@@ -26,6 +26,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Parent's read-only view of student grades with read tracking.
 ///
@@ -458,8 +459,8 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
   Widget _buildStudentSelector() {
     if (_studentList.isEmpty) {
       return Container(
-        margin: EdgeInsets.all(16),
-        padding: EdgeInsets.all(16),
+        margin: EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: ColorUtils.warning600.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
@@ -482,7 +483,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                 size: 20,
               ),
             ),
-            SizedBox(width: 12),
+            SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 AppLocalizations.noChildrenLinked.tr,
@@ -591,7 +592,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
           children: [
             // Gradient header
             Container(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -672,7 +673,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: 350),
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -757,7 +758,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
             ),
             child: Icon(icon, size: 18, color: c),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -817,7 +818,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
               color: ColorUtils.slate400,
             ),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppSpacing.lg),
           Text(
             message,
             style: TextStyle(
@@ -967,7 +968,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                             ],
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         // Content
                         Expanded(
                           child: Column(
@@ -991,7 +992,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                                   ),
                                   // Unread dot
                                   if (!isRead) ...[
-                                    SizedBox(width: 8),
+                                    SizedBox(width: AppSpacing.sm),
                                     Container(
                                       width: 8,
                                       height: 8,
@@ -1016,7 +1017,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
-                              SizedBox(height: 8),
+                              SizedBox(height: AppSpacing.sm),
                               // Info tags
                               Wrap(
                                 spacing: 6,
@@ -1089,7 +1090,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1124,7 +1125,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                     child: Row(
                       children: [
                         Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text('Perbarui Data'),
                       ],
                     ),

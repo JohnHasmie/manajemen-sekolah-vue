@@ -31,6 +31,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Admin lesson plan (RPP) review screen with drill-down navigation.
 ///
@@ -251,7 +252,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                 // Scrollable Content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -263,7 +264,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                               size: 18,
                               color: ColorUtils.slate700,
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Status',
@@ -277,7 +278,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -334,7 +335,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
 
                 // Bottom Action Buttons
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -367,7 +368,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -831,7 +832,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 10, color: color),
-          SizedBox(width: 4),
+          SizedBox(width: AppSpacing.xs),
           Flexible(
             child: Text(
               label,
@@ -881,7 +882,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
           onTap: () => _viewRppDetail(rpp),
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -908,7 +909,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                         size: 22,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -938,7 +939,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
@@ -959,7 +960,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
                 Divider(color: ColorUtils.slate100, height: 1),
                 SizedBox(height: 10),
                 // Info tags: class + teacher
@@ -981,7 +982,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
                 // Action buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -991,7 +992,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                       color: _getPrimaryColor(),
                       onPressed: () => _viewRppDetail(rpp),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.edit_outlined,
                       color: ColorUtils.warning600,
@@ -1018,7 +1019,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
           onTap: () => _selectTeacher(teacher),
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -1042,7 +1043,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1181,7 +1182,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1260,7 +1261,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                                   child: Row(
                                     children: [
                                       Icon(Icons.download, size: 20),
-                                      SizedBox(width: 8),
+                                      SizedBox(width: AppSpacing.sm),
                                       Text(
                                         languageProvider.getTranslatedText({
                                           'en': 'Export to Excel',
@@ -1275,7 +1276,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                                 child: Row(
                                   children: [
                                     Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                                    SizedBox(width: 8),
+                                    SizedBox(width: AppSpacing.sm),
                                     Text('Perbarui Data'),
                                   ],
                                 ),
@@ -1284,7 +1285,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                           ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Search Bar
                     Row(
@@ -1345,7 +1346,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                           ),
                         ),
                         if (!_showTeacherList) ...[
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           // Filter Button (RPP only)
                           Container(
                             key: _filterKey,
@@ -1378,7 +1379,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                                     right: 8,
                                     top: 8,
                                     child: Container(
-                                      padding: EdgeInsets.all(4),
+                                      padding: EdgeInsets.all(AppSpacing.xs),
                                       decoration: BoxDecoration(
                                         color: ColorUtils.error600,
                                         shape: BoxShape.circle,
@@ -1398,7 +1399,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
 
                     // Filter Chips (RPP only)
                     if (!_showTeacherList && _hasActiveFilter) ...[
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       SizedBox(
                         height: 32,
                         child: Row(
@@ -1433,7 +1434,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                                             fontSize: 12,
                                           ),
                                         ),
-                                        SizedBox(width: 8),
+                                        SizedBox(width: AppSpacing.sm),
                                         GestureDetector(
                                           onTap: _clearAllFilters,
                                           child: Icon(
@@ -1936,7 +1937,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
         children: [
           // Gradient Header
           Container(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -1959,7 +1960,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     size: 24,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1989,7 +1990,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
 
           // Form Content
           Padding(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -2012,13 +2013,13 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                       'Menunggu',
                       ColorUtils.warning600,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     buildStatusOption(
                       'Approved',
                       'Disetujui',
                       ColorUtils.success600,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     buildStatusOption(
                       'Rejected',
                       'Ditolak',
@@ -2026,7 +2027,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: AppSpacing.xl),
                 // Catatan label
                 Text(
                   'Catatan (Opsional)',
@@ -2036,7 +2037,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     color: ColorUtils.slate700,
                   ),
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: AppSpacing.sm),
                 // Styled text field
                 Container(
                   decoration: BoxDecoration(
@@ -2087,7 +2088,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: isUpdating ? null : updateStatus,
@@ -2187,7 +2188,7 @@ class RppAdminDetailPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2242,7 +2243,7 @@ class RppAdminDetailPage extends StatelessWidget {
                             color: ColorUtils.success600,
                             size: 20,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text('Setujui RPP'),
                         ],
                       ),
@@ -2256,7 +2257,7 @@ class RppAdminDetailPage extends StatelessWidget {
                             color: ColorUtils.error600,
                             size: 20,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text('Tolak RPP'),
                         ],
                       ),
@@ -2270,14 +2271,14 @@ class RppAdminDetailPage extends StatelessWidget {
           // Scrollable Body
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Status card
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
@@ -2335,12 +2336,12 @@ class RppAdminDetailPage extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.lg),
 
                   // Informasi Detail
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
@@ -2358,7 +2359,7 @@ class RppAdminDetailPage extends StatelessWidget {
                             color: ColorUtils.slate600,
                           ),
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         buildDetailItem(
                           'Guru Pengajar',
                           rpp['teacher_name'] ?? rpp['teacher']?['name'] ?? '-',
@@ -2387,9 +2388,9 @@ class RppAdminDetailPage extends StatelessWidget {
                           buildDetailItem('Catatan', rpp['catatan']),
 
                         if (rpp['catatan_admin'] != null) ...[
-                          SizedBox(height: 8),
+                          SizedBox(height: AppSpacing.sm),
                           Divider(),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppSpacing.sm),
                           Text(
                             'Catatan Admin',
                             style: TextStyle(
@@ -2398,7 +2399,7 @@ class RppAdminDetailPage extends StatelessWidget {
                               color: ColorUtils.slate600,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          SizedBox(height: AppSpacing.xs),
                           Text(
                             rpp['catatan_admin']!,
                             style: TextStyle(
@@ -2412,12 +2413,12 @@ class RppAdminDetailPage extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.lg),
 
                   // Isi RPP
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
@@ -2435,7 +2436,7 @@ class RppAdminDetailPage extends StatelessWidget {
                             color: ColorUtils.slate600,
                           ),
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         buildContentSection(
                           'Kompetensi Inti',
                           rpp['core_competence'],
@@ -2473,10 +2474,10 @@ class RppAdminDetailPage extends StatelessWidget {
 
                   // File Attachment
                   if (rpp['file_path'] != null) ...[
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
@@ -2494,7 +2495,7 @@ class RppAdminDetailPage extends StatelessWidget {
                               color: ColorUtils.slate600,
                             ),
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           ElevatedButton.icon(
                             onPressed: () =>
                                 downloadAndOpenFile(context, rpp['file_path']),
@@ -2567,7 +2568,7 @@ class RppAdminDetailPage extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(value, style: TextStyle(color: ColorUtils.slate700)),
           ),
@@ -2591,10 +2592,10 @@ class RppAdminDetailPage extends StatelessWidget {
               fontSize: 14,
             ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: AppSpacing.xs),
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: ColorUtils.slate50,
               borderRadius: BorderRadius.circular(8),

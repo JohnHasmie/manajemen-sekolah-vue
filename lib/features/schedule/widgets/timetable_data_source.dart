@@ -5,6 +5,7 @@
 // (Syncfusion DataGridSource that maps schedule data into grid cells).
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 // Data class untuk grid view
 class ScheduleGridData {
@@ -71,7 +72,7 @@ class TimetableDataSource extends DataGridSource {
         if (cell.columnName == 'waktu') {
           return Container(
             alignment: Alignment.center,
-            padding: EdgeInsets.all(4),
+            padding: EdgeInsets.all(AppSpacing.xs),
             child: Text(
               timeSlot,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),

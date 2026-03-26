@@ -27,6 +27,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Parent's read-only view of a child's attendance with monthly summaries
 /// and read tracking.
@@ -529,7 +530,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                               size: 20,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
                               languageProvider.getTranslatedText({
@@ -570,7 +571,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                 // Scrollable content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -582,7 +583,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                           }),
                           Icons.calendar_month_outlined,
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -626,7 +627,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                           }),
                           Icons.school_outlined,
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -697,7 +698,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -810,7 +811,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
       child: Row(
         children: [
           Icon(icon, size: 16, color: ColorUtils.slate700),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(
@@ -871,7 +872,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
     return Container(
       key: _monthlySummaryKey,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -925,7 +926,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                     color: _getPrimaryColor(),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   AppLocalizations.attendanceRate.tr,
                   style: TextStyle(
@@ -937,7 +938,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
 
           // Detail status
           Row(
@@ -997,7 +998,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
             ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           label,
           style: TextStyle(fontSize: 9, color: ColorUtils.slate500),
@@ -1065,7 +1066,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                 color: ColorUtils.slate400,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               AppLocalizations.noPresenceData.tr,
               style: TextStyle(
@@ -1075,13 +1076,13 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
               ),
             ),
             if (_hasActiveFilter) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 'Try adjusting your filters',
                 style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
               ),
             ] else ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 'No attendance records found for this year',
                 style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
@@ -1093,7 +1094,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: filteredAbsensi.length,
       itemBuilder: (context, index) {
         final absen = filteredAbsensi[index];
@@ -1192,7 +1193,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
 
                 // Middle: subject + day + info tags
                 Expanded(
@@ -1217,7 +1218,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                           color: ColorUtils.slate600,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       // Info tags row
                       Wrap(
                         spacing: 5,
@@ -1250,7 +1251,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
 
                 // Right: unread dot
                 if (!isRead)
@@ -1399,7 +1400,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1436,7 +1437,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                     child: Row(
                       children: [
                         Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text('Perbarui Data'),
                       ],
                     ),
@@ -1445,7 +1446,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppSpacing.lg),
 
           // Search and Filter Row
           Row(
@@ -1483,7 +1484,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                   ),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               GestureDetector(
                 onTap: _showFilterSheet,
                 child: Container(
@@ -1528,7 +1529,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
 
           // Filter Chips
           if (_hasActiveFilter) ...[
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -1620,8 +1621,8 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                     children: [
                       // Info siswa
                       Container(
-                        margin: const EdgeInsets.all(16),
-                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.all(AppSpacing.lg),
+                        padding: const EdgeInsets.all(AppSpacing.lg),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
@@ -1651,7 +1652,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                                 size: 24,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1665,7 +1666,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                                       color: ColorUtils.slate900,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: AppSpacing.xs),
                                   Text(
                                     'NIS: ${_student?.studentNumber ?? '-'}',
                                     style: TextStyle(
@@ -1705,7 +1706,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
 
                       Expanded(
                         child: Container(

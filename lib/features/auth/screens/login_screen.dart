@@ -29,6 +29,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// The login page widget. Like a Vue page component (`pages/login.vue`).
 ///
@@ -499,7 +500,7 @@ class LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.transparent,
             valueColor: AlwaysStoppedAnimation<Color>(ColorUtils.darkBlue),
           ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.xl),
         Text(
           'Pilih Role',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -513,7 +514,7 @@ class LoginScreenState extends State<LoginScreen> {
           'Sekolah: ${_selectedSchool?['school_name'] ?? _selectedSchool?['name'] ?? _selectedSchool?['nama_sekolah'] ?? _userData?['school_name'] ?? _userData?['nama_sekolah'] ?? '-'}',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
-        SizedBox(height: 20),
+        SizedBox(height: AppSpacing.xl),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -533,7 +534,7 @@ class LoginScreenState extends State<LoginScreen> {
             );
           },
         ),
-        SizedBox(height: 20),
+        SizedBox(height: AppSpacing.xl),
         if (_schoolList.length > 1)
           TextButton(
             onPressed: () {
@@ -624,7 +625,7 @@ class LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.transparent,
             valueColor: AlwaysStoppedAnimation<Color>(ColorUtils.darkBlue),
           ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.xl),
         Text(
           'Pilih Sekolah',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -634,7 +635,7 @@ class LoginScreenState extends State<LoginScreen> {
           'Halo ${_userData?['name'] ?? _userData?['nama'] ?? 'User'}, silakan pilih sekolah:',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
-        SizedBox(height: 20),
+        SizedBox(height: AppSpacing.xl),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -656,7 +657,7 @@ class LoginScreenState extends State<LoginScreen> {
             );
           },
         ),
-        SizedBox(height: 20),
+        SizedBox(height: AppSpacing.xl),
         TextButton(
           onPressed: () {
             setState(() {
@@ -677,7 +678,7 @@ class LoginScreenState extends State<LoginScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Image.asset('assets/icon/KamilEdu.png', height: 80),
-        SizedBox(height: 20),
+        SizedBox(height: AppSpacing.xl),
         Text(
           'Kamil Edu',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -686,7 +687,7 @@ class LoginScreenState extends State<LoginScreen> {
         if (!_serverConnected) ...[
           SizedBox(height: 10),
           Container(
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: Colors.red[50],
               border: Border.all(color: Colors.red),
@@ -695,7 +696,7 @@ class LoginScreenState extends State<LoginScreen> {
             child: Row(
               children: [
                 Icon(Icons.warning, color: Colors.red),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     'Server tidak terhubung',
@@ -745,7 +746,7 @@ class LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
-        SizedBox(height: 20),
+        SizedBox(height: AppSpacing.xl),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -980,9 +981,9 @@ class LoginScreenState extends State<LoginScreen> {
               style: TextStyle(fontSize: 12),
             ),
             Text(email, style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
             Text('Masukkan 6 digit kode OTP:'),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             TextField(
               controller: otpController,
               decoration: InputDecoration(

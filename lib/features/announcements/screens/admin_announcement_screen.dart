@@ -33,6 +33,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Admin announcement management screen.
 ///
@@ -357,7 +358,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             children: [
               // --- Pattern #11 Gradient Header ---
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -382,7 +383,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                           color: Colors.white,
                           size: 22,
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Filter',
@@ -422,7 +423,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
               // --- Filter Content ---
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(AppSpacing.xl),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -434,7 +435,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             size: 16,
                             color: ColorUtils.slate600,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Priority',
@@ -493,7 +494,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         }).toList(),
                       ),
 
-                      SizedBox(height: 20),
+                      SizedBox(height: AppSpacing.xl),
 
                       // Target Filter
                       Row(
@@ -503,7 +504,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             size: 16,
                             color: ColorUtils.slate600,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Target',
@@ -593,7 +594,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             }).toList(),
                       ),
 
-                      SizedBox(height: 20),
+                      SizedBox(height: AppSpacing.xl),
 
                       // Status Filter
                       Row(
@@ -603,7 +604,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             size: 16,
                             color: ColorUtils.slate600,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Status',
@@ -692,7 +693,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
               // --- Pattern #11 Footer ---
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -728,7 +729,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
@@ -1227,7 +1228,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         // --- Scrollable Form Body ---
                         Expanded(
                           child: SingleChildScrollView(
-                            padding: EdgeInsets.all(20),
+                            padding: EdgeInsets.all(AppSpacing.xl),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1239,7 +1240,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   }),
                                   icon: Icons.title,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildDialogTextField(
                                   controller: kontenController,
                                   label: languageProvider.getTranslatedText({
@@ -1249,7 +1250,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   icon: Icons.description,
                                   maxLines: 4,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildPrioritasDropdown(
                                   value: selectedPrioritas,
                                   onChanged: (value) {
@@ -1259,7 +1260,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   },
                                   languageProvider: languageProvider,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildRoleTargetDropdown(
                                   value: selectedRole,
                                   onChanged: (value) {
@@ -1269,7 +1270,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   },
                                   languageProvider: languageProvider,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 Row(
                                   children: [
                                     Expanded(
@@ -1288,7 +1289,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                             }),
                                       ),
                                     ),
-                                    SizedBox(width: 12),
+                                    SizedBox(width: AppSpacing.md),
                                     Expanded(
                                       child: _buildDateField(
                                         label: languageProvider
@@ -1307,7 +1308,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildFilePicker(
                                   setDialogState,
                                   languageProvider,
@@ -1319,7 +1320,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
                         // --- Enhanced Footer ---
                         Container(
-                          padding: EdgeInsets.all(20),
+                          padding: EdgeInsets.all(AppSpacing.xl),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border(
@@ -1361,7 +1362,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () async {
@@ -1587,7 +1588,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             child: Row(
               children: [
                 Icon(Icons.circle, color: ColorUtils.slate400, size: 16),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Normal',
@@ -1602,7 +1603,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             child: Row(
               children: [
                 Icon(Icons.warning, color: Colors.orange, size: 16),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Important',
@@ -1680,7 +1681,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
         child: Row(
           children: [
             Icon(Icons.calendar_today, color: _getPrimaryColor(), size: 20),
-            SizedBox(width: 12),
+            SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 value != null
@@ -1732,7 +1733,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             // Danger gradient header
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -1838,7 +1839,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => AppNavigator.pop(context, true),
@@ -1943,7 +1944,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                     size: 22,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
 
                 // Middle: title + preview + info chips
                 Expanded(
@@ -1973,7 +1974,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       // Info chips row
                       Wrap(
                         spacing: 5,
@@ -2001,7 +2002,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
 
                 // Right: unread dot + icon action buttons
                 Column(
@@ -2116,7 +2117,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
               // Header dengan gradient
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: _getCardGradient(),
                   borderRadius: BorderRadius.only(
@@ -2142,7 +2143,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             size: 20,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Text(
                             announcementData['title'] ?? 'No Title',
@@ -2155,7 +2156,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     Text(
                       _formatDate(announcementData['created_at']),
                       style: TextStyle(
@@ -2169,7 +2170,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
               // Content
               Padding(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2208,7 +2209,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         ),
                       ),
 
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Content text
                     Text(
@@ -2220,7 +2221,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                       ),
                     ),
 
-                    SizedBox(height: 20),
+                    SizedBox(height: AppSpacing.xl),
 
                     // Attachment Section
                     if (announcementData['file_path'] != null) ...[
@@ -2235,7 +2236,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                           color: ColorUtils.slate600,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       InkWell(
                         onTap: () => _openFile(
                           _getFileUrl(announcementData['file_path']),
@@ -2243,7 +2244,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         ),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          padding: EdgeInsets.all(12),
+                          padding: EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
                             color: ColorUtils.slate50,
                             borderRadius: BorderRadius.circular(12),
@@ -2252,7 +2253,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                           child: Row(
                             children: [
                               Container(
-                                padding: EdgeInsets.all(8),
+                                padding: EdgeInsets.all(AppSpacing.sm),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
@@ -2266,7 +2267,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   size: 20,
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2305,12 +2306,12 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                           ),
                         ),
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: AppSpacing.xl),
                     ],
 
                     // Metadata
                     Container(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
                         borderRadius: BorderRadius.circular(12),
@@ -2328,7 +2329,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                 announcementData['creator_name'] ??
                                 'Unknown',
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppSpacing.sm),
                           _buildDetailRow(
                             icon: Icons.people,
                             label: languageProvider.getTranslatedText({
@@ -2341,7 +2342,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             ),
                           ),
                           if (announcementData['start_date'] != null)
-                            SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.sm),
                           if (announcementData['start_date'] != null)
                             _buildDetailRow(
                               icon: Icons.calendar_today,
@@ -2354,7 +2355,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                               ),
                             ),
                           if (announcementData['end_date'] != null)
-                            SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.sm),
                           if (announcementData['end_date'] != null)
                             _buildDetailRow(
                               icon: Icons.event_busy,
@@ -2373,7 +2374,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
               // Close button
               Container(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: [
                     Expanded(
@@ -2448,7 +2449,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
     return Row(
       children: [
         Icon(icon, size: 16, color: _getPrimaryColor()),
-        SizedBox(width: 8),
+        SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2521,7 +2522,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   ) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
         borderRadius: BorderRadius.circular(12),
@@ -2541,10 +2542,10 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppSpacing.sm),
           if (_selectedFile != null)
             Container(
-              padding: EdgeInsets.all(8),
+              padding: EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -2553,7 +2554,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
               child: Row(
                 children: [
                   Icon(Icons.description, color: _getPrimaryColor(), size: 20),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       _selectedFile!.path.split('/').last,
@@ -2600,7 +2601,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                       color: _getPrimaryColor(),
                       size: 24,
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xs),
                     Text(
                       languageProvider.getTranslatedText({
                         'en': 'Tap to upload file',
@@ -2695,7 +2696,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2750,7 +2751,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                               child: Row(
                                 children: [
                                   Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: AppSpacing.sm),
                                   Text('Perbarui Data'),
                                 ],
                               ),
@@ -2759,7 +2760,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Search Bar with Filter Button
                     Row(
@@ -2816,7 +2817,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             ),
                           ),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         // Filter Button
                         Container(
                           key: _filterKey,
@@ -2849,7 +2850,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   right: 8,
                                   top: 8,
                                   child: Container(
-                                    padding: EdgeInsets.all(4),
+                                    padding: EdgeInsets.all(AppSpacing.xs),
                                     decoration: BoxDecoration(
                                       color: ColorUtils.error600,
                                       shape: BoxShape.circle,
@@ -2868,13 +2869,13 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
                     // Show active filters as chips
                     if (_hasActiveFilter) ...[
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       SizedBox(
                         height: 36,
                         child: Row(
                           children: [
                             Container(
-                              padding: EdgeInsets.all(8),
+                              padding: EdgeInsets.all(AppSpacing.sm),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
@@ -2885,7 +2886,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                 color: Colors.white,
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: ListView(
                                 scrollDirection: Axis.horizontal,
@@ -2937,7 +2938,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                 ],
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             InkWell(
                               onTap: _clearAllFilters,
                               borderRadius: BorderRadius.circular(8),

@@ -5,6 +5,7 @@
 // dashboard card showing document approval workflow counts.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A dashboard card showing lesson plan (RPP) approval status breakdown.
 ///
@@ -40,7 +41,7 @@ class LessonPlanStatusCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: EdgeInsets.all(12),
+          padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -114,9 +115,9 @@ class LessonPlanStatusCard extends StatelessWidget {
               Spacer(),
               // Status breakdown - vertical
               _buildStatusRow(ColorUtils.success600, 'Disetujui', approved),
-              SizedBox(height: 4),
+              SizedBox(height: AppSpacing.xs),
               _buildStatusRow(ColorUtils.error600, 'Ditolak', rejected),
-              SizedBox(height: 4),
+              SizedBox(height: AppSpacing.xs),
               _buildStatusRow(ColorUtils.warning600, 'Menunggu', pending),
             ],
           ),

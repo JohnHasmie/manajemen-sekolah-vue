@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// School info settings screen - edit school name, address, and education level (jenjang).
 ///
@@ -90,7 +91,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                 // Gradient Header (Pattern #10)
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(AppSpacing.xl),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -145,7 +146,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                 ),
                 // Form Fields
                 Padding(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(AppSpacing.xl),
                   child: Column(
                     children: [
                       _buildStyledTextField(
@@ -153,14 +154,14 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                         label: 'Nama Sekolah',
                         icon: Icons.school_outlined,
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       _buildStyledTextField(
                         controller: addressController,
                         label: 'Alamat Sekolah',
                         icon: Icons.location_on_outlined,
                         maxLines: 2,
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       DropdownButtonFormField<String>(
                         initialValue: tempJenjang,
                         decoration: InputDecoration(
@@ -233,7 +234,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () async {
@@ -344,7 +345,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
   Widget _buildInfoCard(String label, String value, IconData icon) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -366,7 +367,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
             ),
             child: Icon(icon, color: ColorUtils.corporateBlue600, size: 22),
           ),
-          SizedBox(width: 16),
+          SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,7 +380,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: AppSpacing.xs),
                 Text(
                   value.isNotEmpty ? value : '-',
                   style: TextStyle(
@@ -446,7 +447,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -502,7 +503,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                       color: ColorUtils.corporateBlue600,
                       child: SingleChildScrollView(
                         physics: AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.all(16),
+                        padding: EdgeInsets.all(AppSpacing.lg),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -554,13 +555,13 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                               _schoolName,
                               Icons.school_rounded,
                             ),
-                            SizedBox(height: 12),
+                            SizedBox(height: AppSpacing.md),
                             _buildInfoCard(
                               'Alamat Sekolah',
                               _schoolAddress,
                               Icons.location_on_rounded,
                             ),
-                            SizedBox(height: 12),
+                            SizedBox(height: AppSpacing.md),
                             _buildInfoCard(
                               'Jenjang Pendidikan',
                               _selectedJenjang,

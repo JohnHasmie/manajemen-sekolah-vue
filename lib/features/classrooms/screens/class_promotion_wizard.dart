@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Multi-step wizard for promoting students to the next class/academic year.
 ///
@@ -331,7 +332,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
       child: Row(
         children: [
           Icon(icon, size: 16, color: _getPrimaryColor()),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(
@@ -374,7 +375,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             ),
             child: Icon(icon, size: 18, color: _getPrimaryColor()),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,7 +461,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                         child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,7 +545,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
   }
 
   Widget _buildStepContainer(Widget child) {
-    return SingleChildScrollView(padding: EdgeInsets.all(16), child: child);
+    return SingleChildScrollView(padding: EdgeInsets.all(AppSpacing.lg), child: child);
   }
 
   Widget _buildBottomControls(LanguageProvider languageProvider) {
@@ -589,7 +590,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                   ),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
             ],
             Expanded(
               child: ElevatedButton.icon(
@@ -645,9 +646,9 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             'id': 'Pilih Kelas Asal',
           }),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppSpacing.xs),
         Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -668,7 +669,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                   color: ColorUtils.slate600,
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
               Container(
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
@@ -711,9 +712,9 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 ),
               ),
               if (_selectedSourceClassId != null) ...[
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
                 Container(
-                  padding: EdgeInsets.all(12),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: _getPrimaryColor().withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(10),
@@ -732,7 +733,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                         ),
                         child: Icon(Icons.info_outline_rounded, size: 18, color: _getPrimaryColor()),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
                           languageProvider.getTranslatedText({
@@ -776,11 +777,11 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             'id': 'Pilih Siswa',
           }),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppSpacing.xs),
 
         // Stats card
         Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -798,7 +799,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 value: _students.length.toString(),
                 color: _getPrimaryColor(),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
               _buildStatRow(
                 icon: Icons.check_circle_rounded,
                 label: languageProvider.getTranslatedText({
@@ -809,7 +810,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 color: ColorUtils.success600,
               ),
               if (alreadyPromotedCount > 0) ...[
-                SizedBox(height: 8),
+                SizedBox(height: AppSpacing.sm),
                 _buildStatRow(
                   icon: Icons.warning_rounded,
                   label: languageProvider.getTranslatedText({
@@ -823,7 +824,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             ],
           ),
         ),
-        SizedBox(height: 16),
+        SizedBox(height: AppSpacing.lg),
 
         // Action buttons
         Row(
@@ -862,7 +863,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 },
               ),
             ),
-            SizedBox(width: 12),
+            SizedBox(width: AppSpacing.md),
             Expanded(
               child: OutlinedButton.icon(
                 icon: Icon(Icons.checklist_rounded, size: 18, color: _getPrimaryColor()),
@@ -889,7 +890,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             ),
           ],
         ),
-        SizedBox(height: 20),
+        SizedBox(height: AppSpacing.xl),
 
         // Selected count badge
         Container(
@@ -918,7 +919,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                     ? ColorUtils.success600
                     : ColorUtils.slate500,
               ),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               Text(
                 languageProvider.getTranslatedText({
                   'en': 'Selected: ${_selectedStudentIds.length} students',
@@ -963,7 +964,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             ),
             child: Icon(icon, size: 16, color: color),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(
               label,
@@ -1001,9 +1002,9 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             'id': 'Konfigurasi Tujuan',
           }),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppSpacing.xs),
         Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -1036,7 +1037,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 },
                 icon: Icons.calendar_today_rounded,
               ),
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
               _buildDropdown(
                 label: languageProvider.getTranslatedText({
                   'en': 'Target Class',
@@ -1064,7 +1065,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                     : null,
                 icon: Icons.class_rounded,
               ),
-              SizedBox(height: 20),
+              SizedBox(height: AppSpacing.xl),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -1115,7 +1116,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             color: ColorUtils.slate600,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
@@ -1127,7 +1128,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             children: [
               if (icon != null) ...[
                 Icon(icon, size: 18, color: _getPrimaryColor()),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
               ],
               Expanded(
                 child: DropdownButtonHideUnderline(
@@ -1182,11 +1183,11 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             'id': 'Ringkasan Kenaikan',
           }),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppSpacing.xs),
 
         // Summary info card
         Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -1230,7 +1231,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             ],
           ),
         ),
-        SizedBox(height: 16),
+        SizedBox(height: AppSpacing.lg),
 
         // Student list
         _buildSectionHeader(
@@ -1240,7 +1241,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             'id': 'Siswa Terpilih (${selectedStudentsList.length})',
           }),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppSpacing.xs),
         Container(
           constraints: BoxConstraints(maxHeight: 220),
           decoration: BoxDecoration(
@@ -1251,7 +1252,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
           ),
           child: ListView.separated(
             shrinkWrap: true,
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(AppSpacing.md),
             itemCount: selectedStudentsList.length,
             separatorBuilder: (ctx, i) => Divider(height: 1, color: ColorUtils.slate100),
             itemBuilder: (context, index) {
@@ -1355,7 +1356,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                             ),
                             child: Icon(Icons.checklist_rounded, color: Colors.white, size: 22),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1463,7 +1464,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 12),
+                                  SizedBox(width: AppSpacing.md),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1706,7 +1707,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                   // Gradient header
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
                       gradient: _getCardGradient(),
                     ),
@@ -1722,7 +1723,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                           ),
                           child: Icon(Icons.add_rounded, color: Colors.white, size: 22),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1758,7 +1759,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
 
                   // Form body
                   Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1770,7 +1771,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                           }),
                           icon: Icons.school_rounded,
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         _buildGradeLevelDropdown(
                           value: selectedGradeLevel,
                           onChanged: (val) {
@@ -1780,7 +1781,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                           },
                           languageProvider: languageProvider,
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         _buildHomeroomTeacherDropdown(
                           value: selectedHomeroomTeacherId,
                           onChanged: (val) {
@@ -1821,7 +1822,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () async {

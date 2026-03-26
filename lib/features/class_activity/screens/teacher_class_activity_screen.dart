@@ -36,6 +36,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Teacher's class activity (teaching journal) management screen.
 ///
@@ -327,7 +328,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                         color: ColorUtils.getColorForIndex(index),
                       ),
                     ),
-                    SizedBox(width: 16),
+                    SizedBox(width: AppSpacing.lg),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,7 +367,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                                 ),
                             ],
                           ),
-                          SizedBox(height: 4),
+                          SizedBox(height: AppSpacing.xs),
                           // Subtitle: Grade • Major
                           if ([
                             classData['tingkat'],
@@ -447,7 +448,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
         // Selection Header
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           color: ColorUtils.slate50,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,7 +460,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                 }),
                 style: TextStyle(color: ColorUtils.slate500, fontSize: 12),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: AppSpacing.xs),
               Text(
                 _selectedClassName ?? '-',
                 style: TextStyle(
@@ -532,7 +533,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                               size: 22,
                             ),
                           ),
-                          SizedBox(width: 16),
+                          SizedBox(width: AppSpacing.lg),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,7 +546,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                                     color: ColorUtils.slate900,
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                SizedBox(height: AppSpacing.xs),
                                 Text(
                                   subjectCode.isNotEmpty
                                       ? subjectCode
@@ -1104,7 +1105,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                           size: 20,
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Select Activity Type',
@@ -1141,7 +1142,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                       _showAddActivityDialog('tugas');
                     },
                   ),
-                  SizedBox(height: 12),
+                  SizedBox(height: AppSpacing.md),
                   _buildActivityTypeOption(
                     icon: Icons.menu_book_rounded,
                     title: languageProvider.getTranslatedText({
@@ -1158,11 +1159,11 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                       _showAddActivityDialog('materi');
                     },
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: AppSpacing.xl),
                 ],
               ),
             ),
-            SafeArea(top: false, child: SizedBox(height: 8)),
+            SafeArea(top: false, child: SizedBox(height: AppSpacing.sm)),
           ],
         ),
       ),
@@ -1180,7 +1181,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.05),
           border: Border.all(color: color.withValues(alpha: 0.3)),
@@ -1197,7 +1198,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
               ),
               child: Icon(icon, color: color, size: 24),
             ),
-            SizedBox(width: 16),
+            SizedBox(width: AppSpacing.lg),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1210,7 +1211,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                       color: ColorUtils.slate900,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: AppSpacing.xs),
                   Text(
                     description,
                     style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
@@ -1538,7 +1539,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
 
     return Container(
       key: _tabSwitcherKey,
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppSpacing.lg),
       child: TabSwitcher(
         tabController: _tabController,
         tabs: tabs,
@@ -1601,7 +1602,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
               ),
             ),
           ),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Container(
             decoration: BoxDecoration(
               color: _hasActiveFilter ? _getPrimaryColor() : Colors.white,
@@ -1752,7 +1753,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                               size: 20,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
                               languageProvider.getTranslatedText({
@@ -1841,7 +1842,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                             ),
                           ],
                         ),
-                        SizedBox(height: 20),
+                        SizedBox(height: AppSpacing.xl),
                       ],
                     ),
                   ),
@@ -1883,7 +1884,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
@@ -1976,7 +1977,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
 
             // Filter Chips
             if (_hasActiveFilter) ...[
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
               SizedBox(
                 height: 32,
                 child: ListView(
@@ -2017,7 +2018,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                   }).toList(),
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
             ],
 
             Expanded(
@@ -2049,7 +2050,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                         if (index == _activityList.length) {
                           return Center(
                             child: Padding(
-                              padding: EdgeInsets.all(16),
+                              padding: EdgeInsets.all(AppSpacing.lg),
                               child: CircularProgressIndicator(
                                 color: _getPrimaryColor(),
                               ),
@@ -2147,7 +2148,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                     size: 22,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2172,7 +2173,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       Wrap(
                         spacing: 5,
                         runSpacing: 4,
@@ -2238,7 +2239,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 if (_selectedSubjectCanEdit)
                   Column(
                     children: [
@@ -2314,7 +2315,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -2339,7 +2340,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                       size: 24,
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2379,7 +2380,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: 400),
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2473,7 +2474,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                     ),
                   ),
                   if (_selectedSubjectCanEdit) ...[
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
@@ -2529,7 +2530,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
             ),
             child: Icon(icon, size: 18, color: iconColor),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2679,7 +2680,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2726,7 +2727,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                     child: Row(
                       children: [
                         Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text('Perbarui Data'),
                       ],
                     ),
@@ -2736,7 +2737,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                     child: Row(
                       children: [
                         Icon(Icons.help_outline, size: 20),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text('Help'),
                       ],
                     ),
@@ -2746,7 +2747,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
             ],
           ),
           if (_currentStep == 2) ...[
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
             _buildTabSwitcher(languageProvider),
           ],
         ],
@@ -3888,7 +3889,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                         size: 20,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(
                         widget.isEditMode
@@ -3919,7 +3920,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                     ),
                     IconButton(
                       icon: Container(
-                        padding: EdgeInsets.all(4),
+                        padding: EdgeInsets.all(AppSpacing.xs),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
@@ -3939,7 +3940,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -3948,7 +3949,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                   children: [
                     // Info Box
                     Container(
-                      padding: EdgeInsets.all(12),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       margin: EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.1),
@@ -3966,7 +3967,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                             color: primaryColor,
                             size: 20,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               widget.initialTarget == 'khusus'
@@ -4079,7 +4080,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ),
                       ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
 
                     // Kelas
                     Builder(
@@ -4168,13 +4169,13 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ),
                       ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
 
                     // Toggle: Pilih dari Materi atau Tulis Manual
                     Row(
                       children: [
                         Icon(Icons.title, size: 20, color: ColorUtils.slate600),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Choose from material',
@@ -4201,7 +4202,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
 
                     // Dropdown Bab Materi (if useMateriTitle = true)
                     if (_useMateriTitle) ...[
@@ -4270,7 +4271,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           );
                         },
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                     ],
 
                     // Multi-Select Sub Bab (if bab is selected) - Custom UI
@@ -4314,7 +4315,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                     ],
 
                     // Judul Field
@@ -4345,7 +4346,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                             })
                           : null,
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
 
                     // Deskripsi
                     TextFormField(
@@ -4359,7 +4360,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       ),
                       maxLines: 3,
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
 
                     // Tanggal
                     ListTile(
@@ -4441,7 +4442,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                     // Pilih Siswa (hanya untuk target khusus)
                     if (widget.initialTarget == 'khusus' &&
                         _selectedClassId != null) ...[
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -4474,7 +4475,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       Container(
                         height: 200, // Increased height for better visibility
                         decoration: BoxDecoration(
@@ -4544,7 +4545,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
             ),
           ),
           Container(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -4584,7 +4585,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _isSubmitting ? null : _submitForm,

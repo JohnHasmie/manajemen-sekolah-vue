@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A search bar with a separate filter icon button that shows an active-filter badge.
 ///
@@ -50,7 +51,7 @@ class NewEnhancedSearchBar extends StatelessWidget {
         return Container(
           margin:
               margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
@@ -88,7 +89,7 @@ class NewEnhancedSearchBar extends StatelessWidget {
                 ),
               ),
               if (showFilter) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Container(
                   decoration: BoxDecoration(
                     color: hasActiveFilter ? color : color.withValues(alpha: 0.8),
@@ -116,7 +117,7 @@ class NewEnhancedSearchBar extends StatelessWidget {
                           right: 8,
                           top: 8,
                           child: Container(
-                            padding: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(AppSpacing.xs),
                             decoration: BoxDecoration(
                               color: Colors.red,
                               shape: BoxShape.circle,

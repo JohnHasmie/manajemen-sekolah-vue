@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A card widget that displays a single subject's information with actions.
 ///
@@ -48,7 +49,7 @@ class SubjectListItem extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
               // Icon dan nomor
@@ -70,7 +71,7 @@ class SubjectListItem extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
 
               // Info mata pelajaran
               Expanded(
@@ -86,7 +87,7 @@ class SubjectListItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xs),
                     if (subject['code'] != null || subject['kode'] != null)
                       Text(
                         'Kode: ${subject['code'] ?? subject['kode']}',
@@ -99,11 +100,11 @@ class SubjectListItem extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 4),
+                          SizedBox(height: AppSpacing.xs),
                           Row(
                             children: [
                               Icon(Icons.class_, size: 12, color: Colors.green),
-                              SizedBox(width: 4),
+                              SizedBox(width: AppSpacing.xs),
                               Text(
                                 '$kelasCount kelas',
                                 style: TextStyle(
@@ -137,7 +138,7 @@ class SubjectListItem extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 4),
+                          SizedBox(height: AppSpacing.xs),
                           Text(
                             subject['description'] ?? subject['deskripsi'],
                             style: TextStyle(
@@ -171,7 +172,7 @@ class SubjectListItem extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(Icons.class_, size: 20, color: Colors.blue),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text('Kelola Kelas'),
                       ],
                     ),
@@ -181,7 +182,7 @@ class SubjectListItem extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(Icons.edit, size: 20, color: Colors.orange),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text(AppLocalizations.edit.tr),
                       ],
                     ),
@@ -191,7 +192,7 @@ class SubjectListItem extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(Icons.delete, size: 20, color: Colors.red),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text(AppLocalizations.delete.tr),
                       ],
                     ),

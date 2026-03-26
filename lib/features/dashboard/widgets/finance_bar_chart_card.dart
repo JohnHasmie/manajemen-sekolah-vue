@@ -8,6 +8,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/mini_bar_chart.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart'; // For SmoothPageIndicator
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A swipeable finance bar chart card showing monthly payment data per semester.
 ///
@@ -73,7 +74,7 @@ class _FinanceBarChartCardState extends State<FinanceBarChartCard> {
                 onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -93,7 +94,7 @@ class _FinanceBarChartCardState extends State<FinanceBarChartCard> {
                               color: widget.accentColor,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +141,7 @@ class _FinanceBarChartCardState extends State<FinanceBarChartCard> {
                               cornerRadius: 2.0,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppSpacing.xs),
                           // X-axis labels
                           Row(
                             mainAxisSize: MainAxisSize.min,
@@ -179,7 +180,7 @@ class _FinanceBarChartCardState extends State<FinanceBarChartCard> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8), // Padding for page indicator
+                      const SizedBox(height: AppSpacing.sm), // Padding for page indicator
                     ],
                   ),
                 ),

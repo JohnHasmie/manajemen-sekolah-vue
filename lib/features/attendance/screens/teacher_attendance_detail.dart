@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 // ========== TEACHER ABSENSI DETAIL PAGE ==========
 class TeacherAbsensiDetailPage extends ConsumerStatefulWidget {
@@ -330,7 +331,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,7 +378,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                 ],
               ),
               if (_isEditing) ...[
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
                 Container(
                   decoration: BoxDecoration(
                     color: ColorUtils.slate50,
@@ -578,7 +579,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
       margin: EdgeInsets.symmetric(horizontal: 4),
       child: Container(
         width: 90,
-        padding: EdgeInsets.all(12),
+        padding: EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
@@ -596,7 +597,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
               ),
               child: Icon(icon, color: color, size: 18),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             Text(
               count.toString(),
               style: TextStyle(
@@ -684,7 +685,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
 
                         // Title
                         Expanded(
@@ -757,7 +758,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                           ),
                       ],
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     Row(
                       children: [
                         Icon(
@@ -810,7 +811,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                                   CircularProgressIndicator(
                                     color: _getPrimaryColor(),
                                   ),
-                                  SizedBox(height: 16),
+                                  SizedBox(height: AppSpacing.lg),
                                   Text(
                                     languageProvider.getTranslatedText({
                                       'en': 'Saving changes...',
@@ -831,7 +832,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                         children: [
                           // Info Card (Pattern #8 flat)
                           // Statistics Row
-                          SizedBox(height: 16),
+                          SizedBox(height: AppSpacing.lg),
                           SizedBox(
                             height: 120,
                             child: ListView(
@@ -891,7 +892,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                             ),
                           ),
 
-                          SizedBox(height: 8),
+                          SizedBox(height: AppSpacing.sm),
 
                           // Student List Header
                           Padding(
@@ -906,7 +907,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                                     borderRadius: BorderRadius.circular(2),
                                   ),
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Student List',
@@ -954,7 +955,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                                           size: 64,
                                           color: ColorUtils.slate300,
                                         ),
-                                        SizedBox(height: 12),
+                                        SizedBox(height: AppSpacing.md),
                                         Text(
                                           languageProvider.getTranslatedText({
                                             'en': 'No student data found',

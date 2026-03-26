@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
 class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
@@ -301,7 +302,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +349,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
               ],
             ),
             if (_isEditing) ...[
-              SizedBox(height: 12),
+              SizedBox(height: AppSpacing.md),
               Container(
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
@@ -508,7 +509,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
       margin: EdgeInsets.symmetric(horizontal: 4),
       child: Container(
         width: 90,
-        padding: EdgeInsets.all(12),
+        padding: EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
@@ -526,7 +527,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
               ),
               child: Icon(icon, color: color, size: 18),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             Text(
               count.toString(),
               style: TextStyle(
@@ -597,7 +598,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
           bottomNavigationBar: _isEditing
               ? SafeArea(
                   child: Container(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       boxShadow: [
@@ -696,7 +697,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -751,7 +752,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                             ),
                           ),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         if (!_isEditing)
                           PopupMenuButton<String>(
                             onSelected: (value) {
@@ -777,7 +778,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                                 child: Row(
                                   children: [
                                     Icon(Icons.file_download, size: 20),
-                                    SizedBox(width: 8),
+                                    SizedBox(width: AppSpacing.sm),
                                     Text(
                                       languageProvider.getTranslatedText({
                                         'en': 'Export to Excel',
@@ -792,7 +793,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                                 child: Row(
                                   children: [
                                     Icon(Icons.refresh, size: 20),
-                                    SizedBox(width: 8),
+                                    SizedBox(width: AppSpacing.sm),
                                     Text(
                                       languageProvider.getTranslatedText({
                                         'en': 'Refresh',
@@ -806,7 +807,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                           ),
                       ],
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     Row(
                       children: [
                         Icon(
@@ -849,7 +850,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
               ),
 
               // Statistics Cards
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
               SizedBox(
                 height: 120,
                 child: ListView(

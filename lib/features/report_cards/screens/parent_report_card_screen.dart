@@ -20,6 +20,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Parent's report card list -- shows children with semester selector.
 ///
@@ -231,7 +232,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,7 +267,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                       child: Row(
                         children: [
                           Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           const Text('Perbarui Data'),
                         ],
                       ),
@@ -286,7 +287,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                   'Semester:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: DropdownButton<String>(
                     value: _selectedSemesterId,
@@ -322,13 +323,13 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                             size: 48,
                             color: Colors.orange[300],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             _errorMessage,
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.grey[700]),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           ElevatedButton(
                             onPressed: _loadData,
                             child: const Text('Coba Lagi'),
@@ -347,7 +348,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                           size: 60,
                           color: Colors.grey[300],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                         Text(
                           'Belum ada E-Raport yang dipublikasikan\npada semester ini.',
                           textAlign: TextAlign.center,
@@ -362,7 +363,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                 : RefreshIndicator(
                     onRefresh: _loadData,
                     child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       itemCount: _studentsData.length,
                       itemBuilder: (context, index) {
                         final student = _studentsData[index];
@@ -409,7 +410,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
+                                  const SizedBox(width: AppSpacing.lg),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -423,7 +424,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                                             fontSize: 16,
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: AppSpacing.xs),
                                         Text(
                                           'NIS: ${student['student']['nis'] ?? '-'}',
                                           style: TextStyle(

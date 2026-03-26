@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Pre-generation form for AI RPP creation.
 ///
@@ -243,21 +244,21 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(24),
+        padding: EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Selected Topics Section
             _buildSelectedTopics(),
-            SizedBox(height: 32),
+            SizedBox(height: AppSpacing.xxxl),
 
             // Lesson Details Section
             _buildLessonDetails(),
-            SizedBox(height: 32),
+            SizedBox(height: AppSpacing.xxxl),
 
             // Generate Button
             _buildGenerateButton(),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
 
             // Progress Indicator
             if (_isGenerating) _buildProgressIndicator(),
@@ -273,7 +274,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -310,7 +311,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
               ),
             ],
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
 
           // Display selected sub topics
           if (widget.checkedSubBab.isNotEmpty) ...[
@@ -320,7 +321,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                 child: Row(
                   children: [
                     Icon(Icons.circle, size: 8, color: ColorUtils.indigo600),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(
                         'Sub ${subBab['urutan']}: ${subBab['judul_sub_bab'] ?? 'Judul Sub Bab'}',
@@ -352,7 +353,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                           size: 12,
                           color: ColorUtils.emerald500,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text(
                           'Chapter ${bab['urutan']}: ${bab['judul_bab']}',
                           style: TextStyle(
@@ -378,7 +379,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                               color: Colors.grey.shade700,
                             ),
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               subBab['judul_sub_bab'] ?? 'Judul Sub Bab',
@@ -392,7 +393,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 12),
+                  SizedBox(height: AppSpacing.md),
                 ],
               ),
             ),
@@ -411,7 +412,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
   Widget _buildLessonDetails() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -428,7 +429,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
               color: Colors.grey.shade800,
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: AppSpacing.xl),
 
           // Subject and Date Row
           Row(
@@ -440,7 +441,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                   content: widget.mataPelajaranName,
                 ),
               ),
-              SizedBox(width: 16),
+              SizedBox(width: AppSpacing.lg),
               Expanded(
                 child: _buildInfoCard(
                   icon: Icons.calendar_today,
@@ -450,7 +451,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppSpacing.lg),
 
           // Lesson Title - Editable dengan auto-suggestion
           _buildEditableFieldWithCheckbox(
@@ -469,7 +470,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             },
             maxLines: 2,
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppSpacing.lg),
 
           // Lesson Objectives - Editable
           _buildEditableFieldWithCheckbox(
@@ -486,7 +487,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             },
             maxLines: 3,
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppSpacing.lg),
 
           // Media/Tools - Editable
           _buildEditableFieldWithCheckbox(
@@ -514,7 +515,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
     required String content,
   }) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(8),
@@ -526,7 +527,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           Row(
             children: [
               Icon(icon, size: 16, color: Colors.grey.shade600),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               Text(
                 title,
                 style: TextStyle(
@@ -537,7 +538,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppSpacing.sm),
           Text(
             content,
             style: TextStyle(
@@ -561,7 +562,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
     int maxLines = 1,
   }) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(8),
@@ -580,7 +581,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               Icon(icon, size: 16, color: Colors.grey.shade600),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               Text(
                 label,
                 style: TextStyle(
@@ -591,7 +592,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppSpacing.sm),
           TextField(
             controller: controller,
             enabled: isChecked,
@@ -630,7 +631,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.auto_awesome, size: 24),
-            SizedBox(width: 12),
+            SizedBox(width: AppSpacing.md),
             Text(
               _isGenerating ? 'Generating...' : 'Generate Lesson Plan',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -643,7 +644,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
   Widget _buildProgressIndicator() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -657,7 +658,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             color: ColorUtils.emerald500,
             borderRadius: BorderRadius.circular(4),
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

@@ -33,6 +33,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// School announcements list with automatic read tracking.
 ///
@@ -342,7 +343,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
               // Header dengan gradient
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: _getCardGradient(),
                   borderRadius: BorderRadius.only(
@@ -368,7 +369,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                             size: 20,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Text(
                             announcementData['title'] ?? 'No Title',
@@ -381,7 +382,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     Text(
                       _formatDate(announcementData['created_at']),
                       style: TextStyle(
@@ -395,7 +396,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
 
               // Content
               Padding(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -440,7 +441,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         ),
                       ),
 
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Content text
                     Text(
@@ -452,7 +453,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                       ),
                     ),
 
-                    SizedBox(height: 20),
+                    SizedBox(height: AppSpacing.xl),
 
                     // Attachment Section
                     if (announcementData['file_path'] != null) ...[
@@ -467,7 +468,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                           color: ColorUtils.slate600,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       InkWell(
                         onTap: () => _openFile(
                           _getFileUrl(announcementData['file_path']),
@@ -475,7 +476,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         ),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          padding: EdgeInsets.all(12),
+                          padding: EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
                             color: ColorUtils.slate50,
                             borderRadius: BorderRadius.circular(12),
@@ -484,7 +485,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                           child: Row(
                             children: [
                               Container(
-                                padding: EdgeInsets.all(8),
+                                padding: EdgeInsets.all(AppSpacing.sm),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
@@ -498,7 +499,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                                   size: 20,
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -537,12 +538,12 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: AppSpacing.xl),
                     ],
 
                     // Metadata
                     Container(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
                         borderRadius: BorderRadius.circular(12),
@@ -558,7 +559,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                             value:
                                 announcementData['pembuat_nama'] ?? 'Unknown',
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppSpacing.sm),
                           _buildDetailRow(
                             icon: Icons.people,
                             label: languageProvider.getTranslatedText({
@@ -571,7 +572,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                             ),
                           ),
                           if (announcementData['start_date'] != null)
-                            SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.sm),
                           if (announcementData['start_date'] != null)
                             _buildDetailRow(
                               icon: Icons.calendar_today,
@@ -584,7 +585,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                               ),
                             ),
                           if (announcementData['end_date'] != null)
-                            SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.sm),
                           if (announcementData['end_date'] != null)
                             _buildDetailRow(
                               icon: Icons.event_busy,
@@ -603,7 +604,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
 
               // Close button
               Container(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: [
                     Expanded(
@@ -678,7 +679,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
     return Row(
       children: [
         Icon(icon, size: 16, color: _getPrimaryColor()),
-        SizedBox(width: 8),
+        SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -758,7 +759,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                     size: 22,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
 
                 // Middle: title + preview + info chips
                 Expanded(
@@ -788,7 +789,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       // Info chips row
                       Wrap(
                         spacing: 5,
@@ -820,7 +821,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
 
                 // Right: unread dot
                 if (isUnread)
@@ -888,7 +889,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -937,7 +938,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                               child: Row(
                                 children: [
                                   Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: AppSpacing.sm),
                                   Text('Perbarui Data'),
                                 ],
                               ),
@@ -946,7 +947,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Search Bar
                     Container(

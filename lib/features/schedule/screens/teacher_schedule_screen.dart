@@ -31,6 +31,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Teacher's weekly schedule screen with card and table view modes.
 ///
@@ -974,7 +975,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                               size: 18,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
                               languageProvider.getTranslatedText({
@@ -1024,7 +1025,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1058,7 +1059,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                               .toList(),
                         ),
                         if (_availableClasses.isNotEmpty) ...[
-                          SizedBox(height: 20),
+                          SizedBox(height: AppSpacing.xl),
                           buildSectionHeader(
                             languageProvider.getTranslatedText({
                               'en': 'Class',
@@ -1082,7 +1083,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                           ),
                         ],
                         if (_semesterList.isNotEmpty) ...[
-                          SizedBox(height: 20),
+                          SizedBox(height: AppSpacing.xl),
                           buildSectionHeader(
                             languageProvider.getTranslatedText({
                               'en': 'Semester',
@@ -1108,7 +1109,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                             }).toList(),
                           ),
                         ],
-                        SizedBox(height: 8),
+                        SizedBox(height: AppSpacing.sm),
                       ],
                     ),
                   ),
@@ -1149,7 +1150,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
@@ -1700,7 +1701,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1756,7 +1757,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                             ),
                           ),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         PopupMenuButton<String>(
                           onSelected: (value) {
                             if (value == 'refresh') {
@@ -1769,7 +1770,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                               child: Row(
                                 children: [
                                   Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: AppSpacing.sm),
                                   Text('Perbarui Data'),
                                 ],
                               ),
@@ -1791,12 +1792,12 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Role switcher: only show when user is also wali kelas
                     if (_homeroomClassesList.isNotEmpty)
                       Container(
-                        padding: EdgeInsets.all(12),
+                        padding: EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -1857,7 +1858,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                   size: 20,
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1891,7 +1892,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                           ),
                         ),
                       ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Search Bar with Filter using SeparatedSearchFilter
                     // Search Bar with Filter Button
@@ -1952,7 +1953,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                             ),
                           ),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         // Filter Button
                         Container(
                           decoration: BoxDecoration(
@@ -2004,7 +2005,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
 
                     // Filter Chips
                     if (_hasActiveFilter) ...[
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       SizedBox(
                         height: 32,
                         child: Row(
@@ -2043,7 +2044,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                                 fontWeight: FontWeight.w500,
                                               ),
                                             ),
-                                            SizedBox(width: 4),
+                                            SizedBox(width: AppSpacing.xs),
                                             Icon(
                                               Icons.close,
                                               size: 14,
@@ -2057,7 +2058,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                 ],
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             InkWell(
                               onTap: _clearAllFilters,
                               child: Container(
@@ -2101,7 +2102,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                     : Column(
                         children: [
                           // View Toggle Info
-                          SizedBox(height: 8),
+                          SizedBox(height: AppSpacing.sm),
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16),
                             child: Row(
@@ -2133,7 +2134,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                               ],
                             ),
                           ),
-                          SizedBox(height: 4),
+                          SizedBox(height: AppSpacing.xs),
 
                           Expanded(
                             child: filteredSchedules.isEmpty
@@ -2263,7 +2264,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
       child: SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -2276,7 +2277,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                   color: _getPrimaryColor(),
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
 
               // Table
               Container(
@@ -2480,7 +2481,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                 return Container(
                                   width: 200,
                                   height: 60,
-                                  padding: EdgeInsets.all(4),
+                                  padding: EdgeInsets.all(AppSpacing.xs),
                                   decoration: BoxDecoration(
                                     border: Border(
                                       right: BorderSide(
@@ -2553,9 +2554,9 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
               ),
 
               // Legend
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
               Container(
-                padding: EdgeInsets.all(12),
+                padding: EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
                   borderRadius: BorderRadius.circular(8),
@@ -2571,7 +2572,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                         color: ColorUtils.slate600,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     Wrap(
                       spacing: 16,
                       children: availableDays.map((day) {
@@ -2586,7 +2587,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
-                            SizedBox(width: 4),
+                            SizedBox(width: AppSpacing.xs),
                             Text(day, style: TextStyle(fontSize: 12)),
                           ],
                         );
@@ -2732,7 +2733,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -2761,7 +2762,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                         size: 24,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2792,7 +2793,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                         ],
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 10,
@@ -2816,7 +2817,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                     ),
                   ],
                 ),
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
                 Divider(height: 1, color: ColorUtils.slate100),
                 SizedBox(height: 10),
                 Wrap(
@@ -2846,7 +2847,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                       ),
                   ],
                 ),
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
                 Row(
                   key: index == 0 ? _actionButtonsKey : null,
                   children: [
@@ -2900,7 +2901,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
@@ -2987,7 +2988,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 11, color: color),
-          SizedBox(width: 4),
+          SizedBox(width: AppSpacing.xs),
           Text(
             label,
             style: TextStyle(

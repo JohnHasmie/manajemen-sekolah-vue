@@ -23,6 +23,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Report card detail form for a single student.
 ///
@@ -538,7 +539,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.lg),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,7 +553,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                             letterSpacing: -0.5,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.xs),
                         Text(
                           '${widget.studentName} - ${widget.className}',
                           style: TextStyle(
@@ -608,7 +609,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                         child: Row(
                           children: [
                             Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.sm),
                             const Text('Perbarui Data'),
                           ],
                         ),
@@ -672,7 +673,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
         ),
         bottomNavigationBar: SafeArea(
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
@@ -709,7 +710,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                           ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton(
                     key: _finalizeKey,
@@ -761,26 +762,26 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
   // --- TAB 1: SIKAP ---
   Widget _buildSikapTab() {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         _buildSectionTitle('Sikap Spiritual'),
         _buildDropdown('Predikat', _spiritualPredicate, _predicates, (v) {
           setState(() => _spiritualPredicate = v!);
           _markUnsaved();
         }),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         _buildTextField('Deskripsi', _spiritualDescCtrl, maxLines: 4),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xxl),
         const Divider(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         _buildSectionTitle('Sikap Sosial'),
         _buildDropdown('Predikat', _socialPredicate, _predicates, (v) {
           setState(() => _socialPredicate = v!);
           _markUnsaved();
         }),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         _buildTextField('Deskripsi', _socialDescCtrl, maxLines: 4),
       ],
     );
@@ -789,7 +790,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
   // --- TAB 2: NILAI ---
   Widget _buildNilaiTab() {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: _subjects.length,
       itemBuilder: (context, index) {
         final subject = _subjects[index];
@@ -804,7 +805,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
             boxShadow: [...ColorUtils.corporateShadow()],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -816,7 +817,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                     color: ColorUtils.slate800,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Pengetahuan
                 const Text(
@@ -826,7 +827,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                     color: Colors.blueGrey,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
                     Expanded(
@@ -841,7 +842,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                         isNumber: true,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       flex: 1,
                       child: _buildCompactTextField(
@@ -855,7 +856,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 _buildCompactTextField(
                   'Deskripsi',
                   subject['knowledge_description'],
@@ -866,9 +867,9 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                   maxLines: 2,
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 const Divider(),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Keterampilan
                 const Text(
@@ -878,7 +879,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                     color: Colors.blueGrey,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
                     Expanded(
@@ -893,7 +894,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                         isNumber: true,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       flex: 1,
                       child: _buildCompactTextField(
@@ -907,7 +908,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 _buildCompactTextField(
                   'Deskripsi',
                   subject['skill_description'],
@@ -928,7 +929,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
   // --- TAB 3: TAMBAHAN ---
   Widget _buildTambahanTab() {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -948,9 +949,9 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
         ),
         ...List.generate(_extras.length, (index) => _buildExtraItem(index)),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xxl),
         const Divider(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -993,7 +994,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
         boxShadow: [...ColorUtils.corporateShadow()],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
             Row(
@@ -1009,7 +1010,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                     },
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   flex: 1,
                   child: _buildCompactTextField('Nilai', extra['score'], (v) {
@@ -1026,7 +1027,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             _buildCompactTextField('Keterangan', extra['description'], (v) {
               _extras[index]['description'] = v;
               _markUnsaved();
@@ -1050,7 +1051,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
         boxShadow: [...ColorUtils.corporateShadow()],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
             Row(
@@ -1064,7 +1065,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                     _markUnsaved();
                   }),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   flex: 1,
                   child: _buildCompactTextField(
@@ -1085,7 +1086,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             _buildCompactTextField('Keterangan', ach['description'], (v) {
               _achievements[index]['description'] = v;
               _markUnsaved();
@@ -1099,7 +1100,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
   // --- TAB 4: INFO & KEPUTUSAN ---
   Widget _buildInfoTab() {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         _buildSectionTitle('Ketidakhadiran'),
         Row(
@@ -1107,7 +1108,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
             Expanded(
               child: _buildTextField('Sakit (Hari)', _sickCtrl, isNumber: true),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildTextField(
                 'Izin (Hari)',
@@ -1115,7 +1116,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                 isNumber: true,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildTextField(
                 'Tanpa Ket. (Hari)',
@@ -1125,9 +1126,9 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xxl),
         const Divider(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         _buildSectionTitle('Catatan Wali Kelas'),
         _buildTextField(
           'Masukkan catatan, saran, atau motivasi untuk siswa...',
@@ -1135,9 +1136,9 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
           maxLines: 4,
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xxl),
         const Divider(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         _buildSectionTitle('Keputusan Akhir Tahun (Opsional)'),
         _buildDropdown('Keputusan', _promotionDecision, _decisions, (v) {
@@ -1173,7 +1174,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         TextField(
           controller: controller,
           maxLines: maxLines,
@@ -1260,7 +1261,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(

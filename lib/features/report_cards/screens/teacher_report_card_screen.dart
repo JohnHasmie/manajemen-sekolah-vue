@@ -25,6 +25,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Report card list screen -- shows classes and their students for raport entry.
 ///
@@ -423,7 +424,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,7 +441,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         _languageProvider.getTranslatedText({
                           'en': 'Manage student report cards',
@@ -475,7 +476,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
                       child: Row(
                         children: [
                           Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           const Text('Perbarui Data'),
                         ],
                       ),
@@ -486,7 +487,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
                         child: Row(
                           children: [
                             const Icon(Icons.file_download, size: 20, color: Colors.green),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.sm),
                             const Text('Export Excel'),
                           ],
                         ),
@@ -517,13 +518,13 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, color: Colors.red, size: 60),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 'Terjadi kesalahan:\n$_errorMessage',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.red),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xxl),
               ElevatedButton.icon(
                 onPressed: _loadInitialData,
                 icon: const Icon(Icons.refresh),
@@ -553,7 +554,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
   Widget _buildClassSelector() {
     return Container(
       key: _classSelectorKey,
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppSpacing.lg),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -574,7 +575,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
               size: 20,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,7 +649,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               'Tidak ada data siswa',
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
@@ -659,7 +660,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: _students.length,
       itemBuilder: (context, index) {
         final student = _students[index];
@@ -685,7 +686,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
               },
               borderRadius: BorderRadius.circular(16),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: [
                     CircleAvatar(
@@ -698,7 +699,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppSpacing.lg),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -711,7 +712,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
                               color: ColorUtils.slate800,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppSpacing.xs),
                           Text(
                             'NIS: ${student['student_number'] ?? '-'}',
                             style: TextStyle(
@@ -723,7 +724,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
                       ),
                     ),
                     _buildStatusBadge(hasRaport, status),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     if (status.toLowerCase() == 'final' ||
                         status.toLowerCase() == 'published')
                       IconButton(
@@ -733,10 +734,10 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
                         ),
                         tooltip: 'Cetak PDF',
                         onPressed: () => _downloadStudentPdf(student),
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(AppSpacing.xs),
                         constraints: const BoxConstraints(),
                       ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     Icon(Icons.chevron_right, color: ColorUtils.slate400),
                   ],
                 ),

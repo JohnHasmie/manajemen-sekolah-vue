@@ -34,6 +34,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Data model for a single attendance summary record.
 /// Like a Laravel Eloquent model or a TypeScript interface in Vue.
@@ -663,7 +664,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         child: Column(
           children: [
             Container(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
               ),
@@ -686,7 +687,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
             ),
             Expanded(
               child: ListView.builder(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 itemCount: _fullTeacherList.length,
                 itemBuilder: (context, index) {
                   final teacher = _fullTeacherList[index];
@@ -749,7 +750,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
             children: [
               // Header
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -811,7 +812,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
               // Filter Content
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -823,7 +824,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                             size: 16,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Date Range',
@@ -837,7 +838,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -881,7 +882,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                           );
                         }).toList(),
                       ),
-                      SizedBox(height: 24),
+                      SizedBox(height: AppSpacing.xxl),
 
                       // Subject Filter
                       Row(
@@ -891,7 +892,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                             size: 16,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Subject',
@@ -905,7 +906,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -943,7 +944,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                           );
                         }).toList(),
                       ),
-                      SizedBox(height: 24),
+                      SizedBox(height: AppSpacing.xxl),
 
                       // Day Filter
                       Row(
@@ -953,7 +954,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                             size: 16,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Day',
@@ -967,7 +968,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -1015,7 +1016,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                               );
                             }).toList(),
                       ),
-                      SizedBox(height: 24),
+                      SizedBox(height: AppSpacing.xxl),
 
                       // Lesson Hour Filter
                       Row(
@@ -1025,7 +1026,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                             size: 16,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Lesson Hour',
@@ -1039,7 +1040,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -1077,7 +1078,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                           );
                         }).toList(),
                       ),
-                      SizedBox(height: 24),
+                      SizedBox(height: AppSpacing.xxl),
 
                       // Class Filter
                       Row(
@@ -1087,7 +1088,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                             size: 16,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Class',
@@ -1101,7 +1102,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -1145,7 +1146,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
               ),
               // Apply Button
               Container(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -1178,7 +1179,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
@@ -1256,7 +1257,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
       onRefresh: _forceRefresh,
       color: _getPrimaryColor(),
       child: ListView.builder(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         physics: AlwaysScrollableScrollPhysics(),
         itemCount: filteredClasses.length,
         itemBuilder: (context, index) {
@@ -1521,7 +1522,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.class_outlined, size: 64, color: ColorUtils.slate400),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
             Text(
               languageProvider.getTranslatedText({
                 'en': 'Please select a class to view the table',
@@ -1566,7 +1567,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     }
 
     return Container(
-      margin: EdgeInsets.all(16),
+      margin: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1740,7 +1741,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         borderRadius: BorderRadius.circular(16),
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -1771,7 +1772,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                       size: 20,
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   // Subject + class + date info
                   Expanded(
                     child: Column(
@@ -1795,7 +1796,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                               size: 12,
                               color: _getPrimaryColor(),
                             ),
-                            SizedBox(width: 4),
+                            SizedBox(width: AppSpacing.xs),
                             Text(
                               summary.className,
                               style: TextStyle(
@@ -1840,7 +1841,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                       ],
                     ),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   // Delete button
                   Material(
                     color: Colors.transparent,
@@ -1867,7 +1868,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                 ],
               ),
 
-              SizedBox(height: 12),
+              SizedBox(height: AppSpacing.md),
               Divider(color: ColorUtils.slate100, height: 1),
               SizedBox(height: 10),
 
@@ -1879,13 +1880,13 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                     label: '${summary.present} Hadir',
                     tagColor: ColorUtils.success600,
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   _buildInfoTag(
                     icon: Icons.cancel_outlined,
                     label: '${summary.absent} Absen',
                     tagColor: ColorUtils.error600,
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   _buildInfoTag(
                     icon: Icons.people_outline,
                     label: '${summary.totalStudents} Siswa',
@@ -1915,7 +1916,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                             size: 12,
                             color: _getPrimaryColor(),
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: AppSpacing.xs),
                           Text(
                             'Detail',
                             style: TextStyle(
@@ -1951,7 +1952,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                   ),
                 ),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: AppSpacing.xs),
               Text(
                 '$presentaseHadir% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
                 style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
@@ -2011,7 +2012,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                       'Tahun Ajaran $activeYearName',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     Text(
                       languageProvider.getTranslatedText({
                         'en': 'Select month(s) to export:',
@@ -2022,7 +2023,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                         color: ColorUtils.slate400,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     Expanded(
                       child: ListView.builder(
                         itemCount: months.length,
@@ -2223,7 +2224,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 10, color: color),
-          SizedBox(width: 4),
+          SizedBox(width: AppSpacing.xs),
           Flexible(
             child: Text(
               label,
@@ -2322,7 +2323,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
             // Gradient danger header
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -2360,7 +2361,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 children: [
                   Text(
@@ -2373,7 +2374,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                     style: TextStyle(fontSize: 14, color: ColorUtils.slate700),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: AppSpacing.xl),
                   Row(
                     children: [
                       Expanded(
@@ -2395,7 +2396,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => AppNavigator.pop(context, true),
@@ -2537,7 +2538,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             key: _infoKey,
@@ -2594,7 +2595,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                               ),
                             ),
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                         ],
                         PopupMenuButton<String>(
                           onSelected: (value) {
@@ -2635,7 +2636,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                               child: Row(
                                 children: [
                                   Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: AppSpacing.sm),
                                   Text('Perbarui Data'),
                                 ],
                               ),
@@ -2646,7 +2647,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                                 child: Row(
                                   children: [
                                     Icon(Icons.file_download, size: 20),
-                                    SizedBox(width: 8),
+                                    SizedBox(width: AppSpacing.sm),
                                     Text(
                                       languageProvider.getTranslatedText({
                                         'en': 'Export Excel',
@@ -2660,7 +2661,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Search Bar with Filter Button
                     Row(
@@ -2716,7 +2717,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                             ),
                           ),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         // Filter Button
                         Container(
                           decoration: BoxDecoration(
@@ -2749,7 +2750,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                                   right: 8,
                                   top: 8,
                                   child: Container(
-                                    padding: EdgeInsets.all(4),
+                                    padding: EdgeInsets.all(AppSpacing.xs),
                                     decoration: BoxDecoration(
                                       color: ColorUtils.error600,
                                       shape: BoxShape.circle,
@@ -2768,7 +2769,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
 
                     // Filter Chips
                     if (_hasActiveFilter) ...[
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       SizedBox(
                         height: 32,
                         child: Row(
@@ -2823,12 +2824,12 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                                 ],
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             InkWell(
                               onTap: _clearAllFilters,
                               borderRadius: BorderRadius.circular(8),
                               child: Container(
-                                padding: EdgeInsets.all(8),
+                                padding: EdgeInsets.all(AppSpacing.sm),
                                 decoration: BoxDecoration(
                                   color: ColorUtils.error600,
                                   borderRadius: BorderRadius.circular(8),
@@ -3221,7 +3222,7 @@ class AttendanceDataSource extends DataGridSource {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

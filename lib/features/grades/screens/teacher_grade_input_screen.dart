@@ -34,6 +34,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// The class/subject selection screen (Steps 0-1) before entering the grade book.
 ///
@@ -784,7 +785,7 @@ class GradePageState extends ConsumerState<GradePage> {
                           size: 24,
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -797,7 +798,7 @@ class GradePageState extends ConsumerState<GradePage> {
                                 color: ColorUtils.slate900,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            SizedBox(height: AppSpacing.xs),
                             Wrap(
                               spacing: 4,
                               runSpacing: 4,
@@ -964,7 +965,7 @@ class GradePageState extends ConsumerState<GradePage> {
                           size: 24,
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -977,7 +978,7 @@ class GradePageState extends ConsumerState<GradePage> {
                                 color: ColorUtils.slate900,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            SizedBox(height: AppSpacing.xs),
                             Wrap(
                               spacing: 4,
                               runSpacing: 4,
@@ -1164,7 +1165,7 @@ class GradePageState extends ConsumerState<GradePage> {
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1204,7 +1205,7 @@ class GradePageState extends ConsumerState<GradePage> {
               ),
             ],
           ),
-          SizedBox(height: 24),
+          SizedBox(height: AppSpacing.xxl),
           // Search Bar matched to StudentManagement
           Container(
             decoration: BoxDecoration(

@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A gradient card widget that displays a single teacher's information.
 ///
@@ -82,7 +83,7 @@ class TeacherListItem extends StatelessWidget {
                   ),
                   
                   Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -140,7 +141,7 @@ class TeacherListItem extends StatelessWidget {
                                   child: Row(
                                     children: [
                                       Icon(Icons.edit, size: 16, color: Colors.blue.shade600),
-                                      SizedBox(width: 8),
+                                      SizedBox(width: AppSpacing.sm),
                                       Text(AppLocalizations.edit.tr),
                                     ],
                                   ),
@@ -150,7 +151,7 @@ class TeacherListItem extends StatelessWidget {
                                   child: Row(
                                     children: [
                                       Icon(Icons.delete, size: 16, color: Colors.red.shade600),
-                                      SizedBox(width: 8),
+                                      SizedBox(width: AppSpacing.sm),
                                       Text(AppLocalizations.delete.tr),
                                     ],
                                   ),
@@ -160,7 +161,7 @@ class TeacherListItem extends StatelessWidget {
                           ],
                         ),
                         
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         
                         // Informasi email
                         Row(
@@ -174,7 +175,7 @@ class TeacherListItem extends StatelessWidget {
                               ),
                               child: Icon(Icons.email, size: 12, color: Colors.white),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: Text(
                                 guru['email']?.toString() ?? 'No email',
@@ -203,7 +204,7 @@ class TeacherListItem extends StatelessWidget {
                               ),
                               child: Icon(Icons.badge, size: 12, color: Colors.white),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: Text(
                                 guru['nip']?.toString() ?? 'No NIP',
@@ -218,7 +219,7 @@ class TeacherListItem extends StatelessWidget {
                           ],
                         ),
                         
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         
                         // Action buttons
                         Row(
@@ -267,7 +268,7 @@ class TeacherListItem extends StatelessWidget {
               size: 12,
               color: Colors.white,
             ),
-            SizedBox(width: 4),
+            SizedBox(width: AppSpacing.xs),
             Text(
               label,
               style: TextStyle(

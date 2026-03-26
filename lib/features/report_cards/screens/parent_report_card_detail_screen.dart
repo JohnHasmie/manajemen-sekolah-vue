@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Read-only report card detail view for parents.
 ///
@@ -87,7 +88,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,41 +119,41 @@ class ParentRaportDetailScreen extends StatelessWidget {
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Student Info Card
                   _buildInfoCard(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Sikap (Attitude) Card
                   _buildSikapCard(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Pengetahuan & Keterampilan (Grades)
                   _buildGradesCard(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Ekstrakurikuler
                   _buildExtracurricularCard(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Prestasi
                   _buildAchievementCard(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Kehadiran (Attendance)
                   _buildAttendanceCard(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Catatan Wali Kelas
                   _buildCatatanCard(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Keputusan
                   _buildDecisionCard(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppSpacing.xxxl),
                 ],
               ),
             ),
@@ -203,7 +204,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, color: ColorUtils.corporateBlue600, size: 20),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(
@@ -240,13 +241,13 @@ class ParentRaportDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Text(
               studentName,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               'NIS: ${studentData['nis'] ?? '-'} | NISN: ${studentData['nisn'] ?? '-'}',
               style: TextStyle(color: Colors.grey[600]),
@@ -459,7 +460,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
@@ -473,7 +474,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
       ],
     );

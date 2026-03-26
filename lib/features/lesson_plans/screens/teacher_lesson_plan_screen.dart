@@ -34,6 +34,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// RPP (lesson plan) list screen with CRUD, search, filter, and AI generation.
 ///
@@ -223,7 +224,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                 // Scrollable Content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -235,7 +236,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                               size: 18,
                               color: ColorUtils.slate700,
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Status',
@@ -249,7 +250,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -340,7 +341,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
@@ -499,7 +500,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: EdgeInsets.all(24),
+        padding: EdgeInsets.all(AppSpacing.xxl),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -527,7 +528,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                 color: ColorUtils.slate900,
               ),
             ),
-            SizedBox(height: 24),
+            SizedBox(height: AppSpacing.xxl),
             Row(
               children: [
                 Expanded(
@@ -537,7 +538,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                       _showRppFormDialog();
                     },
                     child: Container(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: _getPrimaryColor().withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
@@ -552,7 +553,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                             size: 32,
                             color: _getPrimaryColor(),
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Upload Manual',
@@ -570,7 +571,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
@@ -578,7 +579,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                       _showGenerateRppFormDialog();
                     },
                     child: Container(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: ColorUtils.success600.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
@@ -593,7 +594,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                             size: 32,
                             color: ColorUtils.success600,
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Generate AI',
@@ -613,7 +614,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
           ],
         ),
       ),
@@ -823,7 +824,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 10, color: color),
-          SizedBox(width: 4),
+          SizedBox(width: AppSpacing.xs),
           Text(
             label,
             style: TextStyle(
@@ -871,7 +872,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
           onTap: () => _lihatDetailRpp(rpp),
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -898,7 +899,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                         size: 22,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -926,7 +927,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
@@ -947,7 +948,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
                 Divider(color: ColorUtils.slate100, height: 1),
                 SizedBox(height: 10),
                 // Info tags: class
@@ -961,7 +962,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
                 // Action buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -971,13 +972,13 @@ class RppScreenState extends ConsumerState<RppScreen> {
                       color: _getPrimaryColor(),
                       onPressed: () => _lihatDetailRpp(rpp),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.edit_outlined,
                       color: ColorUtils.warning600,
                       onPressed: () => _editRpp(rpp),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.delete_outlined,
                       color: ColorUtils.error600,
@@ -1011,7 +1012,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
               color: ColorUtils.slate400,
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: AppSpacing.xl),
           Text(
             languageProvider.getTranslatedText({
               'en': 'No RPP created yet',
@@ -1023,7 +1024,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
               color: ColorUtils.slate700,
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppSpacing.sm),
           Text(
             languageProvider.getTranslatedText({
               'en': 'Click the "+" button to create your first RPP.',
@@ -1039,7 +1040,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
   Widget _buildErrorState() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -1056,7 +1057,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                 color: ColorUtils.error600,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             Text(
               languageProvider.getTranslatedText({
                 'en': 'Error',
@@ -1068,13 +1069,13 @@ class RppScreenState extends ConsumerState<RppScreen> {
                 color: ColorUtils.slate700,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             Text(
               _errorMessage ?? '',
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             ElevatedButton(
               onPressed: _loadRpp,
               style: ElevatedButton.styleFrom(
@@ -1148,7 +1149,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1197,7 +1198,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                           child: Row(
                             children: [
                               Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text('Perbarui Data'),
                             ],
                           ),
@@ -1206,7 +1207,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
 
                 // Search Bar with Filter Button
                 Row(
@@ -1260,7 +1261,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     // Filter Button
                     Container(
                       key: _filterKey,
@@ -1293,7 +1294,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                               right: 8,
                               top: 8,
                               child: Container(
-                                padding: EdgeInsets.all(4),
+                                padding: EdgeInsets.all(AppSpacing.xs),
                                 decoration: BoxDecoration(
                                   color: ColorUtils.error600,
                                   shape: BoxShape.circle,
@@ -1312,7 +1313,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
                 // Filter Chips
                 if (_hasActiveFilter) ...[
-                  SizedBox(height: 12),
+                  SizedBox(height: AppSpacing.md),
                   SizedBox(
                     height: 32,
                     child: Row(
@@ -1343,7 +1344,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                                         fontSize: 12,
                                       ),
                                     ),
-                                    SizedBox(width: 8),
+                                    SizedBox(width: AppSpacing.sm),
                                     GestureDetector(
                                       onTap: _clearAllFilters,
                                       child: Icon(
@@ -2045,7 +2046,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                     GestureDetector(
                       onTap: () => AppNavigator.pop(context),
                       child: Container(
-                        padding: EdgeInsets.all(8),
+                        padding: EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
@@ -2066,7 +2067,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
           // Form Content
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -2091,7 +2092,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedMataPelajaranId,
                       label:
@@ -2125,7 +2126,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedClassId,
                       label:
@@ -2157,7 +2158,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedSemester,
                       label:
@@ -2175,7 +2176,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                         });
                       },
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
                       controller: _tahunAjaranController,
                       label:
@@ -2192,7 +2193,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
                     // File upload section
                     Text(
                       languageProvider.getTranslatedText({
@@ -2205,7 +2206,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                         color: ColorUtils.slate700,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(14),
@@ -2235,7 +2236,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                               size: 20,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2294,7 +2295,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                                 ),
                               ),
                             ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           GestureDetector(
                             onTap: _showFilePickerDialog,
                             child: Container(
@@ -2333,7 +2334,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
 
           // Footer Buttons (Enhanced Pattern)
           Container(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -2373,7 +2374,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _isUploading ? null : _submitForm,
@@ -3089,7 +3090,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                     GestureDetector(
                       onTap: () => AppNavigator.pop(context),
                       child: Container(
-                        padding: EdgeInsets.all(8),
+                        padding: EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
@@ -3110,7 +3111,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
           // Form Content
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -3131,7 +3132,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedMataPelajaranId,
                       label: '${AppLocalizations.subject.tr} *',
@@ -3166,7 +3167,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     Row(
                       children: [
                         Expanded(
@@ -3198,7 +3199,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                             },
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: _buildDialogDropdown(
                             value: _selectedSemester,
@@ -3219,7 +3220,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedBabId,
                       label:
@@ -3254,7 +3255,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedSubBabId,
                       label:
@@ -3289,7 +3290,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                         });
                       },
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
                       controller: _tahunAjaranController,
                       label: '${AppLocalizations.academicYear.tr} *',
@@ -3310,7 +3311,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
 
           // Footer Buttons
           Container(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -3347,7 +3348,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _isAutoGenerating ? null : _submitForm,
@@ -3373,7 +3374,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                                   ),
                                 ),
                                 if (_generationStatus.isNotEmpty) ...[
-                                  SizedBox(height: 4),
+                                  SizedBox(height: AppSpacing.xs),
                                   Text(
                                     _generationStatus,
                                     style: TextStyle(

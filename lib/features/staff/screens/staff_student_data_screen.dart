@@ -9,6 +9,7 @@ import 'package:manajemensekolah/data/data_dummy.dart';
 import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Displays a scrollable list of all students with basic info (NIS, class, parent).
 ///
@@ -29,7 +30,7 @@ class StaffStudentDataScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final student = DataDummy.students[index];
           return Card(
-            margin: EdgeInsets.all(8),
+            margin: EdgeInsets.all(AppSpacing.sm),
             child: ListTile(
               leading: CircleAvatar(child: Text(student.name[0])),
               title: Text(student.name),

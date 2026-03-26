@@ -4,6 +4,7 @@
 // and a dropdown filter in one row. Similar to a Laravel Nova search field
 // with an adjacent filter selector.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A search bar widget with an optional inline dropdown filter.
 ///
@@ -47,7 +48,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppSpacing.lg),
       child: Container(
         height: 48,
         decoration: BoxDecoration(

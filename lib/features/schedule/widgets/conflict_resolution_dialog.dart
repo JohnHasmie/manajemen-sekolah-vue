@@ -6,6 +6,7 @@
 // conflicting schedule to delete before retrying.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A dialog that shows conflicting schedules and lets the user select one to delete.
 ///
@@ -43,7 +44,7 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +57,7 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
                       color: Colors.orange,
                       size: 28,
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(
                         languageProvider.getTranslatedText({
@@ -73,7 +74,7 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
                   ],
                 ),
                 
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
                 
                 // Description
                 Text(
@@ -87,7 +88,7 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
                   ),
                 ),
                 
-                SizedBox(height: 20),
+                SizedBox(height: AppSpacing.xl),
                 
                 // List of conflicting schedules
                 Container(
@@ -102,7 +103,7 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
                   ),
                 ),
                 
-                SizedBox(height: 20),
+                SizedBox(height: AppSpacing.xl),
                 
                 // Action buttons
                 Row(
@@ -123,7 +124,7 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: _selectedScheduleToDelete != null
@@ -181,7 +182,7 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
                 fontSize: 16,
               ),
             ),
-            SizedBox(height: 4),
+            SizedBox(height: AppSpacing.xs),
             Text(
               '${languageProvider.getTranslatedText({
                 'en': 'Teacher',

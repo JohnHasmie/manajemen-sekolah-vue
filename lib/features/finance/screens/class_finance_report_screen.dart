@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Class finance report screen - shows billing/payment details for a specific class.
 ///
@@ -357,7 +358,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
             width: 150,
             height: 60,
             alignment: Alignment.centerLeft,
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(color: ColorUtils.slate300),
@@ -809,7 +810,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                 children: [
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(gradient: _getCardGradient()),
                     child: Row(
                       children: [
@@ -855,7 +856,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                   ),
 
                   Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -872,9 +873,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           ),
                         ),
 
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                         Divider(),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
 
                         DropdownButtonFormField<String>(
                           initialValue: 'Tunai',
@@ -928,14 +929,14 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                             }
                           },
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         _buildDialogTextField(
                           controller: amountController,
                           label: 'Jumlah Bayar',
                           icon: Icons.attach_money,
                           keyboardType: TextInputType.number,
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         _buildDialogTextField(
                           controller: paymentDateController,
                           label: 'Tanggal Bayar',
@@ -954,11 +955,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                             }
                           },
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
 
                         Container(
                           width: double.infinity,
-                          padding: EdgeInsets.all(16),
+                          padding: EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
                             color: ColorUtils.slate50,
                             borderRadius: BorderRadius.circular(12),
@@ -978,7 +979,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                                     : ColorUtils.slate400,
                                 size: 40,
                               ),
-                              SizedBox(height: 8),
+                              SizedBox(height: AppSpacing.sm),
                               Text(
                                 selectedFile != null
                                     ? 'File terpilih: ${selectedFile!.path.split('/').last}'
@@ -990,7 +991,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                                 ),
                               ),
                               if (selectedFile != null) ...[
-                                SizedBox(height: 8),
+                                SizedBox(height: AppSpacing.sm),
                                 Text(
                                   _getFileTypeText(selectedFile!.path),
                                   style: TextStyle(
@@ -999,7 +1000,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                                   ),
                                 ),
                               ],
-                              SizedBox(height: 8),
+                              SizedBox(height: AppSpacing.sm),
                               ElevatedButton(
                                 onPressed: () => _pickFile(setDialogState),
                                 style: ElevatedButton.styleFrom(
@@ -1056,7 +1057,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () async {
@@ -1197,7 +1198,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1287,7 +1288,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1313,7 +1314,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
 
                 // Search Bar & Filter Button
                 Row(
@@ -1346,11 +1347,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     GestureDetector(
                       onTap: _showFilterSheet,
                       child: Container(
-                        padding: EdgeInsets.all(12),
+                        padding: EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color:
                               (_selectedStatus != 'Semua' ||
@@ -1589,7 +1590,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           size: 20,
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
                           'Filter Laporan',
@@ -1639,7 +1640,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                 // Scrollable content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1703,7 +1704,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               }).toList(),
                         ),
 
-                        SizedBox(height: 24),
+                        SizedBox(height: AppSpacing.xxl),
                         // Month Filter
                         buildSectionHeader(
                           'Bulan',
@@ -1730,7 +1731,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           },
                         ),
 
-                        SizedBox(height: 24),
+                        SizedBox(height: AppSpacing.xxl),
                         // Payment Type Filter
                         buildSectionHeader(
                           'Jenis Pembayaran',
@@ -1793,7 +1794,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => AppNavigator.pop(context),
@@ -1879,7 +1880,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
               height: 5,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
-            SizedBox(width: 4),
+            SizedBox(width: AppSpacing.xs),
             Text(
               text,
               style: TextStyle(
@@ -2025,7 +2026,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          SizedBox(height: AppSpacing.xs),
                           Row(
                             children: [
                               Container(

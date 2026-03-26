@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/menu_item_card.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Data class for a single menu item in a [CategorySection].
 /// Like a route definition object `{ title, icon, path }` in a Vue router config.
@@ -177,7 +178,7 @@ class _CategorySectionState extends State<CategorySection>
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
       itemCount: widget.items.length,
-      separatorBuilder: (context, index) => SizedBox(height: 8),
+      separatorBuilder: (context, index) => SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, index) {
         final item = widget.items[index];
         return _buildAnimatedCard(item, index);

@@ -5,6 +5,7 @@
 // `@foreach($schedules as $schedule)` loop rendering partials.
 import 'package:flutter/material.dart';
 import 'schedule_card.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A scrollable list of [ScheduleCard] widgets.
 ///
@@ -29,7 +30,7 @@ class ScheduleList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       itemCount: schedules.length,
       itemBuilder: (context, index) {
         final schedule = schedules[index];

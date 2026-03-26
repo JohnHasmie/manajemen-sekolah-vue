@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 // Form Input Nilai Baru untuk Multiple Siswa
 class GradeInputFormNew extends ConsumerStatefulWidget {
@@ -356,7 +357,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                       // Nilai Input
                       Container(
                         width: 100,
-                        padding: EdgeInsets.all(8),
+                        padding: EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           border: Border(
                             left: BorderSide(color: ColorUtils.slate200),
@@ -447,7 +448,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
   // Build header for add mode after configured (similar to edit mode)
   Widget _buildAddHeader(LanguageProvider languageProvider) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       color: ColorUtils.warning600.withValues(alpha: 0.08),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -472,7 +473,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                     color: ColorUtils.warning600,
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Icon(Icons.edit, size: 16, color: ColorUtils.warning600),
               ],
             ),
@@ -520,7 +521,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     return SingleChildScrollView(
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border(
@@ -531,7 +532,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
           children: [
             // Subject Info
             Container(
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: ColorUtils.slate50,
                 borderRadius: BorderRadius.circular(12),
@@ -552,7 +553,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -582,7 +583,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             // Pilih Jenis Nilai - Pattern #9 style
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -629,7 +630,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 },
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             // Pilih Tanggal - Pattern #9 style
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -645,7 +646,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                     color: _getPrimaryColor(),
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   Text(
                     languageProvider.getTranslatedText({
                       'en': 'Date:',
@@ -671,7 +672,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             // Title field - Pattern #9 style
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -703,7 +704,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             // Set button
             SizedBox(
               width: double.infinity,
@@ -798,7 +799,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -846,7 +847,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
 
                       // Student List Section - only show after configuration is set
                       if (_isConfigurationSet) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
                         Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -915,7 +916,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
                         Expanded(child: _buildInputTable(languageProvider)),
                       ] else ...[
                         const Expanded(
@@ -931,7 +932,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                       // Finish button - only show after configuration is set
                       if (_isConfigurationSet) ...[
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border(

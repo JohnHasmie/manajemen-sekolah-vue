@@ -6,6 +6,7 @@
 // mutate state.  In Laravel terms, think of it as a Blade view with no
 // controller logic -- it just renders a grid of navigation cards.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Displays a grid of administrative feature cards (incoming mail, outgoing
 /// mail, documents, archives, diplomas, certificates).
@@ -24,7 +25,7 @@ class AdministrationScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Administrasi')),
       body: GridView.count(
         crossAxisCount: 2,
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         children: [
           _buildAdminCard('Surat Masuk', Icons.mail_outline, () {}),
           _buildAdminCard('Surat Keluar', Icons.send, () {}),
@@ -47,7 +48,7 @@ class AdministrationScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 40, color: Colors.blue),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             Text(title, textAlign: TextAlign.center),
           ],
         ),

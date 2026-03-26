@@ -18,6 +18,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Notification list screen - shared across admin, teacher (guru), and parent (wali) roles.
 ///
@@ -211,7 +212,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             // Gradient header (Pattern #10)
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -259,7 +260,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             ),
             // Body
             Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Text(
                 notif['body'] ?? '',
                 style: TextStyle(
@@ -408,7 +409,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               // Title and subtitle
               Expanded(
                 child: Column(
@@ -487,7 +488,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                   color: ColorUtils.corporateBlue600.withValues(alpha: 0.6),
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
               Text(
                 'Tidak Ada Notifikasi',
                 style: TextStyle(
@@ -528,7 +529,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.delete_rounded, color: Colors.white, size: 24),
-            SizedBox(height: 4),
+            SizedBox(height: AppSpacing.xs),
             Text(
               AppLocalizations.delete.tr,
               style: TextStyle(
@@ -604,7 +605,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                             ),
                             child: Icon(_getIcon(type), color: color, size: 22),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppSpacing.md),
                           // Text content
                           Expanded(
                             child: Column(
@@ -641,7 +642,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                                     ],
                                   ],
                                 ),
-                                SizedBox(height: 4),
+                                SizedBox(height: AppSpacing.xs),
                                 Text(
                                   notif['body'] ?? '-',
                                   style: TextStyle(
@@ -691,7 +692,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: ColorUtils.slate500),
-          SizedBox(width: 4),
+          SizedBox(width: AppSpacing.xs),
           Text(
             text,
             style: TextStyle(

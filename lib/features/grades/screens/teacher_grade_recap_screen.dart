@@ -31,6 +31,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Grade recap wizard: class selection -> subject selection -> recap table.
 ///
@@ -1944,7 +1945,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2030,7 +2031,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                             child: Row(
                               children: [
                                 Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Text('Perbarui Data'),
                               ],
                             ),
@@ -2041,7 +2042,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                               child: Row(
                                 children: [
                                   Icon(Icons.table_view, size: 20, color: Colors.green),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: AppSpacing.sm),
                                   Text('Export Excel'),
                                 ],
                               ),
@@ -2137,7 +2138,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.search_off, size: 64, color: ColorUtils.slate300),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
             Text(
               languageProvider.getTranslatedText({
                 'en': 'No classes found',
@@ -2229,7 +2230,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                   ),
                 ),
               ),
-              SizedBox(width: 16),
+              SizedBox(width: AppSpacing.lg),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2272,7 +2273,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                           ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     Wrap(
                       spacing: 8,
                       runSpacing: 4,
@@ -2312,7 +2313,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.search_off, size: 64, color: ColorUtils.slate300),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
             Text(
               languageProvider.getTranslatedText({
                 'en': 'No subjects found',
@@ -2374,7 +2375,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                   ),
                 ),
               ),
-              SizedBox(width: 16),
+              SizedBox(width: AppSpacing.lg),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2387,7 +2388,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                         color: ColorUtils.slate900,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     _buildInfoTag(
                       Icons.history_edu_outlined,
                       item['subject_code'] ?? 'Mata Pelajaran',
@@ -2517,7 +2518,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: AppSpacing.xs),
                   Text(
                     'NIS: ${row['nis'] ?? '-'}',
                     style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
@@ -2581,7 +2582,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  SizedBox(width: 4),
+                                  SizedBox(width: AppSpacing.xs),
                                   Icon(
                                     Icons.edit_outlined,
                                     size: 12,
@@ -2624,7 +2625,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                               fontSize: 12,
                             ),
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: AppSpacing.xs),
                           Icon(
                             Icons.edit_outlined,
                             size: 12,
@@ -2653,7 +2654,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                               fontSize: 12,
                             ),
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: AppSpacing.xs),
                           Icon(
                             Icons.edit_outlined,
                             size: 12,
@@ -2925,7 +2926,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.vertical,
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,

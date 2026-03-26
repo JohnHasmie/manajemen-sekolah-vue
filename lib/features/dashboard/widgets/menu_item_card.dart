@@ -6,6 +6,7 @@
 // component `<x-menu-card :title="..." :icon="..." :href="..." />`.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A professional dashboard navigation card with icon, title, badge, and arrow.
 ///
@@ -90,7 +91,7 @@ class MenuItemCard extends StatelessWidget {
                 ),
                 child: _buildIconWidget(icon, effectivePrimaryColor),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
 
               // Title and badge
               Expanded(

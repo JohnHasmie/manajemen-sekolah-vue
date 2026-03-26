@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A bottom sheet widget for applying filters using chip-based selection.
 ///
@@ -61,7 +62,7 @@ class _FilterSheetState extends State<FilterSheet> {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
             ),
@@ -95,7 +96,7 @@ class _FilterSheetState extends State<FilterSheet> {
           // Filter Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: widget.config.sections.map((section) {
@@ -107,7 +108,7 @@ class _FilterSheetState extends State<FilterSheet> {
 
           // Apply Button
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: SafeArea(
               child: Row(
                 children: [
@@ -127,7 +128,7 @@ class _FilterSheetState extends State<FilterSheet> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -171,7 +172,7 @@ class _FilterSheetState extends State<FilterSheet> {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Align(
             alignment: Alignment.centerLeft,
             child: Wrap(
@@ -206,7 +207,7 @@ class _FilterSheetState extends State<FilterSheet> {
               }).toList(),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );

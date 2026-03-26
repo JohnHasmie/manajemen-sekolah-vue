@@ -25,6 +25,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Admin screen to monitor class activities (assignments, exams) per teacher/subject.
 ///
@@ -482,7 +483,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 // Teacher info
                 Expanded(
                   child: Column(
@@ -517,7 +518,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 // Chevron
                 Container(
                   padding: EdgeInsets.all(6),
@@ -579,7 +580,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                     size: 22,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 // Subject name + hint
                 Expanded(
                   child: Column(
@@ -595,7 +596,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       Text(
                         'Ketuk untuk melihat kegiatan',
                         style: TextStyle(
@@ -606,7 +607,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Container(
                   padding: EdgeInsets.all(6),
                   decoration: BoxDecoration(
@@ -672,7 +673,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                     size: 22,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 // Info
                 Expanded(
                   child: Column(
@@ -698,7 +699,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       Wrap(
                         spacing: 5,
                         runSpacing: 4,
@@ -728,7 +729,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Container(
                   padding: EdgeInsets.all(6),
                   decoration: BoxDecoration(
@@ -805,7 +806,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
               // Gradient header (Pattern #10)
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: _getCardGradient(),
                   borderRadius: BorderRadius.only(
@@ -860,7 +861,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
 
               // Content
               Padding(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -898,7 +899,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
 
                     if (activity['deskripsi'] != null &&
                         activity['deskripsi'].isNotEmpty) ...[
-                      SizedBox(height: 16),
+                      SizedBox(height: AppSpacing.lg),
                       Text(
                         'Deskripsi',
                         style: TextStyle(
@@ -907,9 +908,9 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                           color: ColorUtils.slate700,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       Container(
-                        padding: EdgeInsets.all(12),
+                        padding: EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: ColorUtils.slate50,
                           borderRadius: BorderRadius.circular(10),
@@ -928,7 +929,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
 
                     if (activity['judul_bab'] != null ||
                         activity['judul_sub_bab'] != null) ...[
-                      SizedBox(height: 16),
+                      SizedBox(height: AppSpacing.lg),
                       Text(
                         'Informasi Bab',
                         style: TextStyle(
@@ -937,7 +938,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                           color: ColorUtils.slate700,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       if (activity['judul_bab'] != null)
                         _buildDetailItem(
                           icon: Icons.menu_book,
@@ -954,7 +955,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                           activity['additional_material'] is List &&
                           (activity['additional_material'] as List)
                               .isNotEmpty) ...[
-                        SizedBox(height: 4),
+                        SizedBox(height: AppSpacing.xs),
                         ...(activity['additional_material'] as List)
                             .map<Widget>((item) {
                               return _buildDetailItem(
@@ -966,7 +967,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                       ],
                     ],
 
-                    SizedBox(height: 20),
+                    SizedBox(height: AppSpacing.xl),
                     Row(
                       children: [
                         Expanded(
@@ -1022,7 +1023,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
             ),
             child: Icon(icon, size: 18, color: _getPrimaryColor()),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1145,7 +1146,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         // Title + subtitle
                         Expanded(
                           child: Column(
@@ -1231,7 +1232,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                               child: Row(
                                 children: [
                                   Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: AppSpacing.sm),
                                   Text('Perbarui Data'),
                                 ],
                               ),
@@ -1240,7 +1241,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Search Bar
                     Container(

@@ -5,6 +5,7 @@
 // Provides a retry callback to let the user attempt the failed operation again.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A full-screen error widget with an error icon, message, and retry button.
 ///
@@ -54,7 +55,7 @@ class ErrorScreen extends StatelessWidget {
                 color: Colors.red.withValues(alpha: 0.6),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             Text(
               'Oops! Terjadi Kesalahan',
               style: TextStyle(
@@ -63,7 +64,7 @@ class ErrorScreen extends StatelessWidget {
                 color: Colors.grey.shade700,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 40),
               child: Text(
@@ -72,7 +73,7 @@ class ErrorScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             ElevatedButton(
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(

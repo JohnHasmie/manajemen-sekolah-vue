@@ -19,6 +19,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Shows AI-generated learning recommendations for a student in a class.
 ///
@@ -241,11 +242,11 @@ class _LearningRecommendationResultScreenState
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(12),
@@ -298,11 +299,11 @@ class _LearningRecommendationResultScreenState
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(12),
@@ -417,7 +418,7 @@ class _LearningRecommendationResultScreenState
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,7 +432,7 @@ class _LearningRecommendationResultScreenState
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         'Siswa: ${widget.student['nama'] ?? widget.student['name'] ?? 'Siswa'}',
                         style: TextStyle(
@@ -454,7 +455,7 @@ class _LearningRecommendationResultScreenState
                       child: Row(
                         children: [
                           Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           const Text('Perbarui Data'),
                         ],
                       ),
@@ -465,7 +466,7 @@ class _LearningRecommendationResultScreenState
                         child: Row(
                           children: [
                             Icon(Icons.edit_note, size: 20, color: ColorUtils.slate600),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.sm),
                             const Text('Edit Hasil'),
                           ],
                         ),
@@ -490,7 +491,7 @@ class _LearningRecommendationResultScreenState
                 : _recommendations.isEmpty
                 ? Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(AppSpacing.xxxl),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -499,7 +500,7 @@ class _LearningRecommendationResultScreenState
                             size: 48,
                             color: ColorUtils.slate300,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             'Belum ada rekomendasi untuk siswa ini.',
                             textAlign: TextAlign.center,
@@ -508,7 +509,7 @@ class _LearningRecommendationResultScreenState
                               color: ColorUtils.slate500,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             'Generate rekomendasi dari halaman kelas terlebih dahulu.',
                             textAlign: TextAlign.center,
@@ -522,7 +523,7 @@ class _LearningRecommendationResultScreenState
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     itemCount: _recommendations.length,
                     itemBuilder: (context, index) {
                       final rec = _recommendations[index];
@@ -578,7 +579,7 @@ class _LearningRecommendationResultScreenState
         children: [
           // Card Header with Badge
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -602,7 +603,7 @@ class _LearningRecommendationResultScreenState
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -645,7 +646,7 @@ class _LearningRecommendationResultScreenState
 
           // Description (HTML render)
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -658,7 +659,7 @@ class _LearningRecommendationResultScreenState
                     letterSpacing: 1.2,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 HtmlWidget(
                   rec['description'] ?? '',
                   textStyle: TextStyle(
@@ -675,7 +676,7 @@ class _LearningRecommendationResultScreenState
           Container(
             width: double.infinity,
             margin: const EdgeInsets.symmetric(horizontal: 20),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: ColorUtils.primary.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(16),
@@ -693,7 +694,7 @@ class _LearningRecommendationResultScreenState
                       color: ColorUtils.primary,
                       size: 16,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
                       'BERDASARKAN ANALISIS AI:',
                       style: TextStyle(
@@ -742,7 +743,7 @@ class _LearningRecommendationResultScreenState
             ...(rec['materials'] as List).map((mat) => _buildMaterialItem(mat)),
           ],
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );
@@ -769,7 +770,7 @@ class _LearningRecommendationResultScreenState
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
         borderRadius: BorderRadius.circular(16),
@@ -786,7 +787,7 @@ class _LearningRecommendationResultScreenState
             ),
             child: Icon(iconData, color: iconColor, size: 24),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -799,7 +800,7 @@ class _LearningRecommendationResultScreenState
                     color: ColorUtils.slate800,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 HtmlWidget(
                   mat['content'] ?? '',
                   textStyle: TextStyle(

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Print preview for a student's report card.
 ///
@@ -75,7 +76,7 @@ class RaportPrintScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +90,7 @@ class RaportPrintScreen extends StatelessWidget {
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         '${studentName} - ${className}',
                         style: TextStyle(
@@ -137,17 +138,17 @@ class RaportPrintScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildHeader(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.xxl),
                       _buildSikapSection(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       _buildNilaiSection(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       _buildEkstraSection(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       _buildPrestasiSection(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       _buildInfoSection(),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppSpacing.xxxl),
                       _buildSignatures(),
                     ],
                   ),
@@ -168,7 +169,7 @@ class RaportPrintScreen extends StatelessWidget {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -186,7 +187,7 @@ class RaportPrintScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.lg),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,7 +432,7 @@ class RaportPrintScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.black87),
                     ),
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     child: Column(
                       children: [
                         _buildHeaderRow(
@@ -452,7 +453,7 @@ class RaportPrintScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.lg),
             Expanded(
               flex: 2,
               child: Column(
@@ -464,7 +465,7 @@ class RaportPrintScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.black87),
                     ),
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     child: Text(raportData['homeroom_notes'] ?? ''),
                   ),
                 ],
@@ -472,7 +473,7 @@ class RaportPrintScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         if (raportData['promotion_decision'] != null &&
             raportData['promotion_decision'].toString().isNotEmpty)
           Column(
@@ -483,7 +484,7 @@ class RaportPrintScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.black87),
                 ),
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 child: Text(
                   'Berdasarkan pencapaian seluruh kompetensi, peserta didik dinyatakan: ${raportData['promotion_decision']}',
                   style: const TextStyle(fontWeight: FontWeight.bold),

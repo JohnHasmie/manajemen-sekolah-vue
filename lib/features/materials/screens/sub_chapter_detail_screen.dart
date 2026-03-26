@@ -18,6 +18,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Detail page for a sub-chapter (sub-bab) showing its content and AI materials.
 ///
@@ -311,7 +312,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +383,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   ),
                 ),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               GestureDetector(
                 onTap: _navigateToAiResult,
                 child: Container(
@@ -404,9 +405,9 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
               ),
             ],
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
           Container(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
@@ -534,7 +535,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
             color: ColorUtils.slate100,
             borderRadius: BorderRadius.circular(12),
           ),
-          padding: EdgeInsets.all(4),
+          padding: EdgeInsets.all(AppSpacing.xs),
           child: TabBar(
             controller: _tabController,
             indicator: BoxDecoration(
@@ -586,7 +587,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                     SizedBox(width: 6),
                     Text('Kuis'),
                     if (quizzes.isNotEmpty) ...[
-                      SizedBox(width: 4),
+                      SizedBox(width: AppSpacing.xs),
                       Container(
                         padding:
                             EdgeInsets.symmetric(horizontal: 5, vertical: 1),
@@ -620,7 +621,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
             ],
           ),
         ),
-        SizedBox(height: 12),
+        SizedBox(height: AppSpacing.md),
         // Tab Content
         Expanded(
           child: TabBarView(
@@ -664,7 +665,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
 
           // Poin Utama Card
           if (parsedContent['poin_utama'] is List) ...[
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             _buildSectionCard(
               icon: Icons.lightbulb_rounded,
               iconColor: ColorUtils.amber500,
@@ -724,7 +725,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
 
           // Cara Mengajar Card
           if (parsedContent['cara_mengajar'] != null) ...[
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             _buildSectionCard(
               icon: Icons.school_rounded,
               iconColor: _getPrimaryColor(),
@@ -759,9 +760,9 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
 
         // AI Info Badge
         if (_aiGeneratedData != null) ...[
-          SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
           Container(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: _getPrimaryColor().withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(12),
@@ -773,7 +774,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                 Icon(Icons.auto_awesome,
                     size: 16,
                     color: _getPrimaryColor().withValues(alpha: 0.6)),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     'Dibuat oleh AI  •  ${_aiGeneratedData!['ai_model_used'] ?? 'Claude'}',
@@ -802,7 +803,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
 
         // Regular content from main backend
         if (_contentMateriList.isNotEmpty) ...[
-          SizedBox(height: 16),
+          SizedBox(height: AppSpacing.lg),
           Row(
             children: [
               Container(
@@ -815,7 +816,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                 child: Icon(Icons.article_rounded,
                     color: ColorUtils.slate600, size: 16),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               Text(
                 'Konten Manual',
                 style: TextStyle(
@@ -826,7 +827,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
               ),
             ],
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
           ..._contentMateriList.asMap().entries.map((entry) {
             final index = entry.key;
             final content = entry.value;
@@ -841,7 +842,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                 boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
               ),
               child: Padding(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -863,7 +864,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -878,7 +879,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                               color: ColorUtils.slate900,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          SizedBox(height: AppSpacing.xs),
                           Text(
                             content['isi_konten'] ??
                                 content['description'] ??
@@ -926,7 +927,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
       children: [
         // Stats row
         _buildQuizStats(quizzes),
-        SizedBox(height: 16),
+        SizedBox(height: AppSpacing.lg),
 
         // Pilihan Ganda
         if (mcQuizzes.isNotEmpty) ...[
@@ -943,7 +944,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
 
         // Essay
         if (essayQuizzes.isNotEmpty) ...[
-          SizedBox(height: 16),
+          SizedBox(height: AppSpacing.lg),
           _buildSubSectionHeader(
             icon: Icons.edit_note_rounded,
             title: 'Essay',
@@ -1082,7 +1083,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
           ),
           child: Icon(icon, size: 14, color: color),
         ),
-        SizedBox(width: 8),
+        SizedBox(width: AppSpacing.sm),
         Text(
           title,
           style: TextStyle(
@@ -1272,7 +1273,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
               quiz['explanation'].toString().isNotEmpty) ...[
             Container(
               margin: EdgeInsets.fromLTRB(14, 4, 14, 14),
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: ColorUtils.corporateBlue500.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(10),
@@ -1285,7 +1286,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   Icon(Icons.info_outline_rounded,
                       size: 16,
                       color: ColorUtils.corporateBlue500.withValues(alpha: 0.7)),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       quiz['explanation'] ?? '',
@@ -1398,7 +1399,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
           if (quiz['correct_answer'] != null) ...[
             Container(
               margin: EdgeInsets.fromLTRB(14, 0, 14, 8),
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: ColorUtils.emerald500.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(10),
@@ -1441,7 +1442,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
               quiz['explanation'].toString().isNotEmpty) ...[
             Container(
               margin: EdgeInsets.fromLTRB(14, 0, 14, 14),
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: ColorUtils.violet500.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(10),
@@ -1454,7 +1455,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   Icon(Icons.grading_rounded,
                       size: 14,
                       color: ColorUtils.violet500.withValues(alpha: 0.7)),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       quiz['explanation'] ?? '',
@@ -1489,7 +1490,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     return ListView.separated(
       padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
       itemCount: references.length,
-      separatorBuilder: (_, __) => SizedBox(height: 12),
+      separatorBuilder: (_, __) => SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
         final ref = references[index];
         final refType = ref['type']?.toString() ?? '';
@@ -1657,7 +1658,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   }) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: EdgeInsets.all(AppSpacing.xxxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1670,7 +1671,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
               ),
               child: Icon(icon, size: 28, color: ColorUtils.slate400),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
             Text(
               title,
               style: TextStyle(
@@ -1679,7 +1680,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                 color: ColorUtils.slate700,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             Text(
               subtitle,
               textAlign: TextAlign.center,
@@ -1688,7 +1689,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                 color: ColorUtils.slate500,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             GestureDetector(
               onTap: _navigateToAiResult,
               child: Container(
@@ -1710,7 +1711,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   children: [
                     Icon(Icons.auto_awesome,
                         size: 16, color: Colors.white),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     Text(
                       'Generate AI',
                       style: TextStyle(

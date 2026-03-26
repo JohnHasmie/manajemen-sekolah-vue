@@ -36,6 +36,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// The grade book table page (Step 2) -- displays and edits student grades
 /// in a spreadsheet-like view.
@@ -437,7 +438,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
             children: [
               // Gradient header
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -462,7 +463,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                           color: Colors.white,
                           size: 22,
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Filter Grade Types',
@@ -499,7 +500,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
               // Scrollable content
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(AppSpacing.xl),
                   child: Column(
                     children: _allJenisNilaiList.map((jenis) {
                       return CheckboxListTile(
@@ -528,7 +529,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
               ),
               // Footer
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   border: Border(top: BorderSide(color: ColorUtils.slate200)),
                 ),
@@ -708,10 +709,10 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: AppSpacing.sm),
                 ListTile(
                   leading: Container(
-                    padding: EdgeInsets.all(8),
+                    padding: EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -739,7 +740,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                 if (_canEdit && !_isReadOnly) ...[
                   ListTile(
                     leading: Container(
-                      padding: EdgeInsets.all(8),
+                      padding: EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: ColorUtils.warning600.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -763,7 +764,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                   ),
                   ListTile(
                     leading: Container(
-                      padding: EdgeInsets.all(8),
+                      padding: EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: ColorUtils.error600.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -799,7 +800,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     },
                   ),
                 ],
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
               ],
             ),
           ),
@@ -944,7 +945,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       children: [
         // Edit Header
         Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           color: ColorUtils.warning600.withValues(alpha: 0.08),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -974,7 +975,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                   ],
                 ),
               ),
-              SizedBox(width: 16),
+              SizedBox(width: AppSpacing.lg),
               ElevatedButton.icon(
                 onPressed: () async {
                   // Show loading indicator
@@ -1150,7 +1151,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                             // Nilai Input
                             Container(
                               width: 100,
-                              padding: EdgeInsets.all(8),
+                              padding: EdgeInsets.all(AppSpacing.sm),
                               decoration: BoxDecoration(
                                 border: Border(
                                   left: BorderSide(color: ColorUtils.slate200),
@@ -1277,7 +1278,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
             // Gradient header
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -1299,7 +1300,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     color: Colors.white,
                     size: 22,
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Text(
                     languageProvider.getTranslatedText({
                       'en': 'Assessment Details',
@@ -1316,7 +1317,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
             ),
             // Content
             Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1439,7 +1440,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
             // Red gradient header
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -1457,7 +1458,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
               child: Row(
                 children: [
                   Icon(Icons.delete_outline, color: Colors.white, size: 24),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(
                       languageProvider.getTranslatedText({
@@ -1476,7 +1477,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
             ),
             // Content
             Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Text(
                 languageProvider.getTranslatedText({
                   'en':
@@ -1511,7 +1512,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -1700,7 +1701,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           Container(
             height: 70,
             width: 120,
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(AppSpacing.md),
             alignment: Alignment.centerLeft,
             decoration: BoxDecoration(
               color: _getPrimaryColor(),
@@ -1722,7 +1723,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
             return Container(
               height: 60,
               width: 120,
-              padding: EdgeInsets.all(8),
+              padding: EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
                 color: Colors.white,
@@ -1802,7 +1803,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                             _showColumnOptions(jenis, header, languageProvider),
                         child: Container(
                           width: 90,
-                          padding: EdgeInsets.all(4),
+                          padding: EdgeInsets.all(AppSpacing.xs),
                           decoration: BoxDecoration(
                             border: Border(
                               right: BorderSide(color: ColorUtils.slate200),
@@ -1847,7 +1848,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     widgets.add(
                       Container(
                         width: 65,
-                        padding: EdgeInsets.all(4),
+                        padding: EdgeInsets.all(AppSpacing.xs),
                         decoration: BoxDecoration(
                           border: Border(
                             right: BorderSide(
@@ -1915,7 +1916,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                       widgets.add(
                         Container(
                           width: 90,
-                          padding: EdgeInsets.all(4),
+                          padding: EdgeInsets.all(AppSpacing.xs),
                           decoration: BoxDecoration(
                             border: Border(
                               right: BorderSide(color: ColorUtils.slate100),
@@ -2101,7 +2102,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2146,7 +2147,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     // Filter button with badge
                     Stack(
                       key: _filterKey,
@@ -2194,7 +2195,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                           ),
                       ],
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     // Refresh button
                     GestureDetector(
                       onTap: _loadData,
@@ -2352,7 +2353,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                 ],
                               ),
                             ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppSpacing.sm),
 
                           // Tabel Nilai
                           Expanded(

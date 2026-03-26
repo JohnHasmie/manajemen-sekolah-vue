@@ -44,6 +44,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Admin teaching schedule management with full CRUD, timetable grid, and conflict detection.
 ///
@@ -1179,7 +1180,7 @@ class TeachingScheduleManagementScreenState
       child: Row(
         children: [
           Icon(icon, size: 18, color: ColorUtils.slate700),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(
@@ -1205,7 +1206,7 @@ class TeachingScheduleManagementScreenState
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: ColorUtils.slate600),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.xs),
           Flexible(
             child: Text(
               text,
@@ -1440,7 +1441,7 @@ class TeachingScheduleManagementScreenState
                             size: 20,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Text(
                             languageProvider.getTranslatedText({
@@ -1747,7 +1748,7 @@ class TeachingScheduleManagementScreenState
                               );
                             },
                           ),
-                          SizedBox(height: 16),
+                          SizedBox(height: AppSpacing.lg),
                         ],
                       ),
                     ),
@@ -1792,7 +1793,7 @@ class TeachingScheduleManagementScreenState
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
@@ -1986,7 +1987,7 @@ class TeachingScheduleManagementScreenState
                   color: _getPrimaryColor(),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2042,7 +2043,7 @@ class TeachingScheduleManagementScreenState
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
 
         // ── DataGrid with styled card ──
         Expanded(
@@ -2105,7 +2106,7 @@ class TeachingScheduleManagementScreenState
                             color: Colors.white.withValues(alpha: 0.85),
                             size: 14,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppSpacing.xs),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Time',
@@ -2143,7 +2144,7 @@ class TeachingScheduleManagementScreenState
                                 fontSize: 13,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: AppSpacing.xs),
                             Flexible(
                               child: Wrap(
                                 spacing: 3,
@@ -2239,7 +2240,7 @@ class TeachingScheduleManagementScreenState
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     PopupMenuButton<String>(
                       key: _menuKey,
                       onSelected: (value) {
@@ -2277,7 +2278,7 @@ class TeachingScheduleManagementScreenState
                           child: Row(
                             children: [
                               Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Refresh Data',
@@ -2292,7 +2293,7 @@ class TeachingScheduleManagementScreenState
                           child: Row(
                             children: [
                               Icon(Icons.download, size: 20),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Export to Excel',
@@ -2308,7 +2309,7 @@ class TeachingScheduleManagementScreenState
                             child: Row(
                               children: [
                                 Icon(Icons.upload, size: 20),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Import from Excel',
@@ -2323,7 +2324,7 @@ class TeachingScheduleManagementScreenState
                           child: Row(
                             children: [
                               Icon(Icons.file_download, size: 20),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Download Template',
@@ -2401,7 +2402,7 @@ class TeachingScheduleManagementScreenState
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     // Filter Button
                     Container(
                       key: _filterKey,
@@ -2434,7 +2435,7 @@ class TeachingScheduleManagementScreenState
                               right: 8,
                               top: 8,
                               child: Container(
-                                padding: EdgeInsets.all(4),
+                                padding: EdgeInsets.all(AppSpacing.xs),
                                 decoration: BoxDecoration(
                                   color: Colors.red,
                                   shape: BoxShape.circle,
@@ -2500,7 +2501,7 @@ class TeachingScheduleManagementScreenState
                                 ],
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             InkWell(
                               onTap: _clearAllFilters,
                               child: Container(
@@ -2623,7 +2624,7 @@ class TeachingScheduleManagementScreenState
           onTap: () => _showScheduleDetail(schedule),
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
@@ -2651,7 +2652,7 @@ class TeachingScheduleManagementScreenState
                     size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 // Main content
                 Expanded(
                   child: Column(
@@ -2680,7 +2681,7 @@ class TeachingScheduleManagementScreenState
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       // Info tags row
                       Wrap(
                         spacing: 6,
@@ -2696,7 +2697,7 @@ class TeachingScheduleManagementScreenState
                 ),
                 // Action buttons column
                 if (!isReadOnly) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -2705,7 +2706,7 @@ class TeachingScheduleManagementScreenState
                         color: _getPrimaryColor(),
                         onPressed: () => _editSchedule(schedule),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       _buildCircleActionButton(
                         icon: Icons.delete_outline,
                         color: ColorUtils.error600,
@@ -3049,7 +3050,7 @@ class TeachingScheduleManagementScreenState
                     ),
                   ),
                   if (!isReadOnly) ...[
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
@@ -3119,7 +3120,7 @@ class TeachingScheduleManagementScreenState
             ),
             child: Icon(icon, size: 18, color: _getPrimaryColor()),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

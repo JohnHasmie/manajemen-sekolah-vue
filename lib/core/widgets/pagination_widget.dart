@@ -5,6 +5,7 @@
 // Displays "Showing X-Y of Z" info and first/prev/next/last page buttons.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/models/pagination_model.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A pagination control bar with page navigation buttons and item count info.
 ///
@@ -87,7 +88,7 @@ class PaginationWidget extends StatelessWidget {
                   color: color,
                 ),
 
-              SizedBox(width: 4),
+              SizedBox(width: AppSpacing.xs),
 
               // Previous Button
               _buildPageButton(
@@ -98,7 +99,7 @@ class PaginationWidget extends StatelessWidget {
                 color: color,
               ),
 
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
 
               // Page Info
               Container(
@@ -136,7 +137,7 @@ class PaginationWidget extends StatelessWidget {
                       ),
               ),
 
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
 
               // Next Button
               _buildPageButton(
@@ -147,7 +148,7 @@ class PaginationWidget extends StatelessWidget {
                 color: color,
               ),
 
-              SizedBox(width: 4),
+              SizedBox(width: AppSpacing.xs),
 
               // Last Page Button (if not on last page)
               if (pagination.currentPage < pagination.totalPages - 1)
@@ -174,7 +175,7 @@ class PaginationWidget extends StatelessWidget {
       onPressed: onPressed,
       color: onPressed != null ? color : Colors.grey.shade300,
       splashRadius: 20,
-      padding: EdgeInsets.all(8),
+      padding: EdgeInsets.all(AppSpacing.sm),
       constraints: BoxConstraints(
         minWidth: 32,
         minHeight: 32,
@@ -221,7 +222,7 @@ class CompactPaginationWidget extends StatelessWidget {
             onPressed: pagination.hasPrevPage && !isLoading
                 ? () => onPageChanged(pagination.prevPage!)
                 : null,
-            padding: EdgeInsets.all(4),
+            padding: EdgeInsets.all(AppSpacing.xs),
             constraints: BoxConstraints(minWidth: 28, minHeight: 28),
           ),
           Text(
@@ -233,7 +234,7 @@ class CompactPaginationWidget extends StatelessWidget {
             onPressed: pagination.hasNextPage && !isLoading
                 ? () => onPageChanged(pagination.nextPage!)
                 : null,
-            padding: EdgeInsets.all(4),
+            padding: EdgeInsets.all(AppSpacing.xs),
             constraints: BoxConstraints(minWidth: 28, minHeight: 28),
           ),
         ],

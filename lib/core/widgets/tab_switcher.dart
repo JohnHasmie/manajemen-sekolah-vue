@@ -6,6 +6,7 @@
 // in a Laravel Blade layout.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A horizontal tab switcher with icon and label for each tab.
 ///
@@ -33,7 +34,7 @@ class TabSwitcher extends StatelessWidget {
     final color = primaryColor ?? ColorUtils.getRoleColor('guru');
     
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
@@ -73,7 +74,7 @@ class TabSwitcher extends StatelessWidget {
                 color: isSelected ? Colors.white : Colors.grey,
                 size: 20,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 tab.label,
                 textAlign: TextAlign.center,

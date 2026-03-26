@@ -34,6 +34,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Parent billing screen with payment status, upload, and filtering.
 ///
@@ -633,7 +634,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
       child: Row(
         children: [
           Icon(icon, size: 16, color: ColorUtils.slate700),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(
@@ -707,7 +708,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                             size: 18,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Text(
                             AppLocalizations.filter.tr,
@@ -870,7 +871,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                               );
                             }).toList(),
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppSpacing.lg),
                     ],
                   ),
                 ),
@@ -903,7 +904,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -1204,7 +1205,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                             size: 18,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1333,14 +1334,14 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                           }
                         },
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       _buildDialogTextField(
                         controller: amountController,
                         label: 'Jumlah Bayar',
                         icon: Icons.attach_money_rounded,
                         keyboardType: TextInputType.number,
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       _buildDialogTextField(
                         controller: paymentDateController,
                         label: 'Tanggal Bayar',
@@ -1369,7 +1370,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                         onTap: () => _pickFile(setDialogState),
                         child: Container(
                           width: double.infinity,
-                          padding: EdgeInsets.all(16),
+                          padding: EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
                             color: selectedFile != null
                                 ? ColorUtils.success600.withValues(alpha: 0.04)
@@ -1421,7 +1422,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              SizedBox(height: 4),
+                              SizedBox(height: AppSpacing.xs),
                               if (selectedFile != null)
                                 Text(
                                   _getFileTypeText(selectedFile!.path),
@@ -1442,7 +1443,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppSpacing.lg),
                     ],
                   ),
                 ),
@@ -1476,7 +1477,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed:
@@ -1601,7 +1602,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
             children: [
               // Gradient header
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -1659,7 +1660,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
               // Content
               Padding(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   children: [
                     _buildDetailRow(
@@ -1686,9 +1687,9 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                     ),
 
                     if (payment['payment_receipt'] != null) ...[
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       Divider(color: ColorUtils.slate200),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       Row(
                         children: [
                           Container(
@@ -1704,7 +1705,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                               color: primaryColor,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppSpacing.md),
                           Text(
                             'Bukti Pembayaran',
                             style: TextStyle(
@@ -1715,7 +1716,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
@@ -1739,7 +1740,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                                       color: ColorUtils.slate400,
                                       size: 40,
                                     ),
-                                    SizedBox(height: 8),
+                                    SizedBox(height: AppSpacing.sm),
                                     Text(
                                       'Gagal memuat gambar',
                                       style: TextStyle(
@@ -1761,7 +1762,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
               // Footer
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
                   border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -1895,7 +1896,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
             ),
             child: Icon(icon, size: 18, color: c),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2015,7 +2016,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                     size: 24,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 // Content
                 Expanded(
                   child: Column(
@@ -2036,7 +2037,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                             ),
                           ),
                           if (!isRead) ...[
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             Container(
                               width: 8,
                               height: 8,
@@ -2072,7 +2073,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       // Info tags
                       Wrap(
                         spacing: 6,
@@ -2103,9 +2104,9 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                       // Rejected notes
                       if (billing['pembayaran_status'] == 'rejected' &&
                           billing['admin_notes'] != null) ...[
-                        SizedBox(height: 8),
+                        SizedBox(height: AppSpacing.sm),
                         Container(
-                          padding: EdgeInsets.all(8),
+                          padding: EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
                             color: ColorUtils.error600.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(8),
@@ -2164,7 +2165,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                                   color: Colors.white,
                                   size: 14,
                                 ),
-                                SizedBox(width: 4),
+                                SizedBox(width: AppSpacing.xs),
                                 Text(
                                   AppLocalizations.payNow.tr,
                                   style: TextStyle(
@@ -2240,7 +2241,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2308,7 +2309,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                     ),
                   ),
                 ),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert, color: Colors.white),
                 onSelected: (value) {
@@ -2320,7 +2321,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                     child: Row(
                       children: [
                         Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         const Text('Perbarui Data'),
                       ],
                     ),
@@ -2329,7 +2330,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
               ),
             ],
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
@@ -2363,7 +2364,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                   ),
                 ),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               GestureDetector(
                 onTap: _showFilterSheet,
                 child: Container(
@@ -2405,7 +2406,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             Container(
               width: 40,
               height: 4,
@@ -2415,7 +2416,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppSpacing.lg),
               child: Text(
                 AppLocalizations.selectChild.tr,
                 style: TextStyle(
@@ -2550,7 +2551,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                                     size: 16,
                                     color: ColorUtils.error600,
                                   ),
-                                  SizedBox(width: 4),
+                                  SizedBox(width: AppSpacing.xs),
                                   Text(
                                     AppLocalizations.reset.tr,
                                     style: TextStyle(

@@ -6,6 +6,7 @@
 // `InventoryController@index` API endpoint.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/data/data_dummy.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Lists all school inventory items with quantity and condition badges.
 ///
@@ -26,7 +27,7 @@ class InventoryScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final item = DataDummy.inventory[index];
           return Card(
-            margin: EdgeInsets.all(8),
+            margin: EdgeInsets.all(AppSpacing.sm),
             child: ListTile(
               leading: Icon(Icons.inventory_2, color: Colors.blue),
               title: Text(item['nama']),

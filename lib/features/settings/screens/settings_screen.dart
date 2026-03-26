@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// User profile and settings screen - shared across all roles.
 ///
@@ -144,7 +145,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               // Gradient Header (Pattern #10)
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -201,7 +202,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               // Form Fields
               Padding(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   children: [
                     _buildDialogTextField(
@@ -211,7 +212,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       icon: Icons.person_outline_rounded,
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
                       controller: phoneController,
                       label: ref.read(languageRiverpod).getTranslatedText(
@@ -220,7 +221,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
                       controller: addressController,
                       label: ref.read(languageRiverpod).getTranslatedText(
@@ -261,7 +262,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () async {
@@ -429,7 +430,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -528,14 +529,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: Row(
                             children: [
                               Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text('Perbarui Data'),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                   ],
                   flexibleSpace: FlexibleSpaceBar(
                     background: Container(
@@ -577,7 +578,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 16),
+                              SizedBox(width: AppSpacing.lg),
                               Expanded(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -591,7 +592,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         color: Colors.white,
                                       ),
                                     ),
-                                    SizedBox(height: 4),
+                                    SizedBox(height: AppSpacing.xs),
                                     Text(
                                       email,
                                       style: TextStyle(
@@ -601,7 +602,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         ),
                                       ),
                                     ),
-                                    SizedBox(height: 8),
+                                    SizedBox(height: AppSpacing.sm),
                                     Container(
                                       padding: EdgeInsets.symmetric(
                                         horizontal: 10,
@@ -640,7 +641,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       children: [
                         // Personal Information Card
@@ -657,19 +658,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               _profileData['name'] ?? '',
                               Icons.person_rounded,
                             ),
-                            SizedBox(height: 12),
+                            SizedBox(height: AppSpacing.md),
                             _buildInfoRow(
                               'Email',
                               _profileData['email'] ?? '',
                               Icons.email_rounded,
                             ),
-                            SizedBox(height: 12),
+                            SizedBox(height: AppSpacing.md),
                             _buildInfoRow(
                               'No. Telepon',
                               _profileData['phone_number'] ?? '',
                               Icons.phone_rounded,
                             ),
-                            SizedBox(height: 12),
+                            SizedBox(height: AppSpacing.md),
                             _buildInfoRow(
                               'Alamat',
                               _profileData['address'] ?? '',
@@ -677,7 +678,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
 
                         // Account Information Card
                         _buildSectionCard(
@@ -693,7 +694,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               role,
                               Icons.badge_rounded,
                             ),
-                            SizedBox(height: 12),
+                            SizedBox(height: AppSpacing.md),
                             _buildInfoRow(
                               ref.read(languageRiverpod)
                                   .getTranslatedText(AppLocalizations.school),
@@ -702,7 +703,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 24),
+                        SizedBox(height: AppSpacing.xxl),
 
                         // Change Password Button
                         SizedBox(
@@ -735,7 +736,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 24),
+                        SizedBox(height: AppSpacing.xxl),
                       ],
                     ),
                   ),
@@ -861,7 +862,7 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
             // Gradient Header (Pattern #10)
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -919,7 +920,7 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
 
             // Form Fields
             Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -933,7 +934,7 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                       onToggle: () =>
                           setState(() => _obscureOld = !_obscureOld),
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildPasswordField(
                       controller: _newPasswordController,
                       label: ref.read(languageRiverpod).getTranslatedText(
@@ -973,7 +974,7 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     _buildPasswordField(
                       controller: _confirmPasswordController,
                       label: ref.read(languageRiverpod).getTranslatedText(
@@ -1026,7 +1027,7 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _updatePassword,

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A filter bar widget for selecting semester and academic year.
 ///
@@ -154,7 +155,7 @@ class FilterSection extends StatelessWidget {
         child: Row(
           children: [
             Icon(icon, color: ColorUtils.primaryColor, size: 20), // Changed to primary color
-            SizedBox(width: 8),
+            SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
                 '$label: $value',
@@ -177,7 +178,7 @@ class FilterSection extends StatelessWidget {
   Widget build(BuildContext context) {
         return Container(
           width: double.infinity,
-          padding: EdgeInsets.all(20),
+          padding: EdgeInsets.all(AppSpacing.xl),
           decoration: BoxDecoration(
             color: Colors.white, // Changed to white background
             border: Border.all(
@@ -206,7 +207,7 @@ class FilterSection extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
               Text(
                 '${_getSemesterName(selectedSemester, semesterList)} • $selectedAcademicYear',
                 style: TextStyle(
@@ -214,7 +215,7 @@ class FilterSection extends StatelessWidget {
                   fontSize: 16,
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
               Row(
                 children: [
                   Expanded(
@@ -229,7 +230,7 @@ class FilterSection extends StatelessWidget {
                       () => _showSemesterFilter(context),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: _buildFilterCard(
                       context,

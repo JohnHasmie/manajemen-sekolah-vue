@@ -13,6 +13,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Admin data management hub - a navigation menu linking to CRUD sub-screens.
 ///
@@ -44,28 +45,28 @@ class AdminDataManagementScreen extends StatelessWidget {
                   onTap: () => AppNavigator.push(context, StudentManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: AppSpacing.sm),
                 MenuItemCard(
                   title: AppLocalizations.manageTeachers.tr,
                   icon: Icons.person_outline,
                   onTap: () => AppNavigator.push(context, TeacherAdminScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: AppSpacing.sm),
                 MenuItemCard(
                   title: AppLocalizations.manageClasses.tr,
                   icon: Icons.class_outlined,
                   onTap: () => AppNavigator.push(context, AdminClassManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: AppSpacing.sm),
                 MenuItemCard(
                   title: AppLocalizations.manageSubjects.tr,
                   icon: Icons.book_outlined,
                   onTap: () => AppNavigator.push(context, SubjectManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
-                SizedBox(height: 24),
+                SizedBox(height: AppSpacing.xxl),
               ],
             ),
           ),
@@ -121,7 +122,7 @@ class AdminDataManagementScreen extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           // Title and subtitle
           Expanded(
             child: Column(

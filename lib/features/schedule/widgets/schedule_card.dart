@@ -6,6 +6,7 @@
 // is determined by the day of the week.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A gradient card widget that displays a single schedule entry.
 ///
@@ -109,7 +110,7 @@ class ScheduleCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Row(
               children: [
                 _buildTimeSection(),
@@ -152,7 +153,7 @@ class ScheduleCard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: AppSpacing.xs),
           Text(
             '${schedule['jam_ke'] ?? ''}',
             style: TextStyle(
@@ -192,17 +193,17 @@ class ScheduleCard extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppSpacing.sm),
           _buildInfoRow(
             Icons.person,
             schedule['guru_nama'] ?? schedule['teacher_name'] ?? 'No Teacher',
           ),
-          SizedBox(height: 4),
+          SizedBox(height: AppSpacing.xs),
           _buildInfoRow(
             Icons.class_,
             schedule['kelas_nama'] ?? schedule['class_name'] ?? 'No Class',
           ),
-          SizedBox(height: 4),
+          SizedBox(height: AppSpacing.xs),
           _buildInfoRow(
             Icons.calendar_month,
             displayDay,
@@ -221,7 +222,7 @@ class ScheduleCard extends StatelessWidget {
           size: 16,
           color: Colors.white.withValues(alpha: 0.8),
         ),
-        SizedBox(width: 4),
+        SizedBox(width: AppSpacing.xs),
         Expanded(
           child: Text(
             text,

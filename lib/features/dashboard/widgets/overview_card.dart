@@ -6,6 +6,7 @@
 // admin panel dashboard.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A compact overview card for the "Today's Overview" dashboard section.
 ///
@@ -44,7 +45,7 @@ class OverviewCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: EdgeInsets.all(12),
+          padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -122,7 +123,7 @@ class OverviewCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
 
               // Subtitle/description
               Text(

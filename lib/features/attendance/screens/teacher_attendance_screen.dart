@@ -33,6 +33,7 @@ import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Data model for an attendance summary row.
 /// Like a Laravel Eloquent Model or a TypeScript interface -- a plain data class
@@ -816,7 +817,7 @@ class PresencePageState extends ConsumerState<PresencePage>
             topRight: Radius.circular(20),
           ),
         ),
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -827,7 +828,7 @@ class PresencePageState extends ConsumerState<PresencePage>
               }),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
             _buildQuickActionOption('hadir', languageProvider),
             _buildQuickActionOption('terlambat', languageProvider),
             _buildQuickActionOption('izin', languageProvider),
@@ -915,7 +916,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   Widget _buildModeSwitcher(LanguageProvider languageProvider) {
     return Container(
       key: _tabSwitcherKey,
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppSpacing.lg),
       child: TabSwitcher(
         tabController: _tabController,
         primaryColor: _getPrimaryColor(),
@@ -956,7 +957,7 @@ class PresencePageState extends ConsumerState<PresencePage>
     }
 
     return ListView.builder(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       physics: AlwaysScrollableScrollPhysics(),
       itemCount: _classList.length,
       itemBuilder: (context, index) {
@@ -1031,7 +1032,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                                 ),
                               ),
                               if (isHomeroom) ...[
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Container(
                                   padding: EdgeInsets.symmetric(
                                     horizontal: 8,
@@ -1127,7 +1128,7 @@ class PresencePageState extends ConsumerState<PresencePage>
 
             // Filter Chips
             if (_hasActiveFilter) ...[
-              SizedBox(height: 4),
+              SizedBox(height: AppSpacing.xs),
               SizedBox(
                 height: 34,
                 child: Row(
@@ -1170,7 +1171,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                      SizedBox(width: 4),
+                                      SizedBox(width: AppSpacing.xs),
                                       Icon(
                                         Icons.close,
                                         size: 14,
@@ -1219,10 +1220,10 @@ class PresencePageState extends ConsumerState<PresencePage>
                   ],
                 ),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: AppSpacing.xs),
             ],
 
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
 
             Expanded(
               child: filteredSummaries.isEmpty
@@ -1375,7 +1376,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1436,7 +1437,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                     child: Row(
                       children: [
                         Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text('Perbarui Data'),
                       ],
                     ),
@@ -1445,7 +1446,7 @@ class PresencePageState extends ConsumerState<PresencePage>
               ),
             ],
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppSpacing.lg),
 
           // Mode Switcher di dalam header
           _buildModeSwitcher(languageProvider),
@@ -1497,7 +1498,7 @@ class PresencePageState extends ConsumerState<PresencePage>
             ),
           ),
           if (_tabController.index == 0) ...[
-            SizedBox(width: 8),
+            SizedBox(width: AppSpacing.sm),
             Container(
               width: 44,
               height: 44,
@@ -1611,7 +1612,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                               size: 20,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
                               languageProvider.getTranslatedText({
@@ -1654,7 +1655,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                 // Scrollable content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1666,7 +1667,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                           }),
                           Icons.calendar_today_outlined,
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -1732,7 +1733,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                             }),
                             Icons.book_outlined,
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
@@ -1784,7 +1785,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                           }),
                           Icons.today_outlined,
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -1833,7 +1834,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                             }),
                             Icons.access_time_outlined,
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
@@ -1907,7 +1908,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -1955,7 +1956,7 @@ class PresencePageState extends ConsumerState<PresencePage>
       child: Row(
         children: [
           Icon(icon, size: 16, color: ColorUtils.slate700),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(
@@ -2066,7 +2067,7 @@ class PresencePageState extends ConsumerState<PresencePage>
           borderRadius: BorderRadius.circular(16),
           child: Container(
             margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -2097,7 +2098,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                         size: 20,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     // Subject + class + date info
                     Expanded(
                       child: Column(
@@ -2121,7 +2122,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                                 size: 12,
                                 color: _getPrimaryColor(),
                               ),
-                              SizedBox(width: 4),
+                              SizedBox(width: AppSpacing.xs),
                               Text(
                                 summary.className ?? 'Kelas',
                                 style: TextStyle(
@@ -2166,7 +2167,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                         ],
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     // Delete button
                     Material(
                       color: Colors.transparent,
@@ -2193,7 +2194,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                   ],
                 ),
 
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
                 Divider(color: ColorUtils.slate100, height: 1),
                 SizedBox(height: 10),
 
@@ -2205,13 +2206,13 @@ class PresencePageState extends ConsumerState<PresencePage>
                       label: '${summary.present} Hadir',
                       tagColor: ColorUtils.success600,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     _buildInfoTag(
                       icon: Icons.cancel_outlined,
                       label: '${summary.absent} Absen',
                       tagColor: ColorUtils.error600,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     _buildInfoTag(
                       icon: Icons.people_outline,
                       label: '${summary.totalStudent} Siswa',
@@ -2241,7 +2242,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                               size: 12,
                               color: _getPrimaryColor(),
                             ),
-                            SizedBox(width: 4),
+                            SizedBox(width: AppSpacing.xs),
                             Text(
                               'Detail',
                               style: TextStyle(
@@ -2271,7 +2272,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                     valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: AppSpacing.xs),
                 Text(
                   '$presentaseHadir% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
                   style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
@@ -2305,7 +2306,7 @@ class PresencePageState extends ConsumerState<PresencePage>
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 10, color: tagColor ?? ColorUtils.slate600),
-          SizedBox(width: 4),
+          SizedBox(width: AppSpacing.xs),
           Text(
             label,
             style: TextStyle(
@@ -2347,7 +2348,7 @@ class PresencePageState extends ConsumerState<PresencePage>
             // 1. Form Section (Date, Hour, Class, Subject)
             Container(
               margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -2395,7 +2396,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                                   size: 16,
                                   color: _getPrimaryColor(),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppSpacing.sm),
                                 Expanded(
                                   child: Text(
                                     DateFormat(
@@ -2416,7 +2417,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.md),
                       // Lesson Hour Dropdown
                       Expanded(
                         child: Container(
@@ -2483,7 +2484,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
 
                   // Row 2: Class & Subject
                   Row(
@@ -2550,7 +2551,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.md),
                       // Subject Dropdown
                       Expanded(
                         child: Container(
@@ -2637,7 +2638,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                       ),
                     ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
 
                   // Quick Actions Row (Search & Quick Attendance)
                   Row(
@@ -2695,7 +2696,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                         ),
 
                       if (!_showSearch) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         Container(
                           decoration: BoxDecoration(
                             color: _getPrimaryColor().withValues(alpha: 0.1),
@@ -2717,7 +2718,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                               minWidth: 36,
                               minHeight: 36,
                             ),
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(AppSpacing.sm),
                             iconSize: 20,
                           ),
                         ),
@@ -2742,7 +2743,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                               size: 64,
                               color: ColorUtils.slate300,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.lg),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Please select Class and Subject first',
@@ -2756,7 +2757,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppSpacing.sm),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en':
@@ -2898,7 +2899,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2947,7 +2948,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Container(
               decoration: BoxDecoration(
                 color: ColorUtils.slate50,
@@ -3171,7 +3172,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                   'id': 'Beberapa absensi gagal disimpan:',
                 }),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               ...errors.map(
                 (error) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),

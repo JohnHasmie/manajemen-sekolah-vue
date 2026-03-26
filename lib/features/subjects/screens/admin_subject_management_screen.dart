@@ -35,6 +35,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Admin subject management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -341,7 +342,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                           size: 20,
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
                           languageProvider.getTranslatedText({
@@ -650,9 +651,9 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                               );
                             }).toList(),
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                         ],
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                       ],
                     ),
                   ),
@@ -695,7 +696,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -746,7 +747,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
       child: Row(
         children: [
           Icon(icon, size: 16, color: ColorUtils.slate600),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(
@@ -1128,7 +1129,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                                 size: 22,
                               ),
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1194,7 +1195,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
                       Expanded(
                         child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(AppSpacing.xl),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -1206,7 +1207,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                                 }),
                                 icon: Icons.code,
                               ),
-                              SizedBox(height: 12),
+                              SizedBox(height: AppSpacing.md),
                               // Select Master Subject (Autocomplete)
                               Autocomplete<Map<String, dynamic>>(
                                 initialValue: TextEditingValue(
@@ -1337,7 +1338,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                                   );
                                 },
                               ),
-                              SizedBox(height: 12),
+                              SizedBox(height: AppSpacing.md),
 
                               // Subject Name (Standard TextField)
                               _buildDialogTextField(
@@ -1348,7 +1349,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                                 }),
                                 icon: Icons.menu_book,
                               ),
-                              SizedBox(height: 12),
+                              SizedBox(height: AppSpacing.md),
                               _buildDialogTextField(
                                 controller: descriptionController,
                                 label: languageProvider.getTranslatedText({
@@ -1358,7 +1359,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                                 icon: Icons.description,
                                 maxLines: 3,
                               ),
-                              SizedBox(height: 12),
+                              SizedBox(height: AppSpacing.md),
                               // Active Status Switch
                               Container(
                                 decoration: BoxDecoration(
@@ -1404,7 +1405,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
                       // Enhanced Footer (Matches _showFilterSheet)
                       Container(
-                        padding: EdgeInsets.all(20),
+                        padding: EdgeInsets.all(AppSpacing.xl),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           border: Border(
@@ -1441,7 +1442,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                                 ),
                               ),
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: ElevatedButton(
                                 onPressed: isSaving
@@ -1756,7 +1757,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
             child: Row(
               children: [
                 Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Refresh Data',
@@ -1771,7 +1772,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
             child: Row(
               children: [
                 Icon(Icons.download, size: 20),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Export to Excel',
@@ -1786,7 +1787,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
             child: Row(
               children: [
                 Icon(Icons.upload, size: 20),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Import from Excel',
@@ -1801,7 +1802,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
             child: Row(
               children: [
                 Icon(Icons.file_download, size: 20),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Download Template',
@@ -1865,7 +1866,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
               ),
             ),
           ),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Container(
             key: _filterKey,
             decoration: BoxDecoration(
@@ -1893,7 +1894,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                     right: 8,
                     top: 8,
                     child: Container(
-                      padding: EdgeInsets.all(4),
+                      padding: EdgeInsets.all(AppSpacing.xs),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         shape: BoxShape.circle,
@@ -1912,7 +1913,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
               child: Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(8),
+                    padding: EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
@@ -1923,7 +1924,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: ListView(
                       scrollDirection: Axis.horizontal,
@@ -1967,12 +1968,12 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                       ],
                     ),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   InkWell(
                     onTap: _clearAllFilters,
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: EdgeInsets.all(8),
+                      padding: EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(8),
@@ -2035,7 +2036,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 // Content
                 Expanded(
                   child: Column(
@@ -2050,7 +2051,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                           color: ColorUtils.slate800,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       // Subject code and status
                       Row(
                         children: [
@@ -2062,7 +2063,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Container(
                             width: 4,
                             height: 4,
@@ -2071,7 +2072,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                               shape: BoxShape.circle,
                             ),
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 6,
@@ -2095,7 +2096,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                                     shape: BoxShape.circle,
                                   ),
                                 ),
-                                SizedBox(width: 4),
+                                SizedBox(width: AppSpacing.xs),
                                 Text(
                                   isActive
                                       ? languageProvider.getTranslatedText({
@@ -2119,7 +2120,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       // Info tags
                       Wrap(
                         spacing: 8,
@@ -2149,7 +2150,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                       color: _getPrimaryColor(),
                       onPressed: () => _showAddEditDialog(subject: subject),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.delete_outline,
                       color: ColorUtils.error600,
@@ -2750,7 +2751,7 @@ class SubjectClassManagementPageState
                             size: 22,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2796,7 +2797,7 @@ class SubjectClassManagementPageState
                   ),
 
                   Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -2808,7 +2809,7 @@ class SubjectClassManagementPageState
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
 
                         // Search bar dalam dialog
                         Container(
@@ -2837,7 +2838,7 @@ class SubjectClassManagementPageState
                             },
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
 
                         Container(
                           constraints: BoxConstraints(maxHeight: 300),
@@ -2851,7 +2852,7 @@ class SubjectClassManagementPageState
                                         size: 48,
                                         color: Colors.green,
                                       ),
-                                      SizedBox(height: 8),
+                                      SizedBox(height: AppSpacing.sm),
                                       Text(
                                         'Semua kelas sudah ditambahkan',
                                         style: TextStyle(
@@ -2971,7 +2972,7 @@ class SubjectClassManagementPageState
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
@@ -3094,7 +3095,7 @@ class SubjectClassManagementPageState
                     size: 22,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
 
                 // Informasi kelas
                 Expanded(
@@ -3109,7 +3110,7 @@ class SubjectClassManagementPageState
                           color: ColorUtils.slate800,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       Wrap(
                         spacing: 6,
                         runSpacing: 4,
@@ -3130,7 +3131,7 @@ class SubjectClassManagementPageState
                   ),
                 ),
 
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 // Status indicator
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -3157,7 +3158,7 @@ class SubjectClassManagementPageState
                             ? ColorUtils.success600
                             : ColorUtils.corporateBlue600,
                       ),
-                      SizedBox(width: 4),
+                      SizedBox(width: AppSpacing.xs),
                       Text(
                         isAssigned ? 'Terdaftar' : 'Tambahkan',
                         style: TextStyle(
@@ -3267,8 +3268,8 @@ class SubjectClassManagementPageState
               children: [
                 // Quick stats
                 Container(
-                  margin: EdgeInsets.all(16),
-                  padding: EdgeInsets.all(16),
+                  margin: EdgeInsets.all(AppSpacing.lg),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -3348,7 +3349,7 @@ class SubjectClassManagementPageState
                       ],
                     ),
                   ),
-                SizedBox(height: 4),
+                SizedBox(height: AppSpacing.xs),
 
                 Expanded(
                   child: filteredClasses.isEmpty
@@ -3403,7 +3404,7 @@ class SubjectClassManagementPageState
           ),
           child: Icon(icon, color: color, size: 18),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppSpacing.xs),
         Text(
           value,
           style: TextStyle(

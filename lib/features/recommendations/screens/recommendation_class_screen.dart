@@ -24,6 +24,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Displays a list of classes with AI learning recommendation summaries.
 ///
@@ -453,7 +454,7 @@ class _LearningRecommendationClassScreenState
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -468,7 +469,7 @@ class _LearningRecommendationClassScreenState
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               'Pilih Cakupan Siswa',
               style: TextStyle(
@@ -477,7 +478,7 @@ class _LearningRecommendationClassScreenState
                 color: ColorUtils.slate900,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               'Generate rekomendasi AI untuk $className',
               style: TextStyle(
@@ -485,7 +486,7 @@ class _LearningRecommendationClassScreenState
                 color: ColorUtils.slate500,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             _buildScopeOption(
               ctx: ctx,
               value: true,
@@ -504,7 +505,7 @@ class _LearningRecommendationClassScreenState
                   'Hanya siswa yang membutuhkan rekomendasi berdasarkan data performa',
               color: ColorUtils.amber500,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
           ],
         ),
       ),
@@ -544,7 +545,7 @@ class _LearningRecommendationClassScreenState
                   ),
                   child: Icon(icon, size: 20, color: color),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -645,11 +646,11 @@ class _LearningRecommendationClassScreenState
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(12),
@@ -781,7 +782,7 @@ class _LearningRecommendationClassScreenState
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -795,7 +796,7 @@ class _LearningRecommendationClassScreenState
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         'Pilih kelas untuk melihat rekomendasi siswa',
                         style: TextStyle(
@@ -827,7 +828,7 @@ class _LearningRecommendationClassScreenState
                       child: Row(
                         children: [
                           Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           const Text('Perbarui Data'),
                         ],
                       ),
@@ -845,7 +846,7 @@ class _LearningRecommendationClassScreenState
                 await _loadAllData();
               },
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 itemCount: widget.classes.length,
                 itemBuilder: (context, index) {
                   final cls = widget.classes[index];
@@ -934,7 +935,7 @@ class _LearningRecommendationClassScreenState
                     : const Radius.circular(16),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: [
                     Container(
@@ -967,7 +968,7 @@ class _LearningRecommendationClassScreenState
                               letterSpacing: -0.2,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppSpacing.xs),
                           if (isLoading)
                             Text(
                               'Memuat...',
@@ -1017,7 +1018,7 @@ class _LearningRecommendationClassScreenState
             // History list
             if (isLoadingHistory)
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Center(
                   child: SizedBox(
                     width: 20,
@@ -1031,12 +1032,12 @@ class _LearningRecommendationClassScreenState
               )
             else if (history.isEmpty)
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   children: [
                     Icon(Icons.lightbulb_outline_rounded,
                         size: 32, color: ColorUtils.slate300),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       'Belum ada riwayat rekomendasi',
                       style: TextStyle(
@@ -1044,7 +1045,7 @@ class _LearningRecommendationClassScreenState
                         color: ColorUtils.slate500,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       'Tekan tombol Generate untuk membuat rekomendasi AI',
                       textAlign: TextAlign.center,
@@ -1167,7 +1168,7 @@ class _LearningRecommendationClassScreenState
         },
         borderRadius: BorderRadius.circular(10),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
             borderRadius: BorderRadius.circular(10),
@@ -1192,7 +1193,7 @@ class _LearningRecommendationClassScreenState
                   color: periodInfo.color,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               // Info
               Expanded(
                 child: Column(
@@ -1234,7 +1235,7 @@ class _LearningRecommendationClassScreenState
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Wrap(
                       spacing: 6,
                       runSpacing: 4,
@@ -1263,7 +1264,7 @@ class _LearningRecommendationClassScreenState
                   ],
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppSpacing.xs),
               Icon(
                 Icons.chevron_right_rounded,
                 size: 20,
@@ -1367,7 +1368,7 @@ class _SubjectPickerSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1382,7 +1383,7 @@ class _SubjectPickerSheet extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             'Pilih Mata Pelajaran',
             style: TextStyle(
@@ -1391,7 +1392,7 @@ class _SubjectPickerSheet extends StatelessWidget {
               color: ColorUtils.slate900,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             'Generate rekomendasi AI untuk $className',
             style: TextStyle(
@@ -1399,7 +1400,7 @@ class _SubjectPickerSheet extends StatelessWidget {
               color: ColorUtils.slate500,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           ...subjects.map((subject) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Material(
@@ -1431,7 +1432,7 @@ class _SubjectPickerSheet extends StatelessWidget {
                               color: primaryColor,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
                               subject['name'] ?? 'Mata Pelajaran',
@@ -1453,7 +1454,7 @@ class _SubjectPickerSheet extends StatelessWidget {
                   ),
                 ),
               )),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
         ],
       ),
     );

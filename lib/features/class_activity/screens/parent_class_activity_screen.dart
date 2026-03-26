@@ -27,6 +27,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Parent's read-only view of class activities with read tracking.
 ///
@@ -478,8 +479,8 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
   Widget _buildStudentSelector() {
     if (_studentList.isEmpty) {
       return Container(
-        margin: EdgeInsets.all(16),
-        padding: EdgeInsets.all(16),
+        margin: EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: ColorUtils.warning600.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
@@ -502,7 +503,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
                 size: 20,
               ),
             ),
-            SizedBox(width: 12),
+            SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 AppLocalizations.noChildrenLinked.tr,
@@ -612,7 +613,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
           children: [
             // Gradient header
             Container(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -637,7 +638,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
                       size: 24,
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -681,7 +682,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: 400),
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -811,7 +812,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
             ),
             child: Icon(icon, size: 18, color: c),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -949,7 +950,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
                             size: 22,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         // Content
                         Expanded(
                           child: Column(
@@ -972,7 +973,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
                                   ),
                                   // Unread dot
                                   if (!isRead) ...[
-                                    SizedBox(width: 8),
+                                    SizedBox(width: AppSpacing.sm),
                                     Container(
                                       width: 8,
                                       height: 8,
@@ -1022,7 +1023,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
                                       size: 12,
                                       color: ColorUtils.info600,
                                     ),
-                                    SizedBox(width: 4),
+                                    SizedBox(width: AppSpacing.xs),
                                     Expanded(
                                       child: Text(
                                         '${activity['judul_bab']}${activity['judul_sub_bab'] != null ? ' • ${activity['judul_sub_bab']}' : ''}',
@@ -1038,7 +1039,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
                                 ),
                               ],
 
-                              SizedBox(height: 8),
+                              SizedBox(height: AppSpacing.sm),
 
                               // Info tags
                               Wrap(
@@ -1111,7 +1112,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
   Widget _buildEmptyState(String message) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -1128,7 +1129,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
                 color: ColorUtils.slate400,
               ),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
             Text(
               message,
               style: TextStyle(
@@ -1208,7 +1209,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1243,7 +1244,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
                     child: Row(
                       children: [
                         Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text('Perbarui Data'),
                       ],
                     ),
@@ -1252,9 +1253,9 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
               ),
             ],
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
           Container(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
@@ -1275,7 +1276,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
                     size: 18,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

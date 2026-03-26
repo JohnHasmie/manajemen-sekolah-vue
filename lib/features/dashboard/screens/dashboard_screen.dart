@@ -73,6 +73,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// The main dashboard widget. Like a Vue page component (`pages/dashboard.vue`).
 ///
@@ -1587,7 +1588,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                 child: Row(
                   children: [
                     _buildRoleIcon(normalizedForDisplay),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Text(
                       _getRoleDisplayName(normalizedForDisplay),
                       style: TextStyle(fontSize: 16),
@@ -1836,7 +1837,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: AppSpacing.xs),
           Container(
             width: 36,
             height: 9,
@@ -1855,7 +1856,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       baseColor: ColorUtils.shimmerBaseColor,
       highlightColor: ColorUtils.shimmerHighlightColor,
       child: Container(
-        padding: EdgeInsets.all(12),
+        padding: EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -1875,14 +1876,14 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildShimmerBox(width: 40, height: 20, borderRadius: 4),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       _buildShimmerBox(width: 70, height: 11, borderRadius: 4),
                     ],
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             _buildShimmerBox(width: 100, height: 10, borderRadius: 4),
           ],
         ),
@@ -1953,7 +1954,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                   ),
                   child: Icon(Icons.school, color: Colors.white, size: 18),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
 
                 // Title - single line
                 Expanded(
@@ -2145,7 +2146,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          padding: EdgeInsets.all(4),
+                          padding: EdgeInsets.all(AppSpacing.xs),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
@@ -2156,7 +2157,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                             color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Builder(
                           builder: (context) {
                             final provider = ref.watch(academicYearRiverpod);
@@ -2216,7 +2217,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                           letterSpacing: 0.3,
                         ),
                       ),
-                      SizedBox(width: 4),
+                      SizedBox(width: AppSpacing.xs),
                       Text(_getGreetingEmoji(), style: TextStyle(fontSize: 14)),
                     ],
                   ),
@@ -2450,7 +2451,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
               ),
             ],
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
           // Action buttons or skeleton
           SizedBox(
             height: 85,
@@ -3260,7 +3261,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
               'id',
               Colors.green,
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             _buildLanguageOption(
               context,
               languageProvider,
@@ -3290,7 +3291,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
@@ -3299,7 +3300,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           child: Row(
             children: [
               Icon(Icons.language, color: color),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Text(
                 language,
                 style: TextStyle(
@@ -3326,7 +3327,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       isScrollControlled: true,
       builder: (context) {
         return Container(
-          margin: EdgeInsets.all(20),
+          margin: EdgeInsets.all(AppSpacing.xl),
           child: Wrap(
             children: [
               Container(
@@ -3342,7 +3343,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                   ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpacing.xxl),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -3356,7 +3357,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                           ),
                         ),
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: AppSpacing.xl),
 
                       // User Info
                       Row(
@@ -3374,7 +3375,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                               size: 32,
                             ),
                           ),
-                          SizedBox(width: 16),
+                          SizedBox(width: AppSpacing.lg),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3387,7 +3388,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                                     color: Colors.grey.shade800,
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                SizedBox(height: AppSpacing.xs),
                                 Text(
                                   _userData['email'] ?? '',
                                   style: TextStyle(
@@ -3411,10 +3412,10 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                         ],
                       ),
 
-                      SizedBox(height: 24),
+                      SizedBox(height: AppSpacing.xxl),
 
                       if (_availableRoles.length > 1) ...[
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                         Text(
                           AppLocalizations.switchRole.tr,
                           style: TextStyle(
@@ -3423,7 +3424,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                             color: Colors.grey.shade700,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppSpacing.sm),
                         ..._availableRoles.map((role) {
                           final isCurrent = role == widget.role;
                           return Material(
@@ -3438,7 +3439,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
                                 width: double.infinity,
-                                padding: EdgeInsets.all(12),
+                                padding: EdgeInsets.all(AppSpacing.md),
                                 margin: EdgeInsets.only(bottom: 8),
                                 decoration: BoxDecoration(
                                   color: isCurrent
@@ -3454,7 +3455,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                                 child: Row(
                                   children: [
                                     _buildRoleIcon(role),
-                                    SizedBox(width: 12),
+                                    SizedBox(width: AppSpacing.md),
                                     Expanded(
                                       child: Text(
                                         _getRoleDisplayName(role),
@@ -3478,9 +3479,9 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                             ),
                           );
                         }),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                         Divider(),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                       ],
 
                       // Switch Sekolah Button
@@ -3495,7 +3496,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                             borderRadius: BorderRadius.circular(15),
                             child: Container(
                               width: double.infinity,
-                              padding: EdgeInsets.all(16),
+                              padding: EdgeInsets.all(AppSpacing.lg),
                               decoration: BoxDecoration(
                                 color: _getPrimaryColor().withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(15),
@@ -3511,7 +3512,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                                     color: _getPrimaryColor(),
                                     size: 20,
                                   ),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: AppSpacing.sm),
                                   Text(
                                     AppLocalizations.switchSchool.tr,
                                     style: TextStyle(
@@ -3524,9 +3525,9 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                             ),
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                         Divider(),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                       ],
 
                       // Settings Button — shown for all roles
@@ -3540,7 +3541,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                           borderRadius: BorderRadius.circular(15),
                           child: Container(
                             width: double.infinity,
-                            padding: EdgeInsets.all(16),
+                            padding: EdgeInsets.all(AppSpacing.lg),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -3551,7 +3552,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                                   ),
                                   size: 20,
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Text(
                                   AppLocalizations.settings.tr,
                                   style: TextStyle(
@@ -3566,7 +3567,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                           ),
                         ),
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppSpacing.lg),
 
                       // Logout Button
                       Material(
@@ -3582,7 +3583,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                           borderRadius: BorderRadius.circular(15),
                           child: Container(
                             width: double.infinity,
-                            padding: EdgeInsets.all(16),
+                            padding: EdgeInsets.all(AppSpacing.lg),
                             decoration: BoxDecoration(
                               color: Colors.red.shade50,
                               borderRadius: BorderRadius.circular(15),
@@ -3596,7 +3597,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                                   color: Colors.redAccent,
                                   size: 20,
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Text(
                                   AppLocalizations.logout.tr,
                                   style: TextStyle(
@@ -3671,7 +3672,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         title: Row(
           children: [
             Icon(Icons.school_rounded, color: _getPrimaryColor()),
-            SizedBox(width: 8),
+            SizedBox(width: AppSpacing.sm),
             Text(
               AppLocalizations.selectSchool.tr,
               style: TextStyle(
@@ -3688,7 +3689,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             children: [
               if (_isLoadingSchools)
                 Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   child: CircularProgressIndicator(),
                 )
               else
@@ -3708,7 +3709,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                             },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        padding: EdgeInsets.all(12),
+                        padding: EdgeInsets.all(AppSpacing.md),
                         margin: EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
                           color: isCurrent
@@ -3729,7 +3730,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                                   ? _getPrimaryColor()
                                   : Colors.grey,
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -3743,7 +3744,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                                       color: Colors.grey.shade800,
                                     ),
                                   ),
-                                  SizedBox(height: 4),
+                                  SizedBox(height: AppSpacing.xs),
                                   Text(
                                     school['address'] ?? '',
                                     style: TextStyle(

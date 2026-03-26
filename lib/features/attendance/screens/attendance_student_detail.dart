@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 // ========== HELPER FUNCTIONS UNTUK STYLING ==========
 Color _getPrimaryColor() {
@@ -144,7 +145,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,7 +194,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Container(
               decoration: BoxDecoration(
                 color: ColorUtils.slate50,
@@ -455,8 +456,8 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
                   children: [
                     // Header Info
                     Container(
-                      margin: const EdgeInsets.all(16),
-                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.all(AppSpacing.lg),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
@@ -479,7 +480,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
                             textAlign: TextAlign.center,
                           ),
                           if (widget.classId != null) ...[
-                            const SizedBox(height: 4),
+                            const SizedBox(height: AppSpacing.xs),
                             Text(
                               _getKelasName(widget.classId!),
                               style: TextStyle(
@@ -490,7 +491,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
                               textAlign: TextAlign.center,
                             ),
                           ],
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             DateFormat(
                               'EEEE, dd MMMM yyyy',
@@ -502,7 +503,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             '${_studentList.length} ${languageProvider.getTranslatedText({'en': 'Students', 'id': 'Siswa'})}',
                             style: TextStyle(
@@ -555,7 +556,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
                     ),
                     // Update Button
                     Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       child: SizedBox(
                         width: double.infinity,
                         height: 50,
