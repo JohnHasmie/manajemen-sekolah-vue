@@ -35,6 +35,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Teaching material browser with subject, chapter, and sub-chapter navigation.
 ///
@@ -1018,7 +1019,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1061,7 +1062,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                   ),
                 ),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'refresh') {
@@ -1083,7 +1084,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                     child: Row(
                       children: [
                         Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text('Perbarui Data'),
                       ],
                     ),
@@ -1176,7 +1177,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                     ],
                   ),
                 ),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
 
               // Content Section
               Expanded(
@@ -1233,7 +1234,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
     return Container(
       key: _filterKey,
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -1244,7 +1245,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
         children: [
           // Info Filter Aktif
           Container(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
@@ -1295,7 +1296,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
               ],
             ),
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
 
           // Tombol Generate Kegiatan jika ada yang dicentang
           if (totalChecked > 0 && _getCheckedNotGeneratedCount() > 0) ...[
@@ -1319,12 +1320,12 @@ class MateriPageState extends ConsumerState<MateriPage> {
                 ),
               ),
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
           ],
 
           // Dropdown Kelas
           _buildKelasDropdown(languageProvider),
-          SizedBox(height: 12),
+          SizedBox(height: AppSpacing.md),
 
           // Dropdown Mata Pelajaran
           _buildMataPelajaranDropdown(languageProvider),
@@ -1369,7 +1370,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                           size: 16,
                           color: ColorUtils.slate500,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
                             c['name'] ?? c['nama'] ?? 'Unknown',
@@ -1451,7 +1452,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                           size: 16,
                           color: ColorUtils.slate500,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
                             mp['name'] ?? mp['nama'] ?? 'Unknown',
@@ -1512,7 +1513,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     final filteredBabMateri = _getFilteredBabMateri();
 
     return ListView.builder(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       itemCount: filteredBabMateri.length,
       itemBuilder: (context, index) {
         final bab = filteredBabMateri[index];
@@ -1542,7 +1543,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(AppSpacing.lg),
                       child: Row(
                         children: [
                           Container(
@@ -1566,7 +1567,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                               ),
                             ),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1640,7 +1641,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
     if (subBabsForBab.isEmpty) {
       return Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Text(
           'Tidak ada sub-bab',
           style: TextStyle(color: ColorUtils.slate400),
@@ -1685,7 +1686,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(
                       subBab['judul_sub_bab'] ?? 'Judul Sub Bab',

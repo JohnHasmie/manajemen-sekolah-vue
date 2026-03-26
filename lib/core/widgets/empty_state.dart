@@ -5,6 +5,7 @@
 // Displays a large icon, title, subtitle, and an optional action button.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A centered empty state widget displayed when no data is available.
 ///
@@ -57,7 +58,7 @@ class EmptyState extends StatelessWidget {
               color: ColorUtils.blue600.withValues(alpha: 0.5),
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: AppSpacing.xl),
           Text(
             title,
             style: TextStyle(
@@ -66,7 +67,7 @@ class EmptyState extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppSpacing.sm),
           Text(
             subtitle,
             style: TextStyle(

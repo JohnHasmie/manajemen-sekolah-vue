@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A single skeleton loading card that mimics a list item card layout.
 ///
@@ -60,7 +61,7 @@ class SkeletonListCard extends StatelessWidget {
           children: [
             // Avatar placeholder
             CircleAvatar(radius: 22, backgroundColor: Colors.white),
-            SizedBox(width: 12),
+            SizedBox(width: AppSpacing.md),
 
             // Content placeholder
             Expanded(
@@ -76,7 +77,7 @@ class SkeletonListCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: AppSpacing.sm),
                   // Info tags
                   ...List.generate(
                     infoTagCount,
@@ -96,7 +97,7 @@ class SkeletonListCard extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(width: 8),
+            SizedBox(width: AppSpacing.sm),
 
             // Right side placeholders
             Column(
@@ -112,7 +113,7 @@ class SkeletonListCard extends StatelessWidget {
                   ),
                 ),
                 if (showActions) ...[
-                  SizedBox(height: 8),
+                  SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
                       Container(

@@ -5,6 +5,7 @@
 // dashboard stat card showing today's attendance breakdown.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A compact dashboard card showing today's attendance summary with a distribution bar.
 ///
@@ -43,7 +44,7 @@ class AttendanceOverviewCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: EdgeInsets.all(12),
+          padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),

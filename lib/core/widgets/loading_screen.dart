@@ -5,6 +5,7 @@
 // progress indicator inside a gradient circle with an optional message.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A full-screen loading widget with a spinner and message.
 ///
@@ -46,7 +47,7 @@ class LoadingScreen extends StatelessWidget {
                 strokeWidth: 3,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             Text(
               message,
               style: TextStyle(

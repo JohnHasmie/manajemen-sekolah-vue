@@ -9,6 +9,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/mini_bar_chart.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 class FinancePopupDialog extends StatefulWidget {
   final List<Map<String, dynamic>> semestersData;
@@ -62,7 +63,7 @@ class _FinancePopupDialogState extends State<FinancePopupDialog> {
                           color: ColorUtils.slate800,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       Text(
                         'Geser ke kiri/kanan untuk melihat riwayat',
                         style: TextStyle(
@@ -70,7 +71,7 @@ class _FinancePopupDialogState extends State<FinancePopupDialog> {
                           color: ColorUtils.slate500,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.xxl),
                       // Use an explicit container without ScrollView so PageView catches horizontal swipe gestures
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -96,7 +97,7 @@ class _FinancePopupDialogState extends State<FinancePopupDialog> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSpacing.md),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: List.generate(
@@ -136,12 +137,12 @@ class _FinancePopupDialogState extends State<FinancePopupDialog> {
                 },
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             SmoothPageIndicator(
               controller: _pageController,
               count: widget.semestersData.length,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             ElevatedButton(
               onPressed: () => AppNavigator.pop(context),
               style: ElevatedButton.styleFrom(

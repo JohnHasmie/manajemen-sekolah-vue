@@ -23,6 +23,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// RPP detail viewer with inline editing and AI regeneration.
 ///
@@ -193,7 +194,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               'Sisa regenerasi: $remaining dari ${regenInfo?['max'] ?? 2}',
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             TextField(
               controller: textController,
               maxLines: 3,
@@ -212,7 +213,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: _primaryColor),
                 ),
-                contentPadding: EdgeInsets.all(12),
+                contentPadding: EdgeInsets.all(AppSpacing.md),
               ),
             ),
           ],
@@ -259,7 +260,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               'Semua field RPP akan di-generate ulang. Setiap field memiliki batas regenerasi masing-masing.',
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             TextField(
               controller: textController,
               maxLines: 3,
@@ -278,7 +279,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: _primaryColor),
                 ),
-                contentPadding: EdgeInsets.all(12),
+                contentPadding: EdgeInsets.all(AppSpacing.md),
               ),
             ),
           ],
@@ -1275,7 +1276,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                   ),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1321,7 +1322,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
             _saveRPP();
           },
         ),
-        SizedBox(width: 8),
+        SizedBox(width: AppSpacing.sm),
         _buildHeaderButton(
           icon: Icons.close_rounded,
           onTap: _toggleEdit,
@@ -1341,13 +1342,13 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           icon: Icons.edit_outlined,
           onTap: _toggleEdit,
         ),
-        SizedBox(width: 8),
+        SizedBox(width: AppSpacing.sm),
         if (_hasAiAdditionalData) ...[
           _buildHeaderButton(
             icon: Icons.smart_toy_rounded,
             onTap: _openAiRppScreen,
           ),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
         ],
         PopupMenuButton<String>(
           onSelected: (value) {
@@ -1433,7 +1434,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
   Widget _buildEditor() {
     return Padding(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
           // Toolbar
@@ -1468,7 +1469,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               ],
             ),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppSpacing.lg),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -1494,7 +1495,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                 maxLines: null,
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(16),
+                  contentPadding: EdgeInsets.all(AppSpacing.lg),
                   hintText: 'Ketik RPP disini...',
                   hintStyle: TextStyle(color: ColorUtils.slate400),
                 ),
@@ -1528,7 +1529,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     final bool canRegen = _hasAiAdditionalData && _rppId != null;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
           // File attachment card
@@ -1537,7 +1538,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           // Regenerate All button
           if (canRegen) ...[
             _buildRegenAllButton(),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
           ],
 
           // RPP content - structured fields with regen buttons
@@ -1563,7 +1564,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                 ],
               ),
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: EdgeInsets.all(AppSpacing.xxl),
                 child: _buildFormattedContent(),
               ),
             ),
@@ -1613,7 +1614,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                         )
                       : Icon(Icons.auto_awesome, color: _primaryColor, size: 20),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1647,7 +1648,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     // Header info card
     final headerWidgets = <Widget>[
       _buildHeaderInfoCard(),
-      SizedBox(height: 12),
+      SizedBox(height: AppSpacing.md),
     ];
 
     // Field cards
@@ -1722,7 +1723,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1735,7 +1736,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 4),
+            SizedBox(height: AppSpacing.xs),
             Text(
               title,
               style: TextStyle(
@@ -1745,7 +1746,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               ),
             ),
             if (infoItems.isNotEmpty) ...[
-              SizedBox(height: 12),
+              SizedBox(height: AppSpacing.md),
               ...infoItems.map((item) => Padding(
                 padding: EdgeInsets.only(bottom: 4),
                 child: Row(
@@ -1844,7 +1845,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                 ],
                 // Regen button
                 Material(
@@ -1892,7 +1893,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           ),
           // Field content
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: SelectableText(
               _stripHtml(value),
               style: TextStyle(fontSize: 14, height: 1.6, color: ColorUtils.slate700),
@@ -1924,7 +1925,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           children: [
             Row(
@@ -1933,7 +1934,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                   child: Column(
                     children: [
                       Text('Mengetahui', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       Text('Kepala Sekolah', style: TextStyle(fontSize: 13)),
                       SizedBox(height: 40),
                       Text('...................................', style: TextStyle(fontSize: 12)),
@@ -1945,7 +1946,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                   child: Column(
                     children: [
                       Text('', style: TextStyle(fontSize: 13)),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       Text('Guru Mata Pelajaran', style: TextStyle(fontSize: 13)),
                       SizedBox(height: 40),
                       Text('...................................', style: TextStyle(fontSize: 12)),
@@ -1956,9 +1957,9 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               ],
             ),
             if (_rppData['ai_generated'] == true || _rppData['is_ai_generated'] == true) ...[
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
               Divider(color: ColorUtils.slate200),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
               Text(
                 'RPP ini digenerate secara otomatis menggunakan AI',
                 style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: ColorUtils.slate400),
@@ -2001,7 +2002,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           onTap: _isDownloading ? null : _downloadAndOpenFile,
           borderRadius: BorderRadius.circular(14),
           child: Padding(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: Row(
               children: [
                 Container(
@@ -2032,7 +2033,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                           color: ColorUtils.slate800,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       Text(
                         fileName,
                         style: TextStyle(
@@ -2044,7 +2045,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 _isDownloading
                     ? SizedBox(
                         width: 24,
@@ -2055,7 +2056,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                         ),
                       )
                     : Container(
-                        padding: EdgeInsets.all(8),
+                        padding: EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: _primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
@@ -2084,7 +2085,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: lines.map((line) {
         if (line.trim().isEmpty) {
-          return SizedBox(height: 16);
+          return SizedBox(height: AppSpacing.lg);
         }
 
         if (line.startsWith('RENCANA PELAKSANAAN PEMBELAJARAN')) {
@@ -2099,7 +2100,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
             ],
           );
         }
@@ -2122,7 +2123,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
               Text(
                 line,
                 style: TextStyle(
@@ -2131,7 +2132,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                   color: _primaryColor,
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
             ],
           );
         }
@@ -2194,7 +2195,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           return Expanded(
             flex: 2,
             child: Container(
-              padding: EdgeInsets.all(8),
+              padding: EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 border: Border.all(color: ColorUtils.slate200),
               ),

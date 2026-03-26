@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/mini_sparkline.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Enhanced statistics card for professional dashboard display.
 ///
@@ -76,7 +77,7 @@ class EnhancedStatCard extends StatelessWidget {
         child: Container(
           width: 160,
           height: 130,
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           decoration: ColorUtils.statCardDecoration(accentColor: accentColor),
           child: isLoading ? _buildLoadingState() : _buildContent(),
         ),
@@ -96,7 +97,7 @@ class EnhancedStatCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
         ),
-        SizedBox(height: 12),
+        SizedBox(height: AppSpacing.md),
         Container(
           width: 60,
           height: 20,
@@ -105,7 +106,7 @@ class EnhancedStatCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
           ),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppSpacing.xs),
         Container(
           width: 100,
           height: 14,
@@ -130,7 +131,7 @@ class EnhancedStatCard extends StatelessWidget {
             if (trend != null) _buildTrendBadge(),
           ],
         ),
-        SizedBox(height: 12),
+        SizedBox(height: AppSpacing.md),
 
         // Value and title
         Expanded(
@@ -264,7 +265,7 @@ class EnhancedStatCard extends StatelessWidget {
     if (progress != null) {
       return Column(
         children: [
-          SizedBox(height: 4),
+          SizedBox(height: AppSpacing.xs),
           Container(
             height: 4,
             decoration: BoxDecoration(

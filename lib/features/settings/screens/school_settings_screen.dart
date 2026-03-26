@@ -19,6 +19,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// School settings hub screen - navigates to sub-settings pages.
 ///
@@ -274,7 +275,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,7 +309,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
               context: context,
               removeTop: true,
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -385,7 +386,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -80,8 +80,8 @@ SeparatedSearchFilter(
   spacing: 6,
   // Container with background
   containerColor: Colors.grey.shade100,
-  margin: const EdgeInsets.all(12),
-  padding: const EdgeInsets.all(8),
+  margin: const EdgeInsets.all(AppSpacing.md),
+  padding: const EdgeInsets.all(AppSpacing.sm),
 )
 
 // Example 5: Large search bar with small filter button

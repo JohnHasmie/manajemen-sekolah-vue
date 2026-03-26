@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A bottom sheet form for creating or editing a schedule entry.
 ///
@@ -535,7 +536,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                   // ── Form body ──
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(AppSpacing.xl),
                       child: Form(
                         key: _formKey,
                         child: Column(
@@ -545,32 +546,32 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                               uniqueTeacherList,
                               languageProvider,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.md),
                             _buildSubjectDropdown(
                               uniqueSubjectList,
                               languageProvider,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.md),
                             _buildClassDropdown(
                               uniqueClassList,
                               languageProvider,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.md),
                             _buildDayMultiSelect(
                               uniqueHariList,
                               languageProvider,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.md),
                             _buildAcademicYearDropdown(
                               widget.academicYearList,
                               languageProvider,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.md),
                             _buildSemesterDropdown(
                               uniqueSemesterList,
                               languageProvider,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.md),
                             _buildTeachingHourDropdown(
                               uniqueJamPelajaranList,
                               languageProvider,
@@ -583,7 +584,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
 
                   // ── Enhanced Footer ──
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border(
@@ -621,7 +622,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: _saveSchedule,
@@ -679,7 +680,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
@@ -774,7 +775,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
@@ -826,7 +827,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
               ),
               suffixIcon: _isLoadingSubjects
                   ? Padding(
-                      padding: EdgeInsets.all(12),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       child: SizedBox(
                         width: 16,
                         height: 16,
@@ -865,7 +866,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
@@ -951,10 +952,10 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppSpacing.sm),
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(12),
+          padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
             borderRadius: BorderRadius.circular(12),
@@ -1062,7 +1063,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
@@ -1138,7 +1139,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
@@ -1227,7 +1228,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
@@ -1346,7 +1347,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
               ),
               suffixIcon: _isLoadingJamPelajaran
                   ? Padding(
-                      padding: EdgeInsets.all(12),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       child: SizedBox(
                         width: 16,
                         height: 16,

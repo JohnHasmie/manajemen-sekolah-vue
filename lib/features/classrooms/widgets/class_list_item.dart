@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A gradient card widget that displays a single class's information.
 ///
@@ -85,7 +86,7 @@ class ClassListItem extends StatelessWidget {
                       ),
                       
                       Padding(
-                        padding: EdgeInsets.all(16),
+                        padding: EdgeInsets.all(AppSpacing.lg),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -137,7 +138,7 @@ class ClassListItem extends StatelessWidget {
                               ],
                             ),
 
-                            SizedBox(height: 12),
+                            SizedBox(height: AppSpacing.md),
 
                             // Informasi wali kelas
                             Row(
@@ -154,7 +155,7 @@ class ClassListItem extends StatelessWidget {
                                     size: 16
                                   ),
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +191,7 @@ class ClassListItem extends StatelessWidget {
                               ],
                             ),
 
-                            SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.sm),
 
                             // Informasi jumlah siswa
                             Row(
@@ -207,7 +208,7 @@ class ClassListItem extends StatelessWidget {
                                     size: 16
                                   ),
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +242,7 @@ class ClassListItem extends StatelessWidget {
                               ],
                             ),
 
-                            SizedBox(height: 12),
+                            SizedBox(height: AppSpacing.md),
 
                             // Action buttons
                             Row(
@@ -256,7 +257,7 @@ class ClassListItem extends StatelessWidget {
                                   color: Colors.white,
                                   onPressed: onEdit,
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 _buildActionButton(
                                   icon: Icons.delete,
                                   label: languageProvider.getTranslatedText({
@@ -305,7 +306,7 @@ class ClassListItem extends StatelessWidget {
               size: 12,
               color: color,
             ),
-            SizedBox(width: 4),
+            SizedBox(width: AppSpacing.xs),
             Text(
               label,
               style: TextStyle(

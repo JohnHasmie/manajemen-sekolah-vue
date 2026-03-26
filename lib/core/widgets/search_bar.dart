@@ -4,6 +4,7 @@
 // or a Blade partial `@include('partials.search-bar')`.
 // This is the simpler version; see EnhancedSearchBar for the version with filters.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A simple search bar widget with an icon, text field, and clear button.
 ///
@@ -28,7 +29,7 @@ class CustomSearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(16),
+      margin: EdgeInsets.all(AppSpacing.lg),
       padding: EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,

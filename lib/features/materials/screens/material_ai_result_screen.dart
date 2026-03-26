@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Displays AI-generated teaching materials with tabbed content and
 /// regeneration capability.
@@ -405,7 +406,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
           title: Row(
             children: [
               Icon(Icons.auto_awesome, color: _getPrimaryColor()),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               Text(
                 'Generate Ulang AI',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -421,10 +422,10 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                   'Sistem akan menyusun ulang materi berdasarkan Bab/Sub-Bab. Anda dapat menambahkan instruksi spesifik di bawah.',
                   style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(12),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: ColorUtils.slate50,
                     borderRadius: BorderRadius.circular(10),
@@ -441,7 +442,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                           color: ColorUtils.slate500,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       Text(
                         widget.title,
                         style: TextStyle(
@@ -455,7 +456,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                     ],
                   ),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
                 Text(
                   'Instruksi Tambahan (Opsional)',
                   style: TextStyle(
@@ -464,7 +465,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: AppSpacing.sm),
                 TextField(
                   controller: _promptController,
                   maxLines: 4,
@@ -527,7 +528,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -540,12 +541,12 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                     color: ColorUtils.slate800,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: AppSpacing.xs),
                 Text(
                   'Pilih bagian yang ingin di-generate ulang oleh AI',
                   style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
                 ListTile(
                   leading: Container(
                     width: 40,
@@ -722,7 +723,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
               child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
             ),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -748,7 +749,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
               ],
             ),
           ),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           if (!_isLoading && _aiData != null)
             GestureDetector(
               onTap: _isRegenerating ? null : _showRegenOptions,
@@ -780,7 +781,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
   Widget _buildPollingView() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: EdgeInsets.all(AppSpacing.xxxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -792,7 +793,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                 strokeWidth: 3,
               ),
             ),
-            SizedBox(height: 24),
+            SizedBox(height: AppSpacing.xxl),
             Text(
               _pollingStatus,
               textAlign: TextAlign.center,
@@ -802,7 +803,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                 color: ColorUtils.slate700,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             Text(
               'Mohon tunggu, proses ini membutuhkan waktu beberapa saat...',
               textAlign: TextAlign.center,
@@ -820,12 +821,12 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
   Widget _buildErrorView() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: EdgeInsets.all(AppSpacing.xxxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, size: 60, color: Colors.red.shade400),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
             Text(
               'Gagal Generate Materi',
               style: TextStyle(
@@ -834,7 +835,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                 color: ColorUtils.slate800,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             Text(
               _pollingError!,
               textAlign: TextAlign.center,
@@ -843,7 +844,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                 color: ColorUtils.slate600,
               ),
             ),
-            SizedBox(height: 24),
+            SizedBox(height: AppSpacing.xxl),
             ElevatedButton.icon(
               onPressed: () => _generateMateri(),
               icon: Icon(Icons.refresh),
@@ -882,7 +883,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
         side: BorderSide(color: ColorUtils.slate200),
       ),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -942,7 +943,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             Text(
               quiz['question'] ?? '',
               style: TextStyle(
@@ -951,12 +952,12 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                 color: ColorUtils.slate800,
               ),
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             if (quiz['options'] != null &&
                 (quiz['options'] as List).isNotEmpty) ...[
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(12),
+                padding: EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
                   borderRadius: BorderRadius.circular(8),
@@ -980,7 +981,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                                 ? Colors.green
                                 : ColorUtils.slate400,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               opt.toString(),
@@ -1000,11 +1001,11 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                   }).toList(),
                 ),
               ),
-              SizedBox(height: 12),
+              SizedBox(height: AppSpacing.md),
             ],
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: Colors.green.shade50,
                 borderRadius: BorderRadius.circular(8),
@@ -1021,7 +1022,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: AppSpacing.xs),
                   Text(
                     quiz['correct_answer'] ?? '-',
                     style: TextStyle(
@@ -1030,9 +1031,9 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                     ),
                   ),
                   if (quiz['explanation'] != null) ...[
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     Divider(color: Colors.green.shade200),
-                    SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xs),
                     Text(
                       'Penjelasan:',
                       style: TextStyle(
@@ -1041,7 +1042,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xs),
                     Text(
                       quiz['explanation'] ?? '',
                       style: TextStyle(
@@ -1075,7 +1076,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
         side: BorderSide(color: ColorUtils.slate200),
       ),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1107,7 +1108,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                 fontSize: 15,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             Text(
               _stripHtml(ref['content'] ?? ''),
               style: TextStyle(
@@ -1125,7 +1126,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
   Widget _buildMaterialTab() {
     final sections = _parseMaterialContent();
     return ListView.builder(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       itemCount: sections.length,
       itemBuilder: (context, index) {
         final title = sections.keys.elementAt(index);
@@ -1216,7 +1217,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
           ),
           // Section content
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: _buildFormattedContent(content),
           ),
         ],
@@ -1345,7 +1346,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.quiz_outlined, size: 48, color: ColorUtils.slate300),
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             Text(
               'Belum ada kuis',
               style: TextStyle(color: ColorUtils.slate500, fontSize: 15),
@@ -1384,7 +1385,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
           ),
         Expanded(
           child: ListView.builder(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             itemCount: quizzes.length,
             itemBuilder: (context, index) {
               return _buildQuizCard(
@@ -1406,7 +1407,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.menu_book_outlined, size: 48, color: ColorUtils.slate300),
-            SizedBox(height: 12),
+            SizedBox(height: AppSpacing.md),
             Text(
               'Belum ada referensi',
               style: TextStyle(color: ColorUtils.slate500, fontSize: 15),
@@ -1445,7 +1446,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
           ),
         Expanded(
           child: ListView.builder(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             itemCount: refs.length,
             itemBuilder: (context, index) {
               return _buildReferenceCard(

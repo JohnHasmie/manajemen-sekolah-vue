@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 class AddActivityDialog extends ConsumerStatefulWidget {
   final String teacherId;
@@ -868,7 +869,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                         size: 20,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(
                         widget.isEditMode
@@ -899,7 +900,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                     ),
                     IconButton(
                       icon: Container(
-                        padding: EdgeInsets.all(4),
+                        padding: EdgeInsets.all(AppSpacing.xs),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
@@ -919,7 +920,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -928,7 +929,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                   children: [
                     // Info Box
                     Container(
-                      padding: EdgeInsets.all(12),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       margin: EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.1),
@@ -946,7 +947,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                             color: primaryColor,
                             size: 20,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               widget.initialTarget == 'khusus'
@@ -1059,7 +1060,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ),
                       ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
 
                     // Kelas
                     Builder(
@@ -1148,13 +1149,13 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ),
                       ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
 
                     // Toggle: Pilih dari Materi atau Tulis Manual
                     Row(
                       children: [
                         Icon(Icons.title, size: 20, color: ColorUtils.slate600),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Choose from material',
@@ -1181,7 +1182,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
 
                     // Dropdown Bab Materi (if useMateriTitle = true)
                     if (_useMateriTitle) ...[
@@ -1250,7 +1251,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           );
                         },
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                     ],
 
                     // Multi-Select Sub Bab (if bab is selected) - Custom UI
@@ -1294,7 +1295,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                     ],
 
                     // Judul Field
@@ -1325,7 +1326,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                             })
                           : null,
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
 
                     // Deskripsi
                     TextFormField(
@@ -1339,7 +1340,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       ),
                       maxLines: 3,
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
 
                     // Tanggal
                     ListTile(
@@ -1431,7 +1432,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                     // Pilih Siswa (hanya untuk target khusus)
                     if (widget.initialTarget == 'khusus' &&
                         _selectedClassId != null) ...[
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -1464,7 +1465,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       Container(
                         height: 200, // Increased height for better visibility
                         decoration: BoxDecoration(
@@ -1534,7 +1535,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
             ),
           ),
           Container(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -1574,7 +1575,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _isSubmitting ? null : _submitForm,

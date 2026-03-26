@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A reusable confirmation dialog with a gradient header and confirm/cancel buttons.
 ///
@@ -50,7 +51,7 @@ class ConfirmationDialog extends StatelessWidget {
           // Header dengan gradient
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -80,7 +81,7 @@ class ConfirmationDialog extends StatelessWidget {
                     size: 18,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     title,
@@ -97,7 +98,7 @@ class ConfirmationDialog extends StatelessWidget {
 
           // Content
           Padding(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(AppSpacing.xl),
             child: Text(
               content,
               style: TextStyle(
@@ -111,7 +112,7 @@ class ConfirmationDialog extends StatelessWidget {
 
           // Actions
           Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: Row(
               children: [
                 Expanded(
@@ -130,7 +131,7 @@ class ConfirmationDialog extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => AppNavigator.pop(context, true),

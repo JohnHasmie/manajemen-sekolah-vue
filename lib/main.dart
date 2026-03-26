@@ -50,6 +50,7 @@ import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/services/log_service.dart';
 import 'package:manajemensekolah/core/services/performance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Global navigator key that enables navigation from anywhere without a BuildContext.
 /// Like a global `$router` reference in Vue, or using `app()->make('redirect')` in Laravel.
@@ -276,7 +277,7 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CircularProgressIndicator(),
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
                 Text('Initializing...'),
               ],
             ),

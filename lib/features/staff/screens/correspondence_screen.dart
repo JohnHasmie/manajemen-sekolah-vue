@@ -5,6 +5,7 @@
 // Currently uses hardcoded data; in production this would call
 // a Laravel `LetterController@index` API endpoint.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Lists all school correspondence (incoming/outgoing letters) with status chips.
 ///
@@ -48,7 +49,7 @@ class CorrespondenceScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final item = surat[index];
           return Card(
-            margin: EdgeInsets.all(8),
+            margin: EdgeInsets.all(AppSpacing.sm),
             child: ListTile(
               leading: Icon(
                 item['jenis'] == 'Masuk' ? Icons.mail : Icons.send,

@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Attendance detail page where a teacher can view and update each student's
 /// attendance status (hadir/terlambat/izin/sakit/alpha) for a given subject
@@ -190,7 +191,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                 child: Row(
                   children: [
                     Icon(Icons.check_circle, color: Colors.green, size: 16),
-                    SizedBox(width: 4),
+                    SizedBox(width: AppSpacing.xs),
                     Text('Hadir'),
                   ],
                 ),
@@ -200,7 +201,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                 child: Row(
                   children: [
                     Icon(Icons.access_time, color: Colors.purple, size: 16),
-                    SizedBox(width: 4),
+                    SizedBox(width: AppSpacing.xs),
                     Text('Terlambat'),
                   ],
                 ),
@@ -210,7 +211,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                 child: Row(
                   children: [
                     Icon(Icons.info, color: Colors.blue, size: 16),
-                    SizedBox(width: 4),
+                    SizedBox(width: AppSpacing.xs),
                     Text('Izin'),
                   ],
                 ),
@@ -224,7 +225,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                       color: Colors.orange,
                       size: 16,
                     ),
-                    SizedBox(width: 4),
+                    SizedBox(width: AppSpacing.xs),
                     Text('Sakit'),
                   ],
                 ),
@@ -234,7 +235,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                 child: Row(
                   children: [
                     Icon(Icons.cancel, color: Colors.red, size: 16),
-                    SizedBox(width: 4),
+                    SizedBox(width: AppSpacing.xs),
                     Text('Alpha'),
                   ],
                 ),
@@ -344,7 +345,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                 // Header Info
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade50,
                     borderRadius: const BorderRadius.only(
@@ -362,7 +363,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                           color: Colors.blue,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         DateFormat(
                           'EEEE, dd MMMM yyyy',
@@ -374,7 +375,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       // Search Bar
                       Container(
                         decoration: BoxDecoration(
@@ -404,7 +405,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 // Student Count
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -429,7 +430,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 // Student List
                 Expanded(
                   child: _filteredStudentList.isEmpty
@@ -442,7 +443,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                                 size: 64,
                                 color: Colors.grey.shade400,
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: AppSpacing.lg),
                               Text(
                                 'Tidak ada siswa ditemukan',
                                 style: TextStyle(
@@ -461,7 +462,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                 ),
                 // Update Button
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     boxShadow: [

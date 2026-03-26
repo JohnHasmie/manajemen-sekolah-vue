@@ -38,6 +38,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Admin finance management screen with tabbed layout for payment types, bills, and verifications.
 ///
@@ -478,7 +479,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             size: 18,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Status',
@@ -492,7 +493,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -555,9 +556,9 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             }).toList(),
                       ),
 
-                      SizedBox(height: 20),
+                      SizedBox(height: AppSpacing.xl),
                       Divider(color: ColorUtils.slate100),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
 
                       // Periode Filter
                       Row(
@@ -567,7 +568,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             size: 18,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Payment Period',
@@ -581,7 +582,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -649,7 +650,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
               ),
               // Footer
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -682,7 +683,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
@@ -1007,7 +1008,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
               children: [
                 // Header
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: _getPrimaryColor(),
                     borderRadius: BorderRadius.only(
@@ -1018,7 +1019,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   child: Row(
                     children: [
                       Icon(Icons.groups, color: Colors.white, size: 24),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
                           'Pilih Tujuan Pembayaran',
@@ -1039,7 +1040,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
                 // Search Siswa
                 Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   child: Container(
                     decoration: BoxDecoration(
                       color: ColorUtils.slate50,
@@ -1087,7 +1088,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => _clearAllSelection(setModalState),
@@ -1115,7 +1116,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
                 // Footer dengan summary
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: ColorUtils.slate50,
                     border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -1123,7 +1124,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   child: Column(
                     children: [
                       _buildSelectionSummary(),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       Row(
                         children: [
                           Expanded(
@@ -1138,7 +1139,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               child: Text(AppLocalizations.cancel.tr),
                             ),
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
@@ -1290,7 +1291,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
             children: [
               if (filteredSiswa.isEmpty)
                 Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   child: Text(
                     'Tidak ada siswa yang cocok dengan pencarian',
                     style: TextStyle(
@@ -1514,7 +1515,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         },
         child: Container(
           margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -1560,7 +1561,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                 ),
               ),
               _buildKelasSummary(siswaList),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               Container(
                 width: 32,
                 height: 32,
@@ -2032,7 +2033,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ? _getPrimaryColor()
                           : ColorUtils.slate500,
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xs),
                     Text(
                       label,
                       style: TextStyle(
@@ -2186,7 +2187,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.all(AppSpacing.xl),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2197,7 +2198,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             label: 'Nama Pembayaran',
                             icon: Icons.payment_rounded,
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           // Deskripsi
                           _buildDialogTextField(
                             controller: deskripsiController,
@@ -2205,7 +2206,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             icon: Icons.description_rounded,
                             maxLines: 2,
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           // Jumlah
                           _buildDialogTextField(
                             controller: jumlahController,
@@ -2215,7 +2216,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             inputFormatters: [CurrencyInputFormatter()],
                           ),
 
-                          SizedBox(height: 16),
+                          SizedBox(height: AppSpacing.lg),
                           // Periode section
                           Row(
                             children: [
@@ -2272,7 +2273,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ],
                           ),
 
-                          SizedBox(height: 16),
+                          SizedBox(height: AppSpacing.lg),
                           // Tujuan Pembayaran
                           Row(
                             children: [
@@ -2354,7 +2355,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                           : ColorUtils.corporateBlue600,
                                     ),
                                   ),
-                                  SizedBox(width: 12),
+                                  SizedBox(width: AppSpacing.md),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -2397,7 +2398,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ),
                           ),
 
-                          SizedBox(height: 16),
+                          SizedBox(height: AppSpacing.lg),
                           // Status section
                           Row(
                             children: [
@@ -2447,7 +2448,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
                 // Enhanced Footer Actions
                 Container(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(AppSpacing.xl),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -2485,7 +2486,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () async {
@@ -2791,7 +2792,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   // Gradient Header (Pattern #10)
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(gradient: _getCardGradient()),
                     child: Row(
                       children: [
@@ -2839,7 +2840,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
                   // Content
                   Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2867,7 +2868,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         if (isLoadingYears)
                           Center(
                             child: Padding(
-                              padding: EdgeInsets.all(16),
+                              padding: EdgeInsets.all(AppSpacing.lg),
                               child: CircularProgressIndicator(
                                 color: _getPrimaryColor(),
                               ),
@@ -2931,7 +2932,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ),
                           ),
 
-                        SizedBox(height: 20),
+                        SizedBox(height: AppSpacing.xl),
 
                         // Month Grid
                         Row(
@@ -2956,7 +2957,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         if (isLoadingGenerated)
                           Center(
                             child: Padding(
-                              padding: EdgeInsets.all(20),
+                              padding: EdgeInsets.all(AppSpacing.xl),
                               child: CircularProgressIndicator(
                                 color: _getPrimaryColor(),
                               ),
@@ -3077,7 +3078,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed:
@@ -3185,7 +3186,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                 children: [
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
                       gradient: _getCardGradient(),
                       borderRadius: BorderRadius.only(
@@ -3208,7 +3209,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             size: 20,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Text(
                             'Verifikasi Pembayaran',
@@ -3224,7 +3225,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   ),
 
                   Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -3252,16 +3253,16 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           pembayaran['metode_bayar'] ?? '-',
                         ),
 
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                         Divider(),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
 
                         if (pembayaran['payment_receipt'] != null) ...[
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           GestureDetector(
                             onTap: () => _showBuktiPembayaran(pembayaran),
                             child: Container(
-                              padding: EdgeInsets.all(12),
+                              padding: EdgeInsets.all(AppSpacing.md),
                               decoration: BoxDecoration(
                                 color: ColorUtils.corporateBlue600.withValues(
                                   alpha: 0.08,
@@ -3280,7 +3281,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     color: ColorUtils.corporateBlue600,
                                     size: 20,
                                   ),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: AppSpacing.sm),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -3313,7 +3314,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                         ],
 
                         // Status Verifikasi
@@ -3329,7 +3330,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           },
                         ),
 
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
 
                         // Catatan
                         _buildDialogTextField(
@@ -3343,7 +3344,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   ),
 
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppSpacing.lg),
                     child: Row(
                       children: [
                         Expanded(
@@ -3362,7 +3363,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () async {
@@ -3488,7 +3489,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           borderRadius: BorderRadius.circular(16),
           onTap: () {},
           child: Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -3521,7 +3522,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         size: 22,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3548,7 +3549,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     // Status chip
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -3631,7 +3632,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             size: 10,
                             color: _getPrimaryColor(),
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: AppSpacing.xs),
                           Text(
                             _getTranslatedPeriode(item['periode']),
                             style: TextStyle(
@@ -3661,7 +3662,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               size: 10,
                               color: ColorUtils.info600,
                             ),
-                            SizedBox(width: 4),
+                            SizedBox(width: AppSpacing.xs),
                             ConstrainedBox(
                               constraints: BoxConstraints(maxWidth: 160),
                               child: Text(
@@ -3681,7 +3682,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   ],
                 ),
 
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
 
                 // Action buttons
                 Row(
@@ -3693,7 +3694,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       onPressed: () => _confirmGenerateBills(item),
                       tooltip: 'Generate Tagihan',
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.edit_rounded,
                       color: _getPrimaryColor(),
@@ -3701,7 +3702,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           _showAddEditJenisPembayaran(jenisPembayaran: item),
                       tooltip: AppLocalizations.edit.tr,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.delete_rounded,
                       color: ColorUtils.error600,
@@ -3743,7 +3744,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildDashboardStats() {
     return Padding(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
           Expanded(
@@ -3815,7 +3816,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
             ),
             child: Icon(icon, color: color, size: 20),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppSpacing.sm),
           Text(
             value,
             style: TextStyle(
@@ -3861,7 +3862,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         ),
         if (generatedBatches.isEmpty)
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: Center(
               child: Text(
                 'Belum ada tagihan yang digenerate',
@@ -3917,7 +3918,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
               size: 22,
             ),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -4131,7 +4132,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     // Title and subtitle
                     Expanded(
                       child: Column(
@@ -4174,7 +4175,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           child: Row(
                             children: [
                               Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text('Perbarui Data'),
                             ],
                           ),
@@ -4216,7 +4217,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             if (_pembayaranPendingList.isNotEmpty)
                               _buildPendingSection(),
                             _buildGeneratedPaymentTypesSection(),
-                            SizedBox(height: 16),
+                            SizedBox(height: AppSpacing.lg),
                           ],
                         ),
                       ),
@@ -4226,7 +4227,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         children: [
                           // Search Bar and Filter
                           Padding(
-                            padding: EdgeInsets.all(16),
+                            padding: EdgeInsets.all(AppSpacing.lg),
                             child: Row(
                               children: [
                                 Expanded(
@@ -4274,7 +4275,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 // Filter Button
                                 Container(
                                   decoration: BoxDecoration(
@@ -4305,7 +4306,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                           right: 8,
                                           top: 8,
                                           child: Container(
-                                            padding: EdgeInsets.all(4),
+                                            padding: EdgeInsets.all(AppSpacing.xs),
                                             decoration: BoxDecoration(
                                               color: ColorUtils.error600,
                                               shape: BoxShape.circle,
@@ -4380,12 +4381,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                         ],
                                       ),
                                     ),
-                                    SizedBox(width: 8),
+                                    SizedBox(width: AppSpacing.sm),
                                     InkWell(
                                       onTap: _clearAllFilters,
                                       borderRadius: BorderRadius.circular(8),
                                       child: Container(
-                                        padding: EdgeInsets.all(8),
+                                        padding: EdgeInsets.all(AppSpacing.sm),
                                         decoration: BoxDecoration(
                                           color: ColorUtils.error600,
                                           borderRadius: BorderRadius.circular(
@@ -4403,7 +4404,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 ),
                               ),
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.sm),
                           ],
 
                           if (filteredJenisPembayaran.isNotEmpty)
@@ -4421,7 +4422,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 ],
                               ),
                             ),
-                          SizedBox(height: 4),
+                          SizedBox(height: AppSpacing.xs),
                           Expanded(
                             child: filteredJenisPembayaran.isEmpty
                                 ? EmptyState(
@@ -4591,7 +4592,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ),
                       ],
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xs),
                     Text(
                       item['label'] as String,
                       style: TextStyle(
@@ -4631,7 +4632,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         child: Row(
           children: [
             Icon(icon, size: 16, color: sectionColor),
-            SizedBox(width: 8),
+            SizedBox(width: AppSpacing.sm),
             Text(
               title,
               style: TextStyle(
@@ -4649,7 +4650,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget _buildPendingSection() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -4680,7 +4681,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   size: 20,
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -4779,7 +4780,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           borderRadius: BorderRadius.circular(16),
           onTap: () => _showVerifikasiDialog(pembayaran),
           child: Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -4817,7 +4818,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4900,7 +4901,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             size: 10,
                             color: ColorUtils.slate500,
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: AppSpacing.xs),
                           Text(
                             pembayaran['jenis_pembayaran_nama'] ?? '-',
                             style: TextStyle(
@@ -4926,7 +4927,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             size: 10,
                             color: ColorUtils.slate500,
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: AppSpacing.xs),
                           Text(
                             _formatCurrency(pembayaran['amount']),
                             style: TextStyle(
@@ -4953,7 +4954,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             size: 10,
                             color: ColorUtils.slate500,
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: AppSpacing.xs),
                           Text(
                             pembayaran['payment_date']?.split('T')[0] ?? '-',
                             style: TextStyle(
@@ -5019,7 +5020,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
                 // Verifikasi button
                 if (!ref.read(academicYearRiverpod).isReadOnly) ...[
-                  SizedBox(height: 12),
+                  SizedBox(height: AppSpacing.md),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -5098,7 +5099,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
               // Header
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   gradient: _getCardGradient(),
                   borderRadius: BorderRadius.only(
@@ -5109,7 +5110,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.photo_library, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     Text(
                       'Bukti Pembayaran',
                       style: TextStyle(
@@ -5130,7 +5131,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
               // Image
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
@@ -5157,12 +5158,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               color: ColorUtils.error600,
                               size: 40,
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.sm),
                             Text(
                               'Gagal memuat gambar',
                               style: TextStyle(color: ColorUtils.error600),
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.sm),
                             Text(
                               'File: $imageFile',
                               style: TextStyle(
@@ -5181,7 +5182,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
               // Info
               Container(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
                   borderRadius: BorderRadius.only(
@@ -5199,7 +5200,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         fontSize: 14,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     _buildInfoRow('Siswa', pembayaran['siswa_nama'] ?? '-'),
                     _buildInfoRow('Kelas', pembayaran['kelas_nama'] ?? '-'),
                     _buildInfoRow(

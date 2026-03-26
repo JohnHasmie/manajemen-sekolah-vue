@@ -33,6 +33,8 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/mixins/pagination_mixin.dart';
 
 /// Admin announcement management screen.
 ///
@@ -49,8 +51,8 @@ class AdminAnnouncementScreen extends ConsumerStatefulWidget {
 ///
 /// Key state variables (like Vue `data()` properties):
 /// - [_announcements] - paginated list of announcement objects
-/// - [_isLoading] / [_isLoadingMore] - loading states for initial load vs infinite scroll
-/// - [_currentPage] / [_hasMoreData] - pagination tracking (like Laravel's `paginate()`)
+/// - [_isLoading] / [isLoadingMore] - loading states for initial load vs infinite scroll
+/// - [currentPage] / [hasMoreData] - pagination tracking (like Laravel's `paginate()`)
 /// - [_selectedPriorityFilter] / [_selectedTargetFilter] / [_selectedStatusFilter] - filter states
 /// - [_searchController] - search input with debounce (like Vue `watch` with debounce)
 ///
@@ -58,24 +60,16 @@ class AdminAnnouncementScreen extends ConsumerStatefulWidget {
 /// into view, they're batched and sent to the API after 1 second of inactivity.
 ///
 /// setState() is like Vue's reactivity - triggers a re-render when data changes.
-class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen> {
+class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen>
+    with PaginationMixin {
   final ApiService _apiService = ApiService();
   File? _selectedFile;
   List<dynamic> _announcements = [];
   bool _isLoading = true;
   String? _errorMessage;
 
-  // Scroll Controller for Infinite Scroll
-  final ScrollController _scrollController = ScrollController();
-
   // Search dan filter
   final TextEditingController _searchController = TextEditingController();
-
-  // Pagination States (Infinite Scroll)
-  int _currentPage = 1;
-  final int _perPage = 10; // Fixed 10 items per load
-  bool _hasMoreData = true;
-  bool _isLoadingMore = false;
 
   // Filter States (Backend filtering)
   String? _selectedPriorityFilter; // 'Important', 'Normal', or null for all
@@ -99,9 +93,8 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   @override
   void initState() {
     super.initState();
-
-    // Listen to scroll for infinite scroll
-    _scrollController.addListener(_onScroll);
+    perPage = 10;
+    initPagination();
 
     // Listen to search changes with debounce
     _searchController.addListener(_onSearchChanged);
@@ -118,8 +111,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   /// Cleans up controllers and cancels pending timers to prevent memory leaks.
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+    disposePagination();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _searchDebounce?.cancel(); // Cancel search debounce
@@ -174,7 +166,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   }
 
   String? _buildAnnouncementCacheKey() {
-    if (_currentPage != 1) return null;
+    if (currentPage != 1) return null;
     if (_selectedPriorityFilter != null ||
         _selectedTargetFilter != null ||
         _selectedStatusFilter != null ||
@@ -195,19 +187,6 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
     _loadData(resetPage: true, useCache: false);
   }
 
-  /// Detects when user scrolls near the bottom to trigger loading more items.
-  /// This implements "infinite scroll" - like a Vue `@scroll` handler or
-  /// an Intersection Observer that loads more data when reaching the bottom.
-  void _onScroll() {
-    // Detect when user scrolls near bottom
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      if (!_isLoadingMore && _hasMoreData && !_isLoading) {
-        _loadMoreAnnouncements();
-      }
-    }
-  }
-
   /// Debounced search handler - waits 500ms after typing stops before searching.
   /// Like a Vue `watch` on a search input with `debounce: 500`.
   void _onSearchChanged() {
@@ -216,7 +195,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
   void _handleSearch() {
     setState(() {
-      _currentPage = 1;
+      currentPage = 1;
     });
     _loadData();
   }
@@ -275,7 +254,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
       _selectedTargetFilter = null;
       _selectedStatusFilter = null;
       _searchController.clear();
-      _currentPage = 1;
+      currentPage = 1;
       _hasActiveFilter = false;
     });
     _loadData(); // Reload data setelah clear filters
@@ -357,7 +336,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             children: [
               // --- Pattern #11 Gradient Header ---
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -382,7 +361,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                           color: Colors.white,
                           size: 22,
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Filter',
@@ -422,7 +401,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
               // --- Filter Content ---
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(AppSpacing.xl),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -434,7 +413,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             size: 16,
                             color: ColorUtils.slate600,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Priority',
@@ -493,7 +472,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         }).toList(),
                       ),
 
-                      SizedBox(height: 20),
+                      SizedBox(height: AppSpacing.xl),
 
                       // Target Filter
                       Row(
@@ -503,7 +482,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             size: 16,
                             color: ColorUtils.slate600,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Target',
@@ -593,7 +572,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             }).toList(),
                       ),
 
-                      SizedBox(height: 20),
+                      SizedBox(height: AppSpacing.xl),
 
                       // Status Filter
                       Row(
@@ -603,7 +582,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             size: 16,
                             color: ColorUtils.slate600,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Status',
@@ -692,7 +671,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
               // --- Pattern #11 Footer ---
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -728,7 +707,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
@@ -778,8 +757,8 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
     try {
       if (resetPage) {
-        _currentPage = 1;
-        _hasMoreData = true;
+        currentPage = 1;
+        hasMoreData = true;
         _errorMessage = null;
         _processedIds.clear();
       }
@@ -794,7 +773,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             if (cachedList.isNotEmpty) {
               setState(() {
                 _announcements = cachedList;
-                _hasMoreData = cached['pagination']?['has_next_page'] ?? false;
+                hasMoreData = cached['pagination']?['has_next_page'] ?? false;
                 _isLoading = false;
               });
               AppLogger.info('announcement', 'Announcements loaded from cache');
@@ -876,8 +855,8 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
       // Load with pagination and backend filtering
       final response = await getIt<ApiAnnouncementService>().getAnnouncementsPaginated(
-        page: _currentPage,
-        limit: _perPage,
+        page: currentPage,
+        limit: perPage,
         prioritas: mappedPrioritas,
         roleTarget: mappedRoleTarget,
         status: mappedStatus,
@@ -894,7 +873,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
         setState(() {
           _announcements = fetchedList;
-          _hasMoreData = response['pagination']?['has_next_page'] ?? false;
+          hasMoreData = response['pagination']?['has_next_page'] ?? false;
           _isLoading = false;
           _errorMessage = null;
         });
@@ -941,18 +920,11 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
     }
   }
 
-  /// Loads the next page of announcements for infinite scroll.
-  /// Like incrementing `page` param in a Vue API call when user scrolls to bottom.
-  Future<void> _loadMoreAnnouncements() async {
-    if (_isLoadingMore || !_hasMoreData) return;
-
-    setState(() {
-      _isLoadingMore = true;
-    });
-
+  /// PaginationMixin callback — loads the given page of announcements.
+  /// The mixin handles isLoadingMore, currentPage++, and scroll detection.
+  @override
+  Future<void> loadPage(int page) async {
     try {
-      _currentPage++;
-
       // Map display values to backend values (same logic as _loadData)
       String? mappedPrioritas;
       if (_selectedPriorityFilter != null) {
@@ -1012,8 +984,8 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
       }
 
       final response = await getIt<ApiAnnouncementService>().getAnnouncementsPaginated(
-        page: _currentPage,
-        limit: _perPage,
+        page: page,
+        limit: perPage,
         prioritas: mappedPrioritas,
         roleTarget: mappedRoleTarget,
         status: mappedStatus,
@@ -1027,38 +999,25 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
       if (response.containsKey('data') && response.containsKey('pagination')) {
         var newItems = response['data'] ?? [];
 
-        // Keep all items (including read ones) as per user request
-        if (newItems is List) {
-          // No filtering
-        }
-
         setState(() {
           if (newItems is List) {
             _announcements.addAll(newItems);
           }
-          _hasMoreData = response['pagination']?['has_next_page'] ?? false;
-          _isLoadingMore = false;
+          updatePaginationFromMeta(response['pagination']);
         });
       } else {
-        AppLogger.error('announcement', 'Unexpected response structure for _loadMoreAnnouncements');
+        AppLogger.error('announcement', 'Unexpected response structure for loadPage');
         setState(() {
-          _isLoadingMore = false;
-          _currentPage--; // Revert page increment on error
+          currentPage--; // Revert page increment on error
         });
       }
 
-      // Removed eager marking
-      // if (response['data'] != null && (response['data'] as List).isNotEmpty) {
-      //   _markAnnouncementsAsRead(response['data']);
-      // }
-
-      AppLogger.info('announcement', 'Loaded more announcements: Page $_currentPage, Total: ${_announcements.length}',);
+      AppLogger.info('announcement', 'Loaded more announcements: Page $page, Total: ${_announcements.length}',);
     } catch (e) {
       if (!mounted) return;
 
       setState(() {
-        _isLoadingMore = false;
-        _currentPage--; // Revert page increment on error
+        currentPage--; // Revert page increment on error
       });
 
       AppLogger.error('announcement', 'Error loading more announcements: $e');
@@ -1227,7 +1186,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         // --- Scrollable Form Body ---
                         Expanded(
                           child: SingleChildScrollView(
-                            padding: EdgeInsets.all(20),
+                            padding: EdgeInsets.all(AppSpacing.xl),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1239,7 +1198,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   }),
                                   icon: Icons.title,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildDialogTextField(
                                   controller: kontenController,
                                   label: languageProvider.getTranslatedText({
@@ -1249,7 +1208,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   icon: Icons.description,
                                   maxLines: 4,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildPrioritasDropdown(
                                   value: selectedPrioritas,
                                   onChanged: (value) {
@@ -1259,7 +1218,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   },
                                   languageProvider: languageProvider,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildRoleTargetDropdown(
                                   value: selectedRole,
                                   onChanged: (value) {
@@ -1269,7 +1228,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   },
                                   languageProvider: languageProvider,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 Row(
                                   children: [
                                     Expanded(
@@ -1288,7 +1247,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                             }),
                                       ),
                                     ),
-                                    SizedBox(width: 12),
+                                    SizedBox(width: AppSpacing.md),
                                     Expanded(
                                       child: _buildDateField(
                                         label: languageProvider
@@ -1307,7 +1266,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildFilePicker(
                                   setDialogState,
                                   languageProvider,
@@ -1319,7 +1278,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
                         // --- Enhanced Footer ---
                         Container(
-                          padding: EdgeInsets.all(20),
+                          padding: EdgeInsets.all(AppSpacing.xl),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border(
@@ -1361,7 +1320,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () async {
@@ -1587,7 +1546,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             child: Row(
               children: [
                 Icon(Icons.circle, color: ColorUtils.slate400, size: 16),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Normal',
@@ -1602,7 +1561,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             child: Row(
               children: [
                 Icon(Icons.warning, color: Colors.orange, size: 16),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Important',
@@ -1680,7 +1639,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
         child: Row(
           children: [
             Icon(Icons.calendar_today, color: _getPrimaryColor(), size: 20),
-            SizedBox(width: 12),
+            SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 value != null
@@ -1732,7 +1691,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             // Danger gradient header
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -1838,7 +1797,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => AppNavigator.pop(context, true),
@@ -1943,7 +1902,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                     size: 22,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
 
                 // Middle: title + preview + info chips
                 Expanded(
@@ -1973,7 +1932,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       // Info chips row
                       Wrap(
                         spacing: 5,
@@ -2001,7 +1960,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
 
                 // Right: unread dot + icon action buttons
                 Column(
@@ -2116,7 +2075,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
               // Header dengan gradient
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: _getCardGradient(),
                   borderRadius: BorderRadius.only(
@@ -2142,7 +2101,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             size: 20,
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Text(
                             announcementData['title'] ?? 'No Title',
@@ -2155,7 +2114,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.sm),
                     Text(
                       _formatDate(announcementData['created_at']),
                       style: TextStyle(
@@ -2169,7 +2128,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
               // Content
               Padding(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2208,7 +2167,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         ),
                       ),
 
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Content text
                     Text(
@@ -2220,7 +2179,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                       ),
                     ),
 
-                    SizedBox(height: 20),
+                    SizedBox(height: AppSpacing.xl),
 
                     // Attachment Section
                     if (announcementData['file_path'] != null) ...[
@@ -2235,7 +2194,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                           color: ColorUtils.slate600,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       InkWell(
                         onTap: () => _openFile(
                           _getFileUrl(announcementData['file_path']),
@@ -2243,7 +2202,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         ),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          padding: EdgeInsets.all(12),
+                          padding: EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
                             color: ColorUtils.slate50,
                             borderRadius: BorderRadius.circular(12),
@@ -2252,7 +2211,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                           child: Row(
                             children: [
                               Container(
-                                padding: EdgeInsets.all(8),
+                                padding: EdgeInsets.all(AppSpacing.sm),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
@@ -2266,7 +2225,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   size: 20,
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2305,12 +2264,12 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                           ),
                         ),
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: AppSpacing.xl),
                     ],
 
                     // Metadata
                     Container(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
                         borderRadius: BorderRadius.circular(12),
@@ -2328,7 +2287,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                 announcementData['creator_name'] ??
                                 'Unknown',
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppSpacing.sm),
                           _buildDetailRow(
                             icon: Icons.people,
                             label: languageProvider.getTranslatedText({
@@ -2341,7 +2300,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             ),
                           ),
                           if (announcementData['start_date'] != null)
-                            SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.sm),
                           if (announcementData['start_date'] != null)
                             _buildDetailRow(
                               icon: Icons.calendar_today,
@@ -2354,7 +2313,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                               ),
                             ),
                           if (announcementData['end_date'] != null)
-                            SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.sm),
                           if (announcementData['end_date'] != null)
                             _buildDetailRow(
                               icon: Icons.event_busy,
@@ -2373,7 +2332,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
               // Close button
               Container(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: [
                     Expanded(
@@ -2448,7 +2407,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
     return Row(
       children: [
         Icon(icon, size: 16, color: _getPrimaryColor()),
-        SizedBox(width: 8),
+        SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2521,7 +2480,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   ) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
         borderRadius: BorderRadius.circular(12),
@@ -2541,10 +2500,10 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppSpacing.sm),
           if (_selectedFile != null)
             Container(
-              padding: EdgeInsets.all(8),
+              padding: EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -2553,7 +2512,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
               child: Row(
                 children: [
                   Icon(Icons.description, color: _getPrimaryColor(), size: 20),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       _selectedFile!.path.split('/').last,
@@ -2600,7 +2559,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                       color: _getPrimaryColor(),
                       size: 24,
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xs),
                     Text(
                       languageProvider.getTranslatedText({
                         'en': 'Tap to upload file',
@@ -2695,7 +2654,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2750,7 +2709,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                               child: Row(
                                 children: [
                                   Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: AppSpacing.sm),
                                   Text('Perbarui Data'),
                                 ],
                               ),
@@ -2759,7 +2718,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
 
                     // Search Bar with Filter Button
                     Row(
@@ -2816,7 +2775,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             ),
                           ),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         // Filter Button
                         Container(
                           key: _filterKey,
@@ -2849,7 +2808,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                   right: 8,
                                   top: 8,
                                   child: Container(
-                                    padding: EdgeInsets.all(4),
+                                    padding: EdgeInsets.all(AppSpacing.xs),
                                     decoration: BoxDecoration(
                                       color: ColorUtils.error600,
                                       shape: BoxShape.circle,
@@ -2868,13 +2827,13 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
                     // Show active filters as chips
                     if (_hasActiveFilter) ...[
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       SizedBox(
                         height: 36,
                         child: Row(
                           children: [
                             Container(
-                              padding: EdgeInsets.all(8),
+                              padding: EdgeInsets.all(AppSpacing.sm),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
@@ -2885,7 +2844,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                 color: Colors.white,
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: ListView(
                                 scrollDirection: Axis.horizontal,
@@ -2937,7 +2896,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                 ],
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             InkWell(
                               onTap: _clearAllFilters,
                               borderRadius: BorderRadius.circular(8),
@@ -2999,10 +2958,10 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                         color: _getPrimaryColor(),
                         backgroundColor: Colors.white,
                         child: ListView.builder(
-                          controller: _scrollController,
+                          controller: paginationScrollController,
                           padding: EdgeInsets.only(top: 8, bottom: 16),
                           itemCount:
-                              _announcements.length + (_isLoadingMore ? 1 : 0),
+                              _announcements.length + (isLoadingMore ? 1 : 0),
                           itemBuilder: (context, index) {
                             // Show loading indicator at bottom
                             if (index == _announcements.length) {

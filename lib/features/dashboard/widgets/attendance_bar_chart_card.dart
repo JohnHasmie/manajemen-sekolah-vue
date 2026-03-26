@@ -9,6 +9,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/mini_bar_chart.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart'; // For SmoothPageIndicator
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A swipeable attendance bar chart card for the dashboard.
 ///
@@ -109,7 +110,7 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                               color: widget.accentColor,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,7 +197,7 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                                 cornerRadius: 2.0,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: AppSpacing.xs),
                             // X-axis labels
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -228,7 +229,7 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                             ),
                           ],
                         ),
-                      const SizedBox(height: 4), // Padding for page indicator
+                      const SizedBox(height: AppSpacing.xs), // Padding for page indicator
                     ],
                   ),
                 ),

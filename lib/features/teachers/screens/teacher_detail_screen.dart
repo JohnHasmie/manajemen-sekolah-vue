@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Teacher detail screen - displays full profile for a single teacher.
 ///
@@ -132,7 +133,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
               color: ColorUtils.corporateBlue600,
             ),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,7 +206,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
       child: Row(
         children: [
           Icon(icon, size: 16, color: ColorUtils.corporateBlue600),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(
@@ -380,7 +381,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                     child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,7 +435,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             strokeWidth: 3,
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                         Text(
                           'Memuat detail guru...',
                           style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
@@ -445,7 +446,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                 : _errorMessage != null
                 ? Center(
                     child: Padding(
-                      padding: EdgeInsets.all(24),
+                      padding: EdgeInsets.all(AppSpacing.xxl),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -459,18 +460,18 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             ),
                             child: Icon(Icons.error_outline_rounded, size: 36, color: ColorUtils.error600),
                           ),
-                          SizedBox(height: 16),
+                          SizedBox(height: AppSpacing.lg),
                           Text(
                             'Terjadi kesalahan',
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ColorUtils.slate800),
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppSpacing.sm),
                           Text(
                             _errorMessage!,
                             style: TextStyle(color: ColorUtils.slate600, fontSize: 13),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 20),
+                          SizedBox(height: AppSpacing.xl),
                           ElevatedButton.icon(
                             onPressed: _loadTeacherDetail,
                             icon: Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
@@ -487,7 +488,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                     ),
                   )
                 : SingleChildScrollView(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -525,13 +526,13 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 12),
+                              SizedBox(height: AppSpacing.md),
                               Text(
                                 nameStr,
                                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                                 textAlign: TextAlign.center,
                               ),
-                              SizedBox(height: 8),
+                              SizedBox(height: AppSpacing.sm),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
@@ -546,12 +547,12 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                       ),
                                       child: Row(mainAxisSize: MainAxisSize.min, children: [
                                         Icon(Icons.badge_outlined, size: 12, color: Colors.white),
-                                        SizedBox(width: 4),
+                                        SizedBox(width: AppSpacing.xs),
                                         Text('NIP: $nip', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
                                       ]),
                                     ),
                                   if (homeroomStatus != '-') ...[
-                                    SizedBox(width: 8),
+                                    SizedBox(width: AppSpacing.sm),
                                     Container(
                                       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                       decoration: BoxDecoration(
@@ -561,7 +562,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                       ),
                                       child: Row(mainAxisSize: MainAxisSize.min, children: [
                                         Icon(Icons.groups_outlined, size: 12, color: Colors.white),
-                                        SizedBox(width: 4),
+                                        SizedBox(width: AppSpacing.xs),
                                         Text('Wali Kelas', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
                                       ]),
                                     ),
@@ -571,11 +572,11 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
 
                         // --- Personal Information Card ---
                         Container(
-                          padding: EdgeInsets.all(16),
+                          padding: EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
@@ -592,11 +593,11 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
 
                         // --- Teaching Information Card ---
                         Container(
-                          padding: EdgeInsets.all(16),
+                          padding: EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
@@ -622,7 +623,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 24),
+                        SizedBox(height: AppSpacing.xxl),
 
                         // --- Back Button ---
                         SizedBox(
@@ -641,7 +642,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                       ],
                     ),
                   ),

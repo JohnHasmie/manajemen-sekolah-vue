@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A swipeable dashboard card showing teaching material progress per subject.
 ///
@@ -71,7 +72,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
                 onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
-                  padding: EdgeInsets.all(12),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   child: _buildMaterialContent(material),
                 ),
               );
@@ -96,7 +97,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -107,7 +108,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.menu_book_outlined, color: ColorUtils.slate400, size: 24),
-            SizedBox(height: 4),
+            SizedBox(height: AppSpacing.xs),
             Text(
               "No materials",
               style: TextStyle(
@@ -207,7 +208,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
             ),
           ),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppSpacing.xs),
         // Next chapter
         if (nextChapter != null)
           Text(
@@ -229,7 +230,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
               color: ColorUtils.success600,
             ),
           ),
-        SizedBox(height: 8), // Space for dots
+        SizedBox(height: AppSpacing.sm), // Space for dots
       ],
     );
   }

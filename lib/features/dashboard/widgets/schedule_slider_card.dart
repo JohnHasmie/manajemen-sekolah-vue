@@ -6,6 +6,7 @@
 // reusable [SmoothPageIndicator] dot indicator widget.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A swipeable dashboard card showing today's class schedule entries.
 ///
@@ -69,7 +70,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
                 onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
-                  padding: EdgeInsets.all(12),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   child: _buildScheduleContent(schedule),
                 ),
               );
@@ -95,7 +96,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -106,7 +107,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.event_busy, color: ColorUtils.slate400, size: 24),
-            SizedBox(height: 4),
+            SizedBox(height: AppSpacing.xs),
             Text(
               "No classes",
               style: TextStyle(
@@ -200,7 +201,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 12), // Space for dots
+        SizedBox(height: AppSpacing.md), // Space for dots
       ],
     );
   }

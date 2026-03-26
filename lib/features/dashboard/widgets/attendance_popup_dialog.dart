@@ -10,6 +10,7 @@ import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/mini_bar_chart.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 class AttendancePopupDialog extends StatefulWidget {
   final String? semesterLabel;
@@ -202,7 +203,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     _buildTypeDropdown(),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: AppSpacing.sm),
                                     _isWeekly
                                         ? _buildMonthDropdown()
                                         : _buildWeekDropdown(),
@@ -210,7 +211,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.lg),
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
@@ -221,7 +222,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: AppSpacing.xxl),
                             if (title == 'Absensi Belum Ada Data' ||
                                 chartData.every((val) => val == 0.0))
                               SizedBox(
@@ -261,7 +262,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 12),
+                                  const SizedBox(height: AppSpacing.md),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: List.generate(
@@ -298,12 +299,12 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
                       },
                     ),
                   ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             SmoothPageIndicator(
               controller: _pageController,
               count: _classesData.length,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             ElevatedButton(
               onPressed: () => AppNavigator.pop(context),
               style: ElevatedButton.styleFrom(

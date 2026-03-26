@@ -37,6 +37,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Admin teacher management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -371,7 +372,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                 children: [
                   // Header gradient (Pattern #11)
                   Container(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -396,7 +397,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                               color: Colors.white,
                               size: 22,
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: AppSpacing.md),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Filter Teachers',
@@ -438,7 +439,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                   // Scrollable Content
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.all(AppSpacing.xl),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -501,7 +502,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                               ],
                             ),
                           ),
-                          SizedBox(height: 20),
+                          SizedBox(height: AppSpacing.xl),
 
                           // Gender Section
                           Row(
@@ -511,7 +512,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 size: 16,
                                 color: ColorUtils.slate600,
                               ),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Gender',
@@ -558,7 +559,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                               }),
                             ],
                           ),
-                          SizedBox(height: 20),
+                          SizedBox(height: AppSpacing.xl),
 
                           // Employment Status Section
                           Row(
@@ -568,7 +569,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 size: 16,
                                 color: ColorUtils.slate600,
                               ),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Employment Status',
@@ -615,7 +616,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                               }),
                             ],
                           ),
-                          SizedBox(height: 20),
+                          SizedBox(height: AppSpacing.xl),
 
                           // Teaching Class Section
                           Row(
@@ -625,7 +626,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 size: 16,
                                 color: ColorUtils.slate600,
                               ),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Teaching Class',
@@ -682,7 +683,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 20),
+                          SizedBox(height: AppSpacing.xl),
 
                           // Homeroom Status Section
                           Row(
@@ -692,7 +693,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 size: 16,
                                 color: ColorUtils.slate600,
                               ),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Homeroom Teacher Status',
@@ -759,7 +760,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
 
                   // Footer Buttons (Pattern #11)
                   Container(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border(
@@ -797,7 +798,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
@@ -1527,7 +1528,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
 
                           Expanded(
                             child: SingleChildScrollView(
-                              padding: const EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(AppSpacing.xl),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -1539,7 +1540,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                     }),
                                     icon: Icons.person,
                                   ),
-                                  SizedBox(height: 12),
+                                  SizedBox(height: AppSpacing.md),
                                   if (teacher != null)
                                     Container(
                                       margin: EdgeInsets.only(bottom: 12),
@@ -1598,13 +1599,13 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                     icon: Icons.email,
                                     keyboardType: TextInputType.emailAddress,
                                   ),
-                                  SizedBox(height: 12),
+                                  SizedBox(height: AppSpacing.md),
                                   buildDialogTextField(
                                     controller: nipController,
                                     label: 'NIP',
                                     icon: Icons.badge,
                                   ),
-                                  SizedBox(height: 12),
+                                  SizedBox(height: AppSpacing.md),
 
                                   // Gender Dropdown (REQUIRED)
                                   buildDialogDropdown(
@@ -1638,12 +1639,12 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                       setState(() => selectedGender = value);
                                     },
                                   ),
-                                  SizedBox(height: 16),
+                                  SizedBox(height: AppSpacing.lg),
 
                                   // Subjects Section
                                   Container(
                                     width: double.infinity,
-                                    padding: EdgeInsets.all(12),
+                                    padding: EdgeInsets.all(AppSpacing.md),
                                     decoration: BoxDecoration(
                                       color: Colors.grey.shade50,
                                       borderRadius: BorderRadius.circular(12),
@@ -1666,7 +1667,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                             color: Colors.grey.shade700,
                                           ),
                                         ),
-                                        SizedBox(height: 8),
+                                        SizedBox(height: AppSpacing.sm),
                                         ..._subjects
                                             .where(
                                               (subject) =>
@@ -1712,7 +1713,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                       ],
                                     ),
                                   ),
-                                  SizedBox(height: 12),
+                                  SizedBox(height: AppSpacing.md),
 
                                   // Homeroom Class Dropdown (Optional)
                                   buildDialogDropdown(
@@ -1763,7 +1764,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                       );
                                     },
                                   ),
-                                  SizedBox(height: 12),
+                                  SizedBox(height: AppSpacing.md),
 
                                   // Employment Status Dropdown (Optional)
                                   buildDialogDropdown(
@@ -1822,7 +1823,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
 
                           // Enhanced Footer
                           Container(
-                            padding: EdgeInsets.all(20),
+                            padding: EdgeInsets.all(AppSpacing.xl),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               border: Border(
@@ -1863,7 +1864,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(width: 12),
+                                SizedBox(width: AppSpacing.md),
                                 Expanded(
                                   child: ElevatedButton(
                                     onPressed: () async {
@@ -2204,7 +2205,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 // Name + info tags
                 Expanded(
                   child: Column(
@@ -2220,16 +2221,16 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       if (isHomeroomTeacher && className != '-') ...[
                         _buildInfoTag(Icons.class_outlined, className),
-                        SizedBox(height: 4),
+                        SizedBox(height: AppSpacing.xs),
                       ],
                       _buildInfoTag(Icons.email_outlined, email),
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 // Status chip + action buttons
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -2262,7 +2263,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 shape: BoxShape.circle,
                               ),
                             ),
-                            SizedBox(width: 4),
+                            SizedBox(width: AppSpacing.xs),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Homeroom',
@@ -2301,7 +2302,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 shape: BoxShape.circle,
                               ),
                             ),
-                            SizedBox(width: 4),
+                            SizedBox(width: AppSpacing.xs),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Active',
@@ -2317,7 +2318,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                         ),
                       ),
                     if (!isReadOnly) ...[
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       Row(
                         children: [
                           InkWell(
@@ -2472,7 +2473,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                       child: Row(
                         children: [
                           Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Refresh Data',
@@ -2487,7 +2488,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                       child: Row(
                         children: [
                           Icon(Icons.download, size: 20),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Export to Excel',
@@ -2502,7 +2503,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                       child: Row(
                         children: [
                           Icon(Icons.upload, size: 20),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Import from Excel',
@@ -2517,7 +2518,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                       child: Row(
                         children: [
                           Icon(Icons.file_download, size: 20),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Download Template',
@@ -2587,7 +2588,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     // Filter Button
                     Container(
                       key: _filterKey,
@@ -2620,7 +2621,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                               right: 8,
                               top: 8,
                               child: Container(
-                                padding: EdgeInsets.all(4),
+                                padding: EdgeInsets.all(AppSpacing.xs),
                                 decoration: BoxDecoration(
                                   color: Colors.red,
                                   shape: BoxShape.circle,
@@ -2642,7 +2643,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                         child: Row(
                           children: [
                             Container(
-                              padding: EdgeInsets.all(8),
+                              padding: EdgeInsets.all(AppSpacing.sm),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
@@ -2653,7 +2654,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 color: Colors.white,
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: ListView(
                                 scrollDirection: Axis.horizontal,
@@ -2702,12 +2703,12 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 ],
                               ),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             InkWell(
                               onTap: _clearAllFilters,
                               borderRadius: BorderRadius.circular(8),
                               child: Container(
-                                padding: EdgeInsets.all(8),
+                                padding: EdgeInsets.all(AppSpacing.sm),
                                 decoration: BoxDecoration(
                                   color: Colors.red,
                                   borderRadius: BorderRadius.circular(8),
@@ -2724,7 +2725,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                       )
                     : null,
               ),
-              SizedBox(height: 8),
+              SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: _isLoading && _teachers.isEmpty
                     ? SkeletonListLoading(itemCount: 6, infoTagCount: 2)

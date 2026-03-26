@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Student detail screen - displays full profile for a single student.
 ///
@@ -150,7 +151,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
               color: _getPrimaryColor(),
             ),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +198,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
       child: Row(
         children: [
           Icon(icon, size: 16, color: _getPrimaryColor()),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(
@@ -299,7 +300,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                     child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,7 +347,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                   ),
                 ),
                 if (widget.onEdit != null) ...[
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   GestureDetector(
                     onTap: () {
                       AppNavigator.pop(context);
@@ -386,7 +387,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                             strokeWidth: 3,
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: AppSpacing.lg),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Loading student detail...',
@@ -400,7 +401,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                 : _errorMessage != null
                     ? Center(
                         child: Padding(
-                          padding: EdgeInsets.all(24),
+                          padding: EdgeInsets.all(AppSpacing.xxl),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -420,7 +421,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                   color: ColorUtils.error600,
                                 ),
                               ),
-                              SizedBox(height: 16),
+                              SizedBox(height: AppSpacing.lg),
                               Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'An error occurred',
@@ -432,7 +433,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                   color: ColorUtils.slate800,
                                 ),
                               ),
-                              SizedBox(height: 8),
+                              SizedBox(height: AppSpacing.sm),
                               Text(
                                 _errorMessage!,
                                 style: TextStyle(
@@ -441,7 +442,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              SizedBox(height: 20),
+                              SizedBox(height: AppSpacing.xl),
                               ElevatedButton.icon(
                                 onPressed: _loadStudentDetail,
                                 icon: Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
@@ -469,7 +470,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                         ),
                       )
                     : SingleChildScrollView(
-                        padding: EdgeInsets.all(16),
+                        padding: EdgeInsets.all(AppSpacing.lg),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -520,7 +521,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(height: 12),
+                                  SizedBox(height: AppSpacing.md),
                                   Text(
                                     nameStr.isNotEmpty ? nameStr : 'No Name',
                                     style: TextStyle(
@@ -530,7 +531,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
-                                  SizedBox(height: 8),
+                                  SizedBox(height: AppSpacing.sm),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     mainAxisSize: MainAxisSize.min,
@@ -549,7 +550,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Icon(Icons.badge_outlined, size: 12, color: Colors.white),
-                                              SizedBox(width: 4),
+                                              SizedBox(width: AppSpacing.xs),
                                               Text(
                                                 'NIS: $nis',
                                                 style: TextStyle(
@@ -562,7 +563,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                           ),
                                         ),
                                       if (className.isNotEmpty) ...[
-                                        SizedBox(width: 8),
+                                        SizedBox(width: AppSpacing.sm),
                                         Container(
                                           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
@@ -576,7 +577,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Icon(Icons.school_outlined, size: 12, color: Colors.white),
-                                              SizedBox(width: 4),
+                                              SizedBox(width: AppSpacing.xs),
                                               Text(
                                                 className,
                                                 style: TextStyle(
@@ -594,11 +595,11 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                 ],
                               ),
                             ),
-                            SizedBox(height: 16),
+                            SizedBox(height: AppSpacing.lg),
 
                             // --- Personal Information Card ---
                             Container(
-                              padding: EdgeInsets.all(16),
+                              padding: EdgeInsets.all(AppSpacing.lg),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
@@ -659,9 +660,9 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
 
                             // --- Class History Card ---
                             if (classes.isNotEmpty) ...[
-                              SizedBox(height: 12),
+                              SizedBox(height: AppSpacing.md),
                               Container(
-                                padding: EdgeInsets.all(16),
+                                padding: EdgeInsets.all(AppSpacing.lg),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(16),
@@ -692,11 +693,11 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                 ),
                               ),
                             ],
-                            SizedBox(height: 12),
+                            SizedBox(height: AppSpacing.md),
 
                             // --- Parent Information Card ---
                             Container(
-                              padding: EdgeInsets.all(16),
+                              padding: EdgeInsets.all(AppSpacing.lg),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
@@ -742,7 +743,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                 ],
                               ),
                             ),
-                            SizedBox(height: 24),
+                            SizedBox(height: AppSpacing.xxl),
 
                             // --- Back Button ---
                             SizedBox(
@@ -773,7 +774,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                                 ),
                               ),
                             ),
-                            SizedBox(height: 16),
+                            SizedBox(height: AppSpacing.lg),
                           ],
                         ),
                       ),

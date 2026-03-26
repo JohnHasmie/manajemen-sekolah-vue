@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 // Note: pastikan import AppLocalizations dan Provider jika diperlukan,
 // namun di sini kita gunakan styling yang umum.
 
@@ -396,7 +397,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
           title: Row(
             children: [
               Icon(Icons.auto_awesome, color: ColorUtils.primary),
-              SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),
               Text(
                 'Generate Ulang AI',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -412,14 +413,14 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                   'Sistem akan menyusun ulang konten RPP berdasarkan data saat ini. Anda dapat menambahkan instruksi spesifik di bawah.',
                   style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
                 _buildDialogField(
                   'Mata Pelajaran',
                   _mataPelajaranController.text,
                 ),
-                SizedBox(height: 12),
+                SizedBox(height: AppSpacing.md),
                 _buildDialogField('Bab', _babController.text),
-                SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
                 Text(
                   'Instruksi / Prompt Tambahan (Opsional)',
                   style: TextStyle(
@@ -428,7 +429,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: AppSpacing.sm),
                 TextField(
                   controller: _promptController,
                   maxLines: 4,
@@ -487,7 +488,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: TextStyle(color: ColorUtils.slate500, fontSize: 12)),
-        SizedBox(height: 4),
+        SizedBox(height: AppSpacing.xs),
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -775,13 +776,13 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
   Widget _buildPollingSkeletonBody() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Status banner
           Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
@@ -797,7 +798,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                     color: ColorUtils.getRoleColor('guru'),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -810,7 +811,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                           fontSize: 14,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       Text(
                         _pollingStatus,
                         style: TextStyle(
@@ -824,20 +825,20 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
               ],
             ),
           ),
-          SizedBox(height: 24),
+          SizedBox(height: AppSpacing.xxl),
           // Skeleton sections
           _buildSkeletonSection('Judul RPP', height: 48),
-          SizedBox(height: 20),
+          SizedBox(height: AppSpacing.xl),
           _buildSkeletonSection('Informasi Umum', height: 200),
-          SizedBox(height: 20),
+          SizedBox(height: AppSpacing.xl),
           _buildSkeletonSection('A. Kompetensi Inti (KI)', height: 120),
-          SizedBox(height: 20),
+          SizedBox(height: AppSpacing.xl),
           _buildSkeletonSection('B. Kompetensi Dasar (KD)', height: 120),
-          SizedBox(height: 20),
+          SizedBox(height: AppSpacing.xl),
           _buildSkeletonSection('C. Tujuan Pembelajaran', height: 120),
-          SizedBox(height: 20),
+          SizedBox(height: AppSpacing.xl),
           _buildSkeletonSection('D. Kegiatan Pembelajaran', height: 150),
-          SizedBox(height: 20),
+          SizedBox(height: AppSpacing.xl),
           _buildSkeletonSection('E. Penilaian (Asesmen)', height: 120),
         ],
       ),
@@ -856,7 +857,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             color: ColorUtils.slate800,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppSpacing.sm),
         Shimmer.fromColors(
           baseColor: ColorUtils.shimmerBaseColor,
           highlightColor: ColorUtils.shimmerHighlightColor,
@@ -876,7 +877,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   Widget _buildPollingErrorBody() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -893,7 +894,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                 color: ColorUtils.error600,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             Text(
               'Gagal Generate RPP',
               style: TextStyle(
@@ -902,13 +903,13 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                 color: ColorUtils.slate700,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             Text(
               _pollingError ?? '',
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             ElevatedButton(
               onPressed: () => AppNavigator.pop(context),
               style: ElevatedButton.styleFrom(
@@ -985,12 +986,12 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
           : _pollingError != null
               ? _buildPollingErrorBody()
               : SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(12),
@@ -999,7 +1000,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
               child: Row(
                 children: [
                   Icon(Icons.auto_awesome, color: Colors.blue.shade700),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(
                       'RPP berhasil di-generate menggunakan format 10 Komponen AI dan telah dipetakan ke 3 Komponen K-13. Anda bisa menyesuaikan teks di bawah ini sebelum menyimpan.',
@@ -1013,27 +1014,27 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('Judul RPP'),
             _buildTextField(_judulController, maxLines: 1),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('Informasi Umum'),
             _buildMetaInfoPanel(),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('A. Kompetensi Inti (KI)'),
             _buildRichTextField(_kompetensiIntiController),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('B. Kompetensi Dasar (KD) dan Indikator (IPK)'),
             _buildRichTextField(_kompetensiDasarController),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('C. Tujuan Pembelajaran'),
             _buildRichTextField(_tujuanController),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             _buildSectionHeader(
               'D. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup)',
             ),
             _buildRichTextField(_kegiatanIntiController),
-            SizedBox(height: 20),
+            SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('E. Penilaian (Asesmen)'),
             _buildRichTextField(_penilaianController),
             SizedBox(height: 40),
@@ -1089,7 +1090,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
   Widget _buildMetaInfoPanel() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1175,7 +1176,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         style: TextStyle(fontSize: 14, height: 1.6, color: ColorUtils.slate800),
         decoration: InputDecoration(
           border: InputBorder.none,
-          contentPadding: EdgeInsets.all(16),
+          contentPadding: EdgeInsets.all(AppSpacing.lg),
         ),
       ),
     );
@@ -1219,7 +1220,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
           Divider(height: 1, color: ColorUtils.slate200),
           Container(
             height: 200,
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: quill.QuillEditor.basic(
               controller: controller,
               config: const quill.QuillEditorConfig(),

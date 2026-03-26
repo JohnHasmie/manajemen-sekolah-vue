@@ -35,6 +35,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Admin student management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -600,7 +601,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                 children: [
                   // Gradient Header
                   Container(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -625,7 +626,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                               color: Colors.white,
                               size: 24,
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: AppSpacing.md),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Filter Students',
@@ -666,7 +667,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                   // Scrollable Content
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.all(AppSpacing.xl),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -680,7 +681,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                   size: 18,
                                   color: ColorUtils.slate700,
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Guardian Name',
@@ -693,7 +694,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                               ],
                             ),
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           Autocomplete<String>(
                             optionsBuilder:
                                 (TextEditingValue textEditingValue) async {
@@ -772,7 +773,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                   );
                                 },
                           ),
-                          SizedBox(height: 20),
+                          SizedBox(height: AppSpacing.xl),
 
                           // Status Filter
                           Padding(
@@ -784,7 +785,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                   size: 18,
                                   color: ColorUtils.slate700,
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Status',
@@ -797,7 +798,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                               ],
                             ),
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
@@ -844,7 +845,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                             ],
                           ),
 
-                          SizedBox(height: 24),
+                          SizedBox(height: AppSpacing.xxl),
 
                           // Kelas Filter
                           Padding(
@@ -856,7 +857,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                   size: 18,
                                   color: ColorUtils.slate700,
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Class',
@@ -922,7 +923,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                             }).toList(),
                           ),
 
-                          SizedBox(height: 24),
+                          SizedBox(height: AppSpacing.xxl),
 
                           // Gender Filter
                           Padding(
@@ -934,7 +935,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                   size: 18,
                                   color: ColorUtils.slate700,
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppSpacing.sm),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Gender',
@@ -947,7 +948,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                               ],
                             ),
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppSpacing.md),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
@@ -1000,7 +1001,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
 
                   // Enhanced Footer
                   Container(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border(
@@ -1038,7 +1039,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
@@ -1281,7 +1282,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
 
                         Expanded(
                           child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(20),
+                            padding: const EdgeInsets.all(AppSpacing.xl),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -1293,14 +1294,14 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                   }),
                                   icon: Icons.person,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildDialogTextField(
                                   controller: nisController,
                                   label: 'NIS',
                                   icon: Icons.badge,
                                   keyboardType: TextInputType.number,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildDialogDropdown(
                                   value: selectedClassId,
                                   label: languageProvider.getTranslatedText({
@@ -1328,7 +1329,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                     });
                                   },
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildDialogTextField(
                                   controller: addressController,
                                   label: languageProvider.getTranslatedText({
@@ -1338,7 +1339,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                   icon: Icons.location_on,
                                   maxLines: 2,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildDialogTextField(
                                   controller: birthDateController,
                                   label: languageProvider.getTranslatedText({
@@ -1384,7 +1385,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                     }
                                   },
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildDialogDropdown(
                                   value: selectedGender,
                                   label: languageProvider.getTranslatedText({
@@ -1418,7 +1419,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                     });
                                   },
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 if (isEdit)
                                   Container(
                                     margin: EdgeInsets.only(bottom: 12),
@@ -1476,7 +1477,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                   }),
                                   icon: Icons.family_restroom,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildDialogTextField(
                                   controller: emailParentController,
                                   label: languageProvider.getTranslatedText({
@@ -1487,7 +1488,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                   keyboardType: TextInputType.emailAddress,
                                   hintText: 'wali@example.com',
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.md),
                                 _buildDialogTextField(
                                   controller: phoneController,
                                   label: languageProvider.getTranslatedText({
@@ -1504,7 +1505,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
 
                         // Enhanced Footer (Matches _showFilterSheet)
                         Container(
-                          padding: EdgeInsets.all(20),
+                          padding: EdgeInsets.all(AppSpacing.xl),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border(
@@ -1546,7 +1547,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () async {
@@ -1708,7 +1709,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                                   Icons.error_outline,
                                                   color: ColorUtils.error600,
                                                 ),
-                                                SizedBox(width: 8),
+                                                SizedBox(width: AppSpacing.sm),
                                                 Text(
                                                   languageProvider
                                                       .getTranslatedText({
@@ -1976,7 +1977,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),
 
                 // Student Info (expanded)
                 Expanded(
@@ -1994,7 +1995,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xs),
                       // Compact info chips
                       Row(
                         children: [
@@ -2008,7 +2009,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
 
                 // Right side: status + actions
                 Column(
@@ -2035,7 +2036,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                               shape: BoxShape.circle,
                             ),
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: AppSpacing.xs),
                           Text(
                             'Active',
                             style: TextStyle(
@@ -2048,7 +2049,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                       ),
                     ),
                     if (!isReadOnly) ...[
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       Row(
                         children: [
                           // Edit button
@@ -2188,7 +2189,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
             child: Row(
               children: [
                 Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Refresh Data',
@@ -2203,7 +2204,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
             child: Row(
               children: [
                 Icon(Icons.download, size: 20),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Export to Excel',
@@ -2218,7 +2219,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
             child: Row(
               children: [
                 Icon(Icons.upload, size: 20),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Import from Excel',
@@ -2233,7 +2234,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
             child: Row(
               children: [
                 Icon(Icons.file_download, size: 20),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Download Template',
@@ -2300,7 +2301,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
               ),
             ),
           ),
-          SizedBox(width: 8),
+          SizedBox(width: AppSpacing.sm),
           Container(
             key: _filterKey,
             decoration: BoxDecoration(
@@ -2332,7 +2333,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                     right: 8,
                     top: 8,
                     child: Container(
-                      padding: EdgeInsets.all(4),
+                      padding: EdgeInsets.all(AppSpacing.xs),
                       decoration: BoxDecoration(
                         color: ColorUtils.error600,
                         shape: BoxShape.circle,
@@ -2354,7 +2355,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
             child: Row(
               children: [
                 Container(
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -2365,7 +2366,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: ListView(
                     scrollDirection: Axis.horizontal,
@@ -2409,12 +2410,12 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppSpacing.sm),
                 InkWell(
                   onTap: _clearAllFilters,
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: EdgeInsets.all(8),
+                    padding: EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: ColorUtils.error600,
                       borderRadius: BorderRadius.circular(8),

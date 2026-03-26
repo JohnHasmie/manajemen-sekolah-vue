@@ -18,6 +18,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 // Form Input Nilai Individual
 class GradeInputForm extends ConsumerStatefulWidget {
@@ -216,7 +217,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
             ),
             child: Icon(icon, size: 18, color: ColorUtils.corporateBlue600),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,7 +297,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,7 +340,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                         // Info card - Pattern #10 detail items style
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(14),
@@ -392,7 +393,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                           ),
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
 
                         // Input Title - Pattern #9 styled field
                         Container(
@@ -438,7 +439,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                           ),
                         ),
 
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
 
                         // Input Nilai - Pattern #9 styled field
                         Container(
@@ -499,7 +500,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                           ),
                         ),
 
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
 
                         // Input Deskripsi - Pattern #9 styled field
                         Container(
@@ -538,7 +539,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                           ),
                         ),
 
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
 
                         // Date picker - Pattern #9 field container style
                         Container(
@@ -558,7 +559,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                                 color: _getPrimaryColor(),
                                 size: 20,
                               ),
-                              SizedBox(width: 12),
+                              SizedBox(width: AppSpacing.md),
                               Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Date:',
@@ -585,7 +586,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.xl),
 
                         // Submit button
                         SizedBox(
@@ -617,7 +618,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                       ],
                     ),
                   ),

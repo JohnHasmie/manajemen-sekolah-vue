@@ -9,6 +9,7 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Form screen for editing AI-generated learning recommendations.
 ///
@@ -227,7 +228,7 @@ class _LearningRecommendationEditScreenState
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +242,7 @@ class _LearningRecommendationEditScreenState
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         'Penyuntingan Konten AI',
                         style: TextStyle(
@@ -275,7 +276,7 @@ class _LearningRecommendationEditScreenState
 
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               itemCount: widget.recommendations.length,
               itemBuilder: (context, index) {
                 final rec = widget.recommendations[index];
@@ -286,7 +287,7 @@ class _LearningRecommendationEditScreenState
 
           // Bottom Save Section
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
@@ -353,7 +354,7 @@ class _LearningRecommendationEditScreenState
             child: Row(
               children: [
                 Icon(Icons.edit_note, color: ColorUtils.slate400, size: 20),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 const Expanded(
                   child: Text(
                     'Penyuntingan Rekomendasi',
@@ -367,7 +368,7 @@ class _LearningRecommendationEditScreenState
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
@@ -383,7 +384,7 @@ class _LearningRecommendationEditScreenState
                     letterSpacing: 1,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 TextFormField(
                   controller: _titleControllers[recId],
                   decoration: InputDecoration(
@@ -409,7 +410,7 @@ class _LearningRecommendationEditScreenState
                     color: ColorUtils.slate800,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xxl),
 
                 // Priority Field
                 Text(
@@ -421,7 +422,7 @@ class _LearningRecommendationEditScreenState
                     letterSpacing: 1,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: ['low', 'medium', 'high'].map((p) {
                     final bool isSelected = currentPriority == p;
@@ -458,7 +459,7 @@ class _LearningRecommendationEditScreenState
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xxl),
 
                 // Description Field
                 Text(
@@ -470,13 +471,13 @@ class _LearningRecommendationEditScreenState
                     letterSpacing: 1,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 if (_descriptionControllers[recId] != null)
                   _buildQuillSection(_descriptionControllers[recId]!),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xxl),
           if (rec['materials'] != null &&
               (rec['materials'] as List).isNotEmpty) ...[
             Padding(
@@ -491,12 +492,12 @@ class _LearningRecommendationEditScreenState
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             ...(rec['materials'] as List).map((mat) {
               final matId = mat['id']?.toString() ?? UniqueKey().toString();
               return Container(
                 margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
                   borderRadius: BorderRadius.circular(16),
@@ -512,7 +513,7 @@ class _LearningRecommendationEditScreenState
                           color: ColorUtils.slate400,
                           size: 16,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         Text(
                           mat['title'] ?? 'Materi',
                           style: TextStyle(
@@ -523,7 +524,7 @@ class _LearningRecommendationEditScreenState
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     if (_materialControllers[recId]?[matId] != null)
                       _buildQuillSection(_materialControllers[recId]![matId]!),
                   ],
@@ -531,7 +532,7 @@ class _LearningRecommendationEditScreenState
               );
             }),
           ],
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
         ],
       ),
     );
@@ -570,7 +571,7 @@ class _LearningRecommendationEditScreenState
         ),
         Container(
           height: 180,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300),
             borderRadius: BorderRadius.circular(12),

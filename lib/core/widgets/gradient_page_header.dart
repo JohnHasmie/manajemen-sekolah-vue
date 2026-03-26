@@ -6,6 +6,7 @@
 // injected as child widgets (similar to Vue's named slots).
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A gradient header bar displayed at the top of management screens.
 ///
@@ -87,7 +88,7 @@ class GradientPageHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
               ],
 
               // Title and subtitle
@@ -120,10 +121,10 @@ class GradientPageHeader extends StatelessWidget {
             ],
           ),
 
-          if (searchBar != null) ...[const SizedBox(height: 16), searchBar!],
+          if (searchBar != null) ...[const SizedBox(height: AppSpacing.lg), searchBar!],
 
           if (filterChips != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             filterChips!,
           ],
         ],

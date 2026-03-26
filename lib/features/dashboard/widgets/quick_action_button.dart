@@ -6,6 +6,7 @@
 // buttons below a hero section.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A quick action button with icon, label, and optional badge.
 ///
@@ -78,7 +79,7 @@ class QuickActionButton extends StatelessWidget {
                       right: -4,
                       top: -4,
                       child: Container(
-                        padding: EdgeInsets.all(4),
+                        padding: EdgeInsets.all(AppSpacing.xs),
                         decoration: BoxDecoration(
                           color: ColorUtils.error600,
                           shape: BoxShape.circle,

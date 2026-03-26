@@ -24,6 +24,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Admin report card screen - select class, view students, export/publish raports.
 ///
@@ -513,7 +514,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text('Error: $_errorMessage'),
               TextButton(
                 onPressed: _loadInitialData,
@@ -572,7 +573,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -586,7 +587,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         'Unduh dan publikasikan raport kelas',
                         style: TextStyle(
@@ -622,7 +623,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                       child: Row(
                         children: [
                           Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           const Text('Perbarui Data'),
                         ],
                       ),
@@ -640,7 +641,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
       bottomNavigationBar:
           _selectedClass != null && !_isLoadingStudents && _students.isNotEmpty
           ? Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
@@ -682,7 +683,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                         onPressed: _isExporting ? null : _exportToExcel,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton.icon(
                         key: _publishBtnKey,
@@ -724,7 +725,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
       children: [
         // Class Selection
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           color: Colors.white,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -737,7 +738,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                   color: ColorUtils.slate700,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Container(
                 key: _selectClassKey,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -787,7 +788,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                         size: 48,
                         color: Colors.grey[400],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       Text(
                         'Silakan pilih kelas terlebih dahulu',
                         style: TextStyle(color: Colors.grey[600]),
@@ -804,7 +805,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                 )
               : ListView.builder(
                   key: _studentListKey,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   itemCount: _students.length,
                   itemBuilder: (context, index) {
                     final student = _students[index];
@@ -846,7 +847,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                         borderRadius: BorderRadius.circular(12),
                         onTap: () => _viewRaportDetail(student),
                         child: Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Row(
                             children: [
                               CircleAvatar(
@@ -862,7 +863,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: AppSpacing.lg),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -874,7 +875,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                                         fontSize: 15,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: AppSpacing.xs),
                                     Text(
                                       'NIS: ${student['student_number'] ?? '-'}',
                                       style: TextStyle(
@@ -902,7 +903,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                                       size: 14,
                                       color: statusColor,
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: AppSpacing.xs),
                                     Text(
                                       statusText,
                                       style: TextStyle(
@@ -914,7 +915,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.sm),
                               IconButton(
                                 icon: const Icon(
                                   Icons.picture_as_pdf,
@@ -923,9 +924,9 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                                 onPressed: () => _downloadStudentPdf(student),
                                 tooltip: 'Cetak PDF',
                                 constraints: const BoxConstraints(),
-                                padding: const EdgeInsets.all(4),
+                                padding: const EdgeInsets.all(AppSpacing.xs),
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: AppSpacing.xs),
                               Icon(
                                 Icons.chevron_right,
                                 color: Colors.grey[400],

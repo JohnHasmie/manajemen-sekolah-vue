@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A modal dialog widget for creating or editing a class (kelas).
 ///
@@ -128,7 +129,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
                 // Header dengan gradient
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(AppSpacing.xl),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -158,7 +159,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
                           size: 20,
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
                           widget.isEditMode
@@ -182,7 +183,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
                 ),
                 
                 Padding(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(AppSpacing.xl),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -194,7 +195,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
                         }),
                         icon: Icons.class_,
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       _buildDropdown(
                         value: _selectedGradeLevel?.toString(),
                         label: languageProvider.getTranslatedText({
@@ -225,7 +226,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
                           });
                         },
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppSpacing.md),
                       _buildDropdown(
                         value: _selectedTeacherId,
                         label: languageProvider.getTranslatedText({
@@ -265,7 +266,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
                 
                 // Actions
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   child: Row(
                     children: [
                       Expanded(
@@ -284,7 +285,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: _save,

@@ -19,6 +19,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_result_screen.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Lists students in a class for the learning recommendation flow.
 ///
@@ -193,11 +194,11 @@ class _LearningRecommendationStudentScreenState
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(12),
@@ -299,7 +300,7 @@ class _LearningRecommendationStudentScreenState
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,7 +316,7 @@ class _LearningRecommendationStudentScreenState
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         'Pilih siswa untuk melihat rekomendasi belajar',
                         style: TextStyle(
@@ -337,7 +338,7 @@ class _LearningRecommendationStudentScreenState
                       child: Row(
                         children: [
                           Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           const Text('Perbarui Data'),
                         ],
                       ),
@@ -362,7 +363,7 @@ class _LearningRecommendationStudentScreenState
                 : _students.isEmpty
                 ? const Center(child: Text('Tidak ada data siswa'))
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     itemCount: _students.length,
                     itemBuilder: (context, index) {
                       final student = _students[index];
