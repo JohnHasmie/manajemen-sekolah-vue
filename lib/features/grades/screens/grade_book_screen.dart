@@ -73,14 +73,14 @@ class GradeBookPage extends ConsumerStatefulWidget {
 ///
 /// Key state variables (like Vue `data()`):
 /// - [_studentList] / [_filteredStudentList] -- student list (all and filtered)
-/// - [_nilaiList] -- raw grade records from the API
+/// - [_gradeList] -- raw grade records from the API
 /// - [_assessmentHeaders] -- column headers organized by grade type
 /// - [_isEditMode] -- whether inline editing is active
 /// - [_jenisNilaiFilter] -- which grade types are visible (like Vue checkbox filters)
 class GradeBookPageState extends ConsumerState<GradeBookPage> {
   List<Student> _studentList = [];
   List<Student> _filteredStudentList = [];
-  List<Map<String, dynamic>> _nilaiList = [];
+  List<Map<String, dynamic>> _gradeList = [];
   final List<String> _allGradeTypeList = [
     'uh',
     'tugas',
@@ -185,7 +185,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   /// Processes raw API data into structured grade records per student.
   /// Like a Vue `computed` or `watch` that transforms API response into
   /// a table-friendly format. Maps student data with their grades.
-  void _processAndApplyGradeData(List<dynamic> studentData, List<dynamic> rawNilaiItems) {
+  void _processAndApplyGradeData(List<dynamic> studentData, List<dynamic> rawGradeItems) {
     _studentList = studentData.map((s) => Student.fromJson(s)).toList();
     _filteredStudentList = List.from(_studentList);
 
@@ -197,7 +197,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         .toSet();
 
     // Filter and map grades to internal legacy format
-    _nilaiList = rawNilaiItems
+    _gradeList = rawGradeItems
         .where((item) {
           final studentId =
               (item['student_id'] ??
@@ -244,15 +244,15 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     // Process unique assessments for headers
     _assessmentHeaders = {};
 
-    for (var nilai in _nilaiList) {
-      final jenis = nilai['jenis']?.toString().toLowerCase();
+    for (var gradeItem in _gradeList) {
+      final jenis = gradeItem['jenis']?.toString().toLowerCase();
       if (jenis == null || !_allGradeTypeList.contains(jenis)) continue;
 
-      String? rawDate = nilai['tanggal'];
+      String? rawDate = gradeItem['tanggal'];
       if (rawDate != null) {
         final datePart = rawDate.split('T')[0];
-        final assessmentId = nilai['assessment_id'];
-        final title = (nilai['title'] ?? '').toString().trim();
+        final assessmentId = gradeItem['assessment_id'];
+        final title = (gradeItem['title'] ?? '').toString().trim();
 
         if (!_assessmentHeaders.containsKey(jenis)) {
           _assessmentHeaders[jenis] = [];
@@ -356,19 +356,19 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       final response = await ApiService().get(url);
 
       // Handle paginated response (Map with 'data' key) or direct List
-      List<dynamic> rawNilaiItems = [];
+      List<dynamic> rawGradeItems = [];
       if (response is Map<String, dynamic> && response.containsKey('data')) {
-        rawNilaiItems = response['data'] as List<dynamic>;
+        rawGradeItems = response['data'] as List<dynamic>;
       } else if (response is List) {
-        rawNilaiItems = response;
+        rawGradeItems = response;
       }
 
-      AppLogger.debug('grades', 'DEBUG: Received ${rawNilaiItems.length} grade items');
+      AppLogger.debug('grades', 'DEBUG: Received ${rawGradeItems.length} grade items');
 
       if (!mounted) return;
 
       setState(() {
-        _processAndApplyGradeData(studentData, rawNilaiItems);
+        _processAndApplyGradeData(studentData, rawGradeItems);
       });
       _filterSiswa();
 
@@ -376,7 +376,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       final cacheKey = _buildGradeCacheKey();
       LocalCacheService.save(cacheKey, {
         'studentData': studentData,
-        'nilaiItems': rawNilaiItems,
+        'nilaiItems': rawGradeItems,
       });
 
       // Trigger tour
@@ -572,9 +572,9 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       final studentId = student.id.toString();
       final studentClassId = student.studentClassId?.toString();
 
-      final result = _nilaiList.firstWhere((nilai) {
-        final gradeStudentId = nilai['siswa_id']?.toString();
-        final gradeStudentClassId = nilai['student_class_id']?.toString();
+      final result = _gradeList.firstWhere((gradeItem) {
+        final gradeStudentId = gradeItem['siswa_id']?.toString();
+        final gradeStudentClassId = gradeItem['student_class_id']?.toString();
 
         // 1. Match Student: Try direct ID match or student_class_id match
         bool studentMatch = (gradeStudentId == studentId);
@@ -590,7 +590,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
         // 2. Match Header (Assessment)
         final headerId = header['id']?.toString();
-        final currentAssessmentId = nilai['assessment_id']?.toString();
+        final currentAssessmentId = gradeItem['assessment_id']?.toString();
 
         if (headerId != null && currentAssessmentId != null) {
           if (headerId != currentAssessmentId) return false;
@@ -600,10 +600,10 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           return false;
         }
 
-        final nilaiDate = nilai['tanggal']?.toString().split('T')[0];
-        final nilaiJenis = nilai['jenis']?.toString().toLowerCase();
+        final nilaiDate = gradeItem['tanggal']?.toString().split('T')[0];
+        final nilaiJenis = gradeItem['jenis']?.toString().toLowerCase();
 
-        final nTitle = (nilai['title'] ?? '').toString().trim();
+        final nTitle = (gradeItem['title'] ?? '').toString().trim();
         final hTitle = (header['title'] ?? '').toString().trim();
 
         return (nilaiJenis == jenis.toLowerCase() &&

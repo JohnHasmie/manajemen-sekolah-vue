@@ -20,7 +20,7 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 ///
 /// Grade types supported: UH (daily quiz), Tugas (assignment), UTS/PTS (midterm),
 /// UAS/PAS (final exam).
-class ExcelNilaiService {
+class ExcelGradeService {
   static String get baseUrl => '/grade';
 
   /// Export grade data to Excel via backend POST to `/grade/export`.

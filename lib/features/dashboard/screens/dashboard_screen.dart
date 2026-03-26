@@ -1948,27 +1948,28 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
   }
 
   List<Widget> _buildFourColumnStats() {
+    final lp = languageProvider;
     if (_effectiveRole == 'admin') {
       return [
         _buildHeroStat(
           Icons.people_outline,
           _stats['total_siswa']?.toString() ?? '0',
-          'Siswa',
+          lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
         ),
         _buildHeroStat(
           Icons.school_outlined,
           _stats['total_guru']?.toString() ?? '0',
-          'Guru',
+          lp.getTranslatedText({'en': 'Teachers', 'id': 'Guru'}),
         ),
         _buildHeroStat(
           Icons.class_outlined,
           _stats['total_kelas']?.toString() ?? '0',
-          'Kelas',
+          lp.getTranslatedText({'en': 'Classes', 'id': 'Kelas'}),
         ),
         _buildHeroStat(
           Icons.book_outlined,
           _stats['total_mapel']?.toString() ?? '0',
-          'Mapel',
+          lp.getTranslatedText({'en': 'Subjects', 'id': 'Mapel'}),
         ),
       ];
     } else if (_effectiveRole == 'guru') {
@@ -1976,22 +1977,22 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         _buildHeroStat(
           Icons.people_outline,
           _stats['total_siswa']?.toString() ?? '0',
-          'Siswa',
+          lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
         ),
         _buildHeroStat(
           Icons.class_outlined,
           _stats['total_kelas']?.toString() ?? '0',
-          'Kelas',
+          lp.getTranslatedText({'en': 'Classes', 'id': 'Kelas'}),
         ),
         _buildHeroStat(
           Icons.schedule_outlined,
           _stats['kelas_hari_ini']?.toString() ?? '0',
-          'Hari Ini',
+          lp.getTranslatedText({'en': 'Today', 'id': 'Hari Ini'}),
         ),
         _buildHeroStat(
           Icons.assignment_outlined,
           _stats['total_rpp']?.toString() ?? '0',
-          'RPP',
+          lp.getTranslatedText({'en': 'Plans', 'id': 'RPP'}),
         ),
       ];
     } else {
@@ -1999,22 +2000,22 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         _buildHeroStat(
           Icons.child_care_outlined,
           _stats['anak_terdaftar']?.toString() ?? '0',
-          'Anak',
+          lp.getTranslatedText({'en': 'Children', 'id': 'Anak'}),
         ),
         _buildHeroStat(
           Icons.announcement_outlined,
           _stats['pengumuman_terbaru']?.toString() ?? '0',
-          'Info',
+          lp.getTranslatedText({'en': 'News', 'id': 'Info'}),
         ),
         _buildHeroStat(
           Icons.grade_outlined,
           _stats['unread_grades']?.toString() ?? '0',
-          'Nilai',
+          lp.getTranslatedText({'en': 'Grades', 'id': 'Nilai'}),
         ),
         _buildHeroStat(
           Icons.calendar_today_outlined,
           _stats['unread_presence']?.toString() ?? '0',
-          'Absen',
+          lp.getTranslatedText({'en': 'Attendance', 'id': 'Absen'}),
         ),
       ];
     }
