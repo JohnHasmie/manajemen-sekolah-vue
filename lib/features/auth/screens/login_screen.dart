@@ -28,6 +28,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// The login page widget. Like a Vue page component (`pages/login.vue`).
 ///
@@ -105,7 +106,7 @@ class LoginScreenState extends State<LoginScreen> {
       builder: (context) => AlertDialog(
         icon: Icon(
           Icons.person_off_outlined,
-          color: Color(0xFF0D47A1),
+          color: ColorUtils.darkBlue,
           size: 48,
         ),
         title: Text(
@@ -494,9 +495,9 @@ class LoginScreenState extends State<LoginScreen> {
     return Column(
       children: [
         if (_isLoading)
-          const LinearProgressIndicator(
+          LinearProgressIndicator(
             backgroundColor: Colors.transparent,
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D47A1)),
+            valueColor: AlwaysStoppedAnimation<Color>(ColorUtils.darkBlue),
           ),
         const SizedBox(height: 20),
         Text(
@@ -562,7 +563,7 @@ class LoginScreenState extends State<LoginScreen> {
   Widget _getRoleIcon(String role) {
     switch (role) {
       case 'admin':
-        return Icon(Icons.admin_panel_settings, color: Color(0xFF0D47A1));
+        return Icon(Icons.admin_panel_settings, color: ColorUtils.darkBlue);
       case 'guru':
         return Icon(Icons.school, color: Colors.green);
       case 'wali':
@@ -619,9 +620,9 @@ class LoginScreenState extends State<LoginScreen> {
     return Column(
       children: [
         if (_isLoading)
-          const LinearProgressIndicator(
+          LinearProgressIndicator(
             backgroundColor: Colors.transparent,
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D47A1)),
+            valueColor: AlwaysStoppedAnimation<Color>(ColorUtils.darkBlue),
           ),
         const SizedBox(height: 20),
         Text(
@@ -644,7 +645,7 @@ class LoginScreenState extends State<LoginScreen> {
               margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
               child: ListTile(
                 key: ValueKey('school_${sekolah['school_id'] ?? index}'),
-                leading: Icon(Icons.school, color: Color(0xFF0D47A1)),
+                leading: Icon(Icons.school, color: ColorUtils.darkBlue),
                 title: Text(sekolah['school_name'] ?? 'Sekolah Tanpa Nama'),
                 subtitle: Text(sekolah['address'] ?? ''),
                 trailing: Icon(Icons.arrow_forward_ios, size: 16),
@@ -751,8 +752,8 @@ class LoginScreenState extends State<LoginScreen> {
             onPressed: (_serverConnected && !_isLoading) ? login : null,
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 15),
-              backgroundColor: const Color(0xFF0D47A1),
-              disabledBackgroundColor: const Color(0xFF0D47A1).withValues(alpha: 0.6),
+              backgroundColor: ColorUtils.darkBlue,
+              disabledBackgroundColor: ColorUtils.darkBlue.withValues(alpha: 0.6),
             ),
             child: _isLoading
                 ? const SizedBox(
@@ -781,13 +782,13 @@ class LoginScreenState extends State<LoginScreen> {
             label: Text(
               _isLoading ? 'Mohon Tunggu...' : 'Masuk dengan Google',
               style: TextStyle(
-                color: _isLoading ? Colors.grey : const Color(0xFF0D47A1),
+                color: _isLoading ? Colors.grey : ColorUtils.darkBlue,
               ),
             ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 15),
               side: BorderSide(
-                color: _isLoading ? Colors.grey : const Color(0xFF0D47A1),
+                color: _isLoading ? Colors.grey : ColorUtils.darkBlue,
               ),
             ),
           ),
@@ -809,7 +810,7 @@ class LoginScreenState extends State<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF0D47A1), Color(0xFF002171)],
+            colors: [ColorUtils.darkBlue, Color(0xFF002171)],
           ),
         ),
         child: SafeArea(

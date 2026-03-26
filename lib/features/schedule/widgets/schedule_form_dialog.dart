@@ -113,7 +113,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
   }
 
   Color _getPrimaryColor() {
-    return Color(0xFF4361EE); // Blue untuk admin
+    return ColorUtils.blue600; // Blue untuk admin
   }
 
   void _initializeForm() {

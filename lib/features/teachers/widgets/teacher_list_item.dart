@@ -5,6 +5,7 @@
 // homeroom status badge, email, NIP, and a popup menu for edit/delete.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// A gradient card widget that displays a single teacher's information.
 ///
@@ -51,14 +52,14 @@ class TeacherListItem extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFF4361EE),
-                    Color(0xFF4361EE).withValues(alpha: 0.7),
+                    ColorUtils.blue600,
+                    ColorUtils.blue600.withValues(alpha: 0.7),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0xFF4361EE).withValues(alpha: .2),
+                    color: ColorUtils.blue600.withValues(alpha: .2),
                     blurRadius: 12,
                     offset: Offset(0, 4),
                   ),

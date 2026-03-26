@@ -116,12 +116,12 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
   };
 
   final Map<String, Color> _dayColorMap = {
-    'Senin': Color(0xFF6366F1),
-    'Selasa': Color(0xFF10B981),
-    'Rabu': Color(0xFFF59E0B),
-    'Kamis': Color(0xFFEF4444),
-    'Jumat': Color(0xFF8B5CF6),
-    'Sabtu': Color(0xFF06B6D4),
+    'Senin': ColorUtils.indigo500,
+    'Selasa': ColorUtils.emerald500,
+    'Rabu': ColorUtils.amber500,
+    'Kamis': ColorUtils.red500,
+    'Jumat': ColorUtils.violet500,
+    'Sabtu': ColorUtils.cyan500,
   };
 
   /// Like Vue's `mounted()` -- sets academic year defaults, loads teacher data,

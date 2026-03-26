@@ -135,7 +135,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       case 'activity':
         return ColorUtils.warning600;
       case 'reminder_teaching':
-        return const Color(0xFF7C3AED);
+        return ColorUtils.violet700;
       case 'grade':
       case 'nilai':
       case 'exam_score':

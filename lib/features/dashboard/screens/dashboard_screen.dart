@@ -3785,7 +3785,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
   Color _getPrimaryColor() {
     switch (_effectiveRole) {
       case 'admin':
-        return Color(0xFF2563EB); // Blue
+        return ColorUtils.corporateBlue600; // Blue
       case 'guru':
         return Color(0xFF16A34A); // Teal
       case 'staff':

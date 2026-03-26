@@ -2148,7 +2148,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
         final filteredClasses = _classes;
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.lightGray,
           body: Column(
             children: [
               // Header

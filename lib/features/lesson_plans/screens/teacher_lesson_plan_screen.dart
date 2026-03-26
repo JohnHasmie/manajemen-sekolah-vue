@@ -1105,7 +1105,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
     final filteredRpp = _rppList;
 
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: ColorUtils.lightGray,
       body: Column(
         children: [
           // Header dengan gradient

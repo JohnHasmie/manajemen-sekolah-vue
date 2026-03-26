@@ -1499,11 +1499,11 @@ class MateriPageState extends ConsumerState<MateriPage> {
   Color _getCheckboxColor(String id, {bool isSubBab = false}) {
     if (isSubBab) {
       if (_usedSubBab[id] == true) return ColorUtils.info600;
-      if (_generatedSubBab[id] == true) return Color(0xFF8B5CF6);
+      if (_generatedSubBab[id] == true) return ColorUtils.violet500;
       return ColorUtils.success600;
     } else {
       if (_usedBab[id] == true) return ColorUtils.info600;
-      if (_generatedBab[id] == true) return Color(0xFF8B5CF6);
+      if (_generatedBab[id] == true) return ColorUtils.violet500;
       return ColorUtils.success600;
     }
   }

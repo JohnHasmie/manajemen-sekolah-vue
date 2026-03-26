@@ -2230,7 +2230,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
     final languageProvider = ref.watch(languageRiverpod);
         if (_isLoading) {
           return Scaffold(
-            backgroundColor: Color(0xFFF8F9FA),
+            backgroundColor: ColorUtils.lightGray,
             body: Column(
               children: [
                 _buildHeader(context, languageProvider),
@@ -2252,7 +2252,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
         final filteredSubjects = _getFilteredSubjects();
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.lightGray,
           body: Column(
             children: [
               _buildHeader(context, languageProvider),

@@ -2210,7 +2210,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                                     'id': 'Semua',
                                   }),
                             tagColor: isSpecificTarget
-                                ? Color(0xFF7C3AED)
+                                ? ColorUtils.violet700
                                 : ColorUtils.success600,
                           ),
                           if (isAssignment && activity['batas_waktu'] != null)

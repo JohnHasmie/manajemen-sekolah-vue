@@ -13,6 +13,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// Pre-generation form for AI RPP creation.
 ///
@@ -230,7 +231,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Generate Lesson Plan'),
-        backgroundColor: Color(0xFF4F46E5),
+        backgroundColor: ColorUtils.indigo600,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -295,7 +296,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Color(0xFF4F46E5).withValues(alpha: 0.1),
+                  color: ColorUtils.indigo600.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -303,7 +304,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF4F46E5),
+                    color: ColorUtils.indigo600,
                   ),
                 ),
               ),
@@ -318,7 +319,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                 padding: EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    Icon(Icons.circle, size: 8, color: Color(0xFF4F46E5)),
+                    Icon(Icons.circle, size: 8, color: ColorUtils.indigo600),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -349,7 +350,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                         Icon(
                           Icons.bookmark,
                           size: 12,
-                          color: Color(0xFF10B981),
+                          color: ColorUtils.emerald500,
                         ),
                         SizedBox(width: 8),
                         Text(
@@ -617,7 +618,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
       child: ElevatedButton(
         onPressed: _isGenerating ? null : _generateRPP,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF10B981),
+          backgroundColor: ColorUtils.emerald500,
           foregroundColor: Colors.white,
           padding: EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
@@ -653,7 +654,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           LinearProgressIndicator(
             value: _progress,
             backgroundColor: Colors.grey.shade300,
-            color: Color(0xFF10B981),
+            color: ColorUtils.emerald500,
             borderRadius: BorderRadius.circular(4),
           ),
           SizedBox(height: 12),
@@ -668,7 +669,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                 '${(_progress * 100).toStringAsFixed(0)}%',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF10B981),
+                  color: ColorUtils.emerald500,
                 ),
               ),
             ],

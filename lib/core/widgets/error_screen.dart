@@ -4,6 +4,7 @@
 // or a Vue `<ErrorPage>` component shown when an API call fails.
 // Provides a retry callback to let the user attempt the failed operation again.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// A full-screen error widget with an error icon, message, and retry button.
 ///
@@ -28,7 +29,7 @@ class ErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: ColorUtils.lightGray,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -75,7 +76,7 @@ class ErrorScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF4361EE),
+                backgroundColor: ColorUtils.blue600,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

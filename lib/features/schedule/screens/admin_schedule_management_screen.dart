@@ -2195,7 +2195,7 @@ class TeachingScheduleManagementScreenState
         final filteredSchedules = _getFilteredSchedules();
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.lightGray,
           body: Column(
             children: [
               // Header

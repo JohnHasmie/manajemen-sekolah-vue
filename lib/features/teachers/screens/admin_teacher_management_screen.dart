@@ -2421,7 +2421,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         final displayedTeachers = _teachers;
 
         return Scaffold(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: ColorUtils.lightGray,
           body: Column(
             children: [
               // Header

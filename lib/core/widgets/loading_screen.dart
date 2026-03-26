@@ -4,6 +4,7 @@
 // spinner that you show with `v-if="isLoading"`. Displays a circular
 // progress indicator inside a gradient circle with an optional message.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// A full-screen loading widget with a spinner and message.
 ///
@@ -21,7 +22,7 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: ColorUtils.lightGray,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -34,8 +35,8 @@ class LoadingScreen extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFF4361EE),
-                    Color(0xFF4361EE).withValues(alpha: 0.7),
+                    ColorUtils.blue600,
+                    ColorUtils.blue600.withValues(alpha: 0.7),
                   ],
                 ),
                 shape: BoxShape.circle,

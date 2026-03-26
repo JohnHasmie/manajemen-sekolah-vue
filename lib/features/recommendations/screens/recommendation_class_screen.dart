@@ -493,7 +493,7 @@ class _LearningRecommendationClassScreenState
               title: 'Semua Siswa',
               subtitle:
                   'Generate rekomendasi untuk semua siswa termasuk yang sudah baik',
-              color: const Color(0xFF3B82F6),
+              color: ColorUtils.corporateBlue500,
             ),
             _buildScopeOption(
               ctx: ctx,
@@ -502,7 +502,7 @@ class _LearningRecommendationClassScreenState
               title: 'Siswa yang Perlu Saja',
               subtitle:
                   'Hanya siswa yang membutuhkan rekomendasi berdasarkan data performa',
-              color: const Color(0xFFF59E0B),
+              color: ColorUtils.amber500,
             ),
             const SizedBox(height: 8),
           ],
@@ -1246,17 +1246,17 @@ class _LearningRecommendationClassScreenState
                         if (highCount > 0)
                           _buildMiniTag(
                             '$highCount prioritas tinggi',
-                            const Color(0xFFEF4444),
+                            ColorUtils.red500,
                           ),
                         if (pendingCount > 0)
                           _buildMiniTag(
                             '$pendingCount pending',
-                            const Color(0xFFF59E0B),
+                            ColorUtils.amber500,
                           ),
                         if (completedCount > 0)
                           _buildMiniTag(
                             '$completedCount selesai',
-                            const Color(0xFF10B981),
+                            ColorUtils.emerald500,
                           ),
                       ],
                     ),
@@ -1282,26 +1282,26 @@ class _LearningRecommendationClassScreenState
     switch (triggerSource) {
       case 'weekly_review':
         return (
-          color: const Color(0xFF3B82F6),
+          color: ColorUtils.corporateBlue500,
           label: 'Pekanan',
           icon: Icons.date_range_rounded,
         );
       case 'post_exam':
         return (
-          color: const Color(0xFF8B5CF6),
+          color: ColorUtils.violet500,
           label: 'Bulanan/UTS',
           icon: Icons.calendar_month_rounded,
         );
       case 'attendance_alert':
         return (
-          color: const Color(0xFFEF4444),
+          color: ColorUtils.red500,
           label: 'Kehadiran',
           icon: Icons.warning_amber_rounded,
         );
       case 'on_demand':
       default:
         return (
-          color: const Color(0xFFF59E0B),
+          color: ColorUtils.amber500,
           label: 'Semester',
           icon: Icons.emoji_events_rounded,
         );
