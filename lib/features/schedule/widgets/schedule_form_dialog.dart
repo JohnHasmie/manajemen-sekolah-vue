@@ -986,7 +986,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                     onSelected: (bool selected) {
                       setState(() {
                         if (selected) {
-                          _selectedDayIds.add(dayId);
+                          _selectedDayIds = [dayId];
                         } else {
                           _selectedDayIds.remove(dayId);
                         }
