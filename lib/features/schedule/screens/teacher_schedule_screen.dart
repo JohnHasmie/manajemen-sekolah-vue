@@ -28,6 +28,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Teacher's weekly schedule screen with card and table view modes.
 ///
@@ -1137,7 +1138,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.symmetric(vertical: 13),
                               side: BorderSide(color: ColorUtils.slate300),
@@ -1158,7 +1159,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.pop(context);
+                              AppNavigator.pop(context);
                               final needsReload =
                                   tempSemester != _selectedSemester;
                               setState(() {
@@ -1690,7 +1691,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => AppNavigator.pop(context),
                           child: Container(
                             width: 40,
                             height: 40,
@@ -2710,10 +2711,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PresencePage(
+            AppNavigator.push(context, PresencePage(
                   teacher: {'id': _teacherId, 'nama': _teacherNama},
                   initialDate: DateTime.now(),
                   initialSubjectId:
@@ -2736,9 +2734,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                               jadwal['kelas_nama'] ??
                               jadwal['class']?['name'])
                           ?.toString(),
-                ),
-              ),
-            );
+                ));
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(
@@ -2863,10 +2859,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MateriPage(
+                          AppNavigator.push(context, MateriPage(
                                 teacher: {
                                   'id': _teacherId,
                                   'nama': _teacherNama,
@@ -2886,9 +2879,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                     (jadwal['class_name'] ??
                                             jadwal['kelas_nama'])
                                         ?.toString(),
-                              ),
-                            ),
-                          );
+                              ));
                         },
                         icon: Icon(Icons.library_books_rounded, size: 15),
                         label: Text(
@@ -2938,10 +2929,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                           final scheduleDate = now.add(
                             Duration(days: daysUntilSchedule),
                           );
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ClassActifityScreen(
+                          AppNavigator.push(context, ClassActifityScreen(
                                 initialDate: scheduleDate,
                                 initialSubjectId:
                                     (jadwal['subject_id'] ??
@@ -2959,9 +2947,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                             jadwal['kelas_nama'])
                                         ?.toString(),
                                 autoShowActivityDialog: true,
-                              ),
-                            ),
-                          );
+                              ));
                         },
                         icon: Icon(Icons.assignment_rounded, size: 15),
                         label: Text(

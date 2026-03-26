@@ -28,6 +28,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin lesson plan (RPP) review screen with drill-down navigation.
 ///
@@ -347,7 +348,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(color: ColorUtils.slate300),
@@ -372,7 +373,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                               _selectedStatusFilter = tempSelectedStatus;
                             });
                             _checkActiveFilter();
-                            Navigator.pop(context);
+                            AppNavigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _getPrimaryColor(),
@@ -752,10 +753,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
   }
 
   void _viewRppDetail(Map<String, dynamic> rpp) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => RppAdminDetailPage(rpp: rpp)),
-    );
+    await AppNavigator.push(context, RppAdminDetailPage(rpp: rpp));
     // Refresh list after returning
     if (_showTeacherList && _selectedTeacherName != null) {
       _loadRppByTeacher();
@@ -1156,11 +1154,11 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                         GestureDetector(
                           onTap: () {
                             if (_showTeacherList) {
-                              Navigator.pop(context);
+                              AppNavigator.pop(context);
                             } else {
                               if (widget.teacherId != null) {
                                 // Came from outside with fixed teacher
-                                Navigator.pop(context);
+                                AppNavigator.pop(context);
                               } else {
                                 // Navigate back to teacher list
                                 _backToTeacherList();
@@ -1838,7 +1836,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
     bool noteChanged = catatanController.text != (widget.currentNote ?? '');
 
     if (!statusChanged && !noteChanged) {
-      Navigator.pop(context);
+      AppNavigator.pop(context);
       return;
     }
 
@@ -1855,7 +1853,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
             : null,
       );
       if (mounted) {
-        Navigator.pop(context);
+        AppNavigator.pop(context);
         widget.onStatusUpdated();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -2083,7 +2081,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: isUpdating ? null : () => Navigator.pop(context),
+                    onPressed: isUpdating ? null : () => AppNavigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: ColorUtils.slate300),
@@ -2182,7 +2180,7 @@ class RppAdminDetailPage extends StatelessWidget {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -2555,7 +2553,7 @@ class RppAdminDetailPage extends StatelessWidget {
         currentStatus: rpp['status'],
         currentNote: rpp['catatan'],
         onStatusUpdated: () {
-          Navigator.pop(context); // Kembali ke list
+          AppNavigator.pop(context); // Kembali ke list
         },
       ),
     );

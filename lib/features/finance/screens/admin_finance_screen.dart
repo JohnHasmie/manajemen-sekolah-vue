@@ -34,6 +34,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin finance management screen with tabbed layout for payment types, bills, and verifications.
 ///
@@ -661,7 +662,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => AppNavigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: ColorUtils.slate300),
@@ -682,7 +683,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                           setState(() {
                             _selectedStatusFilter = tempSelectedStatus;
                             _selectedPeriodeFilter = tempSelectedPeriode;
@@ -1034,7 +1035,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       ),
                       IconButton(
                         icon: Icon(Icons.close, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => AppNavigator.pop(context),
                       ),
                     ],
                   ),
@@ -1131,7 +1132,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => AppNavigator.pop(context),
                               style: OutlinedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -1147,7 +1148,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               onPressed: () {
                                 final tujuan = _buildTujuanData();
                                 onSave(tujuan);
-                                Navigator.pop(context);
+                                AppNavigator.pop(context);
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _getPrimaryColor(),
@@ -1510,15 +1511,10 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ClassFinanceReportScreen(
+          AppNavigator.push(context, ClassFinanceReportScreen(
                 classId: kelas['id'].toString(),
                 className: kelas['name'] ?? 'Kelas',
-              ),
-            ),
-          );
+              ));
         },
         child: Container(
           margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
@@ -2198,7 +2194,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       ),
                       IconButton(
                         icon: Icon(Icons.close, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => AppNavigator.pop(context),
                       ),
                     ],
                   ),
@@ -2487,7 +2483,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -2584,7 +2580,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 }
 
                                 if (context.mounted) {
-                                  Navigator.pop(context);
+                                  AppNavigator.pop(context);
                                 }
                                 _loadData(useCache: false);
 
@@ -3138,7 +3134,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -3160,7 +3156,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     generatedMonths.contains(selectedMonth))
                                 ? null
                                 : () {
-                                    Navigator.pop(context, {
+                                    AppNavigator.pop(context, {
                                       'month': selectedMonth,
                                       'academicYearId': selectedAcademicYearId!,
                                     });
@@ -3437,7 +3433,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -3468,7 +3464,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 );
 
                                 if (context.mounted) {
-                                  Navigator.pop(context);
+                                  AppNavigator.pop(context);
                                   _loadData(useCache: false);
 
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -4233,7 +4229,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   children: [
                     // Back button
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => AppNavigator.pop(context),
                       child: Container(
                         width: 40,
                         height: 40,
@@ -5243,7 +5239,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                     Spacer(),
                     IconButton(
                       icon: Icon(Icons.close, color: Colors.white, size: 20),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => AppNavigator.pop(context),
                     ),
                   ],
                 ),

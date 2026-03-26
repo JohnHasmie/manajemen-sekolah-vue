@@ -21,6 +21,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_student_screen.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Displays a list of classes with AI learning recommendation summaries.
 ///
@@ -557,7 +558,7 @@ class _LearningRecommendationClassScreenState
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => Navigator.pop(ctx, value),
+          onTap: () => AppNavigator.pop(ctx, value),
           borderRadius: BorderRadius.circular(12),
           child: Container(
             padding: const EdgeInsets.all(14),
@@ -799,7 +800,7 @@ class _LearningRecommendationClassScreenState
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -1190,15 +1191,10 @@ class _LearningRecommendationClassScreenState
             teacherWithProfileId['teacher_id'] = _teacherProfileId!;
           }
 
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LearningRecommendationStudentScreen(
+          AppNavigator.push(context, LearningRecommendationStudentScreen(
                 teacher: teacherWithProfileId,
                 classData: classData,
-              ),
-            ),
-          ).then((_) {
+              )).then((_) {
             _loadClassSummary(classId);
             _loadClassHistory(classId);
           });
@@ -1443,7 +1439,7 @@ class _SubjectPickerSheet extends StatelessWidget {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => Navigator.pop(context, subject),
+                    onTap: () => AppNavigator.pop(context, subject),
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       padding: const EdgeInsets.all(14),

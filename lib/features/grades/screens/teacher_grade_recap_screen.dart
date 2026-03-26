@@ -28,6 +28,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Grade recap wizard: class selection -> subject selection -> recap table.
 ///
@@ -1067,7 +1068,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => AppNavigator.pop(context),
                   child: Text('Batal'),
                 ),
                 ElevatedButton(
@@ -1086,7 +1087,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                             babIndex,
                             sum / selectedItems.length,
                           );
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                         },
                   child: Text('Gunakan Rata-rata'),
                 ),
@@ -1225,7 +1226,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                                             };
                                           });
                                           _updateAllDescriptions();
-                                          Navigator.pop(context);
+                                          AppNavigator.pop(context);
                                         }
                                       },
                                     ),
@@ -1249,7 +1250,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                                               _chapters[babIndex!] = c;
                                             });
                                             _updateAllDescriptions();
-                                            Navigator.pop(context);
+                                            AppNavigator.pop(context);
                                           },
                                         );
                                       },
@@ -1321,7 +1322,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                                             selectedBulk,
                                             babIndex,
                                           );
-                                          Navigator.pop(context);
+                                          AppNavigator.pop(context);
                                         },
                                         child: Text(
                                           'Gunakan Rata-rata (${selectedBulk.length})',
@@ -1339,7 +1340,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => AppNavigator.pop(context),
                     child: Text('Batal'),
                   ),
                 ],
@@ -1446,7 +1447,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => AppNavigator.pop(context),
               child: Text(
                 languageProvider.getTranslatedText({
                   'en': 'Cancel',
@@ -1471,7 +1472,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                     _hasUnsavedChanges = true;
                   }
                 });
-                Navigator.pop(context);
+                AppNavigator.pop(context);
               },
               child: Text(
                 languageProvider.getTranslatedText({
@@ -1546,7 +1547,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => AppNavigator.pop(context),
             child: Text('Batal'),
           ),
           ElevatedButton(
@@ -1555,7 +1556,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
               foregroundColor: Colors.white,
             ),
             onPressed: () {
-              Navigator.pop(context);
+              AppNavigator.pop(context);
               setState(() {
                 _chapters.removeAt(babIndex);
 
@@ -1847,7 +1848,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false), // Cancel
+              onPressed: () => AppNavigator.pop(context, false), // Cancel
               child: Text(
                 languageProvider.getTranslatedText({
                   'en': 'Cancel',
@@ -1857,7 +1858,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => Navigator.pop(context, true), // Leave
+              onPressed: () => AppNavigator.pop(context, true), // Leave
               child: Text(
                 languageProvider.getTranslatedText({
                   'en': 'Leave',
@@ -1888,7 +1889,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       });
     } else {
       if (mounted) {
-        Navigator.pop(context);
+        AppNavigator.pop(context);
       }
     }
   }
@@ -1903,7 +1904,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
 
             final canLeave = await _onWillPop();
             if (canLeave && mounted) {
-              Navigator.pop(context, result);
+              AppNavigator.pop(context, result);
             }
           },
           child: Scaffold(

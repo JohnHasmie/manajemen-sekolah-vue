@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// User profile and settings screen - shared across all roles.
 ///
@@ -251,7 +252,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 13),
                             side: BorderSide(color: ColorUtils.slate300),
@@ -271,7 +272,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () async {
-                            final navigator = Navigator.of(context);
                             final messenger = ScaffoldMessenger.of(context);
                             final lang = ref.read(languageRiverpod);
                             try {
@@ -282,7 +282,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               );
                               await LocalCacheService.invalidate(_profileCacheKey);
                               if (mounted) {
-                                navigator.pop();
+                                AppNavigator.pop(context);
                                 _loadProfile(useCache: false);
                                 messenger.showSnackBar(
                                   SnackBar(
@@ -783,7 +783,7 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
       );
 
       if (!mounted) return;
-      Navigator.pop(context);
+      AppNavigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -1033,7 +1033,7 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => AppNavigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 13),
                           side: BorderSide(color: ColorUtils.slate300),

@@ -4,6 +4,7 @@
 // dashboard layout. This dialog is shown when the user taps the finance
 // overview card on the admin dashboard.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/mini_bar_chart.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
@@ -141,7 +142,7 @@ class _FinancePopupDialogState extends State<FinancePopupDialog> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => AppNavigator.pop(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: ColorUtils.success600,
                 foregroundColor: Colors.white,

@@ -41,6 +41,7 @@ import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin teaching schedule management with full CRUD, timetable grid, and conflict detection.
 ///
@@ -1133,8 +1134,8 @@ class TeachingScheduleManagementScreenState
           builder: (context) => ConflictResolutionDialog(
             conflictingSchedules: conflicts,
             onDeleteConfirmed: (scheduleId) =>
-                Navigator.pop(context, scheduleId),
-            onCancel: () => Navigator.pop(context),
+                AppNavigator.pop(context, scheduleId),
+            onCancel: () => AppNavigator.pop(context),
           ),
         );
 
@@ -1784,7 +1785,7 @@ class TeachingScheduleManagementScreenState
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
@@ -1816,7 +1817,7 @@ class TeachingScheduleManagementScreenState
                                     tempSelectedJamPelajaran;
                                 _checkActiveFilter();
                               });
-                              Navigator.pop(context);
+                              AppNavigator.pop(context);
                               _loadData();
                             },
                             style: ElevatedButton.styleFrom(
@@ -2221,7 +2222,7 @@ class TeachingScheduleManagementScreenState
                   'id': 'Kelola jadwal mengajar',
                 }),
                 primaryColor: _getPrimaryColor(),
-                onBackPressed: () => Navigator.pop(context),
+                onBackPressed: () => AppNavigator.pop(context),
                 actionMenu: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -2954,7 +2955,7 @@ class TeachingScheduleManagementScreenState
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () => AppNavigator.pop(context),
                     child: Container(
                       width: 32,
                       height: 32,
@@ -3043,7 +3044,7 @@ class TeachingScheduleManagementScreenState
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         side: BorderSide(color: ColorUtils.slate300),
@@ -3065,7 +3066,7 @@ class TeachingScheduleManagementScreenState
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                           _editSchedule(schedule);
                         },
                         icon: const Icon(

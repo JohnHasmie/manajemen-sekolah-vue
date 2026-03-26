@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Class finance report screen - shows billing/payment details for a specific class.
 ///
@@ -707,11 +708,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
           content: Text(AppLocalizations.chooseImageSource.tr),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, ImageSource.gallery),
+              onPressed: () => AppNavigator.pop(context, ImageSource.gallery),
               child: Text(AppLocalizations.gallery.tr),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(context, ImageSource.camera),
+              onPressed: () => AppNavigator.pop(context, ImageSource.camera),
               child: Text(AppLocalizations.camera.tr),
             ),
           ],
@@ -763,11 +764,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         content: Text(AppLocalizations.uploadPaymentProof.tr),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, 'image'),
+            onPressed: () => AppNavigator.pop(context, 'image'),
             child: Text(AppLocalizations.imageCameraGallery.tr),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, 'pdf'),
+            onPressed: () => AppNavigator.pop(context, 'pdf'),
             child: Text(AppLocalizations.pdfDocument.tr),
           ),
         ],
@@ -1040,7 +1041,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -1064,7 +1065,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               }
 
                               try {
-                                Navigator.pop(context); // Close form
+                                AppNavigator.pop(context); // Close form
                                 _uploadManualPayment(
                                   bill: bill,
                                   paymentMethod: paymentMethodController.text,
@@ -1143,7 +1144,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         });
       }
 
-      if (mounted) Navigator.pop(context); // Close loading
+      if (mounted) AppNavigator.pop(context); // Close loading
       _loadData(); // Refresh table
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1153,7 +1154,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         ),
       );
     } catch (e) {
-      if (mounted) Navigator.pop(context);
+      if (mounted) AppNavigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal: $e'),
@@ -1195,7 +1196,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () => AppNavigator.pop(context),
                     child: Container(
                       width: 40,
                       height: 40,
@@ -1285,7 +1286,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                 Row(
                   children: [
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => AppNavigator.pop(context),
                       child: Container(
                         width: 40,
                         height: 40,
@@ -1792,7 +1793,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(color: ColorUtils.slate300),
@@ -1809,7 +1810,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                       SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => AppNavigator.pop(context),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _getPrimaryColor(),
                             padding: EdgeInsets.symmetric(vertical: 14),
@@ -2079,7 +2080,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         subtitle: 'Tandai tagihan sebagai lunas',
                         color: ColorUtils.success600,
                         onTap: () {
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                           _showManualPaymentForm(bill);
                         },
                       ),
@@ -2090,7 +2091,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         subtitle: 'Kembalikan status ke belum lunas',
                         color: ColorUtils.error600,
                         onTap: () {
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                           _processManualPayment(bill, false);
                         },
                       ),
@@ -2102,7 +2103,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                       subtitle: 'Riwayat dan informasi tagihan',
                       color: ColorUtils.corporateBlue600,
                       onTap: () {
-                        Navigator.pop(context);
+                        AppNavigator.pop(context);
                         _showDetailDialog(bill);
                       },
                     ),
@@ -2193,7 +2194,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         } catch (_) {}
       }
 
-      if (mounted) Navigator.pop(context); // Close loading
+      if (mounted) AppNavigator.pop(context); // Close loading
       _loadData(); // Refresh table
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2206,7 +2207,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         ),
       );
     } catch (e) {
-      if (mounted) Navigator.pop(context);
+      if (mounted) AppNavigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal: $e'),
@@ -2257,7 +2258,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => AppNavigator.pop(context),
               child: Text('Tutup'),
             ),
           ],

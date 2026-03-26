@@ -11,6 +11,7 @@ import 'package:manajemensekolah/features/lesson_plans/services/ai_lesson_plan_s
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Pre-generation form for AI RPP creation.
 ///
@@ -209,13 +210,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
       // Navigate ke halaman detail RPP
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                RPPDetailPage(rppData: generatedRPP, isNew: true),
-          ),
-        );
+        AppNavigator.pushReplacement(context, RPPDetailPage(rppData: generatedRPP, isNew: true));
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);

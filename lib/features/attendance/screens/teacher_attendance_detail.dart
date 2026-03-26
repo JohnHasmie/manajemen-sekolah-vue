@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/models/student.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
@@ -684,7 +685,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                                 }
                               });
                             } else {
-                              Navigator.of(context).pop();
+                              AppNavigator.pop(context);
                             }
                           },
                           child: Container(

@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// School settings hub screen - navigates to sub-settings pages.
 ///
@@ -211,10 +212,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
         subtitle: 'Jenjang & informasi sekolah',
         icon: Icons.school_rounded,
         color: ColorUtils.getColorForIndex(0),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => SchoolLevelSettingsScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, SchoolLevelSettingsScreen()),
       ),
       _MenuItem(
         key: _timeSettingsKey,
@@ -222,10 +220,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
         subtitle: 'Jadwal & waktu pembelajaran',
         icon: Icons.access_time_rounded,
         color: ColorUtils.getColorForIndex(2),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => TimeSettingsScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, TimeSettingsScreen()),
       ),
     ];
 
@@ -263,7 +258,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
               children: [
                 // Back button
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,

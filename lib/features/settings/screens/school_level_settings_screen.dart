@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// School info settings screen - edit school name, address, and education level (jenjang).
 ///
@@ -224,7 +225,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.symmetric(vertical: 13),
                               side: BorderSide(color: ColorUtils.slate300),
@@ -256,7 +257,6 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                 return;
                               }
 
-                              final navigator = Navigator.of(context);
                               final messenger = ScaffoldMessenger.of(context);
                               try {
                                 await getIt<ApiSettingsService>().updateSchoolSettings(
@@ -265,7 +265,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                   jenjang: tempJenjang,
                                 );
                                 if (mounted) {
-                                  navigator.pop();
+                                  AppNavigator.pop(context);
                                   _loadSettings();
                                   messenger.showSnackBar(
                                     SnackBar(
@@ -445,7 +445,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,

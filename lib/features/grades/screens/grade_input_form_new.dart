@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 // Form Input Nilai Baru untuk Multiple Siswa
 class GradeInputFormNew extends ConsumerStatefulWidget {
@@ -201,7 +202,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
           ),
         );
 
-        Navigator.pop(context);
+        AppNavigator.pop(context);
       } catch (e) {
         AppLogger.error('grades', e);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -819,7 +820,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
+                      onTap: () => AppNavigator.pop(context),
                       child: Container(
                         width: 40,
                         height: 40,

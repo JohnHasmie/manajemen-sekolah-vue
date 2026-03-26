@@ -12,6 +12,7 @@ import 'package:manajemensekolah/features/teachers/screens/admin_teacher_managem
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/menu_item_card.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin data management hub - a navigation menu linking to CRUD sub-screens.
 ///
@@ -40,48 +41,28 @@ class AdminDataManagementScreen extends StatelessWidget {
                 MenuItemCard(
                   title: AppLocalizations.manageStudents.tr,
                   icon: Icons.people_alt_outlined,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => StudentManagementScreen(),
-                    ),
-                  ),
+                  onTap: () => AppNavigator.push(context, StudentManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 SizedBox(height: 8),
                 MenuItemCard(
                   title: AppLocalizations.manageTeachers.tr,
                   icon: Icons.person_outline,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TeacherAdminScreen(),
-                    ),
-                  ),
+                  onTap: () => AppNavigator.push(context, TeacherAdminScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 SizedBox(height: 8),
                 MenuItemCard(
                   title: AppLocalizations.manageClasses.tr,
                   icon: Icons.class_outlined,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AdminClassManagementScreen(),
-                    ),
-                  ),
+                  onTap: () => AppNavigator.push(context, AdminClassManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 SizedBox(height: 8),
                 MenuItemCard(
                   title: AppLocalizations.manageSubjects.tr,
                   icon: Icons.book_outlined,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SubjectManagementScreen(),
-                    ),
-                  ),
+                  onTap: () => AppNavigator.push(context, SubjectManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 SizedBox(height: 24),
@@ -125,7 +106,7 @@ class AdminDataManagementScreen extends StatelessWidget {
         children: [
           // Back button
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () => AppNavigator.pop(context),
             child: Container(
               width: 40,
               height: 40,

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Read-only report card detail view for parents.
 ///
@@ -70,7 +71,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,

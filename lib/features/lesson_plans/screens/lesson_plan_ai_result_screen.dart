@@ -18,6 +18,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 // Note: pastikan import AppLocalizations dan Provider jika diperlukan,
 // namun di sini kita gunakan styling yang umum.
 
@@ -453,7 +454,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => AppNavigator.pop(context),
               child: Text(
                 'Batal',
                 style: TextStyle(color: ColorUtils.slate500),
@@ -461,7 +462,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
+                AppNavigator.pop(context);
                 _regenerateRPP(prompt: _promptController.text);
               },
               style: ElevatedButton.styleFrom(
@@ -766,7 +767,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             backgroundColor: ColorUtils.success600,
           ),
         );
-        Navigator.pop(context); // Kembali ke list RPP (PopScope triggers onSaved)
+        AppNavigator.pop(context); // Kembali ke list RPP (PopScope triggers onSaved)
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);
@@ -924,7 +925,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => AppNavigator.pop(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: ColorUtils.getRoleColor('guru'),
                 foregroundColor: Colors.white,

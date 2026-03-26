@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Shows AI-generated learning recommendations for a student in a class.
 ///
@@ -349,16 +350,11 @@ class _LearningRecommendationResultScreenState
   }
 
   void _navigateToEdit() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => LearningRecommendationEditScreen(
+    final result = await AppNavigator.push(context, LearningRecommendationEditScreen(
           teacher: widget.teacher,
           student: widget.student,
           recommendations: _recommendations,
-        ),
-      ),
-    );
+        ));
 
     if (result == true) {
       await LocalCacheService.invalidate(_buildRecommendationsCacheKey());
@@ -405,7 +401,7 @@ class _LearningRecommendationResultScreenState
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,

@@ -20,6 +20,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// RPP detail viewer with inline editing and AI regeneration.
 ///
@@ -97,10 +98,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   void _openAiRppScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RppAiResultScreen(
+    AppNavigator.push(context, RppAiResultScreen(
           rppData: _rppData,
           teacherId: _teacherId,
           onSaved: () {
@@ -111,9 +109,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               );
             }
           },
-        ),
-      ),
-    );
+        ));
   }
 
   /// Like Vue's `mounted()` -- copies rppData to local mutable state and loads
@@ -223,11 +219,11 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => AppNavigator.pop(context, false),
             child: Text('Batal', style: TextStyle(color: ColorUtils.slate500)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => AppNavigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryColor,
               foregroundColor: Colors.white,
@@ -289,11 +285,11 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => AppNavigator.pop(context, false),
             child: Text('Batal', style: TextStyle(color: ColorUtils.slate500)),
           ),
           ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => AppNavigator.pop(context, true),
             icon: Icon(Icons.auto_awesome, size: 18),
             label: Text('Regenerasi Semua'),
             style: ElevatedButton.styleFrom(
@@ -327,7 +323,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         ),
         actions: [
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => AppNavigator.pop(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryColor,
               foregroundColor: Colors.white,
@@ -1309,7 +1305,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           Row(
             children: [
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () => AppNavigator.pop(context),
                 child: Container(
                   width: 40,
                   height: 40,

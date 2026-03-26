@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 // ========== HELPER FUNCTIONS UNTUK STYLING ==========
 Color _getPrimaryColor() {
@@ -348,7 +349,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        Navigator.pop(context);
+        AppNavigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
@@ -446,7 +447,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
             iconTheme: IconThemeData(color: Colors.black),
             leading: IconButton(
               icon: Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => AppNavigator.pop(context),
             ),
             actions: [
               IconButton(

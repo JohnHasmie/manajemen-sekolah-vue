@@ -32,6 +32,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin subject management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -672,7 +673,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(color: ColorUtils.slate300),
@@ -705,7 +706,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                               _selectedClassNameFilter = tempSelectedClassName;
                             });
                             _checkActiveFilter();
-                            Navigator.pop(context);
+                            AppNavigator.pop(context);
                             _loadSubjects();
                           },
                           style: ElevatedButton.styleFrom(
@@ -1183,7 +1184,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                               ),
                             ),
                             InkWell(
-                              onTap: () => Navigator.pop(context),
+                              onTap: () => AppNavigator.pop(context),
                               borderRadius: BorderRadius.circular(16),
                               child: Container(
                                 width: 32,
@@ -1435,7 +1436,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                           children: [
                             Expanded(
                               child: OutlinedButton(
-                                onPressed: () => Navigator.pop(context),
+                                onPressed: () => AppNavigator.pop(context),
                                 style: OutlinedButton.styleFrom(
                                   padding: EdgeInsets.symmetric(vertical: 14),
                                   side: BorderSide(color: ColorUtils.slate300),
@@ -1515,7 +1516,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                                             setDialogState(() {
                                               isSaving = false;
                                             });
-                                            Navigator.pop(context);
+                                            AppNavigator.pop(context);
                                             _loadSubjects(); // Reload data
                                           }
 
@@ -1700,12 +1701,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
   // Navigasi ke halaman manajemen kelas untuk mata pelajaran
   void _navigateToClassManagement(Map<String, dynamic> subject) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SubjectClassManagementPage(subject: subject),
-      ),
-    );
+    AppNavigator.push(context, SubjectClassManagementPage(subject: subject));
   }
 
   List<dynamic> _getFilteredSubjects() {
@@ -1754,7 +1750,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
         'id': 'Kelola dan pantau mata pelajaran',
       }),
       primaryColor: _getPrimaryColor(),
-      onBackPressed: () => Navigator.pop(context),
+      onBackPressed: () => AppNavigator.pop(context),
       actionMenu: PopupMenuButton<String>(
         key: _menuKey,
         onSelected: (value) {
@@ -2832,7 +2828,7 @@ class SubjectClassManagementPageState
                           ),
                         ),
                         InkWell(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => AppNavigator.pop(context),
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
                             width: 32,
@@ -2986,7 +2982,7 @@ class SubjectClassManagementPageState
                                           ),
                                         ),
                                         onTap: () {
-                                          Navigator.pop(context);
+                                          AppNavigator.pop(context);
                                           addClassToSubject(kelas);
                                         },
                                       ),
@@ -3011,7 +3007,7 @@ class SubjectClassManagementPageState
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -3032,7 +3028,7 @@ class SubjectClassManagementPageState
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.pop(context);
+                              AppNavigator.pop(context);
                               setState(() {});
                             },
                             style: ElevatedButton.styleFrom(

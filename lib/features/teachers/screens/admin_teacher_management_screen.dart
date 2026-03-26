@@ -34,6 +34,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin teacher management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -774,7 +775,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(color: ColorUtils.slate300),
@@ -807,7 +808,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                     tempSelectedTeachingClass;
                               });
                               _checkActiveFilter();
-                              Navigator.pop(context);
+                              AppNavigator.pop(context);
                               _loadData();
                             },
                             style: ElevatedButton.styleFrom(
@@ -1560,7 +1561,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                   ),
                                 ),
                                 GestureDetector(
-                                  onTap: () => Navigator.pop(context),
+                                  onTap: () => AppNavigator.pop(context),
                                   child: Container(
                                     width: 32,
                                     height: 32,
@@ -1898,7 +1899,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                               children: [
                                 Expanded(
                                   child: OutlinedButton(
-                                    onPressed: () => Navigator.pop(context),
+                                    onPressed: () => AppNavigator.pop(context),
                                     style: OutlinedButton.styleFrom(
                                       padding: EdgeInsets.symmetric(
                                         vertical: 14,
@@ -2030,7 +2031,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                         // Backend handles it in POST/PUT
 
                                         if (context.mounted) {
-                                          Navigator.pop(context);
+                                          AppNavigator.pop(context);
                                         }
                                         _loadData();
                                       } catch (error) {
@@ -2224,12 +2225,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
   }
 
   void navigateToDetail(Map<String, dynamic> teacher) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TeacherDetailScreen(teacher: teacher),
-      ),
-    );
+    AppNavigator.push(context, TeacherDetailScreen(teacher: teacher));
   }
 
   Widget buildTeacherCard(Map<String, dynamic> teacher, int index) {

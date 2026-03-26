@@ -5,6 +5,7 @@
 // role, grade) each with selectable chip options. Similar to Vuetify's
 // `<v-bottom-sheet>` with `<v-chip-group>` inside.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
@@ -112,7 +113,7 @@ class _FilterSheetState extends State<FilterSheet> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         side: BorderSide(color: primaryColor),
@@ -131,7 +132,7 @@ class _FilterSheetState extends State<FilterSheet> {
                     child: ElevatedButton(
                       onPressed: () {
                         widget.onApplyFilters(_currentFilters);
-                        Navigator.pop(context);
+                        AppNavigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),

@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// A bottom sheet form for creating or editing a schedule entry.
 ///
@@ -518,7 +519,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                         ),
                         // 32×32 circle X close button
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => AppNavigator.pop(context),
                           child: Container(
                             width: 32,
                             height: 32,
@@ -606,7 +607,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(color: ColorUtils.slate300),
@@ -1393,7 +1394,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
         print('DEBUG: Saving schedule data: $scheduleData');
       }
 
-      Navigator.pop(context, scheduleData);
+      AppNavigator.pop(context, scheduleData);
     }
   }
 }

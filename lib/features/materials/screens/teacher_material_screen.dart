@@ -14,7 +14,6 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // In Laravel terms, combines MaterialController@index, @show, and
 // ChapterController with progress tracking.
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +21,6 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/enhanced_search_bar.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/class_activity/screens/teacher_class_activity_screen.dart';
-import 'package:manajemensekolah/features/materials/screens/material_ai_result_screen.dart';
 import 'package:manajemensekolah/features/materials/screens/sub_chapter_detail_screen.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -34,6 +32,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Teaching material browser with subject, chapter, and sub-chapter navigation.
 ///
@@ -194,10 +193,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
     if (!mounted) return;
 
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ClassActifityScreen(
+    await AppNavigator.push(context, ClassActifityScreen(
           initialSubjectId: _selectedSubject,
           initialSubjectName: _getSelectedSubjectName(),
           initialClassId: _selectedClassId ?? widget.initialClassId,
@@ -207,9 +203,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
           initialAdditionalMaterials: additionalMaterials,
           materialsToMarkAsGenerated: materialsToMarkAsGenerated,
           autoShowActivityDialog: true,
-        ),
-      ),
-    );
+        ));
 
     // Refresh data after returning
     if (mounted && _selectedSubject != null) {
@@ -945,10 +939,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     Map<String, dynamic> subBab,
     Map<String, dynamic> bab,
   ) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SubBabDetailPage(
+    AppNavigator.push(context, SubBabDetailPage(
           teacherId: _teacherProfileId ?? widget.teacher['id'],
           subjectId: _selectedSubject ?? '',
           subBab: subBab,
@@ -961,9 +952,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
               value,
             );
           },
-        ),
-      ),
-    );
+        ));
   }
 
   List<dynamic> _getFilteredBabMateri() {
@@ -1031,7 +1020,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
           Row(
             children: [
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () => AppNavigator.pop(context),
                 child: Container(
                   width: 40,
                   height: 40,

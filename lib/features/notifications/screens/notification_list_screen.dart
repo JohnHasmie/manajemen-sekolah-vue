@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Notification list screen - shared across admin, teacher (guru), and parent (wali) roles.
 ///
@@ -174,33 +175,21 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
     if (widget.role == 'wali' || widget.role == 'parent') {
       if (type == 'bill') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ParentBillingScreen()),
-        );
+        AppNavigator.push(context, ParentBillingScreen());
         return;
       } else if (type == 'class_activity') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ParentClassActivityScreen()),
-        );
+        AppNavigator.push(context, ParentClassActivityScreen());
         return;
       }
     } else if (widget.role == 'guru' || widget.role == 'teacher') {
       if (type == 'class_activity') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ClassActifityScreen()),
-        );
+        AppNavigator.push(context, ClassActifityScreen());
         return;
       }
     }
 
     if (type == 'announcement' || type == 'pengumuman') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => AnnouncementScreen()),
-      );
+      AppNavigator.push(context, AnnouncementScreen());
     } else if (type == 'grade' || type == 'nilai' || type == 'exam_score') {
       _showDetailDialog(notif);
     }
@@ -291,7 +280,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(ctx),
+                    onPressed: () => AppNavigator.pop(ctx),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: color,
                       padding: EdgeInsets.symmetric(vertical: 13),
@@ -408,7 +397,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             children: [
               // Back button
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () => AppNavigator.pop(context),
                 child: Container(
                   width: 40,
                   height: 40,

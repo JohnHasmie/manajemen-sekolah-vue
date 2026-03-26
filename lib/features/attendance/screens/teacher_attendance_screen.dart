@@ -30,6 +30,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_detail.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Data model for an attendance summary row.
 /// Like a Laravel Eloquent Model or a TypeScript interface -- a plain data class
@@ -819,7 +820,7 @@ class PresencePageState extends ConsumerState<PresencePage>
       title: Text(_getStatusText(status, languageProvider)),
       onTap: () {
         _setAllStatus(status, languageProvider);
-        Navigator.pop(context);
+        AppNavigator.pop(context);
       },
     );
   }
@@ -1341,7 +1342,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                       _studentList = [];
                     });
                   } else {
-                    Navigator.pop(context);
+                    AppNavigator.pop(context);
                   }
                 },
                 child: Container(
@@ -1866,7 +1867,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 13),
                             side: BorderSide(color: ColorUtils.slate300),
@@ -1897,7 +1898,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                               _selectedLessonHourIds = tempLessonHourIds;
                               _checkActiveFilter();
                             });
-                            Navigator.pop(context);
+                            AppNavigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 13),
@@ -2299,10 +2300,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   }
 
   void _navigateToDetailAbsensi(AbsensiSummary summary) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TeacherAbsensiDetailPage(
+    AppNavigator.push(context, TeacherAbsensiDetailPage(
           subjectId: summary.subjectId,
           subjectName: summary.subjectName,
           date: summary.date,
@@ -2311,9 +2309,7 @@ class PresencePageState extends ConsumerState<PresencePage>
           teacher: widget.teacher,
           lessonHourId: summary.lessonHourId,
           lessonHourName: summary.lessonHourName,
-        ),
-      ),
-    );
+        ));
   }
 
   // ========== MODE 2: INPUT ABSENSI (REDESIGNED) ==========
@@ -3215,7 +3211,7 @@ class PresencePageState extends ConsumerState<PresencePage>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => AppNavigator.pop(context),
             child: Text(
               languageProvider.getTranslatedText({
                 'en': 'Close',
@@ -3339,7 +3335,7 @@ class PresencePageState extends ConsumerState<PresencePage>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => AppNavigator.pop(context, false),
             child: Text(
               languageProvider.getTranslatedText({
                 'en': 'Cancel',
@@ -3348,7 +3344,7 @@ class PresencePageState extends ConsumerState<PresencePage>
             ),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => AppNavigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: Text(
               languageProvider.getTranslatedText({

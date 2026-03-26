@@ -69,6 +69,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// The main dashboard widget. Like a Vue page component (`pages/dashboard.vue`).
 ///
@@ -1063,7 +1064,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       if (!mounted) return;
 
       // Navigate ke dashboard dengan role baru
-      Navigator.pushReplacementNamed(context, '/$role');
+      AppNavigator.pushReplacementNamed(context, '/$role');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1570,7 +1571,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       final response = await ApiService.switchSchool(school['school_id']);
 
       // Close Loading Indicator
-      if (mounted) Navigator.pop(context);
+      if (mounted) AppNavigator.pop(context);
 
       // 1. Check for Multiple Roles (`pilih_role`)
       if (response['pilih_role'] == true && response['role_list'] is List) {
@@ -1590,7 +1591,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                   : (role == 'teacher' ? 'guru' : role);
               return SimpleDialogOption(
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                onPressed: () => Navigator.pop(
+                onPressed: () => AppNavigator.pop(
                   context,
                   role,
                 ), // Return original string 'parent'/'admin'
@@ -1620,7 +1621,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       await _processSchoolSwitch(response, school, null);
     } catch (e) {
       // Close Loading Indicator if error occurs
-      if (mounted) Navigator.pop(context);
+      if (mounted) AppNavigator.pop(context);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2018,13 +2019,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                       ),
                       splashRadius: 18,
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                NotificationListScreen(role: widget.role),
-                          ),
-                        );
+                        AppNavigator.push(context, NotificationListScreen(role: widget.role));
                       },
                     ),
                     if (_stats['unread_announcements'] != null &&
@@ -2289,7 +2284,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           return SimpleDialogOption(
             onPressed: () {
               provider.setSelectedYear(year['id'].toString());
-              Navigator.pop(context);
+              AppNavigator.pop(context);
             },
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
             child: Row(
@@ -2597,10 +2592,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           key: _scheduleSectionKey,
           schedules: _todaysScheduleList,
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
-            );
+            AppNavigator.push(context, TeachingScheduleScreen());
           },
         ),
         AttendanceOverviewCard(
@@ -2620,23 +2612,13 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
               ? (_stats['attendance_summary']['total'] ?? 0)
               : 0,
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PresencePage(teacher: _userData),
-              ),
-            );
+            AppNavigator.push(context, PresencePage(teacher: _userData));
           },
         ),
         MaterialSliderCard(
           materials: _materialOverview,
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MateriPage(teacher: _userData),
-              ),
-            );
+            AppNavigator.push(context, MateriPage(teacher: _userData));
           },
         ),
         LessonPlanStatusCard(
@@ -2644,15 +2626,10 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           rejected: _stats['rpp_rejected'] ?? 0,
           pending: _stats['rpp_pending'] ?? 0,
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => RppScreen(
+            AppNavigator.push(context, RppScreen(
                   teacherId: _userData['id'].toString(),
                   teacherName: _userData['name'] ?? 'Guru',
-                ),
-              ),
-            );
+                ));
           },
         ),
       ];
@@ -2733,23 +2710,13 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           label: AppLocalizations.data.tr,
           icon: Icons.folder_outlined,
           color: primaryColor,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AdminDataManagementScreen(),
-            ),
-          ),
+          onTap: () => AppNavigator.push(context, AdminDataManagementScreen()),
         ),
         QuickActionButton(
           label: AppLocalizations.schedule.tr,
           icon: Icons.schedule_outlined,
           color: ColorUtils.info600,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TeachingScheduleManagementScreen(),
-            ),
-          ),
+          onTap: () => AppNavigator.push(context, TeachingScheduleManagementScreen()),
         ),
         QuickActionButton(
           label: AppLocalizations.finance.tr,
@@ -2758,10 +2725,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           badgeCount: _unverifiedPaymentCount > 0
               ? _unverifiedPaymentCount
               : null,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => FinanceScreen()),
-          ),
+          onTap: () => AppNavigator.push(context, FinanceScreen()),
         ),
         QuickActionButton(
           label: AppLocalizations.announcements.tr,
@@ -2769,12 +2733,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           color: ColorUtils.warning600,
           badgeCount: _stats['unread_announcements'],
           onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminAnnouncementScreen(),
-              ),
-            );
+            await AppNavigator.push(context, AdminAnnouncementScreen());
             _loadStats();
           },
         ),
@@ -2785,30 +2744,19 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           label: AppLocalizations.schedule.tr,
           icon: Icons.schedule_outlined,
           color: primaryColor,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
-          ),
+          onTap: () => AppNavigator.push(context, TeachingScheduleScreen()),
         ),
         QuickActionButton(
           label: AppLocalizations.attendance.tr,
           icon: Icons.how_to_reg_outlined,
           color: ColorUtils.warning600,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PresencePage(teacher: _userData),
-            ),
-          ),
+          onTap: () => AppNavigator.push(context, PresencePage(teacher: _userData)),
         ),
         QuickActionButton(
           label: AppLocalizations.activity.tr,
           icon: Icons.local_activity_outlined,
           color: ColorUtils.info600,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ClassActifityScreen()),
-          ),
+          onTap: () => AppNavigator.push(context, ClassActifityScreen()),
         ),
         QuickActionButton(
           label: AppLocalizations.inputGrades.tr,
@@ -2825,12 +2773,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             };
             if (teacherData['id']!.isEmpty) return;
             if (!context.mounted) return;
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => GradePage(teacher: teacherData),
-              ),
-            );
+            AppNavigator.push(context, GradePage(teacher: teacherData));
           },
         ),
       ];
@@ -2842,10 +2785,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           color: primaryColor,
           badgeCount: _stats['unread_announcements'],
           onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AnnouncementScreen()),
-            );
+            await AppNavigator.push(context, AnnouncementScreen());
             _loadStats();
           },
         ),
@@ -2855,10 +2795,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           color: ColorUtils.error600,
           badgeCount: _stats['unread_billing'],
           onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ParentBillingScreen()),
-            );
+            await AppNavigator.push(context, ParentBillingScreen());
             _loadStats();
           },
         ),
@@ -2954,20 +2891,12 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       MenuItem(
         title: AppLocalizations.manageData.tr,
         icon: Icons.folder_shared_outlined,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AdminDataManagementScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, AdminDataManagementScreen()),
       ),
       MenuItem(
         title: AppLocalizations.manageTeachingSchedule.tr,
         icon: Icons.schedule_outlined,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TeachingScheduleManagementScreen(),
-          ),
-        ),
+        onTap: () => AppNavigator.push(context, TeachingScheduleManagementScreen()),
       ),
       MenuItem(
         title: AppLocalizations.inputGrades.tr,
@@ -2990,12 +2919,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GradePage(teacher: adminData),
-            ),
-          );
+          AppNavigator.push(context, GradePage(teacher: adminData));
         },
       ),
     ];
@@ -3009,44 +2933,29 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         icon: Icons.announcement_outlined,
         badgeCount: _stats['unread_announcements'],
         onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AdminAnnouncementScreen()),
-          );
+          await AppNavigator.push(context, AdminAnnouncementScreen());
           _loadStats();
         },
       ),
       MenuItem(
         title: AppLocalizations.classActivities.tr,
         icon: Icons.local_activity_outlined,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AdminClassActivityScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, AdminClassActivityScreen()),
       ),
       MenuItem(
         title: AppLocalizations.presenceReport.tr,
         icon: Icons.check_circle_outline,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AdminPresenceReportScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, AdminPresenceReportScreen()),
       ),
       MenuItem(
         title: AppLocalizations.manageRpp.tr,
         icon: Icons.description_outlined,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AdminRppScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, AdminRppScreen()),
       ),
       MenuItem(
         title: AppLocalizations.studentReport.tr,
         icon: Icons.assignment_turned_in_outlined,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const AdminRaportScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, const AdminRaportScreen()),
       ),
     ];
   }
@@ -3060,18 +2969,12 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         badgeCount: _unverifiedPaymentCount > 0
             ? _unverifiedPaymentCount
             : null,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => FinanceScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, FinanceScreen()),
       ),
       MenuItem(
         title: AppLocalizations.schoolSettings.tr,
         icon: Icons.settings_applications,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SchoolSettingsScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, SchoolSettingsScreen()),
       ),
     ];
   }
@@ -3082,18 +2985,12 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       MenuItem(
         title: AppLocalizations.teachingSchedule.tr,
         icon: Icons.schedule_outlined,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => TeachingScheduleScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, TeachingScheduleScreen()),
       ),
       MenuItem(
         title: AppLocalizations.classActivities.tr,
         icon: Icons.local_activity_outlined,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ClassActifityScreen()),
-        ),
+        onTap: () => AppNavigator.push(context, ClassActifityScreen()),
       ),
       MenuItem(
         title: AppLocalizations.studentAttendance.tr,
@@ -3115,12 +3012,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PresencePage(teacher: guruData),
-            ),
-          );
+          AppNavigator.push(context, PresencePage(teacher: guruData));
         },
       ),
       MenuItem(
@@ -3142,12 +3034,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MateriPage(teacher: teacherData),
-            ),
-          );
+          AppNavigator.push(context, MateriPage(teacher: teacherData));
         },
       ),
     ];
@@ -3176,12 +3063,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GradePage(teacher: teacherData),
-            ),
-          );
+          AppNavigator.push(context, GradePage(teacher: teacherData));
         },
       ),
       MenuItem(
@@ -3204,12 +3086,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RekapNilaiPage(teacher: teacherData),
-            ),
-          );
+          AppNavigator.push(context, RekapNilaiPage(teacher: teacherData));
         },
       ),
       MenuItem(
@@ -3232,12 +3109,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RaportScreen(teacher: teacherData),
-            ),
-          );
+          AppNavigator.push(context, RaportScreen(teacher: teacherData));
         },
       ),
       MenuItem(
@@ -3260,15 +3132,10 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RppScreen(
+          AppNavigator.push(context, RppScreen(
                 teacherId: teacherData['id']!,
                 teacherName: teacherData['nama']!,
-              ),
-            ),
-          );
+              ));
         },
       ),
       MenuItem(
@@ -3276,10 +3143,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         icon: Icons.announcement_outlined,
         badgeCount: _stats['unread_announcements'],
         onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AnnouncementScreen()),
-          );
+          await AppNavigator.push(context, AnnouncementScreen());
           _loadStats();
         },
       ),
@@ -3298,15 +3162,10 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             };
             if (!context.mounted) return;
 
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => LearningRecommendationClassScreen(
+            AppNavigator.push(context, LearningRecommendationClassScreen(
                   teacher: teacherData,
                   classes: _homeroomClasses,
-                ),
-              ),
-            );
+                ));
           },
         ),
     ];
@@ -3320,10 +3179,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         icon: Icons.announcement_outlined,
         badgeCount: _stats['unread_announcements'],
         onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AnnouncementScreen()),
-          );
+          await AppNavigator.push(context, AnnouncementScreen());
           _loadStats();
         },
       ),
@@ -3333,13 +3189,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         badgeCount: _stats['unread_class_activities'],
         onTap: () async {
           final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ParentClassActivityScreen(academicYearId: academicYearId),
-            ),
-          );
+          await AppNavigator.push(context, ParentClassActivityScreen(academicYearId: academicYearId));
           _loadStats();
         },
       ),
@@ -3349,13 +3199,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         badgeCount: _stats['unread_grades'],
         onTap: () async {
           final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ParentGradeScreen(academicYearId: academicYearId),
-            ),
-          );
+          await AppNavigator.push(context, ParentGradeScreen(academicYearId: academicYearId));
           _loadStats();
         },
       ),
@@ -3383,16 +3227,11 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           if (!context.mounted) return;
 
           if (studentsData.length == 1) {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PresenceParentPage(
+            await AppNavigator.push(context, PresenceParentPage(
                   parent: userData,
                   studentId: studentsData[0]['id'],
                   academicYearId: academicYearId,
-                ),
-              ),
-            );
+                ));
             _loadStats();
           } else {
             await _showStudentSelectionDialog(
@@ -3410,10 +3249,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         icon: Icons.account_balance_wallet_outlined,
         badgeCount: _stats['unread_billing'],
         onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ParentBillingScreen()),
-          );
+          await AppNavigator.push(context, ParentBillingScreen());
           _loadStats();
         },
       ),
@@ -3423,13 +3259,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         onTap: () async {
           final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ParentRaportScreen(academicYearId: academicYearId),
-            ),
-          );
+          await AppNavigator.push(context, ParentRaportScreen(academicYearId: academicYearId));
         },
       ),
     ];
@@ -3486,7 +3316,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       color: Colors.transparent,
       child: InkWell(
         onTap: () async {
-          Navigator.pop(context);
+          AppNavigator.pop(context);
           await languageProvider.setLanguage(code);
         },
         borderRadius: BorderRadius.circular(12),
@@ -3633,7 +3463,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                               onTap: isCurrent
                                   ? null
                                   : () {
-                                      Navigator.pop(context);
+                                      AppNavigator.pop(context);
                                       _switchRole(role);
                                     },
                               borderRadius: BorderRadius.circular(12),
@@ -3690,7 +3520,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              Navigator.pop(context);
+                              AppNavigator.pop(context);
                               _showSchoolSelectionDialog(context);
                             },
                             borderRadius: BorderRadius.circular(15),
@@ -3735,13 +3565,8 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SettingsScreen(),
-                              ),
-                            );
+                            AppNavigator.pop(context);
+                            AppNavigator.push(context, const SettingsScreen());
                           },
                           borderRadius: BorderRadius.circular(15),
                           child: Container(
@@ -3782,7 +3607,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                             // Call TokenService.logout to ensure backend token and FCM tokens are completely revoked
                             await TokenService().logout();
                             if (context.mounted) {
-                              Navigator.pop(context);
+                              AppNavigator.pop(context);
                               Navigator.pushNamedAndRemoveUntil(
                                 context,
                                 '/login',
@@ -3912,7 +3737,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                       onTap: isCurrent
                           ? null
                           : () {
-                              Navigator.pop(
+                              AppNavigator.pop(
                                 dialogContext,
                               ); // Close dialog immediately
                               _switchSchool(school);
@@ -3984,7 +3809,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
+            onPressed: () => AppNavigator.pop(dialogContext),
             child: Text(AppLocalizations.cancel.tr, style: TextStyle(color: Colors.grey.shade600)),
           ),
         ],
@@ -4085,17 +3910,12 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                     student['kelas_nama'] ?? 'Kelas tidak tersedia',
                   ),
                   onTap: () async {
-                    Navigator.pop(context);
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PresenceParentPage(
+                    AppNavigator.pop(context);
+                    await AppNavigator.push(context, PresenceParentPage(
                           parent: parent,
                           studentId: student['id'],
                           academicYearId: academicYearId,
-                        ),
-                      ),
-                    );
+                        ));
                     _loadStats();
                   },
                 ),
@@ -4117,7 +3937,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => AppNavigator.pop(context),
             child: Text('OK'),
           ),
         ],

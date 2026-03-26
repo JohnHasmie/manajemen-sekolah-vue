@@ -5,6 +5,7 @@
 // across all management screens, with optional search bar and filter chips
 // injected as child widgets (similar to Vue's named slots).
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// A gradient header bar displayed at the top of management screens.
 ///
@@ -69,9 +70,9 @@ class GradientPageHeader extends StatelessWidget {
           Row(
             children: [
               // Back button
-              if (onBackPressed != null || Navigator.canPop(context)) ...[
+              if (onBackPressed != null || AppNavigator.canPop(context)) ...[
                 GestureDetector(
-                  onTap: onBackPressed ?? () => Navigator.pop(context),
+                  onTap: onBackPressed ?? () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,

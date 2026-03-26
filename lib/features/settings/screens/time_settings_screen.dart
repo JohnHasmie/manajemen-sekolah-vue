@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Time settings screen - configure lesson hour sessions for each school day.
 ///
@@ -224,7 +225,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -638,7 +639,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -660,7 +661,6 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                           child: ElevatedButton(
                             onPressed: () async {
                               if (hourController.text.isEmpty) return;
-                              final navigator = Navigator.of(context);
                               final messenger = ScaffoldMessenger.of(context);
                               final startStr =
                                   '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00';
@@ -684,7 +684,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                     endTime: endStr,
                                   );
                                 }
-                                navigator.pop();
+                                AppNavigator.pop(context);
                                 await _refreshSessions();
                               } catch (e) {
                                 AppLogger.error('settings', e);
@@ -750,7 +750,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
           endTime: s['end_time'],
         );
       }
-      if (mounted) Navigator.pop(context);
+      if (mounted) AppNavigator.pop(context);
       await _refreshSessions();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -763,7 +763,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       }
     } catch (e) {
       AppLogger.error('settings', e);
-      if (mounted) Navigator.pop(context);
+      if (mounted) AppNavigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -885,7 +885,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       color: ColorUtils.slate400,
                     ),
                     onTap: () {
-                      Navigator.pop(context);
+                      AppNavigator.pop(context);
                       _copySchedule(d);
                     },
                   );
@@ -897,7 +897,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
               child: SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => AppNavigator.pop(context),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: ColorUtils.slate300),
@@ -981,7 +981,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context, false),
+                      onPressed: () => AppNavigator.pop(context, false),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 13),
                         side: BorderSide(color: ColorUtils.slate300),
@@ -998,7 +998,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                   SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context, true),
+                      onPressed: () => AppNavigator.pop(context, true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ColorUtils.error600,
                         padding: EdgeInsets.symmetric(vertical: 13),
@@ -1145,7 +1145,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       ),
                     ),
                     IconButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => AppNavigator.pop(context),
                       icon: Container(
                         width: 32,
                         height: 32,
