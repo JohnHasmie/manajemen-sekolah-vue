@@ -42,6 +42,7 @@ import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Admin teaching schedule management with full CRUD, timetable grid, and conflict detection.
 ///
@@ -403,13 +404,7 @@ class TeachingScheduleManagementScreenState
 
   void _showInfoSnackBar(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.blue,
-        duration: Duration(seconds: 2),
-      ),
-    );
+        SnackBarUtils.showInfo(context, message);
   }
 
   String? _buildScheduleCacheKey() {
@@ -998,25 +993,16 @@ class TeachingScheduleManagementScreenState
 
   void _showErrorSnackBar(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.red),
-      );
+            SnackBarUtils.showError(context, message);
     }
   }
 
   void _showSuccessSnackBar(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showSuccess(context, ref.read(languageRiverpod).getTranslatedText({
               'en': message,
               'id': message.replaceAll('successfully', 'berhasil'),
-            }),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+            }));
     }
   }
 

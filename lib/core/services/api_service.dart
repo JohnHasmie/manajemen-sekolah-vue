@@ -527,7 +527,14 @@ class ApiService {
       body['role'] = role;
     }
 
-    final response = await dioClient.post('/auth/switch-school', data: body);
+    final response = await dioClient.post(
+      '/auth/switch-school',
+      data: body,
+      options: Options(
+        sendTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
+      ),
+    );
     return Map<String, dynamic>.from(response.data);
   }
 

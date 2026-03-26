@@ -15,6 +15,7 @@ import 'package:manajemensekolah/features/teachers/services/teacher_service.dart
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// A bottom sheet form for creating or editing a schedule entry.
 ///
@@ -344,20 +345,13 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
 
   void _showErrorSnackBar(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
               'en': message,
               'id': message.replaceAll(
                 'Failed to load teacher subjects',
                 'Gagal memuat mata pelajaran guru',
               ),
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 

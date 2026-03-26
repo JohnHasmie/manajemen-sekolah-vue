@@ -13,6 +13,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 class AddActivityDialog extends ConsumerStatefulWidget {
   final String teacherId;
@@ -247,9 +248,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
           _isLoadingStudents = false;
         });
         // Non-critical in a dialog, but better to show something
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -313,9 +312,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         setState(() {
           _isLoadingBab = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -351,9 +348,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       AppLogger.error('class_activity', 'ERROR loading sub bab materi: $e');
       AppLogger.debug('class_activity', 'Stack trace: ${StackTrace.current}');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -731,10 +726,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       AppNavigator.pop(context);
       widget.onActivityAdded();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.isEditMode
+            SnackBarUtils.showSuccess(context, widget.isEditMode
                 ? languageProvider.getTranslatedText({
                     'en': 'Activity updated successfully',
                     'id': 'Kegiatan berhasil diperbarui',
@@ -742,11 +734,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                 : languageProvider.getTranslatedText({
                     'en': 'Activity added successfully',
                     'id': 'Kegiatan berhasil ditambahkan',
-                  }),
-          ),
-          backgroundColor: ColorUtils.success600,
-        ),
-      );
+                  }));
     } catch (e) {
       _showError(e.toString());
     } finally {
@@ -756,9 +744,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: ColorUtils.error600),
-    );
+        SnackBarUtils.showError(context, message);
   }
 
   void _openMultiSelectSubBabDialog(LanguageProvider languageProvider) {

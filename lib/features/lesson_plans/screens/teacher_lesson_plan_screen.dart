@@ -32,6 +32,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// RPP (lesson plan) list screen with CRUD, search, filter, and AI generation.
 ///
@@ -723,29 +724,15 @@ class RppScreenState extends ConsumerState<RppScreen> {
         await LocalCacheService.clearStartingWith('rpp_');
         _loadRpp(useCache: false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                languageProvider.getTranslatedText({
+                    SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                   'en': 'RPP deleted successfully',
                   'id': 'RPP berhasil dihapus',
-                }),
-              ),
-              backgroundColor: ColorUtils.success600,
-            ),
-          );
+                }));
         }
       } catch (e) {
         AppLogger.error('lesson_plan', 'Delete RPP error: $e');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${languageProvider.getTranslatedText({'en': 'Failed to delete RPP: ', 'id': 'Gagal menghapus RPP: '})}${ErrorUtils.getFriendlyMessage(e)}',
-              ),
-              backgroundColor: ColorUtils.error600,
-            ),
-          );
+                    SnackBarUtils.showError(context, '${languageProvider.getTranslatedText({'en': 'Failed to delete RPP: ', 'id': 'Gagal menghapus RPP: '})}${ErrorUtils.getFriendlyMessage(e)}');
         }
       }
     }
@@ -754,14 +741,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
   Future<void> _lihatDetailRpp(Map<String, dynamic> rpp) async {
     final id = rpp['id']?.toString();
     if (id == null || id.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ErrorUtils.getFriendlyMessage(Exception('RPP ID tidak tersedia')),
-          ),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(Exception('RPP ID tidak tersedia')));
       return;
     }
 
@@ -770,12 +750,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
       AppNavigator.push(context, RPPDetailPage(rppData: fullRpp));
     } catch (e) {
       AppLogger.error('lesson_plan', 'Fetch RPP detail error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(ErrorUtils.getFriendlyMessage(e)),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
     }
   }
 
@@ -1784,16 +1759,10 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       AppLogger.debug('lesson_plan', 'Downloading file from: $fullUrl');
 
       final languageProvider = ref.read(languageRiverpod);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showInfo(context, languageProvider.getTranslatedText({
               'en': 'Downloading file...',
               'id': 'Mengunduh file...',
-            }),
-          ),
-        ),
-      );
+            }));
 
       final dio = Dio();
       final response = await dio.get<List<int>>(
@@ -1816,9 +1785,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
 
       String message = e.toString().replaceFirst('Exception: ', '');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: ColorUtils.error600),
-      );
+            SnackBarUtils.showError(context, message);
     }
   }
 
@@ -1889,10 +1856,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       widget.onSaved();
 
       final languageProvider = ref.read(languageRiverpod);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.rppData != null
+            SnackBarUtils.showInfo(context, widget.rppData != null
                 ? languageProvider.getTranslatedText({
                     'en': 'RPP updated successfully',
                     'id': 'RPP berhasil diupdate',
@@ -1900,19 +1864,10 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                 : languageProvider.getTranslatedText({
                     'en': 'RPP created successfully',
                     'id': 'RPP berhasil dibuat',
-                  }),
-          ),
-        ),
-      );
+                  }));
     } catch (e) {
       AppLogger.error('lesson_plan', 'Error creating RPP: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${languageProvider.getTranslatedText({'en': 'Error', 'id': 'Terjadi Kesalahan'})}: $e',
-          ),
-        ),
-      );
+            SnackBarUtils.showInfo(context, '${languageProvider.getTranslatedText({'en': 'Error', 'id': 'Terjadi Kesalahan'})}: $e');
     } finally {
       setState(() {
         _isUploading = false;
@@ -2625,12 +2580,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
     AppLogger.debug('lesson_plan', '_submitForm called');
     if (!_formKey.currentState!.validate()) {
       AppLogger.error('lesson_plan', 'Validation failed');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mohon lengkapi semua field yang wajib diisi'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+            SnackBarUtils.showWarning(context, 'Mohon lengkapi semua field yang wajib diisi');
       return;
     }
 
@@ -2794,9 +2744,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
     } catch (e) {
       AppLogger.error('lesson_plan', '🚨 _submitForm error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.error.tr}: $e')),
-        );
+                SnackBarUtils.showInfo(context, '${AppLocalizations.error.tr}: $e');
       }
     } finally {
       AppLogger.debug('lesson_plan', '🏁 _submitForm finished (isAutoGenerating: false)');

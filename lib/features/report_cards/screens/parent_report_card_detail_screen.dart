@@ -10,6 +10,7 @@ import 'package:manajemensekolah/features/report_cards/exports/report_card_expor
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Read-only report card detail view for parents.
 ///
@@ -169,12 +170,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
 
   void _downloadPdf(BuildContext context) async {
     // Show loading
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Menyiapkan file PDF...'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+        SnackBarUtils.showInfo(context, 'Menyiapkan file PDF...');
 
     try {
       if (userRole == 'wali') {
@@ -196,12 +192,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }

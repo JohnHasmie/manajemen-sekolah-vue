@@ -25,6 +25,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Parent's read-only view of a child's attendance with monthly summaries
 /// and read tracking.
@@ -233,12 +234,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
       setState(() => _isLoading = false);
 
       if (_absensiData.isEmpty && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       WidgetsBinding.instance.addPostFrameCallback((_) {

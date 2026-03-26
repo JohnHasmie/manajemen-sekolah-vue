@@ -31,6 +31,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_detail.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Data model for an attendance summary row.
 /// Like a Laravel Eloquent Model or a TypeScript interface -- a plain data class
@@ -403,13 +404,7 @@ class PresencePageState extends ConsumerState<PresencePage>
 
       // Only show error if no cached data
       if (_classList.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       if (mounted) {
@@ -864,20 +859,12 @@ class PresencePageState extends ConsumerState<PresencePage>
       }
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          languageProvider.getTranslatedText({
+        SnackBarUtils.showInfo(context, languageProvider.getTranslatedText({
             'en':
                 'All students set to ${_getStatusText(status, languageProvider).toLowerCase()}',
             'id':
                 'Semua siswa diatur menjadi ${_getStatusText(status, languageProvider).toLowerCase()}',
-          }),
-        ),
-        backgroundColor: _getStatusColor(status),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+          }));
   }
 
   IconData _getStatusIcon(String status) {
@@ -3063,50 +3050,26 @@ class PresencePageState extends ConsumerState<PresencePage>
     // Validasi guru_id
     final teacherId = widget.teacher['id'];
     if (teacherId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Invalid teacher data. Please login again.',
               'id': 'Data guru tidak valid. Silakan login ulang.',
-            }),
-          ),
-          backgroundColor: ColorUtils.error600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            }));
       return;
     }
 
     if (_selectedSubjectId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Please select a subject first',
               'id': 'Pilih mata pelajaran terlebih dahulu',
-            }),
-          ),
-          backgroundColor: ColorUtils.error600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            }));
       return;
     }
 
     if (_filteredStudentList.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'No students to save',
               'id': 'Tidak ada siswa untuk disimpan',
-            }),
-          ),
-          backgroundColor: ColorUtils.error600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            }));
       return;
     }
 
@@ -3153,19 +3116,11 @@ class PresencePageState extends ConsumerState<PresencePage>
 
       // Tampilkan hasil
       if (errorCount == 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                 'en':
                     'Attendance successfully saved for $successCount students',
                 'id': 'Absensi berhasil disimpan untuk $successCount siswa',
-              }),
-            ),
-            backgroundColor: ColorUtils.success600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+              }));
 
         // Reset form setelah berhasil
         _resetForm();
@@ -3173,31 +3128,15 @@ class PresencePageState extends ConsumerState<PresencePage>
         // Pindah ke tab Hasil (index 0)
         _tabController.animateTo(0);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showWarning(context, languageProvider.getTranslatedText({
                 'en': '$successCount successful, $errorCount failed',
                 'id': '$successCount berhasil, $errorCount gagal',
-              }),
-            ),
-            backgroundColor: ColorUtils.warning600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+              }));
         _showErrorDetails(errorMessages, languageProvider);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${languageProvider.getTranslatedText({'en': 'Error:', 'id': 'Error:'})} $e',
-          ),
-          backgroundColor: ColorUtils.error600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            SnackBarUtils.showError(context, '${languageProvider.getTranslatedText({'en': 'Error:', 'id': 'Error:'})} $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -3402,31 +3341,17 @@ class PresencePageState extends ConsumerState<PresencePage>
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'Attendance deleted successfully',
               'id': 'Absensi berhasil dihapus',
-            }),
-          ),
-          backgroundColor: ColorUtils.success600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            }));
 
       // Reload summary data
       _loadAbsensiSummary();
     } catch (e) {
       AppLogger.error('attendance', 'Delete attendance error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }

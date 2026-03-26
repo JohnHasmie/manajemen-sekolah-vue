@@ -10,6 +10,7 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Service for exporting student grade data (nilai) to Excel via the backend.
 /// Similar to Laravel's `Excel::download(new NilaiExport($data), 'Data_Nilai.xlsx')`.
@@ -55,29 +56,15 @@ class ExcelNilaiService {
       // Buka file
       await OpenFile.open(filePath);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'Grade data exported successfully',
               'id': 'Data nilai berhasil diexport',
-            }),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+            }));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Failed to export grade data: $e',
               'id': 'Gagal mengexport data nilai: $e',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 

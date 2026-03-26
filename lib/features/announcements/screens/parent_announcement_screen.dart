@@ -31,6 +31,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// School announcements list with automatic read tracking.
 ///
@@ -658,22 +659,12 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
 
       if (result.type != ResultType.done) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Could not open file: ${result.message}'),
-              backgroundColor: ColorUtils.error600,
-            ),
-          );
+                    SnackBarUtils.showError(context, 'Could not open file: ${result.message}');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error opening file: $e'),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Error opening file: $e');
       }
     }
   }

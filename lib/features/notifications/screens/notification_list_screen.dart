@@ -290,7 +290,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                       elevation: 0,
                     ),
                     child: Text(
-                      'Tutup',
+                      AppLocalizations.close.tr,
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -530,7 +530,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             Icon(Icons.delete_rounded, color: Colors.white, size: 24),
             SizedBox(height: 4),
             Text(
-              'Hapus',
+              AppLocalizations.delete.tr,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 11,

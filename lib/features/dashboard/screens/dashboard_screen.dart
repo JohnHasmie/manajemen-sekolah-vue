@@ -71,6 +71,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// The main dashboard widget. Like a Vue page component (`pages/dashboard.vue`).
 ///
@@ -232,14 +233,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
     } catch (e) {
       AppLogger.error('dashboard', 'Error during initialization: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat data dashboard: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: Colors.orange.shade800,
-          ),
-        );
+                SnackBarUtils.showWarning(context, 'Gagal memuat data dashboard: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     } finally {
       if (mounted) {
@@ -708,14 +702,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       AppNavigator.pushReplacementNamed(context, '/$role');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal pindah role: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal pindah role: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -1265,14 +1252,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       if (mounted) AppNavigator.pop(context);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal pindah sekolah: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal pindah sekolah: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -2554,9 +2534,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           };
           if (adminData['id']!.isEmpty) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Admin ID not found')),
-              );
+                            SnackBarUtils.showInfo(context, 'Error: Admin ID not found');
             }
             return;
           }
@@ -2647,9 +2625,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           };
           if (guruData['id']!.isEmpty) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Teacher ID not found')),
-              );
+                            SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
             }
             return;
           }
@@ -2669,9 +2645,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Teacher ID not found')),
-              );
+                            SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
             }
             return;
           }
@@ -2698,9 +2672,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Teacher ID not found')),
-              );
+                            SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
             }
             return;
           }
@@ -2721,9 +2693,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Teacher ID not found')),
-              );
+                            SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
             }
             return;
           }
@@ -2744,9 +2714,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Teacher ID not found')),
-              );
+                            SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
             }
             return;
           }
@@ -2767,9 +2735,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: Teacher ID not found')),
-              );
+                            SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
             }
             return;
           }

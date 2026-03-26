@@ -29,6 +29,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Grade recap wizard: class selection -> subject selection -> recap table.
 ///
@@ -440,9 +441,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       if (mounted) {
         if (_classList.isEmpty) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-          );
+                    SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
         }
       }
     }
@@ -505,9 +504,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       if (mounted) {
         if (_subjectList.isEmpty) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-          );
+                    SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
         }
       }
     }
@@ -710,9 +707,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       if (mounted) {
         if (_tableData.isEmpty) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-          );
+                    SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
         }
       }
     }
@@ -1068,7 +1063,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
               actions: [
                 TextButton(
                   onPressed: () => AppNavigator.pop(context),
-                  child: Text('Batal'),
+                  child: Text(AppLocalizations.cancel.tr),
                 ),
                 ElevatedButton(
                   onPressed: selectedItems.isEmpty
@@ -1340,7 +1335,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                 actions: [
                   TextButton(
                     onPressed: () => AppNavigator.pop(context),
-                    child: Text('Batal'),
+                    child: Text(AppLocalizations.cancel.tr),
                   ),
                 ],
               ),
@@ -1540,14 +1535,14 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Hapus Materi'),
+        title: Text(AppLocalizations.deleteMaterial.tr),
         content: Text(
-          'Apakah Anda yakin ingin menghapus kolom materi ini beserta semua nilainya?',
+          AppLocalizations.deleteColumnConfirm.tr,
         ),
         actions: [
           TextButton(
             onPressed: () => AppNavigator.pop(context),
-            child: Text('Batal'),
+            child: Text(AppLocalizations.cancel.tr),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -1587,7 +1582,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
               });
               _updateAllDescriptions();
             },
-            child: Text('Hapus'),
+            child: Text(AppLocalizations.delete.tr),
           ),
         ],
       ),
@@ -1772,15 +1767,11 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
 
       if (mounted) {
         setState(() => _hasUnsavedChanges = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Rekap Nilai berhasil disimpan')),
-        );
+                SnackBarUtils.showInfo(context, 'Rekap Nilai berhasil disimpan');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       if (mounted) {
@@ -1810,9 +1801,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       if (mounted) {

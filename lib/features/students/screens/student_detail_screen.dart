@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Student detail screen - displays full profile for a single student.
 ///
@@ -83,15 +84,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
         _isLoading = false;
         _errorMessage = ErrorUtils.getFriendlyMessage(e);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Gagal memuat detail siswa: ${ErrorUtils.getFriendlyMessage(e)}',
-          ),
-          backgroundColor: ColorUtils.error600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            SnackBarUtils.showError(context, 'Gagal memuat detail siswa: ${ErrorUtils.getFriendlyMessage(e)}');
     }
   }
 

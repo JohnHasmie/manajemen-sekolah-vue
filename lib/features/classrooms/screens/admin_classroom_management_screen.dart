@@ -33,6 +33,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Admin class management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -769,14 +770,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
         setState(() => _isLoading = false);
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal memuat data kelas', 'id': 'Gagal memuat data kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}',
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            SnackBarUtils.showError(context, '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal memuat data kelas', 'id': 'Gagal memuat data kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}');
     } finally {
       // Trigger tour
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -879,14 +873,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${languageProvider.getTranslatedText({'en': 'Gagal mengimpor file', 'id': 'Gagal mengimpor file'})}: ${ErrorUtils.getFriendlyMessage(e)}',
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            SnackBarUtils.showError(context, '${languageProvider.getTranslatedText({'en': 'Gagal mengimpor file', 'id': 'Gagal mengimpor file'})}: ${ErrorUtils.getFriendlyMessage(e)}');
     }
   }
 
@@ -1541,28 +1528,14 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
         await getIt<ApiClassService>().deleteClass(classData['id'].toString());
         _loadData();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                ref.read(languageRiverpod).getTranslatedText({
+                    SnackBarUtils.showSuccess(context, ref.read(languageRiverpod).getTranslatedText({
                   'en': 'Class successfully deleted',
                   'id': 'Kelas berhasil dihapus',
-                }),
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
+                }));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal menghapus kelas', 'id': 'Gagal menghapus kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}',
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
+                    SnackBarUtils.showError(context, '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal menghapus kelas', 'id': 'Gagal menghapus kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}');
         }
       }
     }

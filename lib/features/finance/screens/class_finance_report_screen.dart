@@ -20,6 +20,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Class finance report screen - shows billing/payment details for a specific class.
 ///
@@ -1050,7 +1051,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
-                              'Batal',
+                              AppLocalizations.cancel.tr,
                               style: TextStyle(color: ColorUtils.slate600),
                             ),
                           ),
@@ -1074,12 +1075,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                                   file: selectedFile,
                                 );
                               } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Error: $e'),
-                                    backgroundColor: ColorUtils.error600,
-                                  ),
-                                );
+                                                                SnackBarUtils.showError(context, 'Error: $e');
                               }
                             },
                             style: ElevatedButton.styleFrom(
@@ -1090,7 +1086,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               padding: EdgeInsets.symmetric(vertical: 12),
                             ),
                             child: Text(
-                              'Simpan',
+                              AppLocalizations.save.tr,
                               style: TextStyle(color: Colors.white),
                             ),
                           ),
@@ -1147,20 +1143,10 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       if (mounted) AppNavigator.pop(context); // Close loading
       _loadData(); // Refresh table
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Pembayaran berhasil dicatat'),
-          backgroundColor: ColorUtils.success600,
-        ),
-      );
+            SnackBarUtils.showSuccess(context, 'Pembayaran berhasil dicatat');
     } catch (e) {
       if (mounted) AppNavigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal: $e'),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            SnackBarUtils.showError(context, 'Gagal: $e');
     }
   }
 
@@ -1802,7 +1788,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                             ),
                           ),
                           child: Text(
-                            'Batal',
+                            AppLocalizations.cancel.tr,
                             style: TextStyle(color: ColorUtils.slate600),
                           ),
                         ),
@@ -2197,23 +2183,12 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       if (mounted) AppNavigator.pop(context); // Close loading
       _loadData(); // Refresh table
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            markAsPaid
+            SnackBarUtils.showInfo(context, markAsPaid
                 ? 'Pembayaran berhasil dicatat'
-                : 'Pembayaran dibatalkan',
-          ),
-        ),
-      );
+                : 'Pembayaran dibatalkan');
     } catch (e) {
       if (mounted) AppNavigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal: $e'),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            SnackBarUtils.showError(context, 'Gagal: $e');
     }
   }
 
@@ -2259,7 +2234,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
           actions: [
             TextButton(
               onPressed: () => AppNavigator.pop(context),
-              child: Text('Tutup'),
+              child: Text(AppLocalizations.close.tr),
             ),
           ],
         );

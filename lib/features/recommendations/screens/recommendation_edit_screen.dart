@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Form screen for editing AI-generated learning recommendations.
 ///
@@ -167,9 +168,7 @@ class _LearningRecommendationEditScreenState
 
     if (mounted) {
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perubahan berhasil disimpan!')),
-      );
+            SnackBarUtils.showInfo(context, 'Perubahan berhasil disimpan!');
       AppNavigator.pop(context, true); // Return true to indicate data changed
     }
   }

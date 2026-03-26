@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Teacher detail screen - displays full profile for a single teacher.
 ///
@@ -93,14 +94,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
         _errorMessage = ErrorUtils.getFriendlyMessage(e);
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Gagal memuat detail guru: ${ErrorUtils.getFriendlyMessage(e)}',
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            SnackBarUtils.showError(context, 'Gagal memuat detail guru: ${ErrorUtils.getFriendlyMessage(e)}');
     }
   }
 
