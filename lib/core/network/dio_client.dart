@@ -14,11 +14,9 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/network/api_exceptions.dart';
+import 'package:manajemensekolah/core/router/app_router.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/main.dart';
-import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 
 /// Global Dio instance. Initialized once via [createDioClient].
@@ -279,20 +277,10 @@ class ErrorInterceptor extends Interceptor {
 
       await Future.delayed(const Duration(milliseconds: 300));
 
-      if (navigatorKey.currentState != null &&
-          (navigatorKey.currentState?.mounted ?? false)) {
-        navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => LoginScreen(initialError: errorMessage),
-          ),
-          (route) => false,
-        );
-      }
+      // Use go_router to navigate to login (replaces entire stack)
+      appRouter.go('/login');
     } catch (e) {
       AppLogger.error('dio', e);
-      try {
-        navigatorKey.currentState?.pushReplacementNamed('/auth/login');
-      } catch (_) {}
     }
   }
 }

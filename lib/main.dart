@@ -37,7 +37,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:manajemensekolah/core/widgets/error_handler.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/firebase_options.dart';
-import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -237,14 +236,9 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
 
       await _tokenService.logout();
 
-      // Navigate to login screen safely
+      // Navigate to login screen via go_router
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (navigatorKey.currentState?.mounted ?? false) {
-          navigatorKey.currentState?.pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => LoginScreen()),
-            (route) => false,
-          );
-        }
+        appRouter.go('/login');
       });
     }
   }
