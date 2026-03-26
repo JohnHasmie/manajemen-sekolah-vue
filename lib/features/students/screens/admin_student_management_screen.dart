@@ -1165,7 +1165,9 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
+      builder: (context) {
+        bool isSaving = false;
+        return StatefulBuilder(
         builder: (context, setDialogState) {
           final languageProvider = ref.watch(languageRiverpod);
               return Padding(
@@ -1549,7 +1551,9 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                               SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () async {
+                                  onPressed: isSaving
+                                      ? null
+                                      : () async {
                                     final name = nameController.text.trim();
                                     final nis = nisController.text.trim();
                                     final address = addressController.text
@@ -1608,6 +1612,8 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                       );
                                       return;
                                     }
+
+                                    setDialogState(() => isSaving = true);
 
                                     try {
                                       final data = {
@@ -1740,10 +1746,15 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                           ),
                                         );
                                       }
+                                    } finally {
+                                      if (context.mounted) {
+                                        setDialogState(() => isSaving = false);
+                                      }
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _getPrimaryColor(),
+                                    disabledBackgroundColor: _getPrimaryColor().withValues(alpha: 0.6),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -1753,7 +1764,16 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                       alpha: 0.4,
                                     ),
                                   ),
-                                  child: Text(
+                                  child: isSaving
+                                      ? SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
                                     isEdit
                                         ? languageProvider.getTranslatedText({
                                             'en': 'Update',
@@ -1780,7 +1800,8 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                 ),
               );
         },
-      ),
+      );
+      },
     );
   }
 

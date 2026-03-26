@@ -415,7 +415,9 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
+      builder: (context) {
+        bool isSaving = false;
+        return StatefulBuilder(
         builder: (context, setModalState) {
           Future<void> pickTime(bool isStart) async {
             final picked = await showTimePicker(
@@ -646,8 +648,11 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                         SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: () async {
+                            onPressed: isSaving
+                                ? null
+                                : () async {
                               if (hourController.text.isEmpty) return;
+                              setModalState(() => isSaving = true);
                               final messenger = ScaffoldMessenger.of(context);
                               final startStr =
                                   '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00';
@@ -684,10 +689,15 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                     behavior: SnackBarBehavior.floating,
                                   ),
                                 );
+                              } finally {
+                                if (context.mounted) {
+                                  setModalState(() => isSaving = false);
+                                }
                               }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ColorUtils.corporateBlue600,
+                              disabledBackgroundColor: ColorUtils.corporateBlue600.withValues(alpha: 0.6),
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
@@ -695,7 +705,16 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                               ),
                               elevation: 2,
                             ),
-                            child: Text(
+                            child: isSaving
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
                               AppLocalizations.save.tr,
                               style: TextStyle(
                                 fontSize: 15,
@@ -712,7 +731,8 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
             ),
           );
         },
-      ),
+      );
+      },
     );
   }
 

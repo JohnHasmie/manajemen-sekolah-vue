@@ -1405,6 +1405,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         backgroundColor: Colors.transparent,
         builder: (context) {
           final languageProvider = ref.watch(languageRiverpod);
+          bool isSaving = false;
             return StatefulBuilder(
               builder: (context, setState) {
                 return Padding(
@@ -1866,10 +1867,11 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 SizedBox(width: AppSpacing.md),
                                 Expanded(
                                   child: ElevatedButton(
-                                    onPressed: () async {
+                                    onPressed: isSaving
+                                        ? null
+                                        : () async {
                                       final name = nameController.text.trim();
                                       final email = emailController.text.trim();
-                                      // final nip = nipController.text.trim(); // Removed unused variable
 
                                       // Validate required fields
                                       if (name.isEmpty ||
@@ -1892,6 +1894,8 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                         );
                                         return;
                                       }
+
+                                      setState(() => isSaving = true);
 
                                       try {
                                         final academicYearProvider =
@@ -1991,11 +1995,17 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                             ),
                                           );
                                         }
+                                      } finally {
+                                        if (context.mounted) {
+                                          setState(() => isSaving = false);
+                                        }
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor:
                                           ColorUtils.corporateBlue600,
+                                      disabledBackgroundColor:
+                                          ColorUtils.corporateBlue600.withValues(alpha: 0.6),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
@@ -2006,7 +2016,16 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                       shadowColor: ColorUtils.corporateBlue600
                                           .withValues(alpha: 0.4),
                                     ),
-                                    child: Text(
+                                    child: isSaving
+                                        ? SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Text(
                                       AppLocalizations.save.tr,
                                       style: TextStyle(
                                         color: Colors.white,

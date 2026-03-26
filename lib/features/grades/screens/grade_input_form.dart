@@ -53,6 +53,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
   final TextEditingController _deskripsiController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+  bool _isSaving = false;
 
   bool get _isReadOnly {
     return ref.read(academicYearRiverpod).isReadOnly;
@@ -115,6 +116,8 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
     }
 
     if (_formKey.currentState!.validate()) {
+      setState(() => _isSaving = true);
+
       try {
         final data = {
           'student_id': widget.student.id,
@@ -161,6 +164,8 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
       } catch (e) {
         AppLogger.error('grades', e);
                 SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
       }
     }
   }
@@ -592,16 +597,26 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _submitNilai,
+                            onPressed: _isSaving ? null : _submitNilai,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _getPrimaryColor(),
+                              disabledBackgroundColor: _getPrimaryColor().withValues(alpha: 0.6),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Text(
+                            child: _isSaving
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
                               widget.existingNilai != null
                                   ? languageProvider.getTranslatedText({
                                       'en': 'Update Grade',

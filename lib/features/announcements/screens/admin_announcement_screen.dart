@@ -1061,6 +1061,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
       backgroundColor: Colors.transparent,
       builder: (context) {
         final languageProvider = ref.watch(languageRiverpod);
+        bool isSaving = false;
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return Padding(
@@ -1322,7 +1323,9 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                               SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () async {
+                                  onPressed: isSaving
+                                      ? null
+                                      : () async {
                                     final title = titleController.text.trim();
                                     final content = contentController.text.trim();
 
@@ -1344,6 +1347,8 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                       );
                                       return;
                                     }
+
+                                    setDialogState(() => isSaving = true);
 
                                     try {
                                       final Map<String, String> data = {
@@ -1437,10 +1442,15 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                           ),
                                         );
                                       }
+                                    } finally {
+                                      if (context.mounted) {
+                                        setDialogState(() => isSaving = false);
+                                      }
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _getPrimaryColor(),
+                                    disabledBackgroundColor: _getPrimaryColor().withValues(alpha: 0.6),
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     elevation: 2,
                                     shadowColor: _getPrimaryColor().withValues(
@@ -1450,7 +1460,16 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  child: Text(
+                                  child: isSaving
+                                      ? SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
                                     isEdit
                                         ? languageProvider.getTranslatedText({
                                             'en': 'Update',

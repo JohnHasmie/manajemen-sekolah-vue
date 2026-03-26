@@ -77,7 +77,9 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
 
     await showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (context) {
+        bool isSaving = false;
+        return StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -237,12 +239,16 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                         SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: () async {
+                            onPressed: isSaving
+                                ? null
+                                : () async {
                               final name = nameController.text.trim();
                               if (name.length < 3) {
                                                                 SnackBarUtils.showError(context, AppLocalizations.schoolNameMinChars.tr);
                                 return;
                               }
+
+                              setDialogState(() => isSaving = true);
 
                               final messenger = ScaffoldMessenger.of(context);
                               try {
@@ -277,17 +283,31 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                     ),
                                   );
                                 }
+                              } finally {
+                                if (context.mounted) {
+                                  setDialogState(() => isSaving = false);
+                                }
                               }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ColorUtils.corporateBlue600,
+                              disabledBackgroundColor: ColorUtils.corporateBlue600.withValues(alpha: 0.6),
                               padding: EdgeInsets.symmetric(vertical: 13),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 0,
                             ),
-                            child: Text(
+                            child: isSaving
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
                               AppLocalizations.save.tr,
                               style: TextStyle(
                                 color: Colors.white,
@@ -304,7 +324,8 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
             ),
           ),
         ),
-      ),
+      );
+      },
     );
   }
 

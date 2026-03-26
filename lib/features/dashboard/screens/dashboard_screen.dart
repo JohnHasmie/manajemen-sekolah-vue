@@ -2966,6 +2966,12 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
+        // Loading states for async actions inside the bottom sheet
+        bool isLoggingOut = false;
+        String? switchingRole; // tracks which role is being switched to
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
         return Container(
           margin: EdgeInsets.all(AppSpacing.xl),
           child: Wrap(
@@ -3067,14 +3073,21 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                         SizedBox(height: AppSpacing.sm),
                         ..._availableRoles.map((role) {
                           final isCurrent = role == widget.role;
+                          final isSwitching = switchingRole == role;
                           return Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: isCurrent
+                              onTap: (isCurrent || switchingRole != null)
                                   ? null
-                                  : () {
-                                      AppNavigator.pop(context);
-                                      _switchRole(role);
+                                  : () async {
+                                      setSheetState(() => switchingRole = role);
+                                      try {
+                                        await _switchRole(role);
+                                      } finally {
+                                        if (context.mounted) {
+                                          setSheetState(() => switchingRole = null);
+                                        }
+                                      }
                                     },
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
@@ -3094,11 +3107,23 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                                 ),
                                 child: Row(
                                   children: [
-                                    _buildRoleIcon(role),
+                                    if (isSwitching)
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: _getPrimaryColor(),
+                                        ),
+                                      )
+                                    else
+                                      _buildRoleIcon(role),
                                     SizedBox(width: AppSpacing.md),
                                     Expanded(
                                       child: Text(
-                                        _getRoleDisplayName(role),
+                                        isSwitching
+                                            ? '${_getRoleDisplayName(role)}...'
+                                            : _getRoleDisplayName(role),
                                         style: TextStyle(
                                           fontWeight: isCurrent
                                               ? FontWeight.bold
@@ -3213,13 +3238,22 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () async {
-                            // Call TokenService.logout to ensure backend token and FCM tokens are completely revoked
-                            await TokenService().logout();
-                            if (context.mounted) {
-                              appRouter.go('/login');
-                            }
-                          },
+                          onTap: (isLoggingOut || switchingRole != null)
+                              ? null
+                              : () async {
+                                  setSheetState(() => isLoggingOut = true);
+                                  try {
+                                    // Call TokenService.logout to ensure backend token and FCM tokens are completely revoked
+                                    await TokenService().logout();
+                                    if (context.mounted) {
+                                      appRouter.go('/login');
+                                    }
+                                  } finally {
+                                    if (context.mounted) {
+                                      setSheetState(() => isLoggingOut = false);
+                                    }
+                                  }
+                                },
                           borderRadius: BorderRadius.circular(15),
                           child: Container(
                             width: double.infinity,
@@ -3232,14 +3266,26 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.logout_rounded,
-                                  color: Colors.redAccent,
-                                  size: 20,
-                                ),
+                                if (isLoggingOut)
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.redAccent,
+                                    ),
+                                  )
+                                else
+                                  Icon(
+                                    Icons.logout_rounded,
+                                    color: Colors.redAccent,
+                                    size: 20,
+                                  ),
                                 SizedBox(width: AppSpacing.sm),
                                 Text(
-                                  AppLocalizations.logout.tr,
+                                  isLoggingOut
+                                      ? 'Logging out...'
+                                      : AppLocalizations.logout.tr,
                                   style: TextStyle(
                                     color: Colors.redAccent,
                                     fontWeight: FontWeight.w600,
@@ -3256,6 +3302,8 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
               ),
             ],
           ),
+        );
+          },
         );
       },
     );

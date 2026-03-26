@@ -68,6 +68,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
 
   // State for tracking whether grade type and date have been set
   bool _isConfigurationSet = false;
+  bool _isSaving = false;
   String? _confirmedGradeType;
   DateTime? _confirmedDate;
   final TextEditingController _titleController = TextEditingController();
@@ -137,6 +138,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
         return;
       }
 
+      setState(() => _isSaving = true);
+
       try {
         int successCount = 0;
 
@@ -184,6 +187,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
       } catch (e) {
         AppLogger.error('grades', e);
                 SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
       }
     } else {
       // Validation failed - show error message
@@ -943,9 +948,10 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                             child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: _submitNilai,
+                                onPressed: _isSaving ? null : _submitNilai,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: _getPrimaryColor(),
+                                  disabledBackgroundColor: _getPrimaryColor().withValues(alpha: 0.6),
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
@@ -955,7 +961,16 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: Text(
+                                child: _isSaving
+                                    ? SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Finish',
                                     'id': 'Selesai',
