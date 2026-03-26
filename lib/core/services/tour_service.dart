@@ -12,6 +12,21 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 /// Like a small Laravel controller with status/complete/save-progress actions.
 /// In Vue terms, this is a simple store module for managing first-time user guidance.
 class ApiTourService {
+  /// Fetch all completed tour names for the authenticated user.
+  /// Returns a list of `{name, role}` maps.
+  /// Backend endpoint: `GET /tours/completed`.
+  static Future<List<dynamic>> getCompletedTours({
+    required String platform,
+  }) async {
+    final response = await dioClient.get(
+      '/tours/completed',
+      queryParameters: {'platform': platform},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+    return (responseData['data'] as List<dynamic>?) ?? [];
+  }
+
   /// Check if the authenticated user should see the tour.
   Future<Map<String, dynamic>> getTourStatus({
     required String platform,
@@ -51,14 +66,16 @@ class ApiTourService {
     return (responseData['data'] as List<dynamic>?) ?? [];
   }
 
-  /// Mark tour as completed.
+  /// Mark tour as completed. Accepts name+role to identify the tour.
+  /// Backend auto-creates the tour record if it doesn't exist.
   Future<Map<String, dynamic>> completeTour({
-    required String tourId,
+    required String name,
+    required String role,
     required String platform,
   }) async {
     final response = await dioClient.post(
       '/tours/complete',
-      data: {'tour_id': tourId, 'platform': platform},
+      data: {'name': name, 'role': role, 'platform': platform},
     );
 
     return response.data as Map<String, dynamic>;

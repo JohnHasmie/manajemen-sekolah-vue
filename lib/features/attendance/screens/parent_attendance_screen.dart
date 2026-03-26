@@ -74,7 +74,6 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
     'alpha': 0,
   };
 
-  String? _tourId;
   final GlobalKey _monthlySummaryKey = GlobalKey();
   final GlobalKey _absensiListKey = GlobalKey();
 
@@ -251,8 +250,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
       final tourCacheKey = CacheKeyBuilder.tourStatus('parent_presence_screen', 'wali');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id']?.toString();
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -281,16 +279,12 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_presence_screen', 'wali'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'parent_presence_screen_tour', role: 'wali', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_presence_screen', 'wali'), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_presence_screen', 'wali'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'parent_presence_screen_tour', role: 'wali', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_presence_screen', 'wali'), {'should_show': false});
         return true;
       },
     ).show(context: context);

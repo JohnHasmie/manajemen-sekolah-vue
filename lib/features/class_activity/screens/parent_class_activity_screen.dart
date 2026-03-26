@@ -56,7 +56,6 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
   bool _isLoading = true;
   bool _hasFreshData = false; // Only show unread dots after fresh API data arrives
 
-  String? _tourId;
   final GlobalKey _studentSelectorKey = GlobalKey();
   final GlobalKey _activityListKey = GlobalKey();
 
@@ -326,8 +325,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
       // Cache-only: tour status pre-fetched from dashboard
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id']?.toString();
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -356,16 +354,12 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_class_activity_screen', 'wali'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'parent_class_activity_screen_tour', role: 'wali', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_class_activity_screen', 'wali'), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_class_activity_screen', 'wali'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'parent_class_activity_screen_tour', role: 'wali', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('parent_class_activity_screen', 'wali'), {'should_show': false});
         return true;
       },
     ).show(context: context);

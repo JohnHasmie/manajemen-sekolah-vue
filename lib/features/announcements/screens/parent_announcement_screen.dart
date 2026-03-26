@@ -72,7 +72,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
 
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _listKey = GlobalKey();
-  String? _tourId;
+
 
   @override
   void dispose() {
@@ -1075,8 +1075,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
       final tourCacheKey = CacheKeyBuilder.tourStatus('announcement_screen', _userRole);
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id']?.toString();
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -1105,16 +1104,12 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('announcement_screen', _userRole), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'announcement_screen_tour', role: 'walimurid', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('announcement_screen', _userRole), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('announcement_screen', _userRole), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'announcement_screen_tour', role: 'walimurid', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('announcement_screen', _userRole), {'should_show': false});
         return true;
       },
     ).show(context: context);

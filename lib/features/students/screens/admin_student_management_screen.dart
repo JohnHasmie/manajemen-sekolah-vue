@@ -93,7 +93,6 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _fabKey = GlobalKey();
-  String? _tourId;
 
   /// Like Vue's `mounted()` - sets up academic year listener, scroll listener
   /// for infinite scroll, applies initial class filter if provided, and loads data.
@@ -2533,8 +2532,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
       // Only use cache (pre-fetched by dashboard), no API call
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id'];
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -2563,16 +2561,12 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('student_management', 'admin'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'student_management_tour', role: 'admin', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('student_management', 'admin'), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('student_management', 'admin'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'student_management_tour', role: 'admin', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('student_management', 'admin'), {'should_show': false});
         return true;
       },
     ).show(context: context);

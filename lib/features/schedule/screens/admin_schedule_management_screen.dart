@@ -123,7 +123,6 @@ class TeachingScheduleManagementScreenState
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _fabKey = GlobalKey();
   final GlobalKey _viewToggleKey = GlobalKey();
-  String? _tourId;
   bool _isTourShowing = false;
 
   // Tambahan untuk tampilan tabel
@@ -3161,8 +3160,7 @@ class TeachingScheduleManagementScreenState
         ttl: const Duration(hours: 24),
       );
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id'];
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && !_isTourShowing) _showTour();
@@ -3198,19 +3196,15 @@ class TeachingScheduleManagementScreenState
         setState(() {
           _isTourShowing = false;
         });
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('schedule_management', 'admin'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'teaching_schedule_management_tour', role: 'admin', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('schedule_management', 'admin'), {'should_show': false});
       },
       onSkip: () {
         setState(() {
           _isTourShowing = false;
         });
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('schedule_management', 'admin'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'teaching_schedule_management_tour', role: 'admin', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('schedule_management', 'admin'), {'should_show': false});
         return true;
       },
       onClickOverlay: (target) {

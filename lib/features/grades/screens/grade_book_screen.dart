@@ -131,7 +131,6 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   // Tour properties
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _addGradeKey = GlobalKey();
-  String? _tourId;
 
   String _buildGradeCacheKey() {
     final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString() ?? 'default';
@@ -2427,8 +2426,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         ttl: const Duration(hours: 24),
       );
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id'];
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -2452,16 +2450,12 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('input_grade_screen', 'guru'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'input_grade_tour', role: 'guru', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('input_grade_screen', 'guru'), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('input_grade_screen', 'guru'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'input_grade_tour', role: 'guru', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('input_grade_screen', 'guru'), {'should_show': false});
         return true;
       },
     ).show(context: context);

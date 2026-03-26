@@ -101,7 +101,6 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
   final GlobalKey _exportKey = GlobalKey();
   final GlobalKey _saveKey = GlobalKey();
   final GlobalKey _addBabKey = GlobalKey();
-  String? _tourId;
 
   /// Like Vue's `mounted()` -- sets up scroll/search listeners and loads initial data.
   @override
@@ -2958,8 +2957,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       final tourCacheKey = CacheKeyBuilder.tourStatus('rekap_nilai_screen', 'guru');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id']?.toString();
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -2983,16 +2981,12 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('rekap_nilai_screen', 'guru'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'rekap_nilai_tour', role: 'guru', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('rekap_nilai_screen', 'guru'), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('rekap_nilai_screen', 'guru'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'rekap_nilai_tour', role: 'guru', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('rekap_nilai_screen', 'guru'), {'should_show': false});
         return true;
       },
     ).show(context: context);

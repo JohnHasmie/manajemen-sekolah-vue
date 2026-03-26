@@ -63,7 +63,6 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
   String? _errorMessage;
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _infoKey = GlobalKey();
-  String? _tourId;
   bool _isTourShowing = false;
 
   // Search
@@ -1381,8 +1380,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
       final tourCacheKey = CacheKeyBuilder.tourStatus('class_activity', 'admin');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id'];
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && !_isTourShowing) _showTour();
@@ -1418,19 +1416,15 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
         setState(() {
           _isTourShowing = false;
         });
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity', 'admin'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'admin_class_activity_tour', role: 'admin', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity', 'admin'), {'should_show': false});
       },
       onSkip: () {
         setState(() {
           _isTourShowing = false;
         });
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity', 'admin'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'admin_class_activity_tour', role: 'admin', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity', 'admin'), {'should_show': false});
         return true;
       },
       onClickOverlay: (target) {

@@ -144,7 +144,6 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   final GlobalKey _searchFilterKey = GlobalKey();
   final GlobalKey _tabSwitcherKey = GlobalKey();
   final GlobalKey _fabKey = GlobalKey();
-  String? _tourId;
 
   /// Like Vue's `mounted()` lifecycle hook. Initializes the tab controller,
   /// sets up scroll/tab listeners, and kicks off initial data loading.
@@ -2874,8 +2873,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
       final tourCacheKey = CacheKeyBuilder.tourStatus('class_activity_screen', 'guru');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id']?.toString();
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -2899,16 +2897,12 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity_screen', 'guru'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'class_activity_tour', role: 'guru', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity_screen', 'guru'), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity_screen', 'guru'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'class_activity_tour', role: 'guru', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('class_activity_screen', 'guru'), {'should_show': false});
         return true;
       },
     ).show(context: context);

@@ -92,7 +92,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   String _errorMessage = '';
   int _currentTabIndex = 0;
 
-  String? _tourId;
   final GlobalKey _tabBarKey = GlobalKey();
   final GlobalKey _addButtonKey = GlobalKey();
 
@@ -160,8 +159,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       final tourCacheKey = CacheKeyBuilder.tourStatus('finance', 'admin');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id']?.toString();
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -190,15 +188,11 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-        }
+        getIt<ApiTourService>().completeTour(name: 'admin_finance_screen_tour', role: 'admin', platform: 'mobile');
         LocalCacheService.save(CacheKeyBuilder.tourStatus('finance', 'admin'), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-        }
+        getIt<ApiTourService>().completeTour(name: 'admin_finance_screen_tour', role: 'admin', platform: 'mobile');
         LocalCacheService.save(CacheKeyBuilder.tourStatus('finance', 'admin'), {'should_show': false});
         return true;
       },

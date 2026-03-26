@@ -130,7 +130,6 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _moreKey = GlobalKey();
   final GlobalKey _infoKey = GlobalKey();
-  String? _tourId;
   bool _isTourShowing = false;
 
   // Data for filters
@@ -2901,8 +2900,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
       final tourCacheKey = CacheKeyBuilder.tourStatus('presence_report', 'admin');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id']?.toString();
+        if (cached['should_show'] == true) {
           if (mounted && !_isTourShowing) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && !_isTourShowing) _showTour();
@@ -2938,18 +2936,14 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         setState(() {
           _isTourShowing = false;
         });
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-        }
+        getIt<ApiTourService>().completeTour(name: 'admin_presence_report_tour', role: 'admin', platform: 'mobile');
         LocalCacheService.save(CacheKeyBuilder.tourStatus('presence_report', 'admin'), {'should_show': false});
       },
       onSkip: () {
         setState(() {
           _isTourShowing = false;
         });
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-        }
+        getIt<ApiTourService>().completeTour(name: 'admin_presence_report_tour', role: 'admin', platform: 'mobile');
         LocalCacheService.save(CacheKeyBuilder.tourStatus('presence_report', 'admin'), {'should_show': false});
         return true;
       },

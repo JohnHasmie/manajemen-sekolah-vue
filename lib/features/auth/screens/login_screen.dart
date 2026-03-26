@@ -292,11 +292,14 @@ class LoginScreenState extends State<LoginScreen> {
     Future(() async {
       try {
         final fcmService = FCMService();
-        AppLogger.debug('login', 'Force refreshing FCM token in background...');
-        await fcmService.forceRefreshToken();
-        AppLogger.info('login', 'FCM token refreshed in background');
+        final token = fcmService.fcmToken ?? await fcmService.getSavedToken();
+        if (token != null) {
+          AppLogger.debug('login', 'Sending existing FCM token to backend...');
+          await fcmService.sendTokenToBackend(token);
+          AppLogger.info('login', 'FCM token sent to backend');
+        }
       } catch (e) {
-        AppLogger.error('login', 'Failed to refresh FCM token in background (non-critical): $e',);
+        AppLogger.error('login', 'Failed to send FCM token (non-critical): $e');
       }
     });
   }

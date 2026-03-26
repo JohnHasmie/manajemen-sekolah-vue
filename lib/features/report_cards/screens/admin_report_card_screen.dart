@@ -57,7 +57,6 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
   Map<String, dynamic>? _selectedClass;
   List<dynamic> _students = [];
 
-  String? _tourId;
   final GlobalKey _selectClassKey = GlobalKey();
   final GlobalKey _studentListKey = GlobalKey();
   final GlobalKey _exportBtnKey = GlobalKey();
@@ -948,8 +947,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
       final tourCacheKey = CacheKeyBuilder.tourStatus('raport_screen', 'admin');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id']?.toString();
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -976,15 +974,11 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-        }
+        getIt<ApiTourService>().completeTour(name: 'admin_raport_screen_tour', role: 'admin', platform: 'mobile');
         LocalCacheService.save(CacheKeyBuilder.tourStatus('raport_screen', 'admin'), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-        }
+        getIt<ApiTourService>().completeTour(name: 'admin_raport_screen_tour', role: 'admin', platform: 'mobile');
         LocalCacheService.save(CacheKeyBuilder.tourStatus('raport_screen', 'admin'), {'should_show': false});
         return true;
       },

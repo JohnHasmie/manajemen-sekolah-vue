@@ -91,7 +91,6 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
   final GlobalKey _tabKey = GlobalKey();
   final GlobalKey _saveDraftKey = GlobalKey();
   final GlobalKey _finalizeKey = GlobalKey();
-  String? _tourId;
 
   /// Like Vue's `mounted()` -- sets up tab controller, loads raport data,
   /// and adds listeners to track unsaved changes (like Vue `watch` on form fields).
@@ -1294,8 +1293,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
       final tourCacheKey = CacheKeyBuilder.tourStatus('raport_detail_screen', 'guru');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id']?.toString();
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -1319,16 +1317,12 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('raport_detail_screen', 'guru'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'raport_detail_screen_tour', role: 'guru', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('raport_detail_screen', 'guru'), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-          LocalCacheService.save(CacheKeyBuilder.tourStatus('raport_detail_screen', 'guru'), {'should_show': false});
-        }
+        getIt<ApiTourService>().completeTour(name: 'raport_detail_screen_tour', role: 'guru', platform: 'mobile');
+        LocalCacheService.save(CacheKeyBuilder.tourStatus('raport_detail_screen', 'guru'), {'should_show': false});
         return true;
       },
     ).show(context: context);

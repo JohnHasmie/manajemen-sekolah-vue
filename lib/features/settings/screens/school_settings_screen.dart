@@ -35,7 +35,6 @@ class SchoolSettingsScreen extends ConsumerStatefulWidget {
 /// Mutable state for [SchoolSettingsScreen].
 /// Manages the guided tour feature. setState() triggers re-render like Vue's reactivity.
 class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
-  String? _tourId;
   final GlobalKey _generalSettingsKey = GlobalKey();
   final GlobalKey _timeSettingsKey = GlobalKey();
 
@@ -53,8 +52,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
       final tourCacheKey = CacheKeyBuilder.tourStatus('school_settings', 'admin');
       final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id']?.toString();
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -83,15 +81,11 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-        }
+        getIt<ApiTourService>().completeTour(name: 'admin_school_settings_tour', role: 'admin', platform: 'mobile');
         LocalCacheService.save(CacheKeyBuilder.tourStatus('school_settings', 'admin'), {'should_show': false});
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-        }
+        getIt<ApiTourService>().completeTour(name: 'admin_school_settings_tour', role: 'admin', platform: 'mobile');
         LocalCacheService.save(CacheKeyBuilder.tourStatus('school_settings', 'admin'), {'should_show': false});
         return true;
       },

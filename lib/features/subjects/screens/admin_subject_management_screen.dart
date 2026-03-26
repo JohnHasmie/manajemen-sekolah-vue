@@ -94,7 +94,6 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _fabKey = GlobalKey();
-  String? _tourId;
 
   List<dynamic> _availableMasterSubjects = [];
 
@@ -2329,8 +2328,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
         ttl: const Duration(hours: 24),
       );
       if (cached != null && cached is Map) {
-        if (cached['should_show'] == true && cached['tour'] != null) {
-          _tourId = cached['tour']['id'];
+        if (cached['should_show'] == true) {
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _showTour();
@@ -2359,14 +2357,10 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-        }
+        getIt<ApiTourService>().completeTour(name: 'subject_management_tour', role: 'admin', platform: 'mobile');
       },
       onSkip: () {
-        if (_tourId != null) {
-          getIt<ApiTourService>().completeTour(tourId: _tourId!, platform: 'mobile');
-        }
+        getIt<ApiTourService>().completeTour(name: 'subject_management_tour', role: 'admin', platform: 'mobile');
         return true;
       },
     ).show(context: context);
