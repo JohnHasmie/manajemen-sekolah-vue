@@ -624,7 +624,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         ttl: const Duration(hours: 24),
       );
       if (cachedDays == null) {
-        final dayData = await getIt<ApiScheduleService>().getHari();
+        final dayData = await getIt<ApiScheduleService>().getDays();
         if (dayData.isNotEmpty) {
           LocalCacheService.save('school_day_data', dayData);
           AppLogger.debug('dashboard', 'Pre-cached day data');
@@ -2618,21 +2618,21 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         title: AppLocalizations.studentAttendance.tr,
         icon: Icons.check_circle_outline,
         onTap: () async {
-          final Map<String, String> guruData = {
+          final Map<String, String> teacherData = {
             'id':
                 (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
             'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
             'email': _userData['email']?.toString() ?? '',
             'role': _effectiveRole,
           };
-          if (guruData['id']!.isEmpty) {
+          if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
                             SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
             }
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, PresencePage(teacher: guruData));
+          AppNavigator.push(context, PresencePage(teacher: teacherData));
         },
       ),
       MenuItem(

@@ -714,24 +714,24 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     }
 
     // TUJUAN PEMBELAJARAN
-    final tujuan = getField([
+    final objectives = getField([
       'learning_objective',
       'tujuan_pembelajaran',
       'learning_objectives',
     ]);
 
-    if (tujuan.isNotEmpty) {
+    if (objectives.isNotEmpty) {
       buffer.writeln(
         '${String.fromCharCode(64 + sectionIndex)}. TUJUAN PEMBELAJARAN',
       );
       sectionIndex++;
       if (isAi) {
-        buffer.writeln(_stripHtml(tujuan));
+        buffer.writeln(_stripHtml(objectives));
       } else {
-        final tujuanLines = tujuan.split('\n');
-        for (int i = 0; i < tujuanLines.length; i++) {
-          if (tujuanLines[i].trim().isNotEmpty) {
-            buffer.writeln('${i + 1}. ${tujuanLines[i].trim()}');
+        final objectiveLines = objectives.split('\n');
+        for (int i = 0; i < objectiveLines.length; i++) {
+          if (objectiveLines[i].trim().isNotEmpty) {
+            buffer.writeln('${i + 1}. ${objectiveLines[i].trim()}');
           }
         }
       }
@@ -739,40 +739,40 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     }
 
     // KEGIATAN PEMBELAJARAN
-    final kegiatanPendahuluan = getField([
+    final preliminaryActivities = getField([
       'kegiatan_pendahuluan',
       'preliminary_activities',
     ]);
-    final kegiatanInti = getField([
+    final coreActivities = getField([
       'learning_activities',
       'kegiatan_inti',
       'core_activities',
     ]);
-    final kegiatanPenutup = getField([
+    final closingActivities = getField([
       'kegiatan_penutup',
       'closing_activities',
     ]);
 
-    if (kegiatanInti.isNotEmpty ||
-        kegiatanPendahuluan.isNotEmpty ||
-        kegiatanPenutup.isNotEmpty) {
+    if (coreActivities.isNotEmpty ||
+        preliminaryActivities.isNotEmpty ||
+        closingActivities.isNotEmpty) {
       buffer.writeln(
         '${String.fromCharCode(64 + sectionIndex)}. KEGIATAN PEMBELAJARAN',
       );
       buffer.writeln();
       sectionIndex++;
 
-      if (kegiatanPendahuluan.isEmpty && kegiatanPenutup.isEmpty) {
+      if (preliminaryActivities.isEmpty && closingActivities.isEmpty) {
         // Data from DB (learning_activities) or AI - single field only
-        buffer.writeln(_stripHtml(kegiatanInti));
+        buffer.writeln(_stripHtml(coreActivities));
       } else {
         // Separate data (introduction, main, closing)
-        if (kegiatanPendahuluan.isNotEmpty) {
-          final pendahuluanTime = getField(['waktu_pendahuluan']);
+        if (preliminaryActivities.isNotEmpty) {
+          final preliminaryTime = getField(['waktu_pendahuluan']);
           buffer.writeln(
-            'Kegiatan Pendahuluan${pendahuluanTime.isNotEmpty ? ' ($pendahuluanTime menit)' : ''}',
+            'Kegiatan Pendahuluan${preliminaryTime.isNotEmpty ? ' ($preliminaryTime menit)' : ''}',
           );
-          for (var line in kegiatanPendahuluan.split('\n')) {
+          for (var line in preliminaryActivities.split('\n')) {
             if (line.trim().isNotEmpty) {
               buffer.writeln('• ${line.trim()}');
             }
@@ -780,12 +780,12 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           buffer.writeln();
         }
 
-        if (kegiatanInti.isNotEmpty) {
-          final intiTime = getField(['waktu_inti']);
+        if (coreActivities.isNotEmpty) {
+          final coreTime = getField(['waktu_inti']);
           buffer.writeln(
-            'Kegiatan Inti${intiTime.isNotEmpty ? ' ($intiTime menit)' : ''}',
+            'Kegiatan Inti${coreTime.isNotEmpty ? ' ($coreTime menit)' : ''}',
           );
-          for (var line in kegiatanInti.split('\n')) {
+          for (var line in coreActivities.split('\n')) {
             if (line.trim().isNotEmpty) {
               if (line.trim().startsWith('A.') ||
                   line.trim().startsWith('B.') ||
@@ -799,12 +799,12 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           buffer.writeln();
         }
 
-        if (kegiatanPenutup.isNotEmpty) {
-          final penutupTime = getField(['waktu_penutup']);
+        if (closingActivities.isNotEmpty) {
+          final closingTime = getField(['waktu_penutup']);
           buffer.writeln(
-            'Kegiatan Penutup${penutupTime.isNotEmpty ? ' ($penutupTime menit)' : ''}',
+            'Kegiatan Penutup${closingTime.isNotEmpty ? ' ($closingTime menit)' : ''}',
           );
-          for (var line in kegiatanPenutup.split('\n')) {
+          for (var line in closingActivities.split('\n')) {
             if (line.trim().isNotEmpty) {
               buffer.writeln('• ${line.trim()}');
             }

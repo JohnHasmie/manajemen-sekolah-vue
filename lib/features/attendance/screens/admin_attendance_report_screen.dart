@@ -534,24 +534,24 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
   Future<void> _fetchData() async {
     try {
       // Prepare filter parameters
-      String? tanggal;
-      String? tanggalStart;
-      String? tanggalEnd;
+      String? filterDate;
+      String? filterDateStart;
+      String? filterDateEnd;
 
       if (_selectedDateFilter == 'today') {
-        tanggal = DateFormat('yyyy-MM-dd').format(DateTime.now());
+        filterDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
       } else if (_selectedDateFilter == 'week') {
         final now = DateTime.now();
         final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
         final endOfWeek = startOfWeek.add(Duration(days: 6));
-        tanggalStart = DateFormat('yyyy-MM-dd').format(startOfWeek);
-        tanggalEnd = DateFormat('yyyy-MM-dd').format(endOfWeek);
+        filterDateStart = DateFormat('yyyy-MM-dd').format(startOfWeek);
+        filterDateEnd = DateFormat('yyyy-MM-dd').format(endOfWeek);
       } else if (_selectedDateFilter == 'month') {
         final now = DateTime.now();
         final startOfMonth = DateTime(now.year, now.month, 1);
         final endOfMonth = DateTime(now.year, now.month + 1, 0);
-        tanggalStart = DateFormat('yyyy-MM-dd').format(startOfMonth);
-        tanggalEnd = DateFormat('yyyy-MM-dd').format(endOfMonth);
+        filterDateStart = DateFormat('yyyy-MM-dd').format(startOfMonth);
+        filterDateEnd = DateFormat('yyyy-MM-dd').format(endOfMonth);
       }
 
       final academicYearId = ref.read(academicYearRiverpod)
@@ -566,9 +566,9 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
             ? _selectedSubjectIds.first
             : null,
         classId: _selectedClassIds.isNotEmpty ? _selectedClassIds.first : null,
-        tanggal: tanggal,
-        tanggalStart: tanggalStart,
-        tanggalEnd: tanggalEnd,
+        date: filterDate,
+        dateStart: filterDateStart,
+        dateEnd: filterDateEnd,
         academicYearId: academicYearId,
         dayIds: _selectedDayIds,
         lessonHourIds: _selectedLessonHourIds,
@@ -1406,8 +1406,8 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         page: 1,
         limit: 1000,
         classId: classId,
-        tanggalStart: startDate,
-        tanggalEnd: endDate,
+        dateStart: startDate,
+        dateEnd: endDate,
         academicYearId: academicYearId,
       );
 
@@ -2139,8 +2139,8 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
       page: 1,
       limit: 2000, // Ensure enough limit
       classId: classId,
-      tanggalStart: startDate,
-      tanggalEnd: endDate,
+      dateStart: startDate,
+      dateEnd: endDate,
       academicYearId: academicYearId,
     );
 

@@ -63,10 +63,10 @@ class TeachingScheduleManagementScreen extends ConsumerStatefulWidget {
 ///
 /// Key state (like Vue `data()`):
 /// - [_scheduleList] - paginated schedule entries from API
-/// - [_teacherList] / [_subjectList] / [_classList] / [_hariList] / [_jamPelajaranList] - reference data
+/// - [_teacherList] / [_subjectList] / [_classList] / [_dayList] / [_lessonHourList] - reference data
 /// - [_showTableView] - toggles between card list and timetable grid (Syncfusion DataGrid)
 /// - [_gridData] / [_timetableDataSource] - data source for the timetable grid view
-/// - Filter states: [_selectedTeacherId], [_selectedClassId], [_selectedHariId], etc.
+/// - Filter states: [_selectedTeacherId], [_selectedClassId], [_selectedDayId], etc.
 /// - Pagination: [_currentPage], [_hasMoreData], [_isLoadingMore] for infinite scroll
 ///
 /// Listens to AcademicYearProvider for year changes and FCM for real-time sync.
@@ -80,9 +80,9 @@ class TeachingScheduleManagementScreenState
   List<dynamic> _scheduleList = [];
   List<dynamic> _subjectList = [];
   List<dynamic> _classList = [];
-  List<dynamic> _hariList = [];
+  List<dynamic> _dayList = [];
   List<dynamic> _semesterList = [];
-  List<dynamic> _jamPelajaranList = [];
+  List<dynamic> _lessonHourList = [];
 
   bool _isLoading = true;
   String _selectedSemester = '1'; // Will be set by _setDefaultAcademicPeriod()
@@ -102,7 +102,7 @@ class TeachingScheduleManagementScreenState
   // Filter state (Backend filtering)
   String? _selectedTeacherId; // Filter by teacher
   String? _selectedClassId; // Filter by class
-  String? _selectedHariId; // Filter by day
+  String? _selectedDayId; // Filter by day
   String? _selectedFilterSemester;
   String? _selectedJamPelajaran; // Filter by Lesson Hour
   bool _hasActiveFilter = false;
@@ -196,9 +196,9 @@ class TeachingScheduleManagementScreenState
           teacher: List<dynamic>.from(cachedData['teachers'] ?? []),
           subject: List<dynamic>.from(cachedData['subjects'] ?? []),
           classData: List<dynamic>.from(cachedData['classes'] ?? []),
-          hari: List<dynamic>.from(cachedData['hari'] ?? []),
+          days: List<dynamic>.from(cachedData['hari'] ?? []),
           semester: List<dynamic>.from(cachedData['semester'] ?? []),
-          jamPelajaran: List<dynamic>.from(cachedData['jamPelajaran'] ?? []),
+          lessonHours: List<dynamic>.from(cachedData['jamPelajaran'] ?? []),
         );
       });
       _updateGridData();
@@ -414,7 +414,7 @@ class TeachingScheduleManagementScreenState
     if (_showTableView) return null;
     if (_selectedTeacherId != null ||
         _selectedClassId != null ||
-        _selectedHariId != null ||
+        _selectedDayId != null ||
         _selectedJamPelajaran != null ||
         _selectedFilterSemester != null ||
         _searchController.text.trim().isNotEmpty) {
@@ -441,19 +441,19 @@ class TeachingScheduleManagementScreenState
     required List<dynamic> teacher,
     required List<dynamic> subject,
     required List<dynamic> classData,
-    required List<dynamic> hari,
+    required List<dynamic> days,
     required List<dynamic> semester,
-    required List<dynamic> jamPelajaran,
+    required List<dynamic> lessonHours,
   }) {
     _scheduleList = scheduleResponse['data'] ?? [];
     _subjectList = subject;
     _classList = classData;
-    _hariList = hari;
-    if (hari.isEmpty && _availableDays.isNotEmpty) {
-      _hariList = _availableDays;
+    _dayList = days;
+    if (days.isEmpty && _availableDays.isNotEmpty) {
+      _dayList = _availableDays;
     }
     _semesterList = semester;
-    _jamPelajaranList = jamPelajaran;
+    _lessonHourList = lessonHours;
     _hasMoreData = scheduleResponse['pagination']?['has_next_page'] ?? false;
     _isLoading = false;
   }
@@ -486,9 +486,9 @@ class TeachingScheduleManagementScreenState
                     teacher: List<dynamic>.from(cachedData['teachers'] ?? []),
                     subject: List<dynamic>.from(cachedData['subjects'] ?? []),
                     classData: List<dynamic>.from(cachedData['classes'] ?? []),
-                    hari: List<dynamic>.from(cachedData['hari'] ?? []),
+                    days: List<dynamic>.from(cachedData['hari'] ?? []),
                     semester: List<dynamic>.from(cachedData['semester'] ?? []),
-                    jamPelajaran: List<dynamic>.from(cachedData['jamPelajaran'] ?? []),
+                    lessonHours: List<dynamic>.from(cachedData['jamPelajaran'] ?? []),
                   );
                 });
                 _updateGridData();
@@ -527,7 +527,7 @@ class TeachingScheduleManagementScreenState
         _showTableView
             ? getIt<ApiScheduleService>().getAllSchedules(
                 semesterId: semesterToUse,
-                tahunAjaran: academicYearToUse,
+                academicYearId: academicYearToUse,
               ).catchError((e) {
                 AppLogger.error('schedule', e);
                 throw e;
@@ -537,13 +537,13 @@ class TeachingScheduleManagementScreenState
                 limit: _perPage,
                 teacherId: _selectedTeacherId,
                 classId: _selectedClassId,
-                hariId: _selectedHariId,
+                dayId: _selectedDayId,
                 semesterId: semesterToUse,
-                tahunAjaran: academicYearToUse,
+                academicYearId: academicYearToUse,
                 search: _searchController.text.trim().isEmpty
                     ? null
                     : _searchController.text.trim(),
-                jamPelajaranId: null, // No longer used for cross-day filter
+                lessonHourId: null, // No longer used for cross-day filter
                 hourNumber: _selectedJamPelajaran,
                 skipCache: !useCache,
               ).catchError((e) {
@@ -562,7 +562,7 @@ class TeachingScheduleManagementScreenState
           AppLogger.error('schedule', e);
           throw e;
         }),
-        getIt<ApiScheduleService>().getHari().catchError((e) {
+        getIt<ApiScheduleService>().getDays().catchError((e) {
           AppLogger.error('schedule', e);
           throw e;
         }),
@@ -582,9 +582,9 @@ class TeachingScheduleManagementScreenState
       final teacher = results[1] as List<dynamic>;
       final subject = results[2] as List<dynamic>;
       final classData = results[3] as List<dynamic>;
-      final hari = results[4] as List<dynamic>;
+      final days = results[4] as List<dynamic>;
       final semester = results[5] as List<dynamic>;
-      final jamPelajaran = results[6] as List<dynamic>;
+      final lessonHours = results[6] as List<dynamic>;
 
       setState(() {
         _applyScheduleData(
@@ -592,9 +592,9 @@ class TeachingScheduleManagementScreenState
           teacher: teacher,
           subject: subject,
           classData: classData,
-          hari: hari,
+          days: days,
           semester: semester,
-          jamPelajaran: jamPelajaran,
+          lessonHours: lessonHours,
         );
       });
 
@@ -610,9 +610,9 @@ class TeachingScheduleManagementScreenState
           'teachers': teacher,
           'subjects': subject,
           'classes': classData,
-          'hari': hari,
+          'hari': days,
           'semester': semester,
-          'jamPelajaran': jamPelajaran,
+          'jamPelajaran': lessonHours,
         });
       }
 
@@ -672,13 +672,13 @@ class TeachingScheduleManagementScreenState
         limit: _perPage,
         teacherId: _selectedTeacherId,
         classId: _selectedClassId,
-        hariId: _selectedHariId,
+        dayId: _selectedDayId,
         semesterId: semesterToUse,
-        tahunAjaran: academicYearToUse,
+        academicYearId: academicYearToUse,
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
-        jamPelajaranId: null,
+        lessonHourId: null,
         hourNumber: _selectedJamPelajaran,
       );
 
@@ -750,10 +750,10 @@ class TeachingScheduleManagementScreenState
   // Export jadwal ke Excel
   Future<void> _exportToExcel() async {
     try {
-      // Enrich schedule data with day name from _hariList
+      // Enrich schedule data with day name from _dayList
       final enrichedSchedules = _scheduleList.map((schedule) {
         final dayId = schedule['day_id']?.toString() ?? '';
-        final dayData = _hariList.firstWhere(
+        final dayData = _dayList.firstWhere(
           (d) => d['id'].toString() == dayId,
           orElse: () => <String, dynamic>{},
         );
@@ -807,14 +807,14 @@ class TeachingScheduleManagementScreenState
 
     final languageProvider = ref.read(languageRiverpod);
     // Filter days based on selection
-    var filteredHariList = _hariList;
-    if (_selectedHariId != null) {
-      filteredHariList = _hariList
-          .where((d) => d['id'].toString() == _selectedHariId)
+    var filteredDayList = _dayList;
+    if (_selectedDayId != null) {
+      filteredDayList = _dayList
+          .where((d) => d['id'].toString() == _selectedDayId)
           .toList();
     }
 
-    final days = filteredHariList
+    final days = filteredDayList
         .map(
           (d) => _translateDay(
             d['name'] ?? d['nama'] ?? '',
@@ -836,7 +836,7 @@ class TeachingScheduleManagementScreenState
     // Ensure we have time slots. If empty, generate them.
     List<String> timeSlots = _generateTimeSlots();
     if (_selectedJamPelajaran != null) {
-      timeSlots = _jamPelajaranList
+      timeSlots = _lessonHourList
           .where((jp) {
             final h = (jp['hour_number'] ?? jp['jam_ke'])?.toString();
             return h == _selectedJamPelajaran;
@@ -867,7 +867,7 @@ class TeachingScheduleManagementScreenState
   }
 
   List<String> _generateTimeSlots() {
-    final slots = _jamPelajaranList.map((jam) {
+    final slots = _lessonHourList.map((jam) {
       String start = (jam['start_time'] ?? jam['jam_mulai'] ?? '').toString();
       String end = (jam['end_time'] ?? jam['jam_selesai'] ?? '').toString();
 
@@ -894,7 +894,7 @@ class TeachingScheduleManagementScreenState
 
     // Create lookup maps for IDs
     final Map<String, String> dayIdToName = {};
-    for (var day in _hariList) {
+    for (var day in _dayList) {
       final id = day['id']?.toString() ?? '';
       final name = day['name'] ?? day['nama'] ?? '';
       if (id.isNotEmpty) dayIdToName[id] = name;
@@ -1016,9 +1016,9 @@ class TeachingScheduleManagementScreenState
         teacherList: _availableTeachers,
         subjectList: _subjectList,
         classList: _availableClasses,
-        hariList: _availableDays,
+        dayList: _availableDays,
         semesterList: _availableSemesters,
-        jamPelajaranList: _jamPelajaranList,
+        lessonHourList: _lessonHourList,
         semester: _selectedSemester,
         academicYear: _selectedAcademicYear,
         academicYearList: _availableAcademicYears,
@@ -1041,9 +1041,9 @@ class TeachingScheduleManagementScreenState
         teacherList: _availableTeachers,
         subjectList: _subjectList,
         classList: _availableClasses,
-        hariList: _availableDays,
+        dayList: _availableDays,
         semesterList: _availableSemesters,
-        jamPelajaranList: _jamPelajaranList,
+        lessonHourList: _lessonHourList,
         semester: _selectedSemester,
         academicYear: _selectedAcademicYear,
         academicYearList: _availableAcademicYears,
@@ -1109,8 +1109,8 @@ class TeachingScheduleManagementScreenState
         classId: newScheduleData['class_id'],
         teacherId: newScheduleData['teacher_id'],
         semesterId: newScheduleData['semester_id'],
-        tahunAjaran: newScheduleData['academic_year_id'],
-        jamPelajaranId: newScheduleData['lesson_hour_days_id'],
+        academicYearId: newScheduleData['academic_year_id'],
+        lessonHourId: newScheduleData['lesson_hour_days_id'],
         excludeScheduleId: editingScheduleId,
       );
 
@@ -1253,7 +1253,7 @@ class TeachingScheduleManagementScreenState
   void _checkActiveFilter() {
     setState(() {
       _hasActiveFilter =
-          _selectedHariId != null ||
+          _selectedDayId != null ||
           _selectedClassId != null ||
           _selectedJamPelajaran != null ||
           (_selectedFilterSemester != null &&
@@ -1265,7 +1265,7 @@ class TeachingScheduleManagementScreenState
     setState(() {
       _selectedTeacherId = null;
       _selectedClassId = null;
-      _selectedHariId = null;
+      _selectedDayId = null;
       _selectedFilterSemester = null;
       _selectedJamPelajaran = null;
       _searchController.clear();
@@ -1281,9 +1281,9 @@ class TeachingScheduleManagementScreenState
     List<Map<String, dynamic>> filterChips = [];
 
     // Add Day Filter Chip
-    if (_selectedHariId != null) {
+    if (_selectedDayId != null) {
       final day = _availableDays.firstWhere(
-        (d) => d['id'].toString() == _selectedHariId,
+        (d) => d['id'].toString() == _selectedDayId,
         orElse: () => {},
       );
       String dayNameRaw = day.isNotEmpty
@@ -1319,7 +1319,7 @@ class TeachingScheduleManagementScreenState
             '${languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'})}: $label',
         'onRemove': () {
           setState(() {
-            _selectedHariId = null;
+            _selectedDayId = null;
             _checkActiveFilter();
             _loadData();
           });
@@ -1391,7 +1391,7 @@ class TeachingScheduleManagementScreenState
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        String? tempSelectedHariId = _selectedHariId;
+        String? tempSelectedHariId = _selectedDayId;
         String? tempSelectedClassId = _selectedClassId;
         // Use default values if filter is not set
         String? tempSelectedSemester =
@@ -1691,7 +1691,7 @@ class TeachingScheduleManagementScreenState
                           Builder(
                             builder: (context) {
                               final Set<String> uniqueHours = {};
-                              for (var jp in _jamPelajaranList) {
+                              for (var jp in _lessonHourList) {
                                 final h = (jp['hour_number'] ?? jp['jam_ke'])
                                     ?.toString();
                                 if (h != null) uniqueHours.add(h);
@@ -1797,7 +1797,7 @@ class TeachingScheduleManagementScreenState
                           child: ElevatedButton(
                             onPressed: () {
                               setState(() {
-                                _selectedHariId = tempSelectedHariId;
+                                _selectedDayId = tempSelectedHariId;
                                 _selectedClassId = tempSelectedClassId;
                                 _selectedFilterSemester = tempSelectedSemester;
                                 _selectedJamPelajaran =
@@ -1863,7 +1863,7 @@ class TeachingScheduleManagementScreenState
 
         return daysIds
             .map((id) {
-              final d = _hariList.firstWhere(
+              final d = _dayList.firstWhere(
                 (element) => element['id'].toString() == id.toString(),
                 orElse: () => {},
               );
@@ -1899,7 +1899,7 @@ class TeachingScheduleManagementScreenState
 
       // Day filter
       bool matchesHari = true;
-      if (_selectedHariId != null) {
+      if (_selectedDayId != null) {
         final daysIds = [];
         if (schedule['days_ids'] is List) {
           daysIds.addAll(schedule['days_ids']);
@@ -1908,7 +1908,7 @@ class TeachingScheduleManagementScreenState
         }
 
         matchesHari = daysIds.any(
-          (id) => id.toString() == _selectedHariId.toString(),
+          (id) => id.toString() == _selectedDayId.toString(),
         );
       }
 
@@ -1939,7 +1939,7 @@ class TeachingScheduleManagementScreenState
       return Center(child: CircularProgressIndicator());
     }
 
-    final days = _hariList
+    final days = _dayList
         .map(
           (d) => _translateDay(
             d['name'] ?? d['nama'] ?? '',
@@ -2830,9 +2830,9 @@ class TeachingScheduleManagementScreenState
           .map((id) {
             final idStr = id.toString();
             if (kDebugMode) {
-              // print('Searching for day id: $idStr in _hariList IDs: ${_hariList.map((e) => e['id']).toList()}');
+              // print('Searching for day id: $idStr in _dayList IDs: ${_dayList.map((e) => e['id']).toList()}');
             }
-            final day = _hariList.firstWhere(
+            final day = _dayList.firstWhere(
               (d) => d['id'].toString().toLowerCase() == idStr.toLowerCase(),
               orElse: () => {},
             );

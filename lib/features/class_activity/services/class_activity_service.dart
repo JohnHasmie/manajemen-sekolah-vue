@@ -29,7 +29,7 @@ class ApiClassActivityService {
     String? classId,
     String? subjectId,
     String? target,
-    String? tanggal,
+    String? date,
     String? search,
     String? chapterId,
     String? subChapterId,
@@ -55,8 +55,8 @@ class ApiClassActivityService {
     if (target != null && target.isNotEmpty) {
       queryParams['target'] = target;
     }
-    if (tanggal != null && tanggal.isNotEmpty) {
-      queryParams['date'] = tanggal;
+    if (date != null && date.isNotEmpty) {
+      queryParams['date'] = date;
     }
     if (search != null && search.isNotEmpty) {
       queryParams['search'] = search;
@@ -239,15 +239,15 @@ class ApiClassActivityService {
   /// Fetches the teacher's schedule to populate form dropdowns.
   /// Like loading relationship data for a Laravel form (e.g., `Teacher::find($id)->schedules`).
   /// Used to show which class/subject/day options are available when creating activities.
-  Future<List<dynamic>> getJadwalForForm({
+  Future<List<dynamic>> getScheduleForForm({
     required String teacherId,
-    String? hari,
-    String? tahunAjaran,
+    String? day,
+    String? academicYear,
   }) async {
     try {
       final params = <String, String>{};
-      if (hari != null && hari != 'Semua Hari') params['day'] = hari;
-      if (tahunAjaran != null) params['academic_year'] = tahunAjaran;
+      if (day != null && day != 'Semua Hari') params['day'] = day;
+      if (academicYear != null) params['academic_year'] = academicYear;
 
       String url = '/schedule/teacher/$teacherId';
       if (params.isNotEmpty) {
@@ -311,21 +311,21 @@ class ApiClassActivityService {
   /// Fetches filter dropdown options for the activity list screen.
   /// Like a Laravel endpoint returning distinct values for filter selects.
   /// Similar to a Vue composable that loads filter metadata on mount.
-  Future<Map<String, dynamic>> getKegiatanFilterOptions({
+  Future<Map<String, dynamic>> getActivityFilterOptions({
     String? teacherId,
     String? classId,
-    String? tanggal,
-    String? bulan,
-    String? tahun,
+    String? date,
+    String? month,
+    String? year,
     String? subjectId,
   }) async {
     try {
       final params = <String, String>{};
       if (teacherId != null && teacherId.isNotEmpty) params['teacher_id'] = teacherId;
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
-      if (tanggal != null && tanggal.isNotEmpty) params['date'] = tanggal;
-      if (bulan != null && bulan.isNotEmpty) params['month'] = bulan;
-      if (tahun != null && tahun.isNotEmpty) params['year'] = tahun;
+      if (date != null && date.isNotEmpty) params['date'] = date;
+      if (month != null && month.isNotEmpty) params['month'] = month;
+      if (year != null && year.isNotEmpty) params['year'] = year;
       if (subjectId != null && subjectId.isNotEmpty) {
         params['subject_id'] = subjectId;
       }

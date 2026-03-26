@@ -180,9 +180,9 @@ class ExcelSubjectService {
       return subject['class_names'];
     }
 
-    final kelasList = subject['class_list'] ?? subject['classes'] ?? [];
-    if (kelasList is List) {
-      return kelasList.map((classItem) => classItem['name'] ?? '').join(', ');
+    final classList = subject['class_list'] ?? subject['classes'] ?? [];
+    if (classList is List) {
+      return classList.map((classItem) => classItem['name'] ?? '').join(', ');
     }
 
     return '';

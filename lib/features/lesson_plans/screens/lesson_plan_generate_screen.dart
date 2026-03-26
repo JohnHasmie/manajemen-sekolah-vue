@@ -19,23 +19,23 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Pre-generation form for AI RPP creation.
 ///
 /// Props (like Vue props):
-/// - [guru] -- teacher data, [selectedMataPelajaran] -- subject ID
-/// - [mataPelajaranName] -- subject name for display
-/// - [checkedBab] / [checkedSubBab] -- selected chapters for generation
+/// - [teacher] -- teacher data, [selectedSubjectId] -- subject ID
+/// - [subjectName] -- subject name for display
+/// - [checkedChapters] / [checkedSubChapters] -- selected chapters for generation
 class RPPGeneratePage extends StatefulWidget {
-  final Map<String, dynamic> guru;
-  final String selectedMataPelajaran;
-  final String mataPelajaranName;
-  final List<Map<String, dynamic>> checkedBab;
-  final List<Map<String, dynamic>> checkedSubBab;
+  final Map<String, dynamic> teacher;
+  final String selectedSubjectId;
+  final String subjectName;
+  final List<Map<String, dynamic>> checkedChapters;
+  final List<Map<String, dynamic>> checkedSubChapters;
 
   const RPPGeneratePage({
     super.key,
-    required this.guru,
-    required this.selectedMataPelajaran,
-    required this.mataPelajaranName,
-    required this.checkedBab,
-    required this.checkedSubBab,
+    required this.teacher,
+    required this.selectedSubjectId,
+    required this.subjectName,
+    required this.checkedChapters,
+    required this.checkedSubChapters,
   });
 
   @override
@@ -47,9 +47,9 @@ class RPPGeneratePage extends StatefulWidget {
 /// Like a Vue component with `data() { return { isGenerating, progress, ... } }`.
 /// Manages form fields, auto-title generation, and the RPP generation process.
 class RPPGeneratePageState extends State<RPPGeneratePage> {
-  final TextEditingController _judulController = TextEditingController();
-  final TextEditingController _tujuanController = TextEditingController();
-  final TextEditingController _alatMediaController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _objectivesController = TextEditingController();
+  final TextEditingController _toolsMediaController = TextEditingController();
 
   bool _isGenerating = false;
   String _statusMessage = '';
@@ -69,28 +69,28 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
   void _generateAutoTitle() {
     final String autoTitle = _getLessonTitleFromSelection();
-    _judulController.text = autoTitle;
+    _titleController.text = autoTitle;
   }
 
   String _getLessonTitleFromSelection() {
     List<String> titleParts = [];
 
     // Prioritize checked sub-chapters
-    if (widget.checkedSubBab.isNotEmpty) {
-      for (var subBab in widget.checkedSubBab) {
-        final judul = subBab['judul_sub_bab'] ?? '';
-        if (judul.isNotEmpty) {
-          titleParts.add(judul);
+    if (widget.checkedSubChapters.isNotEmpty) {
+      for (var subChapter in widget.checkedSubChapters) {
+        final chapterTitle = subChapter['judul_sub_bab'] ?? '';
+        if (chapterTitle.isNotEmpty) {
+          titleParts.add(chapterTitle);
         }
       }
     }
 
     // If no sub-chapters, get from checked chapters
-    if (titleParts.isEmpty && widget.checkedBab.isNotEmpty) {
-      for (var bab in widget.checkedBab) {
-        final judul = bab['judul_bab'] ?? '';
-        if (judul.isNotEmpty) {
-          titleParts.add(judul);
+    if (titleParts.isEmpty && widget.checkedChapters.isNotEmpty) {
+      for (var chapter in widget.checkedChapters) {
+        final chapterTitle = chapter['judul_bab'] ?? '';
+        if (chapterTitle.isNotEmpty) {
+          titleParts.add(chapterTitle);
         }
       }
     }
@@ -106,7 +106,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
     // If still empty, use the subject name
     if (formattedTitle.isEmpty) {
-      formattedTitle = 'RPP ${widget.mataPelajaranName}';
+      formattedTitle = 'RPP ${widget.subjectName}';
     }
 
     return formattedTitle;
@@ -116,13 +116,13 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
     if (_titleChecked) {
       final newTitle = _getLessonTitleFromSelection();
       setState(() {
-        _judulController.text = newTitle;
+        _titleController.text = newTitle;
       });
     }
   }
 
   Future<void> _generateRPP() async {
-    if (_judulController.text.isEmpty) {
+    if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Judul RPP harus diisi')));
@@ -137,57 +137,57 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
     try {
       // Collect all material content from selected chapters and sub-chapters
-      List<Map<String, dynamic>> allKontenMateri = [];
+      List<Map<String, dynamic>> allMaterialContent = [];
 
       // Get content from checked sub-chapters
-      for (var subBab in widget.checkedSubBab) {
+      for (var subChapter in widget.checkedSubChapters) {
         setState(() {
           _statusMessage = 'Mengambil konten sub bab...';
         });
 
-        final konten = await getIt<ApiSubjectService>().getContentMateri(
-          subBabId: subBab['id'],
+        final content = await getIt<ApiSubjectService>().getContentMateri(
+          subBabId: subChapter['id'],
         );
 
-        for (var item in konten) {
-          allKontenMateri.add({
+        for (var item in content) {
+          allMaterialContent.add({
             'type': 'sub_bab',
-            'sub_bab': subBab['judul_sub_bab'],
+            'sub_bab': subChapter['judul_sub_bab'],
             'judul': item['judul_konten'],
             'isi': item['isi_konten'],
           });
         }
         _progress +=
-            0.2 / (widget.checkedSubBab.length + widget.checkedBab.length);
+            0.2 / (widget.checkedSubChapters.length + widget.checkedChapters.length);
       }
 
       // Get content from checked chapters (all sub-chapters within the chapter)
-      for (var bab in widget.checkedBab) {
+      for (var chapter in widget.checkedChapters) {
         setState(() {
           _statusMessage = 'Mengambil konten bab...';
         });
 
-        final subBabs = await getIt<ApiSubjectService>().getSubBabMateri(
-          babId: bab['id'],
+        final subChapters = await getIt<ApiSubjectService>().getSubBabMateri(
+          babId: chapter['id'],
         );
 
-        for (var subBab in subBabs) {
-          final konten = await getIt<ApiSubjectService>().getContentMateri(
-            subBabId: subBab['id'],
+        for (var subChapter in subChapters) {
+          final content = await getIt<ApiSubjectService>().getContentMateri(
+            subBabId: subChapter['id'],
           );
 
-          for (var item in konten) {
-            allKontenMateri.add({
+          for (var item in content) {
+            allMaterialContent.add({
               'type': 'bab',
-              'bab': bab['judul_bab'],
-              'sub_bab': subBab['judul_sub_bab'],
+              'bab': chapter['judul_bab'],
+              'sub_bab': subChapter['judul_sub_bab'],
               'judul': item['judul_konten'],
               'isi': item['isi_konten'],
             });
           }
         }
         _progress +=
-            0.3 / (widget.checkedSubBab.length + widget.checkedBab.length);
+            0.3 / (widget.checkedSubChapters.length + widget.checkedChapters.length);
       }
 
       setState(() {
@@ -198,12 +198,12 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
       // Generate RPP using AI service
       final RPPService rppService = RPPService();
       final generatedRPP = await rppService.generateRPP(
-        judul: _judulController.text,
-        subjectId: widget.selectedMataPelajaran,
-        mataPelajaranName: widget.mataPelajaranName,
-        kontenMateri: allKontenMateri,
-        tujuanPembelajaran: _objectivesChecked ? _tujuanController.text : '',
-        alatMedia: _mediaChecked ? _alatMediaController.text : '',
+        title: _titleController.text,
+        subjectId: widget.selectedSubjectId,
+        subjectName: widget.subjectName,
+        materialContent: allMaterialContent,
+        learningObjectives: _objectivesChecked ? _objectivesController.text : '',
+        toolsMedia: _mediaChecked ? _toolsMediaController.text : '',
       );
 
       setState(() {
@@ -270,7 +270,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
   Widget _buildSelectedTopics() {
     final totalSelected =
-        widget.checkedBab.length + widget.checkedSubBab.length;
+        widget.checkedChapters.length + widget.checkedSubChapters.length;
 
     return Container(
       width: double.infinity,
@@ -314,8 +314,8 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           SizedBox(height: AppSpacing.md),
 
           // Display selected sub topics
-          if (widget.checkedSubBab.isNotEmpty) ...[
-            ...widget.checkedSubBab.map(
+          if (widget.checkedSubChapters.isNotEmpty) ...[
+            ...widget.checkedSubChapters.map(
               (subBab) => Padding(
                 padding: EdgeInsets.only(bottom: 8),
                 child: Row(
@@ -338,12 +338,12 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           ],
 
           // Display selected chapters with their sub-chapters
-          if (widget.checkedBab.isNotEmpty) ...[
-            ...widget.checkedBab.map(
+          if (widget.checkedChapters.isNotEmpty) ...[
+            ...widget.checkedChapters.map(
               (bab) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: widget.checkedSubBab.isNotEmpty ? 16 : 0),
+                  SizedBox(height: widget.checkedSubChapters.isNotEmpty ? 16 : 0),
                   Padding(
                     padding: EdgeInsets.only(bottom: 8),
                     child: Row(
@@ -438,7 +438,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                 child: _buildInfoCard(
                   icon: Icons.subject,
                   title: 'Subject',
-                  content: widget.mataPelajaranName,
+                  content: widget.subjectName,
                 ),
               ),
               SizedBox(width: AppSpacing.lg),
@@ -455,7 +455,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
           // Lesson Title - Editable with auto-suggestion
           _buildEditableFieldWithCheckbox(
-            controller: _judulController,
+            controller: _titleController,
             label: 'Lesson Title',
             hintText: 'Contoh: RPP Introduction to Forces, Newton\'s First Law',
             icon: Icons.title,
@@ -474,7 +474,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
           // Lesson Objectives - Editable
           _buildEditableFieldWithCheckbox(
-            controller: _tujuanController,
+            controller: _objectivesController,
             label: 'Lesson Objectives',
             hintText:
                 'Students will identify types of forces, understand Newton\'s laws of motion, and analyze real-world applications',
@@ -491,7 +491,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
           // Media/Tools - Editable
           _buildEditableFieldWithCheckbox(
-            controller: _alatMediaController,
+            controller: _toolsMediaController,
             label: 'Media/Tools',
             hintText:
                 'Projector, white board, experiment kit (springs, weights, carts)',

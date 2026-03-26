@@ -16,7 +16,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// - [index] - position in list, used for the numbered badge color
 /// - [onEdit] / [onDelete] - action callbacks (like `$emit('edit')`)
 /// - [onTap] - navigate to manage classes for this subject
-/// - [kelasCount] / [kelasNames] - optional class association info
+/// - [classCount] / [classNames] - optional class association info
 ///
 /// Uses a `PopupMenuButton` with three options (like a Vue `<v-menu>`).
 class SubjectListItem extends StatelessWidget {
@@ -25,8 +25,8 @@ class SubjectListItem extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback? onTap;
-  final int? kelasCount;
-  final List<String>? kelasNames;
+  final int? classCount;
+  final List<String>? classNames;
 
   const SubjectListItem({
     super.key,
@@ -35,8 +35,8 @@ class SubjectListItem extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     this.onTap,
-    this.kelasCount,
-    this.kelasNames,
+    this.classCount,
+    this.classNames,
   });
 
   @override
@@ -96,7 +96,7 @@ class SubjectListItem extends StatelessWidget {
                           fontSize: 12,
                         ),
                       ),
-                    if (kelasCount != null)
+                    if (classCount != null)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -106,7 +106,7 @@ class SubjectListItem extends StatelessWidget {
                               Icon(Icons.class_, size: 12, color: Colors.green),
                               SizedBox(width: AppSpacing.xs),
                               Text(
-                                '$kelasCount kelas',
+                                '$classCount kelas',
                                 style: TextStyle(
                                   color: Colors.green.shade600,
                                   fontSize: 12,
@@ -115,12 +115,12 @@ class SubjectListItem extends StatelessWidget {
                               ),
                             ],
                           ),
-                          if (kelasNames != null && kelasNames!.isNotEmpty)
+                          if (classNames != null && classNames!.isNotEmpty)
                             Padding(
                               padding: EdgeInsets.only(top: 2),
                               child: Text(
-                                kelasNames!.take(3).join(', ') +
-                                    (kelasNames!.length > 3 ? '...' : ''),
+                                classNames!.take(3).join(', ') +
+                                    (classNames!.length > 3 ? '...' : ''),
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
                                   fontSize: 11,

@@ -24,11 +24,11 @@ class ExcelNilaiService {
   static String get baseUrl => '/grade';
 
   /// Export grade data to Excel via backend POST to `/grade/export`.
-  /// [nilaiData] - list of grade records. [filters] - optional filter map
+  /// [gradeData] - list of grade records. [filters] - optional filter map
   /// (e.g., class_id, subject_id). [context] - for SnackBar and i18n.
   /// Side effects: validates, downloads .xlsx, saves to device, opens file.
-  static Future<void> exportNilaiToExcel({
-    required List<dynamic> nilaiData,
+  static Future<void> exportGradesToExcel({
+    required List<dynamic> gradeData,
     required BuildContext context,
     Map<String, dynamic> filters = const {},
   }) async {
@@ -36,11 +36,11 @@ class ExcelNilaiService {
 
     try {
       // Validate data first
-      final validatedData = validateNilaiData(nilaiData);
+      final validatedData = validateGradeData(gradeData);
 
       final response = await dioClient.post<List<int>>(
         '$baseUrl/export',
-        data: {'nilaiData': validatedData, 'filters': filters},
+        data: {'gradeData': validatedData, 'filters': filters},
         options: Options(responseType: ResponseType.bytes),
       );
 
@@ -72,66 +72,66 @@ class ExcelNilaiService {
   /// Like a Laravel FormRequest: checks required fields (nis, student_name,
   /// class_name, subject_name, type, grade) and ensures grade is 0-100.
   /// Throws with accumulated error messages if any row fails validation.
-  static List<Map<String, dynamic>> validateNilaiData(List<dynamic> nilaiData) {
+  static List<Map<String, dynamic>> validateGradeData(List<dynamic> gradeData) {
     final List<Map<String, dynamic>> validatedData = [];
     final List<String> errors = [];
 
-    for (int i = 0; i < nilaiData.length; i++) {
-      final nilai = nilaiData[i];
-      final Map<String, dynamic> validatedNilai = {};
+    for (int i = 0; i < gradeData.length; i++) {
+      final gradeItem = gradeData[i];
+      final Map<String, dynamic> validatedGrade = {};
 
       // Validate required fields
-      if (nilai['nis'] == null || nilai['nis'].toString().isEmpty) {
+      if (gradeItem['nis'] == null || gradeItem['nis'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: NIS tidak boleh kosong');
       } else {
-        validatedNilai['nis'] = nilai['nis'];
+        validatedGrade['nis'] = gradeItem['nis'];
       }
 
-      if (nilai['student_name'] == null ||
-          nilai['student_name'].toString().isEmpty) {
+      if (gradeItem['student_name'] == null ||
+          gradeItem['student_name'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama siswa tidak boleh kosong');
       } else {
-        validatedNilai['student_name'] = nilai['student_name'];
+        validatedGrade['student_name'] = gradeItem['student_name'];
       }
 
-      if (nilai['class_name'] == null ||
-          nilai['class_name'].toString().isEmpty) {
+      if (gradeItem['class_name'] == null ||
+          gradeItem['class_name'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Kelas tidak boleh kosong');
       } else {
-        validatedNilai['class_name'] = nilai['class_name'];
+        validatedGrade['class_name'] = gradeItem['class_name'];
       }
 
-      if (nilai['subject_name'] == null ||
-          nilai['subject_name'].toString().isEmpty) {
+      if (gradeItem['subject_name'] == null ||
+          gradeItem['subject_name'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Mata pelajaran tidak boleh kosong');
       } else {
-        validatedNilai['subject_name'] = nilai['subject_name'];
+        validatedGrade['subject_name'] = gradeItem['subject_name'];
       }
 
-      if (nilai['type'] == null || nilai['type'].toString().isEmpty) {
+      if (gradeItem['type'] == null || gradeItem['type'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Jenis nilai tidak boleh kosong');
       } else {
-        validatedNilai['type'] = nilai['type'];
+        validatedGrade['type'] = gradeItem['type'];
       }
 
-      if (nilai['grade'] == null) {
+      if (gradeItem['grade'] == null) {
         errors.add('Baris ${i + 1}: Nilai tidak boleh kosong');
       } else {
-        final nilaiValue = double.tryParse(nilai['grade'].toString());
-        if (nilaiValue == null || nilaiValue < 0 || nilaiValue > 100) {
+        final gradeValue = double.tryParse(gradeItem['grade'].toString());
+        if (gradeValue == null || gradeValue < 0 || gradeValue > 100) {
           errors.add('Baris ${i + 1}: Nilai harus antara 0-100');
         } else {
-          validatedNilai['grade'] = nilaiValue;
+          validatedGrade['grade'] = gradeValue;
         }
       }
 
       // Field optional
-      validatedNilai['description'] = nilai['description'] ?? '';
-      validatedNilai['date'] = nilai['date'] ?? '';
-      validatedNilai['teacher_name'] = nilai['teacher_name'] ?? '';
+      validatedGrade['description'] = gradeItem['description'] ?? '';
+      validatedGrade['date'] = gradeItem['date'] ?? '';
+      validatedGrade['teacher_name'] = gradeItem['teacher_name'] ?? '';
 
       if (errors.isEmpty) {
-        validatedData.add(validatedNilai);
+        validatedData.add(validatedGrade);
       }
     }
 

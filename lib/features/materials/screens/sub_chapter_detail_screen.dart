@@ -94,17 +94,17 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     if (mounted) setState(() => _isLoading = true);
 
     try {
-      final kontenMateri = await getIt<ApiSubjectService>().getContentMateri(
+      final contentMaterial = await getIt<ApiSubjectService>().getContentMateri(
         subBabId: widget.subBab['id'].toString(),
       );
       if (!mounted) return;
 
       setState(() {
-        _contentMateriList = kontenMateri;
+        _contentMateriList = contentMaterial;
         _isLoading = false;
       });
 
-      await LocalCacheService.save(contentCacheKey, kontenMateri);
+      await LocalCacheService.save(contentCacheKey, contentMaterial);
     } catch (e) {
       AppLogger.error('material', 'Error loading content materi: $e');
       if (!mounted) return;

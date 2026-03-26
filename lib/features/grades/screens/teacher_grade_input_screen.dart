@@ -395,7 +395,7 @@ class GradePageState extends ConsumerState<GradePage> {
         limit: 100,
         teacherId: widget.teacher['id'],
         classId: _selectedClass!['id'].toString(),
-        tahunAjaran: academicYearId,
+        academicYearId: academicYearId,
       );
       final myData = mySchedules['data'] ?? [];
       final mySubjectIds = <String>{};
@@ -509,7 +509,7 @@ class GradePageState extends ConsumerState<GradePage> {
         }
       } catch (_) {}
       if (days.isEmpty) {
-        days = await getIt<ApiScheduleService>().getHari();
+        days = await getIt<ApiScheduleService>().getDays();
         if (days.isNotEmpty) LocalCacheService.save('school_day_data', days);
       }
 
@@ -564,7 +564,7 @@ class GradePageState extends ConsumerState<GradePage> {
         final schedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
           limit: 100,
           teacherId: widget.teacher['id'],
-          tahunAjaran: academicYearId,
+          academicYearId: academicYearId,
         );
         allSchedules = schedules['data'] ?? [];
       }

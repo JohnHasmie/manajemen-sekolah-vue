@@ -157,7 +157,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
         }
       } catch (_) {}
       if (days.isEmpty) {
-        days = await getIt<ApiScheduleService>().getHari();
+        days = await getIt<ApiScheduleService>().getDays();
         if (days.isNotEmpty) LocalCacheService.save('school_day_data', days);
       }
 
@@ -214,7 +214,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
         final schedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
           limit: 100,
           teacherId: widget.teacher['id'],
-          tahunAjaran: academicYearId,
+          academicYearId: academicYearId,
         );
         allSchedules = schedules['data'] ?? [];
       }

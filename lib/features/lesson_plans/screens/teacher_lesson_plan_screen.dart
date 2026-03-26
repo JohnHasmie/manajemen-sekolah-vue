@@ -1569,9 +1569,9 @@ class RppFormDialog extends ConsumerStatefulWidget {
 class _RppFormDialogState extends ConsumerState<RppFormDialog> {
   final _formKey = GlobalKey<FormState>();
   final _judulController = TextEditingController();
-  final _tahunAjaranController = TextEditingController();
+  final _academicYearController = TextEditingController();
 
-  String? _selectedMataPelajaranId;
+  String? _selectedSubjectId;
   String? _selectedClassId;
   String? _selectedSemester = 'Ganjil';
   String? _selectedFileName;
@@ -1590,11 +1590,11 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
     if (widget.rppData != null) {
       _judulController.text =
           widget.rppData!['judul'] ?? widget.rppData!['title'] ?? '';
-      _tahunAjaranController.text =
+      _academicYearController.text =
           widget.rppData!['academic_year'] ??
           widget.rppData!['tahun_ajaran'] ??
           '';
-      _selectedMataPelajaranId =
+      _selectedSubjectId =
           (widget.rppData!['subject_id'] ??
                   widget.rppData!['mata_pelajaran_id'])
               ?.toString();
@@ -1604,12 +1604,12 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       _selectedSemester = widget.rppData!['semester'] ?? 'Ganjil';
       _selectedFileName = widget.rppData!['file_path'];
 
-      if (_selectedMataPelajaranId != null) {
-        _loadKelasByMataPelajaran(_selectedMataPelajaranId!);
+      if (_selectedSubjectId != null) {
+        _loadClassesBySubject(_selectedSubjectId!);
       }
     } else {
       // New add mode: set default academic year
-      _tahunAjaranController.text = DateTime.now().year.toString();
+      _academicYearController.text = DateTime.now().year.toString();
     }
   }
 
@@ -1660,7 +1660,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
     }
   }
 
-  Future<void> _loadKelasByMataPelajaran(String subjectId) async {
+  Future<void> _loadClassesBySubject(String subjectId) async {
     try {
       final apiService = ApiService();
       final result = await apiService.get(
@@ -1821,17 +1821,17 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       // Debug data to be submitted
       AppLogger.debug('lesson_plan', 'Submitting RPP data:');
       AppLogger.debug('lesson_plan', '- Guru ID: ${widget.teacherId}');
-      AppLogger.debug('lesson_plan', '- Mata Pelajaran ID: $_selectedMataPelajaranId');
+      AppLogger.debug('lesson_plan', '- Mata Pelajaran ID: $_selectedSubjectId');
       AppLogger.debug('lesson_plan', '- Kelas ID: $_selectedClassId');
       AppLogger.debug('lesson_plan', '- Judul: ${_judulController.text}');
       AppLogger.debug('lesson_plan', '- File Path: $filePath');
 
       final rppData = {
-        'subject_id': _selectedMataPelajaranId,
+        'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
         'title': _judulController.text,
         'semester': _selectedSemester,
-        'academic_year': _tahunAjaranController.text,
+        'academic_year': _academicYearController.text,
         'file_path': filePath ?? _selectedFileName,
       };
 
@@ -2088,7 +2088,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
-                      value: _selectedMataPelajaranId,
+                      value: _selectedSubjectId,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})} *',
                       icon: Icons.book_outlined,
@@ -2105,10 +2105,10 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedMataPelajaranId = value.toString();
+                          _selectedSubjectId = value.toString();
                           _selectedClassId = null;
                         });
-                        _loadKelasByMataPelajaran(value.toString());
+                        _loadClassesBySubject(value.toString());
                       },
                       validator: (value) {
                         if (value == null) {
@@ -2172,7 +2172,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
-                      controller: _tahunAjaranController,
+                      controller: _academicYearController,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Academic Year', 'id': 'Tahun Ajaran'})} *',
                       icon: Icons.calendar_today_rounded,
@@ -2435,9 +2435,9 @@ class GenerateRppFormDialog extends ConsumerStatefulWidget {
 class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
   final _formKey = GlobalKey<FormState>();
   final _judulController = TextEditingController();
-  final _tahunAjaranController = TextEditingController();
+  final _academicYearController = TextEditingController();
 
-  String? _selectedMataPelajaranId;
+  String? _selectedSubjectId;
   String? _selectedClassId;
   String? _selectedBabId;
   String? _selectedSubBabId;
@@ -2454,7 +2454,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
   void initState() {
     super.initState();
     _loadMataPelajaranByGuru();
-    _tahunAjaranController.text = DateTime.now().year.toString();
+    _academicYearController.text = DateTime.now().year.toString();
   }
 
   Future<void> _loadMataPelajaranByGuru() async {
@@ -2495,7 +2495,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
     }
   }
 
-  Future<void> _loadKelasByMataPelajaran(String subjectId) async {
+  Future<void> _loadClassesBySubject(String subjectId) async {
     try {
       final apiService = ApiService();
       final result = await apiService.get(
@@ -2608,12 +2608,12 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
 
       final requestBody = {
         'title': _judulController.text,
-        'subject_id': _selectedMataPelajaranId,
+        'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
         'chapter_id': _selectedBabId,
         'sub_chapter_id': _selectedSubBabId,
         'semester': _selectedSemester,
-        'academic_year': _tahunAjaranController.text,
+        'academic_year': _academicYearController.text,
         'teacher_id': widget.teacherId,
       };
 
@@ -2761,7 +2761,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
         : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
 
     final selectedSubject = _mataPelajaranList.firstWhere(
-      (m) => m['id'].toString() == _selectedMataPelajaranId,
+      (m) => m['id'].toString() == _selectedSubjectId,
       orElse: () => {'name': 'Mata Pelajaran'},
     );
     final mataPelajaranNama =
@@ -2798,13 +2798,13 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
 
     return {
       'title': _judulController.text,
-      'mata_pelajaran_id': _selectedMataPelajaranId,
+      'mata_pelajaran_id': _selectedSubjectId,
       'mata_pelajaran_nama': mataPelajaranNama,
       'satuan_pendidikan': schoolNameStr,
       'bab_nama': babName,
       'sub_bab_nama': subBabName,
       'kelas_semester': '$kelasNama / ${_selectedSemester ?? 'Ganjil'}',
-      'alokasi_waktu': _tahunAjaranController.text,
+      'alokasi_waktu': _academicYearController.text,
     };
   }
 
@@ -2821,7 +2821,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
         : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
 
     final selectedSubject = _mataPelajaranList.firstWhere(
-      (m) => m['id'].toString() == _selectedMataPelajaranId,
+      (m) => m['id'].toString() == _selectedSubjectId,
       orElse: () => {'name': 'Mata Pelajaran'},
     );
     final mataPelajaranNama =
@@ -2869,7 +2869,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
     final mappedRppData = {
       'id': null,
       'judul': rppResponse['title'] ?? _judulController.text,
-      'mata_pelajaran_id': _selectedMataPelajaranId,
+      'mata_pelajaran_id': _selectedSubjectId,
       'mata_pelajaran_nama': mataPelajaranNama,
       'satuan_pendidikan': schoolNameStr,
       'bab_nama': babName,
@@ -2879,7 +2879,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       'tema': rppResponse['title'],
       'sub_tema': '',
       'pembelajaran_ke': '',
-      'alokasi_waktu': _tahunAjaranController.text,
+      'alokasi_waktu': _academicYearController.text,
       'waktu_pendahuluan': '15',
       'waktu_inti': '140',
       'waktu_penutup': '15',
@@ -3128,7 +3128,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
-                      value: _selectedMataPelajaranId,
+                      value: _selectedSubjectId,
                       label: '${AppLocalizations.subject.tr} *',
                       icon: Icons.book_outlined,
                       items: _mataPelajaranList.map((mp) {
@@ -3144,14 +3144,14 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedMataPelajaranId = value.toString();
+                          _selectedSubjectId = value.toString();
                           _selectedClassId = null;
                           _selectedBabId = null;
                           _selectedSubBabId = null;
                           _babList = [];
                           _subBabList = [];
                         });
-                        _loadKelasByMataPelajaran(value.toString());
+                        _loadClassesBySubject(value.toString());
                         _loadBabByMataPelajaran(value.toString());
                       },
                       validator: (value) {
@@ -3286,7 +3286,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
-                      controller: _tahunAjaranController,
+                      controller: _academicYearController,
                       label: '${AppLocalizations.academicYear.tr} *',
                       icon: Icons.calendar_today_rounded,
                       hintText: '2024/2025',

@@ -783,10 +783,10 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
     for (var subject in data) {
       // Support both naming conventions
-      final kelasNames =
+      final classNames =
           (subject['class_names'] ?? subject['kelas_names'])?.toString() ?? '';
-      if (kelasNames.isNotEmpty) {
-        final names = kelasNames
+      if (classNames.isNotEmpty) {
+        final names = classNames
             .split(',')
             .map((e) => e.trim())
             .where((e) => e.isNotEmpty);
@@ -953,19 +953,19 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
       Set<String> gradeLevelsSet = Set.from(_availableGradeLevels);
 
       for (var subject in data) {
-        final kelasNames = subject['class_names']?.toString() ?? '';
-        if (kelasNames.isNotEmpty) {
-          final names = kelasNames
+        final classNames = subject['class_names']?.toString() ?? '';
+        if (classNames.isNotEmpty) {
+          final names = classNames
               .split(',')
               .map((e) => e.trim())
               .where((e) => e.isNotEmpty);
           classNamesSet.addAll(names);
         }
 
-        final kelasGradeLevels =
+        final classGradeLevels =
             subject['kelas_grade_levels']?.toString() ?? '';
-        if (kelasGradeLevels.isNotEmpty) {
-          final levels = kelasGradeLevels
+        if (classGradeLevels.isNotEmpty) {
+          final levels = classGradeLevels
               .split(',')
               .map((e) => e.trim())
               .where((e) => e.isNotEmpty);
@@ -1690,23 +1690,23 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
       // Kelas status filter
       final hasClasses = (subject['jumlah_kelas'] ?? 0) > 0;
-      final matchesKelasStatusFilter =
+      final matchesClassStatusFilter =
           _selectedClassesStatusFilter == null ||
           (_selectedClassesStatusFilter == 'ada' && hasClasses) ||
           (_selectedClassesStatusFilter == 'tidak_ada' && !hasClasses);
 
       // Class Name filter
-      final kelasNames = subject['kelas_names']?.toString() ?? '';
+      final classNames = subject['kelas_names']?.toString() ?? '';
       final matchesClassNameFilter =
           _selectedClassNameFilter == null ||
-          (kelasNames.isNotEmpty &&
-              kelasNames
+          (classNames.isNotEmpty &&
+              classNames
                   .split(',')
                   .map((e) => e.trim())
                   .contains(_selectedClassNameFilter));
 
       return matchesSearch &&
-          matchesKelasStatusFilter &&
+          matchesClassStatusFilter &&
           matchesClassNameFilter;
     }).toList();
   }
@@ -1993,11 +1993,11 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
   Widget _buildSubjectCard(Map<String, dynamic> subject, int index) {
     final languageProvider = ref.read(languageRiverpod);
-    final kelasCount = subject['jumlah_kelas'] ?? 0;
+    final classCount = subject['jumlah_kelas'] ?? 0;
     final isActive = subject['is_active'] ?? true;
     final avatarColor = ColorUtils.getColorForIndex(index);
     final subjectCode = subject['code'] ?? subject['kode'] ?? '-';
-    final kelasNames = (subject['kelas_names']?.toString() ?? '')
+    final classNames = (subject['kelas_names']?.toString() ?? '')
         .split(',')
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
@@ -2127,12 +2127,12 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                         children: [
                           _buildInfoTag(
                             Icons.class_outlined,
-                            '$kelasCount ${languageProvider.getTranslatedText({'en': 'Classes', 'id': 'Kelas'})}',
+                            '$classCount ${languageProvider.getTranslatedText({'en': 'Classes', 'id': 'Kelas'})}',
                           ),
-                          if (kelasNames.isNotEmpty)
+                          if (classNames.isNotEmpty)
                             _buildInfoTag(
                               Icons.groups_outlined,
-                              kelasNames.join(', '),
+                              classNames.join(', '),
                             ),
                         ],
                       ),

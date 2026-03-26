@@ -47,7 +47,7 @@ class TeachingScheduleScreen extends ConsumerStatefulWidget {
 /// State for [TeachingScheduleScreen].
 ///
 /// Like a Vue page component with `data() { return {...} }`. Manages:
-/// - [_jadwalList] -- schedule entries from API
+/// - [_scheduleList] -- schedule entries from API
 /// - [_isTableView] -- toggle between card and table layout
 /// - [_isHomeroomView] -- special view for homeroom teachers
 /// - Filter state (day, semester, class)
@@ -57,10 +57,10 @@ class TeachingScheduleScreen extends ConsumerStatefulWidget {
 /// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
 class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> {
   // Static in-memory cache for instant display on revisit (no async needed)
-  static List<dynamic>? _memCachedJadwal;
+  static List<dynamic>? _memCachedSchedules;
   static List<Map<String, String>>? _memCachedClasses;
 
-  List<dynamic> _jadwalList = [];
+  List<dynamic> _scheduleList = [];
   List<dynamic> _semesterList = [];
   bool _isLoading = true;
   String _teacherId = '';
@@ -132,8 +132,8 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
     super.initState();
 
     // Instantly restore from static in-memory cache (synchronous, no async)
-    if (_memCachedJadwal != null && _memCachedClasses != null) {
-      _jadwalList = _memCachedJadwal!;
+    if (_memCachedSchedules != null && _memCachedClasses != null) {
+      _scheduleList = _memCachedSchedules!;
       _availableClasses = _memCachedClasses!;
       _isLoading = false;
       AppLogger.debug('schedule', 'Instant restore from static memory cache');
@@ -207,7 +207,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
           if (cached != null && mounted) {
             final cachedData = Map<String, dynamic>.from(cached);
             setState(() {
-              _jadwalList = List<dynamic>.from(cachedData['jadwal'] ?? []);
+              _scheduleList = List<dynamic>.from(cachedData['jadwal'] ?? []);
               _availableClasses =
                   (cachedData['availableClasses'] as List<dynamic>?)
                           ?.map((e) => Map<String, String>.from(e))
@@ -385,7 +385,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
         dayData = List<dynamic>.from(cached);
         AppLogger.info('schedule', 'Day data loaded from cache');
       } else {
-        dayData = await getIt<ApiScheduleService>().getHari();
+        dayData = await getIt<ApiScheduleService>().getDays();
         if (dayData.isNotEmpty) {
           LocalCacheService.save('school_day_data', dayData);
         }
@@ -577,7 +577,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
 
   Future<void> _forceRefresh() async {
     // Clear static in-memory cache
-    _memCachedJadwal = null;
+    _memCachedSchedules = null;
     _memCachedClasses = null;
 
     final cacheKey = _buildScheduleCacheKey();
@@ -608,7 +608,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
         if (cached != null && mounted) {
           final cachedData = Map<String, dynamic>.from(cached);
           setState(() {
-            _jadwalList = List<dynamic>.from(cachedData['jadwal'] ?? []);
+            _scheduleList = List<dynamic>.from(cachedData['jadwal'] ?? []);
             _availableClasses = (cachedData['availableClasses'] as List<dynamic>?)
                     ?.map((e) => Map<String, String>.from(e))
                     .toList() ??
@@ -623,7 +623,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
     }
 
     // Step 2: Show skeleton only if no cached data displayed
-    final hasData = _jadwalList.isNotEmpty;
+    final hasData = _scheduleList.isNotEmpty;
     if (!hasData && mounted) {
       setState(() => _isLoading = true);
     }
@@ -647,7 +647,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
         final result = await getIt<ApiScheduleService>().getSchedulesPaginated(
           classId: classId,
           semesterId: semesterToUse,
-          tahunAjaran: academicYearToUse,
+          academicYearId: academicYearToUse,
           limit: 100, // Fetch all for now
         );
         jadwalData = result['data'] ?? [];
@@ -660,13 +660,13 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
         );
       }
 
-      final jadwal = jadwalData is List ? jadwalData : [];
+      final schedules = jadwalData is List ? jadwalData : [];
 
-      AppLogger.info('schedule', 'Total schedule items loaded: ${jadwal.length}');
+      AppLogger.info('schedule', 'Total schedule items loaded: ${schedules.length}');
 
       // Extract unique classes for filter
       final uniqueClasses = <String, String>{};
-      for (var item in jadwal) {
+      for (var item in schedules) {
         final id =
             item['class_id']?.toString() ??
             item['kelas_id']?.toString() ??
@@ -685,19 +685,19 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
         ..sort((a, b) => a['name']!.compareTo(b['name']!));
 
       setState(() {
-        _jadwalList = jadwal;
+        _scheduleList = schedules;
         _availableClasses = classes;
         _isLoading = false;
       });
 
       // Update static in-memory cache for instant restore on revisit
-      _memCachedJadwal = jadwal;
+      _memCachedSchedules = schedules;
       _memCachedClasses = classes;
 
       // Save to cache and persist the cache key for early loading next time
       if (cacheKey != null) {
         LocalCacheService.save(cacheKey, {
-          'jadwal': jadwal,
+          'jadwal': schedules,
           'availableClasses': classes,
         });
         PreferencesService().setString(_prefKeyLastCacheKey, cacheKey);
@@ -1317,7 +1317,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
       }
     });
 
-    final filtered = _jadwalList.where((schedule) {
+    final filtered = _scheduleList.where((schedule) {
       final subjectName =
           schedule['mata_pelajaran_nama']?.toString().toLowerCase() ?? '';
       final className = schedule['kelas_nama']?.toString().toLowerCase() ?? '';
@@ -1371,10 +1371,10 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
       // Robust "Today" detection
       bool belongsToToday(Map<String, dynamic> item, List<String> ids) {
         // Tier 1: Direct name field check (hari_nama)
-        final hariNama = (item['hari_nama'] ?? item['day_name'] ?? '')
+        final dayName = (item['hari_nama'] ?? item['day_name'] ?? '')
             .toString();
-        if (hariNama.isNotEmpty &&
-            _normalizeDayName(hariNama) == currentDayIndo) {
+        if (dayName.isNotEmpty &&
+            _normalizeDayName(dayName) == currentDayIndo) {
           return true;
         }
 
@@ -1565,7 +1565,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
       ),
     );
 
-    if (_jadwalList.isNotEmpty && !_isTableView) {
+    if (_scheduleList.isNotEmpty && !_isTableView) {
       targets.add(
         TargetFocus(
           identify: "ScheduleItem",
@@ -2219,19 +2219,19 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
           (e) => e.value.toString() == rawDayId.toString(),
           orElse: () => MapEntry('Unknown', ''),
         );
-        final hari = entry.key;
-        if (hari == 'Unknown') continue;
+        final day = entry.key;
+        if (day == 'Unknown') continue;
 
         final classItem = schedule['kelas_nama']?.toString() ?? 'Unknown';
 
-        if (!scheduleMap.containsKey(hari)) {
-          scheduleMap[hari] = {};
+        if (!scheduleMap.containsKey(day)) {
+          scheduleMap[day] = {};
         }
-        if (!scheduleMap[hari]!.containsKey(classItem)) {
-          scheduleMap[hari]![classItem] = [];
+        if (!scheduleMap[day]!.containsKey(classItem)) {
+          scheduleMap[day]![classItem] = [];
         }
 
-        scheduleMap[hari]![classItem]!.add(schedule);
+        scheduleMap[day]![classItem]!.add(schedule);
       }
     }
 
@@ -2641,7 +2641,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
     }
   }
 
-  // MOVED: Method for card view (formerly _buildJadwalCard)
+  // MOVED: Method for card view (formerly _buildScheduleCard)
   /// Builds the card view of schedule items grouped by day.
   /// Like a Vue `<ScheduleCardList>` component with `v-for` over days.
   Widget _buildCardView(
@@ -2652,17 +2652,17 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
       padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
       itemCount: schedules.length,
       itemBuilder: (context, index) {
-        return _buildJadwalCard(schedules[index], languageProvider, index);
+        return _buildScheduleCard(schedules[index], languageProvider, index);
       },
     );
   }
 
-  Widget _buildJadwalCard(
-    Map<String, dynamic> jadwal,
+  Widget _buildScheduleCard(
+    Map<String, dynamic> schedule,
     LanguageProvider languageProvider,
     int index,
   ) {
-    final daysIds = _extractDayIds(jadwal);
+    final daysIds = _extractDayIds(schedule);
 
     String dayNames = daysIds
         .map((id) {
@@ -2676,7 +2676,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
         .join(', ');
 
     if (dayNames.isEmpty) {
-      final rawDayName = (jadwal['hari_nama'] ?? jadwal['day_name'] ?? '')
+      final rawDayName = (schedule['hari_nama'] ?? schedule['day_name'] ?? '')
           .toString();
       if (rawDayName.isNotEmpty) dayNames = _normalizeDayName(rawDayName);
     }
@@ -2704,24 +2704,24 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                   teacher: {'id': _teacherId, 'nama': _teacherNama},
                   initialDate: DateTime.now(),
                   initialSubjectId:
-                      (jadwal['subject_id'] ??
-                              jadwal['mata_pelajaran_id'] ??
-                              jadwal['mata_pelajaran']?['id'])
+                      (schedule['subject_id'] ??
+                              schedule['mata_pelajaran_id'] ??
+                              schedule['mata_pelajaran']?['id'])
                           ?.toString(),
                   initialSubjectName:
-                      (jadwal['subject_name'] ??
-                              jadwal['mata_pelajaran_nama'] ??
-                              jadwal['mata_pelajaran']?['name'])
+                      (schedule['subject_name'] ??
+                              schedule['mata_pelajaran_nama'] ??
+                              schedule['mata_pelajaran']?['name'])
                           ?.toString(),
                   initialclassId:
-                      (jadwal['class_id'] ??
-                              jadwal['kelas_id'] ??
-                              jadwal['class']?['id'])
+                      (schedule['class_id'] ??
+                              schedule['kelas_id'] ??
+                              schedule['class']?['id'])
                           ?.toString(),
                   initialClassName:
-                      (jadwal['class_name'] ??
-                              jadwal['kelas_nama'] ??
-                              jadwal['class']?['name'])
+                      (schedule['class_name'] ??
+                              schedule['kelas_nama'] ??
+                              schedule['class']?['name'])
                           ?.toString(),
                 ));
           },
@@ -2762,7 +2762,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            jadwal['mata_pelajaran_nama'] ??
+                            schedule['mata_pelajaran_nama'] ??
                                 languageProvider.getTranslatedText({
                                   'en': 'Subject',
                                   'id': 'Mata Pelajaran',
@@ -2777,7 +2777,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                           ),
                           SizedBox(height: 3),
                           Text(
-                            jadwal['tahun_ajaran_nama'] ??
+                            schedule['tahun_ajaran_nama'] ??
                                 _selectedAcademicYear,
                             style: TextStyle(
                               fontSize: 11,
@@ -2820,23 +2820,23 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                   children: [
                     _buildScheduleInfoTag(
                       Icons.access_time_rounded,
-                      '${_formatTime(jadwal["jam_mulai"])} – ${_formatTime(jadwal["jam_selesai"])}',
+                      '${_formatTime(schedule["jam_mulai"])} – ${_formatTime(schedule["jam_selesai"])}',
                       primary,
                     ),
                     _buildScheduleInfoTag(
                       Icons.class_rounded,
-                      jadwal['kelas_nama'] ?? '-',
+                      schedule['kelas_nama'] ?? '-',
                       primary,
                     ),
                     _buildScheduleInfoTag(
                       Icons.format_list_numbered_rounded,
-                      'Jam ke-${jadwal["jam_ke"] ?? "-"}',
+                      'Jam ke-${schedule["jam_ke"] ?? "-"}',
                       dayColor,
                     ),
-                    if (jadwal['semester_nama'] != null)
+                    if (schedule['semester_nama'] != null)
                       _buildScheduleInfoTag(
                         Icons.calendar_month_rounded,
-                        jadwal['semester_nama'],
+                        schedule['semester_nama'],
                         ColorUtils.slate500,
                       ),
                   ],
@@ -2854,19 +2854,19 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                   'nama': _teacherNama,
                                 },
                                 initialSubjectId:
-                                    (jadwal['subject_id'] ??
-                                            jadwal['mata_pelajaran_id'])
+                                    (schedule['subject_id'] ??
+                                            schedule['mata_pelajaran_id'])
                                         ?.toString(),
                                 initialSubjectName:
-                                    (jadwal['subject_name'] ??
-                                            jadwal['mata_pelajaran_nama'])
+                                    (schedule['subject_name'] ??
+                                            schedule['mata_pelajaran_nama'])
                                         ?.toString(),
                                 initialClassId:
-                                    (jadwal['class_id'] ?? jadwal['kelas_id'])
+                                    (schedule['class_id'] ?? schedule['kelas_id'])
                                         ?.toString(),
                                 initialClassName:
-                                    (jadwal['class_name'] ??
-                                            jadwal['kelas_nama'])
+                                    (schedule['class_name'] ??
+                                            schedule['kelas_nama'])
                                         ?.toString(),
                               ));
                         },
@@ -2904,7 +2904,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                               .firstWhere(
                                 (entry) =>
                                     entry.value.toString() ==
-                                    (jadwal['day_id'] ?? jadwal['hari_id'])
+                                    (schedule['day_id'] ?? schedule['hari_id'])
                                         ?.toString(),
                                 orElse: () => MapEntry('Senin', '1'),
                               )
@@ -2921,19 +2921,19 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                           AppNavigator.push(context, ClassActifityScreen(
                                 initialDate: scheduleDate,
                                 initialSubjectId:
-                                    (jadwal['subject_id'] ??
-                                            jadwal['mata_pelajaran_id'])
+                                    (schedule['subject_id'] ??
+                                            schedule['mata_pelajaran_id'])
                                         ?.toString(),
                                 initialSubjectName:
-                                    (jadwal['subject_name'] ??
-                                            jadwal['mata_pelajaran_nama'])
+                                    (schedule['subject_name'] ??
+                                            schedule['mata_pelajaran_nama'])
                                         ?.toString(),
                                 initialClassId:
-                                    (jadwal['class_id'] ?? jadwal['kelas_id'])
+                                    (schedule['class_id'] ?? schedule['kelas_id'])
                                         ?.toString(),
                                 initialClassName:
-                                    (jadwal['class_name'] ??
-                                            jadwal['kelas_nama'])
+                                    (schedule['class_name'] ??
+                                            schedule['kelas_nama'])
                                         ?.toString(),
                                 autoShowActivityDialog: true,
                               ));

@@ -25,17 +25,17 @@ class RPPService {
   /// user gets a skeleton RPP they can edit manually instead of nothing.
   /// [customContent] - optional AI-generated content to use for objectives.
   Map<String, dynamic> _createFallbackRPP({
-    required String judul,
+    required String title,
     required String subjectId,
-    required String mataPelajaranName,
-    List<Map<String, dynamic>> kontenMateri = const [],
+    required String subjectName,
+    List<Map<String, dynamic>> materialContent = const [],
     String customContent = '',
   }) {
     return {
       'id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'title': judul,
+      'title': title,
       'subject_id': subjectId,
-      'subject_name': mataPelajaranName,
+      'subject_name': subjectName,
       'learning_objectives': customContent.isNotEmpty
           ? customContent
           : 'Tujuan pembelajaran belum tersedia.',
@@ -45,7 +45,7 @@ class RPPService {
       'assessment': 'Penilaian belum tersedia.',
       'education_unit': 'SD/MI',
       'class_semester': '1 / 1',
-      'theme': judul,
+      'theme': title,
       'sub_theme': 'Sub Tema 1',
       'learning_sequence': '1',
       'time_allocation': '1 Hari',
@@ -54,7 +54,7 @@ class RPPService {
       'closing_time': '15',
       'created_at': DateTime.now().toIso8601String(),
       'is_ai_generated': false,
-      'material_content': kontenMateri,
+      'material_content': materialContent,
     };
   }
 
@@ -70,29 +70,29 @@ class RPPService {
   /// Like a Laravel controller action that calls an AI service:
   /// `$rpp = $aiService->generateRPP($request->validated());`
   ///
-  /// [judul] - lesson plan title. [subjectId]/[mataPelajaranName] - subject info.
-  /// [kontenMateri] - list of material/content maps to include.
-  /// [tujuanPembelajaran] - optional custom learning objectives.
-  /// [alatMedia] - optional tools/media description.
+  /// [title] - lesson plan title. [subjectId]/[subjectName] - subject info.
+  /// [materialContent] - list of material/content maps to include.
+  /// [learningObjectives] - optional custom learning objectives.
+  /// [toolsMedia] - optional tools/media description.
   ///
   /// Returns a structured RPP map. Falls back to [_createFallbackRPP] on any error
   /// (network failure, API error, parsing error) -- never throws.
   Future<Map<String, dynamic>> generateRPP({
-    required String judul,
+    required String title,
     required String subjectId,
-    required String mataPelajaranName,
-    required List<Map<String, dynamic>> kontenMateri,
-    String tujuanPembelajaran = '',
-    String alatMedia = '',
+    required String subjectName,
+    required List<Map<String, dynamic>> materialContent,
+    String learningObjectives = '',
+    String toolsMedia = '',
   }) async {
     try {
       // Prepare prompt for AI
       final prompt = _buildPrompt(
-        judul: judul,
-        mataPelajaranName: mataPelajaranName,
-        kontenMateri: kontenMateri,
-        tujuanPembelajaran: tujuanPembelajaran,
-        alatMedia: alatMedia,
+        title: title,
+        subjectName: subjectName,
+        materialContent: materialContent,
+        learningObjectives: learningObjectives,
+        toolsMedia: toolsMedia,
       );
 
       // Call OpenAI API via Dio
@@ -128,17 +128,17 @@ class RPPService {
       // Parse AI response into RPP structure
       return _parseAIResponse(
         content: content,
-        judul: judul,
+        title: title,
         subjectId: subjectId,
-        mataPelajaranName: mataPelajaranName,
+        subjectName: subjectName,
       );
     } catch (e) {
       // Fallback: Create a simple RPP if AI fails
       return _createFallbackRPP(
-        judul: judul,
+        title: title,
         subjectId: subjectId,
-        mataPelajaranName: mataPelajaranName,
-        kontenMateri: kontenMateri,
+        subjectName: subjectName,
+        materialContent: materialContent,
       );
     }
   }
@@ -149,11 +149,11 @@ class RPPService {
   /// The prompt includes a complete example RPP and then asks the AI to
   /// create a new one for the given subject and materials.
   String _buildPrompt({
-    required String judul,
-    required String mataPelajaranName,
-    required List<Map<String, dynamic>> kontenMateri,
-    required String tujuanPembelajaran,
-    required String alatMedia,
+    required String title,
+    required String subjectName,
+    required List<Map<String, dynamic>> materialContent,
+    required String learningObjectives,
+    required String toolsMedia,
   }) {
     final buffer = StringBuffer();
 
@@ -213,20 +213,20 @@ class RPPService {
     );
     buffer.writeln();
     buffer.writeln(
-      'Buat RPP dengan format yang sama untuk mata pelajaran: $mataPelajaranName',
+      'Buat RPP dengan format yang sama untuk mata pelajaran: $subjectName',
     );
-    buffer.writeln('Judul: $judul');
+    buffer.writeln('Judul: $title');
 
-    if (tujuanPembelajaran.isNotEmpty) {
+    if (learningObjectives.isNotEmpty) {
       buffer.writeln(
-        'Tujuan Pembelajaran yang diinginkan: $tujuanPembelajaran',
+        'Tujuan Pembelajaran yang diinginkan: $learningObjectives',
       );
     }
 
-    if (kontenMateri.isNotEmpty) {
+    if (materialContent.isNotEmpty) {
       buffer.writeln('Materi yang akan diajarkan:');
-      for (var materi in kontenMateri) {
-        buffer.writeln('- ${materi['judul']}');
+      for (var material in materialContent) {
+        buffer.writeln('- ${material['judul']}');
       }
     }
 
@@ -239,16 +239,16 @@ class RPPService {
   /// Falls back to [_createFallbackRPP] with the raw content if parsing fails.
   Map<String, dynamic> _parseAIResponse({
     required String content,
-    required String judul,
+    required String title,
     required String subjectId,
-    required String mataPelajaranName,
+    required String subjectName,
   }) {
     try {
       return {
         'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'title': judul,
+        'title': title,
         'subject_id': subjectId,
-        'subject_name': mataPelajaranName,
+        'subject_name': subjectName,
         'learning_objectives': _extractSection(
           content,
           'A. TUJUAN PEMBELAJARAN',
@@ -262,7 +262,7 @@ class RPPService {
         'assessment': _extractSection(content, 'C. PENILAIAN'),
         'education_unit': 'SD/MI',
         'class_semester': '1 / 1',
-        'theme': judul,
+        'theme': title,
         'sub_theme': 'Sub Tema 1',
         'learning_sequence': '1',
         'time_allocation': '1 Hari',
@@ -274,10 +274,10 @@ class RPPService {
       };
     } catch (e) {
       return _createFallbackRPP(
-        judul: judul,
+        title: title,
         subjectId: subjectId,
-        mataPelajaranName: mataPelajaranName,
-        kontenMateri: [],
+        subjectName: subjectName,
+        materialContent: [],
         customContent: content,
       );
     }

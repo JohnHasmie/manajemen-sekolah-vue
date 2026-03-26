@@ -622,12 +622,12 @@ class ApiService {
     String? subjectId,
     String? classId,
     String? semester,
-    String? tahunAjaran,
-    String? tanggalStart,
-    String? tanggalEnd,
+    String? academicYear,
+    String? dateStart,
+    String? dateEnd,
     String? academicYearId,
-    String? mataPelajaranId, // Added based on queryParams
-    String? tanggal, // Added based on queryParams
+    String? filterSubjectId, // Added based on queryParams
+    String? date, // Added based on queryParams
   }) async {
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -642,20 +642,20 @@ class ApiService {
     if (subjectId != null && subjectId.isNotEmpty) {
       queryParams['subject_id'] = subjectId;
     }
-    if (mataPelajaranId != null && mataPelajaranId.isNotEmpty) {
-      queryParams['mataPelajaranId'] = mataPelajaranId;
+    if (filterSubjectId != null && filterSubjectId.isNotEmpty) {
+      queryParams['mataPelajaranId'] = filterSubjectId;
     }
     if (classId != null && classId.isNotEmpty) {
       queryParams['classId'] = classId;
     }
-    if (tanggal != null && tanggal.isNotEmpty) {
-      queryParams['tanggal'] = tanggal;
+    if (date != null && date.isNotEmpty) {
+      queryParams['tanggal'] = date;
     }
-    if (tanggalStart != null && tanggalStart.isNotEmpty) {
-      queryParams['tanggalStart'] = tanggalStart;
+    if (dateStart != null && dateStart.isNotEmpty) {
+      queryParams['tanggalStart'] = dateStart;
     }
-    if (tanggalEnd != null && tanggalEnd.isNotEmpty) {
-      queryParams['tanggalEnd'] = tanggalEnd;
+    if (dateEnd != null && dateEnd.isNotEmpty) {
+      queryParams['tanggalEnd'] = dateEnd;
     }
     if (academicYearId != null && academicYearId.isNotEmpty) {
       queryParams['academic_year_id'] = academicYearId;
@@ -663,8 +663,8 @@ class ApiService {
     if (semester != null && semester.isNotEmpty) {
       queryParams['semester'] = semester;
     }
-    if (tahunAjaran != null && tahunAjaran.isNotEmpty) {
-      queryParams['tahun_ajaran'] = tahunAjaran;
+    if (academicYear != null && academicYear.isNotEmpty) {
+      queryParams['tahun_ajaran'] = academicYear;
     }
 
     final response = await dioClient.get(
@@ -876,8 +876,8 @@ class ApiService {
     String? subjectId,
     String? studentId,
     String? classId,
-    String? tanggalStart,
-    String? tanggalEnd,
+    String? dateStart,
+    String? dateEnd,
     String? academicYearId,
   }) async {
     try {
@@ -896,11 +896,11 @@ class ApiService {
         params['student_id'] = studentId;
       }
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
-      if (tanggalStart != null && tanggalStart.isNotEmpty) {
-        params['tanggalStart'] = tanggalStart;
+      if (dateStart != null && dateStart.isNotEmpty) {
+        params['tanggalStart'] = dateStart;
       }
-      if (tanggalEnd != null && tanggalEnd.isNotEmpty) {
-        params['tanggalEnd'] = tanggalEnd;
+      if (dateEnd != null && dateEnd.isNotEmpty) {
+        params['tanggalEnd'] = dateEnd;
       }
       if (academicYearId != null && academicYearId.isNotEmpty) {
         params['academic_year_id'] = academicYearId;
@@ -970,9 +970,9 @@ class ApiService {
     String? teacherId,
     String? subjectId,
     String? classId,
-    String? tanggal,
-    String? tanggalStart,
-    String? tanggalEnd,
+    String? date,
+    String? dateStart,
+    String? dateEnd,
     String? academicYearId,
     List<String>? dayIds,
     List<String>? lessonHourIds,
@@ -991,12 +991,12 @@ class ApiService {
         params['mataPelajaranId'] = subjectId;
       }
       if (classId != null && classId.isNotEmpty) params['classId'] = classId;
-      if (tanggal != null && tanggal.isNotEmpty) params['tanggal'] = tanggal;
-      if (tanggalStart != null && tanggalStart.isNotEmpty) {
-        params['tanggalStart'] = tanggalStart;
+      if (date != null && date.isNotEmpty) params['tanggal'] = date;
+      if (dateStart != null && dateStart.isNotEmpty) {
+        params['tanggalStart'] = dateStart;
       }
-      if (tanggalEnd != null && tanggalEnd.isNotEmpty) {
-        params['tanggalEnd'] = tanggalEnd;
+      if (dateEnd != null && dateEnd.isNotEmpty) {
+        params['tanggalEnd'] = dateEnd;
       }
       if (dayIds != null && dayIds.isNotEmpty) {
         params['day_ids'] = dayIds.join(',');

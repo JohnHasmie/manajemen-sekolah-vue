@@ -49,7 +49,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
   }
 
   // State variables
-  String? _selectedJenisNilai;
+  String? _selectedGradeType;
   final List<String> _jenisNilaiList = [
     'uh',
     'tugas',
@@ -68,7 +68,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
 
   // State for tracking whether grade type and date have been set
   bool _isConfigurationSet = false;
-  String? _confirmedJenisNilai;
+  String? _confirmedGradeType;
   DateTime? _confirmedDate;
   final TextEditingController _titleController = TextEditingController();
 
@@ -111,7 +111,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     final languageProvider = ref.read(languageRiverpod);
 
     if (_formKey.currentState!.validate()) {
-      if (_selectedJenisNilai == null) {
+      if (_selectedGradeType == null) {
                 SnackBarUtils.showWarning(context, languageProvider.getTranslatedText({
                 'en': 'Please select grade type first',
                 'id': 'Pilih jenis nilai terlebih dahulu',
@@ -122,8 +122,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
       // Check if at least one student has a grade value
       bool hasData = false;
       for (var student in widget.studentList) {
-        final nilaiData = _gradeStudentMap[student.id];
-        if (nilaiData?['nilai']?.isNotEmpty == true) {
+        final gradeData = _gradeStudentMap[student.id];
+        if (gradeData?['nilai']?.isNotEmpty == true) {
           hasData = true;
           break;
         }
@@ -141,11 +141,11 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
         int successCount = 0;
 
         for (var student in widget.studentList) {
-          final nilaiData = _gradeStudentMap[student.id];
-          final nilai = nilaiData?['nilai']?.toString().trim();
+          final gradeData = _gradeStudentMap[student.id];
+          final gradeValue = gradeData?['nilai']?.toString().trim();
 
           // Skip if no grade value was entered
-          if (nilai == null || nilai.isEmpty) {
+          if (gradeValue == null || gradeValue.isEmpty) {
             continue;
           }
 
@@ -159,9 +159,9 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 studentIdToSend, // New field required by backend
             'teacher_id': widget.teacher['id'],
             'subject_id': widget.subject['id'],
-            'type': _selectedJenisNilai,
-            'score': int.parse(nilaiData!['nilai']),
-            'notes': nilaiData['deskripsi'] ?? '',
+            'type': _selectedGradeType,
+            'score': int.parse(gradeData!['nilai']),
+            'notes': gradeData['deskripsi'] ?? '',
             'date':
                 '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
             'title': _titleController.text.isNotEmpty
@@ -303,13 +303,13 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
               ),
               // Rows - scrollable
               ...widget.studentList.map((student) {
-                final nilaiKey = "${student.id}_nilai";
+                final gradeKey = "${student.id}_nilai";
                 final deskripsiKey = "${student.id}_deskripsi";
 
                 // Initialize controllers if not exists
-                if (!_tableControllers.containsKey(nilaiKey)) {
-                  _tableControllers[nilaiKey] = TextEditingController();
-                  _tableFocusNodes[nilaiKey] = FocusNode();
+                if (!_tableControllers.containsKey(gradeKey)) {
+                  _tableControllers[gradeKey] = TextEditingController();
+                  _tableFocusNodes[gradeKey] = FocusNode();
                 }
                 if (!_tableControllers.containsKey(deskripsiKey)) {
                   _tableControllers[deskripsiKey] = TextEditingController();
@@ -365,8 +365,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                           ),
                         ),
                         child: TextFormField(
-                          controller: _tableControllers[nilaiKey],
-                          focusNode: _tableFocusNodes[nilaiKey],
+                          controller: _tableControllers[gradeKey],
+                          focusNode: _tableFocusNodes[gradeKey],
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           style: TextStyle(color: ColorUtils.slate900),
@@ -464,7 +464,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
               children: [
                 Text(
                   _getJenisNilaiLabel(
-                    _confirmedJenisNilai ?? '',
+                    _confirmedGradeType ?? '',
                     languageProvider,
                   ),
                   style: TextStyle(
@@ -593,7 +593,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 border: Border.all(color: ColorUtils.slate200),
               ),
               child: DropdownButtonFormField<String>(
-                initialValue: _selectedJenisNilai,
+                initialValue: _selectedGradeType,
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   prefixIcon: Icon(
@@ -616,7 +616,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    _selectedJenisNilai = newValue;
+                    _selectedGradeType = newValue;
                   });
                 },
                 validator: (value) {
@@ -709,11 +709,11 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: (_selectedJenisNilai != null && !_isReadOnly)
+                onPressed: (_selectedGradeType != null && !_isReadOnly)
                     ? () {
                         setState(() {
                           _isConfigurationSet = true;
-                          _confirmedJenisNilai = _selectedJenisNilai;
+                          _confirmedGradeType = _selectedGradeType;
                           _confirmedDate = _selectedDate;
                         });
                       }
@@ -747,8 +747,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
         final studentsWithGradeCount = widget.studentList.where((student) {
-          final nilaiData = _gradeStudentMap[student.id];
-          return nilaiData?['nilai']?.isNotEmpty == true;
+          final gradeData = _gradeStudentMap[student.id];
+          return gradeData?['nilai']?.isNotEmpty == true;
         }).length;
 
         return Scaffold(

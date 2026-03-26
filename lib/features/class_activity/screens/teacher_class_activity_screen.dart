@@ -963,7 +963,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
         limit: 100,
         teacherId: _teacherId,
         classId: _selectedClassId,
-        tahunAjaran: academicYearId,
+        academicYearId: academicYearId,
       );
       final myData = mySchedules['data'] ?? [];
       final mySubjectIds = <String>{};
@@ -2816,7 +2816,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
         search: _searchController.text.isNotEmpty
             ? _searchController.text
             : null,
-        tanggal: _selectedDateFilter,
+        date: _selectedDateFilter,
         academicYearId: academicYearId,
       );
 
@@ -3083,7 +3083,7 @@ class AddActivityDialog extends ConsumerStatefulWidget {
 
 class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _judulController = TextEditingController();
+  final _titleController = TextEditingController();
   final _deskripsiController = TextEditingController();
   final List<String> _selectedStudents = [];
 
@@ -3144,7 +3144,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
     // If in edit mode, populate form with existing data
     if (widget.isEditMode && widget.activityData != null) {
-      _judulController.text = widget.activityData['judul']?.toString() ?? '';
+      _titleController.text = widget.activityData['judul']?.toString() ?? '';
       _deskripsiController.text =
           widget.activityData['deskripsi']?.toString() ?? '';
 
@@ -3158,9 +3158,9 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       // Load selected students if target is khusus
       if (widget.initialTarget == 'khusus' &&
           widget.activityData['siswa_target'] != null) {
-        final siswaTarget = widget.activityData['siswa_target'];
-        if (siswaTarget is List) {
-          _selectedStudents.addAll(siswaTarget.map((s) => s.toString()));
+        final studentTarget = widget.activityData['siswa_target'];
+        if (studentTarget is List) {
+          _selectedStudents.addAll(studentTarget.map((s) => s.toString()));
         }
       }
     }
@@ -3221,7 +3221,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
   @override
   void dispose() {
-    _judulController.dispose();
+    _titleController.dispose();
     _deskripsiController.dispose();
     super.dispose();
   }
@@ -3431,7 +3431,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     }
 
     if (title.isNotEmpty && title != 'Unknown') {
-      _judulController.text = title;
+      _titleController.text = title;
     }
   }
 
@@ -3572,7 +3572,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         'teacher_id': widget.teacherId,
         'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
-        'title': _judulController.text,
+        'title': _titleController.text,
         'deskripsi': _deskripsiController.text,
         'jenis': widget.activityType,
         'target': widget.initialTarget,
@@ -4314,7 +4314,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
                     // Judul Field
                     TextFormField(
-                      controller: _judulController,
+                      controller: _titleController,
                       decoration: InputDecoration(
                         labelText:
                             '${languageProvider.getTranslatedText({'en': 'Title', 'id': 'Judul'})} *',
