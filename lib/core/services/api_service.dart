@@ -20,6 +20,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dio/dio.dart';
+import 'package:manajemensekolah/core/constants/api_endpoints.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/router/app_router.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
@@ -117,7 +118,7 @@ class ApiService {
   }) async {
     try {
       // Use backend filtering
-      String url = '/grades?subject_id=$subjectId&limit=$limit';
+      String url = '${ApiEndpoints.grades}?subject_id=$subjectId&limit=$limit';
       if (academicYearId != null) {
         url += '&academic_year_id=$academicYearId';
       }
@@ -290,7 +291,7 @@ class ApiService {
 
       AppLogger.debug('api', 'Login request: ${body.keys}');
 
-      final response = await dioClient.post('/auth/login', data: body);
+      final response = await dioClient.post(ApiEndpoints.login, data: body);
       final responseData = response.data;
 
       AppLogger.debug('api', '📥 Login response status: ${response.statusCode}');
@@ -365,7 +366,7 @@ class ApiService {
 
       AppLogger.debug('api', 'Verify OTP request: ${body.keys}');
 
-      final response = await dioClient.post('/auth/verify-otp', data: body);
+      final response = await dioClient.post(ApiEndpoints.verifyOtp, data: body);
 
       AppLogger.debug('api', '📥 Verify OTP response status: ${response.statusCode}');
       AppLogger.debug('api', '📥 Verify OTP response data: ${response.data}');
@@ -408,7 +409,7 @@ class ApiService {
 
       AppLogger.debug('api', 'Google Login request: $email');
 
-      final response = await dioClient.post('/auth/google-login', data: body);
+      final response = await dioClient.post(ApiEndpoints.googleLogin, data: body);
 
       AppLogger.debug('api', '📥 Google Login response status: ${response.statusCode}');
       AppLogger.debug('api', '📥 Google Login response data: ${response.data}');
@@ -435,7 +436,7 @@ class ApiService {
   /// Fetches the available roles for the current user (e.g., admin, guru, siswa).
   /// Like `auth()->user()->roles` in Laravel with Spatie Permission.
   static Future<List<dynamic>> getUserRoles() async {
-    final response = await dioClient.get('/user/roles');
+    final response = await dioClient.get(ApiEndpoints.userRolesList);
     final result = response.data;
     return result['available_roles'] is List ? result['available_roles'] : [];
   }
@@ -459,7 +460,7 @@ class ApiService {
   /// Fetches the list of schools accessible to the current user.
   /// Like a multi-tenant school selector. Returns school objects.
   static Future<List<dynamic>> getUserSchools() async {
-    final response = await dioClient.get('/user/schools');
+    final response = await dioClient.get(ApiEndpoints.userSchoolsList);
     final result = response.data;
     return result is List ? result : [];
   }
@@ -477,7 +478,7 @@ class ApiService {
       }
 
       final response = await dioClient.get(
-        '/dashboard/stats',
+        ApiEndpoints.dashboardStats,
         queryParameters: queryParams,
       );
 
@@ -496,7 +497,7 @@ class ApiService {
   /// Like a notification count endpoint. Returns 0 on error.
   static Future<int> getUnreadAnnouncementCount() async {
     try {
-      final response = await dioClient.get('/announcement/unread-count');
+      final response = await dioClient.get(ApiEndpoints.announcementUnreadCount);
       final data = response.data;
       return data['count'] ?? 0;
     } catch (e) {
@@ -507,7 +508,7 @@ class ApiService {
 
   static Future<bool> markAnnouncementRead(List<String> ids) async {
     try {
-      await dioClient.post('/announcement/mark-read', data: {'ids': ids});
+      await dioClient.post(ApiEndpoints.announcementMarkRead, data: {'ids': ids});
       return true;
     } catch (e) {
       AppLogger.error('api', 'Error marking announcement read: $e');
@@ -528,7 +529,7 @@ class ApiService {
     }
 
     final response = await dioClient.post(
-      '/auth/switch-school',
+      ApiEndpoints.switchSchool,
       data: body,
       options: Options(
         sendTimeout: const Duration(seconds: 60),
@@ -555,7 +556,7 @@ class ApiService {
     if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
 
     final response = await dioClient.get(
-      '/grades',
+      ApiEndpoints.grades,
       queryParameters: queryParams,
     );
 
@@ -569,7 +570,7 @@ class ApiService {
 
   /// Creates a new grade entry. Like `Grade::create($data)` in Laravel.
   static Future<dynamic> createGrade(Map<String, dynamic> data) async {
-    final response = await dioClient.post('/grade', data: data);
+    final response = await dioClient.post(ApiEndpoints.grade, data: data);
     return response.data;
   }
 
@@ -588,7 +589,7 @@ class ApiService {
     if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
 
     final response = await dioClient.get(
-      '/rpp',
+      ApiEndpoints.lessonPlans,
       queryParameters: queryParams,
     );
 
@@ -667,7 +668,7 @@ class ApiService {
     }
 
     final response = await dioClient.get(
-      '/rpp',
+      ApiEndpoints.lessonPlans,
       queryParameters: queryParams,
     );
 
@@ -716,7 +717,7 @@ class ApiService {
     }
 
     final response = await dioClient.get(
-      '/bills',
+      ApiEndpoints.bills,
       queryParameters: queryParams,
     );
 
@@ -740,7 +741,7 @@ class ApiService {
   }
 
   static Future<dynamic> createLessonPlan(Map<String, dynamic> data) async {
-    final response = await dioClient.post('/rpp', data: data);
+    final response = await dioClient.post(ApiEndpoints.lessonPlans, data: data);
     return response.data;
   }
 
@@ -779,7 +780,7 @@ class ApiService {
         ),
       });
 
-      final response = await dioClient.post('/upload/rpp', data: formData);
+      final response = await dioClient.post(ApiEndpoints.uploadLessonPlan, data: formData);
 
       AppLogger.debug('api', 'Upload Response Status: ${response.statusCode}');
       AppLogger.debug('api', 'Upload Response Data: ${response.data}');
@@ -812,10 +813,10 @@ class ApiService {
     if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
     if (lessonHourId != null) queryParams['lesson_hour_id'] = lessonHourId;
 
-    AppLogger.debug('api', '📍 Calling getAbsensi: /attendance with params: $queryParams');
+    AppLogger.debug('api', '📍 Calling getAbsensi: ${ApiEndpoints.attendance} with params: $queryParams');
 
     final response = await dioClient.get(
-      '/attendance',
+      ApiEndpoints.attendance,
       queryParameters: queryParams,
     );
 
@@ -854,7 +855,7 @@ class ApiService {
     String? lessonHourId,
   }) async {
     String query =
-        '/attendance?teacher_id=$teacherId&subject_id=$subjectId&date=$date';
+        '${ApiEndpoints.attendance}?teacher_id=$teacherId&subject_id=$subjectId&date=$date';
     if (classId != null && classId.isNotEmpty) {
       query += '&class_id=$classId';
     }
@@ -906,7 +907,7 @@ class ApiService {
       }
 
       final response = await dioClient.get(
-        '/attendance',
+        ApiEndpoints.attendance,
         queryParameters: params,
       );
       final result = response.data;
@@ -951,7 +952,7 @@ class ApiService {
     if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
 
     final response = await dioClient.get(
-      '/attendance/summary',
+      ApiEndpoints.attendanceSummary,
       queryParameters: queryParams,
     );
 
@@ -1005,7 +1006,7 @@ class ApiService {
       }
 
       final response = await dioClient.get(
-        '/attendance/summary',
+        ApiEndpoints.attendanceSummary,
         queryParameters: params,
       );
       final result = response.data;
@@ -1033,7 +1034,7 @@ class ApiService {
 
   /// Creates a new attendance record. Like `Attendance::create($data)` in Laravel.
   static Future<dynamic> createAttendance(Map<String, dynamic> data) async {
-    final response = await dioClient.post('/attendance', data: data);
+    final response = await dioClient.post(ApiEndpoints.attendance, data: data);
     return response.data;
   }
 
@@ -1052,7 +1053,7 @@ class ApiService {
       if (lessonHourId != null) params['lesson_hour_id'] = lessonHourId;
 
       final response = await dioClient.delete(
-        '/attendance',
+        ApiEndpoints.attendance,
         queryParameters: params,
       );
       return response.data;
@@ -1066,7 +1067,7 @@ class ApiService {
   /// Like `SchoolConfig::getGradeLevels()` in Laravel. Falls back to 1-12.
   Future<List<int>> getGradeLevels() async {
     try {
-      final response = await dioClient.get('/school-configs/grade-levels');
+      final response = await dioClient.get(ApiEndpoints.schoolConfigGradeLevels);
       final result = response.data;
       return result is List
           ? result.cast<int>()
@@ -1081,7 +1082,7 @@ class ApiService {
   Future<List<dynamic>> getClassBySubjectId(String subjectId) async {
     try {
       final result = await get(
-        '/class-by-mata-pelajaran?subject_id=$subjectId',
+        '${ApiEndpoints.classBySubject}?subject_id=$subjectId',
       );
 
       // Handle Map format (pagination or error response)
@@ -1105,7 +1106,7 @@ class ApiService {
   Future<dynamic> createNilai(Map<String, dynamic> data) async {
     // Sanitize data - ubah undefined menjadi null
     final sanitizedData = _sanitizeData(data);
-    return await post('/grade', sanitizedData);
+    return await post(ApiEndpoints.grade, sanitizedData);
   }
 
   Future<dynamic> updateNilai(String id, Map<String, dynamic> data) async {
@@ -1133,7 +1134,7 @@ class ApiService {
   // Get mata pelajaran with kelas data
   Future<List<dynamic>> getSubjectsWithClasses() async {
     try {
-      final result = await get('/subject-with-class');
+      final result = await get(ApiEndpoints.subjectWithClass);
       return result is List ? result : [];
     } catch (e) {
       AppLogger.error('api', 'Error getting mata pelajaran with kelas: $e');
@@ -1208,7 +1209,7 @@ class ApiService {
   static Future<void> markAttendanceRead({required String studentId}) async {
     try {
       await dioClient.post(
-        '/attendance/mark-read',
+        ApiEndpoints.attendanceMarkRead,
         data: {'student_id': studentId},
       );
     } catch (e) {
@@ -1221,7 +1222,7 @@ class ApiService {
     List<String>? billIds,
   }) async {
     try {
-      await dioClient.post('/bill/mark-read', data: {
+      await dioClient.post(ApiEndpoints.billMarkRead, data: {
         if (studentId != null) 'student_id': studentId,
         if (billIds != null) 'bill_ids': billIds,
       });
@@ -1233,7 +1234,7 @@ class ApiService {
   static Future<void> markSingleBillRead({required String billId}) async {
     try {
       await dioClient.post(
-        '/bill/mark-single-read',
+        ApiEndpoints.billMarkSingleRead,
         data: {'bill_id': billId},
       );
     } catch (e) {
@@ -1243,7 +1244,7 @@ class ApiService {
 
   static Future<int> getUnreadBillingCount() async {
     try {
-      final response = await dioClient.get('/bill/unread-count');
+      final response = await dioClient.get(ApiEndpoints.billUnreadCount);
       final result = response.data;
       return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
     } catch (e) {
@@ -1258,7 +1259,7 @@ class ApiService {
   static Future<Map<String, dynamic>> checkHealth() async {
     try {
       final response = await dioClient.get(
-        '/health',
+        ApiEndpoints.health,
         options: Options(
           receiveTimeout: const Duration(seconds: 10),
           sendTimeout: const Duration(seconds: 10),
@@ -1280,7 +1281,7 @@ class ApiService {
   // Manual payment entry by admin (for offline/cash payments)
   Future<dynamic> inputManualPayment(Map<String, dynamic> data) async {
     try {
-      return await post('/payment/manual', data);
+      return await post(ApiEndpoints.paymentManual, data);
     } catch (e) {
       AppLogger.error('api', 'Error input pembayaran manual: $e');
       rethrow;
@@ -1302,7 +1303,7 @@ class ApiService {
         body['payment_type_id'] = paymentTypeId;
       }
       final apiService = ApiService();
-      return await apiService.post('/generate-bill', body);
+      return await apiService.post(ApiEndpoints.generateBill, body);
     } catch (e) {
       AppLogger.error('api', 'Error generating bills: $e');
       rethrow;
@@ -1313,7 +1314,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getFinanceDashboardStats() async {
     try {
       final apiService = ApiService();
-      final response = await apiService.get('/finance/dashboard');
+      final response = await apiService.get(ApiEndpoints.financeDashboard);
       if (response is Map<String, dynamic>) {
         return response;
       }
@@ -1332,7 +1333,7 @@ class ApiService {
     try {
       final apiService = ApiService();
       final response = await apiService.get(
-        '/finance/generated-months?payment_type_id=$paymentTypeId&academic_year_id=$academicYearId',
+        '${ApiEndpoints.financeGeneratedMonths}?payment_type_id=$paymentTypeId&academic_year_id=$academicYearId',
       );
       if (response is List) {
         return List<String>.from(response);
@@ -1381,7 +1382,7 @@ class ApiService {
       AppLogger.debug('api', 'FCM Token length: ${token.length}');
 
       final response = await dioClient.post(
-        '/fcm/token',
+        ApiEndpoints.fcmTokenEndpoint,
         data: {'token': token, 'device_type': deviceType},
       );
 
@@ -1407,7 +1408,7 @@ class ApiService {
       }
 
       final response = await dioClient.delete(
-        '/fcm/token',
+        ApiEndpoints.fcmTokenEndpoint,
         data: {'token': token},
       );
 
@@ -1442,7 +1443,7 @@ class ApiService {
 
     try {
       final response = await dioClient.get(
-        '/attendance/stats',
+        ApiEndpoints.attendanceStats,
         queryParameters: queryParams,
       );
 
@@ -1474,7 +1475,7 @@ class ApiService {
 
     try {
       final response = await dioClient.get(
-        '/finance/bills/stats',
+        ApiEndpoints.financeBillStats,
         queryParameters: queryParams,
       );
 
@@ -1488,7 +1489,7 @@ class ApiService {
 
   static Future<int> getUnreadGradeCount() async {
     try {
-      final response = await dioClient.get('/grade/unread-count');
+      final response = await dioClient.get(ApiEndpoints.gradeUnreadCount);
       final result = response.data;
       return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
     } catch (e) {
@@ -1500,7 +1501,7 @@ class ApiService {
   static Future<void> markGradeAsRead(List<String> gradeIds) async {
     if (gradeIds.isEmpty) return;
     try {
-      await dioClient.post('/grade/mark-read', data: {'grade_ids': gradeIds});
+      await dioClient.post(ApiEndpoints.gradeMarkRead, data: {'grade_ids': gradeIds});
     } catch (e) {
       AppLogger.error('api', 'Error marking grades as read: $e');
     }
@@ -1508,7 +1509,7 @@ class ApiService {
 
   static Future<int> getUnreadPresenceCount() async {
     try {
-      final response = await dioClient.get('/attendance/unread-count');
+      final response = await dioClient.get(ApiEndpoints.attendanceUnreadCount);
       final result = response.data;
       return int.tryParse(result['count']?.toString() ?? '0') ?? 0;
     } catch (e) {
@@ -1521,7 +1522,7 @@ class ApiService {
     if (attendanceIds.isEmpty) return;
     try {
       await dioClient.post(
-        '/attendance/mark-read',
+        ApiEndpoints.attendanceMarkRead,
         data: {'attendance_ids': attendanceIds},
       );
     } catch (e) {
@@ -1543,7 +1544,7 @@ class ApiService {
       if (role != null) params['role'] = role;
 
       final response = await dioClient.get(
-        '/attendance/dashboard-chart',
+        ApiEndpoints.attendanceDashboardChart,
         queryParameters: params,
       );
       final result = response.data;
@@ -1564,7 +1565,7 @@ class ApiService {
       if (academicYearId != null) params['academic_year_id'] = academicYearId;
 
       final response = await dioClient.get(
-        '/finance/dashboard-chart',
+        ApiEndpoints.financeDashboardChart,
         queryParameters: params,
       );
       final result = response.data;
