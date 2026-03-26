@@ -1727,10 +1727,11 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
   void dispose() {
     FCMService().syncTrigger.removeListener(_handleSyncTrigger);
     _animationController.dispose();
-    try {
-      ref.read(academicYearRiverpod).removeListener(_onYearChanged);
-    } catch (e) {
-      AppLogger.error('dashboard', 'Error removing AcademicYearProvider listener: $e');
+    // Guard ref access — may already be disposed during logout navigation
+    if (mounted) {
+      try {
+        ref.read(academicYearRiverpod).removeListener(_onYearChanged);
+      } catch (_) {}
     }
     super.dispose();
   }

@@ -587,10 +587,9 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
 
       final classId = _selectedClass!['id'].toString();
       final subjectId = _selectedSubject!['id'].toString();
-      final masterSubjectId = _selectedSubject?['subject_id']?.toString();
-      if (masterSubjectId == null) {
-        throw Exception('Master Subject ID not found for this subject.');
-      }
+      final masterSubjectId = _selectedSubject?['subject_id']?.toString()
+          ?? _selectedSubject?['id']?.toString()
+          ?? subjectId;
 
       final recapCacheKey = _buildRecapCacheKey();
 

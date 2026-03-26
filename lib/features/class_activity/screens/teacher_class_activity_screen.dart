@@ -3297,14 +3297,9 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         (s) => s['id']?.toString() == subjectId,
         orElse: () => <String, dynamic>{},
       );
-      final masterSubjectId = subject.isEmpty
-          ? null
-          : subject['subject_id']?.toString();
-
-      if (masterSubjectId == null) {
-        AppLogger.error('class_activity', 'Error: Master Subject ID not found for subject $subjectId');
-        return;
-      }
+      final masterSubjectId = subject.isNotEmpty
+          ? (subject['subject_id']?.toString() ?? subject['id']?.toString() ?? subjectId)
+          : subjectId;
 
       final babList = await getIt<ApiSubjectService>().getBabMateri(
         subjectId: masterSubjectId,

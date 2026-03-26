@@ -638,13 +638,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
         (s) => s['id'] == subjectId,
         orElse: () => null,
       );
-      final masterSubjectId = subject?['subject_id']?.toString();
-
-      if (masterSubjectId == null) {
-        AppLogger.error('material', 'Error: Master Subject ID not found for subject $subjectId');
-        if (mounted) setState(() => _isLoadingBab = false);
-        return;
-      }
+      // Fall back to subject's own id if master subject_id is missing
+      final masterSubjectId = subject?['subject_id']?.toString() ?? subject?['id']?.toString() ?? subjectId;
 
       final babMateri = await getIt<ApiSubjectService>().getBabMateri(
         subjectId: masterSubjectId,
