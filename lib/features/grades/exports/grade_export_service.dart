@@ -82,44 +82,44 @@ class ExcelNilaiService {
 
       // Validate required fields
       if (gradeItem['nis'] == null || gradeItem['nis'].toString().isEmpty) {
-        errors.add('Baris ${i + 1}: NIS tidak boleh kosong');
+        errors.add('Row ${i + 1}: NIS must not be empty');
       } else {
         validatedGrade['nis'] = gradeItem['nis'];
       }
 
       if (gradeItem['student_name'] == null ||
           gradeItem['student_name'].toString().isEmpty) {
-        errors.add('Baris ${i + 1}: Nama siswa tidak boleh kosong');
+        errors.add('Row ${i + 1}: Student name must not be empty');
       } else {
         validatedGrade['student_name'] = gradeItem['student_name'];
       }
 
       if (gradeItem['class_name'] == null ||
           gradeItem['class_name'].toString().isEmpty) {
-        errors.add('Baris ${i + 1}: Kelas tidak boleh kosong');
+        errors.add('Row ${i + 1}: Class name must not be empty');
       } else {
         validatedGrade['class_name'] = gradeItem['class_name'];
       }
 
       if (gradeItem['subject_name'] == null ||
           gradeItem['subject_name'].toString().isEmpty) {
-        errors.add('Baris ${i + 1}: Mata pelajaran tidak boleh kosong');
+        errors.add('Row ${i + 1}: Subject name must not be empty');
       } else {
         validatedGrade['subject_name'] = gradeItem['subject_name'];
       }
 
       if (gradeItem['type'] == null || gradeItem['type'].toString().isEmpty) {
-        errors.add('Baris ${i + 1}: Jenis nilai tidak boleh kosong');
+        errors.add('Row ${i + 1}: Grade type must not be empty');
       } else {
         validatedGrade['type'] = gradeItem['type'];
       }
 
       if (gradeItem['grade'] == null) {
-        errors.add('Baris ${i + 1}: Nilai tidak boleh kosong');
+        errors.add('Row ${i + 1}: Grade must not be empty');
       } else {
         final gradeValue = double.tryParse(gradeItem['grade'].toString());
         if (gradeValue == null || gradeValue < 0 || gradeValue > 100) {
-          errors.add('Baris ${i + 1}: Nilai harus antara 0-100');
+          errors.add('Row ${i + 1}: Grade must be between 0-100');
         } else {
           validatedGrade['grade'] = gradeValue;
         }
@@ -145,11 +145,11 @@ class ExcelNilaiService {
   /// Get a localized label for grade type codes (uh, tugas, uts, uas, pts, pas).
   /// Like a Laravel accessor that maps enum values to display strings.
   /// Uses [LanguageProvider] for i18n (en/id), similar to Laravel's `__()` helper.
-  static String getJenisNilaiLabel(
-    String jenis,
+  static String getGradeTypeLabel(
+    String gradeType,
     LanguageProvider languageProvider,
   ) {
-    switch (jenis) {
+    switch (gradeType) {
       case 'uh':
         return languageProvider.getTranslatedText({
           'en': 'Daily/Quiz',
@@ -178,7 +178,7 @@ class ExcelNilaiService {
           'id': 'PAS',
         });
       default:
-        return jenis.toUpperCase();
+        return gradeType.toUpperCase();
     }
   }
 }

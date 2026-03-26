@@ -798,7 +798,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     // Step 3: Fetch fresh data from API
     try {
       await Future.wait([
-        _loadJenisPembayaran(),
+        _loadPaymentTypes(),
         _loadTagihan(),
         _loadPembayaranPending(),
         _loadDashboardData(),
@@ -1663,7 +1663,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  Future<void> _loadJenisPembayaran() async {
+  Future<void> _loadPaymentTypes() async {
     try {
       final response = await _apiService.get('/payment-types');
       final List<dynamic> rawData;
@@ -3474,7 +3474,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }).toList();
   }
 
-  Widget _buildJenisPembayaranCard(Map<String, dynamic> item, int index) {
+  Widget _buildPaymentTypeCard(Map<String, dynamic> item, int index) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
@@ -4431,7 +4431,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 : ListView.builder(
                                     itemCount: filteredPaymentTypes.length,
                                     itemBuilder: (context, index) {
-                                      return _buildJenisPembayaranCard(
+                                      return _buildPaymentTypeCard(
                                         filteredPaymentTypes[index],
                                         index,
                                       );

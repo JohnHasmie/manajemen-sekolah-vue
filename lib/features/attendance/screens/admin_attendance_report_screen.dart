@@ -1729,14 +1729,14 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     LanguageProvider languageProvider,
     int index,
   ) {
-    final presentaseHadir = summary.totalStudents > 0
+    final attendanceRate = summary.totalStudents > 0
         ? (summary.present / summary.totalStudents * 100).round()
         : 0;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _navigateToDetailAbsensi(summary),
+        onTap: () => _navigateToAttendanceDetail(summary),
         borderRadius: BorderRadius.circular(16),
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -1845,7 +1845,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () => _deleteAbsensi(summary, languageProvider),
+                      onTap: () => _deleteAttendance(summary, languageProvider),
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
                         padding: EdgeInsets.all(6),
@@ -1894,7 +1894,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                   Spacer(),
                   // Detail button
                   GestureDetector(
-                    onTap: () => _navigateToDetailAbsensi(summary),
+                    onTap: () => _navigateToAttendanceDetail(summary),
                     child: Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 10,
@@ -1943,9 +1943,9 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                   minHeight: 6,
                   backgroundColor: ColorUtils.slate200,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    presentaseHadir >= 80
+                    attendanceRate >= 80
                         ? ColorUtils.success600
-                        : presentaseHadir >= 60
+                        : attendanceRate >= 60
                         ? ColorUtils.warning600
                         : ColorUtils.error600,
                   ),
@@ -1953,7 +1953,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
               ),
               SizedBox(height: AppSpacing.xs),
               Text(
-                '$presentaseHadir% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
+                '$attendanceRate% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
                 style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
               ),
             ],
@@ -2307,7 +2307,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         date1.day == date2.day;
   }
 
-  Future<void> _deleteAbsensi(
+  Future<void> _deleteAttendance(
     AttendanceSummary summary,
     LanguageProvider languageProvider,
   ) async {
@@ -2456,7 +2456,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     }
   }
 
-  void _navigateToDetailAbsensi(AttendanceSummary summary) {
+  void _navigateToAttendanceDetail(AttendanceSummary summary) {
     AppNavigator.push(context, AdminAbsensiDetailPage(
           subjectId: summary.subjectId,
           subjectName: summary.subjectName,

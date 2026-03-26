@@ -201,7 +201,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     }
   }
 
-  String _getJenisNilaiLabel(String jenis, LanguageProvider languageProvider) {
+  String _getGradeTypeLabel(String jenis, LanguageProvider languageProvider) {
     switch (jenis) {
       case 'uh':
         return languageProvider.getTranslatedText({
@@ -468,7 +468,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
             child: Row(
               children: [
                 Text(
-                  _getJenisNilaiLabel(
+                  _getGradeTypeLabel(
                     _confirmedGradeType ?? '',
                     languageProvider,
                   ),
@@ -616,7 +616,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 items: _jenisNilaiList.map((String jenis) {
                   return DropdownMenuItem<String>(
                     value: jenis,
-                    child: Text(_getJenisNilaiLabel(jenis, languageProvider)),
+                    child: Text(_getGradeTypeLabel(jenis, languageProvider)),
                   );
                 }).toList(),
                 onChanged: (String? newValue) {

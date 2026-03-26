@@ -170,7 +170,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
     }
   }
 
-  String _getJenisNilaiLabel(String jenis, LanguageProvider languageProvider) {
+  String _getGradeTypeLabel(String jenis, LanguageProvider languageProvider) {
     switch (jenis) {
       case 'uh':
         return languageProvider.getTranslatedText({
@@ -389,7 +389,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                                   'en': 'Type',
                                   'id': 'Jenis',
                                 }),
-                                _getJenisNilaiLabel(
+                                _getGradeTypeLabel(
                                   widget.jenisNilai,
                                   languageProvider,
                                 ),

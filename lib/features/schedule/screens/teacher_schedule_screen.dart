@@ -151,7 +151,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
     if (trigger != null && trigger['type'] == 'refresh_schedules') {
       if (mounted) {
         AppLogger.debug('schedule', 'Sync triggered: refresh_schedules');
-        _loadJadwal();
+        _loadSchedule();
       }
     }
   }
@@ -245,7 +245,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
           _loadSemesterData(),
           _loadAcademicYearData(),
         ]);
-        _loadJadwal();
+        _loadSchedule();
         return;
       }
 
@@ -362,7 +362,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
           _loadSemesterData(),
           _loadAcademicYearData(),
         ]);
-        _loadJadwal();
+        _loadSchedule();
       } else {
         setState(() => _isLoading = false);
       }
@@ -585,12 +585,12 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
       await LocalCacheService.invalidate(cacheKey);
     }
     await LocalCacheService.clearStartingWith('schedule_');
-    _loadJadwal(useCache: false);
+    _loadSchedule(useCache: false);
   }
 
   /// Fetches the teacher's schedule from API with cache-first strategy.
   /// Like `axios.get('/api/schedules')` in Vue with localStorage caching.
-  Future<void> _loadJadwal({bool useCache = true}) async {
+  Future<void> _loadSchedule({bool useCache = true}) async {
     if (_teacherId.isEmpty) {
       setState(() => _isLoading = false);
       return;
@@ -639,7 +639,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
       AppLogger.debug('schedule', '- Semester: $semesterToUse');
       AppLogger.debug('schedule', '- Academic Year: $academicYearToUse');
 
-      dynamic jadwalData;
+      dynamic scheduleData;
 
       if (_isHomeroomView && _selectedHomeroomClass != null) {
         // Fetch schedule for the homeroom class
@@ -650,17 +650,17 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
           academicYearId: academicYearToUse,
           limit: 100, // Fetch all for now
         );
-        jadwalData = result['data'] ?? [];
+        scheduleData = result['data'] ?? [];
       } else {
         // Fetch teaching schedule for the teacher
-        jadwalData = await getIt<ApiScheduleService>().getFilteredSchedule(
+        scheduleData = await getIt<ApiScheduleService>().getFilteredSchedule(
           teacherId: _teacherId,
           semester: semesterToUse,
           academicYear: academicYearToUse,
         );
       }
 
-      final schedules = jadwalData is List ? jadwalData : [];
+      final schedules = scheduleData is List ? scheduleData : [];
 
       AppLogger.info('schedule', 'Total schedule items loaded: ${schedules.length}');
 
@@ -754,7 +754,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
       _checkActiveFilter();
     });
     // Reload data to ensure semester and other contexts are correct
-    _loadSemesterData().then((_) => _loadJadwal());
+    _loadSemesterData().then((_) => _loadSchedule());
   }
 
   List<Map<String, dynamic>> _buildFilterChips(
@@ -828,7 +828,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
             _selectedFilterSemester = null;
             _checkActiveFilter();
           });
-          _loadJadwal();
+          _loadSchedule();
         },
       });
     }
@@ -1165,7 +1165,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                 }
                                 _checkActiveFilter();
                               });
-                              if (needsReload) _loadJadwal();
+                              if (needsReload) _loadSchedule();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primary,
@@ -1833,7 +1833,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                         value as Map<String, dynamic>;
                                   }
                                 });
-                                _loadJadwal();
+                                _loadSchedule();
                               }
                             });
                           },
@@ -2155,10 +2155,10 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                           'en': 'Refresh',
                                           'id': 'Muat Ulang',
                                         }),
-                                    onPressed: _loadJadwal,
+                                    onPressed: _loadSchedule,
                                   )
                                 : RefreshIndicator(
-                                    onRefresh: _loadJadwal,
+                                    onRefresh: _loadSchedule,
                                     color: _getPrimaryColor(),
                                     backgroundColor: Colors.white,
                                     child: _isTableView

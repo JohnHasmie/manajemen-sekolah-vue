@@ -79,42 +79,42 @@ class MateriPageState extends ConsumerState<MateriPage> {
   String? _selectedClassName;
   List<dynamic> _subjectList = [];
   List<dynamic> _classList = [];
-  List<dynamic> _babMateriList = [];
-  List<dynamic> _subBabMateriList = [];
+  List<dynamic> _chapterMaterialList = [];
+  List<dynamic> _subChapterMaterialList = [];
 
   // Search dan Filter
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = 'All';
 
   // State for expanded/collapsed
-  final Map<String, bool> _expandedBab = {};
+  final Map<String, bool> _expandedChapter = {};
 
   // State for checkboxes
-  final Map<String, bool> _checkedBab = {};
-  final Map<String, bool> _checkedSubBab = {};
+  final Map<String, bool> _checkedChapter = {};
+  final Map<String, bool> _checkedSubChapter = {};
 
   // State for generated (previously generated)
-  final Map<String, bool> _generatedBab = {};
-  final Map<String, bool> _generatedSubBab = {};
+  final Map<String, bool> _generatedChapter = {};
+  final Map<String, bool> _generatedSubChapter = {};
 
   // State for used (already used in class activity) - Blue Check
-  final Map<String, bool> _usedBab = {};
-  final Map<String, bool> _usedSubBab = {};
+  final Map<String, bool> _usedChapter = {};
+  final Map<String, bool> _usedSubChapter = {};
 
   // Teacher profile ID (from teachers table, not user ID)
   String? _teacherProfileId;
 
   // Get checked chapters that have not been generated yet
-  List<Map<String, dynamic>> _getCheckedNotGeneratedBab() {
-    return _babMateriList
+  List<Map<String, dynamic>> _getCheckedNotGeneratedChapters() {
+    return _chapterMaterialList
         .where((bab) {
-          final hasSubChapters = _subBabMateriList.any(
+          final hasSubChapters = _subChapterMaterialList.any(
             (sb) => sb['bab_id'].toString() == bab['id'].toString(),
           );
 
-          return _checkedBab[bab['id']] == true &&
-              _generatedBab[bab['id']] != true &&
-              _usedBab[bab['id']] != true && // Exclude used
+          return _checkedChapter[bab['id']] == true &&
+              _generatedChapter[bab['id']] != true &&
+              _usedChapter[bab['id']] != true && // Exclude used
               !hasSubChapters; // Only include if it has NO sub-chapters
         })
         .toList()
@@ -122,13 +122,13 @@ class MateriPageState extends ConsumerState<MateriPage> {
   }
 
   // Get checked sub-chapters that have not been generated yet
-  List<Map<String, dynamic>> _getCheckedNotGeneratedSubBab() {
-    return _subBabMateriList
+  List<Map<String, dynamic>> _getCheckedNotGeneratedSubChapters() {
+    return _subChapterMaterialList
         .where(
-          (subBab) =>
-              _checkedSubBab[subBab['id']] == true &&
-              _generatedSubBab[subBab['id']] != true &&
-              _usedSubBab[subBab['id']] != true, // Exclude used
+          (subChapter) =>
+              _checkedSubChapter[subChapter['id']] == true &&
+              _generatedSubChapter[subChapter['id']] != true &&
+              _usedSubChapter[subChapter['id']] != true, // Exclude used
         )
         .toList()
         .cast<Map<String, dynamic>>();
@@ -139,38 +139,38 @@ class MateriPageState extends ConsumerState<MateriPage> {
   /// Like a Vue `methods.navigateToGenerate()` that uses `this.$router.push()`.
   void _navigateToGenerateRPP() async {
     // Use ones that haven't been generated yet
-    final checkedBab = _getCheckedNotGeneratedBab();
-    final checkedSubBab = _getCheckedNotGeneratedSubBab();
+    final checkedChapters = _getCheckedNotGeneratedChapters();
+    final checkedSubChapters = _getCheckedNotGeneratedSubChapters();
 
-    if (checkedBab.isEmpty && checkedSubBab.isEmpty) {
+    if (checkedChapters.isEmpty && checkedSubChapters.isEmpty) {
             SnackBarUtils.showInfo(context, 'Pilih minimal 1 bab atau sub bab untuk di-generate');
       return;
     }
 
-    String? selectedBabId;
-    String? selectedSubBabId;
+    String? selectedChapterId;
+    String? selectedSubChapterId;
 
-    // If sub bab is selected, get its parent bab and the sub bab itself
-    if (checkedSubBab.isNotEmpty) {
-      final firstSubBab = checkedSubBab.first;
-      selectedSubBabId = firstSubBab['id']?.toString();
-      selectedBabId = firstSubBab['bab_id']?.toString();
+    // If sub-chapter is selected, get its parent chapter and the sub-chapter itself
+    if (checkedSubChapters.isNotEmpty) {
+      final firstSubChapter = checkedSubChapters.first;
+      selectedSubChapterId = firstSubChapter['id']?.toString();
+      selectedChapterId = firstSubChapter['bab_id']?.toString();
 
-      AppLogger.debug('material', 'Selected sub bab: $selectedSubBabId, parent bab: $selectedBabId',);
+      AppLogger.debug('material', 'Selected sub-chapter: $selectedSubChapterId, parent chapter: $selectedChapterId',);
     }
-    // If only bab is selected (no sub bab)
-    else if (checkedBab.isNotEmpty) {
-      selectedBabId = checkedBab.first['id']?.toString();
+    // If only chapter is selected (no sub-chapter)
+    else if (checkedChapters.isNotEmpty) {
+      selectedChapterId = checkedChapters.first['id']?.toString();
 
-      AppLogger.debug('material', 'Selected bab only: $selectedBabId');
+      AppLogger.debug('material', 'Selected chapter only: $selectedChapterId');
     }
 
     // Prepare additional materials (all checked sub-chapters)
     // We pass ALL checked sub-chapters as "additional" materials.
     // The activity form logic will filter out the primary one if needed.
     List<Map<String, dynamic>> additionalMaterials = [];
-    if (checkedSubBab.isNotEmpty) {
-      for (var sub in checkedSubBab) {
+    if (checkedSubChapters.isNotEmpty) {
+      for (var sub in checkedSubChapters) {
         additionalMaterials.add({
           'chapter_id': sub['bab_id'],
           'sub_chapter_id': sub['id'],
@@ -180,13 +180,13 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
     // Prepare list to mark as generated upon success
     final List<Map<String, dynamic>> materialsToMarkAsGenerated = [];
-    for (var bab in checkedBab) {
-      materialsToMarkAsGenerated.add({'bab_id': bab['id'], 'sub_bab_id': null});
+    for (var chapter in checkedChapters) {
+      materialsToMarkAsGenerated.add({'bab_id': chapter['id'], 'sub_bab_id': null});
     }
-    for (var subBab in checkedSubBab) {
+    for (var subChapter in checkedSubChapters) {
       materialsToMarkAsGenerated.add({
-        'bab_id': subBab['bab_id'],
-        'sub_bab_id': subBab['id'],
+        'bab_id': subChapter['bab_id'],
+        'sub_bab_id': subChapter['id'],
       });
     }
 
@@ -197,8 +197,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
           initialSubjectName: _getSelectedSubjectName(),
           initialClassId: _selectedClassId ?? widget.initialClassId,
           initialClassName: _selectedClassName ?? widget.initialClassName,
-          initialBabId: selectedBabId,
-          initialSubBabId: selectedSubBabId,
+          initialBabId: selectedChapterId,
+          initialSubBabId: selectedSubChapterId,
           initialAdditionalMaterials: additionalMaterials,
           materialsToMarkAsGenerated: materialsToMarkAsGenerated,
           autoShowActivityDialog: true,
@@ -206,7 +206,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
     // Refresh data after returning
     if (mounted && _selectedSubject != null) {
-      _loadBabMateri(_selectedSubject!);
+      _loadChapterMaterials(_selectedSubject!);
     }
   }
 
@@ -237,7 +237,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     super.dispose();
   }
 
-  String? _buildMateriCacheKey() {
+  String? _buildMaterialCacheKey() {
     final teacherId = widget.teacher['id']?.toString() ?? '';
     if (teacherId.isEmpty) return null;
     return 'materi_data_$teacherId';
@@ -301,8 +301,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
   void _applySubjectList(List<dynamic> subjects) {
     setState(() {
       _subjectList = subjects;
-      _babMateriList = [];
-      _subBabMateriList = [];
+      _chapterMaterialList = [];
+      _subChapterMaterialList = [];
       _isLoading = false;
 
       if (widget.initialSubjectId != null &&
@@ -317,7 +317,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     });
 
     if (_selectedSubject != null) {
-      _loadBabMateri(_selectedSubject!);
+      _loadChapterMaterials(_selectedSubject!);
     }
   }
 
@@ -340,7 +340,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
         return;
       }
 
-      final cacheKey = _buildMateriCacheKey();
+      final cacheKey = _buildMaterialCacheKey();
 
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
       final teacherProvider = ref.read(teacherRiverpod);
@@ -572,47 +572,47 @@ class MateriPageState extends ConsumerState<MateriPage> {
   /// Loads chapters (bab) and sub-chapters (sub-bab) for a subject.
   /// Like `axios.get('/api/subjects/{id}/chapters')` in Vue.
   /// Also loads progress data to mark generated/used chapters.
-  Future<void> _loadBabMateri(String subjectId, {bool useCache = true}) async {
+  Future<void> _loadChapterMaterials(String subjectId, {bool useCache = true}) async {
     final babCacheKey = CacheKeyBuilder.custom('materi_bab', widget.teacher['id'].toString(), subjectId);
 
     // Show skeleton if list is empty
-    if (_babMateriList.isEmpty && mounted) {
+    if (_chapterMaterialList.isEmpty && mounted) {
       setState(() => _isLoadingBab = true);
     }
 
     // Step 1: Try cache → return early if hit
-    if (useCache && _babMateriList.isEmpty) {
+    if (useCache && _chapterMaterialList.isEmpty) {
       try {
         final cached = await LocalCacheService.load(babCacheKey, ttl: const Duration(hours: 3));
         if (cached != null && mounted) {
           final cachedData = Map<String, dynamic>.from(cached);
           final cachedBab = List<dynamic>.from(cachedData['babMateri'] ?? []);
-          final cachedSubBab = List<dynamic>.from(cachedData['subBabMateri'] ?? []);
+          final cachedSubChapters = List<dynamic>.from(cachedData['subBabMateri'] ?? []);
 
           if (cachedBab.isNotEmpty) {
             setState(() {
-              _babMateriList = cachedBab;
-              _subBabMateriList = cachedSubBab;
+              _chapterMaterialList = cachedBab;
+              _subChapterMaterialList = cachedSubChapters;
               _isLoadingBab = false;
-              _expandedBab.clear();
-              _checkedBab.clear();
-              _checkedSubBab.clear();
-              _generatedBab.clear();
-              _generatedSubBab.clear();
-              _usedBab.clear();
-              _usedSubBab.clear();
+              _expandedChapter.clear();
+              _checkedChapter.clear();
+              _checkedSubChapter.clear();
+              _generatedChapter.clear();
+              _generatedSubChapter.clear();
+              _usedChapter.clear();
+              _usedSubChapter.clear();
               for (var bab in cachedBab) {
-                _expandedBab[bab['id'].toString()] = false;
-                _checkedBab[bab['id'].toString()] = false;
-                _generatedBab[bab['id'].toString()] = false;
-                _usedBab[bab['id'].toString()] = false;
+                _expandedChapter[bab['id'].toString()] = false;
+                _checkedChapter[bab['id'].toString()] = false;
+                _generatedChapter[bab['id'].toString()] = false;
+                _usedChapter[bab['id'].toString()] = false;
               }
-              for (var subBab in cachedSubBab) {
-                _checkedSubBab[subBab['id'].toString()] = false;
+              for (var sc in cachedSubChapters) {
+                _checkedSubChapter[sc['id'].toString()] = false;
               }
             });
             // Load progress from DB non-blocking (always fresh — this is user-specific state)
-            _loadMateriProgress(subjectId);
+            _loadMaterialProgress(subjectId);
             // Trigger tour check
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _checkAndShowTour();
@@ -651,27 +651,27 @@ class MateriPageState extends ConsumerState<MateriPage> {
       }
 
       setState(() {
-        _babMateriList = babMateri;
-        _subBabMateriList = List.from(allSubBabs);
+        _chapterMaterialList = babMateri;
+        _subChapterMaterialList = List.from(allSubBabs);
         _isLoadingBab = false;
 
-        _expandedBab.clear();
-        _checkedBab.clear();
-        _checkedSubBab.clear();
-        _generatedBab.clear();
-        _generatedSubBab.clear();
-        _usedBab.clear();
-        _usedSubBab.clear();
+        _expandedChapter.clear();
+        _checkedChapter.clear();
+        _checkedSubChapter.clear();
+        _generatedChapter.clear();
+        _generatedSubChapter.clear();
+        _usedChapter.clear();
+        _usedSubChapter.clear();
 
         for (var bab in babMateri) {
-          _expandedBab[bab['id'].toString()] = false;
-          _checkedBab[bab['id'].toString()] = false;
-          _generatedBab[bab['id'].toString()] = false;
-          _usedBab[bab['id'].toString()] = false;
+          _expandedChapter[bab['id'].toString()] = false;
+          _checkedChapter[bab['id'].toString()] = false;
+          _generatedChapter[bab['id'].toString()] = false;
+          _usedChapter[bab['id'].toString()] = false;
         }
 
-        for (var subBab in _subBabMateriList) {
-          _checkedSubBab[subBab['id'].toString()] = false;
+        for (var sc in _subChapterMaterialList) {
+          _checkedSubChapter[sc['id'].toString()] = false;
         }
 
       });
@@ -683,7 +683,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
       });
 
       // Load progress from database (non-blocking — UI already shows chapter structure)
-      _loadMateriProgress(subjectId);
+      _loadMaterialProgress(subjectId);
 
       // Trigger tour
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -695,83 +695,82 @@ class MateriPageState extends ConsumerState<MateriPage> {
       AppLogger.error('material', 'Error loading bab and sub-bab: $e');
       if (!mounted) return;
       setState(() => _isLoadingBab = false);
-      if (_babMateriList.isEmpty) {
+      if (_chapterMaterialList.isEmpty) {
                 SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
 
   // Handle checkbox change on sub-chapter
-  void _handleSubBabCheck(String subBabId, String babId, bool? value) {
+  void _handleSubChapterCheck(String subChapterId, String chapterId, bool? value) {
     // Prevent unchecking if already generated (Purple) or Used (Blue)
-    if ((_generatedSubBab[subBabId] == true || _usedSubBab[subBabId] == true) &&
+    if ((_generatedSubChapter[subChapterId] == true || _usedSubChapter[subChapterId] == true) &&
         value == false) {
       return;
     }
 
     setState(() {
-      _checkedSubBab[subBabId] = value ?? false;
+      _checkedSubChapter[subChapterId] = value ?? false;
 
       // Check if all sub-chapters in this chapter are checked
-      // Get the list of sub-chapters belonging to this babId
-      final subBabsForThisBab = _subBabMateriList.where((sb) {
-        return sb['bab_id'].toString() == babId.toString();
+      final subChaptersForThisChapter = _subChapterMaterialList.where((sb) {
+        return sb['bab_id'].toString() == chapterId.toString();
       }).toList();
 
-      if (subBabsForThisBab.isNotEmpty) {
+      if (subChaptersForThisChapter.isNotEmpty) {
         // Check if every sub-chapter is checked
-        final allChecked = subBabsForThisBab.every((sb) {
+        final allChecked = subChaptersForThisChapter.every((sb) {
           final sbId = sb['id'].toString();
-          return _checkedSubBab[sbId] == true;
+          return _checkedSubChapter[sbId] == true;
         });
 
         // Update chapter checkbox status
-        _checkedBab[babId] = allChecked;
+        _checkedChapter[chapterId] = allChecked;
 
-        AppLogger.debug('material', 'SubBab check changed: $subBabId -> $value');
-        AppLogger.debug('material', 'Bab $babId auto-check status: $allChecked');
+        AppLogger.debug('material', 'SubChapter check changed: $subChapterId -> $value');
+        AppLogger.debug('material', 'Chapter $chapterId auto-check status: $allChecked');
       }
     });
 
     // Save to database
-    _saveProgress(babId, subBabId, value ?? false);
+    _saveProgress(chapterId, subChapterId, value ?? false);
   }
 
   // Handle checkbox change on chapter
-  void _handleBabCheck(String babId, bool? value) {
+  void _handleChapterCheck(String chapterId, bool? value) {
     // Prevent unchecking if already generated (Purple) or Used (Blue)
-    if ((_generatedBab[babId] == true || _usedBab[babId] == true) &&
+    if ((_generatedChapter[chapterId] == true || _usedChapter[chapterId] == true) &&
         value == false) {
       return;
     }
 
     setState(() {
-      _checkedBab[babId] = value ?? false;
+      _checkedChapter[chapterId] = value ?? false;
 
-      // Update sub-babs logic:
-      // If checking Bab (True): Check all sub-babs.
-      // If unchecking Bab (False): Uncheck all sub-babs EXCEPT those that are Generated (Purple).
-      for (var subBab in _subBabMateriList.where(
-        (subBab) => subBab['bab_id'] == babId,
+      // Update sub-chapters logic:
+      // If checking chapter (True): Check all sub-chapters.
+      // If unchecking chapter (False): Uncheck all sub-chapters EXCEPT those that are Generated (Purple).
+      for (var subChapter in _subChapterMaterialList.where(
+        (sc) => sc['bab_id'] == chapterId,
       )) {
         if (value == true) {
-          _checkedSubBab[subBab['id']] = true;
+          _checkedSubChapter[subChapter['id']] = true;
         } else {
           // If unchecking, only uncheck if NOT generated and NOT used
-          if (_generatedSubBab[subBab['id']] != true &&
-              _usedSubBab[subBab['id']] != true) {
-            _checkedSubBab[subBab['id']] = false;
+          if (_generatedSubChapter[subChapter['id']] != true &&
+              _usedSubChapter[subChapter['id']] != true) {
+            _checkedSubChapter[subChapter['id']] = false;
           }
         }
       }
     });
 
-    // Save to database (bab and all its sub-babs)
-    _saveBabAndSubBabsProgress(babId, value ?? false);
+    // Save to database (chapter and all its sub-chapters)
+    _saveChapterAndSubChaptersProgress(chapterId, value ?? false);
   }
 
   // Load materi progress from database
-  Future<void> _loadMateriProgress(String subjectId) async {
+  Future<void> _loadMaterialProgress(String subjectId) async {
     try {
       final String? teacherId = widget.teacher['id'];
       if (teacherId == null) return;
@@ -796,42 +795,42 @@ class MateriPageState extends ConsumerState<MateriPage> {
       setState(() {
         // Apply checked and generated state from database
         for (var item in progress) {
-          final babId = item['bab_id'];
-          final subBabId = item['sub_bab_id'];
+          final chapterId = item['bab_id'];
+          final subChapterId = item['sub_bab_id'];
           final isChecked =
               item['is_checked'] == 1 || item['is_checked'] == true;
           final isGenerated =
               item['is_generated'] == 1 || item['is_generated'] == true;
           final isUsed = item['is_used'] == 1 || item['is_used'] == true;
 
-          if (subBabId != null) {
-            // Sub bab checked and generated status
-            _checkedSubBab[subBabId.toString()] = isChecked;
-            _generatedSubBab[subBabId.toString()] = isGenerated;
-            _usedSubBab[subBabId.toString()] = isUsed;
-          } else if (babId != null) {
-            // Bab checked and generated status (no specific sub bab)
-            _checkedBab[babId.toString()] = isChecked;
-            _generatedBab[babId.toString()] = isGenerated;
-            _usedBab[babId.toString()] = isUsed;
+          if (subChapterId != null) {
+            // Sub-chapter checked and generated status
+            _checkedSubChapter[subChapterId.toString()] = isChecked;
+            _generatedSubChapter[subChapterId.toString()] = isGenerated;
+            _usedSubChapter[subChapterId.toString()] = isUsed;
+          } else if (chapterId != null) {
+            // Chapter checked and generated status (no specific sub-chapter)
+            _checkedChapter[chapterId.toString()] = isChecked;
+            _generatedChapter[chapterId.toString()] = isGenerated;
+            _usedChapter[chapterId.toString()] = isUsed;
           }
         }
 
-        // Final pass: Recalculate Bab status based on Sub-Babs
-        // This ensures visual correctness even if Bab record is absent in DB
-        for (var bab in _babMateriList) {
-          final babId = bab['id'].toString();
-          final subBabsForThisBab = _subBabMateriList
-              .where((sb) => sb['bab_id'].toString() == babId)
+        // Final pass: Recalculate chapter status based on sub-chapters
+        // This ensures visual correctness even if chapter record is absent in DB
+        for (var bab in _chapterMaterialList) {
+          final chapterId = bab['id'].toString();
+          final subChaptersForThisChapter = _subChapterMaterialList
+              .where((sb) => sb['bab_id'].toString() == chapterId)
               .toList();
 
-          if (subBabsForThisBab.isNotEmpty) {
-            final allSubBabsChecked =
-                subBabsForThisBab.isNotEmpty &&
-                subBabsForThisBab.every(
-                  (sb) => _checkedSubBab[sb['id'].toString()] == true,
+          if (subChaptersForThisChapter.isNotEmpty) {
+            final allSubChaptersChecked =
+                subChaptersForThisChapter.isNotEmpty &&
+                subChaptersForThisChapter.every(
+                  (sb) => _checkedSubChapter[sb['id'].toString()] == true,
                 );
-            _checkedBab[babId] = allSubBabsChecked;
+            _checkedChapter[chapterId] = allSubChaptersChecked;
           }
         }
       });
@@ -842,8 +841,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
   // Save single progress to database
   Future<void> _saveProgress(
-    String babId,
-    String? subBabId,
+    String chapterId,
+    String? subChapterId,
     bool isChecked,
   ) async {
     try {
@@ -854,19 +853,19 @@ class MateriPageState extends ConsumerState<MateriPage> {
         'teacher_id': teacherId,
         'subject_id': _selectedSubject,
         'class_id': _selectedClassId,
-        'chapter_id': babId,
-        'sub_chapter_id': subBabId,
+        'chapter_id': chapterId,
+        'sub_chapter_id': subChapterId,
         'is_checked': isChecked ? 1 : 0,
       });
 
-      AppLogger.info('material', 'Progress saved: bab=$babId, sub_bab=$subBabId, checked=$isChecked',);
+      AppLogger.info('material', 'Progress saved: chapter=$chapterId, subChapter=$subChapterId, checked=$isChecked',);
     } catch (e) {
       AppLogger.error('material', 'Error saving progress: $e');
     }
   }
 
-  // Save bab and all its sub-babs progress to database
-  Future<void> _saveBabAndSubBabsProgress(String babId, bool isChecked) async {
+  // Save chapter and all its sub-chapters progress to database
+  Future<void> _saveChapterAndSubChaptersProgress(String chapterId, bool isChecked) async {
     try {
       final String? teacherId = widget.teacher['id'];
       if (teacherId == null || _selectedSubject == null) return;
@@ -874,35 +873,35 @@ class MateriPageState extends ConsumerState<MateriPage> {
       // Prepare batch items
       final List<Map<String, dynamic>> progressItems = [];
 
-      // Debug sub-bab count
-      final subBabsForThisBab = _subBabMateriList
-          .where((sb) => sb['bab_id'].toString() == babId.toString())
+      // Debug sub-chapter count
+      final subChaptersForThisChapter = _subChapterMaterialList
+          .where((sb) => sb['bab_id'].toString() == chapterId.toString())
           .toList();
 
-      AppLogger.debug('material', 'Found ${subBabsForThisBab.length} sub-babs for bab $babId');
+      AppLogger.debug('material', 'Found ${subChaptersForThisChapter.length} sub-chapters for chapter $chapterId');
 
-      // Add bab itself ONLY if it has NO sub-chapters
+      // Add chapter itself ONLY if it has NO sub-chapters
       // If it has sub-chapters, its status is derived and shouldn't be saved explicitly
-      if (subBabsForThisBab.isEmpty) {
+      if (subChaptersForThisChapter.isEmpty) {
         progressItems.add({
-          'bab_id': babId,
+          'bab_id': chapterId,
           'sub_bab_id': null,
           'is_checked': isChecked ? 1 : 0,
         });
       }
 
-      // Add all sub-babs of this bab
-      for (var subBab in subBabsForThisBab) {
+      // Add all sub-chapters of this chapter
+      for (var sc in subChaptersForThisChapter) {
         // Respect locks: If unchecking, don't include if Generated or Used
         if (isChecked == false) {
-          final isGenerated = _generatedSubBab[subBab['id']] == true;
-          final isUsed = _usedSubBab[subBab['id']] == true;
+          final isGenerated = _generatedSubChapter[sc['id']] == true;
+          final isUsed = _usedSubChapter[sc['id']] == true;
           if (isGenerated || isUsed) continue;
         }
 
         progressItems.add({
-          'bab_id': babId,
-          'sub_bab_id': subBab['id'],
+          'bab_id': chapterId,
+          'sub_bab_id': sc['id'],
           'is_checked': isChecked ? 1 : 0,
         });
       }
@@ -922,19 +921,19 @@ class MateriPageState extends ConsumerState<MateriPage> {
   }
 
   // Navigate to sub-chapter detail page
-  void _navigateToSubBabDetail(
-    Map<String, dynamic> subBab,
+  void _navigateToSubChapterDetail(
+    Map<String, dynamic> subChapter,
     Map<String, dynamic> bab,
   ) {
     AppNavigator.push(context, SubBabDetailPage(
           teacherId: _teacherProfileId ?? widget.teacher['id'],
           subjectId: _selectedSubject ?? '',
-          subBab: subBab,
+          subChapter: subChapter,
           bab: bab,
-          checked: _checkedSubBab[subBab['id'].toString()] ?? false,
+          checked: _checkedSubChapter[subChapter['id'].toString()] ?? false,
           onCheckChanged: (value) {
-            _handleSubBabCheck(
-              subBab['id'].toString(),
+            _handleSubChapterCheck(
+              subChapter['id'].toString(),
               bab['id'].toString(),
               value,
             );
@@ -942,30 +941,30 @@ class MateriPageState extends ConsumerState<MateriPage> {
         ));
   }
 
-  List<dynamic> _getFilteredBabMateri() {
+  List<dynamic> _getFilteredChapterMaterials() {
     final searchTerm = _searchController.text.toLowerCase();
 
     if (searchTerm.isEmpty) {
-      return _babMateriList;
+      return _chapterMaterialList;
     }
 
-    return _babMateriList.where((bab) {
-      final matchesBab =
+    return _chapterMaterialList.where((bab) {
+      final matchesChapter =
           (bab['judul_bab']?.toString().toLowerCase().contains(searchTerm) ??
           false);
 
       // Also search in related sub-chapters
-      final subBabMatches = _subBabMateriList
-          .where((subBab) => subBab['bab_id'] == bab['id'])
+      final subChapterMatches = _subChapterMaterialList
+          .where((sc) => sc['bab_id'] == bab['id'])
           .any(
-            (subBab) =>
-                subBab['judul_sub_bab']?.toString().toLowerCase().contains(
+            (sc) =>
+                sc['judul_sub_bab']?.toString().toLowerCase().contains(
                   searchTerm,
                 ) ??
                 false,
           );
 
-      return matchesBab || subBabMatches;
+      return matchesChapter || subChapterMatches;
     }).toList();
   }
 
@@ -1167,7 +1166,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                   child: Row(
                     children: [
                       Text(
-                        '${_getFilteredBabMateri().length} ${languageProvider.getTranslatedText({'en': 'materials found', 'id': 'materi ditemukan'})}',
+                        '${_getFilteredChapterMaterials().length} ${languageProvider.getTranslatedText({'en': 'materials found', 'id': 'materi ditemukan'})}',
                         style: TextStyle(
                           color: ColorUtils.slate500,
                           fontSize: 14,
@@ -1198,7 +1197,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                         padding: EdgeInsets.only(top: 8, bottom: 80),
                         showActions: false,
                       )
-                    : _babMateriList.isEmpty
+                    : _chapterMaterialList.isEmpty
                     ? _buildEmptyState(
                         languageProvider.getTranslatedText({
                           'en': 'No materials available for this subject',
@@ -1206,7 +1205,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                         }),
                         languageProvider,
                       )
-                    : _getFilteredBabMateri().isEmpty
+                    : _getFilteredChapterMaterials().isEmpty
                     ? EmptyState(
                         title: languageProvider.getTranslatedText({
                           'en': 'No Materials Found',
@@ -1220,7 +1219,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                         }),
                         icon: Icons.search,
                       )
-                    : _buildMateriList(),
+                    : _buildMaterialList(),
               ),
             ],
           ),
@@ -1273,7 +1272,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                             'en': 'No subjects available',
                             'id': 'Tidak ada mata pelajaran',
                           })
-                        : '${_babMateriList.length} ${languageProvider.getTranslatedText({'en': 'materials', 'id': 'bab materi'})} • ${_getSelectedSubjectName()}',
+                        : '${_chapterMaterialList.length} ${languageProvider.getTranslatedText({'en': 'materials', 'id': 'bab materi'})} • ${_getSelectedSubjectName()}',
                     style: TextStyle(fontSize: 12, color: ColorUtils.slate700),
                   ),
                 ),
@@ -1393,8 +1392,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
                     );
                     _selectedClassName =
                         selectedClass['name'] ?? selectedClass['nama'];
-                    _babMateriList = [];
-                    _subBabMateriList = [];
+                    _chapterMaterialList = [];
+                    _subChapterMaterialList = [];
                     _subjectList = [];
                     _selectedSubject = null;
                     _isLoadingBab = false;
@@ -1470,12 +1469,12 @@ class MateriPageState extends ConsumerState<MateriPage> {
                 if (newValue != null) {
                   setState(() {
                     _selectedSubject = newValue;
-                    _babMateriList = [];
-                    _subBabMateriList = [];
+                    _chapterMaterialList = [];
+                    _subChapterMaterialList = [];
                     _isLoadingBab = true;
                     _searchController.clear();
                   });
-                  _loadBabMateri(newValue);
+                  _loadChapterMaterials(newValue);
                 }
               },
             ),
@@ -1496,29 +1495,29 @@ class MateriPageState extends ConsumerState<MateriPage> {
     );
   }
 
-  Color _getCheckboxColor(String id, {bool isSubBab = false}) {
-    if (isSubBab) {
-      if (_usedSubBab[id] == true) return ColorUtils.info600;
-      if (_generatedSubBab[id] == true) return ColorUtils.violet500;
+  Color _getCheckboxColor(String id, {bool isSubChapter = false}) {
+    if (isSubChapter) {
+      if (_usedSubChapter[id] == true) return ColorUtils.info600;
+      if (_generatedSubChapter[id] == true) return ColorUtils.violet500;
       return ColorUtils.success600;
     } else {
-      if (_usedBab[id] == true) return ColorUtils.info600;
-      if (_generatedBab[id] == true) return ColorUtils.violet500;
+      if (_usedChapter[id] == true) return ColorUtils.info600;
+      if (_generatedChapter[id] == true) return ColorUtils.violet500;
       return ColorUtils.success600;
     }
   }
 
-  Widget _buildMateriList() {
-    final filteredBabMateri = _getFilteredBabMateri();
+  Widget _buildMaterialList() {
+    final filteredChapterMaterials = _getFilteredChapterMaterials();
 
     return ListView.builder(
       padding: EdgeInsets.all(AppSpacing.lg),
-      itemCount: filteredBabMateri.length,
+      itemCount: filteredChapterMaterials.length,
       itemBuilder: (context, index) {
-        final bab = filteredBabMateri[index];
+        final bab = filteredChapterMaterials[index];
         final cardColor = ColorUtils.getColorForIndex(index);
-        final babIdStr = bab['id'].toString();
-        final isExpanded = _expandedBab[babIdStr] ?? false;
+        final chapterIdStr = bab['id'].toString();
+        final isExpanded = _expandedChapter[chapterIdStr] ?? false;
 
         return Container(
           margin: EdgeInsets.only(bottom: 10),
@@ -1528,7 +1527,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
               borderRadius: BorderRadius.circular(14),
               onTap: () {
                 setState(() {
-                  _expandedBab[babIdStr] = !isExpanded;
+                  _expandedChapter[chapterIdStr] = !isExpanded;
                 });
               },
               child: Container(
@@ -1593,11 +1592,11 @@ class MateriPageState extends ConsumerState<MateriPage> {
                             ),
                           ),
                           Checkbox(
-                            value: _checkedBab[babIdStr] ?? false,
+                            value: _checkedChapter[chapterIdStr] ?? false,
                             onChanged: (value) {
-                              _handleBabCheck(babIdStr, value);
+                              _handleChapterCheck(chapterIdStr, value);
                             },
-                            activeColor: _getCheckboxColor(babIdStr),
+                            activeColor: _getCheckboxColor(chapterIdStr),
                           ),
                           Container(
                             width: 32,
@@ -1621,7 +1620,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                     // Sub Bab List (Expandable)
                     if (isExpanded) ...[
                       Divider(height: 1, color: ColorUtils.slate200),
-                      _buildSubBabList(bab),
+                      _buildSubChapterList(bab),
                     ],
                   ],
                 ),
@@ -1633,12 +1632,12 @@ class MateriPageState extends ConsumerState<MateriPage> {
     );
   }
 
-  Widget _buildSubBabList(Map<String, dynamic> bab) {
-    final subBabsForBab = _subBabMateriList
-        .where((subBab) => subBab['bab_id'].toString() == bab['id'].toString())
+  Widget _buildSubChapterList(Map<String, dynamic> bab) {
+    final subChaptersForChapter = _subChapterMaterialList
+        .where((sc) => sc['bab_id'].toString() == bab['id'].toString())
         .toList();
 
-    if (subBabsForBab.isEmpty) {
+    if (subChaptersForChapter.isEmpty) {
       return Padding(
         padding: EdgeInsets.all(AppSpacing.lg),
         child: Text(
@@ -1650,16 +1649,16 @@ class MateriPageState extends ConsumerState<MateriPage> {
     }
 
     return Column(
-      children: subBabsForBab.map((subBab) {
-        final subBabIdStr = subBab['id'].toString();
-        final subBabColor = ColorUtils.getColorForIndex(
-          int.parse(subBab['urutan']?.toString() ?? '0'),
+      children: subChaptersForChapter.map((subChapter) {
+        final subChapterIdStr = subChapter['id'].toString();
+        final subChapterColor = ColorUtils.getColorForIndex(
+          int.parse(subChapter['urutan']?.toString() ?? '0'),
         );
 
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => _navigateToSubBabDetail(subBab, bab),
+            onTap: () => _navigateToSubChapterDetail(subChapter, bab),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -1668,17 +1667,17 @@ class MateriPageState extends ConsumerState<MateriPage> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: subBabColor.withValues(alpha: 0.12),
+                      color: subChapterColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: subBabColor.withValues(alpha: 0.2),
+                        color: subChapterColor.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Center(
                       child: Text(
-                        '${subBab['urutan']}',
+                        '${subChapter['urutan']}',
                         style: TextStyle(
-                          color: subBabColor,
+                          color: subChapterColor,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1688,7 +1687,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                   SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(
-                      subBab['judul_sub_bab'] ?? 'Judul Sub Bab',
+                      subChapter['judul_sub_bab'] ?? 'Judul Sub Bab',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -1697,15 +1696,15 @@ class MateriPageState extends ConsumerState<MateriPage> {
                     ),
                   ),
                   Checkbox(
-                    value: _checkedSubBab[subBabIdStr] ?? false,
+                    value: _checkedSubChapter[subChapterIdStr] ?? false,
                     onChanged: (value) {
-                      _handleSubBabCheck(
-                        subBabIdStr,
+                      _handleSubChapterCheck(
+                        subChapterIdStr,
                         bab['id'].toString(),
                         value,
                       );
                     },
-                    activeColor: _getCheckboxColor(subBabIdStr, isSubBab: true),
+                    activeColor: _getCheckboxColor(subChapterIdStr, isSubChapter: true),
                   ),
                   Icon(
                     Icons.arrow_forward_ios_rounded,
@@ -1731,16 +1730,16 @@ class MateriPageState extends ConsumerState<MateriPage> {
   }
 
   int _getCheckedCount() {
-    final babChecked = _checkedBab.values.where((checked) => checked).length;
-    final subBabChecked = _checkedSubBab.values
+    final chapterChecked = _checkedChapter.values.where((checked) => checked).length;
+    final subChapterChecked = _checkedSubChapter.values
         .where((checked) => checked)
         .length;
-    return babChecked + subBabChecked;
+    return chapterChecked + subChapterChecked;
   }
 
   int _getCheckedNotGeneratedCount() {
-    return _getCheckedNotGeneratedBab().length +
-        _getCheckedNotGeneratedSubBab().length;
+    return _getCheckedNotGeneratedChapters().length +
+        _getCheckedNotGeneratedSubChapters().length;
   }
 
   Future<void> _checkAndShowTour() async {

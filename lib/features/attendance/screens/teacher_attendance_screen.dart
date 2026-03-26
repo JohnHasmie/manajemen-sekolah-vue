@@ -39,7 +39,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Like a Laravel Eloquent Model or a TypeScript interface -- a plain data class
 /// that holds computed attendance counts for a subject on a specific date.
 // Model for Attendance Summary
-class AbsensiSummary {
+class AttendanceSummaryItem {
   final String subjectId;
   final String subjectName;
   final DateTime date;
@@ -51,7 +51,7 @@ class AbsensiSummary {
   final String? lessonHourId;
   final String? lessonHourName;
 
-  AbsensiSummary({
+  AttendanceSummaryItem({
     required this.subjectId,
     required this.subjectName,
     required this.date,
@@ -119,7 +119,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   late TabController _tabController;
 
   // Data for View Results mode
-  List<AbsensiSummary> _attendanceSummaryList = [];
+  List<AttendanceSummaryItem> _attendanceSummaryList = [];
   bool _isLoadingSummary = false;
 
   // Data for Attendance Input mode
@@ -672,7 +672,7 @@ class PresencePageState extends ConsumerState<PresencePage>
           setState(() {
             _attendanceSummaryList = cachedList.map((item) {
               final m = Map<String, dynamic>.from(item);
-              return AbsensiSummary(
+              return AttendanceSummaryItem(
                 subjectId: m['subjectId'] ?? '',
                 subjectName: m['subjectName'] ?? '',
                 date: DateTime.tryParse(m['date'] ?? '') ?? DateTime.now(),
@@ -710,7 +710,7 @@ class PresencePageState extends ConsumerState<PresencePage>
         academicYearId: academicYearId,
       );
 
-      final Map<String, AbsensiSummary> summaryMap = {};
+      final Map<String, AttendanceSummaryItem> summaryMap = {};
 
       for (var record in attendanceData) {
         final subjectId = (record['subject_id'] ?? '').toString();
@@ -722,7 +722,7 @@ class PresencePageState extends ConsumerState<PresencePage>
         final dateStr = record['date']?.toString() ?? '';
         final date = _parseLocalDate(dateStr);
 
-        final summary = AbsensiSummary(
+        final summary = AttendanceSummaryItem(
           subjectId: subjectId,
           subjectName: subjectName,
           date: date,
@@ -1263,7 +1263,7 @@ class PresencePageState extends ConsumerState<PresencePage>
         );
   }
 
-  List<AbsensiSummary> _getFilteredSummaries() {
+  List<AttendanceSummaryItem> _getFilteredSummaries() {
     final searchTerm = _searchController.text.toLowerCase();
     final now = DateTime.now();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
@@ -2045,24 +2045,24 @@ class PresencePageState extends ConsumerState<PresencePage>
   }
 
   Widget _buildSummaryCard(
-    AbsensiSummary summary,
+    AttendanceSummaryItem summary,
     LanguageProvider languageProvider,
     int index,
   ) {
-    final presentaseHadir = summary.totalStudent > 0
+    final attendanceRate = summary.totalStudent > 0
         ? (summary.present / summary.totalStudent * 100).round()
         : 0;
 
-    final progressColor = presentaseHadir >= 80
+    final progressColor = attendanceRate >= 80
         ? ColorUtils.success600
-        : presentaseHadir >= 60
+        : attendanceRate >= 60
         ? ColorUtils.warning600
         : ColorUtils.error600;
 
     return Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _navigateToDetailAbsensi(summary),
+          onTap: () => _navigateToAttendanceDetail(summary),
           borderRadius: BorderRadius.circular(16),
           child: Container(
             margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -2171,7 +2171,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () => _deleteAbsensi(summary, languageProvider),
+                        onTap: () => _deleteAttendance(summary, languageProvider),
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
                           padding: EdgeInsets.all(6),
@@ -2220,7 +2220,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                     Spacer(),
                     // Detail button
                     GestureDetector(
-                      onTap: () => _navigateToDetailAbsensi(summary),
+                      onTap: () => _navigateToAttendanceDetail(summary),
                       child: Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 10,
@@ -2273,7 +2273,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                 ),
                 SizedBox(height: AppSpacing.xs),
                 Text(
-                  '$presentaseHadir% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
+                  '$attendanceRate% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
                   style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
                 ),
               ],
@@ -2319,7 +2319,7 @@ class PresencePageState extends ConsumerState<PresencePage>
     );
   }
 
-  void _navigateToDetailAbsensi(AbsensiSummary summary) {
+  void _navigateToAttendanceDetail(AttendanceSummaryItem summary) {
     AppNavigator.push(context, TeacherAbsensiDetailPage(
           subjectId: summary.subjectId,
           subjectName: summary.subjectName,
@@ -2818,7 +2818,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton.icon(
-                        onPressed: _isSubmitting ? null : _submitAbsensi,
+                        onPressed: _isSubmitting ? null : _submitAttendance,
                         icon: _isSubmitting
                             ? const SizedBox(
                                 width: 20,
@@ -3045,7 +3045,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   /// Like a Vue `methods.submitForm()` calling `axios.post('/api/attendance')`
   /// for each student. Shows progress, handles errors, and displays
   /// success/failure summary. In Laravel: `AttendanceController@store`.
-  Future<void> _submitAbsensi() async {
+  Future<void> _submitAttendance() async {
     final languageProvider = ref.read(languageRiverpod);
 
     // Validate teacher_id
@@ -3283,8 +3283,8 @@ class PresencePageState extends ConsumerState<PresencePage>
     }
   }
 
-  Future<void> _deleteAbsensi(
-    AbsensiSummary summary,
+  Future<void> _deleteAttendance(
+    AttendanceSummaryItem summary,
     LanguageProvider languageProvider,
   ) async {
     // Show confirmation dialog

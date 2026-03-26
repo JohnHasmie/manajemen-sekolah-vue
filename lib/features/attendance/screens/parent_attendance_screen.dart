@@ -856,7 +856,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   Widget _buildMonthlySummary() {
     final languageProvider = ref.read(languageRiverpod);
     final totalDays = _monthlySummary.values.reduce((a, b) => a + b);
-    final presentaseAbsensi = totalDays > 0
+    final attendancePercentage = totalDays > 0
         ? ((_monthlySummary['hadir']! + _monthlySummary['terlambat']!) /
                   totalDays *
                   100)
@@ -913,7 +913,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '$presentaseAbsensi%',
+                  '$attendancePercentage%',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,

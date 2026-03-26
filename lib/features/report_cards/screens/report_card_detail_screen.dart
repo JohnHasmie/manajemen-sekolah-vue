@@ -662,7 +662,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                       controller: _tabController,
                       children: [
                         _buildSikapTab(),
-                        _buildNilaiTab(),
+                        _buildGradeTab(),
                         _buildTambahanTab(),
                         _buildInfoTab(),
                       ],
@@ -787,7 +787,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
   }
 
   // --- TAB 2: NILAI ---
-  Widget _buildNilaiTab() {
+  Widget _buildGradeTab() {
     return ListView.builder(
       padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: _subjects.length,

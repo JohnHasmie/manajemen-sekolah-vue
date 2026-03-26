@@ -141,7 +141,7 @@ class RaportPrintScreen extends StatelessWidget {
                       const SizedBox(height: AppSpacing.xxl),
                       _buildSikapSection(),
                       const SizedBox(height: AppSpacing.lg),
-                      _buildNilaiSection(),
+                      _buildGradeSection(),
                       const SizedBox(height: AppSpacing.lg),
                       _buildEkstraSection(),
                       const SizedBox(height: AppSpacing.lg),
@@ -278,7 +278,7 @@ class RaportPrintScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNilaiSection() {
+  Widget _buildGradeSection() {
     final List<dynamic> subjects = reportCardData['raport_subjects'] ?? [];
 
     return Column(
