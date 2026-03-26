@@ -97,7 +97,7 @@ class ApiClassService {
     int page = 1,
     int limit = 10,
     String? gradeLevel,
-    String? waliclassId,
+    String? homeroomTeacherId,
     String? search,
     String? academicYearId,
     String? hasHomeroomTeacher,
@@ -115,8 +115,8 @@ class ApiClassService {
     if (gradeLevel != null && gradeLevel.isNotEmpty) {
       queryParams['grade_level'] = gradeLevel;
     }
-    if (waliclassId != null && waliclassId.isNotEmpty) {
-      queryParams['homeroom_teacher_id'] = waliclassId;
+    if (homeroomTeacherId != null && homeroomTeacherId.isNotEmpty) {
+      queryParams['homeroom_teacher_id'] = homeroomTeacherId;
     }
     if (search != null && search.isNotEmpty) {
       queryParams['search'] = search;

@@ -28,7 +28,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// teacher/subject IDs, and a checkbox callback.
 class SubBabDetailPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> subChapter;
-  final Map<String, dynamic> bab;
+  final Map<String, dynamic> chapter;
   final String teacherId;
   final String subjectId;
   final bool checked;
@@ -37,7 +37,7 @@ class SubBabDetailPage extends ConsumerStatefulWidget {
   const SubBabDetailPage({
     super.key,
     required this.subChapter,
-    required this.bab,
+    required this.chapter,
     required this.teacherId,
     required this.subjectId,
     required this.checked,
@@ -94,8 +94,8 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     if (mounted) setState(() => _isLoading = true);
 
     try {
-      final contentMaterial = await getIt<ApiSubjectService>().getContentMateri(
-        subBabId: widget.subChapter['id'].toString(),
+      final contentMaterial = await getIt<ApiSubjectService>().getContentMaterials(
+        subChapterId: widget.subChapter['id'].toString(),
       );
       if (!mounted) return;
 
@@ -113,7 +113,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   }
 
   Future<void> _loadAiContent() async {
-    final aiCacheKey = CacheKeyBuilder.custom('materi_ai', '${widget.teacherId}_${widget.bab['id']}', widget.subChapter['id'].toString());
+    final aiCacheKey = CacheKeyBuilder.custom('materi_ai', '${widget.teacherId}_${widget.chapter['id']}', widget.subChapter['id'].toString());
 
     // Try local cache — return early if hit
     try {
@@ -139,7 +139,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
       try {
         final cacheResult = await getIt<ApiSubjectService>().checkMaterialCache(
           teacherId: widget.teacherId,
-          chapterId: widget.bab['id'].toString(),
+          chapterId: widget.chapter['id'].toString(),
           subChapterId: widget.subChapter['id'].toString(),
         );
         if (!mounted) return;
@@ -175,7 +175,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
         try {
           final listResult = await getIt<ApiSubjectService>().listGeneratedMaterials(
             teacherId: widget.teacherId,
-            chapterId: widget.bab['id'].toString(),
+            chapterId: widget.chapter['id'].toString(),
           );
           if (!mounted) return;
 
@@ -318,7 +318,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'BAB ${widget.bab['urutan']}',
+                      'BAB ${widget.chapter['urutan']}',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -326,7 +326,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                     ),
                     SizedBox(height: 2),
                     Text(
-                      widget.bab['judul_bab'] ?? 'Judul Bab',
+                      widget.chapter['judul_bab'] ?? 'Judul Bab',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -1585,7 +1585,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     AppNavigator.push(context, MateriAiResultScreen(
           teacherId: widget.teacherId,
           subjectId: widget.subjectId,
-          chapterId: widget.bab['id'].toString(),
+          chapterId: widget.chapter['id'].toString(),
           subChapterId: widget.subChapter['id'].toString(),
           title: widget.subChapter['judul_sub_bab'] ?? 'Materi Pembelajaran',
         )).then((_) {

@@ -31,8 +31,8 @@ class AddActivityDialog extends ConsumerStatefulWidget {
   final DateTime? initialDate;
   final String? initialSubjectId;
   final String? initialClassId;
-  final String? initialBabId;
-  final String? initialSubBabId;
+  final String? initialChapterId;
+  final String? initialSubChapterId;
   final bool isEditMode;
   final dynamic activityData;
 
@@ -52,8 +52,8 @@ class AddActivityDialog extends ConsumerStatefulWidget {
     this.initialDate,
     this.initialSubjectId,
     this.initialClassId,
-    this.initialBabId,
-    this.initialSubBabId,
+    this.initialChapterId,
+    this.initialSubChapterId,
     this.initialAdditionalMaterials,
     this.materialsToMarkAsGenerated,
     this.isEditMode = false,
@@ -85,13 +85,11 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   List<dynamic> _studentList = [];
 
   // Bab & Sub Bab Materi
-  bool _isLoadingBab = false;
-  List<dynamic> _babMateriList = [];
-  List<dynamic> _subBabMateriList = [];
-  String? _selectedBabId;
-  String? _selectedSubBabId; // Primary selection (kept for backward compat)
-  final List<String> _selectedSubBabIds = []; // Multi-selection support
-  bool _useMateriTitle = false; // Toggle: use bab/sub bab or manual input
+  bool _isLoadingChapters = false;
+  List<dynamic> _chapterMaterialList = [];
+  List<dynamic> _subChapterMaterialList = [];
+  final List<String> _selectedSubChapterIds = []; // Multi-selection support
+  bool _useMaterialTitle = false; // Toggle: use chapter/sub-chapter or manual input
 
   final List<String> _days = [
     'Senin',
@@ -112,18 +110,18 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     _selectedDay = _days[_selectedDate!.weekday - 1];
     _selectedSubjectId = widget.initialSubjectId;
     _selectedClassId = widget.initialClassId;
-    _selectedBabId = widget.initialBabId;
-    _selectedSubBabId = widget.initialSubBabId;
+    _selectedChapterId = widget.initialChapterId;
+    _selectedSubChapterId = widget.initialSubChapterId;
 
     // Initialize multi-select list
-    if (_selectedSubBabId != null) {
-      _selectedSubBabIds.add(_selectedSubBabId!);
+    if (_selectedSubChapterId != null) {
+      _selectedSubChapterIds.add(_selectedSubChapterId!);
     }
     if (widget.initialAdditionalMaterials != null) {
       for (var item in widget.initialAdditionalMaterials!) {
         final subId = item['sub_chapter_id']?.toString();
-        if (subId != null && !_selectedSubBabIds.contains(subId)) {
-          _selectedSubBabIds.add(subId);
+        if (subId != null && !_selectedSubChapterIds.contains(subId)) {
+          _selectedSubChapterIds.add(subId);
         }
       }
     }
@@ -152,8 +150,8 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     }
 
     // If initial bab is provided, enable material title mode
-    if (_selectedBabId != null || _selectedSubBabId != null) {
-      _useMateriTitle = true;
+    if (_selectedChapterId != null || _selectedSubChapterId != null) {
+      _useMaterialTitle = true;
     }
 
     // Debug logging
@@ -165,9 +163,9 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     //   print('Initial target: ${widget.initialTarget}');
     //   print('Initial subject ID: $_selectedSubjectId');
     //   print('Initial class ID: $_selectedClassId');
-    //   print('Initial bab ID: $_selectedBabId');
-    //   print('Initial sub bab ID: $_selectedSubBabId');
-    //   print('Use materi title: $_useMateriTitle');
+    //   print('Initial bab ID: $_selectedChapterId');
+    //   print('Initial sub bab ID: $_selectedSubChapterId');
+    //   print('Use materi title: $_useMaterialTitle');
     //   print('Initial date: $_selectedDate');
     // }
 
@@ -180,9 +178,9 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         // Load bab materi for the initial subject
         _loadBabMateri(_selectedSubjectId!).then((_) {
           // After bab list loaded, load sub bab if initial bab is provided
-          if (_selectedBabId != null) {
-            AppLogger.debug('class_activity', 'Loading sub bab for bab: $_selectedBabId');
-            _loadSubBabMateri(_selectedBabId!).then((_) {
+          if (_selectedChapterId != null) {
+            AppLogger.debug('class_activity', 'Loading sub bab for bab: $_selectedChapterId');
+            _loadSubBabMateri(_selectedChapterId!).then((_) {
               // After sub bab loaded, update title
               _updateTitleFromMateri();
             });
@@ -260,8 +258,8 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       AppLogger.debug('class_activity', 'Subject ID: $subjectId');
 
       setState(() {
-        _isLoadingBab = true;
-        _babMateriList = []; // Clear previous list while loading
+        _isLoadingChapters = true;
+        _chapterMaterialList = []; // Clear previous list while loading
       });
 
       // Find Master Subject ID from the selected School Subject ID
@@ -273,45 +271,45 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
           ? (subject['subject_id']?.toString() ?? subject['id']?.toString() ?? subjectId)
           : subjectId;
 
-      final babList = await getIt<ApiSubjectService>().getBabMateri(
+      final chapterList = await getIt<ApiSubjectService>().getChapterMaterials(
         subjectId: masterSubjectId,
       );
 
       if (kDebugMode) {
-        AppLogger.debug('class_activity', 'API Response - Bab count: ${babList.length}');
-        if (babList.isNotEmpty) {
-          AppLogger.debug('class_activity', 'First item structure: ${babList[0]}');
-          AppLogger.debug('class_activity', 'Available fields: ${babList[0].keys}');
-          AppLogger.debug('class_activity', 'Judul Bab: ${babList[0]['judul_bab']}');
+        AppLogger.debug('class_activity', 'API Response - Bab count: ${chapterList.length}');
+        if (chapterList.isNotEmpty) {
+          AppLogger.debug('class_activity', 'First item structure: ${chapterList[0]}');
+          AppLogger.debug('class_activity', 'Available fields: ${chapterList[0].keys}');
+          AppLogger.debug('class_activity', 'Judul Bab: ${chapterList[0]['judul_bab']}');
         }
       }
 
       setState(() {
-        _babMateriList = babList;
+        _chapterMaterialList = chapterList;
         // Only reset if no initial values were provided
-        if (widget.initialBabId == null) {
-          _selectedBabId = null;
+        if (widget.initialChapterId == null) {
+          _selectedChapterId = null;
         }
-        if (widget.initialSubBabId == null) {
-          _selectedSubBabId = null;
+        if (widget.initialSubChapterId == null) {
+          _selectedSubChapterId = null;
         }
         // Only clear sub bab list if no initial sub bab
-        if (widget.initialSubBabId == null) {
-          _subBabMateriList = [];
+        if (widget.initialSubChapterId == null) {
+          _subChapterMaterialList = [];
         }
-        _isLoadingBab = false;
+        _isLoadingChapters = false;
       });
 
-      AppLogger.debug('class_activity', 'State updated - _babMateriList.length: ${_babMateriList.length}',);
-      AppLogger.debug('class_activity', 'Current _selectedBabId: $_selectedBabId');
-      AppLogger.debug('class_activity', 'Current _selectedSubBabId: $_selectedSubBabId');
+      AppLogger.debug('class_activity', 'State updated - _chapterMaterialList.length: ${_chapterMaterialList.length}',);
+      AppLogger.debug('class_activity', 'Current _selectedChapterId: $_selectedChapterId');
+      AppLogger.debug('class_activity', 'Current _selectedSubChapterId: $_selectedSubChapterId');
       AppLogger.debug('class_activity', '=============================');
     } catch (e) {
       AppLogger.error('class_activity', 'ERROR loading bab materi: $e');
       AppLogger.debug('class_activity', 'Stack trace: ${StackTrace.current}');
       if (mounted) {
         setState(() {
-          _isLoadingBab = false;
+          _isLoadingChapters = false;
         });
                 SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
@@ -323,7 +321,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       AppLogger.debug('class_activity', '===== LOADING SUB BAB MATERI =====');
       AppLogger.debug('class_activity', 'Bab ID: $babId');
 
-      final subBabList = await getIt<ApiSubjectService>().getSubBabMateri(babId: babId);
+      final subBabList = await getIt<ApiSubjectService>().getSubChapterMaterials(chapterId: babId);
 
       if (kDebugMode) {
         AppLogger.debug('class_activity', 'API Response - Sub Bab count: ${subBabList.length}');
@@ -335,15 +333,15 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       }
 
       setState(() {
-        _subBabMateriList = subBabList;
+        _subChapterMaterialList = subBabList;
         // Only reset if no initial value was provided
-        if (widget.initialSubBabId == null) {
-          _selectedSubBabId = null;
+        if (widget.initialSubChapterId == null) {
+          _selectedSubChapterId = null;
         }
       });
 
-      AppLogger.debug('class_activity', 'State updated - _subBabMateriList.length: ${_subBabMateriList.length}',);
-      AppLogger.debug('class_activity', 'Current _selectedSubBabId: $_selectedSubBabId');
+      AppLogger.debug('class_activity', 'State updated - _subChapterMaterialList.length: ${_subChapterMaterialList.length}',);
+      AppLogger.debug('class_activity', 'Current _selectedSubChapterId: $_selectedSubChapterId');
       AppLogger.debug('class_activity', '==================================');
     } catch (e) {
       AppLogger.error('class_activity', 'ERROR loading sub bab materi: $e');
@@ -354,7 +352,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     }
   }
 
-  String _getBabName(dynamic bab) {
+  String _getChapterName(dynamic bab) {
     // Try multiple possible field names (backend returns 'chapter_title')
     return bab['chapter_title']?.toString() ??
         bab['judul_bab']?.toString() ??
@@ -365,7 +363,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         'Unknown';
   }
 
-  String _getSubBabName(dynamic subBab) {
+  String _getSubChapterName(dynamic subBab) {
     // Try multiple possible field names (backend returns 'sub_chapter_title')
     return subBab['sub_chapter_title']?.toString() ??
         subBab['judul_sub_bab']?.toString() ??
@@ -377,43 +375,43 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   }
 
   void _updateTitleFromMateri() {
-    String babName = '';
-    String subBabName = '';
+    String chapterName = '';
+    String subChapterName = '';
 
     // Get bab name if selected
-    if (_selectedBabId != null && _babMateriList.isNotEmpty) {
-      final bab = _babMateriList.firstWhere(
-        (b) => b['id']?.toString() == _selectedBabId,
+    if (_selectedChapterId != null && _chapterMaterialList.isNotEmpty) {
+      final chapter = _chapterMaterialList.firstWhere(
+        (b) => b['id']?.toString() == _selectedChapterId,
         orElse: () => <String, dynamic>{},
       );
-      if (bab.isNotEmpty) {
+      if (chapter.isNotEmpty) {
         // Check if the map is not empty
-        babName = _getBabName(bab);
+        chapterName = _getChapterName(chapter);
       }
     }
 
     // Get sub bab name if selected
-    if (_selectedSubBabId != null && _subBabMateriList.isNotEmpty) {
-      final subBab = _subBabMateriList.firstWhere(
-        (item) => item['id']?.toString() == _selectedSubBabId,
+    if (_selectedSubChapterId != null && _subChapterMaterialList.isNotEmpty) {
+      final subBab = _subChapterMaterialList.firstWhere(
+        (item) => item['id']?.toString() == _selectedSubChapterId,
         orElse: () => <String, dynamic>{},
       );
       if (subBab.isNotEmpty) {
-        subBabName = _getSubBabName(subBab);
+        subChapterName = _getSubChapterName(subBab);
       }
     }
 
     // Build title based on what's selected
     String title = '';
-    if (babName.isNotEmpty && subBabName.isNotEmpty) {
+    if (chapterName.isNotEmpty && subChapterName.isNotEmpty) {
       // Both selected: "Bab - Sub Bab"
-      title = '$babName - $subBabName';
-    } else if (babName.isNotEmpty) {
+      title = '$chapterName - $subChapterName';
+    } else if (chapterName.isNotEmpty) {
       // Only bab selected
-      title = babName;
-    } else if (subBabName.isNotEmpty) {
+      title = chapterName;
+    } else if (subChapterName.isNotEmpty) {
       // Only sub bab selected (edge case)
-      title = subBabName;
+      title = subChapterName;
     }
 
     if (title.isNotEmpty && title != 'Unknown') {
@@ -567,37 +565,37 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       };
 
       // Save chapter_id and sub_chapter_id if selected from materi
-      if (_useMateriTitle && _selectedBabId != null) {
-        data['chapter_id'] = _selectedBabId;
+      if (_useMaterialTitle && _selectedChapterId != null) {
+        data['chapter_id'] = _selectedChapterId;
       } else if (_selectedChapterId != null) {
         // Fallback to old chapter props if exists
         data['chapter_id'] = _selectedChapterId;
       }
 
-      if (_useMateriTitle && _selectedSubBabId != null) {
-        data['sub_chapter_id'] = _selectedSubBabId;
+      if (_useMaterialTitle && _selectedSubChapterId != null) {
+        data['sub_chapter_id'] = _selectedSubChapterId;
       } else if (_selectedSubChapterId != null) {
         // Fallback to old sub chapter props if exists
         data['sub_chapter_id'] = _selectedSubChapterId;
       }
 
       // Handle Additional Material (from LIVE selection)
-      if (_selectedSubBabIds.isNotEmpty) {
+      if (_selectedSubChapterIds.isNotEmpty) {
         final List<Map<String, dynamic>> extraMaterials = [];
         final primarySubId = data['sub_chapter_id']?.toString();
 
-        for (var subId in _selectedSubBabIds) {
+        for (var subId in _selectedSubChapterIds) {
           // Skip if this is the primary sub chapter
           if (subId == primarySubId) continue;
 
           // Try to find full details for this sub chapter
           // 1. Check in loaded sub bab list
-          var subBabData = _subBabMateriList.firstWhere(
+          var subBabData = _subChapterMaterialList.firstWhere(
             (s) => s['id']?.toString() == subId,
             orElse: () => <String, dynamic>{},
           );
 
-          String? chapterIdForSub = _selectedBabId;
+          String? chapterIdForSub = _selectedChapterId;
 
           // 2. If not found (maybe from initial params but not loaded in current list?), check initialAdditionalMaterials
           if (subBabData == null && widget.initialAdditionalMaterials != null) {
@@ -612,7 +610,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                 // We might not have titles here if not standard format, but we do our best
               };
               chapterIdForSub =
-                  found['chapter_id']?.toString() ?? _selectedBabId;
+                  found['chapter_id']?.toString() ?? _selectedChapterId;
             }
           }
 
@@ -688,17 +686,17 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
           }
 
           // Also Add manually selected IDs from the multi-select dialog
-          if (_useMateriTitle &&
-              _selectedSubBabIds.isNotEmpty &&
-              _selectedBabId != null) {
-            for (var subId in _selectedSubBabIds) {
+          if (_useMaterialTitle &&
+              _selectedSubChapterIds.isNotEmpty &&
+              _selectedChapterId != null) {
+            for (var subId in _selectedSubChapterIds) {
               // Avoid duplicates
               bool exists = progressItems.any(
                 (p) => p['sub_bab_id'].toString() == subId,
               );
               if (!exists) {
                 progressItems.add({
-                  'bab_id': _selectedBabId,
+                  'bab_id': _selectedChapterId,
                   'sub_bab_id': subId,
                   'is_checked': true,
                   'is_generated': true,
@@ -749,7 +747,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   }
 
   void _openMultiSelectSubBabDialog(LanguageProvider languageProvider) {
-    if (_subBabMateriList.isEmpty) return;
+    if (_subChapterMaterialList.isEmpty) return;
 
     showDialog(
       context: context,
@@ -768,24 +766,24 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                 width: double.maxFinite,
                 child: ListView(
                   shrinkWrap: true,
-                  children: _subBabMateriList.map((subBab) {
+                  children: _subChapterMaterialList.map((subBab) {
                     final subId = subBab['id'].toString();
-                    final isSelected = _selectedSubBabIds.contains(subId);
+                    final isSelected = _selectedSubChapterIds.contains(subId);
                     return CheckboxListTile(
-                      title: Text(_getSubBabName(subBab)),
+                      title: Text(_getSubChapterName(subBab)),
                       value: isSelected,
                       onChanged: (bool? value) {
                         setDialogState(() {
                           if (value == true) {
-                            if (!_selectedSubBabIds.contains(subId)) {
-                              _selectedSubBabIds.add(subId);
+                            if (!_selectedSubChapterIds.contains(subId)) {
+                              _selectedSubChapterIds.add(subId);
                             }
                           } else {
-                            _selectedSubBabIds.remove(subId);
+                            _selectedSubChapterIds.remove(subId);
                           }
                           // Update primary selection for backward compatibility
-                          _selectedSubBabId = _selectedSubBabIds.isNotEmpty
-                              ? _selectedSubBabIds.first
+                          _selectedSubChapterId = _selectedSubChapterIds.isNotEmpty
+                              ? _selectedSubChapterIds.first
                               : null;
                         });
                         // Trigger main widget rebuild to update UI text
@@ -1165,16 +1163,16 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                         ),
                         Spacer(),
                         Switch(
-                          value: _useMateriTitle,
+                          value: _useMaterialTitle,
                           onChanged: _selectedSubjectId == null
                               ? null
                               : (value) {
                                   setState(() {
-                                    _useMateriTitle = value;
+                                    _useMaterialTitle = value;
                                     if (!value) {
                                       // Reset when switching to manual
-                                      _selectedBabId = null;
-                                      _selectedSubBabId = null;
+                                      _selectedChapterId = null;
+                                      _selectedSubChapterId = null;
                                     }
                                   });
                                 },
@@ -1185,17 +1183,17 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                     SizedBox(height: AppSpacing.sm),
 
                     // Dropdown Bab Materi (if useMateriTitle = true)
-                    if (_useMateriTitle) ...[
+                    if (_useMaterialTitle) ...[
                       Builder(
                         builder: (context) {
                           final Map<String, DropdownMenuItem<String>>
                           uniqueBabItems = {};
-                          for (var bab in _babMateriList) {
-                            final id = bab['id']?.toString();
+                          for (var chapter in _chapterMaterialList) {
+                            final id = chapter['id']?.toString();
                             if (id != null && !uniqueBabItems.containsKey(id)) {
                               uniqueBabItems[id] = DropdownMenuItem<String>(
                                 value: id,
-                                child: Text(_getBabName(bab)),
+                                child: Text(_getChapterName(chapter)),
                               );
                             }
                           }
@@ -1204,7 +1202,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
                           return DropdownButtonFormField<String>(
                             key: ValueKey(
-                              'bab_${_selectedBabId}_${babItems.length}',
+                              'bab_${_selectedChapterId}_${babItems.length}',
                             ),
                             decoration: InputDecoration(
                               labelText: languageProvider.getTranslatedText({
@@ -1216,9 +1214,9 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                             ),
                             initialValue:
                                 (babItems.any(
-                                  (item) => item.value == _selectedBabId,
+                                  (item) => item.value == _selectedChapterId,
                                 ))
-                                ? _selectedBabId
+                                ? _selectedChapterId
                                 : null,
                             isExpanded: true,
                             items: babItems.isEmpty ? null : babItems,
@@ -1226,8 +1224,8 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                                 ? null
                                 : (value) {
                                     setState(() {
-                                      _selectedBabId = value;
-                                      _selectedSubBabId = null;
+                                      _selectedChapterId = value;
+                                      _selectedSubChapterId = null;
                                     });
                                     if (value != null) {
                                       _loadSubBabMateri(value);
@@ -1236,12 +1234,12 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                                   },
                             hint: Text(
                               languageProvider.getTranslatedText({
-                                'en': _isLoadingBab
+                                'en': _isLoadingChapters
                                     ? 'Loading chapters...'
                                     : (babItems.isEmpty
                                           ? 'No chapters found'
                                           : 'Select Chapter'),
-                                'id': _isLoadingBab
+                                'id': _isLoadingChapters
                                     ? 'Memuat bab...'
                                     : (babItems.isEmpty
                                           ? 'Tidak ada bab'
@@ -1255,7 +1253,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                     ],
 
                     // Multi-Select Sub Bab (if bab is selected) - Custom UI
-                    if (_useMateriTitle && _selectedBabId != null) ...[
+                    if (_useMaterialTitle && _selectedChapterId != null) ...[
                       InkWell(
                         onTap: () =>
                             _openMultiSelectSubBabDialog(languageProvider),
@@ -1270,23 +1268,23 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                             suffixIcon: Icon(Icons.arrow_drop_down),
                           ),
                           child: Text(
-                            _selectedSubBabIds.isEmpty
+                            _selectedSubChapterIds.isEmpty
                                 ? languageProvider.getTranslatedText({
                                     'en': 'Select Sub Chapters (optional)',
                                     'id': 'Pilih Sub Bab (opsional)',
                                   })
-                                : _selectedSubBabIds.length == 1
-                                ? _getSubBabName(
-                                    _subBabMateriList.firstWhere(
+                                : _selectedSubChapterIds.length == 1
+                                ? _getSubChapterName(
+                                    _subChapterMaterialList.firstWhere(
                                       (s) =>
                                           s['id'].toString() ==
-                                          _selectedSubBabIds.first,
+                                          _selectedSubChapterIds.first,
                                       orElse: () => {},
                                     ),
                                   )
-                                : '${_selectedSubBabIds.length} ${languageProvider.getTranslatedText({'en': 'selected', 'id': 'dipilih'})}',
+                                : '${_selectedSubChapterIds.length} ${languageProvider.getTranslatedText({'en': 'selected', 'id': 'dipilih'})}',
                             style: TextStyle(
-                              color: _selectedSubBabIds.isEmpty
+                              color: _selectedSubChapterIds.isEmpty
                                   ? ColorUtils.slate600
                                   : ColorUtils.slate900,
                             ),
@@ -1306,7 +1304,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                             '${languageProvider.getTranslatedText({'en': 'Title', 'id': 'Judul'})} *',
                         prefixIcon: Icon(Icons.title),
                         border: OutlineInputBorder(),
-                        helperText: _useMateriTitle
+                        helperText: _useMaterialTitle
                             ? languageProvider.getTranslatedText({
                                 'en': 'Auto-filled from chapter/sub-chapter',
                                 'id': 'Otomatis dari bab/sub bab',
@@ -1317,8 +1315,8 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                               }),
                       ),
                       readOnly:
-                          _useMateriTitle &&
-                          (_selectedBabId != null || _selectedSubBabId != null),
+                          _useMaterialTitle &&
+                          (_selectedChapterId != null || _selectedSubChapterId != null),
                       validator: (value) => value == null || value.isEmpty
                           ? languageProvider.getTranslatedText({
                               'en': 'Required',

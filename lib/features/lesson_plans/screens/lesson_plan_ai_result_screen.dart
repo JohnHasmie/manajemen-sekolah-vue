@@ -75,7 +75,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
   late quill.QuillController _tujuanController;
   late quill.QuillController _kegiatanIntiController;
-  late quill.QuillController _penilaianController;
+  late quill.QuillController _assessmentController;
   late quill.QuillController _kompetensiIntiController;
   late quill.QuillController _kompetensiDasarController;
 
@@ -83,7 +83,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   late TextEditingController _satuanPendidikanController;
   late TextEditingController _mataPelajaranController;
   late TextEditingController _babController;
-  late TextEditingController _subBabController;
+  late TextEditingController _subChapterController;
   late TextEditingController _pembelajaranKeController;
   late TextEditingController _kelasSemesterController;
   late TextEditingController _alokasiWaktuController;
@@ -321,7 +321,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       text: data['mata_pelajaran_nama'] ?? '',
     );
     _babController = TextEditingController(text: data['bab_nama'] ?? '');
-    _subBabController = TextEditingController(text: data['sub_bab_nama'] ?? '');
+    _subChapterController = TextEditingController(text: data['sub_bab_nama'] ?? '');
     _pembelajaranKeController = TextEditingController(
       text: data['pembelajaran_ke'] ?? '',
     );
@@ -356,7 +356,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       selection: const TextSelection.collapsed(offset: 0),
     );
 
-    _penilaianController = quill.QuillController(
+    _assessmentController = quill.QuillController(
       document: _convertHtmlToQuill(
         data['penilaian'] ?? data['assessment'] ?? '',
       ),
@@ -372,12 +372,12 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     _kompetensiDasarController.dispose();
     _tujuanController.dispose();
     _kegiatanIntiController.dispose();
-    _penilaianController.dispose();
+    _assessmentController.dispose();
     _judulController.dispose();
     _satuanPendidikanController.dispose();
     _mataPelajaranController.dispose();
     _babController.dispose();
-    _subBabController.dispose();
+    _subChapterController.dispose();
     _pembelajaranKeController.dispose();
     _kelasSemesterController.dispose();
     _alokasiWaktuController.dispose();
@@ -535,7 +535,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         _kegiatanIntiController.document = _convertHtmlToQuill(
           regeneratedData['learning_activities']!,
         );
-        _penilaianController.document = _convertHtmlToQuill(
+        _assessmentController.document = _convertHtmlToQuill(
           regeneratedData['assessment']!,
         );
       });
@@ -602,7 +602,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         'Satuan Pendidikan : ${_satuanPendidikanController.text}',
         'Mata Pelajaran    : ${_mataPelajaranController.text}',
         'Bab               : ${_babController.text}',
-        'Sub Bab           : ${_subBabController.text}',
+        'Sub Bab           : ${_subChapterController.text}',
         'Kelas/Semester    : ${_kelasSemesterController.text}',
         'Pembelajaran Ke   : ${_pembelajaranKeController.text}',
         'Alokasi Waktu     : ${_alokasiWaktuController.text}',
@@ -688,7 +688,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       );
       yPosition = drawSection(
         'E. Penilaian (Asesmen)',
-        _penilaianController.document.toPlainText(),
+        _assessmentController.document.toPlainText(),
         yPosition,
       );
 
@@ -739,11 +739,11 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         'kegiatan_inti': _kegiatanIntiController.document.toPlainText(),
         'kegiatan_penutup':
             '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa',
-        'penilaian': _penilaianController.document.toPlainText(),
+        'penilaian': _assessmentController.document.toPlainText(),
         'satuan_pendidikan': _satuanPendidikanController.text,
         'kelas_semester': _kelasSemesterController.text,
         'tema': _babController.text, // Chapter as theme
-        'sub_tema': _subBabController.text,
+        'sub_tema': _subChapterController.text,
         'pembelajaran_ke': _pembelajaranKeController.text,
         'alokasi_waktu': _alokasiWaktuController.text,
         'waktu_pendahuluan': '15',
@@ -1036,7 +1036,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             _buildRichTextField(_kegiatanIntiController),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('E. Penilaian (Asesmen)'),
-            _buildRichTextField(_penilaianController),
+            _buildRichTextField(_assessmentController),
             SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
@@ -1101,7 +1101,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
           _buildMetaRow('Satuan Pendidikan', _satuanPendidikanController),
           _buildMetaRow('Mata Pelajaran', _mataPelajaranController),
           _buildMetaRow('Bab', _babController),
-          _buildMetaRow('Sub Bab', _subBabController),
+          _buildMetaRow('Sub Bab', _subChapterController),
           _buildMetaRow('Kelas/Semester', _kelasSemesterController),
           _buildMetaRow('Pembelajaran Ke', _pembelajaranKeController),
           _buildMetaRow('Alokasi Waktu', _alokasiWaktuController),

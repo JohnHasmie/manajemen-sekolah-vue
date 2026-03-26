@@ -145,8 +145,8 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           _statusMessage = 'Mengambil konten sub bab...';
         });
 
-        final content = await getIt<ApiSubjectService>().getContentMateri(
-          subBabId: subChapter['id'],
+        final content = await getIt<ApiSubjectService>().getContentMaterials(
+          subChapterId: subChapter['id'],
         );
 
         for (var item in content) {
@@ -167,13 +167,13 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           _statusMessage = 'Mengambil konten bab...';
         });
 
-        final subChapters = await getIt<ApiSubjectService>().getSubBabMateri(
-          babId: chapter['id'],
+        final subChapters = await getIt<ApiSubjectService>().getSubChapterMaterials(
+          chapterId: chapter['id'],
         );
 
         for (var subChapter in subChapters) {
-          final content = await getIt<ApiSubjectService>().getContentMateri(
-            subBabId: subChapter['id'],
+          final content = await getIt<ApiSubjectService>().getContentMaterials(
+            subChapterId: subChapter['id'],
           );
 
           for (var item in content) {
@@ -316,7 +316,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           // Display selected sub topics
           if (widget.checkedSubChapters.isNotEmpty) ...[
             ...widget.checkedSubChapters.map(
-              (subBab) => Padding(
+              (subChapter) => Padding(
                 padding: EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
@@ -324,7 +324,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                     SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(
-                        'Sub ${subBab['urutan']}: ${subBab['judul_sub_bab'] ?? 'Judul Sub Bab'}',
+                        'Sub ${subChapter['urutan']}: ${subChapter['judul_sub_bab'] ?? 'Judul Sub Bab'}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade700,
@@ -340,7 +340,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           // Display selected chapters with their sub-chapters
           if (widget.checkedChapters.isNotEmpty) ...[
             ...widget.checkedChapters.map(
-              (bab) => Column(
+              (chapter) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: widget.checkedSubChapters.isNotEmpty ? 16 : 0),
@@ -355,7 +355,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                         ),
                         SizedBox(width: AppSpacing.sm),
                         Text(
-                          'Chapter ${bab['urutan']}: ${bab['judul_bab']}',
+                          'Chapter ${chapter['urutan']}: ${chapter['judul_bab']}',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -366,13 +366,13 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                     ),
                   ),
                   // Display all sub-chapters in this chapter
-                  ..._getAllSubBabForBab(bab['id']).map(
-                    (subBab) => Padding(
+                  ..._getAllSubBabForBab(chapter['id']).map(
+                    (subChapter) => Padding(
                       padding: EdgeInsets.only(left: 20, bottom: 6),
                       child: Row(
                         children: [
                           Text(
-                            '${subBab['urutan']}.',
+                            '${subChapter['urutan']}.',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -382,7 +382,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                           SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
-                              subBab['judul_sub_bab'] ?? 'Judul Sub Bab',
+                              subChapter['judul_sub_bab'] ?? 'Judul Sub Bab',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.grey.shade600,

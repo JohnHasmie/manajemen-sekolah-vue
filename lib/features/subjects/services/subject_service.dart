@@ -233,13 +233,13 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  /// Fetches content materials for a specific sub-chapter (sub-bab).
-  /// Part of the material hierarchy: Subject > Bab > Sub-Bab > Content.
-  Future<List<dynamic>> getContentMateri({
-    required String subBabId,
+  /// Fetches content materials for a specific sub-chapter.
+  /// Part of the material hierarchy: Subject > Chapter > SubChapter > Content.
+  Future<List<dynamic>> getContentMaterials({
+    required String subChapterId,
   }) async {
     final response = await dioClient.get(
-      '/content-material?sub_chapter_id=$subBabId',
+      '/content-material?sub_chapter_id=$subChapterId',
     );
 
     final result = response.data;
@@ -248,9 +248,9 @@ class ApiSubjectService {
     return [];
   }
 
-  /// Fetches chapters (bab) for a subject. Top level of the material hierarchy.
+  /// Fetches chapters for a subject. Top level of the material hierarchy.
   /// Like `Chapter::where('subject_id', $id)->get()` in Laravel.
-  Future<List<dynamic>> getBabMateri({String? subjectId}) async {
+  Future<List<dynamic>> getChapterMaterials({String? subjectId}) async {
     String url = '/bab-material?';
     if (subjectId != null) url += 'subject_id=$subjectId&';
 
@@ -260,71 +260,71 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  /// Fetches sub-chapters (sub-bab) for a given chapter.
-  /// Like `SubChapter::where('chapter_id', $babId)->get()` in Laravel.
-  Future<List<dynamic>> getSubBabMateri({required String babId}) async {
+  /// Fetches sub-chapters for a given chapter.
+  /// Like `SubChapter::where('chapter_id', $chapterId)->get()` in Laravel.
+  Future<List<dynamic>> getSubChapterMaterials({required String chapterId}) async {
     final response = await dioClient.get(
-      '/sub-bab-material?chapter_id=$babId',
+      '/sub-bab-material?chapter_id=$chapterId',
     );
 
     final result = response.data;
     return result is List ? result : [];
   }
 
-  // Tambah Bab Materi
-  Future<dynamic> addBabMateri(Map<String, dynamic> data) async {
+  // Add Chapter Material
+  Future<dynamic> addChapterMaterial(Map<String, dynamic> data) async {
     final response = await dioClient.post('/bab-material', data: data);
     return response.data;
   }
 
-  // Tambah Sub Bab Materi
-  Future<dynamic> addSubBabMateri(Map<String, dynamic> data) async {
+  // Add Sub-Chapter Material
+  Future<dynamic> addSubChapterMaterial(Map<String, dynamic> data) async {
     final response = await dioClient.post('/sub-bab-material', data: data);
     return response.data;
   }
 
-  // Tambah Konten Materi
-  Future<dynamic> addContentMateri(Map<String, dynamic> data) async {
+  // Add Content Material
+  Future<dynamic> addContentMaterial(Map<String, dynamic> data) async {
     final response = await dioClient.post('/content-material', data: data);
     return response.data;
   }
 
-  // Update Bab Materi
-  Future<void> updateBabMateri(
+  // Update Chapter Material
+  Future<void> updateChapterMaterial(
     String id,
     Map<String, dynamic> data,
   ) async {
     await dioClient.put('/bab-material/$id', data: data);
   }
 
-  // Update Sub Bab Materi
-  Future<void> updateSubBabMateri(
+  // Update Sub-Chapter Material
+  Future<void> updateSubChapterMaterial(
     String id,
     Map<String, dynamic> data,
   ) async {
     await dioClient.put('/sub-bab-material/$id', data: data);
   }
 
-  // Update Konten Materi
-  Future<void> updateContentMateri(
+  // Update Content Material
+  Future<void> updateContentMaterial(
     String id,
     Map<String, dynamic> data,
   ) async {
     await dioClient.put('/content-material/$id', data: data);
   }
 
-  // Delete Bab Materi
-  Future<void> deleteBabMateri(String id) async {
+  // Delete Chapter Material
+  Future<void> deleteChapterMaterial(String id) async {
     await dioClient.delete('/bab-material/$id');
   }
 
-  // Delete Sub Bab Materi
-  Future<void> deleteSubBabMateri(String id) async {
+  // Delete Sub-Chapter Material
+  Future<void> deleteSubChapterMaterial(String id) async {
     await dioClient.delete('/sub-bab-material/$id');
   }
 
-  // Delete Konten Materi
-  Future<void> deleteContentMateri(String id) async {
+  // Delete Content Material
+  Future<void> deleteContentMaterial(String id) async {
     await dioClient.delete('/content-material/$id');
   }
 

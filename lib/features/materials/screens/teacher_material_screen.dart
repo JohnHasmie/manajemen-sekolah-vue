@@ -107,14 +107,14 @@ class MateriPageState extends ConsumerState<MateriPage> {
   // Get checked chapters that have not been generated yet
   List<Map<String, dynamic>> _getCheckedNotGeneratedChapters() {
     return _chapterMaterialList
-        .where((bab) {
+        .where((chapter) {
           final hasSubChapters = _subChapterMaterialList.any(
-            (sb) => sb['bab_id'].toString() == bab['id'].toString(),
+            (sb) => sb['bab_id'].toString() == chapter['id'].toString(),
           );
 
-          return _checkedChapter[bab['id']] == true &&
-              _generatedChapter[bab['id']] != true &&
-              _usedChapter[bab['id']] != true && // Exclude used
+          return _checkedChapter[chapter['id']] == true &&
+              _generatedChapter[chapter['id']] != true &&
+              _usedChapter[chapter['id']] != true && // Exclude used
               !hasSubChapters; // Only include if it has NO sub-chapters
         })
         .toList()
@@ -197,8 +197,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
           initialSubjectName: _getSelectedSubjectName(),
           initialClassId: _selectedClassId ?? widget.initialClassId,
           initialClassName: _selectedClassName ?? widget.initialClassName,
-          initialBabId: selectedChapterId,
-          initialSubBabId: selectedSubChapterId,
+          initialChapterId: selectedChapterId,
+          initialSubChapterId: selectedSubChapterId,
           initialAdditionalMaterials: additionalMaterials,
           materialsToMarkAsGenerated: materialsToMarkAsGenerated,
           autoShowActivityDialog: true,
@@ -586,12 +586,12 @@ class MateriPageState extends ConsumerState<MateriPage> {
         final cached = await LocalCacheService.load(babCacheKey, ttl: const Duration(hours: 3));
         if (cached != null && mounted) {
           final cachedData = Map<String, dynamic>.from(cached);
-          final cachedBab = List<dynamic>.from(cachedData['babMateri'] ?? []);
-          final cachedSubChapters = List<dynamic>.from(cachedData['subBabMateri'] ?? []);
+          final cachedChapters = List<dynamic>.from(cachedData['chapterMaterials'] ?? cachedData['babMateri'] ?? []);
+          final cachedSubChapters = List<dynamic>.from(cachedData['subChapterMaterials'] ?? cachedData['subBabMateri'] ?? []);
 
-          if (cachedBab.isNotEmpty) {
+          if (cachedChapters.isNotEmpty) {
             setState(() {
-              _chapterMaterialList = cachedBab;
+              _chapterMaterialList = cachedChapters;
               _subChapterMaterialList = cachedSubChapters;
               _isLoadingBab = false;
               _expandedChapter.clear();
@@ -601,11 +601,11 @@ class MateriPageState extends ConsumerState<MateriPage> {
               _generatedSubChapter.clear();
               _usedChapter.clear();
               _usedSubChapter.clear();
-              for (var bab in cachedBab) {
-                _expandedChapter[bab['id'].toString()] = false;
-                _checkedChapter[bab['id'].toString()] = false;
-                _generatedChapter[bab['id'].toString()] = false;
-                _usedChapter[bab['id'].toString()] = false;
+              for (var chapter in cachedChapters) {
+                _expandedChapter[chapter['id'].toString()] = false;
+                _checkedChapter[chapter['id'].toString()] = false;
+                _generatedChapter[chapter['id'].toString()] = false;
+                _usedChapter[chapter['id'].toString()] = false;
               }
               for (var sc in cachedSubChapters) {
                 _checkedSubChapter[sc['id'].toString()] = false;
@@ -635,24 +635,24 @@ class MateriPageState extends ConsumerState<MateriPage> {
       // Fall back to subject's own id if master subject_id is missing
       final masterSubjectId = subject?['subject_id']?.toString() ?? subject?['id']?.toString() ?? subjectId;
 
-      final babMateri = await getIt<ApiSubjectService>().getBabMateri(
+      final chapterMaterials = await getIt<ApiSubjectService>().getChapterMaterials(
         subjectId: masterSubjectId,
       );
       if (!mounted) return;
 
-      // Extract sub-chapters directly from getBabMateri response
+      // Extract sub-chapters directly from getChapterMaterials response
       // (backend already includes sub_chapters nested in each chapter)
-      final allSubBabs = <dynamic>[];
-      for (var bab in babMateri) {
-        final subChapters = bab['sub_chapters'];
+      final allSubChapters = <dynamic>[];
+      for (var chapter in chapterMaterials) {
+        final subChapters = chapter['sub_chapters'];
         if (subChapters is List) {
-          allSubBabs.addAll(subChapters);
+          allSubChapters.addAll(subChapters);
         }
       }
 
       setState(() {
-        _chapterMaterialList = babMateri;
-        _subChapterMaterialList = List.from(allSubBabs);
+        _chapterMaterialList = chapterMaterials;
+        _subChapterMaterialList = List.from(allSubChapters);
         _isLoadingBab = false;
 
         _expandedChapter.clear();
@@ -663,11 +663,11 @@ class MateriPageState extends ConsumerState<MateriPage> {
         _usedChapter.clear();
         _usedSubChapter.clear();
 
-        for (var bab in babMateri) {
-          _expandedChapter[bab['id'].toString()] = false;
-          _checkedChapter[bab['id'].toString()] = false;
-          _generatedChapter[bab['id'].toString()] = false;
-          _usedChapter[bab['id'].toString()] = false;
+        for (var chapter in chapterMaterials) {
+          _expandedChapter[chapter['id'].toString()] = false;
+          _checkedChapter[chapter['id'].toString()] = false;
+          _generatedChapter[chapter['id'].toString()] = false;
+          _usedChapter[chapter['id'].toString()] = false;
         }
 
         for (var sc in _subChapterMaterialList) {
@@ -678,8 +678,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
       // Save to cache (non-blocking)
       LocalCacheService.save(babCacheKey, {
-        'babMateri': babMateri,
-        'subBabMateri': allSubBabs,
+        'chapterMaterials': chapterMaterials,
+        'subChapterMaterials': allSubChapters,
       });
 
       // Load progress from database (non-blocking — UI already shows chapter structure)
@@ -818,8 +818,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
         // Final pass: Recalculate chapter status based on sub-chapters
         // This ensures visual correctness even if chapter record is absent in DB
-        for (var bab in _chapterMaterialList) {
-          final chapterId = bab['id'].toString();
+        for (var chapter in _chapterMaterialList) {
+          final chapterId = chapter['id'].toString();
           final subChaptersForThisChapter = _subChapterMaterialList
               .where((sb) => sb['bab_id'].toString() == chapterId)
               .toList();
@@ -929,7 +929,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
           teacherId: _teacherProfileId ?? widget.teacher['id'],
           subjectId: _selectedSubject ?? '',
           subChapter: subChapter,
-          bab: bab,
+          chapter: bab,
           checked: _checkedSubChapter[subChapter['id'].toString()] ?? false,
           onCheckChanged: (value) {
             _handleSubChapterCheck(
@@ -948,14 +948,14 @@ class MateriPageState extends ConsumerState<MateriPage> {
       return _chapterMaterialList;
     }
 
-    return _chapterMaterialList.where((bab) {
+    return _chapterMaterialList.where((chapter) {
       final matchesChapter =
-          (bab['judul_bab']?.toString().toLowerCase().contains(searchTerm) ??
+          (chapter['judul_bab']?.toString().toLowerCase().contains(searchTerm) ??
           false);
 
       // Also search in related sub-chapters
       final subChapterMatches = _subChapterMaterialList
-          .where((sc) => sc['bab_id'] == bab['id'])
+          .where((sc) => sc['bab_id'] == chapter['id'])
           .any(
             (sc) =>
                 sc['judul_sub_bab']?.toString().toLowerCase().contains(
@@ -1514,9 +1514,9 @@ class MateriPageState extends ConsumerState<MateriPage> {
       padding: EdgeInsets.all(AppSpacing.lg),
       itemCount: filteredChapterMaterials.length,
       itemBuilder: (context, index) {
-        final bab = filteredChapterMaterials[index];
+        final chapter = filteredChapterMaterials[index];
         final cardColor = ColorUtils.getColorForIndex(index);
-        final chapterIdStr = bab['id'].toString();
+        final chapterIdStr = chapter['id'].toString();
         final isExpanded = _expandedChapter[chapterIdStr] ?? false;
 
         return Container(
@@ -1556,7 +1556,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                             ),
                             child: Center(
                               child: Text(
-                                '${bab['urutan']}',
+                                '${chapter['urutan']}',
                                 style: TextStyle(
                                   color: cardColor,
                                   fontWeight: FontWeight.w700,
@@ -1571,7 +1571,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  bab['judul_bab'] ?? 'Judul Bab',
+                                  chapter['judul_bab'] ?? 'Judul Bab',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 15,
@@ -1582,7 +1582,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                                 ),
                                 SizedBox(height: 2),
                                 Text(
-                                  'Bab ${bab['urutan']}',
+                                  'Bab ${chapter['urutan']}',
                                   style: TextStyle(
                                     color: ColorUtils.slate500,
                                     fontSize: 13,
@@ -1620,7 +1620,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
                     // Sub Bab List (Expandable)
                     if (isExpanded) ...[
                       Divider(height: 1, color: ColorUtils.slate200),
-                      _buildSubChapterList(bab),
+                      _buildSubChapterList(chapter),
                     ],
                   ],
                 ),

@@ -2439,16 +2439,16 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
 
   String? _selectedSubjectId;
   String? _selectedClassId;
-  String? _selectedBabId;
-  String? _selectedSubBabId;
+  String? _selectedChapterId;
+  String? _selectedSubChapterId;
   String? _selectedSemester = 'Ganjil';
   bool _isAutoGenerating = false;
   String _generationStatus = '';
 
   List<dynamic> _mataPelajaranList = [];
   List<dynamic> _classList = [];
-  List<dynamic> _babList = [];
-  List<dynamic> _subBabList = [];
+  List<dynamic> _chapterList = [];
+  List<dynamic> _subChapterList = [];
 
   @override
   void initState() {
@@ -2517,28 +2517,28 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
     }
   }
 
-  Future<void> _loadBabByMataPelajaran(String subjectId) async {
+  Future<void> _loadChaptersBySubject(String subjectId) async {
     try {
-      final result = await getIt<ApiSubjectService>().getBabMateri(subjectId: subjectId);
+      final result = await getIt<ApiSubjectService>().getChapterMaterials(subjectId: subjectId);
       setState(() {
-        _babList = result;
+        _chapterList = result;
       });
     } catch (e) {
       setState(() {
-        _babList = [];
+        _chapterList = [];
       });
     }
   }
 
-  Future<void> _loadSubBabByBab(String babId) async {
+  Future<void> _loadSubChaptersByChapter(String chapterId) async {
     try {
-      final result = await getIt<ApiSubjectService>().getSubBabMateri(babId: babId);
+      final result = await getIt<ApiSubjectService>().getSubChapterMaterials(chapterId: chapterId);
       setState(() {
-        _subBabList = result;
+        _subChapterList = result;
       });
     } catch (e) {
       setState(() {
-        _subBabList = [];
+        _subChapterList = [];
       });
     }
   }
@@ -2610,8 +2610,8 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
         'title': _judulController.text,
         'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
-        'chapter_id': _selectedBabId,
-        'sub_chapter_id': _selectedSubBabId,
+        'chapter_id': _selectedChapterId,
+        'sub_chapter_id': _selectedSubChapterId,
         'semester': _selectedSemester,
         'academic_year': _academicYearController.text,
         'teacher_id': widget.teacherId,
@@ -2764,46 +2764,46 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       (m) => m['id'].toString() == _selectedSubjectId,
       orElse: () => {'name': 'Mata Pelajaran'},
     );
-    final mataPelajaranNama =
+    final subjectName =
         selectedSubject['name'] ?? selectedSubject['nama'] ?? 'Mata Pelajaran';
 
     final selectedClass = _classList.firstWhere(
       (k) => k['id'].toString() == _selectedClassId,
       orElse: () => {'name': 'Kelas'},
     );
-    final kelasNama = selectedClass['name'] ?? selectedClass['nama'] ?? 'Kelas';
+    final className = selectedClass['name'] ?? selectedClass['nama'] ?? 'Kelas';
 
-    final babMap = _selectedBabId != null
-        ? _babList.firstWhere(
-            (b) => b['id'].toString() == _selectedBabId,
+    final chapterMap = _selectedChapterId != null
+        ? _chapterList.firstWhere(
+            (b) => b['id'].toString() == _selectedChapterId,
             orElse: () => <String, dynamic>{},
           )
         : <String, dynamic>{};
-    final babName = babMap.isNotEmpty
-        ? (babMap['judul_bab'] ?? babMap['title'] ?? babMap['judul'] ?? '')
+    final chapterName = chapterMap.isNotEmpty
+        ? (chapterMap['judul_bab'] ?? chapterMap['title'] ?? chapterMap['judul'] ?? '')
         : '';
 
-    final subBabMap = _selectedSubBabId != null
-        ? _subBabList.firstWhere(
-            (s) => s['id'].toString() == _selectedSubBabId,
+    final subChapterMap = _selectedSubChapterId != null
+        ? _subChapterList.firstWhere(
+            (s) => s['id'].toString() == _selectedSubChapterId,
             orElse: () => <String, dynamic>{},
           )
         : <String, dynamic>{};
-    final subBabName = subBabMap.isNotEmpty
-        ? (subBabMap['judul_sub_bab'] ??
-              subBabMap['title'] ??
-              subBabMap['judul'] ??
+    final subChapterName = subChapterMap.isNotEmpty
+        ? (subChapterMap['judul_sub_bab'] ??
+              subChapterMap['title'] ??
+              subChapterMap['judul'] ??
               '')
         : '';
 
     return {
       'title': _judulController.text,
       'mata_pelajaran_id': _selectedSubjectId,
-      'mata_pelajaran_nama': mataPelajaranNama,
+      'mata_pelajaran_nama': subjectName,
       'satuan_pendidikan': schoolNameStr,
-      'bab_nama': babName,
-      'sub_bab_nama': subBabName,
-      'kelas_semester': '$kelasNama / ${_selectedSemester ?? 'Ganjil'}',
+      'bab_nama': chapterName,
+      'sub_bab_nama': subChapterName,
+      'kelas_semester': '$className / ${_selectedSemester ?? 'Ganjil'}',
       'alokasi_waktu': _academicYearController.text,
     };
   }
@@ -2824,7 +2824,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       (m) => m['id'].toString() == _selectedSubjectId,
       orElse: () => {'name': 'Mata Pelajaran'},
     );
-    final mataPelajaranNama =
+    final subjectName =
         rppResponse['mata_pelajaran_nama'] ??
         selectedSubject['name'] ??
         selectedSubject['nama'] ??
@@ -2834,35 +2834,35 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       (k) => k['id'].toString() == _selectedClassId,
       orElse: () => {'name': 'Kelas'},
     );
-    final kelasNama =
+    final className =
         rppResponse['kelas_nama'] ??
         selectedClass['name'] ??
         selectedClass['nama'] ??
         'Kelas';
 
-    final babMap = _selectedBabId != null
-        ? _babList.firstWhere(
-            (b) => b['id'].toString() == _selectedBabId,
+    final chapterMap = _selectedChapterId != null
+        ? _chapterList.firstWhere(
+            (b) => b['id'].toString() == _selectedChapterId,
             orElse: () => <String, dynamic>{},
           )
         : <String, dynamic>{};
-    final babName = babMap.isNotEmpty
-        ? (babMap['judul_bab'] ??
-              babMap['title'] ??
-              babMap['judul'] ??
+    final chapterName = chapterMap.isNotEmpty
+        ? (chapterMap['judul_bab'] ??
+              chapterMap['title'] ??
+              chapterMap['judul'] ??
               'Tanpa Nama')
         : '';
 
-    final subBabMap = _selectedSubBabId != null
-        ? _subBabList.firstWhere(
-            (s) => s['id'].toString() == _selectedSubBabId,
+    final subChapterMap = _selectedSubChapterId != null
+        ? _subChapterList.firstWhere(
+            (s) => s['id'].toString() == _selectedSubChapterId,
             orElse: () => <String, dynamic>{},
           )
         : <String, dynamic>{};
-    final subBabName = subBabMap.isNotEmpty
-        ? (subBabMap['judul_sub_bab'] ??
-              subBabMap['title'] ??
-              subBabMap['judul'] ??
+    final subChapterName = subChapterMap.isNotEmpty
+        ? (subChapterMap['judul_sub_bab'] ??
+              subChapterMap['title'] ??
+              subChapterMap['judul'] ??
               'Tanpa Nama')
         : '';
 
@@ -2870,12 +2870,12 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       'id': null,
       'judul': rppResponse['title'] ?? _judulController.text,
       'mata_pelajaran_id': _selectedSubjectId,
-      'mata_pelajaran_nama': mataPelajaranNama,
+      'mata_pelajaran_nama': subjectName,
       'satuan_pendidikan': schoolNameStr,
-      'bab_nama': babName,
-      'sub_bab_nama': subBabName,
+      'bab_nama': chapterName,
+      'sub_bab_nama': subChapterName,
       'kelas_semester':
-          '$kelasNama / ${rppResponse['semester'] ?? _selectedSemester}',
+          '$className / ${rppResponse['semester'] ?? _selectedSemester}',
       'tema': rppResponse['title'],
       'sub_tema': '',
       'pembelajaran_ke': '',
@@ -3146,13 +3146,13 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                         setState(() {
                           _selectedSubjectId = value.toString();
                           _selectedClassId = null;
-                          _selectedBabId = null;
-                          _selectedSubBabId = null;
-                          _babList = [];
-                          _subBabList = [];
+                          _selectedChapterId = null;
+                          _selectedSubChapterId = null;
+                          _chapterList = [];
+                          _subChapterList = [];
                         });
                         _loadClassesBySubject(value.toString());
-                        _loadBabByMataPelajaran(value.toString());
+                        _loadChaptersBySubject(value.toString());
                       },
                       validator: (value) {
                         if (value == null) {
@@ -3216,28 +3216,28 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
-                      value: _selectedBabId,
+                      value: _selectedChapterId,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Chapter', 'id': 'Bab'})} *',
                       icon: Icons.bookmark_border_rounded,
-                      items: _babList.map((bab) {
+                      items: _chapterList.map((chapter) {
                         return DropdownMenuItem(
-                          value: bab['id'],
+                          value: chapter['id'],
                           child: Text(
-                            bab['judul_bab'] ??
-                                bab['title'] ??
-                                bab['judul'] ??
+                            chapter['judul_bab'] ??
+                                chapter['title'] ??
+                                chapter['judul'] ??
                                 'Tanpa Nama',
                           ),
                         );
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedBabId = value.toString();
-                          _selectedSubBabId = null;
-                          _subBabList = [];
+                          _selectedChapterId = value.toString();
+                          _selectedSubChapterId = null;
+                          _subChapterList = [];
                         });
-                        _loadSubBabByBab(value.toString());
+                        _loadSubChaptersByChapter(value.toString());
                       },
                       validator: (value) {
                         if (value == null) {
@@ -3251,7 +3251,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
-                      value: _selectedSubBabId,
+                      value: _selectedSubChapterId,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Sub Chapter', 'id': 'Sub Bab'})} (Opsional)',
                       icon: Icons.bookmark_add_outlined,
@@ -3266,13 +3266,13 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                             style: TextStyle(color: ColorUtils.slate400),
                           ),
                         ),
-                        ..._subBabList.map((subBab) {
+                        ..._subChapterList.map((subChapter) {
                           return DropdownMenuItem(
-                            value: subBab['id'],
+                            value: subChapter['id'],
                             child: Text(
-                              subBab['judul_sub_bab'] ??
-                                  subBab['title'] ??
-                                  subBab['judul'] ??
+                              subChapter['judul_sub_bab'] ??
+                                  subChapter['title'] ??
+                                  subChapter['judul'] ??
                                   'Tanpa Nama',
                             ),
                           );
@@ -3280,7 +3280,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                       ],
                       onChanged: (value) {
                         setState(() {
-                          _selectedSubBabId = value?.toString();
+                          _selectedSubChapterId = value?.toString();
                         });
                       },
                     ),

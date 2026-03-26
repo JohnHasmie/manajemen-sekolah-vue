@@ -150,7 +150,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
       final academicYearId = _getAcademicYearId();
 
       final classesResponse = await getIt<ApiClassService>().getClassPaginated(
-        waliclassId: widget.teacher['id'],
+        homeroomTeacherId: widget.teacher['id'],
         academicYearId: academicYearId,
         limit: 100,
       );

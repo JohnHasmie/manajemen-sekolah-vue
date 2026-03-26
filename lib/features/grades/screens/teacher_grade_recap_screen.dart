@@ -648,7 +648,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
         _loadWithCache(
           cacheKey: babCacheKey,
           ttl: const Duration(hours: 12),
-          apiFetcher: () => getIt<ApiSubjectService>().getBabMateri(subjectId: masterSubjectId),
+          apiFetcher: () => getIt<ApiSubjectService>().getChapterMaterials(subjectId: masterSubjectId),
           useCache: useCache,
         ),
         _loadGradesWithCache(
