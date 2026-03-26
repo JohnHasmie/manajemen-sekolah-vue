@@ -343,7 +343,7 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  Future<dynamic> addMateri(Map<String, dynamic> data) async {
+  Future<dynamic> addMaterial(Map<String, dynamic> data) async {
     final response = await dioClient.post('/materials', data: data);
     return response.data;
   }
@@ -694,7 +694,7 @@ class ApiSubjectService {
 
   /// Marks specific materials as AI-generated (after RPP/activity generation).
   /// Prevents accidental re-generation. Like setting a `generated_at` timestamp.
-  Future<dynamic> markMateriGenerated(Map<String, dynamic> data) async {
+  Future<dynamic> markMaterialGenerated(Map<String, dynamic> data) async {
     // Remap keys
     final requestData = {
       'teacher_id': data['teacher_id'],
@@ -717,7 +717,7 @@ class ApiSubjectService {
 
   /// Resets the generated status to allow re-generation.
   /// Like clearing the `generated_at` flag so the AI can regenerate content.
-  Future<dynamic> resetMateriGenerated(Map<String, dynamic> data) async {
+  Future<dynamic> resetMaterialGenerated(Map<String, dynamic> data) async {
     // Remap keys
     final requestData = {
       'teacher_id': data['teacher_id'],

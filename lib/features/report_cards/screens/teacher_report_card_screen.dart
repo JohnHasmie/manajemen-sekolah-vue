@@ -320,7 +320,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
 
       final semesterId = await _resolveSemester();
 
-      await ExcelRaportService.exportRaportToExcel(
+      await ExcelRaportService.exportReportCardToExcel(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,

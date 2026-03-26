@@ -1322,7 +1322,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
           ],
 
           // Dropdown Kelas
-          _buildKelasDropdown(languageProvider),
+          _buildClassDropdown(languageProvider),
           SizedBox(height: AppSpacing.md),
 
           // Dropdown Mata Pelajaran
@@ -1332,7 +1332,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     );
   }
 
-  Widget _buildKelasDropdown(LanguageProvider languageProvider) {
+  Widget _buildClassDropdown(LanguageProvider languageProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

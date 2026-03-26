@@ -3190,7 +3190,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
         widget.onSubjectSelected(_selectedSubjectId!);
         // Load bab materi for the initial subject
-        _loadBabMateri(_selectedSubjectId!).then((_) {
+        _loadChapterMaterials(_selectedSubjectId!).then((_) {
           // After bab list loaded, load sub bab if initial bab is provided
           if (_selectedChapterId != null) {
             AppLogger.debug('class_activity', 'Loading sub bab for bab: $_selectedChapterId');
@@ -3266,7 +3266,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     }
   }
 
-  Future<void> _loadBabMateri(String subjectId) async {
+  Future<void> _loadChapterMaterials(String subjectId) async {
     try {
       AppLogger.debug('class_activity', '===== LOADING BAB MATERI =====');
       AppLogger.debug('class_activity', 'Subject ID: $subjectId');
@@ -3335,19 +3335,19 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       AppLogger.debug('class_activity', '===== LOADING SUB BAB MATERI =====');
       AppLogger.debug('class_activity', 'Bab ID: $babId');
 
-      final subBabList = await getIt<ApiSubjectService>().getSubChapterMaterials(chapterId: babId);
+      final subChapterList = await getIt<ApiSubjectService>().getSubChapterMaterials(chapterId: babId);
 
       if (kDebugMode) {
-        AppLogger.debug('class_activity', 'API Response - Sub Bab count: ${subBabList.length}');
-        if (subBabList.isNotEmpty) {
-          AppLogger.debug('class_activity', 'First item structure: ${subBabList[0]}');
-          AppLogger.debug('class_activity', 'Available fields: ${subBabList[0].keys}');
-          AppLogger.debug('class_activity', 'Judul Sub Bab: ${subBabList[0]['judul_sub_bab']}');
+        AppLogger.debug('class_activity', 'API Response - Sub Bab count: ${subChapterList.length}');
+        if (subChapterList.isNotEmpty) {
+          AppLogger.debug('class_activity', 'First item structure: ${subChapterList[0]}');
+          AppLogger.debug('class_activity', 'Available fields: ${subChapterList[0].keys}');
+          AppLogger.debug('class_activity', 'Judul Sub Bab: ${subChapterList[0]['judul_sub_bab']}');
         }
       }
 
       setState(() {
-        _subChapterMaterialList = subBabList;
+        _subChapterMaterialList = subChapterList;
         // Only reset if no initial value was provided
         if (widget.initialSubChapterId == null) {
           _selectedSubChapterId = null;
@@ -3377,14 +3377,14 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         'Unknown';
   }
 
-  String _getSubChapterName(dynamic subBab) {
+  String _getSubChapterName(dynamic subChapter) {
     // Try multiple possible field names (backend returns 'sub_chapter_title')
-    return subBab['sub_chapter_title']?.toString() ??
-        subBab['judul_sub_bab']?.toString() ??
-        subBab['nama']?.toString() ??
-        subBab['judul']?.toString() ??
-        subBab['title']?.toString() ??
-        subBab['name']?.toString() ??
+    return subChapter['sub_chapter_title']?.toString() ??
+        subChapter['judul_sub_bab']?.toString() ??
+        subChapter['nama']?.toString() ??
+        subChapter['judul']?.toString() ??
+        subChapter['title']?.toString() ??
+        subChapter['name']?.toString() ??
         'Unknown';
   }
 
@@ -3406,12 +3406,12 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
     // Get sub bab name if selected
     if (_selectedSubChapterId != null && _subChapterMaterialList.isNotEmpty) {
-      final subBab = _subChapterMaterialList.firstWhere(
+      final subChapter = _subChapterMaterialList.firstWhere(
         (item) => item['id']?.toString() == _selectedSubChapterId,
         orElse: () => <String, dynamic>{},
       );
-      if (subBab.isNotEmpty) {
-        subChapterName = _getSubChapterName(subBab);
+      if (subChapter.isNotEmpty) {
+        subChapterName = _getSubChapterName(subChapter);
       }
     }
 
@@ -3604,7 +3604,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
           // Try to find full details for this sub chapter
           // 1. Check in loaded sub bab list
-          var subBabData = _subChapterMaterialList.firstWhere(
+          var subChapterData = _subChapterMaterialList.firstWhere(
             (s) => s['id']?.toString() == subId,
             orElse: () => <String, dynamic>{},
           );
@@ -3612,14 +3612,14 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
           String? chapterIdForSub = _selectedChapterId;
 
           // 2. If not found (maybe from initial params but not loaded in current list?), check initialAdditionalMaterials
-          if (subBabData == null && widget.initialAdditionalMaterials != null) {
+          if (subChapterData == null && widget.initialAdditionalMaterials != null) {
             final found = widget.initialAdditionalMaterials!.firstWhere(
               (m) => m['sub_chapter_id'].toString() == subId,
               orElse: () => {},
             );
             if (found.isNotEmpty) {
               // Construct a temporary object if found in initial params
-              subBabData = {
+              subChapterData = {
                 'id': subId,
                 // We might not have titles here if not standard format, but we do our best
               };
@@ -3628,7 +3628,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
             }
           }
 
-          if (subBabData.isNotEmpty || chapterIdForSub != null) {
+          if (subChapterData.isNotEmpty || chapterIdForSub != null) {
             extraMaterials.add({
               'chapter_id':
                   chapterIdForSub, // Fallback to currently selected bab
@@ -3780,11 +3780,11 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                 width: double.maxFinite,
                 child: ListView(
                   shrinkWrap: true,
-                  children: _subChapterMaterialList.map((subBab) {
-                    final subId = subBab['id'].toString();
+                  children: _subChapterMaterialList.map((subChapter) {
+                    final subId = subChapter['id'].toString();
                     final isSelected = _selectedSubChapterIds.contains(subId);
                     return CheckboxListTile(
-                      title: Text(_getSubChapterName(subBab)),
+                      title: Text(_getSubChapterName(subChapter)),
                       value: isSelected,
                       onChanged: (bool? value) {
                         setDialogState(() {
@@ -4033,7 +4033,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                                   });
                                   if (value != null) {
                                     widget.onSubjectSelected(value);
-                                    _loadBabMateri(value);
+                                    _loadChapterMaterials(value);
                                   }
                                 },
                           validator: (value) => value == null
@@ -4196,23 +4196,23 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                     ),
                     SizedBox(height: AppSpacing.sm),
 
-                    // Dropdown Bab Materi (if useMateriTitle = true)
+                    // Dropdown Chapter Materials (if useMaterialTitle = true)
                     if (_useMaterialTitle) ...[
                       Builder(
                         builder: (context) {
                           final Map<String, DropdownMenuItem<String>>
-                          uniqueBabItems = {};
+                          uniqueChapterItems = {};
                           for (var chapter in _chapterMaterialList) {
                             final id = chapter['id']?.toString();
-                            if (id != null && !uniqueBabItems.containsKey(id)) {
-                              uniqueBabItems[id] = DropdownMenuItem<String>(
+                            if (id != null && !uniqueChapterItems.containsKey(id)) {
+                              uniqueChapterItems[id] = DropdownMenuItem<String>(
                                 value: id,
                                 child: Text(_getChapterName(chapter)),
                               );
                             }
                           }
                           final List<DropdownMenuItem<String>> babItems =
-                              uniqueBabItems.values.toList();
+                              uniqueChapterItems.values.toList();
 
                           return DropdownButtonFormField<String>(
                             key: ValueKey(

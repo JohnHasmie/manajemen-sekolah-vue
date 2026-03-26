@@ -800,9 +800,9 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       await Future.wait([
         _loadPaymentTypes(),
         _loadTagihan(),
-        _loadPembayaranPending(),
+        _loadPendingPayments(),
         _loadDashboardData(),
-        _loadKelasData(),
+        _loadClassData(),
       ]);
 
       if (mounted) {
@@ -840,7 +840,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   // Method to load class and student data
-  Future<void> _loadKelasData() async {
+  Future<void> _loadClassData() async {
     try {
       final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
@@ -1554,7 +1554,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   ],
                 ),
               ),
-              _buildKelasSummary(studentList),
+              _buildClassSummary(studentList),
               SizedBox(width: AppSpacing.sm),
               Container(
                 width: 32,
@@ -1576,7 +1576,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  Widget _buildKelasSummary(List<dynamic> studentList) {
+  Widget _buildClassSummary(List<dynamic> studentList) {
     int totalLunas = 0;
     int totalPending = 0;
     int totalBelumBayar = 0;
@@ -1786,13 +1786,13 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     setState(() {
       _isLoadingMorePending = true;
     });
-    await _loadPembayaranPending(loadMore: true);
+    await _loadPendingPayments(loadMore: true);
     setState(() {
       _isLoadingMorePending = false;
     });
   }
 
-  Future<void> _loadPembayaranPending({bool loadMore = false}) async {
+  Future<void> _loadPendingPayments({bool loadMore = false}) async {
     try {
       if (!loadMore) {
         setState(() {

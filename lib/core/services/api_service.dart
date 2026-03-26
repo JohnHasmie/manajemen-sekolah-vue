@@ -1058,7 +1058,7 @@ class ApiService {
       );
       return response.data;
     } catch (e) {
-      AppLogger.error('api', 'ApiService.deleteAbsensi error: $e');
+      AppLogger.error('api', 'ApiService.deleteAttendance error: $e');
       rethrow;
     }
   }
@@ -1101,34 +1101,6 @@ class ApiService {
       AppLogger.error('api', 'Error getting kelas by mata pelajaran: $e');
       return [];
     }
-  }
-
-  Future<dynamic> createNilai(Map<String, dynamic> data) async {
-    // Sanitize data - ubah undefined menjadi null
-    final sanitizedData = _sanitizeData(data);
-    return await post(ApiEndpoints.grade, sanitizedData);
-  }
-
-  Future<dynamic> updateNilai(String id, Map<String, dynamic> data) async {
-    // Sanitize data - ubah undefined menjadi null
-    final sanitizedData = _sanitizeData(data);
-    return await put('/grade/$id', sanitizedData);
-  }
-
-  /// Sanitizes form data by removing null and 'undefined' string values.
-  /// Prevents sending invalid data to the Laravel backend.
-  /// Like a Laravel FormRequest's `prepareForValidation()` method.
-  Map<String, dynamic> _sanitizeData(Map<String, dynamic> data) {
-    final sanitized = Map<String, dynamic>.from(data);
-    sanitized.removeWhere(
-      (key, value) => value == null || value == 'undefined',
-    );
-    sanitized.forEach((key, value) {
-      if (value == 'undefined') {
-        sanitized[key] = null;
-      }
-    });
-    return sanitized;
   }
 
   // Get mata pelajaran with kelas data
