@@ -37,11 +37,11 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:manajemensekolah/core/widgets/error_handler.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/firebase_options.dart';
-import 'package:manajemensekolah/features/dashboard/screens/dashboard_screen.dart';
 import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_router.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
@@ -292,11 +292,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
     }
 
     final langProvider = ref.watch(languageRiverpod);
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      navigatorObservers: [
-        if (AnalyticsService.observer != null) AnalyticsService.observer!,
-      ],
+    return MaterialApp.router(
+      routerConfig: appRouter,
       title: langProvider.getTranslatedText({
         'en': 'School Management',
         'id': 'Manajemen Sekolah',
@@ -312,129 +309,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
         FlutterQuillLocalizations.delegate,
       ],
       supportedLocales: const [Locale('en', 'US'), Locale('id', 'ID')],
-      home: FutureBuilder(
-        future: _checkAuthStatus(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return _buildLoadingScreen(langProvider);
-          } else {
-            final isAuthenticated = snapshot.data ?? false;
-            AppLogger.info('app', 'Home decision: authenticated = $isAuthenticated');
-            if (isAuthenticated) {
-              return _redirectToDashboard(langProvider);
-            } else {
-              return LoginScreen();
-            }
-          }
-        },
-      ),
-      routes: {
-        '/admin': (context) => Dashboard(role: 'admin'),
-        '/guru': (context) => Dashboard(role: 'guru'),
-        '/teacher': (context) => Dashboard(role: 'guru'),
-        '/staff': (context) => Dashboard(role: 'staff'),
-        '/wali': (context) => Dashboard(role: 'wali'),
-        '/parent': (context) => Dashboard(role: 'wali'),
-        '/login': (context) => LoginScreen(),
-      },
       debugShowCheckedModeBanner: false,
     );
   }
 
-  /// Builds a simple centered loading spinner shown while checking auth status.
-  Widget _buildLoadingScreen(LanguageProvider languageProvider) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text(
-              languageProvider.getTranslatedText({
-                'en': 'Loading...',
-                'id': 'Memuat...',
-              }),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Checks if the user has a valid auth token stored locally.
-  /// Like Laravel's `Auth::check()` - returns true if the user is authenticated.
-  /// Used by the FutureBuilder in `build()` to decide between LoginScreen and Dashboard.
-  Future<bool> _checkAuthStatus() async {
-    try {
-      AppLogger.debug('auth', 'Checking auth status...');
-
-      final isLoggedIn = await _tokenService.isLoggedIn();
-
-      AppLogger.debug('auth', 'Auth status result: $isLoggedIn');
-
-      return isLoggedIn;
-    } catch (e) {
-      AppLogger.error('auth', e);
-      // Jika ada error, anggap tidak authenticated
-      return false;
-    }
-  }
-
-  /// Resolves the user's role and navigates to the correct Dashboard.
-  /// Like Laravel's `RedirectIfAuthenticated` middleware that routes
-  /// admin to `/admin`, guru to `/guru`, etc.
-  Widget _redirectToDashboard(LanguageProvider languageProvider) {
-    return FutureBuilder(
-      future: _getUserRole(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildRedirectingScreen(languageProvider);
-        } else {
-          final role = snapshot.data ?? 'guru';
-          AppLogger.info('app', 'Redirecting to dashboard with role: $role');
-          return Dashboard(role: role);
-        }
-      },
-    );
-  }
-
-  /// Builds a "Redirecting..." spinner shown while resolving the user's role.
-  Widget _buildRedirectingScreen(LanguageProvider languageProvider) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text(
-              languageProvider.getTranslatedText({
-                'en': 'Redirecting...',
-                'id': 'Mengalihkan...',
-              }),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Reads the user's role from stored user data (SharedPreferences).
-  /// Like `Auth::user()->role` in Laravel. Defaults to 'guru' if not found.
-  ///
-  /// Returns a role string: 'admin', 'guru', 'staff', or 'wali'.
-  Future<String> _getUserRole() async {
-    try {
-      final userData = await _tokenService.getUserData();
-      final role = userData?['role']?.toString() ?? 'guru';
-
-      AppLogger.debug('auth', 'User role: $role');
-
-      return role;
-    } catch (e) {
-      AppLogger.error('auth', e);
-      return 'guru';
-    }
-  }
 }
