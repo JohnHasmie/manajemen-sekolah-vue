@@ -31,6 +31,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// RPP (lesson plan) list screen with CRUD, search, filter, and AI generation.
 ///
@@ -320,7 +321,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(color: ColorUtils.slate300),
@@ -345,7 +346,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                                 _selectedStatusFilter = tempSelectedStatus;
                               });
                               _checkActiveFilter();
-                              Navigator.pop(context);
+                              AppNavigator.pop(context);
                               _loadRpp();
                             },
                             style: ElevatedButton.styleFrom(
@@ -530,7 +531,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.pop(context);
+                      AppNavigator.pop(context);
                       _showRppFormDialog();
                     },
                     child: Container(
@@ -571,7 +572,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.pop(context);
+                      AppNavigator.pop(context);
                       _showGenerateRppFormDialog();
                     },
                     child: Container(
@@ -687,7 +688,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => AppNavigator.pop(context, false),
             child: Text(
               languageProvider.getTranslatedText({
                 'en': 'Cancel',
@@ -696,7 +697,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
             ),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => AppNavigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: ColorUtils.error600,
               elevation: 0,
@@ -766,12 +767,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
     try {
       final fullRpp = await ApiService.getLessonPlanById(id);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => RPPDetailPage(rppData: fullRpp),
-        ),
-      );
+      AppNavigator.push(context, RPPDetailPage(rppData: fullRpp));
     } catch (e) {
       AppLogger.error('lesson_plan', 'Fetch RPP detail error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1161,7 +1157,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                 Row(
                   children: [
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => AppNavigator.pop(context),
                       child: Container(
                         width: 40,
                         height: 40,
@@ -1889,7 +1885,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       }
 
       if (!mounted) return;
-      Navigator.pop(context);
+      AppNavigator.pop(context);
       widget.onSaved();
 
       final languageProvider = ref.read(languageRiverpod);
@@ -2091,7 +2087,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => AppNavigator.pop(context),
                       child: Container(
                         padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -2400,7 +2396,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                     child: OutlinedButton(
                       onPressed: _isUploading
                           ? null
-                          : () => Navigator.pop(context),
+                          : () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -2727,19 +2723,14 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
 
         if (!mounted) return;
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => RppAiResultScreen(
+        AppNavigator.pushReplacement(context, RppAiResultScreen(
               teacherId: widget.teacherId,
               onSaved: widget.onSaved,
               pollUrl: pollUrl,
               jobId: jobId,
               token: token,
               pollingMetadata: pollingMetadata,
-            ),
-          ),
-        );
+            ));
         return;
       }
 
@@ -2772,7 +2763,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
               actionsAlignment: MainAxisAlignment.center,
               actions: [
                 ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => AppNavigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ColorUtils.warning600,
                     foregroundColor: Colors.white,
@@ -2969,18 +2960,13 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
     };
 
     if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RppAiResultScreen(
+    AppNavigator.pushReplacement(context, RppAiResultScreen(
           rppData: mappedRppData,
           teacherId: widget.teacherId,
           onSaved: () {
             widget.onSaved();
           },
-        ),
-      ),
-    );
+        ));
 
     messenger.showSnackBar(
       SnackBar(
@@ -3152,7 +3138,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => AppNavigator.pop(context),
                       child: Container(
                         padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -3394,7 +3380,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                     child: OutlinedButton(
                       onPressed: _isAutoGenerating
                           ? null
-                          : () => Navigator.pop(context),
+                          : () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

@@ -14,6 +14,7 @@ import 'package:manajemensekolah/features/teachers/services/teacher_service.dart
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Teacher detail screen - displays full profile for a single teacher.
 ///
@@ -374,7 +375,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -633,7 +634,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             icon: Icon(Icons.arrow_back_rounded, size: 18, color: ColorUtils.slate700),
                             label: Text(
                               'Kembali ke Daftar Guru',

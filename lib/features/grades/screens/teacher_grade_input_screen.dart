@@ -31,6 +31,7 @@ import 'package:manajemensekolah/features/grades/screens/grade_book_screen.dart'
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// The class/subject selection screen (Steps 0-1) before entering the grade book.
 ///
@@ -1155,7 +1156,7 @@ class GradePageState extends ConsumerState<GradePage> {
               GestureDetector(
                 onTap: () async {
                   final shouldPop = await _handleWillPop();
-                  if (shouldPop && mounted) Navigator.pop(context);
+                  if (shouldPop && mounted) AppNavigator.pop(context);
                 },
                 child: Container(
                   width: 40,

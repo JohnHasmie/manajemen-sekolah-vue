@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Detail page for a sub-chapter (sub-bab) showing its content and AI materials.
 ///
@@ -298,7 +299,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
           Row(
             children: [
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () => AppNavigator.pop(context),
                 child: Container(
                   width: 40,
                   height: 40,
@@ -1579,18 +1580,13 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   // ==================== SHARED HELPERS ====================
 
   void _navigateToAiResult() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MateriAiResultScreen(
+    AppNavigator.push(context, MateriAiResultScreen(
           teacherId: widget.teacherId,
           subjectId: widget.subjectId,
           chapterId: widget.bab['id'].toString(),
           subChapterId: widget.subBab['id'].toString(),
           title: widget.subBab['judul_sub_bab'] ?? 'Materi Pembelajaran',
-        ),
-      ),
-    ).then((_) {
+        )).then((_) {
       // Reload AI content when returning
       _loadAiContent();
     });

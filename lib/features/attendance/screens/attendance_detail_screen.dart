@@ -13,6 +13,7 @@ import 'package:manajemensekolah/features/students/services/student_service.dart
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Attendance detail page where a teacher can view and update each student's
 /// attendance status (hadir/terlambat/izin/sakit/alpha) for a given subject
@@ -290,7 +291,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
+        AppNavigator.pop(context);
       }
     } catch (e) {
       AppLogger.error('attendance', e);

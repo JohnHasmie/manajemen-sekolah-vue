@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/features/attendance/screens/admin_attendance_detail.dart';
 import 'package:manajemensekolah/features/attendance/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
@@ -19,7 +18,6 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
-import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
@@ -33,6 +31,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Data model for a single attendance summary record.
 /// Like a Laravel Eloquent model or a TypeScript interface in Vue.
@@ -692,7 +691,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                   ),
                   IconButton(
                     icon: Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => AppNavigator.pop(context),
                   ),
                 ],
               ),
@@ -724,14 +723,8 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                       ),
                       subtitle: Text(teacher['nuptk'] ?? 'N/A'),
                       onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                PresencePage(teacher: teacher),
-                          ),
-                        ).then((_) => _loadData(useCache: false));
+                        AppNavigator.pop(context);
+                        AppNavigator.push(context, PresencePage(teacher: teacher)).then((_) => _loadData(useCache: false));
                       },
                     ),
                   );
@@ -1180,7 +1173,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => AppNavigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: ColorUtils.slate300),
@@ -1201,7 +1194,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                           setState(() {
                             _selectedDateFilter = tempSelectedDate;
                             _selectedSubjectIds.clear();
@@ -2082,7 +2075,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => AppNavigator.pop(context),
                   child: Text(
                     languageProvider.getTranslatedText({
                       'en': 'Cancel',
@@ -2094,7 +2087,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                   onPressed: selectedMonths.isEmpty
                       ? null
                       : () {
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                           _processExport(selectedMonths);
                         },
                   child: Text('Export'),
@@ -2131,7 +2124,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
       }
 
       if (mounted) {
-        Navigator.pop(context); // Close loading
+        AppNavigator.pop(context); // Close loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -2146,7 +2139,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // Close loading
+        AppNavigator.pop(context); // Close loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Export failed: $e'),
@@ -2418,7 +2411,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context, false),
+                          onPressed: () => AppNavigator.pop(context, false),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 12),
                             side: BorderSide(color: ColorUtils.slate300),
@@ -2438,7 +2431,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                       SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context, true),
+                          onPressed: () => AppNavigator.pop(context, true),
                           style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 12),
                             backgroundColor: ColorUtils.error600,
@@ -2511,10 +2504,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
   }
 
   void _navigateToDetailAbsensi(AttendanceSummary summary) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AdminAbsensiDetailPage(
+    AppNavigator.push(context, AdminAbsensiDetailPage(
           subjectId: summary.subjectId,
           subjectName: summary.subjectName,
           date: summary.date,
@@ -2523,9 +2513,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
           lessonHourId: summary.lessonHourId,
           lessonHourName: summary.lessonHourName,
           academicYearId: summary.academicYearId,
-        ),
-      ),
-    );
+        ));
   }
 
   @override
@@ -2579,7 +2567,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                                 _absensiSummaryList.clear();
                               });
                             } else {
-                              Navigator.pop(context);
+                              AppNavigator.pop(context);
                             }
                           },
                           child: Container(

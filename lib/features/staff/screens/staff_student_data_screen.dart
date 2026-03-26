@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/data/data_dummy.dart';
 import 'package:manajemensekolah/core/models/student.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Displays a scrollable list of all students with basic info (NIS, class, parent).
 ///
@@ -72,7 +73,7 @@ class StaffStudentDataScreen extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => AppNavigator.pop(context),
             child: Text('Tutup'),
           ),
         ],

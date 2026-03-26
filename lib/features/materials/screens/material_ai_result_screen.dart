@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Displays AI-generated teaching materials with tabbed content and
 /// regeneration capability.
@@ -512,7 +513,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => AppNavigator.pop(context),
               child: Text(
                 'Batal',
                 style: TextStyle(color: ColorUtils.slate500),
@@ -520,7 +521,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
+                AppNavigator.pop(context);
                 _generateMateri(prompt: _promptController.text);
               },
               style: ElevatedButton.styleFrom(
@@ -581,7 +582,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                       style: TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text('Buat ulang materi, kuis, dan referensi'),
                   onTap: () {
-                    Navigator.pop(context);
+                    AppNavigator.pop(context);
                     _showRegenerateDialog();
                   },
                 ),
@@ -601,7 +602,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                   subtitle:
                       Text('Menambahkan kuis baru ke daftar yang sudah ada'),
                   onTap: () {
-                    Navigator.pop(context);
+                    AppNavigator.pop(context);
                     _regenerateQuiz();
                   },
                 ),
@@ -621,7 +622,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                   subtitle:
                       Text('Mengganti seluruh referensi dengan yang baru'),
                   onTap: () {
-                    Navigator.pop(context);
+                    AppNavigator.pop(context);
                     _regenerateReferences();
                   },
                 ),
@@ -731,7 +732,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () => AppNavigator.pop(context),
             child: Container(
               width: 40,
               height: 40,

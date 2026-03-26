@@ -31,6 +31,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Parent billing screen with payment status, upload, and filtering.
 ///
@@ -885,7 +886,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(color: ColorUtils.slate300),
@@ -911,7 +912,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                               _selectedPeriodeFilter = tempSelectedPeriode;
                             });
                             _checkActiveFilter();
-                            Navigator.pop(context);
+                            AppNavigator.pop(context);
                             _loadData();
                           },
                           style: ElevatedButton.styleFrom(
@@ -955,11 +956,11 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
           content: Text(AppLocalizations.chooseImageSource.tr),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, ImageSource.gallery),
+              onPressed: () => AppNavigator.pop(context, ImageSource.gallery),
               child: Text(AppLocalizations.gallery.tr),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(context, ImageSource.camera),
+              onPressed: () => AppNavigator.pop(context, ImageSource.camera),
               child: Text(AppLocalizations.camera.tr),
             ),
           ],
@@ -1058,11 +1059,11 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
           content: Text(AppLocalizations.uploadPaymentProof.tr),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, 'image'),
+              onPressed: () => AppNavigator.pop(context, 'image'),
               child: Text(AppLocalizations.imageCameraGallery.tr),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(context, 'pdf'),
+              onPressed: () => AppNavigator.pop(context, 'pdf'),
               child: Text(AppLocalizations.pdfDocument.tr),
             ),
           ],
@@ -1482,7 +1483,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(color: ColorUtils.slate300),
@@ -1558,7 +1559,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                                     );
 
                                     if (context.mounted) {
-                                      Navigator.pop(context);
+                                      AppNavigator.pop(context);
                                       _loadData();
 
                                       ScaffoldMessenger.of(
@@ -1808,7 +1809,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => AppNavigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: ColorUtils.slate300),
@@ -2268,7 +2269,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
           Row(
             children: [
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () => AppNavigator.pop(context),
                 child: Container(
                   width: 40,
                   height: 40,
@@ -2503,7 +2504,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                     });
                     _loadTagihan();
                   }
-                  Navigator.pop(context);
+                  AppNavigator.pop(context);
                 },
               );
             }),

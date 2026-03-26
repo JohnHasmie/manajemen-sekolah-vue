@@ -17,6 +17,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_result_screen.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Lists students in a class for the learning recommendation flow.
 ///
@@ -282,7 +283,7 @@ class _LearningRecommendationStudentScreenState
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -405,17 +406,11 @@ class _LearningRecommendationStudentScreenState
                             color: ColorUtils.slate400,
                           ),
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    LearningRecommendationResultScreen(
+                            AppNavigator.push(context, LearningRecommendationResultScreen(
                                       teacher: widget.teacher,
                                       student: student,
                                       classData: widget.classData,
-                                    ),
-                              ),
-                            );
+                                    ));
                           },
                         ),
                       );

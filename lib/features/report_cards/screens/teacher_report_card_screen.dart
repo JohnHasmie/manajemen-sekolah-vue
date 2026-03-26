@@ -22,6 +22,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Report card list screen -- shows classes and their students for raport entry.
 ///
@@ -423,7 +424,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -692,16 +693,11 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RaportDetailScreen(
+                AppNavigator.push(context, RaportDetailScreen(
                       studentClassId: student['student_class_id'].toString(),
                       studentName: student['student_name'] ?? 'Siswa',
                       className: _selectedClass?['name'] ?? '',
-                    ),
-                  ),
-                ).then((_) => _loadStudentsForClass());
+                    )).then((_) => _loadStudentsForClass());
               },
               borderRadius: BorderRadius.circular(16),
               child: Padding(

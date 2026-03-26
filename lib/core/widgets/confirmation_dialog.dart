@@ -4,6 +4,7 @@
 // you would use in a Laravel/Vue app before deleting a record.
 // Returns `true` via Navigator.pop when confirmed, `false` when cancelled.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// A reusable confirmation dialog with a gradient header and confirm/cancel buttons.
 ///
@@ -112,7 +113,7 @@ class ConfirmationDialog extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context, false),
+                    onPressed: () => AppNavigator.pop(context, false),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -129,7 +130,7 @@ class ConfirmationDialog extends StatelessWidget {
                 SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context, true),
+                    onPressed: () => AppNavigator.pop(context, true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: confirmColor,
                       shape: RoundedRectangleBorder(

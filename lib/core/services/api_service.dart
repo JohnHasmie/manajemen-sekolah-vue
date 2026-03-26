@@ -18,12 +18,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
-import 'package:manajemensekolah/main.dart';
-import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
+import 'package:manajemensekolah/core/router/app_router.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -240,28 +238,12 @@ class ApiService {
       final prefs = PreferencesService();
       await prefs.clear();
 
-      // Delay sedikit untuk memastikan context sudah ready
       await Future.delayed(const Duration(milliseconds: 300));
 
-      // Navigate to login with error message
-      if (navigatorKey.currentState != null &&
-          (navigatorKey.currentState?.mounted ?? false)) {
-        navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => LoginScreen(initialError: errorMessage),
-          ),
-          (route) => false,
-        );
-      }
+      // Use go_router to navigate to login
+      appRouter.go('/login');
     } catch (e) {
       AppLogger.error('api', 'Error during authentication cleanup: $e');
-      // Fallback ke named route
-      try {
-        navigatorKey.currentState?.pushReplacementNamed('/auth/login');
-      } catch (_) {
-        // If all navigation fails, we're likely in a bad state
-        AppLogger.info('api', '🚨 Critical: Unable to navigate to login');
-      }
     }
   }
 

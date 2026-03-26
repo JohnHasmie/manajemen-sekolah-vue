@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Multi-step wizard for promoting students to the next class/academic year.
 ///
@@ -485,7 +486,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                         if (_currentStep > 0) {
                           _onStepCancel();
                         } else {
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                         }
                       },
                       child: Container(
@@ -1430,7 +1431,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => Navigator.pop(context),
+                            onTap: () => AppNavigator.pop(context),
                             child: Container(
                               width: 32,
                               height: 32,
@@ -1588,7 +1589,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => AppNavigator.pop(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _getPrimaryColor(),
                           padding: EdgeInsets.symmetric(vertical: 14),
@@ -1724,7 +1725,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.pop(context, true);
+      AppNavigator.pop(context, true);
     } catch (e) {
       AppLogger.error('classroom', e);
       if (mounted) {
@@ -1747,7 +1748,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     if (_currentStep > 0) {
       _goToStep(_currentStep - 1);
     } else {
-      Navigator.pop(context);
+      AppNavigator.pop(context);
     }
   }
 
@@ -1872,7 +1873,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(color: ColorUtils.slate300),
                               shape: RoundedRectangleBorder(
@@ -1917,7 +1918,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                                   'academic_year_id': _selectedTargetYearId,
                                 };
                                 await getIt<ApiClassService>().addClass(data);
-                                Navigator.pop(context);
+                                AppNavigator.pop(context);
                                 if (_selectedTargetYearId != null) {
                                   _loadTargetClasses(_selectedTargetYearId!);
                                 }

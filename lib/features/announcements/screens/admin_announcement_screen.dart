@@ -30,6 +30,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin announcement management screen.
 ///
@@ -705,7 +706,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => AppNavigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: ColorUtils.slate300),
@@ -735,7 +736,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             _selectedStatusFilter = tempSelectedStatus;
                           });
                           _checkActiveFilter();
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                           _loadData();
                         },
                         style: ElevatedButton.styleFrom(
@@ -1209,7 +1210,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () => Navigator.pop(context),
+                                onTap: () => AppNavigator.pop(context),
                                 child: Container(
                                   width: 32,
                                   height: 32,
@@ -1343,7 +1344,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                             children: [
                               Expanded(
                                 child: OutlinedButton(
-                                  onPressed: () => Navigator.pop(context),
+                                  onPressed: () => AppNavigator.pop(context),
                                   style: OutlinedButton.styleFrom(
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     side: BorderSide(
@@ -1436,7 +1437,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                                   ColorUtils.success600,
                                             ),
                                           );
-                                          Navigator.pop(context);
+                                          AppNavigator.pop(context);
                                         }
                                       } else {
                                         await getIt<ApiAnnouncementService>().createAnnouncement(
@@ -1460,7 +1461,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                                   ColorUtils.success600,
                                             ),
                                           );
-                                          Navigator.pop(context);
+                                          AppNavigator.pop(context);
                                         }
                                       }
                                       _loadData(resetPage: true, useCache: false);
@@ -1822,7 +1823,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context, false),
+                      onPressed: () => AppNavigator.pop(context, false),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 13),
                         side: BorderSide(color: ColorUtils.slate300),
@@ -1845,7 +1846,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                   SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context, true),
+                      onPressed: () => AppNavigator.pop(context, true),
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 13),
                         backgroundColor: ColorUtils.error600,
@@ -2396,7 +2397,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => AppNavigator.pop(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _getPrimaryColor(),
                           shape: RoundedRectangleBorder(
@@ -2708,7 +2709,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => AppNavigator.pop(context),
                           child: Container(
                             width: 40,
                             height: 40,

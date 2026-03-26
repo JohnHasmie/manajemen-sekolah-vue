@@ -6,6 +6,7 @@
 // This is a StatelessWidget -- no local mutable state needed.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Print preview for a student's report card.
 ///
@@ -58,7 +59,7 @@ class RaportPrintScreen extends StatelessWidget {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,

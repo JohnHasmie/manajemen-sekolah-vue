@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Parent's report card list -- shows children with semester selector.
 ///
@@ -215,7 +216,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -381,20 +382,14 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                           child: InkWell(
                             borderRadius: BorderRadius.circular(12),
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      ParentRaportDetailScreen(
+                              AppNavigator.push(context, ParentRaportDetailScreen(
                                         raportData: raport,
                                         studentName:
                                             student['student']['name'] ??
                                             'Siswa',
                                         userRole: 'wali',
                                         studentData: student['student'],
-                                      ),
-                                ),
-                              );
+                                      ));
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),

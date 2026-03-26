@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer,
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 class AddActivityDialog extends ConsumerStatefulWidget {
   final String teacherId;
@@ -268,14 +269,9 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         (s) => s['id']?.toString() == subjectId,
         orElse: () => <String, dynamic>{},
       );
-      final masterSubjectId = subject.isEmpty
-          ? null
-          : subject['subject_id']?.toString();
-
-      if (masterSubjectId == null) {
-        AppLogger.error('class_activity', 'Error: Master Subject ID not found for subject $subjectId');
-        return;
-      }
+      final masterSubjectId = subject.isNotEmpty
+          ? (subject['subject_id']?.toString() ?? subject['id']?.toString() ?? subjectId)
+          : subjectId;
 
       final babList = await getIt<ApiSubjectService>().getBabMateri(
         subjectId: masterSubjectId,
@@ -732,7 +728,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       }
 
       if (!mounted) return;
-      Navigator.pop(context);
+      AppNavigator.pop(context);
       widget.onActivityAdded();
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -815,7 +811,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => AppNavigator.pop(context),
                   child: Text(
                     languageProvider.getTranslatedText({
                       'en': 'Done',
@@ -928,7 +924,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           size: 20,
                         ),
                       ),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => AppNavigator.pop(context),
                     ),
                   ],
                 ),
@@ -1562,7 +1558,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                     child: OutlinedButton(
                       onPressed: _isSubmitting
                           ? null
-                          : () => Navigator.pop(context),
+                          : () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(

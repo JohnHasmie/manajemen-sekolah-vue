@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Student detail screen - displays full profile for a single student.
 ///
@@ -294,7 +295,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -355,7 +356,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                   SizedBox(width: 8),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pop(context);
+                      AppNavigator.pop(context);
                       widget.onEdit?.call();
                     },
                     child: Container(
@@ -754,7 +755,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                             SizedBox(
                               width: double.infinity,
                               child: OutlinedButton.icon(
-                                onPressed: () => Navigator.pop(context),
+                                onPressed: () => AppNavigator.pop(context),
                                 icon: Icon(
                                   Icons.arrow_back_rounded,
                                   size: 18,

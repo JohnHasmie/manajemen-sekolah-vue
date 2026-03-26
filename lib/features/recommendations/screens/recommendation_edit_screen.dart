@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Form screen for editing AI-generated learning recommendations.
 ///
@@ -169,7 +170,7 @@ class _LearningRecommendationEditScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Perubahan berhasil disimpan!')),
       );
-      Navigator.pop(context, true); // Return true to indicate data changed
+      AppNavigator.pop(context, true); // Return true to indicate data changed
     }
   }
 
@@ -212,7 +213,7 @@ class _LearningRecommendationEditScreenState
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,

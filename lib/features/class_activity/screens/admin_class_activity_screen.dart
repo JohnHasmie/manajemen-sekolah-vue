@@ -22,6 +22,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin screen to monitor class activities (assignments, exams) per teacher/subject.
 ///
@@ -979,7 +980,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -1135,7 +1136,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
                         // Back button (40x40 semi-transparent)
                         GestureDetector(
                           onTap: _showTeacherList
-                              ? () => Navigator.pop(context)
+                              ? () => AppNavigator.pop(context)
                               : (_showSubjectList
                                     ? _backToTeacherList
                                     : _backToSubjectList),

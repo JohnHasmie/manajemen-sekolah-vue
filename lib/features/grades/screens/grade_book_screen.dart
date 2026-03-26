@@ -33,6 +33,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// The grade book table page (Step 2) -- displays and edits student grades
 /// in a spreadsheet-like view.
@@ -546,7 +547,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => AppNavigator.pop(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _getPrimaryColor(),
                       padding: EdgeInsets.symmetric(vertical: 14),
@@ -638,10 +639,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         ? _getNilaiForSiswaAndHeader(student, jenisNilai, header)
         : null;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GradeInputForm(
+    AppNavigator.push(context, GradeInputForm(
           teacher: widget.teacher,
           subject: widget.subject,
           siswa: student,
@@ -650,9 +648,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           assessmentId: header?['id'], // Pass assessment ID
           initialDate: header != null ? DateTime.parse(header['date']) : null,
           initialTitle: header?['title'],
-        ),
-      ),
-    ).then((_) {
+        )).then((_) {
       _loadData();
     });
   }
@@ -748,7 +744,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     ),
                   ),
                   onTap: () {
-                    Navigator.pop(context);
+                    AppNavigator.pop(context);
                     _showAssessmentDetail(jenis, header, languageProvider);
                   },
                 ),
@@ -773,7 +769,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                       ),
                     ),
                     onTap: () {
-                      Navigator.pop(context);
+                      AppNavigator.pop(context);
                       _enterEditMode(jenis, header);
                     },
                   ),
@@ -810,7 +806,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                       ),
                     ),
                     onTap: () {
-                      Navigator.pop(context);
+                      AppNavigator.pop(context);
                       _confirmDeleteAssessment(jenis, header, languageProvider);
                     },
                   ),
@@ -1390,7 +1386,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => AppNavigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _getPrimaryColor(),
                     padding: EdgeInsets.symmetric(vertical: 12),
@@ -1510,7 +1506,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 12),
                         side: BorderSide(color: ColorUtils.slate300),
@@ -1531,7 +1527,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        AppNavigator.pop(context);
                         _deleteAssessment(jenis, header);
                       },
                       style: ElevatedButton.styleFrom(
@@ -1693,16 +1689,11 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   void _openNewInputForm(LanguageProvider languageProvider) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GradeInputFormNew(
+    AppNavigator.push(context, GradeInputFormNew(
           teacher: widget.teacher,
           subject: widget.subject,
           siswaList: _siswaList,
-        ),
-      ),
-    ).then((_) {
+        )).then((_) {
       _loadData();
     });
   }
@@ -2105,7 +2096,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                         if (widget.onBack != null) {
                           widget.onBack!();
                         } else {
-                          Navigator.of(context).pop();
+                          AppNavigator.pop(context);
                         }
                       },
                       child: Container(

@@ -30,6 +30,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// School announcements list with automatic read tracking.
 ///
@@ -605,7 +606,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => AppNavigator.pop(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _getPrimaryColor(),
                           shape: RoundedRectangleBorder(
@@ -880,7 +881,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => AppNavigator.pop(context),
                           child: Container(
                             width: 40,
                             height: 40,

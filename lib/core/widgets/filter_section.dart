@@ -4,6 +4,7 @@
 // management page. Similar to Laravel Nova's filter panel where you pick
 // semester and academic year before viewing data.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
@@ -76,11 +77,11 @@ class FilterSection extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => AppNavigator.pop(context),
                 child: Text(AppLocalizations.cancel.tr),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, controller.text),
+                onPressed: () => AppNavigator.pop(context, controller.text),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ColorUtils.primaryColor,
                   shape: RoundedRectangleBorder(
@@ -119,7 +120,7 @@ class FilterSection extends StatelessWidget {
             children: semesterList.map((semester) {
               return ListTile(
                 title: Text(semester['nama'] ?? 'Unknown'),
-                onTap: () => Navigator.pop(context, semester['id']),
+                onTap: () => AppNavigator.pop(context, semester['id']),
                 selected: selectedSemester == semester['id'],
               );
             }).toList(),

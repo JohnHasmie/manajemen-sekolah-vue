@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Report card detail form for a single student.
 ///
@@ -415,7 +416,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
             ),
           );
           if (status == 'final') {
-            Navigator.pop(context, true); // Return true to indicate change
+            AppNavigator.pop(context, true); // Return true to indicate change
           } else {
             _existingRaport = response;
           }
@@ -454,12 +455,12 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false), // Cancel
+              onPressed: () => AppNavigator.pop(context, false), // Cancel
               child: const Text('Batal'),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => Navigator.pop(context, true), // Leave
+              onPressed: () => AppNavigator.pop(context, true), // Leave
               child: const Text(
                 'Keluar',
                 style: TextStyle(color: Colors.white),
@@ -480,7 +481,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
     }
 
     if (mounted) {
-      Navigator.pop(context);
+      AppNavigator.pop(context);
     }
   }
 
@@ -493,7 +494,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
 
         final canLeave = await _onWillPop();
         if (canLeave && mounted) {
-          Navigator.pop(context, result);
+          AppNavigator.pop(context, result);
         }
       },
       child: Scaffold(
@@ -576,16 +577,11 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                     GestureDetector(
                       onTap: () {
                         if (_existingRaport != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RaportPrintScreen(
+                          AppNavigator.push(context, RaportPrintScreen(
                                 raportData: _existingRaport!,
                                 studentName: widget.studentName,
                                 className: widget.className,
-                              ),
-                            ),
-                          );
+                              ));
                         }
                       },
                       child: Container(
@@ -739,12 +735,12 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                                 ),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.pop(context),
+                                    onPressed: () => AppNavigator.pop(context),
                                     child: const Text('Batal'),
                                   ),
                                   ElevatedButton(
                                     onPressed: () {
-                                      Navigator.pop(context);
+                                      AppNavigator.pop(context);
                                       _saveRaport(status: 'final');
                                     },
                                     child: const Text('Ya, Selesaikan'),

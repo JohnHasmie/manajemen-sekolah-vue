@@ -6,6 +6,7 @@
 // taps a specific attendance summary row.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/models/student.dart';
@@ -703,7 +704,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                                 }
                               });
                             } else {
-                              Navigator.of(context).pop();
+                              AppNavigator.pop(context);
                             }
                           },
                           child: Container(

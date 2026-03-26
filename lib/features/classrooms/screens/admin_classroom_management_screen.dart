@@ -32,6 +32,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer,
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin class management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -600,7 +601,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => AppNavigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: ColorUtils.slate300),
@@ -629,7 +630,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                             _selectedHomeroomFilter = tempSelectedHomeroom;
                           });
                           _checkActiveFilter();
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                           _loadData();
                         },
                         style: ElevatedButton.styleFrom(
@@ -1089,7 +1090,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () => Navigator.pop(context),
+                                onTap: () => AppNavigator.pop(context),
                                 child: Container(
                                   width: 32,
                                   height: 32,
@@ -1169,7 +1170,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                             children: [
                               Expanded(
                                 child: OutlinedButton(
-                                  onPressed: () => Navigator.pop(context),
+                                  onPressed: () => AppNavigator.pop(context),
                                   style: OutlinedButton.styleFrom(
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     side: BorderSide(
@@ -1249,7 +1250,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                                               backgroundColor: Colors.green,
                                             ),
                                           );
-                                          Navigator.pop(context);
+                                          AppNavigator.pop(context);
                                         }
                                       } else {
                                         await getIt<ApiClassService>().addClass({
@@ -1275,7 +1276,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                                               backgroundColor: Colors.green,
                                             ),
                                           );
-                                          Navigator.pop(context);
+                                          AppNavigator.pop(context);
                                         }
                                       }
                                       _loadData();
@@ -1906,7 +1907,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                           top: 0,
                           right: 0,
                           child: GestureDetector(
-                            onTap: () => Navigator.pop(context),
+                            onTap: () => AppNavigator.pop(context),
                             child: Container(
                               width: 32,
                               height: 32,
@@ -1972,16 +1973,11 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.pop(context);
+                          AppNavigator.pop(context);
                           // Navigate to student management screen with class filter
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => StudentManagementScreen(
+                          AppNavigator.push(context, StudentManagementScreen(
                                 initialClassId: classData['id'].toString(),
-                              ),
-                            ),
-                          );
+                              ));
                         },
                         icon: Icon(Icons.list, color: Colors.white),
                         label: Text(
@@ -2014,7 +2010,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => AppNavigator.pop(context),
                               style: OutlinedButton.styleFrom(
                                 padding: EdgeInsets.symmetric(vertical: 13),
                                 side: BorderSide(color: ColorUtils.slate300),
@@ -2040,7 +2036,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                             Expanded(
                               child: ElevatedButton.icon(
                                 onPressed: () {
-                                  Navigator.pop(context);
+                                  AppNavigator.pop(context);
                                   _showAddEditDialog(classData: classData);
                                 },
                                 icon: Icon(
@@ -2192,7 +2188,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                   'id': 'Kelola dan pantau kelas',
                 }),
                 primaryColor: _getPrimaryColor(),
-                onBackPressed: () => Navigator.pop(context),
+                onBackPressed: () => AppNavigator.pop(context),
                 actionMenu: PopupMenuButton<String>(
                   key: _menuKey,
                   onSelected: (value) {
@@ -2656,10 +2652,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
   }
 
   void _showPromotionWizard() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ClassPromotionWizard()),
-    );
+    AppNavigator.push(context, ClassPromotionWizard());
   }
 
   Future<void> _checkAndShowTour() async {

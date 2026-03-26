@@ -24,6 +24,7 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// The login page widget. Like a Vue page component (`pages/login.vue`).
@@ -122,7 +123,7 @@ class LoginScreenState extends State<LoginScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => AppNavigator.pop(context),
             child: Text('Mengerti'),
           ),
         ],
@@ -995,7 +996,7 @@ class LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     // Navigate berdasarkan role
-    Navigator.pushReplacementNamed(context, '/$userRole');
+    AppNavigator.pushReplacementNamed(context, '/$userRole');
   }
 
   /// Shows an OTP input dialog for email-based two-factor authentication.
@@ -1038,7 +1039,7 @@ class LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Close dialog
+              AppNavigator.pop(context); // Close dialog
               setState(() => _isLoading = false);
             },
             child: Text('Batal'),
@@ -1052,7 +1053,7 @@ class LoginScreenState extends State<LoginScreen> {
                 );
                 return;
               }
-              Navigator.pop(context); // Close dialog
+              AppNavigator.pop(context); // Close dialog
               await _verifyOtp(email, otp);
             },
             child: Text('Verifikasi'),

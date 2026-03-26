@@ -32,6 +32,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin student management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -1050,7 +1051,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(color: ColorUtils.slate300),
@@ -1081,7 +1082,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                 _selectedGuardian = tempSelectedGuardian;
                               });
                               _checkActiveFilter();
-                              Navigator.pop(context);
+                              AppNavigator.pop(context);
                               _loadData();
                             },
                             style: ElevatedButton.styleFrom(
@@ -1292,7 +1293,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () => Navigator.pop(context),
+                                onTap: () => AppNavigator.pop(context),
                                 child: Container(
                                   width: 32,
                                   height: 32,
@@ -1556,7 +1557,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                             children: [
                               Expanded(
                                 child: OutlinedButton(
-                                  onPressed: () => Navigator.pop(context),
+                                  onPressed: () => AppNavigator.pop(context),
                                   style: OutlinedButton.styleFrom(
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     side: BorderSide(
@@ -1688,7 +1689,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                                   ColorUtils.success600,
                                             ),
                                           );
-                                          Navigator.pop(context);
+                                          AppNavigator.pop(context);
                                         }
                                       } else {
                                         await getIt<ApiStudentService>().addStudent(
@@ -1721,7 +1722,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                                   ColorUtils.success600,
                                             ),
                                           );
-                                          Navigator.pop(context);
+                                          AppNavigator.pop(context);
                                         }
                                       }
                                     } catch (e) {
@@ -1760,7 +1761,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                                             actions: [
                                               TextButton(
                                                 onPressed: () =>
-                                                    Navigator.pop(ctx),
+                                                    AppNavigator.pop(ctx),
                                                 child: Text(
                                                   'OK',
                                                   style: TextStyle(
@@ -1955,17 +1956,12 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
 
   void _navigateToStudentDetail(Map<String, dynamic> student) {
     final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => StudentDetailScreen(
+    AppNavigator.push(context, StudentDetailScreen(
           student: student,
           onEdit: isReadOnly
               ? null
               : () => _showStudentDialog(student: student),
-        ),
-      ),
-    );
+        ));
   }
 
   String _getGenderText(String? gender, LanguageProvider languageProvider) {

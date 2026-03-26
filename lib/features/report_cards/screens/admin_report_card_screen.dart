@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Admin report card screen - select class, view students, export/publish raports.
 ///
@@ -297,14 +298,14 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => AppNavigator.pop(context, false),
             child: const Text('Batal'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: ColorUtils.corporateBlue600,
             ),
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => AppNavigator.pop(context, true),
             child: const Text(
               'Ya, Kirim',
               style: TextStyle(color: Colors.white),
@@ -444,14 +445,11 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
       }
 
       if (!mounted) return;
-      Navigator.pop(context); // Close loading dialog
+      AppNavigator.pop(context); // Close loading dialog
 
       if (detail != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ParentRaportDetailScreen(
-              raportData: detail!,
+        AppNavigator.push(context, ParentRaportDetailScreen(
+              raportData: detail,
               studentName: student['student_name'] ?? 'Unknown',
               userRole: 'admin',
               studentData: {
@@ -459,15 +457,13 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                 'nisn':
                     '-', // Admin API list doesnt fetch NISN by default, fallback
               },
-            ),
-          ),
-        );
+            ));
       } else {
         throw Exception("Data raport tidak ditemukan.");
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // Close loading dialog
+        AppNavigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
         );
@@ -584,7 +580,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => AppNavigator.pop(context),
                   child: Container(
                     width: 40,
                     height: 40,
