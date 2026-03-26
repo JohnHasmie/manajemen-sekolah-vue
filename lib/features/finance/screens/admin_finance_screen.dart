@@ -35,6 +35,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Admin finance management screen with tabbed layout for payment types, bills, and verifications.
 ///
@@ -905,14 +906,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     } catch (error) {
       AppLogger.error('finance', error);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat data kelas: ${ErrorUtils.getFriendlyMessage(error)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat data kelas: ${ErrorUtils.getFriendlyMessage(error)}');
       }
     }
   }
@@ -1721,14 +1715,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     } catch (error) {
       AppLogger.error('finance', error);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}');
       }
     }
   }
@@ -1779,14 +1766,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     } catch (error) {
       AppLogger.error('finance', error);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat daftar tagihan: ${ErrorUtils.getFriendlyMessage(error)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat daftar tagihan: ${ErrorUtils.getFriendlyMessage(error)}');
       }
     } finally {
       if (mounted) {
@@ -2509,15 +2489,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             onPressed: () async {
                               if (namaController.text.isEmpty ||
                                   jumlahController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Nama dan jumlah harus diisi',
-                                    ),
-                                    backgroundColor: ColorUtils.error600,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                                                                SnackBarUtils.showError(context, 'Nama dan jumlah harus diisi');
                                 return;
                               }
 
@@ -2527,28 +2499,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                   );
 
                               if (parsedAmount <= 0) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Jumlah harus lebih besar dari Rp 0',
-                                    ),
-                                    backgroundColor: ColorUtils.error600,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                                                                SnackBarUtils.showError(context, 'Jumlah harus lebih besar dari Rp 0');
                                 return;
                               }
 
                               if (tujuanData == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Tujuan pembayaran harus dipilih',
-                                    ),
-                                    backgroundColor: ColorUtils.error600,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                                                                SnackBarUtils.showError(context, 'Tujuan pembayaran harus dipilih');
                                 return;
                               }
 
@@ -2585,26 +2541,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 _loadData(useCache: false);
 
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Data berhasil disimpan'),
-                                      backgroundColor: ColorUtils.success600,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
+                                                                    SnackBarUtils.showSuccess(context, 'Data berhasil disimpan');
                                 }
                               } catch (error) {
                                 AppLogger.error('finance', error);
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Gagal menyimpan jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
-                                      ),
-                                      backgroundColor: ColorUtils.error600,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
+                                                                    SnackBarUtils.showError(context, 'Gagal menyimpan jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}');
                                 }
                               }
                             },
@@ -2751,27 +2693,13 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       try {
         await _apiService.delete('/payment-type/${jenisPembayaran['id']}');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Jenis pembayaran berhasil dihapus'),
-              backgroundColor: ColorUtils.success600,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+                    SnackBarUtils.showSuccess(context, 'Jenis pembayaran berhasil dihapus');
         }
         _loadData(useCache: false);
       } catch (error) {
         AppLogger.error('finance', error);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Gagal menghapus jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
-              ),
-              backgroundColor: ColorUtils.error600,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+                    SnackBarUtils.showError(context, 'Gagal menghapus jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}');
         }
       }
     }
@@ -3220,28 +3148,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
             message = (response['errors'] as List).join('\n');
           }
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: ColorUtils.success600,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+                    SnackBarUtils.showSuccess(context, message);
           _loadData(useCache: false);
         }
       } catch (error) {
         AppLogger.error('finance', error);
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Gagal mengenerate tagihan: ${ErrorUtils.getFriendlyMessage(error)}',
-              ),
-              backgroundColor: ColorUtils.error600,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+                    SnackBarUtils.showError(context, 'Gagal mengenerate tagihan: ${ErrorUtils.getFriendlyMessage(error)}');
         }
       } finally {
         if (mounted) {
@@ -3467,28 +3381,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                   AppNavigator.pop(context);
                                   _loadData(useCache: false);
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Pembayaran berhasil ${status == 'verified' ? 'diverifikasi' : 'ditolak'}',
-                                      ),
-                                      backgroundColor: ColorUtils.success600,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
+                                                                    SnackBarUtils.showSuccess(context, 'Pembayaran berhasil ${status == 'verified' ? 'diverifikasi' : 'ditolak'}');
                                 }
                               } catch (error) {
                                 AppLogger.error('finance', error);
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Gagal memverifikasi: ${ErrorUtils.getFriendlyMessage(error)}',
-                                      ),
-                                      backgroundColor: ColorUtils.error600,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
+                                                                    SnackBarUtils.showError(context, 'Gagal memverifikasi: ${ErrorUtils.getFriendlyMessage(error)}');
                                 }
                               }
                             },
@@ -4143,25 +4041,13 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Tagihan "$name" periode $formattedMonth berhasil dihapus',
-              ),
-              backgroundColor: ColorUtils.success600,
-            ),
-          );
+                    SnackBarUtils.showSuccess(context, 'Tagihan "$name" periode $formattedMonth berhasil dihapus');
           _loadData(useCache: false);
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Gagal menghapus tagihan: $e'),
-              backgroundColor: ColorUtils.error600,
-            ),
-          );
+                    SnackBarUtils.showError(context, 'Gagal menghapus tagihan: $e');
         }
       }
     }
@@ -5190,12 +5076,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         pembayaran['payment_proof'] ?? pembayaran['payment_receipt'];
 
     if (imageFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tidak ada bukti pembayaran'),
-          backgroundColor: ColorUtils.warning600,
-        ),
-      );
+            SnackBarUtils.showWarning(context, 'Tidak ada bukti pembayaran');
       return;
     }
 

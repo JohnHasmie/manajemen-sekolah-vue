@@ -20,6 +20,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Report card detail form for a single student.
 ///
@@ -407,14 +408,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
           setState(() {
             _hasUnsavedChanges = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                status == 'final' ? 'Raport diselesaikan!' : 'Draft disimpan!',
-              ),
-              backgroundColor: status == 'final' ? Colors.green : Colors.blue,
-            ),
-          );
+                    SnackBarUtils.showInfo(context, status == 'final' ? 'Raport diselesaikan!' : 'Draft disimpan!');
           if (status == 'final') {
             AppNavigator.pop(context, true); // Return true to indicate change
           } else {
@@ -426,12 +420,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {

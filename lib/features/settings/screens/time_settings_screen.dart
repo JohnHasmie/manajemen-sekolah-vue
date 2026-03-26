@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Time settings screen - configure lesson hour sessions for each school day.
 ///
@@ -74,15 +75,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       AppLogger.error('settings', e);
       if (mounted) {
         setState(() => _isLoadingTime = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -387,15 +380,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
     } catch (e) {
       AppLogger.error('settings', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat ulang sesi: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat ulang sesi: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -753,27 +738,13 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       if (mounted) AppNavigator.pop(context);
       await _refreshSessions();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Berhasil menyalin jadwal'),
-            backgroundColor: ColorUtils.success600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showSuccess(context, 'Berhasil menyalin jadwal');
       }
     } catch (e) {
       AppLogger.error('settings', e);
       if (mounted) AppNavigator.pop(context);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal menyalin: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal menyalin: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -1032,15 +1003,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
     } catch (e) {
       AppLogger.error('settings', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal menghapus: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal menghapus: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }

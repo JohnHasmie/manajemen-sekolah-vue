@@ -10,6 +10,7 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Service for exporting RPP (Rencana Pelaksanaan Pembelajaran / Lesson Plan) to Excel.
 /// Similar to `Excel::download(new RppExport($data), 'Data_RPP.xlsx')` in Laravel.
@@ -54,29 +55,15 @@ class ExcelRppService {
       // Buka file
       await OpenFile.open(filePath);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'RPP data exported successfully',
               'id': 'Data RPP berhasil diexport',
-            }),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+            }));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Failed to export RPP data: $e',
               'id': 'Gagal mengexport data RPP: $e',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 

@@ -33,6 +33,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Admin student management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -192,17 +193,10 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
   Future<void> _exportToExcel() async {
     try {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showInfo(context, ref.read(languageRiverpod).getTranslatedText({
               'en': 'Preparing export...',
               'id': 'Menyiapkan export...',
-            }),
-          ),
-          duration: Duration(seconds: 1),
-        ),
-      );
+            }));
 
       final response = await getIt<ApiStudentService>().getStudentPaginated(
         page: 1,
@@ -226,17 +220,10 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
     } catch (e) {
       AppLogger.error('student', 'Export to Excel error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
               'en': 'Failed to export: ${ErrorUtils.getFriendlyMessage(e)}',
               'id': 'Gagal mengexport: ${ErrorUtils.getFriendlyMessage(e)}',
-            }),
-          ),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            }));
     }
   }
 
@@ -258,34 +245,20 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
         await _loadData();
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                languageProvider.getTranslatedText({
+                    SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                   'en': 'Students imported successfully',
                   'id': 'Data siswa berhasil diimpor',
-                }),
-              ),
-              backgroundColor: ColorUtils.success600,
-            ),
-          );
+                }));
         }
       }
     } catch (e) {
       AppLogger.error('student', 'Import from Excel error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en':
                   'Failed to import file: ${ErrorUtils.getFriendlyMessage(e)}',
               'id': 'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(e)}',
-            }),
-          ),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            }));
     }
   }
 
@@ -411,19 +384,12 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
         setState(() => _isLoading = false);
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
               'en':
                   'Failed to load student/class data: ${ErrorUtils.getFriendlyMessage(e)}',
               'id':
                   'Gagal memuat data siswa/kelas: ${ErrorUtils.getFriendlyMessage(e)}',
-            }),
-          ),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            }));
     } finally {
       // Trigger tour (cache pre-fetched by dashboard, no delay needed)
       _checkAndShowTour();
@@ -1921,34 +1887,20 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
         await getIt<ApiStudentService>().deleteStudent(student['id']);
         await _loadData();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                ref.read(languageRiverpod).getTranslatedText({
+                    SnackBarUtils.showSuccess(context, ref.read(languageRiverpod).getTranslatedText({
                   'en': 'Student successfully deleted',
                   'id': 'Siswa berhasil dihapus',
-                }),
-              ),
-              backgroundColor: ColorUtils.success600,
-            ),
-          );
+                }));
         }
       } catch (e) {
         AppLogger.error('student', 'Delete student error: $e');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                ref.read(languageRiverpod).getTranslatedText({
+                    SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
                   'en':
                       'Failed to delete student: ${ErrorUtils.getFriendlyMessage(e)}',
                   'id':
                       'Gagal menghapus siswa: ${ErrorUtils.getFriendlyMessage(e)}',
-                }),
-              ),
-              backgroundColor: ColorUtils.error600,
-            ),
-          );
+                }));
         }
       }
     }

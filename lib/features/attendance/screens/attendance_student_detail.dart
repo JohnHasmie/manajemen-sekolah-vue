@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 // ========== HELPER FUNCTIONS UNTUK STYLING ==========
 Color _getPrimaryColor() {
@@ -337,31 +338,15 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                 'en': 'Successfully updated $successCount attendance records',
                 'id': 'Berhasil update $successCount absensi',
-              }),
-            ),
-            backgroundColor: ColorUtils.success600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+              }));
         AppNavigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${languageProvider.getTranslatedText({'en': 'Error:', 'id': 'Error:'})} $e',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, '${languageProvider.getTranslatedText({'en': 'Error:', 'id': 'Error:'})} $e');
       }
     } finally {
       if (mounted) {

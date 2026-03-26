@@ -10,6 +10,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Service for generating student data Excel files entirely on the client side.
 /// Unlike the other `Excel*Service` classes that POST to the backend, this service
@@ -123,29 +124,15 @@ class ExcelService {
       // Open the file
       await OpenFile.open(path);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'Student data exported successfully',
               'id': 'Data siswa berhasil diexport',
-            }),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+            }));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Failed to export data: $e',
               'id': 'Gagal mengexport data: $e',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 
@@ -215,29 +202,15 @@ class ExcelService {
       // Open the file
       await OpenFile.open(path);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'Template downloaded successfully',
               'id': 'Template berhasil diunduh',
-            }),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+            }));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Failed to download template: $e',
               'id': 'Gagal mengunduh template: $e',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 
@@ -261,29 +234,15 @@ class ExcelService {
       // Open the file
       await OpenFile.open(path);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'CSV Template downloaded successfully',
               'id': 'Template CSV berhasil diunduh',
-            }),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+            }));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Failed to download CSV template: $e',
               'id': 'Gagal mengunduh template CSV: $e',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 

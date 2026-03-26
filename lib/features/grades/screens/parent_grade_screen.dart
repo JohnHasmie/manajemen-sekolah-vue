@@ -24,6 +24,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Parent's read-only view of student grades with read tracking.
 ///
@@ -152,9 +153,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
       AppLogger.error('grades', e);
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -228,9 +227,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
       if (!mounted) return;
       if (_studentList.isEmpty) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e))),
-        );
+                SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
@@ -281,12 +278,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
       if (!mounted) return;
       if (_gradeList.isEmpty) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       WidgetsBinding.instance.addPostFrameCallback((_) {

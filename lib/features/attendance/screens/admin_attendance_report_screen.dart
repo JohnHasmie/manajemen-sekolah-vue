@@ -32,6 +32,7 @@ import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Data model for a single attendance summary record.
 /// Like a Laravel Eloquent model or a TypeScript interface in Vue.
@@ -293,14 +294,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     } catch (e) {
       AppLogger.error('attendance', 'Error loading filter data (critical): $e');
       if (mounted && _classList.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat data filter: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat data filter: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     } finally {
       if (mounted) {
@@ -635,14 +629,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
           _isLoadingSummary = false;
           _isLoadingMore = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat data laporan: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat data laporan: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -1354,17 +1341,10 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
   Future<void> _loadTableData() async {
     if (!mounted) return;
     if (_selectedClassIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText({
+            SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
               'en': 'Please select a class first',
               'id': 'Mohon pilih kelas terlebih dahulu',
-            }),
-          ),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            }));
       setState(() => _showTableView = false);
       return;
     }
@@ -1518,9 +1498,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
       AppLogger.error('attendance', 'Error loading table data: $e');
       if (mounted) {
         setState(() => _isTableLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load table data: $e')),
-        );
+                SnackBarUtils.showInfo(context, 'Failed to load table data: $e');
       }
     }
   }
@@ -2125,27 +2103,15 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
 
       if (mounted) {
         AppNavigator.pop(context); // Close loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                 'en': 'Exported $successCount files successfully',
                 'id': 'Berhasil mengexport $successCount file',
-              }),
-            ),
-            backgroundColor: ColorUtils.success600,
-          ),
-        );
+              }));
       }
     } catch (e) {
       if (mounted) {
         AppNavigator.pop(context); // Close loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Export failed: $e'),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Export failed: $e');
       }
     }
   }
@@ -2474,31 +2440,17 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
           lessonHourId: summary.lessonHourId,
         );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                 'en': 'Attendance deleted successfully',
                 'id': 'Absensi berhasil dihapus',
-              }),
-            ),
-            backgroundColor: ColorUtils.success600,
-          ),
-        );
+              }));
 
         _loadData(useCache: false);
       } catch (e) {
         setState(() {
           _isLoadingSummary = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal menghapus absensi: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal menghapus absensi: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -2653,17 +2605,11 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                                 if (_selectedClassData != null) {
                                   _showExportDialog();
                                 } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        languageProvider.getTranslatedText({
+                                                                    SnackBarUtils.showInfo(context, languageProvider.getTranslatedText({
                                           'en': 'Please select a class first',
                                           'id':
                                               'Mohon pilih kelas terlebih dahulu',
-                                        }),
-                                      ),
-                                    ),
-                                  );
+                                        }));
                                 }
                                 break;
                             }

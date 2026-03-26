@@ -19,6 +19,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 // Note: pastikan import AppLocalizations dan Provider jika diperlukan,
 // namun di sini kita gunakan styling yang umum.
 
@@ -538,12 +539,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('RPP berhasil di-generate ulang!'),
-            backgroundColor: ColorUtils.success600,
-          ),
-        );
+                SnackBarUtils.showSuccess(context, 'RPP berhasil di-generate ulang!');
       }
     } catch (e) {
       if (mounted) {
@@ -708,9 +704,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       await OpenFile.open(file.path);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal membuat preview PDF: $e')),
-        );
+                SnackBarUtils.showInfo(context, 'Gagal membuat preview PDF: $e');
       }
     }
   }
@@ -761,23 +755,13 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       await getIt<ApiSubjectService>().saveRPP(payloadData);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('RPP AI berhasil disimpan!'),
-            backgroundColor: ColorUtils.success600,
-          ),
-        );
+                SnackBarUtils.showSuccess(context, 'RPP AI berhasil disimpan!');
         AppNavigator.pop(context); // Kembali ke list RPP (PopScope triggers onSaved)
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: Colors.red,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       if (mounted) {

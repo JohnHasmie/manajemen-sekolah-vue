@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Print preview for a student's report card.
 ///
@@ -101,13 +102,7 @@ class RaportPrintScreen extends StatelessWidget {
                 ),
                 GestureDetector(
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Fungsi cetak PDF menggunakan Syncfusion akan segera diimplementasikan.',
-                        ),
-                      ),
-                    );
+                                        SnackBarUtils.showInfo(context, 'Fungsi cetak PDF menggunakan Syncfusion akan segera diimplementasikan.');
                   },
                   child: Container(
                     width: 40,

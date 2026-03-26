@@ -22,6 +22,7 @@ import 'package:manajemensekolah/features/recommendations/screens/recommendation
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Displays a list of classes with AI learning recommendation summaries.
 ///
@@ -356,12 +357,7 @@ class _LearningRecommendationClassScreenState
     final subjects = _getSubjectsForClass(classId);
     if (subjects.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('Tidak ada mata pelajaran ditemukan untuk kelas ini'),
-          ),
-        );
+                SnackBarUtils.showInfo(context, 'Tidak ada mata pelajaran ditemukan untuk kelas ini');
       }
       return;
     }
@@ -407,12 +403,7 @@ class _LearningRecommendationClassScreenState
       if (result['async'] == true) {
         final jobId = result['job_id']?.toString();
         if (jobId != null && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? 'Sedang memproses...'),
-              duration: const Duration(seconds: 3),
-            ),
-          );
+                    SnackBarUtils.showInfo(context, result['message'] ?? 'Sedang memproses...');
 
           try {
             await getIt<ApiRecommendationService>().pollJobUntilComplete(
@@ -422,32 +413,17 @@ class _LearningRecommendationClassScreenState
               },
             );
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Rekomendasi berhasil dibuat!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+                            SnackBarUtils.showSuccess(context, 'Rekomendasi berhasil dibuat!');
             }
           } catch (e) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Gagal: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+                            SnackBarUtils.showError(context, 'Gagal: $e');
             }
           }
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Rekomendasi berhasil dibuat!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+                    SnackBarUtils.showSuccess(context, 'Rekomendasi berhasil dibuat!');
         }
       }
 
@@ -458,22 +434,11 @@ class _LearningRecommendationClassScreenState
       _loadClassHistory(classId, useCache: false);
     } on RateLimitException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+                SnackBarUtils.showWarning(context, e.message);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Error: $e');
       }
     } finally {
       if (mounted) setState(() => _generating[classId] = false);

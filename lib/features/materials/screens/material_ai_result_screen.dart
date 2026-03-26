@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Displays AI-generated teaching materials with tabbed content and
 /// regeneration capability.
@@ -333,12 +334,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
     });
 
     if (cached && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Materi dimuat dari cache.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+            SnackBarUtils.showInfo(context, 'Materi dimuat dari cache.');
     }
   }
 
@@ -361,21 +357,12 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
           _isRegenerating = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Kuis baru ditambahkan (sisa regenerasi: ${response['remaining'] ?? '?'})'),
-          ),
-        );
+                SnackBarUtils.showInfo(context, 'Kuis baru ditambahkan (sisa regenerasi: ${response['remaining'] ?? '?'})');
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isRegenerating = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text('Gagal regenerasi kuis: ${ErrorUtils.getFriendlyMessage(e)}')),
-      );
+            SnackBarUtils.showInfo(context, 'Gagal regenerasi kuis: ${ErrorUtils.getFriendlyMessage(e)}');
     }
   }
 
@@ -396,21 +383,12 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
           _isRegenerating = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Referensi diperbarui (sisa regenerasi: ${response['remaining'] ?? '?'})'),
-          ),
-        );
+                SnackBarUtils.showInfo(context, 'Referensi diperbarui (sisa regenerasi: ${response['remaining'] ?? '?'})');
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isRegenerating = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'Gagal regenerasi referensi: ${ErrorUtils.getFriendlyMessage(e)}')),
-      );
+            SnackBarUtils.showInfo(context, 'Gagal regenerasi referensi: ${ErrorUtils.getFriendlyMessage(e)}');
     }
   }
 

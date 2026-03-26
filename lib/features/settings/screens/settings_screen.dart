@@ -20,6 +20,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// User profile and settings screen - shared across all roles.
 ///
@@ -116,15 +117,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       // Only show error if no cached data
       if (_profileData.isEmpty) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToLoadProfile)}: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToLoadProfile)}: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -784,29 +777,13 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
 
       if (!mounted) return;
       AppNavigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(languageRiverpod).getTranslatedText(
+            SnackBarUtils.showSuccess(context, ref.read(languageRiverpod).getTranslatedText(
               AppLocalizations.passwordChangedSuccess,
-            ),
-          ),
-          backgroundColor: ColorUtils.success600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            ));
     } catch (e) {
       AppLogger.error('settings', e);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToChangePassword)}: ${ErrorUtils.getFriendlyMessage(e)}',
-          ),
-          backgroundColor: ColorUtils.error600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            SnackBarUtils.showError(context, '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToChangePassword)}: ${ErrorUtils.getFriendlyMessage(e)}');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

@@ -26,6 +26,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// The login page widget. Like a Vue page component (`pages/login.vue`).
 ///
@@ -92,13 +93,7 @@ class LoginScreenState extends State<LoginScreen> {
     // Show initial error if provided
     if (widget.initialError != null && mounted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.initialError!),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 5),
-          ),
-        );
+                SnackBarUtils.showError(context, widget.initialError!);
       });
     }
   }
@@ -145,13 +140,7 @@ class LoginScreenState extends State<LoginScreen> {
         setState(() {
           _serverConnected = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal terhubung ke server: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-          ),
-        );
+                SnackBarUtils.showInfo(context, 'Gagal terhubung ke server: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -173,9 +162,7 @@ class LoginScreenState extends State<LoginScreen> {
   /// In Laravel terms, this calls `POST /api/login`.
   Future<void> login() async {
     if (!_serverConnected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Server tidak terhubung. Tidak dapat login.')),
-      );
+            SnackBarUtils.showInfo(context, 'Server tidak terhubung. Tidak dapat login.');
       return;
     }
 
@@ -191,9 +178,7 @@ class LoginScreenState extends State<LoginScreen> {
     final String password = passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email dan password harus diisi')),
-      );
+            SnackBarUtils.showInfo(context, 'Email dan password harus diisi');
       setState(() {
         _isLoading = false;
       });
@@ -242,12 +227,7 @@ class LoginScreenState extends State<LoginScreen> {
               ? 'Email atau password salah, atau akun belum terdaftar. Silakan periksa kembali.'
               : ErrorUtils.getFriendlyMessage(error);
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(friendlyMessage),
-              backgroundColor: Colors.red.shade700,
-            ),
-          );
+                    SnackBarUtils.showError(context, friendlyMessage);
         }
       }
 
@@ -323,9 +303,7 @@ class LoginScreenState extends State<LoginScreen> {
   /// On success, delegates to [_handleLoginResponse] for school/role selection.
   Future<void> _handleGoogleSignIn() async {
     if (!_serverConnected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Server tidak terhubung. Tidak dapat login.')),
-      );
+            SnackBarUtils.showInfo(context, 'Server tidak terhubung. Tidak dapat login.');
       return;
     }
 
@@ -393,12 +371,7 @@ class LoginScreenState extends State<LoginScreen> {
         if (isUnregistered) {
           _showUnregisteredDialog();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: Colors.red.shade700,
-            ),
-          );
+                    SnackBarUtils.showError(context, errorMessage);
         }
       }
 
@@ -418,9 +391,7 @@ class LoginScreenState extends State<LoginScreen> {
   /// a dropdown/select change that triggers a new API call with the chosen value.
   Future<void> _selectSchool(String? schoolId) async {
     if (schoolId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ID Sekolah tidak valid (null)')),
-      );
+            SnackBarUtils.showInfo(context, 'ID Sekolah tidak valid (null)');
       return;
     }
 
@@ -458,12 +429,7 @@ class LoginScreenState extends State<LoginScreen> {
     } catch (error) {
       AppLogger.error('login', 'School selection error: $error');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(ErrorUtils.getFriendlyMessage(error)),
-          backgroundColor: Colors.red.shade700,
-        ),
-      );
+            SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(error));
 
       setState(() {
         _isLoading = false;
@@ -512,12 +478,7 @@ class LoginScreenState extends State<LoginScreen> {
     } catch (error) {
       AppLogger.error('login', 'Role selection error: $error');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(ErrorUtils.getFriendlyMessage(error)),
-          backgroundColor: Colors.red.shade700,
-        ),
-      );
+            SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(error));
 
       setState(() {
         _isLoading = false;
@@ -1048,9 +1009,7 @@ class LoginScreenState extends State<LoginScreen> {
             onPressed: () async {
               final otp = otpController.text.trim();
               if (otp.length != 6) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Masukkan 6 digit kode OTP')),
-                );
+                                SnackBarUtils.showInfo(context, 'Masukkan 6 digit kode OTP');
                 return;
               }
               AppNavigator.pop(context); // Close dialog
@@ -1082,12 +1041,7 @@ class LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         String errorMsg = e.toString().replaceAll('Exception:', '').trim();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Verifikasi Gagal: $errorMsg'),
-            backgroundColor: Colors.red,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Verifikasi Gagal: $errorMsg');
         // Re-open dialog to interpret retry
         _showOtpDialog(email);
       }

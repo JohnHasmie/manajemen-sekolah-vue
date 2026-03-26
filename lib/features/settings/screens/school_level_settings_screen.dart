@@ -12,6 +12,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// School info settings screen - edit school name, address, and education level (jenjang).
 ///
@@ -59,15 +60,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
       AppLogger.error('settings', e);
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat pengaturan: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat pengaturan: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -245,15 +238,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                             onPressed: () async {
                               final name = nameController.text.trim();
                               if (name.length < 3) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Nama sekolah minimal 3 karakter',
-                                    ),
-                                    backgroundColor: ColorUtils.error600,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                                                                SnackBarUtils.showError(context, 'Nama sekolah minimal 3 karakter');
                                 return;
                               }
 

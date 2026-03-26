@@ -10,6 +10,7 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Service for exporting grade recapitulation data (rekap nilai) to Excel.
 /// Similar to `Excel::download(new RekapNilaiExport($data), 'Rekap_Nilai.xlsx')` in Laravel.
@@ -72,29 +73,15 @@ class ExcelRekapNilaiService {
       // Open the file
       await OpenFile.open(filePath);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'Grade Rekap exported successfully',
               'id': 'Rekap nilai berhasil diexport',
-            }),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+            }));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en': 'Failed to export data: $e',
               'id': 'Gagal mengexport data: $e',
-            }),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+            }));
     }
   }
 }

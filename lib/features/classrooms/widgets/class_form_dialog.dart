@@ -6,6 +6,7 @@
 // how you would pass `v-model` and `@submit` to a Vue form component.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// A modal dialog widget for creating or editing a class (kelas).
 ///
@@ -94,24 +95,12 @@ class ClassFormDialogState extends State<ClassFormDialog> {
     final selectedGradeLevel = _selectedGradeLevel;
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.classNameRequired.tr,
-          ),
-        ),
-      );
+            SnackBarUtils.showInfo(context, AppLocalizations.classNameRequired.tr);
       return;
     }
 
     if (selectedGradeLevel == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.gradeLevelRequired.tr,
-          ),
-        ),
-      );
+            SnackBarUtils.showInfo(context, AppLocalizations.gradeLevelRequired.tr);
       return;
     }
 

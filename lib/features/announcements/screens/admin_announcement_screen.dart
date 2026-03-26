@@ -31,6 +31,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Admin announcement management screen.
 ///
@@ -928,14 +929,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal memuat data pengumuman', 'id': 'Gagal memuat data pengumuman'})}: ${ErrorUtils.getFriendlyMessage(e)}',
-          ),
-          backgroundColor: ColorUtils.error600,
-        ),
-      );
+            SnackBarUtils.showError(context, '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal memuat data pengumuman', 'id': 'Gagal memuat data pengumuman'})}: ${ErrorUtils.getFriendlyMessage(e)}');
     } finally {
       // Trigger tour after initial load
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1878,31 +1872,17 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
         await _apiService.delete('/announcement/${announcementData['id']}');
         await _loadData(resetPage: true, useCache: false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                ref.read(languageRiverpod).getTranslatedText({
+                    SnackBarUtils.showSuccess(context, ref.read(languageRiverpod).getTranslatedText({
                   'en': 'Announcement successfully deleted',
                   'id': 'Pengumuman berhasil dihapus',
-                }),
-              ),
-              backgroundColor: ColorUtils.success600,
-            ),
-          );
+                }));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                ref.read(languageRiverpod).getTranslatedText({
+                    SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
                   'en': 'Failed to delete announcement: $e',
                   'id': 'Gagal menghapus pengumuman: $e',
-                }),
-              ),
-              backgroundColor: ColorUtils.error600,
-            ),
-          );
+                }));
         }
       }
     }
@@ -2449,22 +2429,12 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
       if (result.type != ResultType.done) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Could not open file: ${result.message}'),
-              backgroundColor: ColorUtils.error600,
-            ),
-          );
+                    SnackBarUtils.showError(context, 'Could not open file: ${result.message}');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error opening file: $e'),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Error opening file: $e');
       }
     }
   }

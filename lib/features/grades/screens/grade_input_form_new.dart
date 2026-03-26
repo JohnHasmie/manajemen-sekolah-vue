@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 // Form Input Nilai Baru untuk Multiple Siswa
 class GradeInputFormNew extends ConsumerStatefulWidget {
@@ -110,18 +111,10 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
 
     if (_formKey.currentState!.validate()) {
       if (_selectedJenisNilai == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showWarning(context, languageProvider.getTranslatedText({
                 'en': 'Please select grade type first',
                 'id': 'Pilih jenis nilai terlebih dahulu',
-              }),
-            ),
-            backgroundColor: Colors.orange.shade400,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+              }));
         return;
       }
 
@@ -136,18 +129,10 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
       }
 
       if (!hasData) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showWarning(context, languageProvider.getTranslatedText({
                 'en': 'Enter grade for at least one student',
                 'id': 'Masukkan nilai untuk setidaknya satu siswa',
-              }),
-            ),
-            backgroundColor: Colors.orange.shade400,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+              }));
         return;
       }
 
@@ -189,46 +174,24 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
         }
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                 'en': '$successCount grades successfully saved',
                 'id': '$successCount nilai berhasil disimpan',
-              }),
-            ),
-            backgroundColor: Colors.green.shade400,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+              }));
 
         AppNavigator.pop(context);
       } catch (e) {
         AppLogger.error('grades', e);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: Colors.red.shade400,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     } else {
       // Validation failed - show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
               'en':
                   'Please check your input. Grades must be integers between 0-100.',
               'id':
                   'Periksa input Anda. Nilai harus berupa angka bulat antara 0-100.',
-            }),
-          ),
-          backgroundColor: Colors.red.shade400,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            }));
     }
   }
 

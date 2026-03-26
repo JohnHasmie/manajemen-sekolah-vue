@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer,
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Multi-step wizard for promoting students to the next class/academic year.
 ///
@@ -121,15 +122,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     } catch (e) {
       AppLogger.error('classroom', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat data awal: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat data awal: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     } finally {
       setState(() => _isLoading = false);
@@ -149,15 +142,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     } catch (e) {
       AppLogger.error('classroom', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat daftar siswa: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat daftar siswa: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     } finally {
       setState(() => _isLoading = false);
@@ -183,15 +168,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
       AppLogger.error('classroom', e);
       setState(() => _targetClasses = []);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat kelas tujuan: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat kelas tujuan: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     } finally {
       setState(() => _isLoading = false);
@@ -210,15 +187,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     } catch (e) {
       AppLogger.error('classroom', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat data guru: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat data guru: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -307,15 +276,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
         _generateGradeLevels();
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memuat pengaturan sekolah: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memuat pengaturan sekolah: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     }
   }
@@ -894,19 +855,10 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                       }
                     }
                   });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        languageProvider.getTranslatedText({
+                                    SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                           'en': 'All eligible students selected',
                           'id': 'Semua siswa yang memenuhi syarat dipilih',
-                        }),
-                      ),
-                      backgroundColor: ColorUtils.success600,
-                      behavior: SnackBarBehavior.floating,
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
+                        }));
                 },
               ),
             ),
@@ -1679,18 +1631,10 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     } else if (_currentStep == 2) {
       if (_selectedTargetYearId == null) return;
       if (_selectedTargetClassId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageProvider.getTranslatedText({
+                SnackBarUtils.showWarning(context, languageProvider.getTranslatedText({
                 'en': 'Please select or create a target class',
                 'id': 'Silakan pilih atau buat kelas tujuan',
-              }),
-            ),
-            backgroundColor: ColorUtils.warning600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+              }));
         return;
       }
       _goToStep(3);
@@ -1713,31 +1657,15 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
       await getIt<ApiClassService>().promoteStudents(data);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
+            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
               'en': 'Promotion successful',
               'id': 'Kenaikan kelas berhasil',
-            }),
-          ),
-          backgroundColor: ColorUtils.success600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+            }));
       AppNavigator.pop(context, true);
     } catch (e) {
       AppLogger.error('classroom', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal memproses kenaikan kelas: ${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+                SnackBarUtils.showError(context, 'Gagal memproses kenaikan kelas: ${ErrorUtils.getFriendlyMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -1899,13 +1827,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                             onPressed: () async {
                               if (nameController.text.isEmpty ||
                                   selectedGradeLevel == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Please fill required fields'),
-                                    backgroundColor: ColorUtils.warning600,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                                                                SnackBarUtils.showWarning(context, 'Please fill required fields');
                                 return;
                               }
 
@@ -1922,25 +1844,11 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                                 if (_selectedTargetYearId != null) {
                                   _loadTargetClasses(_selectedTargetYearId!);
                                 }
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Class Created'),
-                                    backgroundColor: ColorUtils.success600,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                                                                SnackBarUtils.showSuccess(context, 'Class Created');
                               } catch (e) {
                                 AppLogger.error('classroom', e);
                                 if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Gagal membuat kelas: ${ErrorUtils.getFriendlyMessage(e)}',
-                                      ),
-                                      backgroundColor: ColorUtils.error600,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
+                                                                    SnackBarUtils.showError(context, 'Gagal membuat kelas: ${ErrorUtils.getFriendlyMessage(e)}');
                                 }
                               }
                             },
