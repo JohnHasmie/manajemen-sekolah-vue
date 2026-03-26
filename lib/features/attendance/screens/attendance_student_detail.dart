@@ -18,7 +18,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
-// ========== HELPER FUNCTIONS UNTUK STYLING ==========
+// ========== HELPER FUNCTIONS FOR STYLING ==========
 Color _getPrimaryColor() {
   return ColorUtils.getRoleColor('guru');
 }
@@ -45,10 +45,10 @@ class AbsensiDetailPage extends ConsumerStatefulWidget {
 }
 
 class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
-  List<dynamic> _absensiData = [];
+  List<dynamic> _attendanceData = [];
   List<Student> _studentList = [];
   List<dynamic> _classList = [];
-  final Map<String, String> _absensiStatus = {};
+  final Map<String, String> _attendanceStatus = {};
   bool _isLoading = true;
   bool _isSubmitting = false;
 
@@ -61,7 +61,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
   Future<void> _loadData() async {
     try {
       // Load siswa, absensi, dan kelas data
-      final [studentData, absensiData, classData] = await Future.wait([
+      final [studentData, attendanceData, classData] = await Future.wait([
         getIt<ApiStudentService>().getStudent(),
         ApiService.getAttendance(
           teacherId: widget.teacher['id'],
@@ -78,32 +78,32 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
             .toList();
         if (widget.classId != null && widget.classId!.isNotEmpty) {
           _studentList = allStudent
-              .where((siswa) => siswa.classId == widget.classId)
+              .where((student) => student.classId == widget.classId)
               .toList();
         } else {
           _studentList = allStudent;
         }
 
         _classList = classData;
-        _absensiData = absensiData;
+        _attendanceData = attendanceData;
 
         // Map status absensi only for students in this class
-        for (var absen in _absensiData) {
-          final studentId = absen['student_id']?.toString();
+        for (var record in _attendanceData) {
+          final studentId = record['student_id']?.toString();
           if (studentId != null && _studentList.any((s) => s.id == studentId)) {
-            _absensiStatus[studentId] = absen['status'];
+            _attendanceStatus[studentId] = record['status'];
           }
         }
 
-        // Set default untuk siswa yang belum ada data absensi
+        // Set default for students who don't have attendance data yet
         for (var student in _studentList) {
-          _absensiStatus[student.id] ??= 'hadir';
+          _attendanceStatus[student.id] ??= 'hadir';
         }
 
         _isLoading = false;
       });
 
-      AppLogger.info('attendance', 'Loaded ${_absensiData.length} absensi records for ${_studentList.length} students in class ${widget.classId ?? "all"}',);
+      AppLogger.info('attendance', 'Loaded ${_attendanceData.length} absensi records for ${_studentList.length} students in class ${widget.classId ?? "all"}',);
     } catch (e) {
       AppLogger.error('attendance', 'Error loading absensi detail: $e');
       setState(() {
@@ -113,7 +113,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
   }
 
   Widget _buildStudentItem(Student student, LanguageProvider languageProvider) {
-    final status = _absensiStatus[student.id] ?? 'hadir';
+    final status = _attendanceStatus[student.id] ?? 'hadir';
     final Color statusColor = _getStatusColor(status);
     final String statusText = _mapStatusToDisplay(status, languageProvider);
     final avatarColor = _getAvatarColor(student.name);
@@ -251,11 +251,11 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
     String studentId,
   ) {
     final isSelected =
-        _absensiStatus[studentId]?.toLowerCase() == status.toLowerCase();
+        _attendanceStatus[studentId]?.toLowerCase() == status.toLowerCase();
     return GestureDetector(
       onTap: () {
         setState(() {
-          _absensiStatus[studentId] = status;
+          _attendanceStatus[studentId] = status;
         });
       },
       child: Container(
@@ -312,7 +312,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
     }
   }
 
-  Future<void> _updateAbsensi() async {
+  Future<void> _updateAttendance() async {
     final languageProvider = ref.read(languageRiverpod);
 
     setState(() {
@@ -323,7 +323,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
       int successCount = 0;
 
       for (var student in _studentList) {
-        final status = _absensiStatus[student.id] ?? 'hadir';
+        final status = _attendanceStatus[student.id] ?? 'hadir';
 
         await ApiService.createAttendance({
           'student_id': student.id,
@@ -374,19 +374,19 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
     }
   }
 
-  Color _getAvatarColor(String nama) {
+  Color _getAvatarColor(String name) {
     final colors = [Colors.blue, Colors.green, Colors.orange, Colors.purple];
-    final index = nama.codeUnitAt(0) % colors.length;
+    final index = name.codeUnitAt(0) % colors.length;
     return colors[index];
   }
 
-  String _getKelasName(String classId) {
+  String _getClassName(String classId) {
     try {
-      final kelas = _classList.firstWhere(
+      final classItem = _classList.firstWhere(
         (k) => k['id'].toString() == classId,
         orElse: () => {'nama': 'Unknown Class'},
       );
-      return kelas['nama'] ?? 'Unknown Class';
+      return classItem['nama'] ?? 'Unknown Class';
     } catch (e) {
       return 'Unknown Class';
     }
@@ -482,7 +482,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
                           if (widget.classId != null) ...[
                             const SizedBox(height: AppSpacing.xs),
                             Text(
-                              _getKelasName(widget.classId!),
+                              _getClassName(widget.classId!),
                               style: TextStyle(
                                 color: ColorUtils.getRoleColor("guru"),
                                 fontSize: 14,
@@ -561,7 +561,7 @@ class _AbsensiDetailPageState extends ConsumerState<AbsensiDetailPage> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton.icon(
-                          onPressed: _isSubmitting ? null : _updateAbsensi,
+                          onPressed: _isSubmitting ? null : _updateAttendance,
                           icon: _isSubmitting
                               ? const SizedBox(
                                   width: 20,

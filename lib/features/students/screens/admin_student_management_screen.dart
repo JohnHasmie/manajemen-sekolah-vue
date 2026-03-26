@@ -872,15 +872,15 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: _classList.map((kelas) {
-                              final classId = kelas['id'].toString();
+                            children: _classList.map((classItem) {
+                              final classId = classItem['id'].toString();
                               final isSelected = tempSelectedClass.contains(
                                 classId,
                               );
 
                               return FilterChip(
                                 label: Text(
-                                  kelas['name'] ?? kelas['nama'] ?? 'Unknown',
+                                  classItem['name'] ?? classItem['nama'] ?? 'Unknown',
                                 ),
                                 selected: isSelected,
                                 onSelected: (selected) {
@@ -1184,7 +1184,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
                   child: SafeArea(
                     child: Column(
                       children: [
-                        // Header dengan gradient
+                        // Header with gradient
                         Container(
                           width: double.infinity,
                           padding: EdgeInsets.fromLTRB(20, 20, 12, 20),

@@ -46,8 +46,8 @@ class TeacherAbsensiDetailPage extends ConsumerStatefulWidget {
 }
 
 class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailPage> {
-  List<dynamic> _absensiData = [];
-  List<Student> _siswaList = [];
+  List<dynamic> _attendanceData = [];
+  List<Student> _studentList = [];
   bool _isLoading = true;
   bool _isEditing = false;
   bool _isSaving = false;
@@ -65,7 +65,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
   Future<void> _loadData() async {
     try {
       // 1. Load attendance data
-      final absensiData = await ApiService.getAttendance(
+      final attendanceData = await ApiService.getAttendance(
         subjectId: widget.subjectId,
         date: DateFormat('yyyy-MM-dd').format(widget.date),
         teacherId: widget.teacher['id'],
@@ -74,40 +74,40 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
       );
 
       // 2. Load students by class ID
-      List<dynamic> siswaData;
+      List<dynamic> studentData;
       if (_detectedClassId != null && _detectedClassId!.isNotEmpty) {
-        siswaData = await getIt<ApiStudentService>().getStudentByClass(
+        studentData = await getIt<ApiStudentService>().getStudentByClass(
           _detectedClassId!,
         );
       } else {
         // Fallback: if no classId provided, try to get from attendance data
-        if (absensiData.isNotEmpty) {
+        if (attendanceData.isNotEmpty) {
           final classIdFromData =
-              absensiData.first['class_id']?.toString() ??
-              absensiData.first['kelas_id']?.toString();
+              attendanceData.first['class_id']?.toString() ??
+              attendanceData.first['kelas_id']?.toString();
 
           if (classIdFromData != null && classIdFromData.isNotEmpty) {
             _detectedClassId = classIdFromData;
-            siswaData = await getIt<ApiStudentService>().getStudentByClass(
+            studentData = await getIt<ApiStudentService>().getStudentByClass(
               classIdFromData,
             );
           } else {
-            siswaData = await getIt<ApiStudentService>().getStudent();
+            studentData = await getIt<ApiStudentService>().getStudent();
           }
         } else {
-          siswaData = await getIt<ApiStudentService>().getStudent();
+          studentData = await getIt<ApiStudentService>().getStudent();
         }
       }
 
       if (mounted) {
         setState(() {
-          _siswaList = siswaData.map((s) => Student.fromJson(s)).toList();
-          _absensiData = absensiData;
+          _studentList = studentData.map((s) => Student.fromJson(s)).toList();
+          _attendanceData = attendanceData;
           _isLoading = false;
 
           // Initialize edited status
-          for (var siswa in _siswaList) {
-            _editedStatus[siswa.id] = _getStudentStatus(siswa.id);
+          for (var student in _studentList) {
+            _editedStatus[student.id] = _getStudentStatus(student.id);
           }
         });
       }
@@ -122,7 +122,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
   }
 
   Future<void> exportDetail() async {
-    if (_absensiData.isEmpty) {
+    if (_attendanceData.isEmpty) {
             SnackBarUtils.showWarning(context, 'Tidak ada data kegiatan untuk diexport');
       return;
     }
@@ -186,9 +186,9 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
       int successCount = 0;
       int errorCount = 0;
 
-      for (var siswa in _siswaList) {
-        final currentStatus = _getStudentStatus(siswa.id);
-        final newStatus = _editedStatus[siswa.id];
+      for (var student in _studentList) {
+        final currentStatus = _getStudentStatus(student.id);
+        final newStatus = _editedStatus[student.id];
 
         // Only update if status changed
         if (newStatus != null && newStatus != currentStatus) {
@@ -198,24 +198,24 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
             String? targetLessonHourId = widget.lessonHourId;
             if (targetLessonHourId == null) {
               try {
-                final existingRecord = _absensiData.firstWhere(
-                  (a) => a['student_id'].toString() == siswa.id.toString(),
+                final existingRecord = _attendanceData.firstWhere(
+                  (a) => a['student_id'].toString() == student.id.toString(),
                 );
                 targetLessonHourId = existingRecord['lesson_hour_id']
                     ?.toString();
-                AppLogger.debug('attendance', 'Found existing record for ${siswa.name}, resolved lesson_hour_id: $targetLessonHourId',);
+                AppLogger.debug('attendance', 'Found existing record for ${student.name}, resolved lesson_hour_id: $targetLessonHourId',);
               } catch (_) {
-                AppLogger.warning('attendance', 'No existing record found for ${siswa.name} in _absensiData',);
+                AppLogger.warning('attendance', 'No existing record found for ${student.name} in _attendanceData',);
               }
             }
 
-            AppLogger.debug('attendance', 'Saving attendance for ${siswa.name} with lesson_hour_id: $targetLessonHourId',);
+            AppLogger.debug('attendance', 'Saving attendance for ${student.name} with lesson_hour_id: $targetLessonHourId',);
 
             await ApiService.createAttendance({
-              'student_id': siswa.id,
+              'student_id': student.id,
               'teacher_id': widget.teacher['id'],
               'subject_id': widget.subjectId,
-              'class_id': _detectedClassId ?? siswa.classId ?? '',
+              'class_id': _detectedClassId ?? student.classId ?? '',
               'date': DateFormat('yyyy-MM-dd').format(widget.date),
               'status': _mapStatusToBackend(newStatus),
               'notes': '',
@@ -224,7 +224,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
             successCount++;
           } catch (e) {
             errorCount++;
-            AppLogger.error('attendance', 'Error updating attendance for ${siswa.name}: $e');
+            AppLogger.error('attendance', 'Error updating attendance for ${student.name}: $e');
           }
         }
       }
@@ -270,14 +270,14 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
     );
   }
 
-  // Method untuk mendapatkan status absensi siswa
-  String _getStudentStatus(String siswaId) {
+  // Method to get student's attendance status
+  String _getStudentStatus(String studentId) {
     try {
-      final absenRecord = _absensiData.firstWhere(
-        (a) => a['student_id']?.toString() == siswaId.toString(),
+      final attendanceRecord = _attendanceData.firstWhere(
+        (a) => a['student_id']?.toString() == studentId.toString(),
         orElse: () => {'status': 'absent'}, // Fallback if not found
       );
-      final status = (absenRecord['status'] ?? 'absent')
+      final status = (attendanceRecord['status'] ?? 'absent')
           .toString()
           .toLowerCase();
 
@@ -529,7 +529,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
     );
   }
 
-  // Method untuk menghitung statistik
+  // Method to calculate statistics
   Map<String, int> _calculateStatistics() {
     int hadir = 0;
     int terlambat = 0;
@@ -537,8 +537,8 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
     int sakit = 0;
     int alpha = 0;
 
-    for (var siswa in _siswaList) {
-      final status = _getStudentStatus(siswa.id);
+    for (var student in _studentList) {
+      final status = _getStudentStatus(student.id);
       switch (status.toLowerCase()) {
         case 'hadir':
         case 'present':
@@ -570,7 +570,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
       'izin': izin,
       'sakit': sakit,
       'alpha': alpha,
-      'total': _siswaList.length,
+      'total': _studentList.length,
     };
   }
 
@@ -663,7 +663,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                             if (_isEditing) {
                               setState(() {
                                 _isEditing = false;
-                                for (var s in _siswaList) {
+                                for (var s in _studentList) {
                                   _editedStatus[s.id] = _getStudentStatus(s.id);
                                 }
                               });
@@ -930,7 +930,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    '${_siswaList.length} siswa',
+                                    '${_studentList.length} siswa',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: ColorUtils.slate600,
@@ -944,7 +944,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
 
                           // Student List
                           Expanded(
-                            child: _siswaList.isEmpty
+                            child: _studentList.isEmpty
                                 ? Center(
                                     child: Column(
                                       mainAxisAlignment:
@@ -971,10 +971,10 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
                                   )
                                 : ListView.builder(
                                     padding: EdgeInsets.only(bottom: 16),
-                                    itemCount: _siswaList.length,
+                                    itemCount: _studentList.length,
                                     itemBuilder: (context, index) =>
                                         _buildStudentCard(
-                                          _siswaList[index],
+                                          _studentList[index],
                                           languageProvider,
                                           index,
                                         ),

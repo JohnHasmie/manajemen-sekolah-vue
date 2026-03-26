@@ -76,16 +76,16 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
   bool _isLoadingMore = false;
 
   // Filter States (Backend filtering)
-  String? _selectedStatusFilter; // 'active', 'inactive', atau null untuk semua
+  String? _selectedStatusFilter; // 'active', 'inactive', or null for all
 
   String?
-  _selectedKelasStatusFilter; // 'ada', 'tidak_ada', atau null untuk semua
-  String? _selectedGradeLevelFilter; // '1' sampai '12', atau null untuk semua
+  _selectedClassesStatusFilter; // 'ada', 'tidak_ada', or null for all
+  String? _selectedGradeLevelFilter; // '1' through '12', or null for all
   String?
-  _selectedClassNameFilter; // Nama kelas spesifik (7A, 7B, dll), atau null untuk semua
+  _selectedClassNameFilter; // Specific class name (7A, 7B, etc.), or null for all
   bool _hasActiveFilter = false;
 
-  // Dynamic list untuk nama kelas yang tersedia
+  // Dynamic list of available class names
   List<String> _availableClassNames = [];
   List<String> _availableGradeLevels = [];
 
@@ -186,7 +186,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
     setState(() {
       _hasActiveFilter =
           _selectedStatusFilter != null ||
-          _selectedKelasStatusFilter != null ||
+          _selectedClassesStatusFilter != null ||
           _selectedGradeLevelFilter != null ||
           _selectedClassNameFilter != null;
     });
@@ -195,7 +195,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
   void _clearAllFilters() {
     setState(() {
       _selectedStatusFilter = null;
-      _selectedKelasStatusFilter = null;
+      _selectedClassesStatusFilter = null;
       _selectedGradeLevelFilter = null;
       _selectedClassNameFilter = null;
       _searchController.clear();
@@ -232,8 +232,8 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
       });
     }
 
-    if (_selectedKelasStatusFilter != null) {
-      final statusText = _selectedKelasStatusFilter == 'ada'
+    if (_selectedClassesStatusFilter != null) {
+      final statusText = _selectedClassesStatusFilter == 'ada'
           ? languageProvider.getTranslatedText({
               'en': 'Has Classes',
               'id': 'Ada Kelas',
@@ -247,7 +247,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
             '${languageProvider.getTranslatedText({'en': 'Classes', 'id': 'Kelas'})}: $statusText',
         'onRemove': () {
           setState(() {
-            _selectedKelasStatusFilter = null;
+            _selectedClassesStatusFilter = null;
           });
           _checkActiveFilter();
           _loadSubjects();
@@ -291,7 +291,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
     // Temporary state for bottom sheet
     String? tempSelectedStatus = _selectedStatusFilter;
-    String? tempSelectedClassStatus = _selectedKelasStatusFilter;
+    String? tempSelectedClassStatus = _selectedClassesStatusFilter;
     String? tempSelectedGradeLevel = _selectedGradeLevelFilter;
     String? tempSelectedClassName = _selectedClassNameFilter;
 
@@ -701,7 +701,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
                           onPressed: () {
                             setState(() {
                               _selectedStatusFilter = tempSelectedStatus;
-                              _selectedKelasStatusFilter =
+                              _selectedClassesStatusFilter =
                                   tempSelectedClassStatus;
                               _selectedGradeLevelFilter =
                                   tempSelectedGradeLevel;
@@ -765,7 +765,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
     if (_currentPage != 1) return null;
     if (_selectedStatusFilter != null ||
         _selectedGradeLevelFilter != null ||
-        _selectedKelasStatusFilter != null ||
+        _selectedClassesStatusFilter != null ||
         _selectedClassNameFilter != null ||
         _searchController.text.trim().isNotEmpty) {
       return null;
@@ -1671,7 +1671,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
     }
   }
 
-  // Navigasi ke halaman manajemen kelas untuk mata pelajaran
+  // Navigate to class management page for the subject
   void _navigateToClassManagement(Map<String, dynamic> subject) {
     AppNavigator.push(context, SubjectClassManagementPage(subject: subject));
   }
@@ -1691,9 +1691,9 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
       // Kelas status filter
       final hasClasses = (subject['jumlah_kelas'] ?? 0) > 0;
       final matchesKelasStatusFilter =
-          _selectedKelasStatusFilter == null ||
-          (_selectedKelasStatusFilter == 'ada' && hasClasses) ||
-          (_selectedKelasStatusFilter == 'tidak_ada' && !hasClasses);
+          _selectedClassesStatusFilter == null ||
+          (_selectedClassesStatusFilter == 'ada' && hasClasses) ||
+          (_selectedClassesStatusFilter == 'tidak_ada' && !hasClasses);
 
       // Class Name filter
       final kelasNames = subject['kelas_names']?.toString() ?? '';
@@ -2557,7 +2557,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
   }
 }
 
-// Halaman Manajemen Kelas untuk Mata Pelajaran (Updated dengan style yang sama)
+// Class Management Page for Subject (Updated with the same style)
 class SubjectClassManagementPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> subject;
 
@@ -2597,10 +2597,10 @@ class SubjectClassManagementPageState
         isLoading = true;
       });
 
-      // Load semua kelas yang tersedia
+      // Load all available classes
       final allClassesResponse = await apiService.get('/class');
 
-      // Load kelas yang sudah ditetapkan untuk mata pelajaran ini
+      // Load classes already assigned to this subject
       // getKelasByMataPelajaran already returns List<dynamic>
       final assignedClasses = await apiService.getClassBySubjectId(
         widget.subject['id'].toString(),
@@ -2635,15 +2635,15 @@ class SubjectClassManagementPageState
     }
   }
 
-  Future<void> addClassToSubject(Map<String, dynamic> kelas) async {
+  Future<void> addClassToSubject(Map<String, dynamic> classItem) async {
     try {
       await getIt<ApiSubjectService>().attachClass(
         widget.subject['id'].toString(),
-        kelas['id'].toString(),
+        classItem['id'].toString(),
       );
 
       if (mounted) {
-                SnackBarUtils.showSuccess(context, 'Kelas ${kelas['name']} berhasil ditambahkan');
+                SnackBarUtils.showSuccess(context, 'Kelas ${classItem['name']} berhasil ditambahkan');
       }
 
       loadData();
@@ -2654,13 +2654,13 @@ class SubjectClassManagementPageState
     }
   }
 
-  Future<void> removeClassFromSubject(Map<String, dynamic> kelas) async {
+  Future<void> removeClassFromSubject(Map<String, dynamic> classItem) async {
     final confirmed = await showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
         title: AppLocalizations.removeClass.tr,
         content:
-            '${languageProvider.getTranslatedText({'en': 'Are you sure you want to remove class', 'id': 'Yakin ingin menghapus kelas'})} ${kelas['name']} ${languageProvider.getTranslatedText({'en': 'from this subject?', 'id': 'dari mata pelajaran ini?'})}',
+            '${languageProvider.getTranslatedText({'en': 'Are you sure you want to remove class', 'id': 'Yakin ingin menghapus kelas'})} ${classItem['name']} ${languageProvider.getTranslatedText({'en': 'from this subject?', 'id': 'dari mata pelajaran ini?'})}',
         confirmColor: Colors.red,
       ),
     );
@@ -2669,11 +2669,11 @@ class SubjectClassManagementPageState
       try {
         await getIt<ApiSubjectService>().detachClass(
           widget.subject['id'].toString(),
-          kelas['id'].toString(),
+          classItem['id'].toString(),
         );
 
         if (mounted) {
-                    SnackBarUtils.showSuccess(context, 'Kelas ${kelas['name']} berhasil dihapus');
+                    SnackBarUtils.showSuccess(context, 'Kelas ${classItem['name']} berhasil dihapus');
         }
 
         loadData();
@@ -2685,10 +2685,10 @@ class SubjectClassManagementPageState
     }
   }
 
-  // Method untuk menambah kelas secara cepat
+  // Method to quickly add classes
   void showQuickAddClassDialog() {
-    final unassignedClasses = availableClasses.where((kelas) {
-      return !isClassAssigned(kelas['id']);
+    final unassignedClasses = availableClasses.where((classItem) {
+      return !isClassAssigned(classItem['id']);
     }).toList();
 
     if (unassignedClasses.isEmpty) {
@@ -2708,7 +2708,7 @@ class SubjectClassManagementPageState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header dengan gradient
+                  // Header with gradient
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.fromLTRB(20, 20, 16, 20),
@@ -2814,7 +2814,7 @@ class SubjectClassManagementPageState
                           ),
                           child: TextField(
                             decoration: InputDecoration(
-                              hintText: 'Cari kelas...',
+                              hintText: 'Cari classItem...',
                               hintStyle: TextStyle(color: ColorUtils.slate400),
                               prefixIcon: Icon(
                                 Icons.search,
@@ -2861,7 +2861,7 @@ class SubjectClassManagementPageState
                                   shrinkWrap: true,
                                   itemCount: unassignedClasses.length,
                                   itemBuilder: (context, index) {
-                                    final kelas = unassignedClasses[index];
+                                    final classItem = unassignedClasses[index];
                                     return Card(
                                       margin: EdgeInsets.symmetric(vertical: 4),
                                       elevation: 1,
@@ -2884,7 +2884,7 @@ class SubjectClassManagementPageState
                                           ),
                                         ),
                                         title: Text(
-                                          kelas['name'] ?? 'Kelas',
+                                          classItem['name'] ?? 'Kelas',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -2893,15 +2893,15 @@ class SubjectClassManagementPageState
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            if (kelas['tingkat'] != null)
+                                            if (classItem['tingkat'] != null)
                                               Text(
-                                                'Tingkat: ${kelas['tingkat']}',
+                                                'Tingkat: ${classItem['tingkat']}',
                                                 style: TextStyle(fontSize: 12),
                                               ),
-                                            if (kelas['wali_kelas_nama'] !=
+                                            if (classItem['wali_kelas_nama'] !=
                                                 null)
                                               Text(
-                                                'Wali: ${kelas['wali_kelas_nama']}',
+                                                'Wali: ${classItem['wali_kelas_nama']}',
                                                 style: TextStyle(
                                                   fontSize: 11,
                                                   color: ColorUtils.slate500,
@@ -2925,7 +2925,7 @@ class SubjectClassManagementPageState
                                         ),
                                         onTap: () {
                                           AppNavigator.pop(context);
-                                          addClassToSubject(kelas);
+                                          addClassToSubject(classItem);
                                         },
                                       ),
                                     );
@@ -3001,16 +3001,16 @@ class SubjectClassManagementPageState
   }
 
   bool isClassAssigned(String classId) {
-    return assignedClasses0.any((kelas) => kelas['id'] == classId);
+    return assignedClasses0.any((classItem) => classItem['id'] == classId);
   }
 
   List<dynamic> getFilteredClasses() {
     final searchTerm = searchController.text.toLowerCase();
-    return availableClasses.where((kelas) {
-      final className = kelas['name']?.toString().toLowerCase() ?? '';
-      final classLevel = kelas['tingkat']?.toString().toLowerCase() ?? '';
+    return availableClasses.where((classItem) {
+      final className = classItem['name']?.toString().toLowerCase() ?? '';
+      final classLevel = classItem['tingkat']?.toString().toLowerCase() ?? '';
       final homeroomTeacher =
-          kelas['wali_kelas_nama']?.toString().toLowerCase() ?? '';
+          classItem['wali_kelas_nama']?.toString().toLowerCase() ?? '';
 
       final matchesSearch =
           searchTerm.isEmpty ||
@@ -3018,7 +3018,7 @@ class SubjectClassManagementPageState
           classLevel.contains(searchTerm) ||
           homeroomTeacher.contains(searchTerm);
 
-      final isAssigned = isClassAssigned(kelas['id']);
+      final isAssigned = isClassAssigned(classItem['id']);
 
       final matchesFilter =
           selectedFilter == 'All' ||
@@ -3030,7 +3030,7 @@ class SubjectClassManagementPageState
   }
 
   Widget buildClassCard(
-    Map<String, dynamic> kelas,
+    Map<String, dynamic> classItem,
     int index,
     bool isAssigned,
   ) {
@@ -3056,9 +3056,9 @@ class SubjectClassManagementPageState
           borderRadius: BorderRadius.circular(14),
           onTap: () {
             if (isAssigned) {
-              removeClassFromSubject(kelas);
+              removeClassFromSubject(classItem);
             } else {
-              addClassToSubject(kelas);
+              addClassToSubject(classItem);
             }
           },
           child: Padding(
@@ -3097,7 +3097,7 @@ class SubjectClassManagementPageState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        kelas['name'] ?? 'Kelas',
+                        classItem['name'] ?? 'Kelas',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -3109,15 +3109,15 @@ class SubjectClassManagementPageState
                         spacing: 6,
                         runSpacing: 4,
                         children: [
-                          if (kelas['tingkat'] != null)
+                          if (classItem['tingkat'] != null)
                             buildClassInfoTag(
                               Icons.layers_outlined,
-                              'Tingkat ${kelas['tingkat']}',
+                              'Tingkat ${classItem['tingkat']}',
                             ),
-                          if (kelas['wali_kelas_nama'] != null)
+                          if (classItem['wali_kelas_nama'] != null)
                             buildClassInfoTag(
                               Icons.person_outline,
-                              kelas['wali_kelas_nama'],
+                              classItem['wali_kelas_nama'],
                             ),
                         ],
                       ),
@@ -3304,7 +3304,7 @@ class SubjectClassManagementPageState
 
                 EnhancedSearchBar(
                   controller: searchController,
-                  hintText: 'Cari kelas...',
+                  hintText: 'Cari classItem...',
                   onChanged: (value) {
                     setState(() {});
                   },
@@ -3359,9 +3359,9 @@ class SubjectClassManagementPageState
                       : ListView.builder(
                           itemCount: filteredClasses.length,
                           itemBuilder: (context, index) {
-                            final kelas = filteredClasses[index];
-                            final isAssigned = isClassAssigned(kelas['id']);
-                            return buildClassCard(kelas, index, isAssigned);
+                            final classItem = filteredClasses[index];
+                            final isAssigned = isClassAssigned(classItem['id']);
+                            return buildClassCard(classItem, index, isAssigned);
                           },
                         ),
                 ),

@@ -38,7 +38,7 @@ class AppErrorHandler {
         FlutterError.presentError(details);
       }
 
-      // Kirim error ke stream
+      // Send error to stream
       _errorController.add(Exception(details.exception.toString()));
 
       // Log error
@@ -50,7 +50,7 @@ class AppErrorHandler {
       AppLogger.error('error', error);
       AppLogger.debug('error', 'Stack: $stack');
 
-      // Kirim error ke stream
+      // Send error to stream
       _errorController.add(Exception(error.toString()));
 
       // Log error

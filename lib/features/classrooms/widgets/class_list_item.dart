@@ -34,7 +34,7 @@ class ClassListItem extends StatelessWidget {
   });
 
   Color _getPrimaryColor() {
-    return ColorUtils.blue600; // Blue untuk admin
+    return ColorUtils.blue600; // Blue for admin
   }
 
   /// Builds the gradient class card with name, grade, teacher info, student count,
@@ -90,7 +90,7 @@ class ClassListItem extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Header dengan nama dan grade
+                            // Header with name and grade
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [

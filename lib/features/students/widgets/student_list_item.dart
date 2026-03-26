@@ -14,7 +14,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 /// - [student] - student data map from the API (like `:student` prop)
 /// - [index] - position in list, used for avatar color cycling
 /// - [onEdit] - callback when "Edit" is selected from the popup menu
-/// - [onDelete] - callback when "Hapus" is selected from the popup menu
+/// - [onDelete] - callback when "Delete" is selected from the popup menu
 ///
 /// Uses a `PopupMenuButton` for actions (like a Vue `<v-menu>` with items).
 class StudentListItem extends StatelessWidget {

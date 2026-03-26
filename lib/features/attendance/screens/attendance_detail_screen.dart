@@ -51,9 +51,9 @@ class AbsensiDetailPage extends StatefulWidget {
 ///
 /// This is like a Vue page component with its own local state
 /// (`data() { return {...} }`).  Key state variables:
-/// - [_absensiData] -- raw attendance records from the API
+/// - [_attendanceData] -- raw attendance records from the API
 /// - [_studentList] / [_filteredStudentList] -- all students and the search-filtered subset
-/// - [_absensiStatus] -- a Map<studentId, status> tracking each student's attendance choice
+/// - [_attendanceStatus] -- a Map<studentId, status> tracking each student's attendance choice
 /// - [_isLoading] / [_isSubmitting] -- loading flags (like Vue `data.loading`)
 /// - [_searchController] -- TextEditingController, similar to a Vue `v-model` on an input
 ///
@@ -61,10 +61,10 @@ class AbsensiDetailPage extends StatefulWidget {
 /// re-renders the widget tree, just like Vue re-renders when a reactive
 /// property changes.
 class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
-  List<dynamic> _absensiData = [];
+  List<dynamic> _attendanceData = [];
   List<Student> _studentList = [];
   List<Student> _filteredStudentList = [];
-  final Map<String, String> _absensiStatus = {};
+  final Map<String, String> _attendanceStatus = {};
   bool _isLoading = true;
   bool _isSubmitting = false;
   final TextEditingController _searchController = TextEditingController();
@@ -76,7 +76,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   void initState() {
     super.initState();
     _loadData();
-    _searchController.addListener(_filterSiswa);
+    _searchController.addListener(_filterStudents);
   }
 
   /// Called when the widget is removed from the tree.
@@ -92,7 +92,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   /// Like a Vue `computed` property that filters an array, or a Laravel
   /// Collection `->filter()` call. Called automatically via the search
   /// controller listener set up in [initState].
-  void _filterSiswa() {
+  void _filterStudents() {
     final query = _searchController.text.toLowerCase();
     setState(() {
       if (query.isEmpty) {
@@ -100,9 +100,9 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       } else {
         _filteredStudentList = _studentList
             .where(
-              (siswa) =>
-                  siswa.name.toLowerCase().contains(query) ||
-                  siswa.studentNumber.toLowerCase().contains(query),
+              (student) =>
+                  student.name.toLowerCase().contains(query) ||
+                  student.studentNumber.toLowerCase().contains(query),
             )
             .toList();
       }
@@ -116,7 +116,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   Future<void> _loadData() async {
     try {
       // Load siswa dan absensi data
-      final [studentData, absensiData] = await Future.wait([
+      final [studentData, attendanceData] = await Future.wait([
         getIt<ApiStudentService>().getStudent(),
         ApiService.getAttendance(
           teacherId: widget.teacher['id'],
@@ -128,16 +128,16 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       setState(() {
         _studentList = studentData.map((s) => Student.fromJson(s)).toList();
         _filteredStudentList = List.from(_studentList);
-        _absensiData = absensiData;
+        _attendanceData = attendanceData;
 
         // Map status absensi
-        for (var absen in _absensiData) {
-          _absensiStatus[absen['siswa_id']] = absen['status'];
+        for (var record in _attendanceData) {
+          _attendanceStatus[record['siswa_id']] = record['status'];
         }
 
-        // Set default untuk siswa yang belum ada data
+        // Set default for students who don't have data yet
         for (var student in _studentList) {
-          _absensiStatus[student.id] ??= 'hadir';
+          _attendanceStatus[student.id] ??= 'hadir';
         }
 
         _isLoading = false;
@@ -157,7 +157,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   /// Each dropdown change calls `setState()` which triggers a re-render
   /// (equivalent to Vue reactivity updating the DOM).
   Widget _buildStudentItem(Student student) {
-    final status = _absensiStatus[student.id] ?? 'hadir';
+    final status = _attendanceStatus[student.id] ?? 'hadir';
     final Color statusColor = _getStatusColor(status);
 
     return Card(
@@ -243,7 +243,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
             ],
             onChanged: (value) {
               setState(() {
-                _absensiStatus[student.id] = value!;
+                _attendanceStatus[student.id] = value!;
               });
             },
           ),
@@ -256,7 +256,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
   /// Like a Vue `methods.submitForm()` that calls `axios.post()` in a loop.
   /// In Laravel terms, this is like calling `AttendanceController@store`
   /// for each student. Shows success/error snackbar (like Vue `this.$toast`).
-  Future<void> _updateAbsensi() async {
+  Future<void> _updateAttendance() async {
     setState(() {
       _isSubmitting = true;
     });
@@ -265,7 +265,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       int successCount = 0;
 
       for (var student in _studentList) {
-        final status = _absensiStatus[student.id] ?? 'hadir';
+        final status = _attendanceStatus[student.id] ?? 'hadir';
 
         await ApiService.createAttendance({
           'siswa_id': student.id,
@@ -313,7 +313,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
     }
   }
 
-  Color _getAvatarColor(String nama) {
+  Color _getAvatarColor(String name) {
     final colors = [
       Colors.blue,
       Colors.green,
@@ -322,7 +322,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
       Colors.teal,
       Colors.indigo,
     ];
-    final index = nama.isNotEmpty ? nama.codeUnitAt(0) % colors.length : 0;
+    final index = name.isNotEmpty ? name.codeUnitAt(0) % colors.length : 0;
     return colors[index];
   }
 
@@ -474,7 +474,7 @@ class _AbsensiDetailPageState extends State<AbsensiDetailPage> {
                     ],
                   ),
                   child: ElevatedButton.icon(
-                    onPressed: _isSubmitting ? null : _updateAbsensi,
+                    onPressed: _isSubmitting ? null : _updateAttendance,
                     icon: _isSubmitting
                         ? const SizedBox(
                             width: 16,

@@ -86,25 +86,25 @@ class MateriPageState extends ConsumerState<MateriPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = 'All';
 
-  // State untuk expanded/collapsed
+  // State for expanded/collapsed
   final Map<String, bool> _expandedBab = {};
 
-  // State untuk ceklis
+  // State for checkboxes
   final Map<String, bool> _checkedBab = {};
   final Map<String, bool> _checkedSubBab = {};
 
-  // State untuk generated (sudah pernah di-generate)
+  // State for generated (previously generated)
   final Map<String, bool> _generatedBab = {};
   final Map<String, bool> _generatedSubBab = {};
 
-  // State untuk used (sudah digunakan di class activity) - Blue Check
+  // State for used (already used in class activity) - Blue Check
   final Map<String, bool> _usedBab = {};
   final Map<String, bool> _usedSubBab = {};
 
-  // Teacher profile ID (dari tabel teachers, bukan user ID)
+  // Teacher profile ID (from teachers table, not user ID)
   String? _teacherProfileId;
 
-  // Fungsi untuk mendapatkan bab yang dicentang tapi belum di-generate
+  // Get checked chapters that have not been generated yet
   List<Map<String, dynamic>> _getCheckedNotGeneratedBab() {
     return _babMateriList
         .where((bab) {
@@ -121,7 +121,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
         .cast<Map<String, dynamic>>();
   }
 
-  // Fungsi untuk mendapatkan sub bab yang dicentang tapi belum di-generate
+  // Get checked sub-chapters that have not been generated yet
   List<Map<String, dynamic>> _getCheckedNotGeneratedSubBab() {
     return _subBabMateriList
         .where(
@@ -134,11 +134,11 @@ class MateriPageState extends ConsumerState<MateriPage> {
         .cast<Map<String, dynamic>>();
   }
 
-  // Fungsi untuk navigate ke halaman class activity dengan bab yang dipilih
+  // Navigate to class activity page with selected chapters
   /// Navigates to ClassActivity screen with checked chapters for RPP generation.
   /// Like a Vue `methods.navigateToGenerate()` that uses `this.$router.push()`.
   void _navigateToGenerateRPP() async {
-    // Gunakan yang belum di-generate
+    // Use ones that haven't been generated yet
     final checkedBab = _getCheckedNotGeneratedBab();
     final checkedSubBab = _getCheckedNotGeneratedSubBab();
 
@@ -682,7 +682,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
         'subBabMateri': allSubBabs,
       });
 
-      // Load progress dari database (non-blocking — UI already shows bab structure)
+      // Load progress from database (non-blocking — UI already shows chapter structure)
       _loadMateriProgress(subjectId);
 
       // Trigger tour
@@ -701,7 +701,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     }
   }
 
-  // Fungsi untuk menangani perubahan ceklis pada sub bab
+  // Handle checkbox change on sub-chapter
   void _handleSubBabCheck(String subBabId, String babId, bool? value) {
     // Prevent unchecking if already generated (Purple) or Used (Blue)
     if ((_generatedSubBab[subBabId] == true || _usedSubBab[subBabId] == true) &&
@@ -712,20 +712,20 @@ class MateriPageState extends ConsumerState<MateriPage> {
     setState(() {
       _checkedSubBab[subBabId] = value ?? false;
 
-      // Cek apakah semua sub bab dalam bab ini sudah dicentang
-      // Ambil daftar sub bab yang dimiliki oleh babId ini
+      // Check if all sub-chapters in this chapter are checked
+      // Get the list of sub-chapters belonging to this babId
       final subBabsForThisBab = _subBabMateriList.where((sb) {
         return sb['bab_id'].toString() == babId.toString();
       }).toList();
 
       if (subBabsForThisBab.isNotEmpty) {
-        // Cek apakah setiap sub bab sudah dicentang
+        // Check if every sub-chapter is checked
         final allChecked = subBabsForThisBab.every((sb) {
           final sbId = sb['id'].toString();
           return _checkedSubBab[sbId] == true;
         });
 
-        // Update status ceklis bab
+        // Update chapter checkbox status
         _checkedBab[babId] = allChecked;
 
         AppLogger.debug('material', 'SubBab check changed: $subBabId -> $value');
@@ -737,7 +737,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     _saveProgress(babId, subBabId, value ?? false);
   }
 
-  // Fungsi untuk menangani perubahan ceklis pada bab
+  // Handle checkbox change on chapter
   void _handleBabCheck(String babId, bool? value) {
     // Prevent unchecking if already generated (Purple) or Used (Blue)
     if ((_generatedBab[babId] == true || _usedBab[babId] == true) &&
@@ -921,7 +921,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     }
   }
 
-  // Navigasi ke halaman detail sub bab
+  // Navigate to sub-chapter detail page
   void _navigateToSubBabDetail(
     Map<String, dynamic> subBab,
     Map<String, dynamic> bab,
@@ -954,7 +954,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
           (bab['judul_bab']?.toString().toLowerCase().contains(searchTerm) ??
           false);
 
-      // Cari juga di sub bab yang terkait
+      // Also search in related sub-chapters
       final subBabMatches = _subBabMateriList
           .where((subBab) => subBab['bab_id'] == bab['id'])
           .any(
@@ -1104,7 +1104,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
           backgroundColor: ColorUtils.slate50,
           body: Column(
             children: [
-              // Header dengan gradient seperti presence_teacher
+              // Header with gradient like presence_teacher
               _buildHeader(languageProvider),
 
               // Filter Section
@@ -1297,7 +1297,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
           ),
           SizedBox(height: AppSpacing.md),
 
-          // Tombol Generate Kegiatan jika ada yang dicentang
+          // Generate Activity button if any items are checked
           if (totalChecked > 0 && _getCheckedNotGeneratedCount() > 0) ...[
             SizedBox(
               width: double.infinity,

@@ -40,7 +40,7 @@ class ExcelClassService {
     
 
     try {
-      // Validasi data terlebih dahulu
+      // Validate data first
       final validatedData = validateClassData(classes);
 
       final response = await dioClient.post<List<int>>(
@@ -49,16 +49,16 @@ class ExcelClassService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      // Get directory untuk menyimpan file
+      // Get directory to save the file
       final Directory directory = await getApplicationDocumentsDirectory();
       final String filePath =
           '${directory.path}/Data_Kelas_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-      // Simpan file yang didownload
+      // Save the downloaded file
       final File file = File(filePath);
       await file.writeAsBytes(response.data ?? []);
 
-      // Buka file
+      // Open file
       await OpenFile.open(filePath);
 
             SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
@@ -85,15 +85,15 @@ class ExcelClassService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      // Get directory untuk menyimpan file
+      // Get directory to save the file
       final Directory directory = await getApplicationDocumentsDirectory();
       final String filePath = '${directory.path}/Template_Import_Kelas.xlsx';
 
-      // Simpan file yang didownload
+      // Save the downloaded file
       final File file = File(filePath);
       await file.writeAsBytes(response.data ?? []);
 
-      // Buka file
+      // Open file
       await OpenFile.open(filePath);
 
             SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
@@ -119,15 +119,15 @@ class ExcelClassService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      // Get directory untuk menyimpan file
+      // Get directory to save the file
       final Directory directory = await getApplicationDocumentsDirectory();
       final String filePath = '${directory.path}/Template_Import_Kelas.csv';
 
-      // Simpan file yang didownload
+      // Save the downloaded file
       final File file = File(filePath);
       await file.writeAsBytes(response.data ?? []);
 
-      // Buka file
+      // Open file
       await OpenFile.open(filePath);
 
             SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
@@ -179,7 +179,7 @@ class ExcelClassService {
       final classItem = classes[i];
       final Map<String, dynamic> validatedClass = {};
 
-      // Validasi field required
+      // Validate required fields
       if (classItem['name'] == null || classItem['name'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama kelas tidak boleh kosong');
       } else {

@@ -23,17 +23,17 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
-// Form Input Nilai Baru untuk Multiple Siswa
+// New Grade Input Form for Multiple Students
 class GradeInputFormNew extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final Map<String, dynamic> subject;
-  final List<Student> siswaList;
+  final List<Student> studentList;
 
   const GradeInputFormNew({
     super.key,
     required this.teacher,
     required this.subject,
-    required this.siswaList,
+    required this.studentList,
   });
 
   @override
@@ -48,7 +48,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     return ref.read(academicYearRiverpod).isReadOnly;
   }
 
-  // Variabel untuk state
+  // State variables
   String? _selectedJenisNilai;
   final List<String> _jenisNilaiList = [
     'uh',
@@ -59,14 +59,14 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     'pas',
   ];
 
-  // Map untuk menyimpan nilai per siswa
-  final Map<String, Map<String, dynamic>> _nilaiSiswaMap = {};
+  // Map to store grades per student
+  final Map<String, Map<String, dynamic>> _gradeStudentMap = {};
 
-  // Text controllers untuk tabel input
+  // Text controllers for input table
   final Map<String, TextEditingController> _tableControllers = {};
   final Map<String, FocusNode> _tableFocusNodes = {};
 
-  // State untuk tracking apakah jenis nilai dan tanggal sudah di-set
+  // State for tracking whether grade type and date have been set
   bool _isConfigurationSet = false;
   String? _confirmedJenisNilai;
   DateTime? _confirmedDate;
@@ -75,9 +75,9 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
   @override
   void initState() {
     super.initState();
-    // Initialize map dengan nilai default untuk setiap siswa
-    for (var siswa in widget.siswaList) {
-      _nilaiSiswaMap[siswa.id] = {'nilai': '', 'deskripsi': ''};
+    // Initialize map with default values for each student
+    for (var student in widget.studentList) {
+      _gradeStudentMap[student.id] = {'nilai': '', 'deskripsi': ''};
     }
   }
 
@@ -119,10 +119,10 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
         return;
       }
 
-      // Cek apakah ada setidaknya satu siswa yang memiliki nilai
+      // Check if at least one student has a grade value
       bool hasData = false;
-      for (var siswa in widget.siswaList) {
-        final nilaiData = _nilaiSiswaMap[siswa.id];
+      for (var student in widget.studentList) {
+        final nilaiData = _gradeStudentMap[student.id];
         if (nilaiData?['nilai']?.isNotEmpty == true) {
           hasData = true;
           break;
@@ -140,21 +140,21 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
       try {
         int successCount = 0;
 
-        for (var siswa in widget.siswaList) {
-          final nilaiData = _nilaiSiswaMap[siswa.id];
+        for (var student in widget.studentList) {
+          final nilaiData = _gradeStudentMap[student.id];
           final nilai = nilaiData?['nilai']?.toString().trim();
 
-          // Skip jika tidak ada nilai yang diinput
+          // Skip if no grade value was entered
           if (nilai == null || nilai.isEmpty) {
             continue;
           }
 
-          // Perbaikan: Kirim Student Class ID jika ada, fallback ke ID siswa (untuk kompatibilitas)
-          final studentIdToSend = siswa.studentClassId ?? siswa.id;
+          // Fix: Send Student Class ID if available, fallback to student ID (for compatibility)
+          final studentIdToSend = student.studentClassId ?? student.id;
 
           // ... (inside _submitNilai)
           final data = {
-            'student_id': siswa.id, // For legacy/history
+            'student_id': student.id, // For legacy/history
             'student_class_id':
                 studentIdToSend, // New field required by backend
             'teacher_id': widget.teacher['id'],
@@ -302,9 +302,9 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 ),
               ),
               // Rows - scrollable
-              ...widget.siswaList.map((siswa) {
-                final nilaiKey = "${siswa.id}_nilai";
-                final deskripsiKey = "${siswa.id}_deskripsi";
+              ...widget.studentList.map((student) {
+                final nilaiKey = "${student.id}_nilai";
+                final deskripsiKey = "${student.id}_deskripsi";
 
                 // Initialize controllers if not exists
                 if (!_tableControllers.containsKey(nilaiKey)) {
@@ -336,7 +336,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              siswa.name,
+                              student.name,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 color: ColorUtils.slate900,
@@ -345,7 +345,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              siswa.studentNumber,
+                              student.studentNumber,
                               style: TextStyle(
                                 fontSize: 10,
                                 color: ColorUtils.slate500,
@@ -400,7 +400,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                           },
                           onChanged: (value) {
                             setState(() {
-                              _nilaiSiswaMap[siswa.id]?['nilai'] = value;
+                              _gradeStudentMap[student.id]?['nilai'] = value;
                             });
                           },
                         ),
@@ -429,7 +429,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                               ),
                             ),
                             onChanged: (value) {
-                              _nilaiSiswaMap[siswa.id]?['deskripsi'] = value;
+                              _gradeStudentMap[student.id]?['deskripsi'] = value;
                             },
                           ),
                         ),
@@ -746,8 +746,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
-        final siswaWithNilaiCount = widget.siswaList.where((siswa) {
-          final nilaiData = _nilaiSiswaMap[siswa.id];
+        final studentsWithGradeCount = widget.studentList.where((student) {
+          final nilaiData = _gradeStudentMap[student.id];
           return nilaiData?['nilai']?.isNotEmpty == true;
         }).length;
 
@@ -873,14 +873,14 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: siswaWithNilaiCount > 0
+                                  color: studentsWithGradeCount > 0
                                       ? ColorUtils.success600.withValues(
                                           alpha: 0.08,
                                         )
                                       : ColorUtils.slate100,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: siswaWithNilaiCount > 0
+                                    color: studentsWithGradeCount > 0
                                         ? ColorUtils.success600.withValues(
                                             alpha: 0.3,
                                           )
@@ -888,9 +888,9 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                                   ),
                                 ),
                                 child: Text(
-                                  '$siswaWithNilaiCount/${widget.siswaList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
+                                  '$studentsWithGradeCount/${widget.studentList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
                                   style: TextStyle(
-                                    color: siswaWithNilaiCount > 0
+                                    color: studentsWithGradeCount > 0
                                         ? ColorUtils.success600
                                         : ColorUtils.slate500,
                                     fontSize: 12,

@@ -110,7 +110,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
   }
 
   Color _getPrimaryColor() {
-    return ColorUtils.blue600; // Blue untuk admin
+    return ColorUtils.blue600; // Blue for admin
   }
 
   /// Builds the dialog UI with a gradient header, form fields, and action buttons.
@@ -126,7 +126,7 @@ class ClassFormDialogState extends State<ClassFormDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header dengan gradient
+                // Header with gradient
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(AppSpacing.xl),

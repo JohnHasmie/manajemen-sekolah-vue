@@ -118,7 +118,7 @@ class ApiSubjectService {
     String cacheKey = CacheKeyBuilder.custom('subject', schoolId, queryString);
 
     try {
-      // 1. Coba ambil dari cache
+      // 1. Try to get from cache
       final cachedData = await LocalCacheService.load(
         cacheKey,
         ttl: Duration(minutes: 30),
@@ -128,7 +128,7 @@ class ApiSubjectService {
         return cachedData;
       }
 
-      // 2. Jika tidak ada di cache, ambil dari API
+      // 2. If not in cache, fetch from API
       AppLogger.debug('subject', 'Fetching subjects from API for School: $schoolId');
       final response = await dioClient.get('/subject?$queryString');
 
@@ -141,7 +141,7 @@ class ApiSubjectService {
         return result;
       }
 
-      // Fallback untuk backward compatibility
+      // Fallback for backward compatibility
       final fallbackResult = {
         'success': true,
         'data': result is List ? result : [],

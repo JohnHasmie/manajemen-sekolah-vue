@@ -137,11 +137,11 @@ class ApiClassActivityService {
 
       final result = response.data;
 
-      // Handle jika response adalah array langsung
+      // Handle if response is a direct array
       if (result is List) {
         return result;
       }
-      // Handle jika response adalah object dengan data property
+      // Handle if response is an object with data property
       else if (result is Map && result.containsKey('data')) {
         return result['data'] ?? [];
       }
@@ -160,12 +160,12 @@ class ApiClassActivityService {
   /// Like `ClassActivity::where('class_id', $classId)->get()` in Laravel.
   Future<List<dynamic>> getKegiatanByKelas(
     String classId, {
-    String? siswaId,
+    String? studentId,
     String? academicYearId,
   }) async {
     try {
       final params = <String, String>{};
-      if (siswaId != null) params['student_id'] = siswaId;
+      if (studentId != null) params['student_id'] = studentId;
       if (academicYearId != null) params['academic_year_id'] = academicYearId;
 
       String url = '/class-activity/class/$classId';

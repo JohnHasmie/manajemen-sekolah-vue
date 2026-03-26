@@ -457,7 +457,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         final classId = (schedule['class_id'] ?? schedule['kelas_id'])
             .toString();
 
-        // Untuk target KHUSUS: tidak ada filter waktu, semua jadwal bisa dipilih
+        // For SPECIFIC target: no time filter, all schedules can be selected
         if (widget.initialTarget == 'khusus') {
           if (!uniqueClasses.containsKey(classId)) {
             uniqueClasses[classId] = {
@@ -466,9 +466,9 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
             };
           }
         }
-        // Untuk target UMUM
+        // For GENERAL target
         else {
-          // Jika ada initialClassId (dari teaching schedule), selalu include kelas tersebut
+          // If initialClassId exists (from teaching schedule), always include that class
           if (widget.initialClassId != null &&
               classId == widget.initialClassId) {
             if (!uniqueClasses.containsKey(classId)) {
@@ -479,7 +479,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
               AppLogger.debug('class_activity', 'Added class from initialClassId: ${schedule['kelas_nama']}',);
             }
           }
-          // Filter berdasarkan waktu untuk kelas lainnya
+          // Filter by time for other classes
           else {
             var scheduleDay =
                 schedule['hari_nama']?.toString() ??
@@ -637,7 +637,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         data['batas_waktu'] = _deadline!.toIso8601String();
       }
 
-      // Tambahkan siswa target untuk kegiatan khusus
+      // Add target students for specific activities
       final Map<String, dynamic> requestData = Map<String, dynamic>.from(data);
       if (widget.initialTarget == 'khusus' && _selectedStudents.isNotEmpty) {
         requestData['siswa_target'] = _selectedStudents;
@@ -1151,7 +1151,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       ),
                     SizedBox(height: AppSpacing.md),
 
-                    // Toggle: Pilih dari Materi atau Tulis Manual
+                    // Toggle: Select from Material or Write Manually
                     Row(
                       children: [
                         Icon(Icons.title, size: 20, color: ColorUtils.slate600),
@@ -1384,7 +1384,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       },
                     ),
 
-                    // Batas Waktu (hanya untuk Tugas)
+                    // Deadline (only for Assignments)
                     if (isAssignment) ...[
                       ListTile(
                         contentPadding: EdgeInsets.zero,
@@ -1429,7 +1429,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       ),
                     ],
 
-                    // Pilih Siswa (hanya untuk target khusus)
+                    // Select Students (only for specific target)
                     if (widget.initialTarget == 'khusus' &&
                         _selectedClassId != null) ...[
                       SizedBox(height: AppSpacing.md),

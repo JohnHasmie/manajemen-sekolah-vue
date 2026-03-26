@@ -83,7 +83,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       'learning_source',
       'learning_activities',
       'assessment',
-      // Metadata yang biasanya disimpan dengan AI generation
+      // Metadata typically saved with AI generation
       'ai_model_used',
       'ai_tokens_used',
       'ai_generated',
@@ -105,7 +105,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           rppData: _rppData,
           teacherId: _teacherId,
           onSaved: () {
-            // Jika ingin refresh halaman setelah menyimpan, bisa tambahkan logika di sini.
+            // If you want to refresh the page after saving, add logic here.
             if (mounted) {
                             SnackBarUtils.showInfo(context, 'RPP AI berhasil disimpan');
             }
@@ -618,7 +618,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     final teacherName = getField(['guru_nama', 'teacher_name']);
     final status = getField(['status']);
 
-    // Header fields yang mungkin ada dari AI generation atau input manual
+    // Header fields that may come from AI generation or manual input
     final unit = getField(['satuan_pendidikan', 'education_unit']);
     final theme = getField(['tema', 'theme']);
     final subTheme = getField(['sub_tema', 'sub_theme']);
@@ -628,7 +628,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     buffer.writeln('RENCANA PELAKSANAAN PEMBELAJARAN (RPP)');
     buffer.writeln();
 
-    // Informasi Header dari database
+    // Header information from database
     buffer.writeln('Judul\t\t\t: $title');
     if (subjectName.isNotEmpty) {
       buffer.writeln('Mata Pelajaran\t: $subjectName');
@@ -649,7 +649,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       buffer.writeln('Status\t\t\t: $status');
     }
 
-    // Header tambahan (dari AI generation atau input manual)
+    // Additional header (from AI generation or manual input)
     if (unit.isNotEmpty) {
       buffer.writeln('Satuan Pendidikan\t: $unit');
     }
@@ -667,12 +667,12 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     }
     buffer.writeln();
 
-    // Cek apakah RPP hasil genrasi AI (format 10 komponen API)
+    // Check if RPP is AI-generated (10-component API format)
     final bool isAi =
         _rppData['ai_generated'] == true ||
         _rppData['is_ai_generated'] == true;
 
-    // Kompetensi Inti & Kompetensi Dasar (jika tersedia)
+    // Core Competencies & Basic Competencies (if available)
     final String kompetensiInti = getField([
       'kompetensi_inti',
       'kompetensiInti',
@@ -763,10 +763,10 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       sectionIndex++;
 
       if (kegiatanPendahuluan.isEmpty && kegiatanPenutup.isEmpty) {
-        // Data dari DB (learning_activities) atau AI - 1 field saja
+        // Data from DB (learning_activities) or AI - single field only
         buffer.writeln(_stripHtml(kegiatanInti));
       } else {
-        // Data terpisah (pendahuluan, inti, penutup)
+        // Separate data (introduction, main, closing)
         if (kegiatanPendahuluan.isNotEmpty) {
           final pendahuluanTime = getField(['waktu_pendahuluan']);
           buffer.writeln(
@@ -828,7 +828,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       buffer.writeln();
     }
 
-    // Materi dan Sumber Belajar (jika tersedia)
+    // Materials and Learning Resources (if available)
     final String mainMaterial = getField(['main_material']);
     final String learningMethod = getField(['learning_method']);
     final String mediaTools = getField(['media_tools']);
@@ -1004,7 +1004,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
   Future<void> _exportToWord() async {
     try {
-      // Tunggu sebentar untuk memastikan plugin siap
+      // Wait briefly to ensure the plugin is ready
       await Future.delayed(Duration(milliseconds: 100));
 
       // Create a new PDF document
@@ -1060,7 +1060,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       final List<int> bytes = await document.save();
       document.dispose();
 
-      // Get directory dengan error handling
+      // Get directory with error handling
       final directory = await getTemporaryDirectory();
       final file = File(
         '${directory.path}/RPP_${_rppData['judul']}_${DateTime.now().millisecondsSinceEpoch}.pdf',

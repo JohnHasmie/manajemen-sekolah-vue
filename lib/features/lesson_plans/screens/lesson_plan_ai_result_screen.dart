@@ -22,8 +22,8 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-// Note: pastikan import AppLocalizations dan Provider jika diperlukan,
-// namun di sini kita gunakan styling yang umum.
+// Note: ensure AppLocalizations and Provider are imported if needed,
+// but here we use common styling.
 
 /// AI-generated lesson plan viewer/editor with rich text editing.
 ///
@@ -364,7 +364,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     );
   }
 
-  // stripHtml dihapus karena digunakan html2md
+  // stripHtml removed because html2md is used instead
 
   @override
   void dispose() {
@@ -724,8 +724,8 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     });
 
     try {
-      // Map data untuk Backend K-13 (3 komponen manual + metadata)
-      // Waktu dan default lainnya diatur static untuk AI bypass saat ini
+      // Map data for Backend K-13 (3 manual components + metadata)
+      // Duration and other defaults are set statically for AI bypass currently
       final payloadData = {
         'guru_id': widget.teacherId,
         'mata_pelajaran_id':
@@ -742,14 +742,14 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         'penilaian': _penilaianController.document.toPlainText(),
         'satuan_pendidikan': _satuanPendidikanController.text,
         'kelas_semester': _kelasSemesterController.text,
-        'tema': _babController.text, // Bab sebagai tema
+        'tema': _babController.text, // Chapter as theme
         'sub_tema': _subBabController.text,
         'pembelajaran_ke': _pembelajaranKeController.text,
         'alokasi_waktu': _alokasiWaktuController.text,
         'waktu_pendahuluan': '15',
         'waktu_inti': '140',
         'waktu_penutup': '15',
-        'is_ai_generated': true, // Flaging backend untuk AI
+        'is_ai_generated': true, // Backend flag for AI-generated content
       };
 
       AppLogger.debug('lesson_plan', "Menyimpan RPP Payload: \$payloadData");
@@ -758,7 +758,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
       if (mounted) {
                 SnackBarUtils.showSuccess(context, 'RPP AI berhasil disimpan!');
-        AppNavigator.pop(context); // Kembali ke list RPP (PopScope triggers onSaved)
+        AppNavigator.pop(context); // Return to RPP list (PopScope triggers onSaved)
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);

@@ -24,7 +24,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 class GradeInputForm extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final Map<String, dynamic> subject;
-  final Student siswa;
+  final Student student;
   final String jenisNilai;
   final Map<String, dynamic>? existingNilai;
   final dynamic assessmentId; // Added assessmentId
@@ -35,7 +35,7 @@ class GradeInputForm extends ConsumerStatefulWidget {
     super.key,
     required this.teacher,
     required this.subject,
-    required this.siswa,
+    required this.student,
     required this.jenisNilai,
     this.existingNilai,
     this.assessmentId, // Added assessmentId
@@ -61,7 +61,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill data jika edit
+    // Pre-fill data if editing
     if (widget.existingNilai != null) {
       _nilaiController.text = widget.existingNilai!['nilai'].toString();
       _deskripsiController.text =
@@ -117,9 +117,9 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
     if (_formKey.currentState!.validate()) {
       try {
         final data = {
-          'student_id': widget.siswa.id,
+          'student_id': widget.student.id,
           'student_class_id':
-              widget.siswa.studentClassId, // Added for completeness
+              widget.student.studentClassId, // Added for completeness
           'teacher_id': widget.teacher['id'],
           'subject_id': widget.subject['id'],
           'type': widget.jenisNilai,
@@ -137,7 +137,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
         };
 
         if (widget.existingNilai != null) {
-          // Update nilai yang sudah ada
+          // Update existing grade
           await ApiService().put(
             '/grades/${widget.existingNilai!['id']}',
             data,
@@ -314,7 +314,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                             ),
                           ),
                           Text(
-                            widget.siswa.name,
+                            widget.student.name,
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.white.withValues(alpha: 0.9),
@@ -358,7 +358,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                                   'en': 'Student',
                                   'id': 'Siswa',
                                 }),
-                                widget.siswa.name,
+                                widget.student.name,
                               ),
                               _buildDetailItem(
                                 Icons.badge_outlined,
@@ -366,7 +366,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                                   'en': 'NIS',
                                   'id': 'NIS',
                                 }),
-                                widget.siswa.studentNumber,
+                                widget.student.studentNumber,
                               ),
                               _buildDetailItem(
                                 Icons.menu_book_outlined,

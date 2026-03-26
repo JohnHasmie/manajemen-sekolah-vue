@@ -55,7 +55,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
   String _statusMessage = '';
   double _progress = 0.0;
 
-  // State untuk checkbox
+  // State for checkboxes
   bool _titleChecked = true;
   bool _objectivesChecked = true;
   bool _mediaChecked = true;
@@ -75,7 +75,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
   String _getLessonTitleFromSelection() {
     List<String> titleParts = [];
 
-    // Prioritaskan sub bab yang dicentang
+    // Prioritize checked sub-chapters
     if (widget.checkedSubBab.isNotEmpty) {
       for (var subBab in widget.checkedSubBab) {
         final judul = subBab['judul_sub_bab'] ?? '';
@@ -85,7 +85,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
       }
     }
 
-    // Jika tidak ada sub bab, ambil dari bab yang dicentang
+    // If no sub-chapters, get from checked chapters
     if (titleParts.isEmpty && widget.checkedBab.isNotEmpty) {
       for (var bab in widget.checkedBab) {
         final judul = bab['judul_bab'] ?? '';
@@ -95,16 +95,16 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
       }
     }
 
-    // Format title dengan pemisah koma
+    // Format title with comma separator
     String formattedTitle = titleParts.join(', ');
 
-    // Tambahkan prefix RPP jika belum ada dan title tidak kosong
+    // Add RPP prefix if not present and title is not empty
     if (formattedTitle.isNotEmpty &&
         !formattedTitle.toLowerCase().contains('rpp')) {
       formattedTitle = 'RPP $formattedTitle';
     }
 
-    // Jika masih kosong, gunakan nama mata pelajaran
+    // If still empty, use the subject name
     if (formattedTitle.isEmpty) {
       formattedTitle = 'RPP ${widget.mataPelajaranName}';
     }
@@ -136,10 +136,10 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
     });
 
     try {
-      // Kumpulkan semua konten materi dari bab dan sub bab yang dipilih
+      // Collect all material content from selected chapters and sub-chapters
       List<Map<String, dynamic>> allKontenMateri = [];
 
-      // Ambil konten dari sub bab yang dicentang
+      // Get content from checked sub-chapters
       for (var subBab in widget.checkedSubBab) {
         setState(() {
           _statusMessage = 'Mengambil konten sub bab...';
@@ -161,7 +161,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             0.2 / (widget.checkedSubBab.length + widget.checkedBab.length);
       }
 
-      // Ambil konten dari bab yang dicentang (semua sub bab dalam bab)
+      // Get content from checked chapters (all sub-chapters within the chapter)
       for (var bab in widget.checkedBab) {
         setState(() {
           _statusMessage = 'Mengambil konten bab...';
@@ -195,7 +195,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
         _progress = 0.8;
       });
 
-      // Generate RPP menggunakan AI service
+      // Generate RPP using AI service
       final RPPService rppService = RPPService();
       final generatedRPP = await rppService.generateRPP(
         judul: _judulController.text,
@@ -337,7 +337,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
             ),
           ],
 
-          // Display selected chapters dengan sub bab-nya
+          // Display selected chapters with their sub-chapters
           if (widget.checkedBab.isNotEmpty) ...[
             ...widget.checkedBab.map(
               (bab) => Column(
@@ -365,7 +365,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                       ],
                     ),
                   ),
-                  // Tampilkan semua sub bab dalam chapter ini
+                  // Display all sub-chapters in this chapter
                   ..._getAllSubBabForBab(bab['id']).map(
                     (subBab) => Padding(
                       padding: EdgeInsets.only(left: 20, bottom: 6),
@@ -404,8 +404,8 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
   }
 
   List<Map<String, dynamic>> _getAllSubBabForBab(String babId) {
-    // Untuk implementasi nyata, Anda perlu mengambil data dari API
-    // Saat ini mengembalikan list kosong - perlu diimplementasi sesuai struktur data Anda
+    // For real implementation, you need to fetch data from the API
+    // Currently returns an empty list - needs to be implemented according to your data structure
     return [];
   }
 
@@ -453,7 +453,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
           ),
           SizedBox(height: AppSpacing.lg),
 
-          // Lesson Title - Editable dengan auto-suggestion
+          // Lesson Title - Editable with auto-suggestion
           _buildEditableFieldWithCheckbox(
             controller: _judulController,
             label: 'Lesson Title',

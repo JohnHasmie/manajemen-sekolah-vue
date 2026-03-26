@@ -667,10 +667,10 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                       }),
                                     ),
                                   ),
-                                  ..._availableClass.map((kelas) {
+                                  ..._availableClass.map((classItem) {
                                     return DropdownMenuItem<String>(
-                                      value: kelas['id'].toString(),
-                                      child: Text(kelas['name'].toString()),
+                                      value: classItem['id'].toString(),
+                                      child: Text(classItem['name'].toString()),
                                     );
                                   }),
                                 ],
@@ -940,7 +940,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      // Load subjects and classes (untuk dropdown/reference)
+      // Load subjects and classes (for dropdown/reference)
       final subjectData = await _subjectService.getSubject();
       final classData = await getIt<ApiClassService>().getClass(
         academicYearId: selectedYearId,
@@ -1423,7 +1423,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                     child: SafeArea(
                       child: Column(
                         children: [
-                          // Header dengan gradient (Pattern #9)
+                          // Header with gradient (Pattern #9)
                           Container(
                             width: double.infinity,
                             padding: EdgeInsets.fromLTRB(20, 20, 12, 20),

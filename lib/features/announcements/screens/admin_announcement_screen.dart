@@ -2071,7 +2071,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header dengan gradient
+              // Header with gradient
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(AppSpacing.xl),

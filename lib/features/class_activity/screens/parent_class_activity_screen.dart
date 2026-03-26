@@ -284,7 +284,7 @@ class ParentClassActivityScreenState extends ConsumerState<ParentClassActivitySc
       if (selectedStudent.isNotEmpty && classId != null) {
         final activities = await getIt<ApiClassActivityService>().getKegiatanByKelas(
           classId,
-          siswaId: _selectedStudentId,
+          studentId: _selectedStudentId,
           academicYearId: widget.academicYearId,
         );
 

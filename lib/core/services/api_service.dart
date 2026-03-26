@@ -41,7 +41,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// - Grade, attendance, RPP, billing endpoints are grouped here for historical reasons
 class ApiService {
   // static const String baseUrl = 'http://10.0.2.2:3000/api'; // Android emulator
-  // static const String baseUrl = 'http://localhost:3001/api'; // iOS simulator atau web
+  // static const String baseUrl = 'http://localhost:3001/api'; // iOS simulator or web
 
   // static const String baseUrl = 'https://backendmanajemensekolah2.vercel.app/api';
   // static const String baseUrl = 'https://libra.web.id/apimanajemen';
@@ -297,13 +297,13 @@ class ApiService {
       AppLogger.debug('api', '📥 Login response status: ${response.statusCode}');
       AppLogger.debug('api', '📥 Login response data: $responseData');
 
-      // Handle semua kemungkinan flow
+      // Handle all possible flows
       if (responseData['pilih_sekolah'] == true) {
         AppLogger.debug('api', 'Login flow: Need to select school');
         return Map<String, dynamic>.from(responseData);
       }
 
-      // PERBAIKAN: Handle jika setelah pilih sekolah, perlu pilih role
+      // FIX: Handle if after selecting school, role selection is needed
       if (responseData['pilih_role'] == true) {
         AppLogger.debug('api', 'Login flow: Need to select role after school selection');
         return Map<String, dynamic>.from(responseData);
@@ -316,7 +316,7 @@ class ApiService {
         return Map<String, dynamic>.from(responseData);
       }
 
-      // Hanya validasi token untuk login sukses langsung
+      // Only validate token for direct successful login
       if (responseData['token'] == null) {
         throw Exception('Server tidak mengembalikan token');
       }
@@ -542,14 +542,14 @@ class ApiService {
   /// Fetches student grades (nilai) with multiple optional filters.
   /// Like `Grade::filter($request)->get()` in Laravel.
   static Future<List<dynamic>> getGrades({
-    String? siswaId,
+    String? studentId,
     String? teacherId,
     String? subjectId,
     String? jenis,
     String? academicYearId,
   }) async {
     final queryParams = <String, dynamic>{};
-    if (siswaId != null) queryParams['student_id'] = siswaId;
+    if (studentId != null) queryParams['student_id'] = studentId;
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
     if (subjectId != null) queryParams['subject_id'] = subjectId;
     if (jenis != null) queryParams['grade_type'] = jenis;
@@ -696,8 +696,8 @@ class ApiService {
     int page = 1,
     int limit = 10,
     String? status,
-    String? siswaId,
-    String? jenisPembayaranId,
+    String? studentId,
+    String? paymentTypeId,
     String? classId,
   }) async {
     Map<String, dynamic> queryParams = {
@@ -706,11 +706,11 @@ class ApiService {
     };
 
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
-    if (siswaId != null && siswaId.isNotEmpty) {
-      queryParams['student_id'] = siswaId;
+    if (studentId != null && studentId.isNotEmpty) {
+      queryParams['student_id'] = studentId;
     }
-    if (jenisPembayaranId != null && jenisPembayaranId.isNotEmpty) {
-      queryParams['payment_type_id'] = jenisPembayaranId;
+    if (paymentTypeId != null && paymentTypeId.isNotEmpty) {
+      queryParams['payment_type_id'] = paymentTypeId;
     }
     if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
@@ -770,7 +770,7 @@ class ApiService {
     return response.data;
   }
 
-  // Di api_services.dart - Perbaiki fungsi uploadFileRPP
+  // Fix uploadLessonPlanFile function
   static Future<dynamic> uploadLessonPlanFile(File file) async {
     try {
       final formData = FormData.fromMap({
@@ -1152,7 +1152,7 @@ class ApiService {
     String fileField = 'bukti_bayar',
   }) async {
     try {
-      // Deteksi MIME type yang benar
+      // Detect the correct MIME type
       String mimeType;
       final extension = file.path.toLowerCase().split('.').last;
 

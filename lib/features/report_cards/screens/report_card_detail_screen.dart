@@ -569,7 +569,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                       onTap: () {
                         if (_existingRaport != null) {
                           AppNavigator.push(context, RaportPrintScreen(
-                                raportData: _existingRaport!,
+                                reportCardData: _existingRaport!,
                                 studentName: widget.studentName,
                                 className: widget.className,
                               ));

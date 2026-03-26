@@ -125,7 +125,7 @@ class TeachingScheduleManagementScreenState
   final GlobalKey _viewToggleKey = GlobalKey();
   bool _isTourShowing = false;
 
-  // Tambahan untuk tampilan tabel
+  // Additional state for table view
   bool _showTableView = false;
   List<ScheduleGridData> _gridData = [];
   TimetableDataSource? _timetableDataSource;
@@ -518,7 +518,7 @@ class TeachingScheduleManagementScreenState
       }
 
       // ─── Step 2: Fetch fresh data from API ───
-      // Gunakan nilai semester dan tahun ajaran yang sudah diset
+      // Use the already-set semester and academic year values
       final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
       final academicYearToUse = _selectedAcademicYear;
 
@@ -662,7 +662,7 @@ class TeachingScheduleManagementScreenState
     try {
       _currentPage++;
 
-      // Gunakan nilai semester dan tahun ajaran yang sudah diset
+      // Use the already-set semester and academic year values
       final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
       final academicYearToUse = _selectedAcademicYear;
 
@@ -888,7 +888,7 @@ class TeachingScheduleManagementScreenState
     return slots;
   }
 
-  // Method baru untuk menghasilkan data timetable dalam format yang diinginkan
+  // Method to generate timetable data in the desired format
   List<ScheduleGridData> _generateTimetableData() {
     final List<ScheduleGridData> timetableData = [];
 
@@ -965,7 +965,7 @@ class TeachingScheduleManagementScreenState
             id: schedule['id']?.toString() ?? '',
             waktu: formattedTimeSlot,
             hari: translatedDayName,
-            kelas: className,
+            classroom: className,
             mataPelajaran:
                 schedule['subject_name'] ??
                 schedule['mata_pelajaran_nama'] ??
@@ -982,11 +982,11 @@ class TeachingScheduleManagementScreenState
 
   String _getGradeLevel(String classId) {
     try {
-      final kelas = _classList.firstWhere(
+      final classItem = _classList.firstWhere(
         (k) => k['id'] == classId,
         orElse: () => {},
       );
-      return kelas['grade_level']?.toString() ?? '-';
+      return classItem['grade_level']?.toString() ?? '-';
     } catch (e) {
       return '-';
     }
@@ -1272,7 +1272,7 @@ class TeachingScheduleManagementScreenState
       _hasActiveFilter = false;
     });
     _checkActiveFilter();
-    _loadData(); // Reload data untuk menampilkan data default
+    _loadData(); // Reload data to show default data
   }
 
   List<Map<String, dynamic>> _buildFilterChips(
@@ -1393,7 +1393,7 @@ class TeachingScheduleManagementScreenState
       builder: (context) {
         String? tempSelectedHariId = _selectedHariId;
         String? tempSelectedClassId = _selectedClassId;
-        // Gunakan nilai default jika filter belum diset
+        // Use default values if filter is not set
         String? tempSelectedSemester =
             _selectedFilterSemester ?? _selectedSemester;
         String? tempSelectedJamPelajaran = _selectedJamPelajaran;
@@ -2782,7 +2782,7 @@ class TeachingScheduleManagementScreenState
     }
   }
 
-  // Helper robust untuk parsing days
+  // Robust helper for parsing days
   String _formatScheduleDays(
     Map<String, dynamic> schedule, [
     LanguageProvider? provider,

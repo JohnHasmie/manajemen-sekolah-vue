@@ -61,7 +61,7 @@ class RPPService {
   /// OpenAI Chat Completions API endpoint.
   /// Like setting `OPENAI_API_URL` in Laravel's `.env` file.
   static const String baseUrl = "https://api.openai.com/v1/chat/completions";
-  // Ganti dengan API key OpenAI Anda
+  // Replace with your OpenAI API key
   /// OpenAI API key. In production, this should come from a secure source
   /// (like Laravel's `config('services.openai.key')` from `.env`).
   static const String apiKey = "your-openai-api-key";
@@ -86,7 +86,7 @@ class RPPService {
     String alatMedia = '',
   }) async {
     try {
-      // Siapkan prompt untuk AI
+      // Prepare prompt for AI
       final prompt = _buildPrompt(
         judul: judul,
         mataPelajaranName: mataPelajaranName,
@@ -95,7 +95,7 @@ class RPPService {
         alatMedia: alatMedia,
       );
 
-      // Panggil API OpenAI via Dio
+      // Call OpenAI API via Dio
       final dio = Dio(BaseOptions(
         baseUrl: baseUrl,
         headers: {
@@ -125,7 +125,7 @@ class RPPService {
       final data = response.data;
       final content = data['choices'][0]['message']['content'];
 
-      // Parse response AI menjadi struktur RPP
+      // Parse AI response into RPP structure
       return _parseAIResponse(
         content: content,
         judul: judul,
@@ -133,7 +133,7 @@ class RPPService {
         mataPelajaranName: mataPelajaranName,
       );
     } catch (e) {
-      // Fallback: Buat RPP sederhana jika AI gagal
+      // Fallback: Create a simple RPP if AI fails
       return _createFallbackRPP(
         judul: judul,
         subjectId: subjectId,

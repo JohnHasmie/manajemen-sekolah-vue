@@ -34,7 +34,7 @@ class ExcelRppService {
     
 
     try {
-      // Validasi data terlebih dahulu
+      // Validate data first
       final validatedData = validateRppData(rppList);
 
       final response = await dioClient.post<List<int>>(
@@ -43,16 +43,16 @@ class ExcelRppService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      // Get directory untuk menyimpan file
+      // Get directory to save the file
       final Directory directory = await getApplicationDocumentsDirectory();
       final String filePath =
           '${directory.path}/Data_RPP_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-      // Simpan file yang didownload
+      // Save the downloaded file
       final File file = File(filePath);
       await file.writeAsBytes(response.data ?? []);
 
-      // Buka file
+      // Open file
       await OpenFile.open(filePath);
 
             SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
@@ -102,7 +102,7 @@ class ExcelRppService {
       final rpp = rppList[i];
       final Map<String, dynamic> validatedRpp = {};
 
-      // Validasi field required untuk export
+      // Validate required fields for export
       if (rpp['title'] == null || rpp['title'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Judul RPP tidak boleh kosong');
       } else {

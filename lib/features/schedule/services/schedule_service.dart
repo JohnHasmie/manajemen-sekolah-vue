@@ -179,7 +179,7 @@ class ApiScheduleService {
         return result;
       }
 
-      // Fallback untuk backward compatibility
+      // Fallback for backward compatibility
       final fallbackResult = {
         'success': true,
         'data': result is List ? result : [],
@@ -327,7 +327,7 @@ class ApiScheduleService {
     required String semesterId,
     required String tahunAjaran,
     required String jamPelajaranId,
-    String? excludeScheduleId, // Untuk edit, exclude jadwal yang sedang diedit
+    String? excludeScheduleId, // For edit, exclude the schedule being edited
   }) async {
     try {
       String url = '/teaching-schedule/conflicts?';

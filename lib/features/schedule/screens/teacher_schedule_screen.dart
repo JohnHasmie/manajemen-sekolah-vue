@@ -84,7 +84,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
   _selectedHomeroomClass; // Current selected homeroom class
   bool _isHomeroomView = false;
 
-  // DITAMBAHKAN KEMBALI: Toggle antara card dan table view
+  // RE-ADDED: Toggle between card and table view
   bool _isTableView = false;
 
   // Last known cache key for early cache loading
@@ -1199,7 +1199,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
     );
   }
 
-  // DITAMBAHKAN KEMBALI: Method untuk toggle view
+  // RE-ADDED: Method to toggle view
   /// Toggles between card view and table (grid) view.
   /// Like a Vue `methods.toggleView()` that flips a boolean flag.
   void _toggleView() {
@@ -1655,7 +1655,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
           backgroundColor: ColorUtils.slate50,
           body: Column(
             children: [
-              // Header dengan gradient
+              // Header with gradient
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.only(
@@ -1733,7 +1733,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                             ],
                           ),
                         ),
-                        // DITAMBAHKAN KEMBALI: Tombol toggle view
+                        // RE-ADDED: Toggle view button
                         GestureDetector(
                           key: _toggleViewKey,
                           onTap: _toggleView,
@@ -2180,7 +2180,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
         );
   }
 
-  // DITAMBAHKAN KEMBALI: Method untuk table view dengan format seperti Excel
+  // RE-ADDED: Method for table view with Excel-like format
   /// Builds the table/grid view of the weekly schedule.
   /// Like a Vue `<ScheduleTable>` component with days as columns and
   /// time slots as rows.
@@ -2222,16 +2222,16 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
         final hari = entry.key;
         if (hari == 'Unknown') continue;
 
-        final kelas = schedule['kelas_nama']?.toString() ?? 'Unknown';
+        final classItem = schedule['kelas_nama']?.toString() ?? 'Unknown';
 
         if (!scheduleMap.containsKey(hari)) {
           scheduleMap[hari] = {};
         }
-        if (!scheduleMap[hari]!.containsKey(kelas)) {
-          scheduleMap[hari]![kelas] = [];
+        if (!scheduleMap[hari]!.containsKey(classItem)) {
+          scheduleMap[hari]![classItem] = [];
         }
 
-        scheduleMap[hari]![kelas]!.add(schedule);
+        scheduleMap[hari]![classItem]!.add(schedule);
       }
     }
 
@@ -2463,12 +2463,12 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
 
                             // Schedule Data for each day and class
                             ...availableDays.expand((day) {
-                              return classes.map((kelas) {
+                              return classes.map((classItem) {
                                 final scheduleForCell =
                                     _getScheduleForSessionAndDayAndClass(
                                       session,
                                       day,
-                                      kelas,
+                                      classItem,
                                       schedules,
                                     );
 
@@ -2480,7 +2480,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                                     border: Border(
                                       right: BorderSide(
                                         color:
-                                            classes.last == kelas &&
+                                            classes.last == classItem &&
                                                 availableDays.last != day
                                             ? ColorUtils.slate300
                                             : Colors.transparent,
@@ -2641,7 +2641,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
     }
   }
 
-  // DIPINDAH: Method untuk card view (sebelumnya _buildJadwalCard)
+  // MOVED: Method for card view (formerly _buildJadwalCard)
   /// Builds the card view of schedule items grouped by day.
   /// Like a Vue `<ScheduleCardList>` component with `v-for` over days.
   Widget _buildCardView(

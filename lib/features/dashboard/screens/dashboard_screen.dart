@@ -700,7 +700,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
 
       if (!mounted) return;
 
-      // Navigate ke dashboard dengan role baru
+      // Navigate to dashboard with new role
       AppNavigator.pushReplacementNamed(context, '/$role');
     } catch (e) {
       if (mounted) {
@@ -1109,7 +1109,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
     }
   }
 
-  // Method untuk mendapatkan data siswa untuk parent/wali murid
+  // Method to get student data for parent/guardian
   Future<List<dynamic>> _getStudentDataForParent(String parentId) async {
     try {
       AppLogger.debug('dashboard', 'Mencari data siswa untuk parent: $parentId');
@@ -1126,7 +1126,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
 
       AppLogger.debug('dashboard', 'Email wali: ${userData['email']}, Nama wali: ${userData['name']}',);
 
-      // Cek berdasarkan siswa_id di user data
+      // Check by siswa_id in user data
       if (userData['siswa_id'] != null && userData['siswa_id'].isNotEmpty) {
         AppLogger.debug('dashboard', 'Mencari siswa dengan ID: ${userData['siswa_id']}');
         final student = allStudents.firstWhere(
@@ -1139,7 +1139,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         }
       }
 
-      // Cek berdasarkan email atau nama wali atau user_id (Parent User)
+      // Check by email, guardian name, or user_id (Parent User)
       final studentsWithThisParent = allStudents.where((student) {
         final emailMatch = student['guardian_email'] == userData['email'];
         // Fix: Use 'name' instead of 'nama' (based on debug logs)
@@ -3124,7 +3124,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                         SizedBox(height: AppSpacing.lg),
                       ],
 
-                      // Switch Sekolah Button
+                      // Switch School Button
                       if (_accessibleSchools.length > 1) ...[
                         Material(
                           color: Colors.transparent,
@@ -3422,7 +3422,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
     );
   }
 
-  // Helper methods untuk colors dan gradients
+  // Helper methods for colors and gradients
   Color _getPrimaryColor() {
     switch (_effectiveRole) {
       case 'admin':

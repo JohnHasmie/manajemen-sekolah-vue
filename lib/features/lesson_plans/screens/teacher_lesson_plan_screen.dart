@@ -1108,7 +1108,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
       backgroundColor: ColorUtils.lightGray,
       body: Column(
         children: [
-          // Header dengan gradient
+          // Header with gradient
           Container(
             width: double.infinity,
             padding: EdgeInsets.only(
@@ -1579,14 +1579,14 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
   bool _isUploading = false;
 
   List<dynamic> _mataPelajaranList = [];
-  List<dynamic> _kelasList = [];
+  List<dynamic> _classList = [];
 
   @override
   void initState() {
     super.initState();
     _loadMataPelajaranByGuru();
 
-    // Jika mode edit, isi field dengan data RPP
+    // If in edit mode, fill fields with RPP data
     if (widget.rppData != null) {
       _judulController.text =
           widget.rppData!['judul'] ?? widget.rppData!['title'] ?? '';
@@ -1608,7 +1608,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
         _loadKelasByMataPelajaran(_selectedMataPelajaranId!);
       }
     } else {
-      // Mode tambah baru: set default tahun ajaran
+      // New add mode: set default academic year
       _tahunAjaranController.text = DateTime.now().year.toString();
     }
   }
@@ -1669,24 +1669,24 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       setState(() {
         // Backend might return {success: true, data: [...]} or direct array
         if (result is Map && result['data'] is List) {
-          _kelasList = result['data'];
+          _classList = result['data'];
         } else if (result is List) {
-          _kelasList = result;
+          _classList = result;
         } else {
-          _kelasList = [];
+          _classList = [];
         }
       });
       if (kDebugMode) {
-        AppLogger.info('lesson_plan', 'Loaded ${_kelasList.length} kelas for mata pelajaran $subjectId',);
-        if (_kelasList.isNotEmpty) {
-          AppLogger.debug('lesson_plan', 'DEBUG CLASS ITEM: ${_kelasList.first}');
+        AppLogger.info('lesson_plan', 'Loaded ${_classList.length} kelas for mata pelajaran $subjectId',);
+        if (_classList.isNotEmpty) {
+          AppLogger.debug('lesson_plan', 'DEBUG CLASS ITEM: ${_classList.first}');
         }
       }
     } catch (e) {
       if (kDebugMode) {
         AppLogger.error('lesson_plan', 'Error loading kelas by mata pelajaran: $e');
         setState(() {
-          _kelasList = [];
+          _classList = [];
         });
       }
     }
@@ -1703,7 +1703,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       if (result != null && result.files.single.path != null) {
         PlatformFile file = result.files.first;
 
-        // Pastikan file benar-benar ada
+        // Make sure the file actually exists
         File selectedFile = File(file.path!);
         bool fileExists = await selectedFile.exists();
 
@@ -1797,7 +1797,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
     try {
       String? filePath;
 
-      // Debug: Cek apakah file ada
+      // Debug: Check if file exists
       AppLogger.debug('lesson_plan', 'File selected: $_selectedFile');
       AppLogger.debug('lesson_plan', 'File name: $_selectedFileName');
 
@@ -1811,14 +1811,14 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
           AppLogger.info('lesson_plan', 'File uploaded successfully: $filePath');
         } catch (uploadError) {
           AppLogger.error('lesson_plan', 'Error during file upload: $uploadError');
-          // Tetap lanjut tanpa file jika upload gagal
+          // Continue without file if upload fails
           filePath = null;
         }
       } else {
         AppLogger.debug('lesson_plan', 'No file selected for upload');
       }
 
-      // Debug data yang akan dikirim
+      // Debug data to be submitted
       AppLogger.debug('lesson_plan', 'Submitting RPP data:');
       AppLogger.debug('lesson_plan', '- Guru ID: ${widget.teacherId}');
       AppLogger.debug('lesson_plan', '- Mata Pelajaran ID: $_selectedMataPelajaranId');
@@ -1835,13 +1835,13 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
         'file_path': filePath ?? _selectedFileName,
       };
 
-      // Submit data RPP (mode edit atau tambah)
+      // Submit RPP data (edit or add mode)
       if (widget.rppData != null) {
-        // Mode edit
+        // Edit mode
         await ApiService.updateRPP(widget.rppData!['id'], rppData);
         AppLogger.info('lesson_plan', 'RPP updated successfully');
       } else {
-        // Mode tambah baru
+        // New add mode
         rppData['teacher_id'] = widget.teacherId;
         await ApiService.createLessonPlan(rppData);
         AppLogger.info('lesson_plan', 'RPP created successfully');
@@ -2126,13 +2126,13 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})} *',
                       icon: Icons.class_outlined,
-                      items: _kelasList.map((kelas) {
+                      items: _classList.map((classItem) {
                         return DropdownMenuItem(
-                          value: kelas['id'],
+                          value: classItem['id'],
                           child: Text(
-                            kelas['name'] ??
-                                kelas['nama'] ??
-                                kelas['class_name'] ??
+                            classItem['name'] ??
+                                classItem['nama'] ??
+                                classItem['class_name'] ??
                                 'Tanpa Nama',
                           ),
                         );
@@ -2446,7 +2446,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
   String _generationStatus = '';
 
   List<dynamic> _mataPelajaranList = [];
-  List<dynamic> _kelasList = [];
+  List<dynamic> _classList = [];
   List<dynamic> _babList = [];
   List<dynamic> _subBabList = [];
 
@@ -2503,16 +2503,16 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       );
       setState(() {
         if (result is Map && result['data'] is List) {
-          _kelasList = result['data'];
+          _classList = result['data'];
         } else if (result is List) {
-          _kelasList = result;
+          _classList = result;
         } else {
-          _kelasList = [];
+          _classList = [];
         }
       });
     } catch (e) {
       setState(() {
-        _kelasList = [];
+        _classList = [];
       });
     }
   }
@@ -2543,7 +2543,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
     }
   }
 
-  // Helper untuk membersihkan HTML tag menjadi teks biasa
+  // Helper to strip HTML tags into plain text
   String _stripHtml(String html) {
     if (html.isEmpty) return '';
     var text = html.replaceAll(RegExp(r'<ul>|<ol>'), '\n');
@@ -2767,7 +2767,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
     final mataPelajaranNama =
         selectedSubject['name'] ?? selectedSubject['nama'] ?? 'Mata Pelajaran';
 
-    final selectedClass = _kelasList.firstWhere(
+    final selectedClass = _classList.firstWhere(
       (k) => k['id'].toString() == _selectedClassId,
       orElse: () => {'name': 'Kelas'},
     );
@@ -2830,7 +2830,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
         selectedSubject['nama'] ??
         'Mata Pelajaran';
 
-    final selectedClass = _kelasList.firstWhere(
+    final selectedClass = _classList.firstWhere(
       (k) => k['id'].toString() == _selectedClassId,
       orElse: () => {'name': 'Kelas'},
     );
@@ -3169,13 +3169,13 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                             value: _selectedClassId,
                             label: '${AppLocalizations.class_.tr} *',
                             icon: Icons.class_outlined,
-                            items: _kelasList.map((kelas) {
+                            items: _classList.map((classItem) {
                               return DropdownMenuItem(
-                                value: kelas['id'],
+                                value: classItem['id'],
                                 child: Text(
-                                  kelas['name'] ??
-                                      kelas['nama'] ??
-                                      kelas['class_name'] ??
+                                  classItem['name'] ??
+                                      classItem['nama'] ??
+                                      classItem['class_name'] ??
                                       'Tanpa Nama',
                                 ),
                               );

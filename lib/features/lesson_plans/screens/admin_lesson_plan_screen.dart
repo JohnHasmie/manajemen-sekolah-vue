@@ -2121,7 +2121,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
   }
 }
 
-// Halaman Detail RPP untuk Admin
+// RPP Detail Page for Admin
 class RppAdminDetailPage extends StatelessWidget {
   final Map<String, dynamic> rpp;
 
@@ -2540,7 +2540,7 @@ class RppAdminDetailPage extends StatelessWidget {
         currentStatus: rpp['status'],
         currentNote: rpp['catatan'],
         onStatusUpdated: () {
-          AppNavigator.pop(context); // Kembali ke list
+          AppNavigator.pop(context); // Return to list
         },
       ),
     );

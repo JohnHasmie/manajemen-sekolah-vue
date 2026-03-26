@@ -35,7 +35,7 @@ class ExcelNilaiService {
     
 
     try {
-      // Validasi data terlebih dahulu
+      // Validate data first
       final validatedData = validateNilaiData(nilaiData);
 
       final response = await dioClient.post<List<int>>(
@@ -44,16 +44,16 @@ class ExcelNilaiService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      // Get directory untuk menyimpan file
+      // Get directory to save the file
       final Directory directory = await getApplicationDocumentsDirectory();
       final String filePath =
           '${directory.path}/Data_Nilai_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-      // Simpan file yang didownload
+      // Save the downloaded file
       final File file = File(filePath);
       await file.writeAsBytes(response.data ?? []);
 
-      // Buka file
+      // Open file
       await OpenFile.open(filePath);
 
             SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
@@ -80,7 +80,7 @@ class ExcelNilaiService {
       final nilai = nilaiData[i];
       final Map<String, dynamic> validatedNilai = {};
 
-      // Validasi field required
+      // Validate required fields
       if (nilai['nis'] == null || nilai['nis'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: NIS tidak boleh kosong');
       } else {

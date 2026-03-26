@@ -85,7 +85,7 @@ class AdminPresenceReportScreen extends ConsumerStatefulWidget {
 /// Mutable state for [AdminPresenceReportScreen].
 ///
 /// Key state (like Vue `data()`):
-/// - [_absensiSummaryList] - attendance summary records from API
+/// - [_attendanceSummaryList] - attendance summary records from API
 /// - [_showTableView] - toggles between card list and Syncfusion data grid
 /// - [_selectedSubjectIds] / [_selectedClassIds] / [_selectedDayIds] - multi-select filters
 /// - [_selectedDateFilter] - date range filter ('today', 'week', 'month')
@@ -93,8 +93,8 @@ class AdminPresenceReportScreen extends ConsumerStatefulWidget {
 ///
 /// setState() is like Vue's reactivity - triggers a re-render when data changes.
 class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportScreen> {
-  // Data untuk mode View Results
-  List<AttendanceSummary> _absensiSummaryList = [];
+  // Data for View Results mode
+  List<AttendanceSummary> _attendanceSummaryList = [];
   bool _isLoadingSummary = false;
 
   // Pagination State
@@ -120,7 +120,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
 
   // Filter States
   String?
-  _selectedDateFilter; // 'today', 'week', 'month', atau null untuk semua
+  _selectedDateFilter; // 'today', 'week', 'month', or null for all
   final List<String> _selectedSubjectIds = [];
   final List<String> _selectedClassIds = [];
   final List<String> _selectedDayIds = [];
@@ -389,13 +389,13 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     // Show individual chips for each selected class
     if (_selectedClassIds.isNotEmpty) {
       for (var classId in _selectedClassIds) {
-        final kelas = _classList.firstWhere(
+        final classItem = _classList.firstWhere(
           (k) => k['id'].toString() == classId,
           orElse: () => {'name': 'Class #$classId'},
         );
         filterChips.add({
           'label':
-              '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: ${kelas['name'] ?? kelas['nama']}',
+              '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: ${classItem['name'] ?? classItem['nama']}',
           'onRemove': () {
             setState(() {
               _selectedClassIds.remove(classId);
@@ -475,7 +475,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
               );
             }).toList();
             setState(() {
-              _absensiSummaryList = cachedItems;
+              _attendanceSummaryList = cachedItems;
               _hasMoreData = cached['hasMoreData'] ?? false;
               _isLoadingSummary = false;
             });
@@ -487,7 +487,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     }
 
     // Show skeleton only if list is empty
-    if (_absensiSummaryList.isEmpty && mounted) {
+    if (_attendanceSummaryList.isEmpty && mounted) {
       setState(() {
         _isLoadingSummary = true;
       });
@@ -499,8 +499,8 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     // Step 3: Save to cache (only default view, page 1, non-blocking)
     if (mounted) {
       final cacheKey = _buildSummaryCacheKey();
-      if (cacheKey != null && _absensiSummaryList.isNotEmpty) {
-        final serialized = _absensiSummaryList.map((item) => {
+      if (cacheKey != null && _attendanceSummaryList.isNotEmpty) {
+        final serialized = _attendanceSummaryList.map((item) => {
           'subjectId': item.subjectId,
           'subjectName': item.subjectName,
           'date': item.date.toIso8601String(),
@@ -610,9 +610,9 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
 
       setState(() {
         if (_currentPage == 1) {
-          _absensiSummaryList = newItems;
+          _attendanceSummaryList = newItems;
         } else {
-          _absensiSummaryList.addAll(newItems);
+          _attendanceSummaryList.addAll(newItems);
         }
 
         _hasMoreData = pagination['has_next_page'] ?? false;
@@ -1235,8 +1235,8 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     }
 
     final searchTerm = _searchController.text.toLowerCase();
-    final filteredClasses = _classList.where((kelas) {
-      final className = kelas['name']?.toString().toLowerCase() ?? '';
+    final filteredClasses = _classList.where((cls) {
+      final className = cls['name']?.toString().toLowerCase() ?? '';
       return className.contains(searchTerm);
     }).toList();
 
@@ -1260,15 +1260,15 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         physics: AlwaysScrollableScrollPhysics(),
         itemCount: filteredClasses.length,
         itemBuilder: (context, index) {
-          final kelas = filteredClasses[index];
+          final classItem = filteredClasses[index];
           return Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
                 setState(() {
-                  _selectedClassData = kelas;
+                  _selectedClassData = classItem;
                   _selectedClassIds.clear();
-                  _selectedClassIds.add(kelas['id'].toString());
+                  _selectedClassIds.add(classItem['id'].toString());
                   _loadData();
                 });
               },
@@ -1306,7 +1306,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            kelas['name'] ?? 'Unknown Class',
+                            classItem['name'] ?? 'Unknown Class',
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
@@ -1315,7 +1315,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                           ),
                           SizedBox(height: 3),
                           Text(
-                            '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${kelas['grade_level'] ?? '-'}',
+                            '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${classItem['grade_level'] ?? '-'}',
                             style: TextStyle(
                               fontSize: 12,
                               color: ColorUtils.slate600,
@@ -2249,7 +2249,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     final startOfMonth = DateTime(now.year, now.month, 1);
     final endOfMonth = DateTime(now.year, now.month + 1, 0);
 
-    return _absensiSummaryList.where((summary) {
+    return _attendanceSummaryList.where((summary) {
       // Search filter
       final matchesSearch =
           searchTerm.isEmpty ||
@@ -2487,7 +2487,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
           ),
           body: Column(
             children: [
-              // Header dengan gradient
+              // Header with gradient
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.only(
@@ -2517,7 +2517,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
                               setState(() {
                                 _selectedClassData = null;
                                 _selectedClassIds.clear();
-                                _absensiSummaryList.clear();
+                                _attendanceSummaryList.clear();
                               });
                             } else {
                               AppNavigator.pop(context);

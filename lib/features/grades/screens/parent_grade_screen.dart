@@ -262,7 +262,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
 
     try {
       final grades = await ApiService.getGrades(
-        siswaId: _selectedStudentId,
+        studentId: _selectedStudentId,
         academicYearId: widget.academicYearId,
       );
 

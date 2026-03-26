@@ -37,7 +37,7 @@ class ExcelPresenceService {
     try {
       AppLogger.debug('attendance', 'Starting export with ${presenceData.length} records');
 
-      // Validasi data
+      // Validate data
       if (presenceData.isEmpty) {
         throw Exception('No attendance data to export');
       }
@@ -50,7 +50,7 @@ class ExcelPresenceService {
 
       AppLogger.debug('attendance', 'Response status: ${response.statusCode}');
 
-      // Simpan file Excel
+      // Save Excel file
       final Directory directory = await getApplicationDocumentsDirectory();
       final String filePath =
           '${directory.path}/Data_Absensi_${DateTime.now().millisecondsSinceEpoch}.xlsx';
@@ -60,7 +60,7 @@ class ExcelPresenceService {
 
       AppLogger.info('attendance', 'File saved to: $filePath');
 
-      // Buka file
+      // Open file
       final result = await OpenFile.open(filePath);
       AppLogger.debug('attendance', 'Open file result: $result');
 
@@ -118,7 +118,7 @@ class ExcelPresenceService {
       final presence = presenceData[i];
       final Map<String, dynamic> validatedPresence = {};
 
-      // Validasi field required
+      // Validate required fields
       if (presence['nis'] == null || presence['nis'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: NIS tidak boleh kosong');
       } else {

@@ -384,7 +384,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                             borderRadius: BorderRadius.circular(12),
                             onTap: () {
                               AppNavigator.push(context, ParentRaportDetailScreen(
-                                        raportData: raport,
+                                        reportCardData: raport,
                                         studentName:
                                             student['student']['name'] ??
                                             'Siswa',

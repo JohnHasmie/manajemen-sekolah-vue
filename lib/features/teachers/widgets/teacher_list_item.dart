@@ -87,7 +87,7 @@ class TeacherListItem extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header dengan nama dan status
+                        // Header with name and status
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [

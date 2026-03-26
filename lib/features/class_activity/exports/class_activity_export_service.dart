@@ -42,24 +42,24 @@ class ExcelClassActivityService {
     
 
     try {
-      // Format data terlebih dahulu
+      // Format data first
       final formattedData = formatActivitiesForExport(activities);
 
-      // Validasi data (dengan handling error yang lebih baik)
+      // Validate data (with better error handling)
       final validatedData = await _validateAndPrepareData(formattedData);
 
-      // Gunakan ApiService yang sudah ada
+      // Use existing ApiService
       final response = await getIt<ApiClassActivityService>().exportClassActivities(
         validatedData,
       );
 
       if (response.statusCode == 200) {
-        // Get directory untuk menyimpan file
+        // Get directory to save the file
         final Directory directory = await getApplicationDocumentsDirectory();
         final String filePath =
             '${directory.path}/Data_Kegiatan_Kelas_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-        // Simpan file yang didownload
+        // Save the downloaded file
         final File file = File(filePath);
         // Dio response.data can be bytes or parsed JSON depending on responseType
         if (response.data is List<int>) {
@@ -68,7 +68,7 @@ class ExcelClassActivityService {
           throw Exception('Unexpected response format for file download');
         }
 
-        // Buka file
+        // Open file
         await OpenFile.open(filePath);
 
                 SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
@@ -103,7 +103,7 @@ class ExcelClassActivityService {
     for (final activity in activities) {
       final Map<String, dynamic> preparedActivity = {};
 
-      // Field required dengan default value jika kosong
+      // Required fields with default value if empty
       preparedActivity['title'] =
           activity['title']?.toString() ?? 'Tidak Ada Judul';
       preparedActivity['subject_name'] =
@@ -115,7 +115,7 @@ class ExcelClassActivityService {
       preparedActivity['type'] = activity['type']?.toString() ?? 'tugas';
       preparedActivity['target'] = activity['target']?.toString() ?? 'umum';
 
-      // Handle tanggal - convert ke format string jika perlu
+      // Handle date - convert to string format if needed
       if (activity['date'] != null) {
         if (activity['date'] is DateTime) {
           preparedActivity['date'] = (activity['date'] as DateTime)

@@ -38,7 +38,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Data model for an attendance summary row.
 /// Like a Laravel Eloquent Model or a TypeScript interface -- a plain data class
 /// that holds computed attendance counts for a subject on a specific date.
-// Model untuk Summary Absensi
+// Model for Attendance Summary
 class AbsensiSummary {
   final String subjectId;
   final String subjectName;
@@ -107,8 +107,8 @@ class PresencePage extends ConsumerStatefulWidget {
 /// Uses `TickerProviderStateMixin` for the tab animation controller.
 ///
 /// Key state variables:
-/// - Tab 0 ("Results"): [_absensiSummaryList], filters, search
-/// - Tab 1 ("Input"): [_studentList], [_absensiStatus] map, selected date/subject/class
+/// - Tab 0 ("Results"): [_attendanceSummaryList], filters, search
+/// - Tab 1 ("Input"): [_studentList], [_attendanceStatus] map, selected date/subject/class
 /// - [_lessonHours] / [_selectedLessonHourId] -- lesson period selection
 /// - Various filter states for both modes
 ///
@@ -118,11 +118,11 @@ class PresencePageState extends ConsumerState<PresencePage>
   // Tab Controller for TabSwitcher
   late TabController _tabController;
 
-  // Data untuk mode View Results
-  List<AbsensiSummary> _absensiSummaryList = [];
+  // Data for View Results mode
+  List<AbsensiSummary> _attendanceSummaryList = [];
   bool _isLoadingSummary = false;
 
-  // Data untuk mode Input Absensi
+  // Data for Attendance Input mode
   DateTime _selectedDate = DateTime.now();
   String? _selectedSubjectId;
   String? _selectedClassId;
@@ -130,7 +130,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   List<dynamic> _classList = [];
   List<Student> _studentList = [];
   List<Student> _filteredStudentList = [];
-  final Map<String, String> _absensiStatus = {};
+  final Map<String, String> _attendanceStatus = {};
   bool _isLoadingInput = true;
   bool _isSubmitting = false;
   bool _hasActiveFilter = false;
@@ -140,14 +140,14 @@ class PresencePageState extends ConsumerState<PresencePage>
   List<dynamic> _lessonHours = [];
   String? _selectedLessonHourId;
 
-  // Filter untuk Results Mode
+  // Filter for Results Mode
   final TextEditingController _searchController = TextEditingController();
   String? _selectedDateFilter;
   List<String> _selectedSubjectIds = [];
   List<String> _selectedDayIds = [];
   List<String> _selectedLessonHourIds = [];
 
-  // Filter untuk Input Mode
+  // Filter for Input Mode
   final TextEditingController _searchControllerInput = TextEditingController();
   String? _selectedStatusFilter;
 
@@ -187,7 +187,7 @@ class PresencePageState extends ConsumerState<PresencePage>
       setState(() {
         // Trigger rebuild when tab changes
         if (_tabController.index == 0) {
-          _loadAbsensiSummary();
+          _loadAttendanceSummary();
         }
       });
     });
@@ -294,7 +294,7 @@ class PresencePageState extends ConsumerState<PresencePage>
               _studentList = studentRaw.map((s) => Student.fromJson(Map<String, dynamic>.from(s))).toList();
               _filteredStudentList = _studentList;
               for (var student in _studentList) {
-                _absensiStatus[student.id] = 'hadir';
+                _attendanceStatus[student.id] = 'hadir';
               }
               if (_classList.isNotEmpty) _isLoadingInput = false;
             });
@@ -374,7 +374,7 @@ class PresencePageState extends ConsumerState<PresencePage>
         _filteredStudentList = _studentList;
 
         for (var student in _studentList) {
-          _absensiStatus[student.id] = 'hadir';
+          _attendanceStatus[student.id] = 'hadir';
         }
 
         _isLoadingInput = false;
@@ -397,8 +397,8 @@ class PresencePageState extends ConsumerState<PresencePage>
 
       _detectCurrentLessonHour();
 
-      // Load summary data untuk mode view
-      _loadAbsensiSummary();
+      // Load summary data for view mode
+      _loadAttendanceSummary();
     } catch (e) {
       AppLogger.error('attendance', 'PresencePage initial data error: $e');
       if (!mounted) return;
@@ -658,20 +658,20 @@ class PresencePageState extends ConsumerState<PresencePage>
   /// Fetches all attendance records, groups them by subject+date+class,
   /// and calculates present/absent counts. Like a Laravel query with
   /// `groupBy()` and `count()` aggregation.
-  Future<void> _loadAbsensiSummary({bool useCache = true}) async {
+  Future<void> _loadAttendanceSummary({bool useCache = true}) async {
     if (!mounted) return;
 
     final summaryCacheKey = _buildSummaryCacheKey();
 
     // Step 1: Try cache for instant display
-    if (useCache && _absensiSummaryList.isEmpty && summaryCacheKey != null) {
+    if (useCache && _attendanceSummaryList.isEmpty && summaryCacheKey != null) {
       try {
         final cached = await LocalCacheService.load(summaryCacheKey, ttl: const Duration(hours: 1));
         if (cached != null && mounted) {
           final cachedList = List<dynamic>.from(cached);
           setState(() {
-            _absensiSummaryList = cachedList.map((absen) {
-              final m = Map<String, dynamic>.from(absen);
+            _attendanceSummaryList = cachedList.map((item) {
+              final m = Map<String, dynamic>.from(item);
               return AbsensiSummary(
                 subjectId: m['subjectId'] ?? '',
                 subjectName: m['subjectName'] ?? '',
@@ -687,7 +687,7 @@ class PresencePageState extends ConsumerState<PresencePage>
             }).toList();
             _isLoadingSummary = false;
           });
-          AppLogger.info('attendance', 'Loaded ${_absensiSummaryList.length} summaries from cache');
+          AppLogger.info('attendance', 'Loaded ${_attendanceSummaryList.length} summaries from cache');
         }
       } catch (e) {
         AppLogger.error('attendance', 'Summary cache load error: $e');
@@ -695,7 +695,7 @@ class PresencePageState extends ConsumerState<PresencePage>
     }
 
     // Step 2: Show loading only if still empty
-    if (_absensiSummaryList.isEmpty && mounted) {
+    if (_attendanceSummaryList.isEmpty && mounted) {
       setState(() => _isLoadingSummary = true);
     }
 
@@ -705,21 +705,21 @@ class PresencePageState extends ConsumerState<PresencePage>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final absensiData = await ApiService.getAttendanceSummary(
+      final attendanceData = await ApiService.getAttendanceSummary(
         teacherId: widget.teacher['id'],
         academicYearId: academicYearId,
       );
 
       final Map<String, AbsensiSummary> summaryMap = {};
 
-      for (var absen in absensiData) {
-        final subjectId = (absen['subject_id'] ?? '').toString();
-        final subjectName = absen['subject_name'] ?? 'Unknown';
-        final className = absen['class_name'] ?? 'Unknown';
-        final classId = (absen['class_id'] ?? '').toString();
-        final lessonHourId = (absen['lesson_hour_id'] ?? '').toString();
-        final lessonHourName = absen['lesson_hour_name'] ?? '';
-        final dateStr = absen['date']?.toString() ?? '';
+      for (var record in attendanceData) {
+        final subjectId = (record['subject_id'] ?? '').toString();
+        final subjectName = record['subject_name'] ?? 'Unknown';
+        final className = record['class_name'] ?? 'Unknown';
+        final classId = (record['class_id'] ?? '').toString();
+        final lessonHourId = (record['lesson_hour_id'] ?? '').toString();
+        final lessonHourName = record['lesson_hour_name'] ?? '';
+        final dateStr = record['date']?.toString() ?? '';
         final date = _parseLocalDate(dateStr);
 
         final summary = AbsensiSummary(
@@ -727,9 +727,9 @@ class PresencePageState extends ConsumerState<PresencePage>
           subjectName: subjectName,
           date: date,
           totalStudent:
-              int.tryParse(absen['total_students']?.toString() ?? '0') ?? 0,
-          present: int.tryParse(absen['present']?.toString() ?? '0') ?? 0,
-          absent: int.tryParse(absen['absent']?.toString() ?? '0') ?? 0,
+              int.tryParse(record['total_students']?.toString() ?? '0') ?? 0,
+          present: int.tryParse(record['present']?.toString() ?? '0') ?? 0,
+          absent: int.tryParse(record['absent']?.toString() ?? '0') ?? 0,
           classId: classId,
           className: className,
           lessonHourId: lessonHourId,
@@ -745,7 +745,7 @@ class PresencePageState extends ConsumerState<PresencePage>
         ..sort((a, b) => b.date.compareTo(a.date));
 
       setState(() {
-        _absensiSummaryList = sortedList;
+        _attendanceSummaryList = sortedList;
         _isLoadingSummary = false;
       });
 
@@ -766,11 +766,11 @@ class PresencePageState extends ConsumerState<PresencePage>
         await LocalCacheService.save(summaryCacheKey, cacheData);
       }
 
-      AppLogger.info('attendance', 'Loaded ${_absensiSummaryList.length} absensi summaries');
+      AppLogger.info('attendance', 'Loaded ${_attendanceSummaryList.length} absensi summaries');
     } catch (e) {
       AppLogger.error('attendance', 'Error loading absensi summary: $e');
       if (mounted) {
-        if (_absensiSummaryList.isEmpty) {
+        if (_attendanceSummaryList.isEmpty) {
           setState(() => _isLoadingSummary = false);
         }
       }
@@ -779,7 +779,7 @@ class PresencePageState extends ConsumerState<PresencePage>
 
   // Helper function to parse date string as local date (not UTC)
   DateTime _parseLocalDate(String dateString) {
-    // Gunakan AppDateUtils untuk parsing yang konsisten dan benar
+    // Use AppDateUtils for consistent and correct parsing
     return AppDateUtils.parseApiDate(dateString) ?? DateTime.now();
   }
 
@@ -856,7 +856,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   void _setAllStatus(String status, LanguageProvider languageProvider) {
     setState(() {
       for (var student in _filteredStudentList) {
-        _absensiStatus[student.id] = status;
+        _attendanceStatus[student.id] = status;
       }
     });
 
@@ -885,7 +885,7 @@ class PresencePageState extends ConsumerState<PresencePage>
     }
   }
 
-  // ========== FILTER UNTUK INPUT MODE ==========
+  // ========== FILTER FOR INPUT MODE ==========
   void _filterStudents() {
     final searchTerm = _searchControllerInput.text.toLowerCase();
 
@@ -900,7 +900,7 @@ class PresencePageState extends ConsumerState<PresencePage>
         // Status filter
         final matchesStatus =
             _selectedStatusFilter == null ||
-            (_absensiStatus[student.id] ?? 'hadir') == _selectedStatusFilter;
+            (_attendanceStatus[student.id] ?? 'hadir') == _selectedStatusFilter;
 
         // Class filter
         final matchesClass =
@@ -975,7 +975,7 @@ class PresencePageState extends ConsumerState<PresencePage>
                 });
                 _loadSubjectsByClass(classData['id']);
                 if (_tabController.index == 0) {
-                  _loadAbsensiSummary();
+                  _loadAttendanceSummary();
                 }
           
               },
@@ -1271,7 +1271,7 @@ class PresencePageState extends ConsumerState<PresencePage>
     final startOfMonth = DateTime(now.year, now.month, 1);
     final endOfMonth = DateTime(now.year, now.month + 1, 0);
 
-    return _absensiSummaryList.where((summary) {
+    return _attendanceSummaryList.where((summary) {
       // Class filter (Fix: Ensure results match selected class)
       if (_selectedClassId != null &&
           _selectedClassId!.isNotEmpty &&
@@ -1454,7 +1454,7 @@ class PresencePageState extends ConsumerState<PresencePage>
     );
   }
 
-  // ========== SEARCH BAR DENGAN FILTER SEPERTI ADMIN ==========
+  // ========== SEARCH BAR WITH FILTER LIKE ADMIN ==========
   Widget _buildSearchAndFilter(LanguageProvider languageProvider) {
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -2866,7 +2866,7 @@ class PresencePageState extends ConsumerState<PresencePage>
 
   // ========== STUDENT ITEM BUILDER BARU ==========
   Widget _buildStudentItem(Student student, LanguageProvider languageProvider) {
-    final status = _absensiStatus[student.id] ?? 'hadir';
+    final status = _attendanceStatus[student.id] ?? 'hadir';
     final Color statusColor = _getStatusColor(status);
     final String statusText = _getStatusText(status, languageProvider);
     final avatarColor = _getAvatarColor(student.name);
@@ -3004,11 +3004,11 @@ class PresencePageState extends ConsumerState<PresencePage>
     String studentId,
   ) {
     final isSelected =
-        _absensiStatus[studentId]?.toLowerCase() == status.toLowerCase();
+        _attendanceStatus[studentId]?.toLowerCase() == status.toLowerCase();
     return GestureDetector(
       onTap: () {
         setState(() {
-          _absensiStatus[studentId] = status;
+          _attendanceStatus[studentId] = status;
         });
       },
       child: Container(
@@ -3048,7 +3048,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   Future<void> _submitAbsensi() async {
     final languageProvider = ref.read(languageRiverpod);
 
-    // Validasi guru_id
+    // Validate teacher_id
     final teacherId = widget.teacher['id'];
     if (teacherId == null) {
             SnackBarUtils.showError(context, languageProvider.getTranslatedText({
@@ -3087,7 +3087,7 @@ class PresencePageState extends ConsumerState<PresencePage>
 
       for (var student in _filteredStudentList) {
         try {
-          final status = _absensiStatus[student.id] ?? 'hadir';
+          final status = _attendanceStatus[student.id] ?? 'hadir';
 
           await ApiService.createAttendance({
             'student_id': student.id,
@@ -3200,7 +3200,7 @@ class PresencePageState extends ConsumerState<PresencePage>
     setState(() {
       // Reset status absensi ke default
       for (var student in _studentList) {
-        _absensiStatus[student.id] = 'hadir';
+        _attendanceStatus[student.id] = 'hadir';
       }
       // Reset filter kelas
       _selectedClassId = null;
@@ -3348,7 +3348,7 @@ class PresencePageState extends ConsumerState<PresencePage>
             }));
 
       // Reload summary data
-      _loadAbsensiSummary();
+      _loadAttendanceSummary();
     } catch (e) {
       AppLogger.error('attendance', 'Delete attendance error: $e');
       if (mounted) {
@@ -3367,7 +3367,7 @@ class PresencePageState extends ConsumerState<PresencePage>
     final languageProvider = ref.watch(languageRiverpod);
         return Scaffold(
           backgroundColor:
-              ColorUtils.slate50, // Background sama dengan pengumuman
+              ColorUtils.slate50, // Background same as announcements
           body: Column(
             children: [
               // Header baru seperti pengumuman
@@ -3507,7 +3507,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   }
 }
 
-// ========== HELPER FUNCTIONS UNTUK STYLING ==========
+// ========== HELPER FUNCTIONS FOR STYLING ==========
 Color _getPrimaryColor() {
   return ColorUtils.getRoleColor('guru');
 }

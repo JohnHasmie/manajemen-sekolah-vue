@@ -20,14 +20,14 @@ class RPPExportService {
   /// Like calling a Laravel queue job that generates a .docx file.
   static Future<void> exportToWord(String content, String fileName) async {
     try {
-      // Format content untuk Word-like structure
+      // Format content for Word-like structure
       await Future.delayed(Duration(milliseconds: 100));
       final formattedContent = _formatForWord(content);
       
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/$fileName.docx');
       
-      // Untuk simulasi file Word, kita buat file text dengan formatting
+      // For simulating a Word file, we create a text file with formatting
       await file.writeAsString(formattedContent);
       
       await OpenFile.open(file.path);
@@ -40,13 +40,13 @@ class RPPExportService {
   /// Currently a placeholder -- in production would use a proper PDF library.
   static Future<void> exportToPDF(String content, String fileName) async {
     try {
-      // Implementasi PDF export yang lebih baik
+      // Better PDF export implementation
       await Future.delayed(Duration(milliseconds: 100));
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/$fileName.pdf');
       
-      // Untuk saat ini, kita buat file text sebagai simulasi
-      // Di production, gunakan library PDF generation seperti pdf atau printing
+      // For now, we create a text file as a simulation
+      // In production, use a PDF generation library like pdf or printing
       await file.writeAsString('PDF Export: $content');
       
       await OpenFile.open(file.path);

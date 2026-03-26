@@ -440,7 +440,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
 
       if (detail != null) {
         AppNavigator.push(context, ParentRaportDetailScreen(
-              raportData: detail,
+              reportCardData: detail,
               studentName: student['student_name'] ?? 'Unknown',
               userRole: 'admin',
               studentData: {
