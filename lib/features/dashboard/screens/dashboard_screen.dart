@@ -12,6 +12,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/router/app_router.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/attendance_overview_card.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/lesson_plan_status_card.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/material_slider_card.dart';
@@ -1709,7 +1710,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
 
     if (newRole != null) {
       // Always navigate to new dashboard to refresh state completely
-      Navigator.pushNamedAndRemoveUntil(context, '/$newRole', (route) => false);
+      AppNavigator.pushReplacementNamed(context, '/$newRole');
     } else {
       // Role same, just reload data
       await _initializeData();
@@ -3607,12 +3608,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                             // Call TokenService.logout to ensure backend token and FCM tokens are completely revoked
                             await TokenService().logout();
                             if (context.mounted) {
-                              AppNavigator.pop(context);
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/login',
-                                (route) => false,
-                              );
+                              appRouter.go('/login');
                             }
                           },
                           borderRadius: BorderRadius.circular(15),
