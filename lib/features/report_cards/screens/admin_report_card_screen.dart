@@ -291,22 +291,22 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Kirim Raport ke Wali Murid?'),
-        content: const Text(
-          'Tindakan ini akan mempublikasikan raport dengan status "Final" dan secara otomatis mengirimkan notifikasi ke wali murid terkait. Lanjutkan?',
+        title: Text(AppLocalizations.sendReportCard.tr),
+        content: Text(
+          AppLocalizations.sendReportCardConfirm.tr,
         ),
         actions: [
           TextButton(
             onPressed: () => AppNavigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text(AppLocalizations.cancel.tr),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: ColorUtils.corporateBlue600,
             ),
             onPressed: () => AppNavigator.pop(context, true),
-            child: const Text(
-              'Ya, Kirim',
+            child: Text(
+              AppLocalizations.yesSend.tr,
               style: TextStyle(color: Colors.white),
             ),
           ),

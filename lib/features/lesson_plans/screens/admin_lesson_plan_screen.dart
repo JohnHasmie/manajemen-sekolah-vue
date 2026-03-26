@@ -2081,7 +2081,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                       ),
                     ),
                     child: Text(
-                      'Batal',
+                      AppLocalizations.cancel.tr,
                       style: TextStyle(color: ColorUtils.slate600),
                     ),
                   ),

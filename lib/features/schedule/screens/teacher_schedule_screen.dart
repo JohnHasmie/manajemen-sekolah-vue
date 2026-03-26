@@ -1140,7 +1140,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
                               ),
                             ),
                             child: Text(
-                              'Batal',
+                              AppLocalizations.cancel.tr,
                               style: TextStyle(
                                 color: ColorUtils.slate600,
                                 fontWeight: FontWeight.w600,

@@ -1777,7 +1777,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                       ),
                     ),
                     child: Text(
-                      'Tutup',
+                      AppLocalizations.close.tr,
                       style: TextStyle(
                         color: ColorUtils.slate700,
                         fontWeight: FontWeight.w600,

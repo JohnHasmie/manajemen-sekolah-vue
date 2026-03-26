@@ -13,6 +13,7 @@ import 'package:manajemensekolah/features/settings/services/settings_service.dar
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -633,7 +634,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                               side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
-                              'Batal',
+                              AppLocalizations.cancel.tr,
                               style: TextStyle(
                                 color: ColorUtils.slate700,
                                 fontWeight: FontWeight.w600,
@@ -676,7 +677,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                 messenger.showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Gagal menyimpan: ${ErrorUtils.getFriendlyMessage(e)}',
+                                      '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
                                     ),
                                     backgroundColor: ColorUtils.error600,
                                     behavior: SnackBarBehavior.floating,
@@ -694,7 +695,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                               elevation: 2,
                             ),
                             child: Text(
-                              'Simpan',
+                              AppLocalizations.save.tr,
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
@@ -877,7 +878,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                     ),
                   ),
                   child: Text(
-                    'Batal',
+                    AppLocalizations.cancel.tr,
                     style: TextStyle(color: ColorUtils.slate600),
                   ),
                 ),
@@ -961,7 +962,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                         ),
                       ),
                       child: Text(
-                        'Batal',
+                        AppLocalizations.cancel.tr,
                         style: TextStyle(color: ColorUtils.slate600),
                       ),
                     ),
@@ -979,7 +980,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                         elevation: 0,
                       ),
                       child: Text(
-                        'Hapus',
+                        AppLocalizations.delete.tr,
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,

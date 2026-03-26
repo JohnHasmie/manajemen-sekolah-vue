@@ -1051,7 +1051,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
-                              'Batal',
+                              AppLocalizations.cancel.tr,
                               style: TextStyle(color: ColorUtils.slate600),
                             ),
                           ),
@@ -1086,7 +1086,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               padding: EdgeInsets.symmetric(vertical: 12),
                             ),
                             child: Text(
-                              'Simpan',
+                              AppLocalizations.save.tr,
                               style: TextStyle(color: Colors.white),
                             ),
                           ),
@@ -1788,7 +1788,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                             ),
                           ),
                           child: Text(
-                            'Batal',
+                            AppLocalizations.cancel.tr,
                             style: TextStyle(color: ColorUtils.slate600),
                           ),
                         ),
@@ -2234,7 +2234,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
           actions: [
             TextButton(
               onPressed: () => AppNavigator.pop(context),
-              child: Text('Tutup'),
+              child: Text(AppLocalizations.close.tr),
             ),
           ],
         );

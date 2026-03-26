@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A list tile widget that displays a single student's information.
 ///
@@ -49,15 +50,15 @@ class StudentListItem extends StatelessWidget {
               style: TextStyle(color: color, fontWeight: FontWeight.bold),
             ),
           ),
-          title: Text(student['nama'] ?? 'Nama tidak tersedia'),
+          title: Text(student['nama'] ?? AppLocalizations.nameNotAvailable.tr),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [Text('Kelas: ${student['class_name'] ?? 'Tidak ada'}')],
+            children: [Text('${AppLocalizations.classString.tr}: ${student['class_name'] ?? AppLocalizations.notAssigned.tr}')],
           ),
           trailing: PopupMenuButton(
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'edit', child: Text('Edit')),
-              PopupMenuItem(value: 'delete', child: Text('Hapus')),
+              PopupMenuItem(value: 'edit', child: Text(AppLocalizations.edit.tr)),
+              PopupMenuItem(value: 'delete', child: Text(AppLocalizations.delete.tr)),
             ],
             onSelected: (value) {
               if (value == 'edit') {

@@ -27,6 +27,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// The login page widget. Like a Vue page component (`pages/login.vue`).
 ///
@@ -1003,19 +1004,19 @@ class LoginScreenState extends State<LoginScreen> {
               AppNavigator.pop(context); // Close dialog
               setState(() => _isLoading = false);
             },
-            child: Text('Batal'),
+            child: Text(AppLocalizations.cancel.tr),
           ),
           ElevatedButton(
             onPressed: () async {
               final otp = otpController.text.trim();
               if (otp.length != 6) {
-                                SnackBarUtils.showInfo(context, 'Masukkan 6 digit kode OTP');
+                                SnackBarUtils.showInfo(context, AppLocalizations.enterOtp.tr);
                 return;
               }
               AppNavigator.pop(context); // Close dialog
               await _verifyOtp(email, otp);
             },
-            child: Text('Verifikasi'),
+            child: Text(AppLocalizations.verify.tr),
           ),
         ],
       ),

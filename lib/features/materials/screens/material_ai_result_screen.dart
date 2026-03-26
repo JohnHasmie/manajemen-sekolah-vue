@@ -18,6 +18,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Displays AI-generated teaching materials with tabbed content and
 /// regeneration capability.
@@ -493,7 +494,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
             TextButton(
               onPressed: () => AppNavigator.pop(context),
               child: Text(
-                'Batal',
+                AppLocalizations.cancel.tr,
                 style: TextStyle(color: ColorUtils.slate500),
               ),
             ),
@@ -1472,10 +1473,10 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
                     : _isLoading
                         ? LoadingScreen(
                             message:
-                                'AI sedang menyusun materi untuk ${widget.title}...',
+                                languageProvider.getTranslatedText({'en': 'AI is preparing material for ${widget.title}...', 'id': 'AI sedang menyusun materi untuk ${widget.title}...'}),
                           )
                         : _aiData == null
-                            ? Center(child: Text('Gagal memuat materi.'))
+                            ? Center(child: Text(languageProvider.getTranslatedText({'en': 'Failed to load material.', 'id': 'Gagal memuat materi.'})))
                             : Column(
                                 children: [
                                   // Tab bar

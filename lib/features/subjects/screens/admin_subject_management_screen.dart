@@ -2662,10 +2662,9 @@ class SubjectClassManagementPageState
     final confirmed = await showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: 'Hapus Kelas',
+        title: AppLocalizations.removeClass.tr,
         content:
-            'Yakin ingin menghapus kelas ${kelas['name']} dari mata pelajaran ini?',
-        confirmText: 'Hapus',
+            '${languageProvider.getTranslatedText({'en': 'Are you sure you want to remove class', 'id': 'Yakin ingin menghapus kelas'})} ${kelas['name']} ${languageProvider.getTranslatedText({'en': 'from this subject?', 'id': 'dari mata pelajaran ini?'})}',
         confirmColor: Colors.red,
       ),
     );
@@ -2963,7 +2962,7 @@ class SubjectClassManagementPageState
                               side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
-                              'Batal',
+                              AppLocalizations.cancel.tr,
                               style: TextStyle(
                                 color: ColorUtils.slate600,
                                 fontWeight: FontWeight.w600,

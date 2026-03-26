@@ -22,6 +22,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// RPP detail viewer with inline editing and AI regeneration.
 ///
@@ -219,7 +220,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         actions: [
           TextButton(
             onPressed: () => AppNavigator.pop(context, false),
-            child: Text('Batal', style: TextStyle(color: ColorUtils.slate500)),
+            child: Text(AppLocalizations.cancel.tr, style: TextStyle(color: ColorUtils.slate500)),
           ),
           ElevatedButton(
             onPressed: () => AppNavigator.pop(context, true),
@@ -228,7 +229,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text('Regenerasi'),
+            child: Text(AppLocalizations.regenerate.tr),
           ),
         ],
       ),
@@ -285,12 +286,12 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         actions: [
           TextButton(
             onPressed: () => AppNavigator.pop(context, false),
-            child: Text('Batal', style: TextStyle(color: ColorUtils.slate500)),
+            child: Text(AppLocalizations.cancel.tr, style: TextStyle(color: ColorUtils.slate500)),
           ),
           ElevatedButton.icon(
             onPressed: () => AppNavigator.pop(context, true),
             icon: Icon(Icons.auto_awesome, size: 18),
-            label: Text('Regenerasi Semua'),
+            label: Text(AppLocalizations.regenerateAll.tr),
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryColor,
               foregroundColor: Colors.white,
@@ -989,7 +990,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('RPP berhasil disimpan')));
+      ).showSnackBar(SnackBar(content: Text(languageProvider.getTranslatedText({'en': 'Lesson plan saved successfully', 'id': 'RPP berhasil disimpan'}))));
     } catch (e) {
       AppLogger.error('lesson_plan', e);
             SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
@@ -1071,7 +1072,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('RPP berhasil diexport ke PDF')));
+        ).showSnackBar(SnackBar(content: Text(languageProvider.getTranslatedText({'en': 'Lesson plan exported to PDF successfully', 'id': 'RPP berhasil diexport ke PDF'}))));
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);

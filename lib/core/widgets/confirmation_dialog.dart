@@ -5,6 +5,7 @@
 // Returns `true` via Navigator.pop when confirmed, `false` when cancelled.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A reusable confirmation dialog with a gradient header and confirm/cancel buttons.
 ///
@@ -16,23 +17,25 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 /// Props (parameters):
 /// - [title] - dialog title displayed in the gradient header
 /// - [content] - body message explaining the action
-/// - [confirmText] - label for the confirm button (defaults to 'Hapus')
+/// - [confirmText] - label for the confirm button (defaults to translated 'Delete')
 /// - [confirmColor] - color theme for the header and confirm button
 ///
 /// Returns `bool` via `Navigator.pop(context, true/false)`.
 class ConfirmationDialog extends StatelessWidget {
   final String title;
   final String content;
-  final String confirmText;
+  final String? _confirmText;
   final Color confirmColor;
 
   const ConfirmationDialog({
     super.key,
     required this.title,
     required this.content,
-    this.confirmText = 'Hapus',
+    String? confirmText,
     this.confirmColor = Colors.red,
-  });
+  }) : _confirmText = confirmText;
+
+  String get confirmText => _confirmText ?? AppLocalizations.delete.tr;
 
   /// Builds the dialog UI with gradient header, message body, and cancel/confirm buttons.
   /// Like the `<template>` section of a Vue SFC modal component.
@@ -91,7 +94,7 @@ class ConfirmationDialog extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Content
           Padding(
             padding: EdgeInsets.all(20),
@@ -105,7 +108,7 @@ class ConfirmationDialog extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ),
-          
+
           // Actions
           Container(
             padding: EdgeInsets.all(16),
@@ -122,7 +125,7 @@ class ConfirmationDialog extends StatelessWidget {
                       side: BorderSide(color: Colors.grey.shade300),
                     ),
                     child: Text(
-                      'Batal',
+                      AppLocalizations.cancel.tr,
                       style: TextStyle(color: Colors.grey.shade700),
                     ),
                   ),

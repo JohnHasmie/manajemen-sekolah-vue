@@ -1133,7 +1133,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 ),
                                 padding: EdgeInsets.symmetric(vertical: 12),
                               ),
-                              child: Text('Batal'),
+                              child: Text(AppLocalizations.cancel.tr),
                             ),
                           ),
                           SizedBox(width: 12),
@@ -1152,7 +1152,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 padding: EdgeInsets.symmetric(vertical: 12),
                               ),
                               child: Text(
-                                'Simpan',
+                                AppLocalizations.save.tr,
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
@@ -2684,7 +2684,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         ),
         content:
             'Yakin ingin menghapus jenis pembayaran "${jenisPembayaran['name']}"?',
-        confirmText: 'Hapus',
         confirmColor: ColorUtils.error600,
       ),
     );
@@ -3071,7 +3070,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
-                              'Batal',
+                              AppLocalizations.cancel.tr,
                               style: TextStyle(color: ColorUtils.slate600),
                             ),
                           ),
@@ -3356,7 +3355,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
-                              'Batal',
+                              AppLocalizations.cancel.tr,
                               style: TextStyle(color: ColorUtils.slate700),
                             ),
                           ),
@@ -3698,14 +3697,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       color: _getPrimaryColor(),
                       onPressed: () =>
                           _showAddEditJenisPembayaran(jenisPembayaran: item),
-                      tooltip: 'Edit',
+                      tooltip: AppLocalizations.edit.tr,
                     ),
                     SizedBox(width: 8),
                     _buildCircleActionButton(
                       icon: Icons.delete_rounded,
                       color: ColorUtils.error600,
                       onPressed: () => _deleteJenisPembayaran(item),
-                      tooltip: 'Hapus',
+                      tooltip: AppLocalizations.delete.tr,
                     ),
                   ],
                 ),
@@ -3979,7 +3978,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
             icon: Icons.delete_outline_rounded,
             color: ColorUtils.error600,
             onPressed: () => _deleteGeneratedBills(item),
-            tooltip: 'Hapus',
+            tooltip: AppLocalizations.delete.tr,
           ),
         ],
       ),

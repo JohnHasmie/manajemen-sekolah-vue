@@ -1063,7 +1063,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
               actions: [
                 TextButton(
                   onPressed: () => AppNavigator.pop(context),
-                  child: Text('Batal'),
+                  child: Text(AppLocalizations.cancel.tr),
                 ),
                 ElevatedButton(
                   onPressed: selectedItems.isEmpty
@@ -1335,7 +1335,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                 actions: [
                   TextButton(
                     onPressed: () => AppNavigator.pop(context),
-                    child: Text('Batal'),
+                    child: Text(AppLocalizations.cancel.tr),
                   ),
                 ],
               ),
@@ -1535,14 +1535,14 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Hapus Materi'),
+        title: Text(AppLocalizations.deleteMaterial.tr),
         content: Text(
-          'Apakah Anda yakin ingin menghapus kolom materi ini beserta semua nilainya?',
+          AppLocalizations.deleteColumnConfirm.tr,
         ),
         actions: [
           TextButton(
             onPressed: () => AppNavigator.pop(context),
-            child: Text('Batal'),
+            child: Text(AppLocalizations.cancel.tr),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -1582,7 +1582,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
               });
               _updateAllDescriptions();
             },
-            child: Text('Hapus'),
+            child: Text(AppLocalizations.delete.tr),
           ),
         ],
       ),

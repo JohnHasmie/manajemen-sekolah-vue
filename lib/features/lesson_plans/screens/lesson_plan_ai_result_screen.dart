@@ -20,6 +20,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 // Note: pastikan import AppLocalizations dan Provider jika diperlukan,
 // namun di sini kita gunakan styling yang umum.
 
@@ -457,7 +458,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             TextButton(
               onPressed: () => AppNavigator.pop(context),
               child: Text(
-                'Batal',
+                AppLocalizations.cancel.tr,
                 style: TextStyle(color: ColorUtils.slate500),
               ),
             ),

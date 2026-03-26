@@ -13,6 +13,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// School info settings screen - edit school name, address, and education level (jenjang).
 ///
@@ -227,7 +228,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                               ),
                             ),
                             child: Text(
-                              'Batal',
+                              AppLocalizations.cancel.tr,
                               style: TextStyle(color: ColorUtils.slate600),
                             ),
                           ),
@@ -238,7 +239,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                             onPressed: () async {
                               final name = nameController.text.trim();
                               if (name.length < 3) {
-                                                                SnackBarUtils.showError(context, 'Nama sekolah minimal 3 karakter');
+                                                                SnackBarUtils.showError(context, AppLocalizations.schoolNameMinChars.tr);
                                 return;
                               }
 
@@ -255,7 +256,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                   messenger.showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        'Pengaturan berhasil disimpan',
+                                        AppLocalizations.settingsSavedSuccess.tr,
                                       ),
                                       backgroundColor: ColorUtils.success600,
                                       behavior: SnackBarBehavior.floating,
@@ -268,7 +269,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                   messenger.showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        'Gagal menyimpan: ${ErrorUtils.getFriendlyMessage(e)}',
+                                        '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
                                       ),
                                       backgroundColor: ColorUtils.error600,
                                       behavior: SnackBarBehavior.floating,
@@ -286,7 +287,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                               elevation: 0,
                             ),
                             child: Text(
-                              'Simpan',
+                              AppLocalizations.save.tr,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
