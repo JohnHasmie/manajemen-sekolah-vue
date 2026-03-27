@@ -1568,7 +1568,7 @@ class RppFormDialog extends ConsumerStatefulWidget {
 
 class _RppFormDialogState extends ConsumerState<RppFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _judulController = TextEditingController();
+  final _titleController = TextEditingController();
   final _academicYearController = TextEditingController();
 
   String? _selectedSubjectId;
@@ -1588,7 +1588,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
 
     // If in edit mode, fill fields with RPP data
     if (widget.rppData != null) {
-      _judulController.text =
+      _titleController.text =
           widget.rppData!['judul'] ?? widget.rppData!['title'] ?? '';
       _academicYearController.text =
           widget.rppData!['academic_year'] ??
@@ -1823,13 +1823,13 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       AppLogger.debug('lesson_plan', '- Guru ID: ${widget.teacherId}');
       AppLogger.debug('lesson_plan', '- Mata Pelajaran ID: $_selectedSubjectId');
       AppLogger.debug('lesson_plan', '- Kelas ID: $_selectedClassId');
-      AppLogger.debug('lesson_plan', '- Judul: ${_judulController.text}');
+      AppLogger.debug('lesson_plan', '- Judul: ${_titleController.text}');
       AppLogger.debug('lesson_plan', '- File Path: $filePath');
 
       final rppData = {
         'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
-        'title': _judulController.text,
+        'title': _titleController.text,
         'semester': _selectedSemester,
         'academic_year': _academicYearController.text,
         'file_path': filePath ?? _selectedFileName,
@@ -2068,7 +2068,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildDialogTextField(
-                      controller: _judulController,
+                      controller: _titleController,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Title', 'id': 'Judul'})} *',
                       icon: Icons.title_rounded,
@@ -2434,7 +2434,7 @@ class GenerateRppFormDialog extends ConsumerStatefulWidget {
 
 class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _judulController = TextEditingController();
+  final _titleController = TextEditingController();
   final _academicYearController = TextEditingController();
 
   String? _selectedSubjectId;
@@ -2607,7 +2607,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       }
 
       final requestBody = {
-        'title': _judulController.text,
+        'title': _titleController.text,
         'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
         'chapter_id': _selectedChapterId,
@@ -2797,7 +2797,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
         : '';
 
     return {
-      'title': _judulController.text,
+      'title': _titleController.text,
       'mata_pelajaran_id': _selectedSubjectId,
       'mata_pelajaran_nama': subjectName,
       'satuan_pendidikan': schoolNameStr,
@@ -2868,7 +2868,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
 
     final mappedRppData = {
       'id': null,
-      'judul': rppResponse['title'] ?? _judulController.text,
+      'judul': rppResponse['title'] ?? _titleController.text,
       'mata_pelajaran_id': _selectedSubjectId,
       'mata_pelajaran_nama': subjectName,
       'satuan_pendidikan': schoolNameStr,
@@ -3112,7 +3112,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildDialogTextField(
-                      controller: _judulController,
+                      controller: _titleController,
                       label: '${AppLocalizations.title.tr} *',
                       icon: Icons.title_rounded,
                       hintText: languageProvider.getTranslatedText({

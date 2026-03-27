@@ -73,13 +73,13 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   String _pollingStatus = '';
   String? _pollingError;
 
-  late quill.QuillController _tujuanController;
-  late quill.QuillController _kegiatanIntiController;
+  late quill.QuillController _objectivesController;
+  late quill.QuillController _coreActivityController;
   late quill.QuillController _assessmentController;
-  late quill.QuillController _kompetensiIntiController;
-  late quill.QuillController _kompetensiDasarController;
+  late quill.QuillController _coreCompetencyController;
+  late quill.QuillController _basicCompetencyController;
 
-  late TextEditingController _judulController;
+  late TextEditingController _titleController;
   late TextEditingController _satuanPendidikanController;
   late TextEditingController _mataPelajaranController;
   late TextEditingController _chapterController;
@@ -311,7 +311,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   }
 
   void _initControllers(Map<String, dynamic> data) {
-    _judulController = TextEditingController(
+    _titleController = TextEditingController(
       text: data['judul'] ?? data['title'] ?? 'RPP AI',
     );
     _satuanPendidikanController = TextEditingController(
@@ -332,24 +332,24 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       text: data['alokasi_waktu'] ?? '',
     );
 
-    _kompetensiIntiController = quill.QuillController(
+    _coreCompetencyController = quill.QuillController(
       document: _convertHtmlToQuill(data['kompetensi_inti'] ?? ''),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
-    _kompetensiDasarController = quill.QuillController(
+    _basicCompetencyController = quill.QuillController(
       document: _convertHtmlToQuill(data['kompetensi_dasar'] ?? ''),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
-    _tujuanController = quill.QuillController(
+    _objectivesController = quill.QuillController(
       document: _convertHtmlToQuill(
         data['tujuan_pembelajaran'] ?? data['learning_objective'] ?? '',
       ),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
-    _kegiatanIntiController = quill.QuillController(
+    _coreActivityController = quill.QuillController(
       document: _convertHtmlToQuill(
         data['kegiatan_inti'] ?? data['learning_activities'] ?? '',
       ),
@@ -368,12 +368,12 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
   @override
   void dispose() {
-    _kompetensiIntiController.dispose();
-    _kompetensiDasarController.dispose();
-    _tujuanController.dispose();
-    _kegiatanIntiController.dispose();
+    _coreCompetencyController.dispose();
+    _basicCompetencyController.dispose();
+    _objectivesController.dispose();
+    _coreActivityController.dispose();
     _assessmentController.dispose();
-    _judulController.dispose();
+    _titleController.dispose();
     _satuanPendidikanController.dispose();
     _mataPelajaranController.dispose();
     _chapterController.dispose();
@@ -519,7 +519,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       await Future.delayed(const Duration(seconds: 2));
 
       final regeneratedData = {
-        'title': _judulController.text, // Pertahankan judul
+        'title': _titleController.text, // Pertahankan judul
         'learning_objective':
             '<ol><li>[Regenerated] Melalui diskusi, siswa dapat memahami konsep dengan lebih mendalam.</li><li>Diberikan studi kasus, siswa mampu memecahkan masalah dengan akurat.</li></ol>',
         'learning_activities':
@@ -529,10 +529,10 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       };
 
       setState(() {
-        _tujuanController.document = _convertHtmlToQuill(
+        _objectivesController.document = _convertHtmlToQuill(
           regeneratedData['learning_objective']!,
         );
-        _kegiatanIntiController.document = _convertHtmlToQuill(
+        _coreActivityController.document = _convertHtmlToQuill(
           regeneratedData['learning_activities']!,
         );
         _assessmentController.document = _convertHtmlToQuill(
@@ -590,7 +590,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       yPosition += 30;
 
       graphics.drawString(
-        _judulController.text.toUpperCase(),
+        _titleController.text.toUpperCase(),
         titleFont,
         bounds: Rect.fromLTWH(0, yPosition, page.size.width, 30),
         format: PdfStringFormat(alignment: PdfTextAlignment.center),
@@ -668,22 +668,22 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
       yPosition = drawSection(
         'A. Kompetensi Inti (KI)',
-        _kompetensiIntiController.document.toPlainText(),
+        _coreCompetencyController.document.toPlainText(),
         yPosition,
       );
       yPosition = drawSection(
         'B. Kompetensi Dasar (KD) dan Indikator (IPK)',
-        _kompetensiDasarController.document.toPlainText(),
+        _basicCompetencyController.document.toPlainText(),
         yPosition,
       );
       yPosition = drawSection(
         'C. Tujuan Pembelajaran',
-        _tujuanController.document.toPlainText(),
+        _objectivesController.document.toPlainText(),
         yPosition,
       );
       yPosition = drawSection(
         'D. Kegiatan Pembelajaran',
-        _kegiatanIntiController.document.toPlainText(),
+        _coreActivityController.document.toPlainText(),
         yPosition,
       );
       yPosition = drawSection(
@@ -712,7 +712,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   }
 
   Future<void> _saveRPP() async {
-    if (_judulController.text.isEmpty) {
+    if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Judul RPP wajib diisi.')));
@@ -730,13 +730,13 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         'guru_id': widget.teacherId,
         'mata_pelajaran_id':
             widget.rppData?['mata_pelajaran_id'] ?? widget.rppData?['subject_id'],
-        'judul': _judulController.text,
-        'kompetensi_inti': _kompetensiIntiController.document.toPlainText(),
-        'kompetensi_dasar': _kompetensiDasarController.document.toPlainText(),
-        'tujuan_pembelajaran': _tujuanController.document.toPlainText(),
+        'judul': _titleController.text,
+        'kompetensi_inti': _coreCompetencyController.document.toPlainText(),
+        'kompetensi_dasar': _basicCompetencyController.document.toPlainText(),
+        'tujuan_pembelajaran': _objectivesController.document.toPlainText(),
         'kegiatan_pendahuluan':
             '• Melakukan Pembukaan dengan Salam dan Membaca Doa\n• Mengaitkan Materi Sebelumnya',
-        'kegiatan_inti': _kegiatanIntiController.document.toPlainText(),
+        'kegiatan_inti': _coreActivityController.document.toPlainText(),
         'kegiatan_penutup':
             '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa',
         'penilaian': _assessmentController.document.toPlainText(),
@@ -1016,24 +1016,24 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             ),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('Judul RPP'),
-            _buildTextField(_judulController, maxLines: 1),
+            _buildTextField(_titleController, maxLines: 1),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('Informasi Umum'),
             _buildMetaInfoPanel(),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('A. Kompetensi Inti (KI)'),
-            _buildRichTextField(_kompetensiIntiController),
+            _buildRichTextField(_coreCompetencyController),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('B. Kompetensi Dasar (KD) dan Indikator (IPK)'),
-            _buildRichTextField(_kompetensiDasarController),
+            _buildRichTextField(_basicCompetencyController),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('C. Tujuan Pembelajaran'),
-            _buildRichTextField(_tujuanController),
+            _buildRichTextField(_objectivesController),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader(
               'D. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup)',
             ),
-            _buildRichTextField(_kegiatanIntiController),
+            _buildRichTextField(_coreActivityController),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('E. Penilaian (Asesmen)'),
             _buildRichTextField(_assessmentController),
