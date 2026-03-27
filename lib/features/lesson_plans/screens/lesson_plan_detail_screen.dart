@@ -673,35 +673,35 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         _lessonPlanData['is_ai_generated'] == true;
 
     // Core Competencies & Basic Competencies (if available)
-    final String kompetensiInti = getField([
+    final String coreCompetency = getField([
       'kompetensi_inti',
-      'kompetensiInti',
+      'coreCompetency',
       'ki',
       'core_competence',
     ]);
-    final String kompetensiDasar = getField([
+    final String basicCompetency = getField([
       'kompetensi_dasar',
-      'kompetensiDasar',
+      'basicCompetency',
       'kd',
       'basic_competence',
     ]);
     final String indikator = getField(['indikator', 'indicator']);
 
     int sectionIndex = 1;
-    if (kompetensiInti.isNotEmpty) {
+    if (coreCompetency.isNotEmpty) {
       buffer.writeln(
         '${String.fromCharCode(64 + sectionIndex)}. KOMPETENSI INTI (KI)',
       );
-      buffer.writeln(_stripHtml(kompetensiInti));
+      buffer.writeln(_stripHtml(coreCompetency));
       buffer.writeln();
       sectionIndex++;
     }
 
-    if (kompetensiDasar.isNotEmpty) {
+    if (basicCompetency.isNotEmpty) {
       buffer.writeln(
         '${String.fromCharCode(64 + sectionIndex)}. KOMPETENSI DASAR (KD)',
       );
-      buffer.writeln(_stripHtml(kompetensiDasar));
+      buffer.writeln(_stripHtml(basicCompetency));
       buffer.writeln();
       sectionIndex++;
     }
@@ -961,13 +961,13 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         'core_competence': fallback([
           'core_competence',
           'kompetensi_inti',
-          'kompetensiInti',
+          'coreCompetency',
           'ki',
         ]),
         'basic_competence': fallback([
           'basic_competence',
           'kompetensi_dasar',
-          'kompetensiDasar',
+          'basicCompetency',
           'kd',
         ]),
         'indicator': fallback(['indicator', 'indikator']),

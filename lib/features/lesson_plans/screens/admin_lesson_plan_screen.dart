@@ -1772,19 +1772,19 @@ class UpdateStatusDialog extends ConsumerStatefulWidget {
 
 class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
   bool isUpdating = false;
-  late TextEditingController catatanController;
+  late TextEditingController notesController;
   String selectedStatus = 'Pending';
 
   @override
   void initState() {
     super.initState();
-    catatanController = TextEditingController(text: widget.currentNote ?? '');
+    notesController = TextEditingController(text: widget.currentNote ?? '');
     mapInitialStatus();
   }
 
   @override
   void dispose() {
-    catatanController.dispose();
+    notesController.dispose();
     super.dispose();
   }
 
@@ -1830,7 +1830,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
 
   Future<void> updateStatus() async {
     bool statusChanged = selectedStatus != widget.currentStatus;
-    bool noteChanged = catatanController.text != (widget.currentNote ?? '');
+    bool noteChanged = notesController.text != (widget.currentNote ?? '');
 
     if (!statusChanged && !noteChanged) {
       AppNavigator.pop(context);
@@ -1845,8 +1845,8 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
       await ApiService.updateLessonPlanStatus(
         widget.lessonPlanId,
         selectedStatus,
-        catatan: catatanController.text.isNotEmpty
-            ? catatanController.text
+        catatan: notesController.text.isNotEmpty
+            ? notesController.text
             : null,
       );
       if (mounted) {
@@ -2040,7 +2040,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     border: Border.all(color: ColorUtils.slate200),
                   ),
                   child: TextField(
-                    controller: catatanController,
+                    controller: notesController,
                     maxLines: 3,
                     style: TextStyle(color: ColorUtils.slate900, fontSize: 14),
                     decoration: InputDecoration(

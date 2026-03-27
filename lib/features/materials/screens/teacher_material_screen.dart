@@ -586,8 +586,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
         final cached = await LocalCacheService.load(chapterCacheKey, ttl: const Duration(hours: 3));
         if (cached != null && mounted) {
           final cachedData = Map<String, dynamic>.from(cached);
-          final cachedChapters = List<dynamic>.from(cachedData['chapterMaterials'] ?? cachedData['babMateri'] ?? []);
-          final cachedSubChapters = List<dynamic>.from(cachedData['subChapterMaterials'] ?? cachedData['subBabMateri'] ?? []);
+          final cachedChapters = List<dynamic>.from(cachedData['chapterMaterials'] ?? cachedData['chapterMaterials'] ?? []);
+          final cachedSubChapters = List<dynamic>.from(cachedData['subChapterMaterials'] ?? cachedData['subChapterMaterials'] ?? []);
 
           if (cachedChapters.isNotEmpty) {
             setState(() {

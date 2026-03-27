@@ -1956,7 +1956,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     final namaController = TextEditingController(
       text: paymentType?['name'],
     );
-    final deskripsiController = TextEditingController(
+    final descriptionController = TextEditingController(
       text: paymentType?['description'],
     );
     final jumlahController = TextEditingController(
@@ -2195,7 +2195,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           SizedBox(height: AppSpacing.md),
                           // Deskripsi
                           _buildDialogTextField(
-                            controller: deskripsiController,
+                            controller: descriptionController,
                             label: 'Deskripsi (Opsional)',
                             icon: Icons.description_rounded,
                             maxLines: 2,
@@ -2508,7 +2508,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               try {
                                 final data = {
                                   'name': namaController.text,
-                                  'description': deskripsiController.text,
+                                  'description': descriptionController.text,
                                   'amount':
                                       CurrencyInputFormatter.parseCurrency(
                                         jumlahController.text,
@@ -3166,7 +3166,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          final catatanController = TextEditingController();
+          final notesController = TextEditingController();
           String status = 'verified';
 
           return Dialog(
@@ -3328,7 +3328,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
                         // Catatan
                         _buildDialogTextField(
-                          controller: catatanController,
+                          controller: notesController,
                           label: 'Catatan (Opsional)',
                           icon: Icons.note,
                           maxLines: 3,
@@ -3367,9 +3367,9 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                   {
                                     'status': status,
                                     'admin_notes':
-                                        catatanController.text.isEmpty
+                                        notesController.text.isEmpty
                                         ? null
-                                        : catatanController.text,
+                                        : notesController.text,
                                   },
                                 );
 

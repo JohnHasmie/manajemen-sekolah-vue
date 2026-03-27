@@ -345,7 +345,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
 
     targets.add(
       TargetFocus(
-        identify: "AbsensiList",
+        identify: "AttendanceList",
         keyTarget: _attendanceListKey,
         alignSkip: Alignment.topRight,
         shape: ShapeLightFocus.RRect,
