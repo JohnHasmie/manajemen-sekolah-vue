@@ -80,13 +80,13 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
   late quill.QuillController _basicCompetencyController;
 
   late TextEditingController _titleController;
-  late TextEditingController _satuanPendidikanController;
-  late TextEditingController _mataPelajaranController;
+  late TextEditingController _educationUnitController;
+  late TextEditingController _subjectNameController;
   late TextEditingController _chapterController;
   late TextEditingController _subChapterController;
-  late TextEditingController _pembelajaranKeController;
-  late TextEditingController _kelasSemesterController;
-  late TextEditingController _alokasiWaktuController;
+  late TextEditingController _lessonNumberController;
+  late TextEditingController _classSemesterController;
+  late TextEditingController _timeAllocationController;
 
   final TextEditingController _promptController = TextEditingController();
 
@@ -314,21 +314,21 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
     _titleController = TextEditingController(
       text: data['judul'] ?? data['title'] ?? 'RPP AI',
     );
-    _satuanPendidikanController = TextEditingController(
+    _educationUnitController = TextEditingController(
       text: data['satuan_pendidikan'] ?? 'SD/MI',
     );
-    _mataPelajaranController = TextEditingController(
+    _subjectNameController = TextEditingController(
       text: data['mata_pelajaran_nama'] ?? '',
     );
     _chapterController = TextEditingController(text: data['bab_nama'] ?? '');
     _subChapterController = TextEditingController(text: data['sub_bab_nama'] ?? '');
-    _pembelajaranKeController = TextEditingController(
+    _lessonNumberController = TextEditingController(
       text: data['pembelajaran_ke'] ?? '',
     );
-    _kelasSemesterController = TextEditingController(
+    _classSemesterController = TextEditingController(
       text: data['kelas_semester'] ?? '',
     );
-    _alokasiWaktuController = TextEditingController(
+    _timeAllocationController = TextEditingController(
       text: data['alokasi_waktu'] ?? '',
     );
 
@@ -374,13 +374,13 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
     _coreActivityController.dispose();
     _assessmentController.dispose();
     _titleController.dispose();
-    _satuanPendidikanController.dispose();
-    _mataPelajaranController.dispose();
+    _educationUnitController.dispose();
+    _subjectNameController.dispose();
     _chapterController.dispose();
     _subChapterController.dispose();
-    _pembelajaranKeController.dispose();
-    _kelasSemesterController.dispose();
-    _alokasiWaktuController.dispose();
+    _lessonNumberController.dispose();
+    _classSemesterController.dispose();
+    _timeAllocationController.dispose();
     _promptController.dispose();
     super.dispose();
   }
@@ -416,7 +416,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                 SizedBox(height: AppSpacing.lg),
                 _buildDialogField(
                   'Mata Pelajaran',
-                  _mataPelajaranController.text,
+                  _subjectNameController.text,
                 ),
                 SizedBox(height: AppSpacing.md),
                 _buildDialogField('Bab', _chapterController.text),
@@ -599,13 +599,13 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
 
       // Draw meta info
       final metaData = [
-        'Satuan Pendidikan : ${_satuanPendidikanController.text}',
-        'Mata Pelajaran    : ${_mataPelajaranController.text}',
+        'Satuan Pendidikan : ${_educationUnitController.text}',
+        'Mata Pelajaran    : ${_subjectNameController.text}',
         'Bab               : ${_chapterController.text}',
         'Sub Bab           : ${_subChapterController.text}',
-        'Kelas/Semester    : ${_kelasSemesterController.text}',
-        'Pembelajaran Ke   : ${_pembelajaranKeController.text}',
-        'Alokasi Waktu     : ${_alokasiWaktuController.text}',
+        'Kelas/Semester    : ${_classSemesterController.text}',
+        'Pembelajaran Ke   : ${_lessonNumberController.text}',
+        'Alokasi Waktu     : ${_timeAllocationController.text}',
       ];
 
       for (var meta in metaData) {
@@ -740,12 +740,12 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
         'kegiatan_penutup':
             '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa',
         'penilaian': _assessmentController.document.toPlainText(),
-        'satuan_pendidikan': _satuanPendidikanController.text,
-        'kelas_semester': _kelasSemesterController.text,
+        'satuan_pendidikan': _educationUnitController.text,
+        'kelas_semester': _classSemesterController.text,
         'tema': _chapterController.text, // Chapter as theme
         'sub_tema': _subChapterController.text,
-        'pembelajaran_ke': _pembelajaranKeController.text,
-        'alokasi_waktu': _alokasiWaktuController.text,
+        'pembelajaran_ke': _lessonNumberController.text,
+        'alokasi_waktu': _timeAllocationController.text,
         'waktu_pendahuluan': '15',
         'waktu_inti': '140',
         'waktu_penutup': '15',
@@ -1098,13 +1098,13 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       ),
       child: Column(
         children: [
-          _buildMetaRow('Satuan Pendidikan', _satuanPendidikanController),
-          _buildMetaRow('Mata Pelajaran', _mataPelajaranController),
+          _buildMetaRow('Satuan Pendidikan', _educationUnitController),
+          _buildMetaRow('Mata Pelajaran', _subjectNameController),
           _buildMetaRow('Bab', _chapterController),
           _buildMetaRow('Sub Bab', _subChapterController),
-          _buildMetaRow('Kelas/Semester', _kelasSemesterController),
-          _buildMetaRow('Pembelajaran Ke', _pembelajaranKeController),
-          _buildMetaRow('Alokasi Waktu', _alokasiWaktuController),
+          _buildMetaRow('Kelas/Semester', _classSemesterController),
+          _buildMetaRow('Pembelajaran Ke', _lessonNumberController),
+          _buildMetaRow('Alokasi Waktu', _timeAllocationController),
         ],
       ),
     );

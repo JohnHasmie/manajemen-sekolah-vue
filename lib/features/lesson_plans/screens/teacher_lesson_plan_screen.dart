@@ -1578,7 +1578,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
   File? _selectedFile;
   bool _isUploading = false;
 
-  List<dynamic> _mataPelajaranList = [];
+  List<dynamic> _subjectList = [];
   List<dynamic> _classList = [];
 
   @override
@@ -1622,17 +1622,17 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
       setState(() {
         // Backend returns {success: true, data: [...], pagination: {...}}
         if (result is Map && result['data'] is List) {
-          _mataPelajaranList = result['data'];
+          _subjectList = result['data'];
         } else if (result is List) {
-          _mataPelajaranList = result;
+          _subjectList = result;
         } else {
-          _mataPelajaranList = [];
+          _subjectList = [];
         }
       });
       if (kDebugMode) {
-        AppLogger.info('lesson_plan', 'Loaded ${_mataPelajaranList.length} mata pelajaran');
-        if (_mataPelajaranList.isNotEmpty) {
-          AppLogger.debug('lesson_plan', 'DEBUG SUBJECT ITEM: ${_mataPelajaranList.first}');
+        AppLogger.info('lesson_plan', 'Loaded ${_subjectList.length} mata pelajaran');
+        if (_subjectList.isNotEmpty) {
+          AppLogger.debug('lesson_plan', 'DEBUG SUBJECT ITEM: ${_subjectList.first}');
         }
       }
     } catch (e) {
@@ -1648,11 +1648,11 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
       setState(() {
         // Backend might return {success: true, data: [...]} or direct array
         if (result is Map && result['data'] is List) {
-          _mataPelajaranList = result['data'];
+          _subjectList = result['data'];
         } else if (result is List) {
-          _mataPelajaranList = result;
+          _subjectList = result;
         } else {
-          _mataPelajaranList = [];
+          _subjectList = [];
         }
       });
     } catch (e) {
@@ -2092,7 +2092,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})} *',
                       icon: Icons.book_outlined,
-                      items: _mataPelajaranList.map((mp) {
+                      items: _subjectList.map((mp) {
                         return DropdownMenuItem(
                           value: mp['id'],
                           child: Text(
@@ -2445,7 +2445,7 @@ class _GenerateLessonPlanFormDialogState extends ConsumerState<GenerateLessonPla
   bool _isAutoGenerating = false;
   String _generationStatus = '';
 
-  List<dynamic> _mataPelajaranList = [];
+  List<dynamic> _subjectList = [];
   List<dynamic> _classList = [];
   List<dynamic> _chapterList = [];
   List<dynamic> _subChapterList = [];
@@ -2465,11 +2465,11 @@ class _GenerateLessonPlanFormDialogState extends ConsumerState<GenerateLessonPla
       );
       setState(() {
         if (result is Map && result['data'] is List) {
-          _mataPelajaranList = result['data'];
+          _subjectList = result['data'];
         } else if (result is List) {
-          _mataPelajaranList = result;
+          _subjectList = result;
         } else {
-          _mataPelajaranList = [];
+          _subjectList = [];
         }
       });
     } catch (e) {
@@ -2483,11 +2483,11 @@ class _GenerateLessonPlanFormDialogState extends ConsumerState<GenerateLessonPla
       final result = await apiService.get('/mata-pelajaran');
       setState(() {
         if (result is Map && result['data'] is List) {
-          _mataPelajaranList = result['data'];
+          _subjectList = result['data'];
         } else if (result is List) {
-          _mataPelajaranList = result;
+          _subjectList = result;
         } else {
-          _mataPelajaranList = [];
+          _subjectList = [];
         }
       });
     } catch (e) {
@@ -2760,7 +2760,7 @@ class _GenerateLessonPlanFormDialogState extends ConsumerState<GenerateLessonPla
         ? (schoolObj['school_name'] ?? schoolObj['nama_sekolah'] ?? 'SD/MI')
         : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
 
-    final selectedSubject = _mataPelajaranList.firstWhere(
+    final selectedSubject = _subjectList.firstWhere(
       (m) => m['id'].toString() == _selectedSubjectId,
       orElse: () => {'name': 'Mata Pelajaran'},
     );
@@ -2820,7 +2820,7 @@ class _GenerateLessonPlanFormDialogState extends ConsumerState<GenerateLessonPla
         ? (schoolObj['school_name'] ?? schoolObj['nama_sekolah'] ?? 'SD/MI')
         : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
 
-    final selectedSubject = _mataPelajaranList.firstWhere(
+    final selectedSubject = _subjectList.firstWhere(
       (m) => m['id'].toString() == _selectedSubjectId,
       orElse: () => {'name': 'Mata Pelajaran'},
     );
@@ -3131,7 +3131,7 @@ class _GenerateLessonPlanFormDialogState extends ConsumerState<GenerateLessonPla
                       value: _selectedSubjectId,
                       label: '${AppLocalizations.subject.tr} *',
                       icon: Icons.book_outlined,
-                      items: _mataPelajaranList.map((mp) {
+                      items: _subjectList.map((mp) {
                         return DropdownMenuItem(
                           value: mp['id'],
                           child: Text(
