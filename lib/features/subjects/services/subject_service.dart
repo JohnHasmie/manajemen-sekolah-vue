@@ -455,6 +455,31 @@ class ApiSubjectService {
     return _aiDioInstance!;
   }
 
+  /// Generate a lesson plan via kamiledu-ai backend.
+  /// POST /lesson-plans/generate
+  /// Returns the generated lesson plan data (sync 201) or job info (async 202).
+  Future<dynamic> generateLessonPlanViaAI({
+    required String teacherId,
+    required String subjectId,
+    required String classId,
+    required String chapterId,
+    String? subChapterId,
+    String? timeAllocation,
+  }) async {
+    final response = await _aiDio.post(
+      '/lesson-plans/generate',
+      data: {
+        'teacher_id': teacherId,
+        'subject_id': subjectId,
+        'class_id': classId,
+        'chapter_id': chapterId,
+        if (subChapterId != null) 'sub_chapter_id': subChapterId,
+        if (timeAllocation != null) 'time_allocation': timeAllocation,
+      },
+    );
+    return response.data;
+  }
+
   /// Returns a raw Dio Response so callers can inspect statusCode (202, 429, etc.).
   Future<Response<dynamic>> generateMaterialRaw(
       Map<String, dynamic> data) async {

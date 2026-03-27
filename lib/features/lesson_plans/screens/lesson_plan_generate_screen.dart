@@ -7,13 +7,13 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/features/lesson_plans/screens/lesson_plan_detail_screen.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
-import 'package:manajemensekolah/features/lesson_plans/services/ai_lesson_plan_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Pre-generation form for AI RPP creation.
@@ -142,7 +142,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
       // Get content from checked sub-chapters
       for (var subChapter in widget.checkedSubChapters) {
         setState(() {
-          _statusMessage = 'Mengambil konten sub bab...';
+          _statusMessage = languageProvider.getTranslatedText({'en': 'Fetching sub-chapter content...', 'id': 'Mengambil konten sub bab...'});
         });
 
         final content = await getIt<ApiSubjectService>().getContentMaterials(
@@ -164,7 +164,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
       // Get content from checked chapters (all sub-chapters within the chapter)
       for (var chapter in widget.checkedChapters) {
         setState(() {
-          _statusMessage = 'Mengambil konten bab...';
+          _statusMessage = languageProvider.getTranslatedText({'en': 'Fetching chapter content...', 'id': 'Mengambil konten bab...'});
         });
 
         final subChapters = await getIt<ApiSubjectService>().getSubChapterMaterials(
@@ -191,24 +191,44 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
       }
 
       setState(() {
-        _statusMessage = 'Generate RPP dengan AI...';
+        _statusMessage = languageProvider.getTranslatedText({'en': 'Generating lesson plan with AI...', 'id': 'Generate RPP dengan AI...'});
         _progress = 0.8;
       });
 
-      // Generate RPP using AI service
-      final LessonPlanService lessonPlanService = LessonPlanService();
-      final generatedRPP = await lessonPlanService.generateLessonPlan(
-        title: _titleController.text,
+      // Generate lesson plan via kamiledu-ai backend
+      // POST https://edu-ai-api.kamillabs.com/api/lesson-plans/generate
+      final teacherId = widget.teacher['teacher_id'] ?? widget.teacher['id'];
+      final classId = widget.checkedChapters.isNotEmpty
+          ? widget.checkedChapters.first['class_id']
+          : widget.checkedSubChapters.isNotEmpty
+              ? widget.checkedSubChapters.first['class_id']
+              : null;
+      final chapterId = widget.checkedChapters.isNotEmpty
+          ? widget.checkedChapters.first['id']
+          : widget.checkedSubChapters.isNotEmpty
+              ? widget.checkedSubChapters.first['chapter_id']
+              : null;
+      final subChapterId = widget.checkedSubChapters.isNotEmpty
+          ? widget.checkedSubChapters.first['id']
+          : null;
+
+      final response = await getIt<ApiSubjectService>().generateLessonPlanViaAI(
+        teacherId: teacherId.toString(),
         subjectId: widget.selectedSubjectId,
-        subjectName: widget.subjectName,
-        materialContent: allMaterialContent,
-        learningObjectives: _objectivesChecked ? _objectivesController.text : '',
-        toolsMedia: _mediaChecked ? _toolsMediaController.text : '',
+        classId: classId?.toString() ?? '',
+        chapterId: chapterId?.toString() ?? '',
+        subChapterId: subChapterId?.toString(),
+        timeAllocation: null,
       );
+
+      // Handle async (202 polling) or sync (201 direct) response
+      final generatedRPP = response is Map<String, dynamic>
+          ? response['data'] ?? response
+          : response;
 
       setState(() {
         _progress = 1.0;
-        _statusMessage = 'RPP berhasil digenerate!';
+        _statusMessage = languageProvider.getTranslatedText({'en': 'Lesson plan generated!', 'id': 'RPP berhasil digenerate!'});
       });
 
       // Navigate ke halaman detail RPP
