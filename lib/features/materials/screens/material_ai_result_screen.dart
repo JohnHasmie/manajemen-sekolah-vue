@@ -79,7 +79,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
     // Show AI polling view immediately (not blue LoadingScreen)
     _isPolling = true;
     _pollingStatus = 'AI sedang memproses materi (percobaan 1)...';
-    _generateMateri();
+    _generateMaterial();
   }
 
   @override
@@ -126,7 +126,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
   /// Like calling `axios.post('/api/ai/generate-material')` then polling
   /// the job status endpoint. Similar to dispatching a Laravel Queue job
   /// and checking `Job::find($id)->status` periodically.
-  Future<void> _generateMateri({String prompt = ''}) async {
+  Future<void> _generateMaterial({String prompt = ''}) async {
     setState(() {
       if (_aiData != null) {
         _isRegenerating = true;
@@ -502,7 +502,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
             ElevatedButton(
               onPressed: () {
                 AppNavigator.pop(context);
-                _generateMateri(prompt: _promptController.text);
+                _generateMaterial(prompt: _promptController.text);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: _getPrimaryColor(),
@@ -846,7 +846,7 @@ class MateriAiResultScreenState extends State<MateriAiResultScreen>
             ),
             SizedBox(height: AppSpacing.xxl),
             ElevatedButton.icon(
-              onPressed: () => _generateMateri(),
+              onPressed: () => _generateMaterial(),
               icon: Icon(Icons.refresh),
               label: Text('Coba Lagi'),
               style: ElevatedButton.styleFrom(

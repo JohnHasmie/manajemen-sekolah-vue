@@ -12,7 +12,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 ///
 /// Like a Vue `<ConfirmDialog>` component, or using SweetAlert2 in a Laravel app:
 /// ```js
-/// Swal.fire({ title: 'Delete?', confirmButtonText: 'Hapus' })
+/// Swal.fire({ title: 'Delete?', confirmButtonText: 'Delete' })
 /// ```
 ///
 /// Props (parameters):
@@ -48,7 +48,7 @@ class ConfirmationDialog extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header dengan gradient
+          // Header with gradient
           Container(
             width: double.infinity,
             padding: EdgeInsets.all(AppSpacing.xl),

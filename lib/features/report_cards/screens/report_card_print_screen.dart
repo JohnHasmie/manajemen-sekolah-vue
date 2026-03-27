@@ -13,15 +13,15 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Print preview for a student's report card.
 ///
 /// StatelessWidget -- like a Vue presentational component with only props.
-/// Props (like Vue props): [raportData], [studentName], [className].
+/// Props (like Vue props): [reportCardData], [studentName], [className].
 class RaportPrintScreen extends StatelessWidget {
-  final Map<String, dynamic> raportData;
+  final Map<String, dynamic> reportCardData;
   final String studentName;
   final String className;
 
   const RaportPrintScreen({
     super.key,
-    required this.raportData,
+    required this.reportCardData,
     required this.studentName,
     required this.className,
   });
@@ -141,7 +141,7 @@ class RaportPrintScreen extends StatelessWidget {
                       const SizedBox(height: AppSpacing.xxl),
                       _buildSikapSection(),
                       const SizedBox(height: AppSpacing.lg),
-                      _buildNilaiSection(),
+                      _buildGradeSection(),
                       const SizedBox(height: AppSpacing.lg),
                       _buildEkstraSection(),
                       const SizedBox(height: AppSpacing.lg),
@@ -254,8 +254,8 @@ class RaportPrintScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Predikat: ${raportData['spiritual_predicate'] ?? '-'}'),
-              Text('Deskripsi: ${raportData['spiritual_description'] ?? '-'}'),
+              Text('Predikat: ${reportCardData['spiritual_predicate'] ?? '-'}'),
+              Text('Deskripsi: ${reportCardData['spiritual_description'] ?? '-'}'),
             ],
           ),
         ),
@@ -269,8 +269,8 @@ class RaportPrintScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Predikat: ${raportData['social_predicate'] ?? '-'}'),
-              Text('Deskripsi: ${raportData['social_description'] ?? '-'}'),
+              Text('Predikat: ${reportCardData['social_predicate'] ?? '-'}'),
+              Text('Deskripsi: ${reportCardData['social_description'] ?? '-'}'),
             ],
           ),
         ),
@@ -278,8 +278,8 @@ class RaportPrintScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNilaiSection() {
-    final List<dynamic> subjects = raportData['raport_subjects'] ?? [];
+  Widget _buildGradeSection() {
+    final List<dynamic> subjects = reportCardData['raport_subjects'] ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -337,7 +337,7 @@ class RaportPrintScreen extends StatelessWidget {
   }
 
   Widget _buildEkstraSection() {
-    final List<dynamic> extras = raportData['extracurriculars'] ?? [];
+    final List<dynamic> extras = reportCardData['extracurriculars'] ?? [];
     if (extras.isEmpty) return const SizedBox();
 
     return Column(
@@ -378,7 +378,7 @@ class RaportPrintScreen extends StatelessWidget {
   }
 
   Widget _buildPrestasiSection() {
-    final List<dynamic> achievements = raportData['achievements'] ?? [];
+    final List<dynamic> achievements = reportCardData['achievements'] ?? [];
     if (achievements.isEmpty) return const SizedBox();
 
     return Column(
@@ -437,15 +437,15 @@ class RaportPrintScreen extends StatelessWidget {
                       children: [
                         _buildHeaderRow(
                           'Sakit',
-                          '${raportData['attendance_sick'] ?? 0} hari',
+                          '${reportCardData['attendance_sick'] ?? 0} hari',
                         ),
                         _buildHeaderRow(
                           'Izin',
-                          '${raportData['attendance_permit'] ?? 0} hari',
+                          '${reportCardData['attendance_permit'] ?? 0} hari',
                         ),
                         _buildHeaderRow(
                           'Tanpa Keterangan',
-                          '${raportData['attendance_absent'] ?? 0} hari',
+                          '${reportCardData['attendance_absent'] ?? 0} hari',
                         ),
                       ],
                     ),
@@ -466,7 +466,7 @@ class RaportPrintScreen extends StatelessWidget {
                       border: Border.all(color: Colors.black87),
                     ),
                     padding: const EdgeInsets.all(AppSpacing.sm),
-                    child: Text(raportData['homeroom_notes'] ?? ''),
+                    child: Text(reportCardData['homeroom_notes'] ?? ''),
                   ),
                 ],
               ),
@@ -474,8 +474,8 @@ class RaportPrintScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
-        if (raportData['promotion_decision'] != null &&
-            raportData['promotion_decision'].toString().isNotEmpty)
+        if (reportCardData['promotion_decision'] != null &&
+            reportCardData['promotion_decision'].toString().isNotEmpty)
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -486,7 +486,7 @@ class RaportPrintScreen extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 child: Text(
-                  'Berdasarkan pencapaian seluruh kompetensi, peserta didik dinyatakan: ${raportData['promotion_decision']}',
+                  'Berdasarkan pencapaian seluruh kompetensi, peserta didik dinyatakan: ${reportCardData['promotion_decision']}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),

@@ -21,8 +21,8 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// A bottom sheet form for creating or editing a schedule entry.
 ///
 /// Like a Vue `<ScheduleFormDialog>` with many props and cascading logic:
-/// - [teacherList], [subjectList], [classList], [hariList], [semesterList],
-///   [jamPelajaranList], [academicYearList] - dropdown data from the parent
+/// - [teacherList], [subjectList], [classList], [dayList], [semesterList],
+///   [lessonHourList], [academicYearList] - dropdown data from the parent
 /// - [semester] / [academicYear] - currently selected filters
 /// - [schedule] - existing schedule for edit mode (null = create mode)
 /// - [apiService] / [apiTeacherService] - API services for fetching related data
@@ -37,9 +37,9 @@ class ScheduleFormDialog extends ConsumerStatefulWidget {
   final List<dynamic> teacherList;
   final List<dynamic> subjectList;
   final List<dynamic> classList;
-  final List<dynamic> hariList;
+  final List<dynamic> dayList;
   final List<dynamic> semesterList;
-  final List<dynamic> jamPelajaranList;
+  final List<dynamic> lessonHourList;
   final List<dynamic> academicYearList; // New: List of AC
   final String semester;
   final String academicYear;
@@ -52,9 +52,9 @@ class ScheduleFormDialog extends ConsumerStatefulWidget {
     required this.teacherList,
     required this.subjectList,
     required this.classList,
-    required this.hariList,
+    required this.dayList,
     required this.semesterList,
-    required this.jamPelajaranList,
+    required this.lessonHourList,
     required this.semester,
     required this.academicYear,
     this.academicYearList =
@@ -84,7 +84,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
   late String _selectedJamPelajaran;
 
   List<dynamic> _filteredSubjectList = [];
-  List<dynamic> _availableJamPelajaranList = [];
+  List<dynamic> _availableLessonHourList = [];
   List<dynamic> _occupiedSlots = [];
   bool _isLoadingSubjects = false;
   bool _isLoadingJamPelajaran = false;
@@ -103,7 +103,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
       await getIt<ApiSettingsService>().getLessonHourSettings();
       if (mounted) {
         // Re-filter if we already have potential candidates
-        if (_availableJamPelajaranList.isNotEmpty &&
+        if (_availableLessonHourList.isNotEmpty &&
             _selectedDayIds.isNotEmpty) {
           _filterAvailableJamPelajaran();
         }
@@ -114,7 +114,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
   }
 
   Color _getPrimaryColor() {
-    return ColorUtils.blue600; // Blue untuk admin
+    return ColorUtils.blue600; // Blue for admin
   }
 
   void _initializeForm() {
@@ -127,7 +127,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
     _selectedJamPelajaran = '';
 
     _filteredSubjectList = widget.subjectList;
-    _availableJamPelajaranList = [];
+    _availableLessonHourList = [];
 
     if (widget.schedule != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -135,9 +135,9 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
       });
     }
 
-    if (widget.hariList.isNotEmpty && _selectedDayIds.isEmpty) {
+    if (widget.dayList.isNotEmpty && _selectedDayIds.isEmpty) {
       // Default to first day if none selected (optional, or leave empty)
-      // _selectedDayIds = [widget.hariList.first['id']?.toString() ?? ''];
+      // _selectedDayIds = [widget.dayList.first['id']?.toString() ?? ''];
     }
   }
 
@@ -204,9 +204,9 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
     try {
       final response = await getIt<ApiScheduleService>().getSchedulesPaginated(
         classId: _selectedClass,
-        hariId: _selectedDayIds.first,
+        dayId: _selectedDayIds.first,
         semesterId: _selectedSemester,
-        tahunAjaran: _selectedAcademicYear,
+        academicYearId: _selectedAcademicYear,
         limit: 100, // Ensure we get all slots
       );
 
@@ -269,7 +269,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
         }
         if (kDebugMode) {
           print(
-            'DEBUG: _availableJamPelajaranList from backend: $_availableJamPelajaranList',
+            'DEBUG: _availableLessonHourList from backend: $_availableLessonHourList',
           );
         }
 
@@ -297,7 +297,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
     try {
       if (_selectedDayIds.isEmpty) {
         setState(() {
-          _availableJamPelajaranList = widget.jamPelajaranList;
+          _availableLessonHourList = widget.lessonHourList;
           _isLoadingJamPelajaran = false;
         });
         return;
@@ -306,7 +306,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
       final selectedDayId = _selectedDayIds.first;
 
       // Filter by day_id directly since backend now populates it
-      final filtered = widget.jamPelajaranList.where((jam) {
+      final filtered = widget.lessonHourList.where((jam) {
         final jamDayId =
             jam['day_id']?.toString() ?? jam['hari_id']?.toString();
         return jamDayId == selectedDayId;
@@ -320,7 +320,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
       });
 
       setState(() {
-        _availableJamPelajaranList = filtered;
+        _availableLessonHourList = filtered;
         _isLoadingJamPelajaran = false;
 
         // Reset selected jam if it's no longer valid
@@ -338,7 +338,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
     } catch (e) {
       if (kDebugMode) print('Error filtering jam pelajaran: $e');
       setState(() {
-        _availableJamPelajaranList = widget.jamPelajaranList;
+        _availableLessonHourList = widget.lessonHourList;
         _isLoadingJamPelajaran = false;
       });
     }
@@ -404,10 +404,10 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
     final languageProvider = ref.watch(languageRiverpod);
         final uniqueTeacherList = _removeDuplicates(widget.teacherList, 'id');
         final uniqueClassList = _removeDuplicates(widget.classList, 'id');
-        final uniqueHariList = _removeDuplicates(widget.hariList, 'id');
+        final uniqueDayList = _removeDuplicates(widget.dayList, 'id');
         final uniqueSemesterList = _removeDuplicates(widget.semesterList, 'id');
         final uniqueJamPelajaranList = _removeDuplicates(
-          _availableJamPelajaranList,
+          _availableLessonHourList,
           'id',
         );
         final uniqueSubjectList = _removeDuplicates(_filteredSubjectList, 'id');
@@ -558,7 +558,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                             ),
                             const SizedBox(height: AppSpacing.md),
                             _buildDayMultiSelect(
-                              uniqueHariList,
+                              uniqueDayList,
                               languageProvider,
                             ),
                             const SizedBox(height: AppSpacing.md),

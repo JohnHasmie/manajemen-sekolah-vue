@@ -343,7 +343,7 @@ class LoginScreenState extends State<LoginScreen> {
       AppLogger.debug('login', 'Google User: ${googleUser.email}');
       AppLogger.info('login', 'Google ID Token: ${idToken.isNotEmpty ? "Present (${idToken.length} chars)" : "Missing"}',);
 
-      // 2. Send to Backend — kirim id_token untuk verifikasi server-side
+      // 2. Send to Backend — send id_token for server-side verification
       final responseData = await ApiService.googleLogin(
         email: googleUser.email,
         displayName: googleUser.displayName,
@@ -411,17 +411,17 @@ class LoginScreenState extends State<LoginScreen> {
     try {
       Map<String, dynamic> responseData;
       if (_otpCode != null) {
-        // Jika login pakai OTP (Email), gunakan verifyOtp
+        // If login uses OTP (Email), use verifyOtp
         responseData = await ApiService.verifyOtp(
           emailController.text.trim(),
           _otpCode!,
           schoolId: schoolId,
         );
       } else if (await ApiService.getToken() != null) {
-        // Jika sudah ada token (misal dari Google Login), gunakan switchSchool
+        // If token already exists (e.g. from Google Login), use switchSchool
         responseData = await ApiService.switchSchool(schoolId);
       } else {
-        // Fallback (misal Password biasa atau debug)
+        // Fallback (e.g. regular password or debug)
         responseData = await ApiService.login(
           emailController.text.trim(),
           passwordController.text,
@@ -439,7 +439,7 @@ class LoginScreenState extends State<LoginScreen> {
 
       setState(() {
         _isLoading = false;
-        // Jangan reset _showSchoolSelection agar user bisa memilih sekolah lain
+        // Don't reset _showSchoolSelection so user can select a different school
       });
     }
   }
@@ -488,7 +488,7 @@ class LoginScreenState extends State<LoginScreen> {
 
       setState(() {
         _isLoading = false;
-        // Jangan reset _showRoleSelection agar user bisa memilih role lain
+        // Don't reset _showRoleSelection so user can select a different role
       });
     }
   }
@@ -543,7 +543,7 @@ class LoginScreenState extends State<LoginScreen> {
             onPressed: () {
               setState(() {
                 _showRoleSelection = false;
-                _showSchoolSelection = true; // Kembali ke pemilihan sekolah
+                _showSchoolSelection = true; // Return to school selection
                 _isLoading = false;
               });
             },
@@ -554,7 +554,7 @@ class LoginScreenState extends State<LoginScreen> {
             onPressed: () {
               setState(() {
                 _showRoleSelection = false;
-                _showSchoolSelection = false; // Kembali ke login
+                _showSchoolSelection = false; // Return to login
                 _isLoading = false;
               });
             },
@@ -951,10 +951,10 @@ class LoginScreenState extends State<LoginScreen> {
       throw Exception('Data user tidak ditemukan dalam response server');
     }
 
-    // Simpan data login
+    // Save login data
     await _saveLoginData(responseData);
 
-    // Validasi role sebelum navigasi
+    // Validate role before navigation
     final String userRole = responseData['user']['role']?.toString() ?? '';
     if (userRole.isEmpty) {
       throw Exception('Role user tidak ditemukan');
@@ -962,7 +962,7 @@ class LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
 
-    // Navigate berdasarkan role
+    // Navigate based on role
     AppNavigator.pushReplacementNamed(context, '/$userRole');
   }
 

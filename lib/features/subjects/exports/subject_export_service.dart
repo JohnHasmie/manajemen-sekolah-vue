@@ -32,7 +32,7 @@ class ExcelSubjectService {
     
 
     try {
-      // Validasi data terlebih dahulu
+      // Validate data first
       final validatedData = validateSubjectData(subjects);
 
       final response = await dioClient.post<List<int>>(
@@ -41,16 +41,16 @@ class ExcelSubjectService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      // Get directory untuk menyimpan file
+      // Get directory to save the file
       final Directory directory = await getApplicationDocumentsDirectory();
       final String filePath =
           '${directory.path}/Data_Mata_Pelajaran_${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-      // Simpan file yang didownload
+      // Save the downloaded file
       final File file = File(filePath);
       await file.writeAsBytes(response.data ?? []);
 
-      // Buka file
+      // Open file
       await OpenFile.open(filePath);
 
             SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
@@ -75,16 +75,16 @@ class ExcelSubjectService {
         options: Options(responseType: ResponseType.bytes),
       );
 
-      // Get directory untuk menyimpan file
+      // Get directory to save the file
       final Directory directory = await getApplicationDocumentsDirectory();
       final String filePath =
           '${directory.path}/Template_Import_Mata_Pelajaran.xlsx';
 
-      // Simpan file yang didownload
+      // Save the downloaded file
       final File file = File(filePath);
       await file.writeAsBytes(response.data ?? []);
 
-      // Buka file
+      // Open file
       await OpenFile.open(filePath);
 
             SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
@@ -139,7 +139,7 @@ class ExcelSubjectService {
         validatedSubject['id'] = subject['id'];
       }
 
-      // Validasi field required
+      // Validate required fields
       final code = subject['code'] ?? subject['kode'];
       if (code == null || code.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Kode mata pelajaran tidak boleh kosong');
@@ -180,9 +180,9 @@ class ExcelSubjectService {
       return subject['class_names'];
     }
 
-    final kelasList = subject['class_list'] ?? subject['classes'] ?? [];
-    if (kelasList is List) {
-      return kelasList.map((kelas) => kelas['name'] ?? '').join(', ');
+    final classList = subject['class_list'] ?? subject['classes'] ?? [];
+    if (classList is List) {
+      return classList.map((classItem) => classItem['name'] ?? '').join(', ');
     }
 
     return '';

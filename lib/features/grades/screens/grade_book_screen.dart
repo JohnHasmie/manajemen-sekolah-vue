@@ -72,16 +72,16 @@ class GradeBookPage extends ConsumerStatefulWidget {
 /// State for [GradeBookPage] -- holds the grade data and editing state.
 ///
 /// Key state variables (like Vue `data()`):
-/// - [_siswaList] / [_filteredSiswaList] -- student list (all and filtered)
-/// - [_nilaiList] -- raw grade records from the API
+/// - [_studentList] / [_filteredStudentList] -- student list (all and filtered)
+/// - [_gradeList] -- raw grade records from the API
 /// - [_assessmentHeaders] -- column headers organized by grade type
 /// - [_isEditMode] -- whether inline editing is active
-/// - [_jenisNilaiFilter] -- which grade types are visible (like Vue checkbox filters)
+/// - [_gradeTypeFilter] -- which grade types are visible (like Vue checkbox filters)
 class GradeBookPageState extends ConsumerState<GradeBookPage> {
-  List<Student> _siswaList = [];
-  List<Student> _filteredSiswaList = [];
-  List<Map<String, dynamic>> _nilaiList = [];
-  final List<String> _allJenisNilaiList = [
+  List<Student> _studentList = [];
+  List<Student> _filteredStudentList = [];
+  List<Map<String, dynamic>> _gradeList = [];
+  final List<String> _allGradeTypeList = [
     'uh',
     'tugas',
     'uts',
@@ -89,12 +89,12 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     'pts',
     'pas',
   ];
-  List<String> _filteredJenisNilaiList = [];
+  List<String> _filteredGradeTypeList = [];
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
 
   // Filter state
-  final Map<String, bool> _jenisNilaiFilter = {
+  final Map<String, bool> _gradeTypeFilter = {
     'uh': true,
     'tugas': true,
     'uts': true,
@@ -104,16 +104,16 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   };
 
   // Map to store unique assessments for each grade type
-  // Key: jenis (e.g., 'harian'), Value: List of assessment headers
+  // Key: type (e.g., 'harian'), Value: List of assessment headers
   // Each header: { 'id': String?, 'date': String, 'title': String?, 'is_temp': bool }
   Map<String, List<Map<String, dynamic>>> _assessmentHeaders = {};
 
-  // Scroll controller untuk sinkronisasi scroll horizontal
+  // Scroll controller for horizontal scroll synchronization
   final ScrollController _horizontalScrollController = ScrollController();
 
   // Edit Mode State
   bool _isEditMode = false;
-  String? _editJenis;
+  String? _editGradeType;
   // Map to store controllers: key = "siswaId_field" (e.g. "123_nilai", "123_deskripsi")
   final Map<String, TextEditingController> _editControllers = {};
   final Map<String, FocusNode> _editFocusNodes = {};
@@ -144,8 +144,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   void initState() {
     super.initState();
     _loadData();
-    _updateFilteredJenisNilai();
-    _searchController.addListener(_filterSiswa);
+    _updateFilteredGradeTypes();
+    _searchController.addListener(_filterStudents);
   }
 
   /// Like Vue's `beforeUnmount()` -- disposes all controllers and focus nodes.
@@ -164,17 +164,17 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
   /// Filters student list by search query. Like a Vue `computed` that filters
   /// an array, or `watch` on a search input that filters `this.students`.
-  void _filterSiswa() {
+  void _filterStudents() {
     final query = _searchController.text.toLowerCase();
     setState(() {
       if (query.isEmpty) {
-        _filteredSiswaList = List.from(_siswaList);
+        _filteredStudentList = List.from(_studentList);
       } else {
-        _filteredSiswaList = _siswaList
+        _filteredStudentList = _studentList
             .where(
-              (siswa) =>
-                  siswa.name.toLowerCase().contains(query) ||
-                  siswa.studentNumber.toLowerCase().contains(query),
+              (student) =>
+                  student.name.toLowerCase().contains(query) ||
+                  student.studentNumber.toLowerCase().contains(query),
             )
             .toList();
       }
@@ -185,19 +185,19 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   /// Processes raw API data into structured grade records per student.
   /// Like a Vue `computed` or `watch` that transforms API response into
   /// a table-friendly format. Maps student data with their grades.
-  void _processAndApplyGradeData(List<dynamic> siswaData, List<dynamic> rawNilaiItems) {
-    _siswaList = siswaData.map((s) => Student.fromJson(s)).toList();
-    _filteredSiswaList = List.from(_siswaList);
+  void _processAndApplyGradeData(List<dynamic> studentData, List<dynamic> rawGradeItems) {
+    _studentList = studentData.map((s) => Student.fromJson(s)).toList();
+    _filteredStudentList = List.from(_studentList);
 
-    final currentStudentIds = _siswaList.map((s) => s.id.toString()).toSet();
-    final currentStudentClassIds = _siswaList
+    final currentStudentIds = _studentList.map((s) => s.id.toString()).toSet();
+    final currentStudentClassIds = _studentList
         .map((s) => s.studentClassId?.toString())
         .where((id) => id != null)
         .cast<String>()
         .toSet();
 
     // Filter and map grades to internal legacy format
-    _nilaiList = rawNilaiItems
+    _gradeList = rawGradeItems
         .where((item) {
           final studentId =
               (item['student_id'] ??
@@ -244,22 +244,22 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     // Process unique assessments for headers
     _assessmentHeaders = {};
 
-    for (var nilai in _nilaiList) {
-      final jenis = nilai['jenis']?.toString().toLowerCase();
-      if (jenis == null || !_allJenisNilaiList.contains(jenis)) continue;
+    for (var gradeItem in _gradeList) {
+      final type = gradeItem['jenis']?.toString().toLowerCase();
+      if (type == null || !_allGradeTypeList.contains(type)) continue;
 
-      String? rawDate = nilai['tanggal'];
+      String? rawDate = gradeItem['tanggal'];
       if (rawDate != null) {
         final datePart = rawDate.split('T')[0];
-        final assessmentId = nilai['assessment_id'];
-        final title = (nilai['title'] ?? '').toString().trim();
+        final assessmentId = gradeItem['assessment_id'];
+        final title = (gradeItem['title'] ?? '').toString().trim();
 
-        if (!_assessmentHeaders.containsKey(jenis)) {
-          _assessmentHeaders[jenis] = [];
+        if (!_assessmentHeaders.containsKey(type)) {
+          _assessmentHeaders[type] = [];
         }
 
         // Check if header already exists
-        final existingIndex = _assessmentHeaders[jenis]!.indexWhere((h) {
+        final existingIndex = _assessmentHeaders[type]!.indexWhere((h) {
           final headerId = h['id']?.toString();
           final currentAssessmentId = assessmentId?.toString();
 
@@ -274,7 +274,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         });
 
         if (existingIndex == -1) {
-          _assessmentHeaders[jenis]!.add({
+          _assessmentHeaders[type]!.add({
             'id': assessmentId,
             'date': datePart,
             'title': title,
@@ -313,13 +313,13 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           );
           if (cached != null && mounted) {
             final cachedData = Map<String, dynamic>.from(cached);
-            final siswaData = List<dynamic>.from(cachedData['siswaData'] ?? []);
+            final studentData = List<dynamic>.from(cachedData['studentData'] ?? []);
             final nilaiItems = List<dynamic>.from(cachedData['nilaiItems'] ?? []);
-            if (siswaData.isNotEmpty) {
+            if (studentData.isNotEmpty) {
               setState(() {
-                _processAndApplyGradeData(siswaData, nilaiItems);
+                _processAndApplyGradeData(studentData, nilaiItems);
               });
-              _filterSiswa();
+              _filterStudents();
               // Trigger tour
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) _checkAndShowTour();
@@ -334,17 +334,17 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       }
 
       // Show skeleton only if no data yet
-      if (_siswaList.isEmpty && mounted) {
+      if (_studentList.isEmpty && mounted) {
         if (showLoading) setState(() => _isLoading = true);
       }
 
       // ─── Step 2: No cache — fetch fresh from API ───
-      // 1. Load siswa berdasarkan kelas
-      final siswaData = await getIt<ApiStudentService>().getStudentByClass(
+      // 1. Load students by class
+      final studentData = await getIt<ApiStudentService>().getStudentByClass(
         widget.classData['id'],
       );
 
-      // 2. Load nilai yang sudah ada
+      // 2. Load existing grades
       final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id'];
 
       final subjectId = widget.subject['id'];
@@ -356,27 +356,27 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       final response = await ApiService().get(url);
 
       // Handle paginated response (Map with 'data' key) or direct List
-      List<dynamic> rawNilaiItems = [];
+      List<dynamic> rawGradeItems = [];
       if (response is Map<String, dynamic> && response.containsKey('data')) {
-        rawNilaiItems = response['data'] as List<dynamic>;
+        rawGradeItems = response['data'] as List<dynamic>;
       } else if (response is List) {
-        rawNilaiItems = response;
+        rawGradeItems = response;
       }
 
-      AppLogger.debug('grades', 'DEBUG: Received ${rawNilaiItems.length} grade items');
+      AppLogger.debug('grades', 'DEBUG: Received ${rawGradeItems.length} grade items');
 
       if (!mounted) return;
 
       setState(() {
-        _processAndApplyGradeData(siswaData, rawNilaiItems);
+        _processAndApplyGradeData(studentData, rawGradeItems);
       });
-      _filterSiswa();
+      _filterStudents();
 
       // ─── Step 3: Save to cache ───
       final cacheKey = _buildGradeCacheKey();
       LocalCacheService.save(cacheKey, {
-        'siswaData': siswaData,
-        'nilaiItems': rawNilaiItems,
+        'studentData': studentData,
+        'nilaiItems': rawGradeItems,
       });
 
       // Trigger tour
@@ -388,7 +388,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     } catch (e) {
       AppLogger.error('grades', e);
       if (!mounted) return;
-      if (_siswaList.isEmpty) {
+      if (_studentList.isEmpty) {
         setState(() => _isLoading = false);
       }
       _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
@@ -410,10 +410,10 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     }
   }
 
-  void _updateFilteredJenisNilai() {
+  void _updateFilteredGradeTypes() {
     setState(() {
-      _filteredJenisNilaiList = _allJenisNilaiList
-          .where((jenis) => _jenisNilaiFilter[jenis] == true)
+      _filteredGradeTypeList = _allGradeTypeList
+          .where((type) => _gradeTypeFilter[type] == true)
           .toList();
     });
   }
@@ -479,11 +479,11 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     TextButton(
                       onPressed: () {
                         setSheetState(() {
-                          for (var key in _jenisNilaiFilter.keys) {
-                            _jenisNilaiFilter[key] = true;
+                          for (var key in _gradeTypeFilter.keys) {
+                            _gradeTypeFilter[key] = true;
                           }
                         });
-                        setState(() => _updateFilteredJenisNilai());
+                        setState(() => _updateFilteredGradeTypes());
                       },
                       child: Text(
                         'Reset',
@@ -501,25 +501,25 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                 child: SingleChildScrollView(
                   padding: EdgeInsets.all(AppSpacing.xl),
                   child: Column(
-                    children: _allJenisNilaiList.map((jenis) {
+                    children: _allGradeTypeList.map((type) {
                       return CheckboxListTile(
                         title: Text(
-                          _getJenisNilaiLabel(jenis, languageProvider),
+                          _getGradeTypeLabel(type, languageProvider),
                           style: TextStyle(
                             color: ColorUtils.slate800,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        value: _jenisNilaiFilter[jenis],
+                        value: _gradeTypeFilter[type],
                         activeColor: _getPrimaryColor(),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                         onChanged: (bool? value) {
                           setSheetState(() {
-                            _jenisNilaiFilter[jenis] = value ?? false;
+                            _gradeTypeFilter[type] = value ?? false;
                           });
-                          setState(() => _updateFilteredJenisNilai());
+                          setState(() => _updateFilteredGradeTypes());
                         },
                       );
                     }).toList(),
@@ -563,34 +563,34 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     );
   }
 
-  Map<String, dynamic>? _getNilaiForSiswaAndHeader(
+  Map<String, dynamic>? _getGradeForStudentAndHeader(
     Student student,
-    String jenis,
+    String type,
     Map<String, dynamic> header,
   ) {
     try {
-      final siswaId = student.id.toString();
+      final studentId = student.id.toString();
       final studentClassId = student.studentClassId?.toString();
 
-      final result = _nilaiList.firstWhere((nilai) {
-        final gradeSiswaId = nilai['siswa_id']?.toString();
-        final gradeStudentClassId = nilai['student_class_id']?.toString();
+      final result = _gradeList.firstWhere((gradeItem) {
+        final gradeStudentId = gradeItem['siswa_id']?.toString();
+        final gradeStudentClassId = gradeItem['student_class_id']?.toString();
 
         // 1. Match Student: Try direct ID match or student_class_id match
-        bool studentMatch = (gradeSiswaId == siswaId);
+        bool studentMatch = (gradeStudentId == studentId);
 
         if (!studentMatch &&
             (studentClassId != null || gradeStudentClassId != null)) {
           studentMatch =
               (gradeStudentClassId == studentClassId) ||
-              (gradeSiswaId == studentClassId);
+              (gradeStudentId == studentClassId);
         }
 
         if (!studentMatch) return false;
 
         // 2. Match Header (Assessment)
         final headerId = header['id']?.toString();
-        final currentAssessmentId = nilai['assessment_id']?.toString();
+        final currentAssessmentId = gradeItem['assessment_id']?.toString();
 
         if (headerId != null && currentAssessmentId != null) {
           if (headerId != currentAssessmentId) return false;
@@ -600,13 +600,13 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           return false;
         }
 
-        final nilaiDate = nilai['tanggal']?.toString().split('T')[0];
-        final nilaiJenis = nilai['jenis']?.toString().toLowerCase();
+        final nilaiDate = gradeItem['tanggal']?.toString().split('T')[0];
+        final nilaiJenis = gradeItem['jenis']?.toString().toLowerCase();
 
-        final nTitle = (nilai['title'] ?? '').toString().trim();
+        final nTitle = (gradeItem['title'] ?? '').toString().trim();
         final hTitle = (header['title'] ?? '').toString().trim();
 
-        return (nilaiJenis == jenis.toLowerCase() &&
+        return (nilaiJenis == type.toLowerCase() &&
             nilaiDate == header['date'] &&
             nTitle == hTitle);
       }, orElse: () => <String, dynamic>{});
@@ -619,20 +619,20 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
   void _openInputForm(
     Student student,
-    String jenisNilai,
+    String gradeType,
     LanguageProvider languageProvider, {
     Map<String, dynamic>? header,
   }) {
-    final existingNilai = header != null
-        ? _getNilaiForSiswaAndHeader(student, jenisNilai, header)
+    final existingGrade = header != null
+        ? _getGradeForStudentAndHeader(student, gradeType, header)
         : null;
 
     AppNavigator.push(context, GradeInputForm(
           teacher: widget.teacher,
           subject: widget.subject,
-          siswa: student,
-          jenisNilai: jenisNilai,
-          existingNilai: existingNilai,
+          student: student,
+          gradeType: gradeType,
+          existingGrade: existingGrade,
           assessmentId: header?['id'], // Pass assessment ID
           initialDate: header != null ? DateTime.parse(header['date']) : null,
           initialTitle: header?['title'],
@@ -642,7 +642,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   void _showColumnOptions(
-    String jenis,
+    String type,
     Map<String, dynamic> header,
     LanguageProvider languageProvider,
   ) {
@@ -695,7 +695,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                       SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          "${_getJenisNilaiLabel(jenis, languageProvider)} - $displayTitle",
+                          "${_getGradeTypeLabel(type, languageProvider)} - $displayTitle",
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -733,7 +733,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                   ),
                   onTap: () {
                     AppNavigator.pop(context);
-                    _showAssessmentDetail(jenis, header, languageProvider);
+                    _showAssessmentDetail(type, header, languageProvider);
                   },
                 ),
                 if (_canEdit && !_isReadOnly) ...[
@@ -758,7 +758,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     ),
                     onTap: () {
                       AppNavigator.pop(context);
-                      _enterEditMode(jenis, header);
+                      _enterEditMode(type, header);
                     },
                   ),
                   ListTile(
@@ -795,7 +795,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     ),
                     onTap: () {
                       AppNavigator.pop(context);
-                      _confirmDeleteAssessment(jenis, header, languageProvider);
+                      _confirmDeleteAssessment(type, header, languageProvider);
                     },
                   ),
                 ],
@@ -825,19 +825,19 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
   /// Enters inline edit mode for a specific grade column.
   /// Like clicking "Edit" on a table cell in a Vue data table component.
-  void _enterEditMode(String jenis, Map<String, dynamic> header) {
+  void _enterEditMode(String type, Map<String, dynamic> header) {
     setState(() {
       _isEditMode = true;
-      _editJenis = jenis;
+      _editGradeType = type;
       _editHeader = header;
       _editControllers.clear();
       _editFocusNodes.clear();
 
       // Initialize controllers for all students
-      for (var siswa in _filteredSiswaList) {
-        final nilaiData = _getNilaiForSiswaAndHeader(siswa, jenis, header);
+      for (var student in _filteredStudentList) {
+        final nilaiData = _getGradeForStudentAndHeader(student, type, header);
 
-        final nilaiKey = "${siswa.id}_nilai";
+        final nilaiKey = "${student.id}_nilai";
         _editControllers[nilaiKey] = TextEditingController(
           text: _formatGradeValue(nilaiData?['nilai']),
         );
@@ -845,8 +845,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         _editFocusNodes[nilaiKey]!.addListener(() {
           if (!_editFocusNodes[nilaiKey]!.hasFocus) {
             _saveInlineGrade(
-              siswa,
-              jenis,
+              student,
+              type,
               header,
               'nilai',
               _editControllers[nilaiKey]!.text,
@@ -855,7 +855,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         });
 
         // Deskripsi Controller
-        final deskripsiKey = "${siswa.id}_deskripsi";
+        final deskripsiKey = "${student.id}_deskripsi";
         _editControllers[deskripsiKey] = TextEditingController(
           text: nilaiData?['deskripsi']?.toString() ?? '',
         );
@@ -863,8 +863,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         _editFocusNodes[deskripsiKey]!.addListener(() {
           if (!_editFocusNodes[deskripsiKey]!.hasFocus) {
             _saveInlineGrade(
-              siswa,
-              jenis,
+              student,
+              type,
               header,
               'deskripsi',
               _editControllers[deskripsiKey]!.text,
@@ -879,14 +879,14 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   /// Like calling `axios.post('/api/grades')` after editing a cell.
   Future<void> _saveInlineGrade(
     Student student,
-    String jenis,
+    String type,
     Map<String, dynamic> header,
     String field,
     String value, {
     bool reload = true,
   }) async {
     // Check if value changed
-    final currentData = _getNilaiForSiswaAndHeader(student, jenis, header);
+    final currentData = _getGradeForStudentAndHeader(student, type, header);
     final currentValue = currentData?[field]?.toString() ?? '';
 
     // If value is empty and was empty, do nothing
@@ -901,7 +901,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         'student_class_id': student.studentClassId,
         'teacher_id': widget.teacher['id'],
         'subject_id': widget.subject['id'],
-        'type': jenis,
+        'type': type,
         'date': header['date'],
         'title': header['title'],
         'assessment_id': header['id'], // Include assessment ID if exists
@@ -962,7 +962,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                       ),
                     ),
                     Text(
-                      "${_getJenisNilaiLabel(_editJenis!, languageProvider)} - $displayTitle",
+                      "${_getGradeTypeLabel(_editGradeType!, languageProvider)} - $displayTitle",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -982,15 +982,15 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
                   try {
                     // Iterate and save all
-                    for (var siswa in _filteredSiswaList) {
-                      final nilaiKey = "${siswa.id}_nilai";
-                      final deskripsiKey = "${siswa.id}_deskripsi";
+                    for (var student in _filteredStudentList) {
+                      final nilaiKey = "${student.id}_nilai";
+                      final deskripsiKey = "${student.id}_deskripsi";
 
                       // Save Nilai
                       if (_editControllers.containsKey(nilaiKey)) {
                         await _saveInlineGrade(
-                          siswa,
-                          _editJenis!,
+                          student,
+                          _editGradeType!,
                           _editHeader!,
                           'nilai',
                           _editControllers[nilaiKey]!.text,
@@ -1001,8 +1001,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                       // Save Deskripsi
                       if (_editControllers.containsKey(deskripsiKey)) {
                         await _saveInlineGrade(
-                          siswa,
-                          _editJenis!,
+                          student,
+                          _editGradeType!,
                           _editHeader!,
                           'deskripsi',
                           _editControllers[deskripsiKey]!.text,
@@ -1016,7 +1016,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
                     setState(() {
                       _isEditMode = false;
-                      _editJenis = null;
+                      _editGradeType = null;
                       _editHeader = null;
                       _isLoading = false;
                     });
@@ -1105,9 +1105,9 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                       ),
                     ),
                     // Rows
-                    ..._filteredSiswaList.map((siswa) {
-                      final nilaiKey = "${siswa.id}_nilai";
-                      final deskripsiKey = "${siswa.id}_deskripsi";
+                    ..._filteredStudentList.map((student) {
+                      final nilaiKey = "${student.id}_nilai";
+                      final deskripsiKey = "${student.id}_deskripsi";
 
                       return Container(
                         decoration: BoxDecoration(
@@ -1129,7 +1129,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    siswa.name,
+                                    student.name,
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
                                       color: ColorUtils.slate900,
@@ -1138,7 +1138,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
-                                    siswa.studentNumber,
+                                    student.studentNumber,
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: ColorUtils.slate500,
@@ -1174,8 +1174,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                 ),
                                 onFieldSubmitted: (value) {
                                   _saveInlineGrade(
-                                    siswa,
-                                    _editJenis!,
+                                    student,
+                                    _editGradeType!,
                                     _editHeader!,
                                     'nilai',
                                     value,
@@ -1209,8 +1209,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                   ),
                                   onFieldSubmitted: (value) {
                                     _saveInlineGrade(
-                                      siswa,
-                                      _editJenis!,
+                                      student,
+                                      _editGradeType!,
                                       _editHeader!,
                                       'deskripsi',
                                       value,
@@ -1246,22 +1246,22 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   void _showAssessmentDetail(
-    String jenis,
+    String type,
     Map<String, dynamic> header,
     LanguageProvider languageProvider,
   ) {
     String date = header['date'];
     String? title = header['title'];
     // Calculate stats
-    int totalSiswa = _siswaList.length;
+    int totalSiswa = _studentList.length;
     int gradedCount = 0;
     double totalNilai = 0;
 
-    for (var siswa in _siswaList) {
-      final existingNilai = _getNilaiForSiswaAndHeader(siswa, jenis, header);
-      if (existingNilai != null && existingNilai.isNotEmpty) {
+    for (var student in _studentList) {
+      final existingGrade = _getGradeForStudentAndHeader(student, type, header);
+      if (existingGrade != null && existingGrade.isNotEmpty) {
         gradedCount++;
-        totalNilai += double.tryParse(existingNilai['nilai'].toString()) ?? 0.0;
+        totalNilai += double.tryParse(existingGrade['nilai'].toString()) ?? 0.0;
       }
     }
 
@@ -1326,7 +1326,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                       'en': 'Type',
                       'id': 'Jenis',
                     }),
-                    _getJenisNilaiLabel(jenis, languageProvider),
+                    _getGradeTypeLabel(type, languageProvider),
                   ),
                   _buildDetailRow(
                     languageProvider.getTranslatedText({
@@ -1422,7 +1422,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   void _confirmDeleteAssessment(
-    String jenis,
+    String type,
     Map<String, dynamic> header,
     LanguageProvider languageProvider,
   ) {
@@ -1480,9 +1480,9 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
               child: Text(
                 languageProvider.getTranslatedText({
                   'en':
-                      'Are you sure you want to delete all grades for ${_getJenisNilaiLabel(jenis, languageProvider)} on ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? This action cannot be undone.',
+                      'Are you sure you want to delete all grades for ${_getGradeTypeLabel(type, languageProvider)} on ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? This action cannot be undone.',
                   'id':
-                      'Apakah Anda yakin ingin menghapus semua nilai ${_getJenisNilaiLabel(jenis, languageProvider)} pada tanggal ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? Tindakan ini tidak dapat dibatalkan.',
+                      'Apakah Anda yakin ingin menghapus semua nilai ${_getGradeTypeLabel(type, languageProvider)} pada tanggal ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? Tindakan ini tidak dapat dibatalkan.',
                 }),
                 style: TextStyle(color: ColorUtils.slate700, fontSize: 14),
               ),
@@ -1516,7 +1516,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     child: ElevatedButton(
                       onPressed: () {
                         AppNavigator.pop(context);
-                        _deleteAssessment(jenis, header);
+                        _deleteAssessment(type, header);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ColorUtils.error600,
@@ -1547,7 +1547,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   Future<void> _deleteAssessment(
-    String jenis,
+    String type,
     Map<String, dynamic> header,
   ) async {
     setState(() => _isLoading = true);
@@ -1560,7 +1560,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
       final queryParams = {
         'mata_pelajaran_id': widget.subject['id'],
-        'jenis': jenis,
+        'jenis': type,
         'tanggal': header['date'],
       };
 
@@ -1588,7 +1588,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     }
   }
 
-  Future<void> _addNewAssessment(String jenis) async {
+  Future<void> _addNewAssessment(String type) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -1601,8 +1601,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
 
       setState(() {
-        if (!_assessmentHeaders.containsKey(jenis)) {
-          _assessmentHeaders[jenis] = [];
+        if (!_assessmentHeaders.containsKey(type)) {
+          _assessmentHeaders[type] = [];
         }
 
         // Add a temporary header. Title is initially null.
@@ -1611,12 +1611,12 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         // we might just be pointing to that one.
 
         // Check if we already have a header with this date and (null) title
-        bool exists = _assessmentHeaders[jenis]!.any(
+        bool exists = _assessmentHeaders[type]!.any(
           (h) => h['date'] == dateStr && h['title'] == null,
         );
 
         if (!exists) {
-          _assessmentHeaders[jenis]!.add({
+          _assessmentHeaders[type]!.add({
             'id': null,
             'date': dateStr,
             'title': null,
@@ -1624,7 +1624,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           });
 
           // Sort
-          _assessmentHeaders[jenis]!.sort((a, b) {
+          _assessmentHeaders[type]!.sort((a, b) {
             final dateCompare = a['date'].compareTo(b['date']);
             if (dateCompare != 0) return dateCompare;
             return (a['title'] ?? '').compareTo(b['title'] ?? '');
@@ -1680,7 +1680,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     AppNavigator.push(context, GradeInputFormNew(
           teacher: widget.teacher,
           subject: widget.subject,
-          siswaList: _siswaList,
+          studentList: _studentList,
         )).then((_) {
       _loadData();
     });
@@ -1718,7 +1718,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
             ),
           ),
           // Student Names
-          ..._filteredSiswaList.map((siswa) {
+          ..._filteredStudentList.map((student) {
             return Container(
               height: 60,
               width: 120,
@@ -1732,7 +1732,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    siswa.name,
+                    student.name,
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       fontSize: 11,
@@ -1742,7 +1742,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     maxLines: 1,
                   ),
                   Text(
-                    '${languageProvider.getTranslatedText({'en': 'NIS', 'id': 'NIS'})}: ${siswa.studentNumber}',
+                    '${languageProvider.getTranslatedText({'en': 'NIS', 'id': 'NIS'})}: ${student.studentNumber}',
                     style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
@@ -1757,8 +1757,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
     // Right side items calculation
     double rightSideWidth = 0;
-    for (var jenis in _filteredJenisNilaiList) {
-      final headers = _assessmentHeaders[jenis] ?? [];
+    for (var type in _filteredGradeTypeList) {
+      final headers = _assessmentHeaders[type] ?? [];
       rightSideWidth +=
           (headers.length * 90.0) +
           (_canEdit && !_isReadOnly ? 65.0 : 0.0); // Increased spacer to 65
@@ -1783,8 +1783,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                 ),
               ),
               child: Row(
-                children: _filteredJenisNilaiList.expand((jenis) {
-                  final headers = _assessmentHeaders[jenis] ?? [];
+                children: _filteredGradeTypeList.expand((type) {
+                  final headers = _assessmentHeaders[type] ?? [];
                   List<Widget> widgets = [];
 
                   // Existing columns headers
@@ -1799,7 +1799,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     widgets.add(
                       InkWell(
                         onTap: () =>
-                            _showColumnOptions(jenis, header, languageProvider),
+                            _showColumnOptions(type, header, languageProvider),
                         child: Container(
                           width: 90,
                           padding: EdgeInsets.all(AppSpacing.xs),
@@ -1814,8 +1814,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                               Text(
                                 title != null && title.isNotEmpty
                                     ? title
-                                    : _getJenisNilaiLabel(
-                                        jenis,
+                                    : _getGradeTypeLabel(
+                                        type,
                                         languageProvider,
                                       ),
                                 style: TextStyle(
@@ -1860,7 +1860,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              _getJenisNilaiLabel(jenis, languageProvider),
+                              _getGradeTypeLabel(type, languageProvider),
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
@@ -1870,7 +1870,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                             ),
                             SizedBox(height: 2),
                             InkWell(
-                              onTap: () => _addNewAssessment(jenis),
+                              onTap: () => _addNewAssessment(type),
                               child: Icon(
                                 Icons.add_circle_outline,
                                 size: 20,
@@ -1888,7 +1888,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
               ),
             ),
             // Right Side Rows (Values)
-            ..._filteredSiswaList.map((siswa) {
+            ..._filteredStudentList.map((student) {
               return Container(
                 height: 60,
                 decoration: BoxDecoration(
@@ -1897,14 +1897,14 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                   ),
                 ),
                 child: Row(
-                  children: _filteredJenisNilaiList.expand((jenis) {
-                    final headers = _assessmentHeaders[jenis] ?? [];
+                  children: _filteredGradeTypeList.expand((type) {
+                    final headers = _assessmentHeaders[type] ?? [];
                     List<Widget> widgets = [];
 
                     for (var header in headers) {
-                      final nilai = _getNilaiForSiswaAndHeader(
-                        siswa,
-                        jenis,
+                      final nilai = _getGradeForStudentAndHeader(
+                        student,
+                        type,
                         header,
                       );
                       final nilaiText = nilai?.isNotEmpty == true
@@ -1924,8 +1924,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                           child: GestureDetector(
                             onTap: (_canEdit && !_isReadOnly)
                                 ? () => _openInputForm(
-                                    siswa,
-                                    jenis,
+                                    student,
+                                    type,
                                     languageProvider,
                                     header: header,
                                   )
@@ -2002,8 +2002,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     );
   }
 
-  String _getJenisNilaiLabel(String jenis, LanguageProvider languageProvider) {
-    switch (jenis) {
+  String _getGradeTypeLabel(String type, LanguageProvider languageProvider) {
+    switch (type) {
       case 'uh':
         return languageProvider.getTranslatedText({
           'en': 'Daily/Quiz',
@@ -2032,7 +2032,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           'id': 'PAS',
         });
       default:
-        return jenis.toUpperCase();
+        return type.toUpperCase();
     }
   }
 
@@ -2043,7 +2043,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
-        final activeFilterCount = _jenisNilaiFilter.values
+        final activeFilterCount = _gradeTypeFilter.values
             .where((v) => v)
             .length;
 
@@ -2167,7 +2167,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                             ),
                           ),
                         ),
-                        if (activeFilterCount < _allJenisNilaiList.length)
+                        if (activeFilterCount < _allGradeTypeList.length)
                           Positioned(
                             right: 4,
                             top: 4,
@@ -2182,7 +2182,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                 minHeight: 14,
                               ),
                               child: Text(
-                                '${_allJenisNilaiList.length - activeFilterCount}',
+                                '${_allGradeTypeList.length - activeFilterCount}',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 8,
@@ -2275,7 +2275,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                         ),
                                       ),
                                       Text(
-                                        '${languageProvider.getTranslatedText({'en': 'Types', 'id': 'Jenis'})}: ${_filteredJenisNilaiList.map((j) => _getJenisNilaiLabel(j, languageProvider)).join(', ')}',
+                                        '${languageProvider.getTranslatedText({'en': 'Types', 'id': 'Jenis'})}: ${_filteredGradeTypeList.map((j) => _getGradeTypeLabel(j, languageProvider)).join(', ')}',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: ColorUtils.slate600,
@@ -2326,13 +2326,13 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                             ),
                           ),
 
-                          if (_filteredSiswaList.isNotEmpty)
+                          if (_filteredStudentList.isNotEmpty)
                             Padding(
                               padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
                               child: Row(
                                 children: [
                                   Text(
-                                    '${_filteredSiswaList.length} ${languageProvider.getTranslatedText({'en': 'students found', 'id': 'siswa ditemukan'})}',
+                                    '${_filteredStudentList.length} ${languageProvider.getTranslatedText({'en': 'students found', 'id': 'siswa ditemukan'})}',
                                     style: TextStyle(
                                       color: ColorUtils.slate500,
                                       fontSize: 12,
@@ -2356,7 +2356,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
                           // Tabel Nilai
                           Expanded(
-                            child: _filteredSiswaList.isEmpty
+                            child: _filteredStudentList.isEmpty
                                 ? EmptyState(
                                     title: languageProvider.getTranslatedText({
                                       'en': 'No students found',

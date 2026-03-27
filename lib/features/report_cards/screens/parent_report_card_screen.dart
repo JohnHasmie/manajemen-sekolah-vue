@@ -367,10 +367,10 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                       itemCount: _studentsData.length,
                       itemBuilder: (context, index) {
                         final student = _studentsData[index];
-                        final raport = student['raport'];
+                        final reportCard = student['raport'];
 
                         // Parent only sees published raports
-                        if (raport == null || raport['status'] != 'published') {
+                        if (reportCard == null || reportCard['status'] != 'published') {
                           return const SizedBox.shrink();
                         }
 
@@ -384,7 +384,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                             borderRadius: BorderRadius.circular(12),
                             onTap: () {
                               AppNavigator.push(context, ParentRaportDetailScreen(
-                                        raportData: raport,
+                                        reportCardData: reportCard,
                                         studentName:
                                             student['student']['name'] ??
                                             'Siswa',

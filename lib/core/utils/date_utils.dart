@@ -15,51 +15,51 @@ import 'package:intl/intl.dart';
 /// common in mobile apps. This is similar to how Carbon in Laravel handles
 /// `Carbon::parse('2024-01-15')` in the app's configured timezone.
 class AppDateUtils {
-  /// Parse string tanggal (YYYY-MM-DD) sebagai local date, bukan UTC
-  /// Ini mencegah masalah timezone yang membuat tanggal mundur 1 hari
+  /// Parse date string (YYYY-MM-DD) as local date, not UTC
+  /// This prevents timezone issues that shift the date back by 1 day
   static DateTime parseLocalDate(String dateString) {
     try {
-      // Parse dengan format YYYY-MM-DD
+      // Parse with YYYY-MM-DD format
       final parts = dateString.split('-');
       if (parts.length == 3) {
         final year = int.parse(parts[0]);
         final month = int.parse(parts[1]);
         final day = int.parse(parts[2]);
         
-        // Buat DateTime sebagai local time, bukan UTC
+        // Create DateTime as local time, not UTC
         return DateTime(year, month, day);
       }
       
-      // Fallback: parse normal tapi convert ke local
+      // Fallback: parse normally but convert to local
       return DateTime.parse(dateString).toLocal();
     } catch (e) {
-      // Jika gagal, kembalikan hari ini
+      // If parsing fails, return today's date
       return DateTime.now();
     }
   }
   
-  /// Format DateTime ke string YYYY-MM-DD untuk dikirim ke backend
+  /// Format DateTime to YYYY-MM-DD string for sending to backend
   static String formatDateForApi(DateTime date) {
     return DateFormat('yyyy-MM-dd').format(date);
   }
   
-  /// Format DateTime ke format yang lebih readable: dd/MM/yyyy
+  /// Format DateTime to a more readable format: dd/MM/yyyy
   static String formatDateReadable(DateTime date) {
     return DateFormat('dd/MM/yyyy').format(date);
   }
   
-  /// Format DateTime ke format Indonesia: dd MMMM yyyy
+  /// Format DateTime to Indonesian format: dd MMMM yyyy
   static String formatDateIndonesian(DateTime date) {
     return DateFormat('dd MMMM yyyy', 'id_ID').format(date);
   }
   
-  /// Format DateTime ke format lengkap: EEEE, dd MMMM yyyy
+  /// Format DateTime to full format: EEEE, dd MMMM yyyy
   static String formatDateFull(DateTime date) {
     return DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(date);
   }
   
-  /// Parse string date dari response API dengan aman
-  /// Menangani berbagai format tanggal dan timezone
+  /// Safely parse date string from API response
+  /// Handles various date formats and timezones
   static DateTime? parseApiDate(dynamic dateValue) {
     if (dateValue == null) return null;
     
@@ -70,12 +70,12 @@ class AppDateUtils {
       
       final String dateString = dateValue.toString();
       
-      // Jika format YYYY-MM-DD (tanpa waktu), parse sebagai local date
+      // If format is YYYY-MM-DD (without time), parse as local date
       if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(dateString)) {
         return parseLocalDate(dateString);
       }
       
-      // Jika ada timestamp ISO (dengan T dan timezone), parse normal
+      // If ISO timestamp (with T and timezone), parse normally
       if (dateString.contains('T')) {
         return DateTime.parse(dateString).toLocal();
       }
@@ -87,8 +87,8 @@ class AppDateUtils {
     }
   }
   
-  /// Format tanggal dari string ke format yang diinginkan
-  /// Dengan handling timezone yang benar
+  /// Format date from string to the desired format
+  /// With correct timezone handling
   static String formatDateString(String? dateString, {String format = 'dd/MM/yyyy'}) {
     if (dateString == null || dateString.isEmpty) return '-';
     

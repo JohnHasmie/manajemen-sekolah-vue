@@ -624,7 +624,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         ttl: const Duration(hours: 24),
       );
       if (cachedDays == null) {
-        final dayData = await getIt<ApiScheduleService>().getHari();
+        final dayData = await getIt<ApiScheduleService>().getDays();
         if (dayData.isNotEmpty) {
           LocalCacheService.save('school_day_data', dayData);
           AppLogger.debug('dashboard', 'Pre-cached day data');
@@ -700,7 +700,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
 
       if (!mounted) return;
 
-      // Navigate ke dashboard dengan role baru
+      // Navigate to dashboard with new role
       AppNavigator.pushReplacementNamed(context, '/$role');
     } catch (e) {
       if (mounted) {
@@ -1109,7 +1109,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
     }
   }
 
-  // Method untuk mendapatkan data siswa untuk parent/wali murid
+  // Method to get student data for parent/guardian
   Future<List<dynamic>> _getStudentDataForParent(String parentId) async {
     try {
       AppLogger.debug('dashboard', 'Mencari data siswa untuk parent: $parentId');
@@ -1126,7 +1126,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
 
       AppLogger.debug('dashboard', 'Email wali: ${userData['email']}, Nama wali: ${userData['name']}',);
 
-      // Cek berdasarkan siswa_id di user data
+      // Check by siswa_id in user data
       if (userData['siswa_id'] != null && userData['siswa_id'].isNotEmpty) {
         AppLogger.debug('dashboard', 'Mencari siswa dengan ID: ${userData['siswa_id']}');
         final student = allStudents.firstWhere(
@@ -1139,7 +1139,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         }
       }
 
-      // Cek berdasarkan email atau nama wali atau user_id (Parent User)
+      // Check by email, guardian name, or user_id (Parent User)
       final studentsWithThisParent = allStudents.where((student) {
         final emailMatch = student['guardian_email'] == userData['email'];
         // Fix: Use 'name' instead of 'nama' (based on debug logs)
@@ -1948,27 +1948,28 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
   }
 
   List<Widget> _buildFourColumnStats() {
+    final lp = languageProvider;
     if (_effectiveRole == 'admin') {
       return [
         _buildHeroStat(
           Icons.people_outline,
           _stats['total_siswa']?.toString() ?? '0',
-          'Siswa',
+          lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
         ),
         _buildHeroStat(
           Icons.school_outlined,
           _stats['total_guru']?.toString() ?? '0',
-          'Guru',
+          lp.getTranslatedText({'en': 'Teachers', 'id': 'Guru'}),
         ),
         _buildHeroStat(
           Icons.class_outlined,
           _stats['total_kelas']?.toString() ?? '0',
-          'Kelas',
+          lp.getTranslatedText({'en': 'Classes', 'id': 'Kelas'}),
         ),
         _buildHeroStat(
           Icons.book_outlined,
           _stats['total_mapel']?.toString() ?? '0',
-          'Mapel',
+          lp.getTranslatedText({'en': 'Subjects', 'id': 'Mapel'}),
         ),
       ];
     } else if (_effectiveRole == 'guru') {
@@ -1976,22 +1977,22 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         _buildHeroStat(
           Icons.people_outline,
           _stats['total_siswa']?.toString() ?? '0',
-          'Siswa',
+          lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
         ),
         _buildHeroStat(
           Icons.class_outlined,
           _stats['total_kelas']?.toString() ?? '0',
-          'Kelas',
+          lp.getTranslatedText({'en': 'Classes', 'id': 'Kelas'}),
         ),
         _buildHeroStat(
           Icons.schedule_outlined,
           _stats['kelas_hari_ini']?.toString() ?? '0',
-          'Hari Ini',
+          lp.getTranslatedText({'en': 'Today', 'id': 'Hari Ini'}),
         ),
         _buildHeroStat(
           Icons.assignment_outlined,
           _stats['total_rpp']?.toString() ?? '0',
-          'RPP',
+          lp.getTranslatedText({'en': 'Plans', 'id': 'RPP'}),
         ),
       ];
     } else {
@@ -1999,22 +2000,22 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         _buildHeroStat(
           Icons.child_care_outlined,
           _stats['anak_terdaftar']?.toString() ?? '0',
-          'Anak',
+          lp.getTranslatedText({'en': 'Children', 'id': 'Anak'}),
         ),
         _buildHeroStat(
           Icons.announcement_outlined,
           _stats['pengumuman_terbaru']?.toString() ?? '0',
-          'Info',
+          lp.getTranslatedText({'en': 'News', 'id': 'Info'}),
         ),
         _buildHeroStat(
           Icons.grade_outlined,
           _stats['unread_grades']?.toString() ?? '0',
-          'Nilai',
+          lp.getTranslatedText({'en': 'Grades', 'id': 'Nilai'}),
         ),
         _buildHeroStat(
           Icons.calendar_today_outlined,
           _stats['unread_presence']?.toString() ?? '0',
-          'Absen',
+          lp.getTranslatedText({'en': 'Attendance', 'id': 'Absen'}),
         ),
       ];
     }
@@ -2250,7 +2251,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           rejected: _stats['rpp_rejected'] ?? 0,
           pending: _stats['rpp_pending'] ?? 0,
           onTap: () {
-            AppNavigator.push(context, RppScreen(
+            AppNavigator.push(context, LessonPlanScreen(
                   teacherId: _userData['id'].toString(),
                   teacherName: _userData['name'] ?? 'Guru',
                 ));
@@ -2572,7 +2573,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       MenuItem(
         title: AppLocalizations.manageRpp.tr,
         icon: Icons.description_outlined,
-        onTap: () => AppNavigator.push(context, AdminRppScreen()),
+        onTap: () => AppNavigator.push(context, AdminLessonPlanScreen()),
       ),
       MenuItem(
         title: AppLocalizations.studentReport.tr,
@@ -2618,21 +2619,21 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         title: AppLocalizations.studentAttendance.tr,
         icon: Icons.check_circle_outline,
         onTap: () async {
-          final Map<String, String> guruData = {
+          final Map<String, String> teacherData = {
             'id':
                 (_userData['teacher_id'] ?? _userData['id'])?.toString() ?? '',
             'nama': _userData['nama'] ?? _userData['name'] ?? 'Teacher',
             'email': _userData['email']?.toString() ?? '',
             'role': _effectiveRole,
           };
-          if (guruData['id']!.isEmpty) {
+          if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
                             SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
             }
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, PresencePage(teacher: guruData));
+          AppNavigator.push(context, PresencePage(teacher: teacherData));
         },
       ),
       MenuItem(
@@ -2700,7 +2701,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, RekapNilaiPage(teacher: teacherData));
+          AppNavigator.push(context, GradeRecapPage(teacher: teacherData));
         },
       ),
       MenuItem(
@@ -2742,7 +2743,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, RppScreen(
+          AppNavigator.push(context, LessonPlanScreen(
                 teacherId: teacherData['id']!,
                 teacherName: teacherData['nama']!,
               ));
@@ -2966,6 +2967,12 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
+        // Loading states for async actions inside the bottom sheet
+        bool isLoggingOut = false;
+        String? switchingRole; // tracks which role is being switched to
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
         return Container(
           margin: EdgeInsets.all(AppSpacing.xl),
           child: Wrap(
@@ -3067,14 +3074,21 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                         SizedBox(height: AppSpacing.sm),
                         ..._availableRoles.map((role) {
                           final isCurrent = role == widget.role;
+                          final isSwitching = switchingRole == role;
                           return Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: isCurrent
+                              onTap: (isCurrent || switchingRole != null)
                                   ? null
-                                  : () {
-                                      AppNavigator.pop(context);
-                                      _switchRole(role);
+                                  : () async {
+                                      setSheetState(() => switchingRole = role);
+                                      try {
+                                        await _switchRole(role);
+                                      } finally {
+                                        if (context.mounted) {
+                                          setSheetState(() => switchingRole = null);
+                                        }
+                                      }
                                     },
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
@@ -3094,11 +3108,23 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                                 ),
                                 child: Row(
                                   children: [
-                                    _buildRoleIcon(role),
+                                    if (isSwitching)
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: _getPrimaryColor(),
+                                        ),
+                                      )
+                                    else
+                                      _buildRoleIcon(role),
                                     SizedBox(width: AppSpacing.md),
                                     Expanded(
                                       child: Text(
-                                        _getRoleDisplayName(role),
+                                        isSwitching
+                                            ? '${_getRoleDisplayName(role)}...'
+                                            : _getRoleDisplayName(role),
                                         style: TextStyle(
                                           fontWeight: isCurrent
                                               ? FontWeight.bold
@@ -3124,7 +3150,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                         SizedBox(height: AppSpacing.lg),
                       ],
 
-                      // Switch Sekolah Button
+                      // Switch School Button
                       if (_accessibleSchools.length > 1) ...[
                         Material(
                           color: Colors.transparent,
@@ -3213,13 +3239,22 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () async {
-                            // Call TokenService.logout to ensure backend token and FCM tokens are completely revoked
-                            await TokenService().logout();
-                            if (context.mounted) {
-                              appRouter.go('/login');
-                            }
-                          },
+                          onTap: (isLoggingOut || switchingRole != null)
+                              ? null
+                              : () async {
+                                  setSheetState(() => isLoggingOut = true);
+                                  try {
+                                    // Call TokenService.logout to ensure backend token and FCM tokens are completely revoked
+                                    await TokenService().logout();
+                                    if (context.mounted) {
+                                      appRouter.go('/login');
+                                    }
+                                  } finally {
+                                    if (context.mounted) {
+                                      setSheetState(() => isLoggingOut = false);
+                                    }
+                                  }
+                                },
                           borderRadius: BorderRadius.circular(15),
                           child: Container(
                             width: double.infinity,
@@ -3232,14 +3267,26 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.logout_rounded,
-                                  color: Colors.redAccent,
-                                  size: 20,
-                                ),
+                                if (isLoggingOut)
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.redAccent,
+                                    ),
+                                  )
+                                else
+                                  Icon(
+                                    Icons.logout_rounded,
+                                    color: Colors.redAccent,
+                                    size: 20,
+                                  ),
                                 SizedBox(width: AppSpacing.sm),
                                 Text(
-                                  AppLocalizations.logout.tr,
+                                  isLoggingOut
+                                      ? 'Logging out...'
+                                      : AppLocalizations.logout.tr,
                                   style: TextStyle(
                                     color: Colors.redAccent,
                                     fontWeight: FontWeight.w600,
@@ -3256,6 +3303,8 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
               ),
             ],
           ),
+        );
+          },
         );
       },
     );
@@ -3422,7 +3471,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
     );
   }
 
-  // Helper methods untuk colors dan gradients
+  // Helper methods for colors and gradients
   Color _getPrimaryColor() {
     switch (_effectiveRole) {
       case 'admin':

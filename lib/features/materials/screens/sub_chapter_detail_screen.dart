@@ -27,8 +27,8 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// loaded asynchronously. Props include the sub-chapter data, parent chapter,
 /// teacher/subject IDs, and a checkbox callback.
 class SubBabDetailPage extends ConsumerStatefulWidget {
-  final Map<String, dynamic> subBab;
-  final Map<String, dynamic> bab;
+  final Map<String, dynamic> subChapter;
+  final Map<String, dynamic> chapter;
   final String teacherId;
   final String subjectId;
   final bool checked;
@@ -36,8 +36,8 @@ class SubBabDetailPage extends ConsumerStatefulWidget {
 
   const SubBabDetailPage({
     super.key,
-    required this.subBab,
-    required this.bab,
+    required this.subChapter,
+    required this.chapter,
     required this.teacherId,
     required this.subjectId,
     required this.checked,
@@ -51,7 +51,7 @@ class SubBabDetailPage extends ConsumerStatefulWidget {
 class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     with SingleTickerProviderStateMixin {
   late bool _isChecked;
-  List<dynamic> _contentMateriList = [];
+  List<dynamic> _contentList = [];
   Map<String, dynamic>? _aiGeneratedData;
   bool _isLoading = false;
   bool _isLoadingAi = false;
@@ -62,7 +62,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     super.initState();
     _isChecked = widget.checked;
     _tabController = TabController(length: 3, vsync: this);
-    _loadContentMateri();
+    _loadContent();
     _loadAiContent();
   }
 
@@ -72,18 +72,18 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     super.dispose();
   }
 
-  Future<void> _loadContentMateri() async {
-    final contentCacheKey = CacheKeyBuilder.custom('materi_content', widget.subBab['id'].toString());
+  Future<void> _loadContent() async {
+    final contentCacheKey = CacheKeyBuilder.custom('materi_content', widget.subChapter['id'].toString());
 
     // Try cache — return early if hit
     try {
       final cached = await LocalCacheService.load(contentCacheKey, ttl: const Duration(hours: 6));
       if (cached != null && cached is List && mounted) {
         setState(() {
-          _contentMateriList = List<dynamic>.from(cached);
+          _contentList = List<dynamic>.from(cached);
           _isLoading = false;
         });
-        AppLogger.debug('material', 'ContentMateri ${widget.subBab['id']}: from cache');
+        AppLogger.debug('material', 'ContentMateri ${widget.subChapter['id']}: from cache');
         return;
       }
     } catch (e) {
@@ -94,17 +94,17 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     if (mounted) setState(() => _isLoading = true);
 
     try {
-      final kontenMateri = await getIt<ApiSubjectService>().getContentMateri(
-        subBabId: widget.subBab['id'].toString(),
+      final contentMaterial = await getIt<ApiSubjectService>().getContentMaterials(
+        subChapterId: widget.subChapter['id'].toString(),
       );
       if (!mounted) return;
 
       setState(() {
-        _contentMateriList = kontenMateri;
+        _contentList = contentMaterial;
         _isLoading = false;
       });
 
-      await LocalCacheService.save(contentCacheKey, kontenMateri);
+      await LocalCacheService.save(contentCacheKey, contentMaterial);
     } catch (e) {
       AppLogger.error('material', 'Error loading content materi: $e');
       if (!mounted) return;
@@ -113,7 +113,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   }
 
   Future<void> _loadAiContent() async {
-    final aiCacheKey = CacheKeyBuilder.custom('materi_ai', '${widget.teacherId}_${widget.bab['id']}', widget.subBab['id'].toString());
+    final aiCacheKey = CacheKeyBuilder.custom('materi_ai', '${widget.teacherId}_${widget.chapter['id']}', widget.subChapter['id'].toString());
 
     // Try local cache — return early if hit
     try {
@@ -123,7 +123,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
           _aiGeneratedData = Map<String, dynamic>.from(cached);
           _isLoadingAi = false;
         });
-        AppLogger.debug('material', 'AI content ${widget.subBab['id']}: from cache');
+        AppLogger.debug('material', 'AI content ${widget.subChapter['id']}: from cache');
         return;
       }
     } catch (e) {
@@ -139,8 +139,8 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
       try {
         final cacheResult = await getIt<ApiSubjectService>().checkMaterialCache(
           teacherId: widget.teacherId,
-          chapterId: widget.bab['id'].toString(),
-          subChapterId: widget.subBab['id'].toString(),
+          chapterId: widget.chapter['id'].toString(),
+          subChapterId: widget.subChapter['id'].toString(),
         );
         if (!mounted) return;
 
@@ -175,7 +175,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
         try {
           final listResult = await getIt<ApiSubjectService>().listGeneratedMaterials(
             teacherId: widget.teacherId,
-            chapterId: widget.bab['id'].toString(),
+            chapterId: widget.chapter['id'].toString(),
           );
           if (!mounted) return;
 
@@ -184,7 +184,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
               : (listResult is List ? listResult : null);
 
           if (items != null && items.isNotEmpty) {
-            final subChapterId = widget.subBab['id'].toString();
+            final subChapterId = widget.subChapter['id'].toString();
             Map<String, dynamic>? match;
 
             for (final item in items) {
@@ -318,7 +318,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'BAB ${widget.bab['urutan']}',
+                      'BAB ${widget.chapter['urutan']}',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -326,7 +326,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                     ),
                     SizedBox(height: 2),
                     Text(
-                      widget.bab['judul_bab'] ?? 'Judul Bab',
+                      widget.chapter['judul_bab'] ?? 'Judul Bab',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -434,7 +434,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Sub Bab ${widget.subBab['urutan']}',
+                        'Sub Bab ${widget.subChapter['urutan']}',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.white.withValues(alpha: 0.8),
@@ -442,7 +442,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                       ),
                       SizedBox(height: 2),
                       Text(
-                        widget.subBab['judul_sub_bab'] ?? 'Judul Sub Bab',
+                        widget.subChapter['judul_sub_bab'] ?? 'Judul Sub Bab',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -476,7 +476,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                         padding: EdgeInsets.only(top: 8, bottom: 80),
                         showActions: false,
                       )
-                    : (_contentMateriList.isEmpty && _aiGeneratedData == null && !_isLoadingAi)
+                    : (_contentList.isEmpty && _aiGeneratedData == null && !_isLoadingAi)
                         ? _buildEmptyContent(languageProvider)
                         : _buildTabbedContent(),
               ),
@@ -627,7 +627,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
           child: TabBarView(
             controller: _tabController,
             children: [
-              _buildMateriTab(),
+              _buildMaterialTab(),
               _buildKuisTab(quizzes),
               _buildReferensiTab(references),
             ],
@@ -639,7 +639,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
 
   // ==================== TAB 1: MATERI ====================
 
-  Widget _buildMateriTab() {
+  Widget _buildMaterialTab() {
     final parsedContent = _parseMaterialContent();
 
     return ListView(
@@ -802,7 +802,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
         ],
 
         // Regular content from main backend
-        if (_contentMateriList.isNotEmpty) ...[
+        if (_contentList.isNotEmpty) ...[
           SizedBox(height: AppSpacing.lg),
           Row(
             children: [
@@ -828,7 +828,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
             ],
           ),
           SizedBox(height: AppSpacing.md),
-          ..._contentMateriList.asMap().entries.map((entry) {
+          ..._contentList.asMap().entries.map((entry) {
             final index = entry.key;
             final content = entry.value;
             final cardColor = ColorUtils.getColorForIndex(index);
@@ -1585,9 +1585,9 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     AppNavigator.push(context, MateriAiResultScreen(
           teacherId: widget.teacherId,
           subjectId: widget.subjectId,
-          chapterId: widget.bab['id'].toString(),
-          subChapterId: widget.subBab['id'].toString(),
-          title: widget.subBab['judul_sub_bab'] ?? 'Materi Pembelajaran',
+          chapterId: widget.chapter['id'].toString(),
+          subChapterId: widget.subChapter['id'].toString(),
+          title: widget.subChapter['judul_sub_bab'] ?? 'Materi Pembelajaran',
         )).then((_) {
       // Reload AI content when returning
       _loadAiContent();

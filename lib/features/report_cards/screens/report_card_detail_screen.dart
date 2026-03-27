@@ -370,7 +370,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
     }
   }
 
-  Future<void> _saveRaport({String status = 'draft'}) async {
+  Future<void> _saveReportCard({String status = 'draft'}) async {
     setState(() {
       _isSaving = true;
     });
@@ -399,7 +399,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
         'achievements': _achievements,
       };
 
-      final response = await getIt<ApiRaportService>().saveRaport(payload);
+      final response = await getIt<ApiRaportService>().saveReportCard(payload);
 
       if (response != null) {
         // Invalidate cache after save
@@ -569,7 +569,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                       onTap: () {
                         if (_existingRaport != null) {
                           AppNavigator.push(context, RaportPrintScreen(
-                                raportData: _existingRaport!,
+                                reportCardData: _existingRaport!,
                                 studentName: widget.studentName,
                                 className: widget.className,
                               ));
@@ -662,7 +662,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                       controller: _tabController,
                       children: [
                         _buildSikapTab(),
-                        _buildNilaiTab(),
+                        _buildGradeTab(),
                         _buildTambahanTab(),
                         _buildInfoTab(),
                       ],
@@ -690,7 +690,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                     key: _saveDraftKey,
                     onPressed: _isSaving
                         ? null
-                        : () => _saveRaport(status: 'draft'),
+                        : () => _saveReportCard(status: 'draft'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: ColorUtils.corporateBlue600),
@@ -732,7 +732,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                                   ElevatedButton(
                                     onPressed: () {
                                       AppNavigator.pop(context);
-                                      _saveRaport(status: 'final');
+                                      _saveReportCard(status: 'final');
                                     },
                                     child: Text(AppLocalizations.yesFinalize.tr),
                                   ),
@@ -787,7 +787,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
   }
 
   // --- TAB 2: NILAI ---
-  Widget _buildNilaiTab() {
+  Widget _buildGradeTab() {
     return ListView.builder(
       padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: _subjects.length,

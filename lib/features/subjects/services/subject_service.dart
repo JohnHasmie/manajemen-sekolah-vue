@@ -118,7 +118,7 @@ class ApiSubjectService {
     String cacheKey = CacheKeyBuilder.custom('subject', schoolId, queryString);
 
     try {
-      // 1. Coba ambil dari cache
+      // 1. Try to get from cache
       final cachedData = await LocalCacheService.load(
         cacheKey,
         ttl: Duration(minutes: 30),
@@ -128,7 +128,7 @@ class ApiSubjectService {
         return cachedData;
       }
 
-      // 2. Jika tidak ada di cache, ambil dari API
+      // 2. If not in cache, fetch from API
       AppLogger.debug('subject', 'Fetching subjects from API for School: $schoolId');
       final response = await dioClient.get('/subject?$queryString');
 
@@ -141,7 +141,7 @@ class ApiSubjectService {
         return result;
       }
 
-      // Fallback untuk backward compatibility
+      // Fallback for backward compatibility
       final fallbackResult = {
         'success': true,
         'data': result is List ? result : [],
@@ -233,13 +233,13 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  /// Fetches content materials for a specific sub-chapter (sub-bab).
-  /// Part of the material hierarchy: Subject > Bab > Sub-Bab > Content.
-  Future<List<dynamic>> getContentMateri({
-    required String subBabId,
+  /// Fetches content materials for a specific sub-chapter.
+  /// Part of the material hierarchy: Subject > Chapter > SubChapter > Content.
+  Future<List<dynamic>> getContentMaterials({
+    required String subChapterId,
   }) async {
     final response = await dioClient.get(
-      '/content-material?sub_chapter_id=$subBabId',
+      '/content-material?sub_chapter_id=$subChapterId',
     );
 
     final result = response.data;
@@ -248,9 +248,9 @@ class ApiSubjectService {
     return [];
   }
 
-  /// Fetches chapters (bab) for a subject. Top level of the material hierarchy.
+  /// Fetches chapters for a subject. Top level of the material hierarchy.
   /// Like `Chapter::where('subject_id', $id)->get()` in Laravel.
-  Future<List<dynamic>> getBabMateri({String? subjectId}) async {
+  Future<List<dynamic>> getChapterMaterials({String? subjectId}) async {
     String url = '/bab-material?';
     if (subjectId != null) url += 'subject_id=$subjectId&';
 
@@ -260,71 +260,71 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  /// Fetches sub-chapters (sub-bab) for a given chapter.
-  /// Like `SubChapter::where('chapter_id', $babId)->get()` in Laravel.
-  Future<List<dynamic>> getSubBabMateri({required String babId}) async {
+  /// Fetches sub-chapters for a given chapter.
+  /// Like `SubChapter::where('chapter_id', $chapterId)->get()` in Laravel.
+  Future<List<dynamic>> getSubChapterMaterials({required String chapterId}) async {
     final response = await dioClient.get(
-      '/sub-bab-material?chapter_id=$babId',
+      '/sub-bab-material?chapter_id=$chapterId',
     );
 
     final result = response.data;
     return result is List ? result : [];
   }
 
-  // Tambah Bab Materi
-  Future<dynamic> addBabMateri(Map<String, dynamic> data) async {
+  // Add Chapter Material
+  Future<dynamic> addChapterMaterial(Map<String, dynamic> data) async {
     final response = await dioClient.post('/bab-material', data: data);
     return response.data;
   }
 
-  // Tambah Sub Bab Materi
-  Future<dynamic> addSubBabMateri(Map<String, dynamic> data) async {
+  // Add Sub-Chapter Material
+  Future<dynamic> addSubChapterMaterial(Map<String, dynamic> data) async {
     final response = await dioClient.post('/sub-bab-material', data: data);
     return response.data;
   }
 
-  // Tambah Konten Materi
-  Future<dynamic> addContentMateri(Map<String, dynamic> data) async {
+  // Add Content Material
+  Future<dynamic> addContentMaterial(Map<String, dynamic> data) async {
     final response = await dioClient.post('/content-material', data: data);
     return response.data;
   }
 
-  // Update Bab Materi
-  Future<void> updateBabMateri(
+  // Update Chapter Material
+  Future<void> updateChapterMaterial(
     String id,
     Map<String, dynamic> data,
   ) async {
     await dioClient.put('/bab-material/$id', data: data);
   }
 
-  // Update Sub Bab Materi
-  Future<void> updateSubBabMateri(
+  // Update Sub-Chapter Material
+  Future<void> updateSubChapterMaterial(
     String id,
     Map<String, dynamic> data,
   ) async {
     await dioClient.put('/sub-bab-material/$id', data: data);
   }
 
-  // Update Konten Materi
-  Future<void> updateContentMateri(
+  // Update Content Material
+  Future<void> updateContentMaterial(
     String id,
     Map<String, dynamic> data,
   ) async {
     await dioClient.put('/content-material/$id', data: data);
   }
 
-  // Delete Bab Materi
-  Future<void> deleteBabMateri(String id) async {
+  // Delete Chapter Material
+  Future<void> deleteChapterMaterial(String id) async {
     await dioClient.delete('/bab-material/$id');
   }
 
-  // Delete Sub Bab Materi
-  Future<void> deleteSubBabMateri(String id) async {
+  // Delete Sub-Chapter Material
+  Future<void> deleteSubChapterMaterial(String id) async {
     await dioClient.delete('/sub-bab-material/$id');
   }
 
-  // Delete Konten Materi
-  Future<void> deleteContentMateri(String id) async {
+  // Delete Content Material
+  Future<void> deleteContentMaterial(String id) async {
     await dioClient.delete('/content-material/$id');
   }
 
@@ -343,7 +343,7 @@ class ApiSubjectService {
     return result is List ? result : [];
   }
 
-  Future<dynamic> addMateri(Map<String, dynamic> data) async {
+  Future<dynamic> addMaterial(Map<String, dynamic> data) async {
     final response = await dioClient.post('/materials', data: data);
     return response.data;
   }
@@ -353,7 +353,7 @@ class ApiSubjectService {
     return response.data;
   }
 
-  Future<List<dynamic>> getRPPByTeacher(String teacherId) async {
+  Future<List<dynamic>> getLessonPlansByTeacher(String teacherId) async {
     final response = await dioClient.get('/rpp?teacher_id=$teacherId');
 
     final result = response.data;
@@ -453,6 +453,31 @@ class ApiSubjectService {
         ),
       );
     return _aiDioInstance!;
+  }
+
+  /// Generate a lesson plan via kamiledu-ai backend.
+  /// POST /lesson-plans/generate
+  /// Returns the generated lesson plan data (sync 201) or job info (async 202).
+  Future<dynamic> generateLessonPlanViaAI({
+    required String teacherId,
+    required String subjectId,
+    required String classId,
+    required String chapterId,
+    String? subChapterId,
+    String? timeAllocation,
+  }) async {
+    final response = await _aiDio.post(
+      '/lesson-plans/generate',
+      data: {
+        'teacher_id': teacherId,
+        'subject_id': subjectId,
+        'class_id': classId,
+        'chapter_id': chapterId,
+        if (subChapterId != null) 'sub_chapter_id': subChapterId,
+        if (timeAllocation != null) 'time_allocation': timeAllocation,
+      },
+    );
+    return response.data;
   }
 
   /// Returns a raw Dio Response so callers can inspect statusCode (202, 429, etc.).
@@ -576,8 +601,8 @@ class ApiSubjectService {
   /// POST /api/lesson-plans/{id}/regen/{field}
   /// Max 2 regenerations per field.
   /// Returns raw Dio Response so callers can inspect statusCode (200, 202, 429).
-  Future<Response<dynamic>> regenRppFieldRaw(
-    String rppId,
+  Future<Response<dynamic>> regenLessonPlanFieldRaw(
+    String lessonPlanId,
     String field, {
     String? additionalText,
   }) async {
@@ -585,10 +610,10 @@ class ApiSubjectService {
     if (additionalText != null && additionalText.trim().isNotEmpty) {
       body['additional_text'] = additionalText.trim();
     }
-    AppLogger.debug('subject', 'Regen RPP field: /lesson-plans/$rppId/regen/$field');
+    AppLogger.debug('subject', 'Regen RPP field: /lesson-plans/$lessonPlanId/regen/$field');
     AppLogger.debug('subject', 'Regen RPP body: $body');
     final response = await _aiDio.post(
-      '/lesson-plans/$rppId/regen/$field',
+      '/lesson-plans/$lessonPlanId/regen/$field',
       data: body,
     );
     AppLogger.debug('subject', 'Regen RPP response: ${response.statusCode}');
@@ -597,10 +622,10 @@ class ApiSubjectService {
 
   /// Get RPP regen limits per field (Section 5.7)
   /// GET /api/lesson-plans/{id}/regen-limits
-  Future<dynamic> getRppRegenLimits(String rppId) async {
-    AppLogger.debug('subject', 'Regen limits: /lesson-plans/$rppId/regen-limits');
+  Future<dynamic> getLessonPlanRegenLimits(String lessonPlanId) async {
+    AppLogger.debug('subject', 'Regen limits: /lesson-plans/$lessonPlanId/regen-limits');
     final response = await _aiDio.get(
-      '/lesson-plans/$rppId/regen-limits',
+      '/lesson-plans/$lessonPlanId/regen-limits',
     );
     AppLogger.debug('subject', 'Regen limits response: ${response.statusCode}');
     // Check for HTML error page from proxy/CDN
@@ -615,12 +640,12 @@ class ApiSubjectService {
 
   /// Update RPP fields / auto-save (Section 5.5)
   /// PATCH /api/lesson-plans/{id}
-  Future<dynamic> updateRppFields(
-    String rppId,
+  Future<dynamic> updateLessonPlanFields(
+    String lessonPlanId,
     Map<String, dynamic> fields,
   ) async {
     final response = await _aiDio.patch(
-      '/lesson-plans/$rppId',
+      '/lesson-plans/$lessonPlanId',
       data: fields,
       options: Options(sendTimeout: const Duration(seconds: 30)),
     );
@@ -629,9 +654,9 @@ class ApiSubjectService {
 
   /// Get RPP detail from AI API (Section 5.4)
   /// GET /api/lesson-plans/{id}
-  Future<dynamic> getRppDetail(String rppId) async {
+  Future<dynamic> getLessonPlanDetail(String lessonPlanId) async {
     final response = await _aiDio.get(
-      '/lesson-plans/$rppId',
+      '/lesson-plans/$lessonPlanId',
     );
     return _handleAiResponse(response);
   }
@@ -694,7 +719,7 @@ class ApiSubjectService {
 
   /// Marks specific materials as AI-generated (after RPP/activity generation).
   /// Prevents accidental re-generation. Like setting a `generated_at` timestamp.
-  Future<dynamic> markMateriGenerated(Map<String, dynamic> data) async {
+  Future<dynamic> markMaterialGenerated(Map<String, dynamic> data) async {
     // Remap keys
     final requestData = {
       'teacher_id': data['teacher_id'],
@@ -717,7 +742,7 @@ class ApiSubjectService {
 
   /// Resets the generated status to allow re-generation.
   /// Like clearing the `generated_at` flag so the AI can regenerate content.
-  Future<dynamic> resetMateriGenerated(Map<String, dynamic> data) async {
+  Future<dynamic> resetMaterialGenerated(Map<String, dynamic> data) async {
     // Remap keys
     final requestData = {
       'teacher_id': data['teacher_id'],

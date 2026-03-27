@@ -150,7 +150,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
       final academicYearId = _getAcademicYearId();
 
       final classesResponse = await getIt<ApiClassService>().getClassPaginated(
-        waliclassId: widget.teacher['id'],
+        homeroomTeacherId: widget.teacher['id'],
         academicYearId: academicYearId,
         limit: 100,
       );
@@ -320,7 +320,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
 
       final semesterId = await _resolveSemester();
 
-      await ExcelRaportService.exportRaportToExcel(
+      await ExcelRaportService.exportReportCardToExcel(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,
@@ -663,7 +663,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
       itemCount: _students.length,
       itemBuilder: (context, index) {
         final student = _students[index];
-        final bool hasRaport = student['has_raport'] ?? false;
+        final bool hasReportCard = student['has_raport'] ?? false;
         final String status = student['raport_status'] ?? 'Belum ada';
 
         return Container(
@@ -722,7 +722,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
                         ],
                       ),
                     ),
-                    _buildStatusBadge(hasRaport, status),
+                    _buildStatusBadge(hasReportCard, status),
                     const SizedBox(width: AppSpacing.sm),
                     if (status.toLowerCase() == 'final' ||
                         status.toLowerCase() == 'published')
@@ -748,12 +748,12 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
     );
   }
 
-  Widget _buildStatusBadge(bool hasRaport, String status) {
+  Widget _buildStatusBadge(bool hasReportCard, String status) {
     Color bgColor;
     Color textColor;
     String label;
 
-    if (!hasRaport) {
+    if (!hasReportCard) {
       bgColor = Colors.grey.shade100;
       textColor = Colors.grey.shade600;
       label = 'Belum Isi';

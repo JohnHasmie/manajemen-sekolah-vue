@@ -199,7 +199,7 @@ class AdminClassActivityScreenState extends ConsumerState<AdminClassActivityScre
     }
   }
 
-  // Method untuk export data
+  // Method to export data
   Future<void> exportActivities() async {
     if (_activityList.isEmpty) {
             SnackBarUtils.showWarning(context, 'Tidak ada data kegiatan untuk diexport');

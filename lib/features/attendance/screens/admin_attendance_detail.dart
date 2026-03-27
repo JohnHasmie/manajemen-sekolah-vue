@@ -51,11 +51,11 @@ class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
 }
 
 class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage> {
-  List<dynamic> _absensiData = [];
-  List<Student> _siswaList = [];
+  List<dynamic> _attendanceData = [];
+  List<Student> _studentList = [];
   bool _isLoading = true;
   bool _isEditing = false;
-  final Map<String, String> _tempAbsensiStatus = {};
+  final Map<String, String> _tempAttendanceStatus = {};
   bool _isSaving = false;
 
   @override
@@ -72,7 +72,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
   Future<void> _loadData() async {
     try {
       // 1. Load attendance data
-      final absensiData = await ApiService.getAttendance(
+      final attendanceData = await ApiService.getAttendance(
         subjectId: widget.subjectId,
         date: DateFormat('yyyy-MM-dd').format(widget.date),
         classId: widget.classId,
@@ -81,43 +81,43 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
       );
 
       // 2. Load students by class ID (from widget parameter)
-      List<dynamic> siswaData;
+      List<dynamic> studentData;
       if (widget.classId.isNotEmpty) {
-        siswaData = await getIt<ApiStudentService>().getStudentByClass(
+        studentData = await getIt<ApiStudentService>().getStudentByClass(
           widget.classId,
           academicYearId: widget.academicYearId,
         );
-        AppLogger.info('attendance', 'Loaded ${siswaData.length} students for class: ${widget.classId} in year: ${widget.academicYearId}',);
+        AppLogger.info('attendance', 'Loaded ${studentData.length} students for class: ${widget.classId} in year: ${widget.academicYearId}',);
       } else {
         // Fallback: if no classId provided, try to get from attendance data
-        if (absensiData.isNotEmpty) {
-          final classIdFromData = absensiData.first['class_id']?.toString();
+        if (attendanceData.isNotEmpty) {
+          final classIdFromData = attendanceData.first['class_id']?.toString();
           if (classIdFromData != null && classIdFromData.isNotEmpty) {
-            siswaData = await getIt<ApiStudentService>().getStudentByClass(
+            studentData = await getIt<ApiStudentService>().getStudentByClass(
               classIdFromData,
               academicYearId: widget.academicYearId,
             );
-            AppLogger.info('attendance', 'Loaded ${siswaData.length} students for class: $classIdFromData (from attendance data)',);
+            AppLogger.info('attendance', 'Loaded ${studentData.length} students for class: $classIdFromData (from attendance data)',);
           } else {
-            siswaData = await getIt<ApiStudentService>().getStudent();
+            studentData = await getIt<ApiStudentService>().getStudent();
             AppLogger.info('attendance', 'Loaded all students (no class ID available)');
           }
         } else {
-          siswaData = await getIt<ApiStudentService>().getStudent();
+          studentData = await getIt<ApiStudentService>().getStudent();
           AppLogger.info('attendance', 'Loaded all students (no attendance data)');
         }
       }
 
-      AppLogger.info('attendance', 'Loaded ${absensiData.length} attendance records');
+      AppLogger.info('attendance', 'Loaded ${attendanceData.length} attendance records');
 
       setState(() {
-        _siswaList = siswaData.map((s) => Student.fromJson(s)).toList();
-        _absensiData = absensiData;
+        _studentList = studentData.map((s) => Student.fromJson(s)).toList();
+        _attendanceData = attendanceData;
 
         // Initialize temp status
-        _tempAbsensiStatus.clear();
-        for (var s in _siswaList) {
-          _tempAbsensiStatus[s.id] = _getStudentStatus(s.id);
+        _tempAttendanceStatus.clear();
+        for (var s in _studentList) {
+          _tempAttendanceStatus[s.id] = _getStudentStatus(s.id);
         }
 
         _isLoading = false;
@@ -131,7 +131,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
   }
 
   Future<void> exportDetail() async {
-    if (_absensiData.isEmpty) {
+    if (_attendanceData.isEmpty) {
             SnackBarUtils.showWarning(context, 'Tidak ada data kegiatan untuk diexport');
       return;
     }
@@ -142,7 +142,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
 
     try {
       await ExcelPresenceService.exportPresenceToExcel(
-        presenceData: _absensiData,
+        presenceData: _attendanceData,
         context: context,
       );
     } catch (e) {
@@ -166,14 +166,14 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
     );
   }
 
-  // Method untuk mendapatkan status absensi siswa
-  String _getStudentStatus(String siswaId) {
+  // Method to get student's attendance status
+  String _getStudentStatus(String studentId) {
     try {
-      final absenRecord = _absensiData.firstWhere(
-        (a) => a['student_id']?.toString() == siswaId.toString(),
+      final attendanceRecord = _attendanceData.firstWhere(
+        (a) => a['student_id']?.toString() == studentId.toString(),
         orElse: () => {'status': 'alpha'}, // Fallback if not found
       );
-      return (absenRecord['status'] ?? 'alpha').toString().toLowerCase();
+      return (attendanceRecord['status'] ?? 'alpha').toString().toLowerCase();
     } catch (e) {
       return 'alpha';
     }
@@ -203,10 +203,10 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
     setState(() => _isSaving = true);
 
     String? teacherId;
-    if (_absensiData.isNotEmpty) {
+    if (_attendanceData.isNotEmpty) {
       teacherId =
-          _absensiData.first['teacher_id']?.toString() ??
-          _absensiData.first['guru_id']?.toString();
+          _attendanceData.first['teacher_id']?.toString() ??
+          _attendanceData.first['guru_id']?.toString();
     }
 
     if (teacherId == null) {
@@ -222,12 +222,12 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(widget.date);
 
-      for (var siswa in _siswaList) {
+      for (var student in _studentList) {
         try {
-          final status = _tempAbsensiStatus[siswa.id] ?? 'alpha';
+          final status = _tempAttendanceStatus[student.id] ?? 'alpha';
 
           await ApiService.createAttendance({
-            'student_id': siswa.id,
+            'student_id': student.id,
             'teacher_id': teacherId,
             'subject_id': widget.subjectId,
             'class_id': widget.classId,
@@ -240,7 +240,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
         } catch (e) {
           errorCount++;
           lastError = e.toString();
-          AppLogger.error('attendance', 'Error saving for student ${siswa.name}: $e');
+          AppLogger.error('attendance', 'Error saving for student ${student.name}: $e');
         }
       }
 
@@ -459,7 +459,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
     }
   }
 
-  // Method untuk menghitung statistik
+  // Method to calculate statistics
   Map<String, int> _calculateStatistics() {
     int hadir = 0;
     int terlambat = 0;
@@ -467,8 +467,8 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
     int sakit = 0;
     int alpha = 0;
 
-    for (var siswa in _siswaList) {
-      final status = _getStudentStatus(siswa.id);
+    for (var student in _studentList) {
+      final status = _getStudentStatus(student.id);
       switch (status.toLowerCase()) {
         case 'hadir':
         case 'present':
@@ -500,7 +500,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
       'izin': izin,
       'sakit': sakit,
       'alpha': alpha,
-      'total': _siswaList.length,
+      'total': _studentList.length,
     };
   }
 
@@ -558,11 +558,11 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
     Color color,
     String studentId,
   ) {
-    final isSelected = _tempAbsensiStatus[studentId] == status;
+    final isSelected = _tempAttendanceStatus[studentId] == status;
     return GestureDetector(
       onTap: () {
         setState(() {
-          _tempAbsensiStatus[studentId] = status;
+          _tempAttendanceStatus[studentId] = status;
         });
       },
       child: Container(
@@ -591,7 +591,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
         final stats = _calculateStatistics();
-        final totalTidakHadir = stats['alpha']!;
+        final totalAbsent = stats['alpha']!;
 
         return Scaffold(
           backgroundColor: ColorUtils.slate50,
@@ -673,8 +673,8 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                             if (_isEditing) {
                               setState(() {
                                 _isEditing = false;
-                                for (var s in _siswaList) {
-                                  _tempAbsensiStatus[s.id] = _getStudentStatus(
+                                for (var s in _studentList) {
+                                  _tempAttendanceStatus[s.id] = _getStudentStatus(
                                     s.id,
                                   );
                                 }
@@ -880,7 +880,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                         'en': 'Absent',
                         'id': 'Tidak Hadir',
                       }),
-                      totalTidakHadir,
+                      totalAbsent,
                       ColorUtils.error600,
                       Icons.cancel,
                     ),
@@ -926,7 +926,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                     ),
                     Spacer(),
                     Text(
-                      '${_siswaList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
+                      '${_studentList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
                       style: TextStyle(
                         fontSize: 12,
                         color: ColorUtils.slate600,
@@ -944,7 +944,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                         infoTagCount: 1,
                         showActions: false,
                       )
-                    : _siswaList.isEmpty
+                    : _studentList.isEmpty
                     ? Padding(
                         padding: EdgeInsets.only(top: 40),
                         child: EmptyState(
@@ -962,9 +962,9 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
                       )
                     : ListView.builder(
                         padding: EdgeInsets.only(bottom: 16),
-                        itemCount: _siswaList.length,
+                        itemCount: _studentList.length,
                         itemBuilder: (context, index) => _buildStudentCard(
-                          _siswaList[index],
+                          _studentList[index],
                           languageProvider,
                           index,
                         ),

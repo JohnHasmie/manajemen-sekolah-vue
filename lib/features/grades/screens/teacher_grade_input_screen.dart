@@ -187,14 +187,14 @@ class GradePageState extends ConsumerState<GradePage> {
   /// Like a Vue `methods.fetchClasses()` calling `axios.get('/api/classes')`.
   Future<void> _loadClasses({bool resetPage = true, bool useCache = true}) async {
     final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
-    final isGuru = _canEdit && role.contains('guru');
+    final isTeacher = _canEdit && role.contains('guru');
 
     if (resetPage) {
       _currentPage = 1;
       _hasMoreData = true;
 
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
-      if (isGuru && useCache) {
+      if (isTeacher && useCache) {
         final teacherProvider = ref.read(teacherRiverpod);
         if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
           List<dynamic> providerClasses = List.from(teacherProvider.allClasses);
@@ -253,7 +253,7 @@ class GradePageState extends ConsumerState<GradePage> {
 
       List<dynamic> loadedClasses = [];
 
-      if (isGuru) {
+      if (isTeacher) {
         final response = await getIt<ApiTeacherService>().getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
@@ -386,16 +386,16 @@ class GradePageState extends ConsumerState<GradePage> {
 
       final isHomeroom = _selectedClass?['is_homeroom'] == true;
       final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
-      final isGuru = role.contains('guru') || role.contains('teacher');
+      final isTeacher = role.contains('guru') || role.contains('teacher');
       final isAdmin =
-          !isGuru; // Assuming non-guru is admin/staff with higher privs
+          !isTeacher; // Assuming non-guru is admin/staff with higher privs
 
       // 1. Fetch subjects taught by THIS teacher in this class
       final mySchedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
         limit: 100,
         teacherId: widget.teacher['id'],
         classId: _selectedClass!['id'].toString(),
-        tahunAjaran: academicYearId,
+        academicYearId: academicYearId,
       );
       final myData = mySchedules['data'] ?? [];
       final mySubjectIds = <String>{};
@@ -509,7 +509,7 @@ class GradePageState extends ConsumerState<GradePage> {
         }
       } catch (_) {}
       if (days.isEmpty) {
-        days = await getIt<ApiScheduleService>().getHari();
+        days = await getIt<ApiScheduleService>().getDays();
         if (days.isNotEmpty) LocalCacheService.save('school_day_data', days);
       }
 
@@ -564,7 +564,7 @@ class GradePageState extends ConsumerState<GradePage> {
         final schedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
           limit: 100,
           teacherId: widget.teacher['id'],
-          tahunAjaran: academicYearId,
+          academicYearId: academicYearId,
         );
         allSchedules = schedules['data'] ?? [];
       }

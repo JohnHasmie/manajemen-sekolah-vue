@@ -7,12 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
-// Data class untuk grid view
+// Data class for grid view
 class ScheduleGridData {
   final String id;
   final String waktu;
   final String hari;
-  final String kelas;
+  final String classroom;
   final String mataPelajaran;
   final String guru;
   final Map<String, dynamic>? originalData;
@@ -21,14 +21,14 @@ class ScheduleGridData {
     required this.id,
     required this.waktu,
     required this.hari,
-    required this.kelas,
+    required this.classroom,
     required this.mataPelajaran,
     required this.guru,
     this.originalData,
   });
 }
 
-// Data source untuk grid view
+// Data source for grid view
 class TimetableDataSource extends DataGridSource {
   final List<String> timeSlots;
   final List<String> days;
@@ -130,7 +130,7 @@ class TimetableDataSource extends DataGridSource {
                       borderRadius: BorderRadius.circular(3),
                     ),
                     child: Text(
-                      schedule.kelas,
+                      schedule.classroom,
                       style: TextStyle(
                         fontSize: 7,
                         fontWeight: FontWeight.bold,

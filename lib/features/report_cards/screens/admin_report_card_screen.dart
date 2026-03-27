@@ -269,7 +269,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
 
       if (academicYearId == null) throw Exception("Tahun ajaran tidak valid.");
 
-      await ExcelRaportService.exportRaportToExcel(
+      await ExcelRaportService.exportReportCardToExcel(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,
@@ -285,7 +285,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
     }
   }
 
-  Future<void> _publishRaports() async {
+  Future<void> _publishReportCards() async {
     if (_selectedClass == null) return;
 
     // Show confirmation dialog
@@ -356,7 +356,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
     return ColorUtils.getRoleColor('admin');
   }
 
-  Future<void> _viewRaportDetail(Map<String, dynamic> student) async {
+  Future<void> _viewReportCardDetail(Map<String, dynamic> student) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -440,7 +440,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
 
       if (detail != null) {
         AppNavigator.push(context, ParentRaportDetailScreen(
-              raportData: detail,
+              reportCardData: detail,
               studentName: student['student_name'] ?? 'Unknown',
               userRole: 'admin',
               studentData: {
@@ -708,7 +708,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                           backgroundColor: ColorUtils.corporateBlue600,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        onPressed: _isPublishing ? null : _publishRaports,
+                        onPressed: _isPublishing ? null : _publishReportCards,
                       ),
                     ),
                   ],
@@ -844,7 +844,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                       ),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
-                        onTap: () => _viewRaportDetail(student),
+                        onTap: () => _viewReportCardDetail(student),
                         child: Padding(
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Row(

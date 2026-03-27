@@ -31,7 +31,7 @@ class AdminDataManagementScreen extends StatelessWidget {
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          // Header dengan gradient (matching Kelola Jadwal style)
+          // Header with gradient (matching Schedule Management style)
           _buildGradientHeader(context),
 
           // Menu items

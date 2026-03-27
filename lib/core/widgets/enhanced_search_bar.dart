@@ -120,7 +120,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
                 margin: const EdgeInsets.symmetric(horizontal: 8),
               ),
             
-            // Filter Dropdown dengan design modern
+            // Filter Dropdown with modern design
             if (widget.showFilter && widget.filterOptions != null)
               Container(
                 padding: EdgeInsets.only(right: 12),

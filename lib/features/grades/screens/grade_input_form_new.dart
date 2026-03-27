@@ -23,17 +23,17 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
-// Form Input Nilai Baru untuk Multiple Siswa
+// New Grade Input Form for Multiple Students
 class GradeInputFormNew extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final Map<String, dynamic> subject;
-  final List<Student> siswaList;
+  final List<Student> studentList;
 
   const GradeInputFormNew({
     super.key,
     required this.teacher,
     required this.subject,
-    required this.siswaList,
+    required this.studentList,
   });
 
   @override
@@ -48,9 +48,9 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     return ref.read(academicYearRiverpod).isReadOnly;
   }
 
-  // Variabel untuk state
-  String? _selectedJenisNilai;
-  final List<String> _jenisNilaiList = [
+  // State variables
+  String? _selectedGradeType;
+  final List<String> _gradeTypeList = [
     'uh',
     'tugas',
     'uts',
@@ -59,25 +59,26 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     'pas',
   ];
 
-  // Map untuk menyimpan nilai per siswa
-  final Map<String, Map<String, dynamic>> _nilaiSiswaMap = {};
+  // Map to store grades per student
+  final Map<String, Map<String, dynamic>> _gradeStudentMap = {};
 
-  // Text controllers untuk tabel input
+  // Text controllers for input table
   final Map<String, TextEditingController> _tableControllers = {};
   final Map<String, FocusNode> _tableFocusNodes = {};
 
-  // State untuk tracking apakah jenis nilai dan tanggal sudah di-set
+  // State for tracking whether grade type and date have been set
   bool _isConfigurationSet = false;
-  String? _confirmedJenisNilai;
+  bool _isSaving = false;
+  String? _confirmedGradeType;
   DateTime? _confirmedDate;
   final TextEditingController _titleController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Initialize map dengan nilai default untuk setiap siswa
-    for (var siswa in widget.siswaList) {
-      _nilaiSiswaMap[siswa.id] = {'nilai': '', 'deskripsi': ''};
+    // Initialize map with default values for each student
+    for (var student in widget.studentList) {
+      _gradeStudentMap[student.id] = {'nilai': '', 'deskripsi': ''};
     }
   }
 
@@ -107,11 +108,11 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     }
   }
 
-  Future<void> _submitNilai() async {
+  Future<void> _submitGrade() async {
     final languageProvider = ref.read(languageRiverpod);
 
     if (_formKey.currentState!.validate()) {
-      if (_selectedJenisNilai == null) {
+      if (_selectedGradeType == null) {
                 SnackBarUtils.showWarning(context, languageProvider.getTranslatedText({
                 'en': 'Please select grade type first',
                 'id': 'Pilih jenis nilai terlebih dahulu',
@@ -119,11 +120,11 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
         return;
       }
 
-      // Cek apakah ada setidaknya satu siswa yang memiliki nilai
+      // Check if at least one student has a grade value
       bool hasData = false;
-      for (var siswa in widget.siswaList) {
-        final nilaiData = _nilaiSiswaMap[siswa.id];
-        if (nilaiData?['nilai']?.isNotEmpty == true) {
+      for (var student in widget.studentList) {
+        final gradeData = _gradeStudentMap[student.id];
+        if (gradeData?['nilai']?.isNotEmpty == true) {
           hasData = true;
           break;
         }
@@ -137,31 +138,33 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
         return;
       }
 
+      setState(() => _isSaving = true);
+
       try {
         int successCount = 0;
 
-        for (var siswa in widget.siswaList) {
-          final nilaiData = _nilaiSiswaMap[siswa.id];
-          final nilai = nilaiData?['nilai']?.toString().trim();
+        for (var student in widget.studentList) {
+          final gradeData = _gradeStudentMap[student.id];
+          final gradeValue = gradeData?['nilai']?.toString().trim();
 
-          // Skip jika tidak ada nilai yang diinput
-          if (nilai == null || nilai.isEmpty) {
+          // Skip if no grade value was entered
+          if (gradeValue == null || gradeValue.isEmpty) {
             continue;
           }
 
-          // Perbaikan: Kirim Student Class ID jika ada, fallback ke ID siswa (untuk kompatibilitas)
-          final studentIdToSend = siswa.studentClassId ?? siswa.id;
+          // Fix: Send Student Class ID if available, fallback to student ID (for compatibility)
+          final studentIdToSend = student.studentClassId ?? student.id;
 
-          // ... (inside _submitNilai)
+          // ... (inside _submitGrade)
           final data = {
-            'student_id': siswa.id, // For legacy/history
+            'student_id': student.id, // For legacy/history
             'student_class_id':
                 studentIdToSend, // New field required by backend
             'teacher_id': widget.teacher['id'],
             'subject_id': widget.subject['id'],
-            'type': _selectedJenisNilai,
-            'score': int.parse(nilaiData!['nilai']),
-            'notes': nilaiData['deskripsi'] ?? '',
+            'type': _selectedGradeType,
+            'score': int.parse(gradeData!['nilai']),
+            'notes': gradeData['deskripsi'] ?? '',
             'date':
                 '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
             'title': _titleController.text.isNotEmpty
@@ -184,6 +187,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
       } catch (e) {
         AppLogger.error('grades', e);
                 SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
       }
     } else {
       // Validation failed - show error message
@@ -196,8 +201,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     }
   }
 
-  String _getJenisNilaiLabel(String jenis, LanguageProvider languageProvider) {
-    switch (jenis) {
+  String _getGradeTypeLabel(String type, LanguageProvider languageProvider) {
+    switch (type) {
       case 'uh':
         return languageProvider.getTranslatedText({
           'en': 'Daily/Quiz',
@@ -226,7 +231,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
           'id': 'PAS',
         });
       default:
-        return jenis.toUpperCase();
+        return type.toUpperCase();
     }
   }
 
@@ -302,14 +307,14 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 ),
               ),
               // Rows - scrollable
-              ...widget.siswaList.map((siswa) {
-                final nilaiKey = "${siswa.id}_nilai";
-                final deskripsiKey = "${siswa.id}_deskripsi";
+              ...widget.studentList.map((student) {
+                final gradeKey = "${student.id}_nilai";
+                final deskripsiKey = "${student.id}_deskripsi";
 
                 // Initialize controllers if not exists
-                if (!_tableControllers.containsKey(nilaiKey)) {
-                  _tableControllers[nilaiKey] = TextEditingController();
-                  _tableFocusNodes[nilaiKey] = FocusNode();
+                if (!_tableControllers.containsKey(gradeKey)) {
+                  _tableControllers[gradeKey] = TextEditingController();
+                  _tableFocusNodes[gradeKey] = FocusNode();
                 }
                 if (!_tableControllers.containsKey(deskripsiKey)) {
                   _tableControllers[deskripsiKey] = TextEditingController();
@@ -336,7 +341,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              siswa.name,
+                              student.name,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 color: ColorUtils.slate900,
@@ -345,7 +350,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              siswa.studentNumber,
+                              student.studentNumber,
                               style: TextStyle(
                                 fontSize: 10,
                                 color: ColorUtils.slate500,
@@ -365,8 +370,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                           ),
                         ),
                         child: TextFormField(
-                          controller: _tableControllers[nilaiKey],
-                          focusNode: _tableFocusNodes[nilaiKey],
+                          controller: _tableControllers[gradeKey],
+                          focusNode: _tableFocusNodes[gradeKey],
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           style: TextStyle(color: ColorUtils.slate900),
@@ -400,7 +405,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                           },
                           onChanged: (value) {
                             setState(() {
-                              _nilaiSiswaMap[siswa.id]?['nilai'] = value;
+                              _gradeStudentMap[student.id]?['nilai'] = value;
                             });
                           },
                         ),
@@ -429,7 +434,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                               ),
                             ),
                             onChanged: (value) {
-                              _nilaiSiswaMap[siswa.id]?['deskripsi'] = value;
+                              _gradeStudentMap[student.id]?['deskripsi'] = value;
                             },
                           ),
                         ),
@@ -463,8 +468,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
             child: Row(
               children: [
                 Text(
-                  _getJenisNilaiLabel(
-                    _confirmedJenisNilai ?? '',
+                  _getGradeTypeLabel(
+                    _confirmedGradeType ?? '',
                     languageProvider,
                   ),
                   style: TextStyle(
@@ -593,7 +598,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 border: Border.all(color: ColorUtils.slate200),
               ),
               child: DropdownButtonFormField<String>(
-                initialValue: _selectedJenisNilai,
+                initialValue: _selectedGradeType,
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   prefixIcon: Icon(
@@ -608,15 +613,15 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                   contentPadding: EdgeInsets.symmetric(vertical: 12),
                 ),
                 style: TextStyle(color: ColorUtils.slate900),
-                items: _jenisNilaiList.map((String jenis) {
+                items: _gradeTypeList.map((String type) {
                   return DropdownMenuItem<String>(
-                    value: jenis,
-                    child: Text(_getJenisNilaiLabel(jenis, languageProvider)),
+                    value: type,
+                    child: Text(_getGradeTypeLabel(type, languageProvider)),
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    _selectedJenisNilai = newValue;
+                    _selectedGradeType = newValue;
                   });
                 },
                 validator: (value) {
@@ -709,11 +714,11 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: (_selectedJenisNilai != null && !_isReadOnly)
+                onPressed: (_selectedGradeType != null && !_isReadOnly)
                     ? () {
                         setState(() {
                           _isConfigurationSet = true;
-                          _confirmedJenisNilai = _selectedJenisNilai;
+                          _confirmedGradeType = _selectedGradeType;
                           _confirmedDate = _selectedDate;
                         });
                       }
@@ -746,9 +751,9 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
-        final siswaWithNilaiCount = widget.siswaList.where((siswa) {
-          final nilaiData = _nilaiSiswaMap[siswa.id];
-          return nilaiData?['nilai']?.isNotEmpty == true;
+        final studentsWithGradeCount = widget.studentList.where((student) {
+          final gradeData = _gradeStudentMap[student.id];
+          return gradeData?['nilai']?.isNotEmpty == true;
         }).length;
 
         return Scaffold(
@@ -873,14 +878,14 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: siswaWithNilaiCount > 0
+                                  color: studentsWithGradeCount > 0
                                       ? ColorUtils.success600.withValues(
                                           alpha: 0.08,
                                         )
                                       : ColorUtils.slate100,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: siswaWithNilaiCount > 0
+                                    color: studentsWithGradeCount > 0
                                         ? ColorUtils.success600.withValues(
                                             alpha: 0.3,
                                           )
@@ -888,9 +893,9 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                                   ),
                                 ),
                                 child: Text(
-                                  '$siswaWithNilaiCount/${widget.siswaList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
+                                  '$studentsWithGradeCount/${widget.studentList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
                                   style: TextStyle(
-                                    color: siswaWithNilaiCount > 0
+                                    color: studentsWithGradeCount > 0
                                         ? ColorUtils.success600
                                         : ColorUtils.slate500,
                                     fontSize: 12,
@@ -943,9 +948,10 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                             child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: _submitNilai,
+                                onPressed: _isSaving ? null : _submitGrade,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: _getPrimaryColor(),
+                                  disabledBackgroundColor: _getPrimaryColor().withValues(alpha: 0.6),
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
@@ -955,7 +961,16 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: Text(
+                                child: _isSaving
+                                    ? SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Finish',
                                     'id': 'Selesai',

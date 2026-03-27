@@ -340,7 +340,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header dengan gradient
+              // Header with gradient
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(AppSpacing.xl),

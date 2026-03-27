@@ -17,16 +17,16 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 ///
 /// StatelessWidget -- no local state needed. All data comes via props.
 /// Like a Vue presentational component that only renders data.
-/// Props: [raportData], [studentName], [studentData], [userRole].
+/// Props: [reportCardData], [studentName], [studentData], [userRole].
 class ParentRaportDetailScreen extends StatelessWidget {
-  final Map<String, dynamic> raportData;
+  final Map<String, dynamic> reportCardData;
   final String studentName;
   final Map<String, dynamic> studentData;
   final String userRole;
 
   const ParentRaportDetailScreen({
     super.key,
-    required this.raportData,
+    required this.reportCardData,
     required this.studentName,
     required this.studentData,
     this.userRole = 'wali', // Default to wali
@@ -176,17 +176,17 @@ class ParentRaportDetailScreen extends StatelessWidget {
     try {
       if (userRole == 'wali') {
         await ExcelRaportService.exportCertificateRaportPdf(
-          studentClassId: raportData['student_class_id'].toString(),
-          academicYearId: raportData['academic_year_id'].toString(),
-          semesterId: raportData['semester_id'].toString(),
+          studentClassId: reportCardData['student_class_id'].toString(),
+          academicYearId: reportCardData['academic_year_id'].toString(),
+          semesterId: reportCardData['semester_id'].toString(),
           studentName: studentName,
           context: context,
         );
       } else {
         await ExcelRaportService.exportSingleRaportPdf(
-          studentClassId: raportData['student_class_id'].toString(),
-          academicYearId: raportData['academic_year_id'].toString(),
-          semesterId: raportData['semester_id'].toString(),
+          studentClassId: reportCardData['student_class_id'].toString(),
+          academicYearId: reportCardData['academic_year_id'].toString(),
+          semesterId: reportCardData['semester_id'].toString(),
           studentName: studentName,
           context: context,
         );
@@ -273,12 +273,12 @@ class ParentRaportDetailScreen extends StatelessWidget {
             _buildSectionHeader('Sikap', Icons.accessibility_new_rounded),
             _buildDetailRow(
               'Spiritual',
-              '${raportData['spiritual_predicate'] ?? '-'} : ${raportData['spiritual_description'] ?? '-'}',
+              '${reportCardData['spiritual_predicate'] ?? '-'} : ${reportCardData['spiritual_description'] ?? '-'}',
             ),
             const Divider(),
             _buildDetailRow(
               'Sosial',
-              '${raportData['social_predicate'] ?? '-'} : ${raportData['social_description'] ?? '-'}',
+              '${reportCardData['social_predicate'] ?? '-'} : ${reportCardData['social_description'] ?? '-'}',
             ),
           ],
         ),
@@ -287,7 +287,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildGradesCard() {
-    final subjects = raportData['raport_subjects'] as List<dynamic>? ?? [];
+    final subjects = reportCardData['raport_subjects'] as List<dynamic>? ?? [];
 
     if (subjects.isEmpty) {
       return Card(
@@ -356,7 +356,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildExtracurricularCard() {
-    final extras = raportData['extracurriculars'] as List<dynamic>? ?? [];
+    final extras = reportCardData['extracurriculars'] as List<dynamic>? ?? [];
     if (extras.isEmpty) return const SizedBox.shrink();
 
     return Card(
@@ -387,7 +387,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildAchievementCard() {
-    final achievements = raportData['achievements'] as List<dynamic>? ?? [];
+    final achievements = reportCardData['achievements'] as List<dynamic>? ?? [];
     if (achievements.isEmpty) return const SizedBox.shrink();
 
     return Card(
@@ -435,17 +435,17 @@ class ParentRaportDetailScreen extends StatelessWidget {
               children: [
                 _buildAttendanceBadge(
                   'Sakit',
-                  raportData['attendance_sick'] ?? 0,
+                  reportCardData['attendance_sick'] ?? 0,
                   Colors.orange,
                 ),
                 _buildAttendanceBadge(
                   'Izin',
-                  raportData['attendance_permit'] ?? 0,
+                  reportCardData['attendance_permit'] ?? 0,
                   Colors.blue,
                 ),
                 _buildAttendanceBadge(
                   'Alpa',
-                  raportData['attendance_absent'] ?? 0,
+                  reportCardData['attendance_absent'] ?? 0,
                   Colors.red,
                 ),
               ],
@@ -481,7 +481,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildCatatanCard() {
-    final notes = raportData['homeroom_notes']?.toString() ?? '';
+    final notes = reportCardData['homeroom_notes']?.toString() ?? '';
     if (notes.isEmpty) return const SizedBox.shrink();
 
     return Card(
@@ -504,7 +504,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
   }
 
   Widget _buildDecisionCard() {
-    final decision = raportData['promotion_decision']?.toString() ?? '';
+    final decision = reportCardData['promotion_decision']?.toString() ?? '';
     if (decision.isEmpty) return const SizedBox.shrink();
 
     return Card(

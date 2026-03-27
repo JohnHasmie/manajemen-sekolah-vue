@@ -38,7 +38,7 @@ class LocalCacheService {
   /// Default time-to-live for cached data. Like Laravel's `cache.ttl` config.
   static const Duration _defaultTTL = Duration(hours: 24);
 
-  /// Menghapus semua cache yang diawali dengan prefix kita
+  /// Clears all cache entries starting with our prefix
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     final keys = prefs
@@ -50,8 +50,8 @@ class LocalCacheService {
     }
   }
 
-  /// Menghapus semua cache yang diawali dengan sub-prefix tertentu (setelah prefix utama)
-  /// Contoh: clearStartingWith('subject_') akan menghapus api_cache_subject_...
+  /// Clears all cache entries starting with a specific sub-prefix (after the main prefix)
+  /// Example: clearStartingWith('subject_') will remove api_cache_subject_...
   static Future<void> clearStartingWith(String subPrefix) async {
     final prefs = await SharedPreferences.getInstance();
     final fullPrefix = '$_prefix$subPrefix';
@@ -69,13 +69,13 @@ class LocalCacheService {
     }
   }
 
-  /// Menghapus cache spesifik berdasarkan key (misal saat ada perubahan data)
+  /// Removes a specific cache entry by key (e.g. when data changes)
   static Future<void> invalidate(String key) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('$_prefix$key');
   }
 
-  /// Menyimpan data hasil API ke cache
+  /// Saves API response data to cache
   static Future<void> save(String key, dynamic data) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -89,7 +89,7 @@ class LocalCacheService {
     }
   }
 
-  /// Memuat data dari cache jika masih dalam masa berlaku (TTL)
+  /// Loads data from cache if still within the time-to-live (TTL) period
   static Future<dynamic> load(String key, {Duration? ttl}) async {
     try {
       final prefs = await SharedPreferences.getInstance();

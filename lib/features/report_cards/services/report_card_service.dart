@@ -88,7 +88,7 @@ class ApiRaportService {
   /// Creates or updates a raport record.
   /// Like `Raport::updateOrCreate($data)` in Laravel.
   /// Returns the saved raport data, or null if unsuccessful.
-  Future<Map<String, dynamic>?> saveRaport(
+  Future<Map<String, dynamic>?> saveReportCard(
     Map<String, dynamic> data,
   ) async {
     final response = await dioClient.post('/raport', data: data);

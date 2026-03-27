@@ -1024,31 +1024,31 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   }
 
   void _showAddEditDialog({Map<String, dynamic>? announcementData}) {
-    final judulController = TextEditingController(
+    final titleController = TextEditingController(
       text: announcementData?['title'] ?? '',
     );
-    final kontenController = TextEditingController(
+    final contentController = TextEditingController(
       text: announcementData?['content'] ?? '',
     );
     String? selectedClassId = announcementData?['kelas_id'];
     String? selectedRole = announcementData?['role_target'] ?? 'all';
-    String? rawPrioritas = announcementData?['priority'];
-    String? selectedPrioritas;
-    if (rawPrioritas != null) {
-      if (rawPrioritas.toLowerCase() == 'biasa') {
-        selectedPrioritas = 'normal';
-      } else if (rawPrioritas.toLowerCase() == 'penting') {
-        selectedPrioritas = 'important';
+    String? rawPriority = announcementData?['priority'];
+    String? selectedPriority;
+    if (rawPriority != null) {
+      if (rawPriority.toLowerCase() == 'biasa') {
+        selectedPriority = 'normal';
+      } else if (rawPriority.toLowerCase() == 'penting') {
+        selectedPriority = 'important';
       } else {
-        selectedPrioritas = rawPrioritas.toLowerCase();
+        selectedPriority = rawPriority.toLowerCase();
       }
     } else {
-      selectedPrioritas = 'normal';
+      selectedPriority = 'normal';
     }
-    DateTime? tanggalAwal = announcementData?['start_date'] != null
+    DateTime? startDate = announcementData?['start_date'] != null
         ? DateTime.parse(announcementData!['start_date'])
         : null;
-    DateTime? tanggalAkhir = announcementData?['end_date'] != null
+    DateTime? endDate = announcementData?['end_date'] != null
         ? DateTime.parse(announcementData!['end_date'])
         : null;
 
@@ -1061,6 +1061,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
       backgroundColor: Colors.transparent,
       builder: (context) {
         final languageProvider = ref.watch(languageRiverpod);
+        bool isSaving = false;
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return Padding(
@@ -1190,7 +1191,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildDialogTextField(
-                                  controller: judulController,
+                                  controller: titleController,
                                   label: languageProvider.getTranslatedText({
                                     'en': 'Title',
                                     'id': 'Judul',
@@ -1199,7 +1200,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                 ),
                                 SizedBox(height: AppSpacing.md),
                                 _buildDialogTextField(
-                                  controller: kontenController,
+                                  controller: contentController,
                                   label: languageProvider.getTranslatedText({
                                     'en': 'Content',
                                     'id': 'Konten',
@@ -1209,10 +1210,10 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                 ),
                                 SizedBox(height: AppSpacing.md),
                                 _buildPrioritasDropdown(
-                                  value: selectedPrioritas,
+                                  value: selectedPriority,
                                   onChanged: (value) {
                                     setDialogState(() {
-                                      selectedPrioritas = value;
+                                      selectedPriority = value;
                                     });
                                   },
                                   languageProvider: languageProvider,
@@ -1237,11 +1238,11 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                               'en': 'Start Date',
                                               'id': 'Tanggal Mulai',
                                             }),
-                                        value: tanggalAwal,
+                                        value: startDate,
                                         onTap: () =>
                                             _selectDate(context, true, (date) {
                                               setDialogState(() {
-                                                tanggalAwal = date;
+                                                startDate = date;
                                               });
                                             }),
                                       ),
@@ -1254,11 +1255,11 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                               'en': 'End Date',
                                               'id': 'Tanggal Berakhir',
                                             }),
-                                        value: tanggalAkhir,
+                                        value: endDate,
                                         onTap: () =>
                                             _selectDate(context, false, (date) {
                                               setDialogState(() {
-                                                tanggalAkhir = date;
+                                                endDate = date;
                                               });
                                             }),
                                       ),
@@ -1322,11 +1323,13 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                               SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () async {
-                                    final judul = judulController.text.trim();
-                                    final konten = kontenController.text.trim();
+                                  onPressed: isSaving
+                                      ? null
+                                      : () async {
+                                    final title = titleController.text.trim();
+                                    final content = contentController.text.trim();
 
-                                    if (judul.isEmpty || konten.isEmpty) {
+                                    if (title.isEmpty || content.isEmpty) {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
@@ -1345,25 +1348,27 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                       return;
                                     }
 
+                                    setDialogState(() => isSaving = true);
+
                                     try {
                                       final Map<String, String> data = {
-                                        'title': judulController.text,
-                                        'content': kontenController.text,
+                                        'title': titleController.text,
+                                        'content': contentController.text,
                                         'role_target': selectedRole ?? 'all',
                                         'priority':
-                                            selectedPrioritas ?? 'normal',
+                                            selectedPriority ?? 'normal',
                                         'type': 'general',
                                       };
 
                                       if (selectedClassId != null) {
                                         data['class_id'] = selectedClassId;
                                       }
-                                      if (tanggalAwal != null) {
-                                        data['start_date'] = tanggalAwal!
+                                      if (startDate != null) {
+                                        data['start_date'] = startDate!
                                             .toIso8601String();
                                       }
-                                      if (tanggalAkhir != null) {
-                                        data['end_date'] = tanggalAkhir!
+                                      if (endDate != null) {
+                                        data['end_date'] = endDate!
                                             .toIso8601String();
                                       }
 
@@ -1437,10 +1442,15 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                           ),
                                         );
                                       }
+                                    } finally {
+                                      if (context.mounted) {
+                                        setDialogState(() => isSaving = false);
+                                      }
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _getPrimaryColor(),
+                                    disabledBackgroundColor: _getPrimaryColor().withValues(alpha: 0.6),
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     elevation: 2,
                                     shadowColor: _getPrimaryColor().withValues(
@@ -1450,7 +1460,16 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  child: Text(
+                                  child: isSaving
+                                      ? SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
                                     isEdit
                                         ? languageProvider.getTranslatedText({
                                             'en': 'Update',
@@ -2071,7 +2090,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header dengan gradient
+              // Header with gradient
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(AppSpacing.xl),

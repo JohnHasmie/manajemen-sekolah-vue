@@ -22,19 +22,19 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-// Note: pastikan import AppLocalizations dan Provider jika diperlukan,
-// namun di sini kita gunakan styling yang umum.
+// Note: ensure AppLocalizations and Provider are imported if needed,
+// but here we use common styling.
 
 /// AI-generated lesson plan viewer/editor with rich text editing.
 ///
 /// Supports two modes:
-/// 1. Direct mode -- [rppData] is provided, displays immediately
+/// 1. Direct mode -- [lessonPlanData] is provided, displays immediately
 /// 2. Polling mode -- [pollUrl]/[jobId] provided, polls for AI job completion
 ///
 /// Uses Flutter Quill for rich text editing (like Vue Quill / TinyMCE).
-/// Props: [rppData], [teacherId], [onSaved] callback, polling fields.
-class RppAiResultScreen extends StatefulWidget {
-  final Map<String, dynamic>? rppData;
+/// Props: [lessonPlanData], [teacherId], [onSaved] callback, polling fields.
+class LessonPlanAiResultScreen extends StatefulWidget {
+  final Map<String, dynamic>? lessonPlanData;
   final String teacherId;
   final VoidCallback onSaved;
 
@@ -43,12 +43,12 @@ class RppAiResultScreen extends StatefulWidget {
   final String? jobId;
   final String? token;
 
-  /// Metadata to build rppData after polling completes
+  /// Metadata to build lessonPlanData after polling completes
   final Map<String, dynamic>? pollingMetadata;
 
-  const RppAiResultScreen({
+  const LessonPlanAiResultScreen({
     super.key,
-    this.rppData,
+    this.lessonPlanData,
     required this.teacherId,
     required this.onSaved,
     this.pollUrl,
@@ -58,35 +58,35 @@ class RppAiResultScreen extends StatefulWidget {
   });
 
   @override
-  State<RppAiResultScreen> createState() => _RppAiResultScreenState();
+  State<LessonPlanAiResultScreen> createState() => _LessonPlanAiResultScreenState();
 }
 
-/// State for [RppAiResultScreen].
+/// State for [LessonPlanAiResultScreen].
 ///
 /// Like a Vue component with `data() { return { isSaving, isPolling, ... } }`.
-/// Manages multiple Quill controllers for each RPP section (tujuan, kegiatan
+/// Manages multiple Quill controllers for each lesson plan section (tujuan, kegiatan
 /// inti, penilaian, kompetensi) and text controllers for metadata fields.
-class _RppAiResultScreenState extends State<RppAiResultScreen> {
+class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
   bool _isSaving = false;
   bool _isRegenerating = false;
   bool _isPolling = false;
   String _pollingStatus = '';
   String? _pollingError;
 
-  late quill.QuillController _tujuanController;
-  late quill.QuillController _kegiatanIntiController;
-  late quill.QuillController _penilaianController;
-  late quill.QuillController _kompetensiIntiController;
-  late quill.QuillController _kompetensiDasarController;
+  late quill.QuillController _objectivesController;
+  late quill.QuillController _coreActivityController;
+  late quill.QuillController _assessmentController;
+  late quill.QuillController _coreCompetencyController;
+  late quill.QuillController _basicCompetencyController;
 
-  late TextEditingController _judulController;
-  late TextEditingController _satuanPendidikanController;
-  late TextEditingController _mataPelajaranController;
-  late TextEditingController _babController;
-  late TextEditingController _subBabController;
-  late TextEditingController _pembelajaranKeController;
-  late TextEditingController _kelasSemesterController;
-  late TextEditingController _alokasiWaktuController;
+  late TextEditingController _titleController;
+  late TextEditingController _educationUnitController;
+  late TextEditingController _subjectNameController;
+  late TextEditingController _chapterController;
+  late TextEditingController _subChapterController;
+  late TextEditingController _lessonNumberController;
+  late TextEditingController _classSemesterController;
+  late TextEditingController _timeAllocationController;
 
   final TextEditingController _promptController = TextEditingController();
 
@@ -99,10 +99,10 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       // Polling mode - init empty controllers and start polling
       _initControllers({});
       _isPolling = true;
-      _pollingStatus = 'RPP sedang disusun oleh AI...';
+      _pollingStatus = 'AI is generating lesson plan...';
       _startPolling();
     } else {
-      _initControllers(widget.rppData ?? {});
+      _initControllers(widget.lessonPlanData ?? {});
     }
   }
 
@@ -171,11 +171,11 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
           if (status == 'completed' || status == 'success') {
             // Per docs Section 2.2: result is inside data.result
-            final rppResponse = jobData['result'] ??
+            final lessonPlanResponse = jobData['result'] ??
                 jobData['data'] ??
                 resultBody['result'] ??
                 resultBody;
-            _applyPollingResult(rppResponse);
+            _applyPollingResult(lessonPlanResponse);
             return;
           } else if (status == 'failed' || status == 'error') {
             setState(() {
@@ -219,26 +219,26 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     }
   }
 
-  void _applyPollingResult(dynamic rppResponse) {
+  void _applyPollingResult(dynamic lessonPlanResponse) {
     final metadata = widget.pollingMetadata ?? {};
 
     final mappedData = {
-      'judul': rppResponse['title'] ?? metadata['title'] ?? 'RPP AI',
-      'mata_pelajaran_id': metadata['mata_pelajaran_id'],
-      'mata_pelajaran_nama': metadata['mata_pelajaran_nama'] ?? '',
-      'satuan_pendidikan': metadata['satuan_pendidikan'] ?? 'SD/MI',
-      'bab_nama': metadata['bab_nama'] ?? '',
-      'sub_bab_nama': metadata['sub_bab_nama'] ?? '',
-      'kelas_semester': metadata['kelas_semester'] ?? '',
-      'tema': rppResponse['title'],
-      'sub_tema': '',
-      'pembelajaran_ke': '',
-      'alokasi_waktu': metadata['alokasi_waktu'] ?? '',
-      'kompetensi_inti': _stripHtml(rppResponse['core_competence'] as String? ?? ''),
-      'kompetensi_dasar': _stripHtml(rppResponse['basic_competence'] as String? ?? ''),
-      'tujuan_pembelajaran': _stripHtml(rppResponse['learning_objective'] as String? ?? ''),
-      'kegiatan_inti': _stripHtml(rppResponse['learning_activities'] as String? ?? ''),
-      'penilaian': _stripHtml(rppResponse['assessment'] as String? ?? ''),
+      'title': lessonPlanResponse['title'] ?? metadata['title'] ?? 'Lesson Plan AI',
+      'subject_id': metadata['mata_pelajaran_id'],
+      'subject_name': metadata['mata_pelajaran_nama'] ?? '',
+      'education_unit': metadata['satuan_pendidikan'] ?? 'SD/MI',
+      'chapter_name': metadata['bab_nama'] ?? '',
+      'sub_chapter_name': metadata['sub_bab_nama'] ?? '',
+      'class_semester': metadata['kelas_semester'] ?? '',
+      'theme': lessonPlanResponse['title'],
+      'sub_theme': '',
+      'lesson_number': '',
+      'time_allocation': metadata['alokasi_waktu'] ?? '',
+      'core_competency': _stripHtml(lessonPlanResponse['core_competence'] as String? ?? ''),
+      'basic_competency': _stripHtml(lessonPlanResponse['basic_competence'] as String? ?? ''),
+      'learning_objectives': _stripHtml(lessonPlanResponse['learning_objective'] as String? ?? ''),
+      'core_activity': _stripHtml(lessonPlanResponse['learning_activities'] as String? ?? ''),
+      'assessment': _stripHtml(lessonPlanResponse['assessment'] as String? ?? ''),
       'is_ai_generated': true,
     };
 
@@ -311,76 +311,85 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   }
 
   void _initControllers(Map<String, dynamic> data) {
-    _judulController = TextEditingController(
-      text: data['judul'] ?? data['title'] ?? 'RPP AI',
+    // English keys first, fallback to Indonesian API keys
+    _titleController = TextEditingController(
+      text: data['title'] ?? data['judul'] ?? 'Lesson Plan AI',
     );
-    _satuanPendidikanController = TextEditingController(
-      text: data['satuan_pendidikan'] ?? 'SD/MI',
+    _educationUnitController = TextEditingController(
+      text: data['education_unit'] ?? data['satuan_pendidikan'] ?? 'SD/MI',
     );
-    _mataPelajaranController = TextEditingController(
-      text: data['mata_pelajaran_nama'] ?? '',
+    _subjectNameController = TextEditingController(
+      text: data['subject_name'] ?? data['mata_pelajaran_nama'] ?? '',
     );
-    _babController = TextEditingController(text: data['bab_nama'] ?? '');
-    _subBabController = TextEditingController(text: data['sub_bab_nama'] ?? '');
-    _pembelajaranKeController = TextEditingController(
-      text: data['pembelajaran_ke'] ?? '',
+    _chapterController = TextEditingController(
+      text: data['chapter_name'] ?? data['bab_nama'] ?? '',
     );
-    _kelasSemesterController = TextEditingController(
-      text: data['kelas_semester'] ?? '',
+    _subChapterController = TextEditingController(
+      text: data['sub_chapter_name'] ?? data['sub_bab_nama'] ?? '',
     );
-    _alokasiWaktuController = TextEditingController(
-      text: data['alokasi_waktu'] ?? '',
+    _lessonNumberController = TextEditingController(
+      text: data['lesson_number'] ?? data['pembelajaran_ke'] ?? '',
     );
-
-    _kompetensiIntiController = quill.QuillController(
-      document: _convertHtmlToQuill(data['kompetensi_inti'] ?? ''),
-      selection: const TextSelection.collapsed(offset: 0),
+    _classSemesterController = TextEditingController(
+      text: data['class_semester'] ?? data['kelas_semester'] ?? '',
     );
-
-    _kompetensiDasarController = quill.QuillController(
-      document: _convertHtmlToQuill(data['kompetensi_dasar'] ?? ''),
-      selection: const TextSelection.collapsed(offset: 0),
+    _timeAllocationController = TextEditingController(
+      text: data['time_allocation'] ?? data['alokasi_waktu'] ?? '',
     );
 
-    _tujuanController = quill.QuillController(
+    _coreCompetencyController = quill.QuillController(
       document: _convertHtmlToQuill(
-        data['tujuan_pembelajaran'] ?? data['learning_objective'] ?? '',
+        data['core_competency'] ?? data['kompetensi_inti'] ?? '',
       ),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
-    _kegiatanIntiController = quill.QuillController(
+    _basicCompetencyController = quill.QuillController(
       document: _convertHtmlToQuill(
-        data['kegiatan_inti'] ?? data['learning_activities'] ?? '',
+        data['basic_competency'] ?? data['kompetensi_dasar'] ?? '',
       ),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
-    _penilaianController = quill.QuillController(
+    _objectivesController = quill.QuillController(
       document: _convertHtmlToQuill(
-        data['penilaian'] ?? data['assessment'] ?? '',
+        data['learning_objectives'] ?? data['tujuan_pembelajaran'] ?? data['learning_objective'] ?? '',
+      ),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+
+    _coreActivityController = quill.QuillController(
+      document: _convertHtmlToQuill(
+        data['core_activity'] ?? data['kegiatan_inti'] ?? data['learning_activities'] ?? '',
+      ),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+
+    _assessmentController = quill.QuillController(
+      document: _convertHtmlToQuill(
+        data['assessment'] ?? data['penilaian'] ?? '',
       ),
       selection: const TextSelection.collapsed(offset: 0),
     );
   }
 
-  // stripHtml dihapus karena digunakan html2md
+  // stripHtml removed because html2md is used instead
 
   @override
   void dispose() {
-    _kompetensiIntiController.dispose();
-    _kompetensiDasarController.dispose();
-    _tujuanController.dispose();
-    _kegiatanIntiController.dispose();
-    _penilaianController.dispose();
-    _judulController.dispose();
-    _satuanPendidikanController.dispose();
-    _mataPelajaranController.dispose();
-    _babController.dispose();
-    _subBabController.dispose();
-    _pembelajaranKeController.dispose();
-    _kelasSemesterController.dispose();
-    _alokasiWaktuController.dispose();
+    _coreCompetencyController.dispose();
+    _basicCompetencyController.dispose();
+    _objectivesController.dispose();
+    _coreActivityController.dispose();
+    _assessmentController.dispose();
+    _titleController.dispose();
+    _educationUnitController.dispose();
+    _subjectNameController.dispose();
+    _chapterController.dispose();
+    _subChapterController.dispose();
+    _lessonNumberController.dispose();
+    _classSemesterController.dispose();
+    _timeAllocationController.dispose();
     _promptController.dispose();
     super.dispose();
   }
@@ -416,10 +425,10 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                 SizedBox(height: AppSpacing.lg),
                 _buildDialogField(
                   'Mata Pelajaran',
-                  _mataPelajaranController.text,
+                  _subjectNameController.text,
                 ),
                 SizedBox(height: AppSpacing.md),
-                _buildDialogField('Bab', _babController.text),
+                _buildDialogField('Bab', _chapterController.text),
                 SizedBox(height: AppSpacing.lg),
                 Text(
                   'Instruksi / Prompt Tambahan (Opsional)',
@@ -466,7 +475,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             ElevatedButton(
               onPressed: () {
                 AppNavigator.pop(context);
-                _regenerateRPP(prompt: _promptController.text);
+                _regenerateLessonPlan(prompt: _promptController.text);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: ColorUtils.primary,
@@ -509,7 +518,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     );
   }
 
-  Future<void> _regenerateRPP({String prompt = ''}) async {
+  Future<void> _regenerateLessonPlan({String prompt = ''}) async {
     setState(() {
       _isRegenerating = true;
     });
@@ -519,7 +528,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       await Future.delayed(const Duration(seconds: 2));
 
       final regeneratedData = {
-        'title': _judulController.text, // Pertahankan judul
+        'title': _titleController.text, // Pertahankan judul
         'learning_objective':
             '<ol><li>[Regenerated] Melalui diskusi, siswa dapat memahami konsep dengan lebih mendalam.</li><li>Diberikan studi kasus, siswa mampu memecahkan masalah dengan akurat.</li></ol>',
         'learning_activities':
@@ -529,13 +538,13 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       };
 
       setState(() {
-        _tujuanController.document = _convertHtmlToQuill(
+        _objectivesController.document = _convertHtmlToQuill(
           regeneratedData['learning_objective']!,
         );
-        _kegiatanIntiController.document = _convertHtmlToQuill(
+        _coreActivityController.document = _convertHtmlToQuill(
           regeneratedData['learning_activities']!,
         );
-        _penilaianController.document = _convertHtmlToQuill(
+        _assessmentController.document = _convertHtmlToQuill(
           regeneratedData['assessment']!,
         );
       });
@@ -590,7 +599,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       yPosition += 30;
 
       graphics.drawString(
-        _judulController.text.toUpperCase(),
+        _titleController.text.toUpperCase(),
         titleFont,
         bounds: Rect.fromLTWH(0, yPosition, page.size.width, 30),
         format: PdfStringFormat(alignment: PdfTextAlignment.center),
@@ -599,13 +608,13 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
       // Draw meta info
       final metaData = [
-        'Satuan Pendidikan : ${_satuanPendidikanController.text}',
-        'Mata Pelajaran    : ${_mataPelajaranController.text}',
-        'Bab               : ${_babController.text}',
-        'Sub Bab           : ${_subBabController.text}',
-        'Kelas/Semester    : ${_kelasSemesterController.text}',
-        'Pembelajaran Ke   : ${_pembelajaranKeController.text}',
-        'Alokasi Waktu     : ${_alokasiWaktuController.text}',
+        'Satuan Pendidikan : ${_educationUnitController.text}',
+        'Mata Pelajaran    : ${_subjectNameController.text}',
+        'Bab               : ${_chapterController.text}',
+        'Sub Bab           : ${_subChapterController.text}',
+        'Kelas/Semester    : ${_classSemesterController.text}',
+        'Pembelajaran Ke   : ${_lessonNumberController.text}',
+        'Alokasi Waktu     : ${_timeAllocationController.text}',
       ];
 
       for (var meta in metaData) {
@@ -668,27 +677,27 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
       yPosition = drawSection(
         'A. Kompetensi Inti (KI)',
-        _kompetensiIntiController.document.toPlainText(),
+        _coreCompetencyController.document.toPlainText(),
         yPosition,
       );
       yPosition = drawSection(
         'B. Kompetensi Dasar (KD) dan Indikator (IPK)',
-        _kompetensiDasarController.document.toPlainText(),
+        _basicCompetencyController.document.toPlainText(),
         yPosition,
       );
       yPosition = drawSection(
         'C. Tujuan Pembelajaran',
-        _tujuanController.document.toPlainText(),
+        _objectivesController.document.toPlainText(),
         yPosition,
       );
       yPosition = drawSection(
         'D. Kegiatan Pembelajaran',
-        _kegiatanIntiController.document.toPlainText(),
+        _coreActivityController.document.toPlainText(),
         yPosition,
       );
       yPosition = drawSection(
         'E. Penilaian (Asesmen)',
-        _penilaianController.document.toPlainText(),
+        _assessmentController.document.toPlainText(),
         yPosition,
       );
 
@@ -711,8 +720,8 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     }
   }
 
-  Future<void> _saveRPP() async {
-    if (_judulController.text.isEmpty) {
+  Future<void> _saveLessonPlan() async {
+    if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Judul RPP wajib diisi.')));
@@ -724,32 +733,32 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     });
 
     try {
-      // Map data untuk Backend K-13 (3 komponen manual + metadata)
-      // Waktu dan default lainnya diatur static untuk AI bypass saat ini
+      // Map data for Backend K-13 (3 manual components + metadata)
+      // Duration and other defaults are set statically for AI bypass currently
       final payloadData = {
         'guru_id': widget.teacherId,
         'mata_pelajaran_id':
-            widget.rppData?['mata_pelajaran_id'] ?? widget.rppData?['subject_id'],
-        'judul': _judulController.text,
-        'kompetensi_inti': _kompetensiIntiController.document.toPlainText(),
-        'kompetensi_dasar': _kompetensiDasarController.document.toPlainText(),
-        'tujuan_pembelajaran': _tujuanController.document.toPlainText(),
+            widget.lessonPlanData?['mata_pelajaran_id'] ?? widget.lessonPlanData?['subject_id'],
+        'judul': _titleController.text,
+        'kompetensi_inti': _coreCompetencyController.document.toPlainText(),
+        'kompetensi_dasar': _basicCompetencyController.document.toPlainText(),
+        'tujuan_pembelajaran': _objectivesController.document.toPlainText(),
         'kegiatan_pendahuluan':
             '• Melakukan Pembukaan dengan Salam dan Membaca Doa\n• Mengaitkan Materi Sebelumnya',
-        'kegiatan_inti': _kegiatanIntiController.document.toPlainText(),
+        'kegiatan_inti': _coreActivityController.document.toPlainText(),
         'kegiatan_penutup':
             '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa',
-        'penilaian': _penilaianController.document.toPlainText(),
-        'satuan_pendidikan': _satuanPendidikanController.text,
-        'kelas_semester': _kelasSemesterController.text,
-        'tema': _babController.text, // Bab sebagai tema
-        'sub_tema': _subBabController.text,
-        'pembelajaran_ke': _pembelajaranKeController.text,
-        'alokasi_waktu': _alokasiWaktuController.text,
+        'penilaian': _assessmentController.document.toPlainText(),
+        'satuan_pendidikan': _educationUnitController.text,
+        'kelas_semester': _classSemesterController.text,
+        'tema': _chapterController.text, // Chapter as theme
+        'sub_tema': _subChapterController.text,
+        'pembelajaran_ke': _lessonNumberController.text,
+        'alokasi_waktu': _timeAllocationController.text,
         'waktu_pendahuluan': '15',
         'waktu_inti': '140',
         'waktu_penutup': '15',
-        'is_ai_generated': true, // Flaging backend untuk AI
+        'is_ai_generated': true, // Backend flag for AI-generated content
       };
 
       AppLogger.debug('lesson_plan', "Menyimpan RPP Payload: \$payloadData");
@@ -758,7 +767,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
       if (mounted) {
                 SnackBarUtils.showSuccess(context, 'RPP AI berhasil disimpan!');
-        AppNavigator.pop(context); // Kembali ke list RPP (PopScope triggers onSaved)
+        AppNavigator.pop(context); // Return to RPP list (PopScope triggers onSaved)
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);
@@ -976,7 +985,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                           ),
                         )
                       : Icon(Icons.save),
-                  onPressed: _isSaving ? null : _saveRPP,
+                  onPressed: _isSaving ? null : _saveLessonPlan,
                   tooltip: 'Simpan RPP',
                 ),
               ],
@@ -1016,33 +1025,33 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             ),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('Judul RPP'),
-            _buildTextField(_judulController, maxLines: 1),
+            _buildTextField(_titleController, maxLines: 1),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('Informasi Umum'),
             _buildMetaInfoPanel(),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('A. Kompetensi Inti (KI)'),
-            _buildRichTextField(_kompetensiIntiController),
+            _buildRichTextField(_coreCompetencyController),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('B. Kompetensi Dasar (KD) dan Indikator (IPK)'),
-            _buildRichTextField(_kompetensiDasarController),
+            _buildRichTextField(_basicCompetencyController),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('C. Tujuan Pembelajaran'),
-            _buildRichTextField(_tujuanController),
+            _buildRichTextField(_objectivesController),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader(
               'D. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup)',
             ),
-            _buildRichTextField(_kegiatanIntiController),
+            _buildRichTextField(_coreActivityController),
             SizedBox(height: AppSpacing.xl),
             _buildSectionHeader('E. Penilaian (Asesmen)'),
-            _buildRichTextField(_penilaianController),
+            _buildRichTextField(_assessmentController),
             SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton.icon(
-                onPressed: _isSaving ? null : _saveRPP,
+                onPressed: _isSaving ? null : _saveLessonPlan,
                 icon: _isSaving
                     ? SizedBox(
                         width: 20,
@@ -1098,13 +1107,13 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       ),
       child: Column(
         children: [
-          _buildMetaRow('Satuan Pendidikan', _satuanPendidikanController),
-          _buildMetaRow('Mata Pelajaran', _mataPelajaranController),
-          _buildMetaRow('Bab', _babController),
-          _buildMetaRow('Sub Bab', _subBabController),
-          _buildMetaRow('Kelas/Semester', _kelasSemesterController),
-          _buildMetaRow('Pembelajaran Ke', _pembelajaranKeController),
-          _buildMetaRow('Alokasi Waktu', _alokasiWaktuController),
+          _buildMetaRow('Satuan Pendidikan', _educationUnitController),
+          _buildMetaRow('Mata Pelajaran', _subjectNameController),
+          _buildMetaRow('Bab', _chapterController),
+          _buildMetaRow('Sub Bab', _subChapterController),
+          _buildMetaRow('Kelas/Semester', _classSemesterController),
+          _buildMetaRow('Pembelajaran Ke', _lessonNumberController),
+          _buildMetaRow('Alokasi Waktu', _timeAllocationController),
         ],
       ),
     );

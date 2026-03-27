@@ -114,7 +114,7 @@ void main() async {
       try {
         await AnalyticsService.initialize();
         await PerformanceService.initialize();
-        // Set user jika sudah login sebelumnya
+        // Set user if already logged in previously
         await AnalyticsService.setUserFromPrefs();
       } catch (e) {
         AppLogger.warning('init', 'Analytics/Performance init failed (non-critical): $e');
@@ -231,7 +231,7 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
   Future<void> _handleGlobalError(Exception error) async {
     AppLogger.error('app', error);
 
-    // Hanya handle error yang terkait authentication
+    // Only handle authentication-related errors
     if (_isAuthError(error)) {
       AppLogger.warning('auth', 'Auth error detected, logging out...');
 
@@ -252,7 +252,7 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
   bool _isAuthError(Exception error) {
     final errorString = error.toString().toLowerCase();
 
-    // Hanya handle error yang benar-benar terkait auth
+    // Only handle errors that are truly auth-related
     return errorString.contains('token expired') ||
         errorString.contains('jwt expired') ||
         errorString.contains('authentication failed') ||

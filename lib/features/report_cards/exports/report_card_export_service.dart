@@ -14,7 +14,7 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Service for exporting student report cards (raport) in multiple formats.
 /// Like a Laravel controller with three export actions:
-/// - `exportRaportToExcel` -> `Excel::download(new RaportExport)` for a whole class
+/// - `exportReportCardToExcel` -> `Excel::download(new RaportExport)` for a whole class
 /// - `exportSingleRaportPdf` -> `PDF::loadView('raport.single')->download()` for one student
 /// - `exportCertificateRaportPdf` -> `PDF::loadView('raport.certificate')->download()`
 ///
@@ -28,7 +28,7 @@ class ExcelRaportService {
   /// [classId], [academicYearId], [semesterId] filter the data server-side.
   /// [className] is used to build a sanitized filename.
   /// Side effects: saves .xlsx to device, opens it, shows SnackBar feedback.
-  static Future<void> exportRaportToExcel({
+  static Future<void> exportReportCardToExcel({
     required String classId,
     required String academicYearId,
     required String semesterId,

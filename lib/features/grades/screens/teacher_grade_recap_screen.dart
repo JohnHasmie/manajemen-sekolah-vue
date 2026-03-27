@@ -37,16 +37,16 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 ///
 /// A StatefulWidget with complex spreadsheet-like editing capabilities.
 /// Props (like Vue props): [teacher] -- current teacher info.
-class RekapNilaiPage extends ConsumerStatefulWidget {
+class GradeRecapPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
 
-  const RekapNilaiPage({super.key, required this.teacher});
+  const GradeRecapPage({super.key, required this.teacher});
 
   @override
-  ConsumerState<RekapNilaiPage> createState() => _RekapNilaiPageState();
+  ConsumerState<GradeRecapPage> createState() => _GradeRecapPageState();
 }
 
-/// State for [RekapNilaiPage].
+/// State for [GradeRecapPage].
 ///
 /// Like a Vue page component with `data() { return {...} }`. Manages:
 /// - Multi-step wizard (class -> subject -> recap table)
@@ -56,7 +56,7 @@ class RekapNilaiPage extends ConsumerStatefulWidget {
 /// - Excel export and unsaved change tracking
 ///
 /// `setState()` is like Vue's reactivity -- triggers UI rebuild.
-class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
+class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   // Services
   final ApiSubjectService apiSubjectService = getIt<ApiSubjectService>();
   final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
@@ -100,7 +100,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
 
   final GlobalKey _exportKey = GlobalKey();
   final GlobalKey _saveKey = GlobalKey();
-  final GlobalKey _addBabKey = GlobalKey();
+  final GlobalKey _addChapterKey = GlobalKey();
 
   /// Like Vue's `mounted()` -- sets up scroll/search listeners and loads initial data.
   @override
@@ -157,7 +157,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
         }
       } catch (_) {}
       if (days.isEmpty) {
-        days = await getIt<ApiScheduleService>().getHari();
+        days = await getIt<ApiScheduleService>().getDays();
         if (days.isNotEmpty) LocalCacheService.save('school_day_data', days);
       }
 
@@ -214,7 +214,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
         final schedules = await getIt<ApiScheduleService>().getSchedulesPaginated(
           limit: 100,
           teacherId: widget.teacher['id'],
-          tahunAjaran: academicYearId,
+          academicYearId: academicYearId,
         );
         allSchedules = schedules['data'] ?? [];
       }
@@ -346,14 +346,14 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
 
   Future<void> _loadClasses({bool resetPage = true, bool useCache = true}) async {
     final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
-    final isGuru = role.contains('guru');
+    final isTeacher = role.contains('guru');
 
     if (resetPage) {
       _currentPage = 1;
       _hasMoreData = true;
 
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
-      if (isGuru && useCache) {
+      if (isTeacher && useCache) {
         final teacherProvider = ref.read(teacherRiverpod);
         if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
           setState(() {
@@ -403,7 +403,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
 
       List<dynamic> loadedClasses = [];
 
-      if (isGuru) {
+      if (isTeacher) {
         loadedClasses = await getIt<ApiTeacherService>().getTeacherClasses(
           widget.teacher['id'],
           academicYearId: academicYearId,
@@ -633,7 +633,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       // bab-material from materi_screen)
 
       final studentCacheKey = CacheKeyBuilder.studentsByClass(classId);
-      final babCacheKey = CacheKeyBuilder.custom('bab_material', masterSubjectId);
+      final chapterCacheKey = CacheKeyBuilder.custom('bab_material', masterSubjectId);
       final gradesCacheKey = CacheKeyBuilder.custom('rekap_grades', '${classId}_$subjectId', academicYearId);
       final recapsCacheKey = CacheKeyBuilder.custom('rekap_recaps', '${classId}_$subjectId', academicYearId);
 
@@ -646,9 +646,9 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
           useCache: useCache,
         ),
         _loadWithCache(
-          cacheKey: babCacheKey,
+          cacheKey: chapterCacheKey,
           ttl: const Duration(hours: 12),
-          apiFetcher: () => getIt<ApiSubjectService>().getBabMateri(subjectId: masterSubjectId),
+          apiFetcher: () => getIt<ApiSubjectService>().getChapterMaterials(subjectId: masterSubjectId),
           useCache: useCache,
         ),
         _loadGradesWithCache(
@@ -716,18 +716,18 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
 
   void _applyRecapChapterNames(List<dynamic> recaps) {
     if (recaps.isNotEmpty) {
-      List<String> longestBabNames = [];
+      List<String> longestChapterNames = [];
       for (var r in recaps) {
         if (r['bab_names'] != null && r['bab_names'] is List) {
           final names = List<String>.from(r['bab_names']);
-          if (names.length > longestBabNames.length) {
-            longestBabNames = names;
+          if (names.length > longestChapterNames.length) {
+            longestChapterNames = names;
           }
         }
       }
 
-      if (longestBabNames.isNotEmpty) {
-        while (_chapters.length < longestBabNames.length) {
+      if (longestChapterNames.isNotEmpty) {
+        while (_chapters.length < longestChapterNames.length) {
           _chapters.add({
             'judul_bab': 'Bab ${_chapters.length + 1}',
             'judul': 'Bab ${_chapters.length + 1}',
@@ -735,11 +735,11 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
           });
         }
 
-        for (int i = 0; i < longestBabNames.length; i++) {
+        for (int i = 0; i < longestChapterNames.length; i++) {
           if (i < _chapters.length) {
-            _chapters[i]['judul_bab'] = longestBabNames[i];
-            _chapters[i]['judul'] = longestBabNames[i];
-            _chapters[i]['title'] = longestBabNames[i];
+            _chapters[i]['judul_bab'] = longestChapterNames[i];
+            _chapters[i]['judul'] = longestChapterNames[i];
+            _chapters[i]['title'] = longestChapterNames[i];
           }
         }
       }
@@ -792,17 +792,17 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
         (a, b) => (a['tanggal'] ?? '').compareTo(b['tanggal'] ?? ''),
       );
 
-      List<double?> babScores = [];
+      List<double?> chapterScores = [];
       int numChapters = chapters.isNotEmpty ? chapters.length : 1;
 
       // Distribute harian grades into chapters evenly
       if (harianGrades.isNotEmpty && numChapters > 0) {
-        int itemsPerBab = (harianGrades.length / numChapters).ceil();
+        int itemsPerChapter = (harianGrades.length / numChapters).ceil();
         for (int i = 0; i < numChapters; i++) {
-          int start = i * itemsPerBab;
-          int end = (start + itemsPerBab > harianGrades.length)
+          int start = i * itemsPerChapter;
+          int end = (start + itemsPerChapter > harianGrades.length)
               ? harianGrades.length
-              : start + itemsPerBab;
+              : start + itemsPerChapter;
 
           if (start < harianGrades.length) {
             var chunk = harianGrades.sublist(start, end);
@@ -815,13 +815,13 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                   0;
               sum += val;
             }
-            babScores.add(sum / chunk.length);
+            chapterScores.add(sum / chunk.length);
           } else {
-            babScores.add(null);
+            chapterScores.add(null);
           }
         }
       } else {
-        babScores = List.filled(numChapters, null);
+        chapterScores = List.filled(numChapters, null);
       }
 
       // UTS/PTS & UAS/PAS
@@ -842,12 +842,12 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
 
       double? utsScore;
       double? uasScore;
-      List<double?> finalBabScores = [];
+      List<double?> finalChapterScores = [];
 
       if (existingRecap != null && existingRecap['bab_scores'] != null) {
         // LOAD FROM SAVED RECAP
-        final savedBabScores = List<dynamic>.from(existingRecap['bab_scores']);
-        finalBabScores = savedBabScores
+        final savedChapterScores = List<dynamic>.from(existingRecap['bab_scores']);
+        finalChapterScores = savedChapterScores
             .map((s) => s != null ? double.tryParse(s.toString()) : null)
             .toList();
         utsScore = existingRecap['uts_score'] != null
@@ -868,14 +868,14 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                 (uasGrade['score'] ?? uasGrade['nilai'] ?? '0').toString(),
               )
             : null;
-        finalBabScores = babScores;
+        finalChapterScores = chapterScores;
       }
 
       // Calculate Final Score
       double finalScoreValue = 0;
       int componentCount = 0;
 
-      for (var score in finalBabScores) {
+      for (var score in finalChapterScores) {
         if (score != null) {
           finalScoreValue += score;
           componentCount++;
@@ -918,7 +918,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       for (int i = 0; i < numChapters; i++) {
         final key = '$studentClassId|bab|$i';
         _scoreControllers[key] = TextEditingController(
-          text: finalBabScores[i]?.toStringAsFixed(1) ?? '',
+          text: finalChapterScores[i]?.toStringAsFixed(1) ?? '',
         );
       }
       _scoreControllers['$studentClassId|uts|null'] = TextEditingController(
@@ -934,7 +934,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
         'student_class_id': studentClassId,
         'nis': (student['student_number'] ?? student['nis'] ?? '-').toString(),
         'nama': (student['name'] ?? student['nama'] ?? '-').toString(),
-        'bab_scores': finalBabScores,
+        'bab_scores': finalChapterScores,
         'uts': utsScore,
         'uas': uasScore,
         'final_score': finalAverage,
@@ -954,7 +954,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
   void _showGradeSelectionDialog(
     String studentClassId,
     String type,
-    int? babIndex,
+    int? chapterIndex,
   ) {
     final studentGrades = _rawGrades.where((g) {
       final gStudentClassId = (g['student_class_id'] ?? g['siswa_kelas_id'])
@@ -1079,7 +1079,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                           _updateTableValue(
                             studentClassId,
                             type,
-                            babIndex,
+                            chapterIndex,
                             sum / selectedItems.length,
                           );
                           AppNavigator.pop(context);
@@ -1097,7 +1097,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
   void _updateTableValue(
     String studentClassId,
     String type,
-    int? babIndex,
+    int? chapterIndex,
     double newValue,
   ) {
     setState(() {
@@ -1108,13 +1108,13 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
         final row = _tableData[index];
 
         // Update Controller
-        final key = '$studentClassId|$type|${babIndex ?? 'null'}';
+        final key = '$studentClassId|$type|${chapterIndex ?? 'null'}';
         if (_scoreControllers.containsKey(key)) {
           _scoreControllers[key]!.text = newValue.toStringAsFixed(1);
         }
 
-        if (type == 'bab' && babIndex != null) {
-          row['bab_scores'][babIndex] = newValue;
+        if (type == 'bab' && chapterIndex != null) {
+          row['bab_scores'][chapterIndex] = newValue;
         } else if (type == 'uts') {
           row['uts'] = newValue;
         } else if (type == 'uas') {
@@ -1127,7 +1127,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
     });
   }
 
-  void _showBulkSelectionDialog(String type, [int? babIndex]) {
+  void _showBulkSelectionDialog(String type, [int? chapterIndex]) {
     // 1. Get unique assessments for bulk filling
     final assessmentMap = <String, Map<String, dynamic>>{};
     for (var g in _rawGrades) {
@@ -1176,7 +1176,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
               child: AlertDialog(
                 title: Text(
                   type == 'bab'
-                      ? 'Pengaturan Kolom Bab ${babIndex! + 1}'
+                      ? 'Pengaturan Kolom Bab ${chapterIndex! + 1}'
                       : 'Pengaturan Kolom ${type.toUpperCase()}',
                 ),
                 contentPadding: EdgeInsets.zero,
@@ -1214,7 +1214,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                                       onSubmitted: (val) {
                                         if (val.isNotEmpty) {
                                           setState(() {
-                                            _chapters[babIndex!] = {
+                                            _chapters[chapterIndex!] = {
                                               'judul_bab': val,
                                               'judul': val,
                                               'title': val,
@@ -1242,7 +1242,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                                           title: Text(title),
                                           onTap: () {
                                             setState(() {
-                                              _chapters[babIndex!] = c;
+                                              _chapters[chapterIndex!] = c;
                                             });
                                             _updateAllDescriptions();
                                             AppNavigator.pop(context);
@@ -1315,7 +1315,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
                                           _applyBulkGrades(
                                             type,
                                             selectedBulk,
-                                            babIndex,
+                                            chapterIndex,
                                           );
                                           AppNavigator.pop(context);
                                         },
@@ -1350,9 +1350,9 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
   Widget _buildEditableGradeCell(
     String studentClassId,
     String type,
-    int? babIndex,
+    int? chapterIndex,
   ) {
-    final key = '$studentClassId|$type|${babIndex ?? 'null'}';
+    final key = '$studentClassId|$type|${chapterIndex ?? 'null'}';
     final controller = _scoreControllers[key];
 
     if (controller == null) return Text('-');
@@ -1370,14 +1370,14 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
           border: OutlineInputBorder(),
           suffixIcon: InkWell(
             onTap: () =>
-                _showGradeSelectionDialog(studentClassId, type, babIndex),
+                _showGradeSelectionDialog(studentClassId, type, chapterIndex),
             child: Icon(Icons.history, size: 14, color: ColorUtils.slate400),
           ),
           suffixIconConstraints: BoxConstraints(minWidth: 24, minHeight: 24),
         ),
         onChanged: (val) {
           final newValue = double.tryParse(val) ?? 0.0;
-          _updateTableValueSilently(studentClassId, type, babIndex, newValue);
+          _updateTableValueSilently(studentClassId, type, chapterIndex, newValue);
         },
       ),
     );
@@ -1386,7 +1386,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
   void _updateTableValueSilently(
     String studentClassId,
     String type,
-    int? babIndex,
+    int? chapterIndex,
     double newValue,
   ) {
     setState(() {
@@ -1395,8 +1395,8 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
       );
       if (index != -1) {
         final row = _tableData[index];
-        if (type == 'bab' && babIndex != null) {
-          row['bab_scores'][babIndex] = newValue;
+        if (type == 'bab' && chapterIndex != null) {
+          row['bab_scores'][chapterIndex] = newValue;
         } else if (type == 'uts') {
           row['uts'] = newValue;
         } else if (type == 'uas') {
@@ -1525,7 +1525,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
     });
   }
 
-  void _deleteChapter(int babIndex) {
+  void _deleteChapter(int chapterIndex) {
     if (_chapters.length <= 1) {
       ScaffoldMessenger.of(
         context,
@@ -1553,14 +1553,14 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
             onPressed: () {
               AppNavigator.pop(context);
               setState(() {
-                _chapters.removeAt(babIndex);
+                _chapters.removeAt(chapterIndex);
 
                 for (var row in _tableData) {
                   final studentClassId = row['student_class_id'];
 
                   if (row['bab_scores'] is List &&
-                      row['bab_scores'].length > babIndex) {
-                    row['bab_scores'].removeAt(babIndex);
+                      row['bab_scores'].length > chapterIndex) {
+                    row['bab_scores'].removeAt(chapterIndex);
                   }
 
                   // Clear old bab controllers
@@ -1593,7 +1593,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
   void _applyBulkGrades(
     String type,
     List<Map<String, dynamic>> selectedAssessments, [
-    int? babIndex,
+    int? chapterIndex,
   ]) {
     setState(() {
       for (var row in _tableData) {
@@ -1646,13 +1646,13 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
           final finalBulkScore = totalScore / count;
 
           // Update Controller
-          final key = '$studentClassId|$type|${babIndex ?? 'null'}';
+          final key = '$studentClassId|$type|${chapterIndex ?? 'null'}';
           if (_scoreControllers.containsKey(key)) {
             _scoreControllers[key]!.text = finalBulkScore.toStringAsFixed(1);
           }
 
           if (type == 'bab') {
-            row['bab_scores'][babIndex!] = finalBulkScore;
+            row['bab_scores'][chapterIndex!] = finalBulkScore;
           } else if (type == 'uts') {
             row['uts'] = finalBulkScore;
           } else if (type == 'uas') {
@@ -1793,7 +1793,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
           _selectedSubject?['name'] ??
           'Mata_Pelajaran';
 
-      await ExcelRekapNilaiService.exportRekapNilaiToExcel(
+      await ExcelGradeRecapService.exportGradeRecapToExcel(
         tableData: _tableData,
         chapters: _chapters,
         className: className,
@@ -2899,7 +2899,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
               ),
               Spacer(),
               OutlinedButton.icon(
-                key: _addBabKey,
+                key: _addChapterKey,
                 onPressed: _addChapter,
                 icon: Icon(Icons.add, size: 16),
                 label: Text(
@@ -2998,7 +2998,7 @@ class _RekapNilaiPageState extends ConsumerState<RekapNilaiPage> {
     targets.add(
       TargetFocus(
         identify: "AddBab",
-        keyTarget: _addBabKey,
+        keyTarget: _addChapterKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
         radius: 8,

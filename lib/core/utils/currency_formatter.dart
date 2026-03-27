@@ -37,23 +37,23 @@ class CurrencyInputFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    // Jika data kosong, kembalikan kosong
+    // If data is empty, return empty
     if (newValue.text.isEmpty) {
       return newValue.copyWith(text: '');
     }
 
-    // Hanya ambil angka
+    // Extract only digits
     String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // Jika hasil kosong (misal user hapus semua angka), kembalikan kosong
+    // If result is empty (e.g. user deleted all digits), return empty
     if (newText.isEmpty) {
       return newValue.copyWith(text: '');
     }
 
-    // Parse ke integer
+    // Parse to integer
     int value = int.parse(newText);
 
-    // Format mata uang
+    // Format currency
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: symbol,
@@ -62,15 +62,15 @@ class CurrencyInputFormatter extends TextInputFormatter {
 
     String newString = formatter.format(value);
 
-    // Kembalikan value baru dengan cursor di akhir
+    // Return new value with cursor at the end
     return TextEditingValue(
       text: newString,
       selection: TextSelection.collapsed(offset: newString.length),
     );
   }
 
-  /// Helper untuk membersihkan format currency menjadi angka murni (double)
-  /// Contoh: "Rp 10.000" -> 10000.0
+  /// Helper to clean currency format into a raw number (double)
+  /// Example: "Rp 10.000" -> 10000.0
   static double parseCurrency(String formattedValue) {
     if (formattedValue.isEmpty) return 0.0;
     String cleanString = formattedValue.replaceAll(RegExp(r'[^0-9]'), '');

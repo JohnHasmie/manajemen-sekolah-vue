@@ -30,7 +30,7 @@ class ApiScheduleService {
   }
 
   /// Fetches the list of school days (hari). Like `Day::all()` in Laravel.
-  Future<List<dynamic>> getHari() async {
+  Future<List<dynamic>> getDays() async {
     final response = await dioClient.get('/day');
 
     final result = response.data;
@@ -106,11 +106,11 @@ class ApiScheduleService {
     int limit = 10,
     String? teacherId,
     String? classId,
-    String? hariId,
+    String? dayId,
     String? semesterId,
-    String? tahunAjaran,
+    String? academicYearId,
     String? search,
-    String? jamPelajaranId,
+    String? lessonHourId,
     String? hourNumber,
     bool skipCache = false,
   }) async {
@@ -126,20 +126,20 @@ class ApiScheduleService {
     if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
     }
-    if (hariId != null && hariId.isNotEmpty) {
-      queryParams['day_id'] = hariId;
+    if (dayId != null && dayId.isNotEmpty) {
+      queryParams['day_id'] = dayId;
     }
     if (semesterId != null && semesterId.isNotEmpty) {
       queryParams['semester_id'] = semesterId;
     }
-    if (tahunAjaran != null && tahunAjaran.isNotEmpty) {
-      queryParams['academic_year_id'] = tahunAjaran;
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
     }
     if (search != null && search.isNotEmpty) {
       queryParams['search'] = search;
     }
-    if (jamPelajaranId != null && jamPelajaranId.isNotEmpty) {
-      queryParams['lesson_hour_id'] = jamPelajaranId;
+    if (lessonHourId != null && lessonHourId.isNotEmpty) {
+      queryParams['lesson_hour_id'] = lessonHourId;
     }
     if (hourNumber != null && hourNumber.isNotEmpty) {
       queryParams['hour_number'] = hourNumber;
@@ -179,7 +179,7 @@ class ApiScheduleService {
         return result;
       }
 
-      // Fallback untuk backward compatibility
+      // Fallback for backward compatibility
       final fallbackResult = {
         'success': true,
         'data': result is List ? result : [],
@@ -264,13 +264,13 @@ class ApiScheduleService {
   /// Fetches lesson hours filtered by day, semester, class, and academic year.
   /// Like `LessonHour::where(...)->get()` in Laravel with multiple scopes.
   Future<List<dynamic>> getJamPelajaranByFilter({
-    String? hariId,
+    String? dayId,
     String? semesterId,
     String? classId,
     String? academicYear,
   }) async {
     String url = '/lesson-hour-filter?';
-    if (hariId != null) url += 'day_id=$hariId&';
+    if (dayId != null) url += 'day_id=$dayId&';
     if (semesterId != null) url += 'semester_id=$semesterId&';
     if (classId != null) url += 'class_id=$classId&';
     if (academicYear != null) url += 'academic_year_id=$academicYear&';
@@ -285,11 +285,11 @@ class ApiScheduleService {
   /// Like `TeachingSchedule::all()` in Laravel. Use sparingly for large datasets.
   Future<Map<String, dynamic>> getAllSchedules({
     String? semesterId,
-    String? tahunAjaran,
+    String? academicYearId,
   }) async {
     final queryParameters = {
       if (semesterId != null) 'semester_id': semesterId,
-      if (tahunAjaran != null) 'academic_year_id': tahunAjaran,
+      if (academicYearId != null) 'academic_year_id': academicYearId,
     };
 
     String url = '/teaching-schedule/all';
@@ -325,9 +325,9 @@ class ApiScheduleService {
     required String classId,
     required String teacherId, // Added parameter
     required String semesterId,
-    required String tahunAjaran,
-    required String jamPelajaranId,
-    String? excludeScheduleId, // Untuk edit, exclude jadwal yang sedang diedit
+    required String academicYearId,
+    required String lessonHourId,
+    String? excludeScheduleId, // For edit, exclude the schedule being edited
   }) async {
     try {
       String url = '/teaching-schedule/conflicts?';
@@ -335,8 +335,8 @@ class ApiScheduleService {
       url += 'class_id=$classId&';
       url += 'teacher_id=$teacherId&'; // Added to URL
       url += 'semester_id=$semesterId&';
-      url += 'academic_year_id=$tahunAjaran&';
-      url += 'lesson_hour_id=$jamPelajaranId&';
+      url += 'academic_year_id=$academicYearId&';
+      url += 'lesson_hour_id=$lessonHourId&';
 
       if (excludeScheduleId != null) {
         url += 'exclude_id=$excludeScheduleId&';
@@ -516,17 +516,17 @@ class ApiScheduleService {
   Future<String> exportSchedules({
     String? teacherId,
     String? classId,
-    String? hariId,
+    String? dayId,
     String? semesterId,
-    String? tahunAjaran,
+    String? academicYearId,
   }) async {
     try {
       String url = '/teaching-schedule/export?';
       if (teacherId != null) url += 'teacher_id=$teacherId&';
       if (classId != null) url += 'class_id=$classId&';
-      if (hariId != null) url += 'day_id=$hariId&';
+      if (dayId != null) url += 'day_id=$dayId&';
       if (semesterId != null) url += 'semester_id=$semesterId&';
-      if (tahunAjaran != null) url += 'academic_year_id=$tahunAjaran&';
+      if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
 
       final response = await dioClient.get<List<int>>(
         url,

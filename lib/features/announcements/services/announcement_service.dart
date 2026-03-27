@@ -113,7 +113,7 @@ class ApiAnnouncementService {
         return result;
       }
 
-      // Fallback untuk backward compatibility
+      // Fallback for backward compatibility
       return {
         'success': true,
         'data': result is List ? result : [],

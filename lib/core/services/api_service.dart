@@ -41,7 +41,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// - Grade, attendance, RPP, billing endpoints are grouped here for historical reasons
 class ApiService {
   // static const String baseUrl = 'http://10.0.2.2:3000/api'; // Android emulator
-  // static const String baseUrl = 'http://localhost:3001/api'; // iOS simulator atau web
+  // static const String baseUrl = 'http://localhost:3001/api'; // iOS simulator or web
 
   // static const String baseUrl = 'https://backendmanajemensekolah2.vercel.app/api';
   // static const String baseUrl = 'https://libra.web.id/apimanajemen';
@@ -297,13 +297,13 @@ class ApiService {
       AppLogger.debug('api', '📥 Login response status: ${response.statusCode}');
       AppLogger.debug('api', '📥 Login response data: $responseData');
 
-      // Handle semua kemungkinan flow
+      // Handle all possible flows
       if (responseData['pilih_sekolah'] == true) {
         AppLogger.debug('api', 'Login flow: Need to select school');
         return Map<String, dynamic>.from(responseData);
       }
 
-      // PERBAIKAN: Handle jika setelah pilih sekolah, perlu pilih role
+      // FIX: Handle if after selecting school, role selection is needed
       if (responseData['pilih_role'] == true) {
         AppLogger.debug('api', 'Login flow: Need to select role after school selection');
         return Map<String, dynamic>.from(responseData);
@@ -316,7 +316,7 @@ class ApiService {
         return Map<String, dynamic>.from(responseData);
       }
 
-      // Hanya validasi token untuk login sukses langsung
+      // Only validate token for direct successful login
       if (responseData['token'] == null) {
         throw Exception('Server tidak mengembalikan token');
       }
@@ -542,17 +542,17 @@ class ApiService {
   /// Fetches student grades (nilai) with multiple optional filters.
   /// Like `Grade::filter($request)->get()` in Laravel.
   static Future<List<dynamic>> getGrades({
-    String? siswaId,
+    String? studentId,
     String? teacherId,
     String? subjectId,
-    String? jenis,
+    String? gradeType,
     String? academicYearId,
   }) async {
     final queryParams = <String, dynamic>{};
-    if (siswaId != null) queryParams['student_id'] = siswaId;
+    if (studentId != null) queryParams['student_id'] = studentId;
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
     if (subjectId != null) queryParams['subject_id'] = subjectId;
-    if (jenis != null) queryParams['grade_type'] = jenis;
+    if (gradeType != null) queryParams['grade_type'] = gradeType;
     if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
 
     final response = await dioClient.get(
@@ -622,12 +622,12 @@ class ApiService {
     String? subjectId,
     String? classId,
     String? semester,
-    String? tahunAjaran,
-    String? tanggalStart,
-    String? tanggalEnd,
+    String? academicYear,
+    String? dateStart,
+    String? dateEnd,
     String? academicYearId,
-    String? mataPelajaranId, // Added based on queryParams
-    String? tanggal, // Added based on queryParams
+    String? filterSubjectId, // Added based on queryParams
+    String? date, // Added based on queryParams
   }) async {
     Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -642,20 +642,20 @@ class ApiService {
     if (subjectId != null && subjectId.isNotEmpty) {
       queryParams['subject_id'] = subjectId;
     }
-    if (mataPelajaranId != null && mataPelajaranId.isNotEmpty) {
-      queryParams['mataPelajaranId'] = mataPelajaranId;
+    if (filterSubjectId != null && filterSubjectId.isNotEmpty) {
+      queryParams['mataPelajaranId'] = filterSubjectId;
     }
     if (classId != null && classId.isNotEmpty) {
       queryParams['classId'] = classId;
     }
-    if (tanggal != null && tanggal.isNotEmpty) {
-      queryParams['tanggal'] = tanggal;
+    if (date != null && date.isNotEmpty) {
+      queryParams['tanggal'] = date;
     }
-    if (tanggalStart != null && tanggalStart.isNotEmpty) {
-      queryParams['tanggalStart'] = tanggalStart;
+    if (dateStart != null && dateStart.isNotEmpty) {
+      queryParams['tanggalStart'] = dateStart;
     }
-    if (tanggalEnd != null && tanggalEnd.isNotEmpty) {
-      queryParams['tanggalEnd'] = tanggalEnd;
+    if (dateEnd != null && dateEnd.isNotEmpty) {
+      queryParams['tanggalEnd'] = dateEnd;
     }
     if (academicYearId != null && academicYearId.isNotEmpty) {
       queryParams['academic_year_id'] = academicYearId;
@@ -663,8 +663,8 @@ class ApiService {
     if (semester != null && semester.isNotEmpty) {
       queryParams['semester'] = semester;
     }
-    if (tahunAjaran != null && tahunAjaran.isNotEmpty) {
-      queryParams['tahun_ajaran'] = tahunAjaran;
+    if (academicYear != null && academicYear.isNotEmpty) {
+      queryParams['tahun_ajaran'] = academicYear;
     }
 
     final response = await dioClient.get(
@@ -696,8 +696,8 @@ class ApiService {
     int page = 1,
     int limit = 10,
     String? status,
-    String? siswaId,
-    String? jenisPembayaranId,
+    String? studentId,
+    String? paymentTypeId,
     String? classId,
   }) async {
     Map<String, dynamic> queryParams = {
@@ -706,11 +706,11 @@ class ApiService {
     };
 
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
-    if (siswaId != null && siswaId.isNotEmpty) {
-      queryParams['student_id'] = siswaId;
+    if (studentId != null && studentId.isNotEmpty) {
+      queryParams['student_id'] = studentId;
     }
-    if (jenisPembayaranId != null && jenisPembayaranId.isNotEmpty) {
-      queryParams['payment_type_id'] = jenisPembayaranId;
+    if (paymentTypeId != null && paymentTypeId.isNotEmpty) {
+      queryParams['payment_type_id'] = paymentTypeId;
     }
     if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
@@ -745,32 +745,32 @@ class ApiService {
     return response.data;
   }
 
-  static Future<dynamic> updateRPP(
-    String rppId,
+  static Future<dynamic> updateLessonPlan(
+    String lessonPlanId,
     Map<String, dynamic> data,
   ) async {
-    final response = await dioClient.put('/rpp/$rppId', data: data);
+    final response = await dioClient.put('/rpp/$lessonPlanId', data: data);
     return response.data;
   }
 
   static Future<dynamic> updateLessonPlanStatus(
-    String rppId,
+    String lessonPlanId,
     String status, {
     String? catatan,
   }) async {
     final response = await dioClient.put(
-      '/rpp/$rppId/status',
+      '/rpp/$lessonPlanId/status',
       data: {'status': status, 'catatan': catatan},
     );
     return response.data;
   }
 
-  static Future<dynamic> deleteLessonPlan(String rppId) async {
-    final response = await dioClient.delete('/rpp/$rppId');
+  static Future<dynamic> deleteLessonPlan(String lessonPlanId) async {
+    final response = await dioClient.delete('/rpp/$lessonPlanId');
     return response.data;
   }
 
-  // Di api_services.dart - Perbaiki fungsi uploadFileRPP
+  // Fix uploadLessonPlanFile function
   static Future<dynamic> uploadLessonPlanFile(File file) async {
     try {
       final formData = FormData.fromMap({
@@ -876,8 +876,8 @@ class ApiService {
     String? subjectId,
     String? studentId,
     String? classId,
-    String? tanggalStart,
-    String? tanggalEnd,
+    String? dateStart,
+    String? dateEnd,
     String? academicYearId,
   }) async {
     try {
@@ -896,11 +896,11 @@ class ApiService {
         params['student_id'] = studentId;
       }
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
-      if (tanggalStart != null && tanggalStart.isNotEmpty) {
-        params['tanggalStart'] = tanggalStart;
+      if (dateStart != null && dateStart.isNotEmpty) {
+        params['tanggalStart'] = dateStart;
       }
-      if (tanggalEnd != null && tanggalEnd.isNotEmpty) {
-        params['tanggalEnd'] = tanggalEnd;
+      if (dateEnd != null && dateEnd.isNotEmpty) {
+        params['tanggalEnd'] = dateEnd;
       }
       if (academicYearId != null && academicYearId.isNotEmpty) {
         params['academic_year_id'] = academicYearId;
@@ -970,9 +970,9 @@ class ApiService {
     String? teacherId,
     String? subjectId,
     String? classId,
-    String? tanggal,
-    String? tanggalStart,
-    String? tanggalEnd,
+    String? date,
+    String? dateStart,
+    String? dateEnd,
     String? academicYearId,
     List<String>? dayIds,
     List<String>? lessonHourIds,
@@ -991,12 +991,12 @@ class ApiService {
         params['mataPelajaranId'] = subjectId;
       }
       if (classId != null && classId.isNotEmpty) params['classId'] = classId;
-      if (tanggal != null && tanggal.isNotEmpty) params['tanggal'] = tanggal;
-      if (tanggalStart != null && tanggalStart.isNotEmpty) {
-        params['tanggalStart'] = tanggalStart;
+      if (date != null && date.isNotEmpty) params['tanggal'] = date;
+      if (dateStart != null && dateStart.isNotEmpty) {
+        params['tanggalStart'] = dateStart;
       }
-      if (tanggalEnd != null && tanggalEnd.isNotEmpty) {
-        params['tanggalEnd'] = tanggalEnd;
+      if (dateEnd != null && dateEnd.isNotEmpty) {
+        params['tanggalEnd'] = dateEnd;
       }
       if (dayIds != null && dayIds.isNotEmpty) {
         params['day_ids'] = dayIds.join(',');
@@ -1058,7 +1058,7 @@ class ApiService {
       );
       return response.data;
     } catch (e) {
-      AppLogger.error('api', 'ApiService.deleteAbsensi error: $e');
+      AppLogger.error('api', 'ApiService.deleteAttendance error: $e');
       rethrow;
     }
   }
@@ -1103,34 +1103,6 @@ class ApiService {
     }
   }
 
-  Future<dynamic> createNilai(Map<String, dynamic> data) async {
-    // Sanitize data - ubah undefined menjadi null
-    final sanitizedData = _sanitizeData(data);
-    return await post(ApiEndpoints.grade, sanitizedData);
-  }
-
-  Future<dynamic> updateNilai(String id, Map<String, dynamic> data) async {
-    // Sanitize data - ubah undefined menjadi null
-    final sanitizedData = _sanitizeData(data);
-    return await put('/grade/$id', sanitizedData);
-  }
-
-  /// Sanitizes form data by removing null and 'undefined' string values.
-  /// Prevents sending invalid data to the Laravel backend.
-  /// Like a Laravel FormRequest's `prepareForValidation()` method.
-  Map<String, dynamic> _sanitizeData(Map<String, dynamic> data) {
-    final sanitized = Map<String, dynamic>.from(data);
-    sanitized.removeWhere(
-      (key, value) => value == null || value == 'undefined',
-    );
-    sanitized.forEach((key, value) {
-      if (value == 'undefined') {
-        sanitized[key] = null;
-      }
-    });
-    return sanitized;
-  }
-
   // Get mata pelajaran with kelas data
   Future<List<dynamic>> getSubjectsWithClasses() async {
     try {
@@ -1152,7 +1124,7 @@ class ApiService {
     String fileField = 'bukti_bayar',
   }) async {
     try {
-      // Deteksi MIME type yang benar
+      // Detect the correct MIME type
       String mimeType;
       final extension = file.path.toLowerCase().split('.').last;
 

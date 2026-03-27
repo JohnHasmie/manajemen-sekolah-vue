@@ -254,7 +254,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         );
       }
 
-      // Add group (even if empty, as requested "masih ada bulannya")
+      // Add group (even if empty, as requested "months should still appear")
       groups.add(
         MonthGroup(
           monthKey: monthKey,
@@ -1856,7 +1856,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         color = ColorUtils.warning600;
         text = 'Menunggu';
       } else {
-        // 3. Fallback: Belum Bayar
+        // 3. Fallback: Not Paid
         color = ColorUtils.error600;
         text = 'Belum';
       }

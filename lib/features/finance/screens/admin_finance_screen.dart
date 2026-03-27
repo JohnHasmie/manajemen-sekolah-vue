@@ -1,7 +1,7 @@
 // Admin finance/billing management screen (keuangan).
 //
 // Like `pages/admin/finance.vue` - the main finance hub for managing:
-// 1. Payment types (jenis pembayaran) - recurring/one-time billing templates
+// 1. Payment types (jenis payment) - recurring/one-time billing templates
 // 2. Bills (tagihan) - actual bills sent to students
 // 3. Pending payments - payments awaiting admin verification
 //
@@ -54,9 +54,9 @@ class FinanceScreen extends ConsumerStatefulWidget {
 ///
 /// Key state (like Vue `data()`):
 /// - [_currentTabIndex] - active tab (0=payment types, 1=bills, 2=pending payments)
-/// - [_jenisPembayaranList] - payment type templates (monthly, yearly, one-time)
-/// - [_tagihanList] - generated bills with pagination and filtering
-/// - [_pembayaranPendingList] - payments awaiting verification
+/// - [_paymentTypeList] - payment type templates (monthly, yearly, one-time)
+/// - [_billList] - generated bills with pagination and filtering
+/// - [_pendingPaymentList] - payments awaiting verification
 /// - [_dashboardData] - finance summary stats (total revenue, outstanding, etc.)
 /// - Pagination and search state for each tab
 ///
@@ -79,14 +79,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
   }
 
-  List<dynamic> _jenisPembayaranList = [];
-  List<dynamic> _tagihanList = [];
-  List<dynamic> _pembayaranPendingList = [];
-  int _totalPembayaranPending = 0;
-  List<dynamic> _kelasList = [];
-  List<dynamic> _siswaList = [];
-  Map<String, List<dynamic>> _siswaByKelas = {};
-  Map<String, List<dynamic>> _tagihanBySiswa = {};
+  List<dynamic> _paymentTypeList = [];
+  List<dynamic> _billList = [];
+  List<dynamic> _pendingPaymentList = [];
+  int _totalPendingPayments = 0;
+  List<dynamic> _classList = [];
+  List<dynamic> _studentList = [];
+  Map<String, List<dynamic>> _studentsByClass = {};
+  Map<String, List<dynamic>> _billsByStudent = {};
   Map<String, dynamic> _dashboardData = {};
   bool _isLoading = true;
   String _errorMessage = '';
@@ -110,16 +110,16 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   bool _isLoadingMore = false;
   Timer? _searchDebounce;
 
-  // Search dan filter
+  // Search and filter
   final TextEditingController _searchController = TextEditingController();
-  String? _selectedStatusFilter; // 'aktif', 'non_aktif', atau null untuk semua
-  String? _selectedPeriodeFilter; // 'bulanan', 'tahunan', atau null untuk semua
+  String? _selectedStatusFilter; // 'aktif', 'non_aktif', or null for all
+  String? _selectedPeriodeFilter; // 'bulanan', 'tahunan', or null for all
   bool _hasActiveFilter = false;
 
-  // Variabel untuk modal pemilihan tujuan
-  List<dynamic> _selectedKelas = [];
-  Map<String, List<dynamic>> _selectedSiswaByKelas = {};
-  final TextEditingController _searchSiswaController = TextEditingController();
+  // Variables for target selection modal
+  List<dynamic> _selectedClasses = [];
+  Map<String, List<dynamic>> _selectedStudentsByClass = {};
+  final TextEditingController _searchStudentController = TextEditingController();
 
   /// Like Vue's `mounted()` - sets up scroll listeners for both tabs'
   /// infinite scroll, search debounce, and loads initial data.
@@ -306,7 +306,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   @override
   void dispose() {
     _searchController.dispose();
-    _searchSiswaController.dispose();
+    _searchStudentController.dispose();
     _scrollController.removeListener(() {});
     _scrollController.dispose();
     _pendingScrollController.dispose();
@@ -752,21 +752,21 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         if (cached != null && cached is Map<String, dynamic>) {
           if (mounted) {
             setState(() {
-              _jenisPembayaranList =
-                  (cached['jenisPembayaran'] as List<dynamic>?) ?? [];
-              _tagihanList = (cached['tagihan'] as List<dynamic>?) ?? [];
-              _pembayaranPendingList =
+              _paymentTypeList =
+                  (cached['paymentTypes'] as List<dynamic>?) ?? [];
+              _billList = (cached['bills'] as List<dynamic>?) ?? [];
+              _pendingPaymentList =
                   (cached['pendingPayments'] as List<dynamic>?) ?? [];
-              _totalPembayaranPending =
+              _totalPendingPayments =
                   (cached['totalPending'] as int?) ?? 0;
               _dashboardData =
                   Map<String, dynamic>.from(cached['dashboard'] ?? {});
-              _kelasList = (cached['kelas'] as List<dynamic>?) ?? [];
-              _siswaList = (cached['siswa'] as List<dynamic>?) ?? [];
-              _siswaByKelas = (cached['siswaByKelas'] as Map<String, dynamic>?)
+              _classList = (cached['kelas'] as List<dynamic>?) ?? [];
+              _studentList = (cached['siswa'] as List<dynamic>?) ?? [];
+              _studentsByClass = (cached['studentsByClass'] as Map<String, dynamic>?)
                       ?.map((k, v) => MapEntry(k, List<dynamic>.from(v))) ??
                   {};
-              _tagihanBySiswa =
+              _billsByStudent =
                   (cached['tagihanBySiswa'] as Map<String, dynamic>?)
                           ?.map(
                             (k, v) => MapEntry(k, List<dynamic>.from(v)),
@@ -785,8 +785,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
 
     // Step 2: Show skeleton only if no cached data displayed
-    final hasData = _jenisPembayaranList.isNotEmpty ||
-        _tagihanList.isNotEmpty ||
+    final hasData = _paymentTypeList.isNotEmpty ||
+        _billList.isNotEmpty ||
         _dashboardData.isNotEmpty;
     if (!hasData) {
       setState(() {
@@ -798,11 +798,11 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     // Step 3: Fetch fresh data from API
     try {
       await Future.wait([
-        _loadJenisPembayaran(),
+        _loadPaymentTypes(),
         _loadTagihan(),
-        _loadPembayaranPending(),
+        _loadPendingPayments(),
         _loadDashboardData(),
-        _loadKelasData(),
+        _loadClassData(),
       ]);
 
       if (mounted) {
@@ -814,15 +814,15 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       // Save to cache (non-blocking)
       if (cacheKey != null) {
         LocalCacheService.save(cacheKey, {
-          'jenisPembayaran': _jenisPembayaranList,
-          'tagihan': _tagihanList,
-          'pendingPayments': _pembayaranPendingList,
-          'totalPending': _totalPembayaranPending,
+          'paymentTypes': _paymentTypeList,
+          'bills': _billList,
+          'pendingPayments': _pendingPaymentList,
+          'totalPending': _totalPendingPayments,
           'dashboard': _dashboardData,
-          'kelas': _kelasList,
-          'siswa': _siswaList,
-          'siswaByKelas': _siswaByKelas,
-          'tagihanBySiswa': _tagihanBySiswa,
+          'kelas': _classList,
+          'siswa': _studentList,
+          'studentsByClass': _studentsByClass,
+          'tagihanBySiswa': _billsByStudent,
         });
       }
     } catch (error) {
@@ -839,67 +839,67 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
   }
 
-  // Tambahkan method baru untuk load data kelas dan siswa
-  Future<void> _loadKelasData() async {
+  // Method to load class and student data
+  Future<void> _loadClassData() async {
     try {
       final academicYearProvider = ref.read(academicYearRiverpod);
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      // Load data kelas
+      // Load class data
       String url = '/classes?limit=1000';
       if (academicYearId != null) {
         url += '&academic_year_id=$academicYearId';
       }
 
-      final kelasResponse = await _apiService.get(url);
+      final classResponse = await _apiService.get(url);
       if (mounted) {
         setState(() {
-          if (kelasResponse is Map && kelasResponse.containsKey('data')) {
-            _kelasList = kelasResponse['data'] is List
-                ? kelasResponse['data']
+          if (classResponse is Map && classResponse.containsKey('data')) {
+            _classList = classResponse['data'] is List
+                ? classResponse['data']
                 : [];
           } else {
-            _kelasList = kelasResponse is List ? kelasResponse : [];
+            _classList = classResponse is List ? classResponse : [];
           }
         });
       }
 
-      // Load data siswa
-      final siswaResponse = await _apiService.get('/students?limit=1000');
-      final List<dynamic> allSiswa;
-      if (siswaResponse is Map && siswaResponse.containsKey('data')) {
-        allSiswa = siswaResponse['data'] is List ? siswaResponse['data'] : [];
+      // Load student data
+      final studentResponse = await _apiService.get('/students?limit=1000');
+      final List<dynamic> allStudents;
+      if (studentResponse is Map && studentResponse.containsKey('data')) {
+        allStudents = studentResponse['data'] is List ? studentResponse['data'] : [];
       } else {
-        allSiswa = siswaResponse is List ? siswaResponse : [];
+        allStudents = studentResponse is List ? studentResponse : [];
       }
 
-      // Kelompokkan siswa berdasarkan kelas
-      Map<String, List<dynamic>> siswaByKelas = {};
-      for (var siswa in allSiswa) {
-        String? classId = siswa['class_id']?.toString();
+      // Group students by class
+      Map<String, List<dynamic>> studentsByClass = {};
+      for (var student in allStudents) {
+        String? classId = student['class_id']?.toString();
         // Fallback to nested class object if class_id is null (new schema)
-        if (classId == null && siswa['class'] != null) {
-          classId = siswa['class']['id']?.toString();
+        if (classId == null && student['class'] != null) {
+          classId = student['class']['id']?.toString();
         }
 
         if (classId != null) {
-          if (!siswaByKelas.containsKey(classId)) {
-            siswaByKelas[classId] = [];
+          if (!studentsByClass.containsKey(classId)) {
+            studentsByClass[classId] = [];
           }
-          siswaByKelas[classId]!.add(siswa);
+          studentsByClass[classId]!.add(student);
         }
       }
 
       if (mounted) {
         setState(() {
-          _siswaByKelas = siswaByKelas;
-          _siswaList = allSiswa;
+          _studentsByClass = studentsByClass;
+          _studentList = allStudents;
         });
       }
 
-      // Load tagihan untuk setiap siswa
-      await _loadTagihanForSiswa(allSiswa);
+      // Load bills for each student
+      await _loadBillsForStudents(allStudents);
     } catch (error) {
       AppLogger.error('finance', error);
       if (mounted) {
@@ -908,7 +908,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
   }
 
-  Future<void> _loadTagihanForSiswa(List<dynamic> siswaList) async {
+  Future<void> _loadBillsForStudents(List<dynamic> studentList) async {
     try {
       // Fetch all bills in a single API call instead of one per student
       final tagihanResponse = await _apiService.get('/bills?limit=10000');
@@ -934,7 +934,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
       if (mounted) {
         setState(() {
-          _tagihanBySiswa = tagihanBySiswa;
+          _billsByStudent = tagihanBySiswa;
         });
       }
     } catch (error) {
@@ -942,19 +942,19 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
   }
 
-  // Method helper untuk parsing tujuan
-  Map<String, dynamic> _parseTujuan(dynamic tujuanData) {
-    if (tujuanData == null) {
+  // Helper method for parsing target/goal
+  Map<String, dynamic> _parseGoal(dynamic goalData) {
+    if (goalData == null) {
       return {};
     }
 
-    if (tujuanData is Map<String, dynamic>) {
-      return tujuanData;
+    if (goalData is Map<String, dynamic>) {
+      return goalData;
     }
 
-    if (tujuanData is String) {
+    if (goalData is String) {
       try {
-        return json.decode(tujuanData) as Map<String, dynamic>;
+        return json.decode(goalData) as Map<String, dynamic>;
       } catch (e) {
         AppLogger.error('finance', e);
         return {};
@@ -964,23 +964,23 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     return {};
   }
 
-  String _getTujuanDescription(dynamic tujuanData) {
-    final parsedTujuan = _parseTujuan(tujuanData);
-    return parsedTujuan['description'] ?? 'Tujuan pembayaran';
+  String _getGoalDescription(dynamic goalData) {
+    final parsedGoal = _parseGoal(goalData);
+    return parsedGoal['description'] ?? 'Tujuan pembayaran';
   }
 
-  void _showPemilihanTujuanModal({
-    Map<String, dynamic>? jenisPembayaran,
+  void _showTargetSelectionModal({
+    Map<String, dynamic>? paymentType,
     required Function(Map<String, dynamic>) onSave,
   }) {
     // Reset state
-    _selectedKelas = [];
-    _selectedSiswaByKelas = {};
-    _searchSiswaController.clear();
+    _selectedClasses = [];
+    _selectedStudentsByClass = {};
+    _searchStudentController.clear();
 
-    // Jika edit, load data tujuan yang sudah dipilih
-    if (jenisPembayaran?['goal'] != null) {
-      _loadExistingTujuan(jenisPembayaran!['goal']);
+    // If editing, load previously selected target data
+    if (paymentType?['goal'] != null) {
+      _loadExistingGoal(paymentType!['goal']);
     }
 
     showModalBottomSheet(
@@ -1042,7 +1042,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       border: Border.all(color: ColorUtils.slate200),
                     ),
                     child: TextField(
-                      controller: _searchSiswaController,
+                      controller: _searchStudentController,
                       decoration: InputDecoration(
                         hintText: 'Cari siswa...',
                         prefixIcon: Icon(
@@ -1106,9 +1106,9 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                 ),
 
                 // List Kelas
-                Expanded(child: _buildKelasListForSelection(setModalState)),
+                Expanded(child: _buildClassListForSelection(setModalState)),
 
-                // Footer dengan summary
+                // Footer with summary
                 Container(
                   padding: EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
@@ -1137,8 +1137,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
-                                final tujuan = _buildTujuanData();
-                                onSave(tujuan);
+                                final goal = _buildGoalData();
+                                onSave(goal);
                                 AppNavigator.pop(context);
                               },
                               style: ElevatedButton.styleFrom(
@@ -1167,62 +1167,62 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  void _loadExistingTujuan(dynamic tujuanData) {
-    final tujuan = _parseTujuan(tujuanData);
+  void _loadExistingGoal(dynamic goalData) {
+    final goal = _parseGoal(goalData);
 
-    if (tujuan['type'] == 'all') {
-      // Pilih semua kelas
-      _selectedKelas = List.from(_kelasList);
-      for (var kelas in _kelasList) {
-        final classId = kelas['id'].toString();
-        _selectedSiswaByKelas[classId] = List.from(
-          _siswaByKelas[classId] ?? [],
+    if (goal['type'] == 'all') {
+      // Select all classes
+      _selectedClasses = List.from(_classList);
+      for (var classItem in _classList) {
+        final classId = classItem['id'].toString();
+        _selectedStudentsByClass[classId] = List.from(
+          _studentsByClass[classId] ?? [],
         );
       }
-    } else if (tujuan['type'] == 'custom') {
+    } else if (goal['type'] == 'custom') {
       // Load custom selection
-      _selectedKelas = _kelasList.where((kelas) {
-        return tujuan['kelas']?.contains(kelas['id'].toString()) == true;
+      _selectedClasses = _classList.where((classItem) {
+        return goal['kelas']?.contains(classItem['id'].toString()) == true;
       }).toList();
 
-      for (var classId in tujuan['kelas'] ?? []) {
-        _selectedSiswaByKelas[classId] = (tujuan['siswa']?[classId] ?? [])
-            .map((siswaId) => _findSiswaById(siswaId))
-            .where((siswa) => siswa != null)
+      for (var classId in goal['kelas'] ?? []) {
+        _selectedStudentsByClass[classId] = (goal['siswa']?[classId] ?? [])
+            .map((id) => _findStudentById(id))
+            .where((student) => student != null)
             .cast<Map<String, dynamic>>()
             .toList();
       }
     }
   }
 
-  dynamic _findSiswaById(String siswaId) {
-    for (var siswaList in _siswaByKelas.values) {
-      for (var siswa in siswaList) {
-        if (siswa['id'].toString() == siswaId) {
-          return siswa;
+  dynamic _findStudentById(String studentId) {
+    for (var studentList in _studentsByClass.values) {
+      for (var student in studentList) {
+        if (student['id'].toString() == studentId) {
+          return student;
         }
       }
     }
     return null;
   }
 
-  Widget _buildKelasListForSelection(StateSetter setModalState) {
-    final searchTerm = _searchSiswaController.text.toLowerCase();
+  Widget _buildClassListForSelection(StateSetter setModalState) {
+    final searchTerm = _searchStudentController.text.toLowerCase();
 
     return ListView.builder(
-      itemCount: _kelasList.length,
+      itemCount: _classList.length,
       itemBuilder: (context, index) {
-        final kelas = _kelasList[index];
-        final classId = kelas['id'].toString();
-        final isKelasSelected = _selectedKelas.any(
+        final classItem = _classList[index];
+        final classId = classItem['id'].toString();
+        final isClassSelected = _selectedClasses.any(
           (k) => k['id'].toString() == classId,
         );
-        final siswaList = _siswaByKelas[classId] ?? [];
+        final studentList = _studentsByClass[classId] ?? [];
 
-        // Filter siswa berdasarkan search
-        final filteredSiswa = siswaList.where((siswa) {
-          final nama = siswa['name']?.toString().toLowerCase() ?? '';
-          final nis = siswa['student_number']?.toString().toLowerCase() ?? '';
+        // Filter students by search term
+        final filteredStudents = studentList.where((student) {
+          final nama = student['name']?.toString().toLowerCase() ?? '';
+          final nis = student['student_number']?.toString().toLowerCase() ?? '';
           return searchTerm.isEmpty ||
               nama.contains(searchTerm) ||
               nis.contains(searchTerm);
@@ -1237,35 +1237,35 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           ),
           child: ExpansionTile(
             leading: Checkbox(
-              value: isKelasSelected,
+              value: isClassSelected,
               onChanged: (value) {
                 setModalState(() {
                   if (value == true) {
-                    _selectedKelas.add(kelas);
-                    _selectedSiswaByKelas[classId] = List.from(siswaList);
+                    _selectedClasses.add(classItem);
+                    _selectedStudentsByClass[classId] = List.from(studentList);
                   } else {
-                    _selectedKelas.removeWhere(
+                    _selectedClasses.removeWhere(
                       (k) => k['id'].toString() == classId,
                     );
-                    _selectedSiswaByKelas.remove(classId);
+                    _selectedStudentsByClass.remove(classId);
                   }
                 });
               },
             ),
             title: Text(
-              kelas['name'] ?? 'Kelas',
+              classItem['name'] ?? 'Kelas',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: isKelasSelected
+                color: isClassSelected
                     ? _getPrimaryColor()
                     : ColorUtils.slate900,
               ),
             ),
             subtitle: Text(
-              '${siswaList.length} ${languageProvider.getTranslatedText(AppLocalizations.students)}',
+              '${studentList.length} ${languageProvider.getTranslatedText(AppLocalizations.students)}',
               style: TextStyle(fontSize: 12),
             ),
-            trailing: isKelasSelected
+            trailing: isClassSelected
                 ? Container(
                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
@@ -1273,7 +1273,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '${_selectedSiswaByKelas[classId]?.length ?? 0}/${siswaList.length}',
+                      '${_selectedStudentsByClass[classId]?.length ?? 0}/${studentList.length}',
                       style: TextStyle(
                         fontSize: 10,
                         color: _getPrimaryColor(),
@@ -1283,7 +1283,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   )
                 : null,
             children: [
-              if (filteredSiswa.isEmpty)
+              if (filteredStudents.isEmpty)
                 Padding(
                   padding: EdgeInsets.all(AppSpacing.lg),
                   child: Text(
@@ -1296,9 +1296,9 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   ),
                 )
               else
-                ...filteredSiswa.map(
-                  (siswa) => _buildSiswaCheckbox(
-                    siswa: siswa,
+                ...filteredStudents.map(
+                  (student) => _buildStudentCheckbox(
+                    student: student,
                     classId: classId,
                     setModalState: setModalState,
                   ),
@@ -1310,14 +1310,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  Widget _buildSiswaCheckbox({
-    required Map<String, dynamic> siswa,
+  Widget _buildStudentCheckbox({
+    required Map<String, dynamic> student,
     required String classId,
     required StateSetter setModalState,
   }) {
     final isSelected =
-        _selectedSiswaByKelas[classId]?.any(
-          (s) => s['id'].toString() == siswa['id'].toString(),
+        _selectedStudentsByClass[classId]?.any(
+          (s) => s['id'].toString() == student['id'].toString(),
         ) ==
         true;
 
@@ -1331,31 +1331,31 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         value: isSelected,
         onChanged: (value) {
           setModalState(() {
-            final siswaList = _selectedSiswaByKelas[classId] ?? [];
+            final studentList = _selectedStudentsByClass[classId] ?? [];
             if (value == true) {
-              siswaList.add(siswa);
+              studentList.add(student);
             } else {
-              siswaList.removeWhere(
-                (s) => s['id'].toString() == siswa['id'].toString(),
+              studentList.removeWhere(
+                (s) => s['id'].toString() == student['id'].toString(),
               );
             }
-            _selectedSiswaByKelas[classId] = siswaList;
+            _selectedStudentsByClass[classId] = studentList;
 
             // Update kelas selection
-            if (siswaList.isEmpty) {
-              _selectedKelas.removeWhere((k) => k['id'].toString() == classId);
-            } else if (!_selectedKelas.any(
+            if (studentList.isEmpty) {
+              _selectedClasses.removeWhere((k) => k['id'].toString() == classId);
+            } else if (!_selectedClasses.any(
               (k) => k['id'].toString() == classId,
             )) {
-              _selectedKelas.add(
-                _kelasList.firstWhere((k) => k['id'].toString() == classId),
+              _selectedClasses.add(
+                _classList.firstWhere((k) => k['id'].toString() == classId),
               );
             }
           });
         },
-        title: Text(siswa['name'] ?? 'Siswa', style: TextStyle(fontSize: 14)),
+        title: Text(student['name'] ?? 'Siswa', style: TextStyle(fontSize: 14)),
         subtitle: Text(
-          'NIS: ${siswa['student_number'] ?? '-'}',
+          'NIS: ${student['student_number'] ?? '-'}',
           style: TextStyle(fontSize: 11, color: ColorUtils.slate600),
         ),
         dense: true,
@@ -1365,10 +1365,10 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildSelectionSummary() {
-    int totalKelas = _selectedKelas.length;
-    int totalSiswa = _selectedSiswaByKelas.values.fold(
+    int totalClasses = _selectedClasses.length;
+    int totalStudents = _selectedStudentsByClass.values.fold(
       0,
-      (sum, siswaList) => sum + siswaList.length,
+      (sum, studentList) => sum + studentList.length,
     );
 
     return Row(
@@ -1382,7 +1382,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
               style: TextStyle(fontSize: 12, color: ColorUtils.slate600),
             ),
             Text(
-              '$totalKelas Kelas • $totalSiswa Siswa',
+              '$totalClasses Kelas • $totalStudents Siswa',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -1391,7 +1391,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
             ),
           ],
         ),
-        if (totalKelas == _kelasList.length && totalSiswa == _getTotalSiswa())
+        if (totalClasses == _classList.length && totalStudents == _getTotalStudents())
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -1411,20 +1411,20 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  int _getTotalSiswa() {
-    return _siswaByKelas.values.fold(
+  int _getTotalStudents() {
+    return _studentsByClass.values.fold(
       0,
-      (sum, siswaList) => sum + siswaList.length,
+      (sum, studentList) => sum + studentList.length,
     );
   }
 
   void _selectAllKelas(StateSetter setModalState) {
     setModalState(() {
-      _selectedKelas = List.from(_kelasList);
-      for (var kelas in _kelasList) {
-        final classId = kelas['id'].toString();
-        _selectedSiswaByKelas[classId] = List.from(
-          _siswaByKelas[classId] ?? [],
+      _selectedClasses = List.from(_classList);
+      for (var classItem in _classList) {
+        final classId = classItem['id'].toString();
+        _selectedStudentsByClass[classId] = List.from(
+          _studentsByClass[classId] ?? [],
         );
       }
     });
@@ -1432,47 +1432,47 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   void _clearAllSelection(StateSetter setModalState) {
     setModalState(() {
-      _selectedKelas.clear();
-      _selectedSiswaByKelas.clear();
+      _selectedClasses.clear();
+      _selectedStudentsByClass.clear();
     });
   }
 
-  Map<String, dynamic> _buildTujuanData() {
-    final totalKelas = _selectedKelas.length;
-    final totalSiswa = _getTotalSiswa();
-    final selectedSiswaCount = _selectedSiswaByKelas.values.fold(
+  Map<String, dynamic> _buildGoalData() {
+    final totalClasses = _selectedClasses.length;
+    final totalStudents = _getTotalStudents();
+    final selectedStudentCount = _selectedStudentsByClass.values.fold(
       0,
-      (sum, siswaList) => sum + siswaList.length,
+      (sum, studentList) => sum + studentList.length,
     );
 
-    // Jika semua kelas dan semua siswa terpilih
-    if (totalKelas == _kelasList.length && selectedSiswaCount == totalSiswa) {
+    // If all classes and all students are selected
+    if (totalClasses == _classList.length && selectedStudentCount == totalStudents) {
       return {'type': 'all', 'description': 'Semua siswa di semua kelas'};
     }
 
     // Custom selection
-    final classIds = _selectedKelas.map((k) => k['id'].toString()).toList();
-    final siswaMap = <String, List<String>>{};
+    final classIds = _selectedClasses.map((k) => k['id'].toString()).toList();
+    final studentMap = <String, List<String>>{};
 
-    _selectedSiswaByKelas.forEach((classId, siswaList) {
-      siswaMap[classId] = siswaList.map((s) => s['id'].toString()).toList();
+    _selectedStudentsByClass.forEach((classId, studentList) {
+      studentMap[classId] = studentList.map((s) => s['id'].toString()).toList();
     });
 
     return {
       'type': 'custom',
       'kelas': classIds,
-      'siswa': siswaMap,
-      'description': '$selectedSiswaCount siswa di $totalKelas kelas',
+      'siswa': studentMap,
+      'description': '$selectedStudentCount siswa di $totalClasses kelas',
     };
   }
 
-  // Widget untuk tab Laporan Kelas
-  Widget _buildLaporanKelasTab() {
+  // Widget for Class Report tab
+  Widget _buildClassReportTab() {
     if (_isLoading) {
       return SkeletonListLoading(itemCount: 6, infoTagCount: 1);
     }
 
-    if (_kelasList.isEmpty) {
+    if (_classList.isEmpty) {
       return EmptyState(
         title: 'Belum ada data kelas',
         subtitle: 'Data kelas akan muncul di sini',
@@ -1481,20 +1481,20 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
 
     return ListView.builder(
-      itemCount: _kelasList.length,
+      itemCount: _classList.length,
       itemBuilder: (context, index) {
-        final kelas = _kelasList[index];
-        final classId = kelas['id']?.toString();
-        final siswaList = _siswaByKelas[classId] ?? [];
+        final classItem = _classList[index];
+        final classId = classItem['id']?.toString();
+        final studentList = _studentsByClass[classId] ?? [];
 
-        return _buildKelasCard(kelas, siswaList, index);
+        return _buildClassCard(classItem, studentList, index);
       },
     );
   }
 
-  Widget _buildKelasCard(
-    Map<String, dynamic> kelas,
-    List<dynamic> siswaList,
+  Widget _buildClassCard(
+    Map<String, dynamic> classItem,
+    List<dynamic> studentList,
     int index,
   ) {
     return Material(
@@ -1503,8 +1503,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         borderRadius: BorderRadius.circular(16),
         onTap: () {
           AppNavigator.push(context, ClassFinanceReportScreen(
-                classId: kelas['id'].toString(),
-                className: kelas['name'] ?? 'Kelas',
+                classId: classItem['id'].toString(),
+                className: classItem['name'] ?? 'Kelas',
               ));
         },
         child: Container(
@@ -1536,7 +1536,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      kelas['name'] ?? 'Kelas',
+                      classItem['name'] ?? 'Kelas',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
@@ -1545,7 +1545,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      '${kelas['student_count'] ?? siswaList.length} siswa',
+                      '${classItem['student_count'] ?? studentList.length} siswa',
                       style: TextStyle(
                         color: ColorUtils.slate500,
                         fontSize: 12,
@@ -1554,7 +1554,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   ],
                 ),
               ),
-              _buildKelasSummary(siswaList),
+              _buildClassSummary(studentList),
               SizedBox(width: AppSpacing.sm),
               Container(
                 width: 32,
@@ -1576,7 +1576,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  Widget _buildKelasSummary(List<dynamic> siswaList) {
+  Widget _buildClassSummary(List<dynamic> studentList) {
     int totalLunas = 0;
     int totalPending = 0;
     int totalBelumBayar = 0;
@@ -1586,20 +1586,20 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         .selectedAcademicYear?['id']
         ?.toString();
 
-    for (var siswa in siswaList) {
-      final siswaId = siswa['id']?.toString();
-      final tagihanList = _tagihanBySiswa[siswaId] ?? [];
+    for (var student in studentList) {
+      final studentId = student['id']?.toString();
+      final billList = _billsByStudent[studentId] ?? [];
 
-      for (var tagihan in tagihanList) {
+      for (var bill in billList) {
         // Filter based on academic year
-        final tagihanAcademicYearId = tagihan['academic_year_id']?.toString();
+        final billAcademicYearId = bill['academic_year_id']?.toString();
         if (selectedAcademicYearId != null &&
-            tagihanAcademicYearId != null &&
-            tagihanAcademicYearId != selectedAcademicYearId) {
+            billAcademicYearId != null &&
+            billAcademicYearId != selectedAcademicYearId) {
           continue;
         }
 
-        final status = tagihan['status'];
+        final status = bill['status'];
 
         // 1. Check Verified/Lunas
         if (status == 'verified') {
@@ -1609,8 +1609,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         // Logic: Has a payment with status 'pending' (regardless of bill status being pending/unpaid)
         else {
           bool hasPendingPayment = false;
-          if (tagihan['payments'] != null && tagihan['payments'] is List) {
-            for (var p in tagihan['payments']) {
+          if (bill['payments'] != null && bill['payments'] is List) {
+            for (var p in bill['payments']) {
               final pStatus = p['status'];
               if (pStatus == 'pending' || pStatus == 'test_status') {
                 hasPendingPayment = true;
@@ -1622,7 +1622,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           if (hasPendingPayment) {
             totalPending++;
           } else {
-            // 3. Fallback: Belum Bayar
+            // 3. Fallback: Not Paid
             // Typically bill status is 'unpaid' or 'pending' here with no pending proof
             totalBelumBayar++;
           }
@@ -1663,7 +1663,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  Future<void> _loadJenisPembayaran() async {
+  Future<void> _loadPaymentTypes() async {
     try {
       final response = await _apiService.get('/payment-types');
       final List<dynamic> rawData;
@@ -1675,7 +1675,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
       if (mounted) {
         setState(() {
-          _jenisPembayaranList = rawData.map((item) {
+          _paymentTypeList = rawData.map((item) {
             if (item is Map<String, dynamic>) {
               final newItem = Map<String, dynamic>.from(item);
 
@@ -1721,7 +1721,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     try {
       if (resetPage) {
         _currentPage = 1;
-        _tagihanList = [];
+        _billList = [];
         _hasMoreData = true;
       }
 
@@ -1743,7 +1743,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
         if (mounted) {
           setState(() {
-            _tagihanList.addAll(pageData);
+            _billList.addAll(pageData);
             _hasMoreData =
                 pagination['has_next_page'] ?? (pageData.length == _perPage);
           });
@@ -1754,7 +1754,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
             (res['pagination'] as Map?)?.cast<String, dynamic>() ?? {};
         if (mounted) {
           setState(() {
-            _tagihanList.addAll(pageData);
+            _billList.addAll(pageData);
             _hasMoreData =
                 pagination['has_next_page'] ?? (pageData.length == _perPage);
           });
@@ -1786,13 +1786,13 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     setState(() {
       _isLoadingMorePending = true;
     });
-    await _loadPembayaranPending(loadMore: true);
+    await _loadPendingPayments(loadMore: true);
     setState(() {
       _isLoadingMorePending = false;
     });
   }
 
-  Future<void> _loadPembayaranPending({bool loadMore = false}) async {
+  Future<void> _loadPendingPayments({bool loadMore = false}) async {
     try {
       if (!loadMore) {
         setState(() {
@@ -1821,17 +1821,17 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
             rawList = response['data'] is List ? response['data'] : [];
             // Parse total from pagination
             if (response.containsKey('total')) {
-              _totalPembayaranPending =
+              _totalPendingPayments =
                   int.tryParse(response['total'].toString()) ?? 0;
             } else if (response.containsKey('meta') &&
                 response['meta'] is Map) {
-              _totalPembayaranPending =
+              _totalPendingPayments =
                   int.tryParse(response['meta']['total'].toString()) ?? 0;
             }
           } else {
             rawList = response is List ? response : [];
             if (!loadMore) {
-              _totalPembayaranPending = rawList.length; // Fallback if no meta
+              _totalPendingPayments = rawList.length; // Fallback if no meta
             }
           }
 
@@ -1868,9 +1868,9 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           }).toList();
 
           if (loadMore) {
-            _pembayaranPendingList.addAll(mappedList);
+            _pendingPaymentList.addAll(mappedList);
           } else {
-            _pembayaranPendingList = mappedList;
+            _pendingPaymentList = mappedList;
           }
         });
       }
@@ -1952,34 +1952,34 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     return result;
   }
 
-  void _showAddEditJenisPembayaran({Map<String, dynamic>? jenisPembayaran}) {
+  void _showAddEditPaymentType({Map<String, dynamic>? paymentType}) {
     final namaController = TextEditingController(
-      text: jenisPembayaran?['name'],
+      text: paymentType?['name'],
     );
     final deskripsiController = TextEditingController(
-      text: jenisPembayaran?['description'],
+      text: paymentType?['description'],
     );
     final jumlahController = TextEditingController(
-      text: jenisPembayaran?['amount'] != null
+      text: paymentType?['amount'] != null
           ? NumberFormat.currency(
               locale: 'id_ID',
               symbol: 'Rp ',
               decimalDigits: 0,
             ).format(
-              double.tryParse(jenisPembayaran!['amount'].toString()) ?? 0,
+              double.tryParse(paymentType!['amount'].toString()) ?? 0,
             )
           : '',
     );
     final periodeController = TextEditingController(
-      text: jenisPembayaran?['periode'] ?? 'bulanan',
+      text: paymentType?['periode'] ?? 'bulanan',
     );
 
-    Map<String, dynamic>? tujuanData = jenisPembayaran != null
-        ? _parseTujuan(jenisPembayaran['goal'])
+    Map<String, dynamic>? goalData = paymentType != null
+        ? _parseGoal(paymentType!['goal'])
         : null;
-    String? status = (jenisPembayaran?['status'] == 'active')
+    String? status = (paymentType?['status'] == 'active')
         ? 'aktif'
-        : (jenisPembayaran?['status'] == 'inactive' ? 'non-aktif' : 'aktif');
+        : (paymentType?['status'] == 'inactive' ? 'non-aktif' : 'aktif');
 
     showModalBottomSheet(
       context: context,
@@ -1990,7 +1990,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           String selectedPeriode = periodeController.text.isEmpty
               ? 'bulanan'
               : periodeController.text;
-          final isEdit = jenisPembayaran != null;
+          final isEdit = paymentType != null;
           final languageProvider = ref.read(languageRiverpod);
 
           Widget buildPeriodeChip(String value, String label, IconData icon) {
@@ -2290,10 +2290,10 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           SizedBox(height: 10),
                           InkWell(
                             onTap: () {
-                              _showPemilihanTujuanModal(
-                                jenisPembayaran: jenisPembayaran,
-                                onSave: (tujuan) {
-                                  setModalState(() => tujuanData = tujuan);
+                              _showTargetSelectionModal(
+                                paymentType: paymentType,
+                                onSave: (goal) {
+                                  setModalState(() => goalData = goal);
                                 },
                               );
                             },
@@ -2306,7 +2306,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color:
-                                    tujuanData != null && tujuanData!.isNotEmpty
+                                    goalData != null && goalData!.isNotEmpty
                                     ? ColorUtils.success600.withValues(
                                         alpha: 0.06,
                                       )
@@ -2314,8 +2314,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color:
-                                      tujuanData != null &&
-                                          tujuanData!.isNotEmpty
+                                      goalData != null &&
+                                          goalData!.isNotEmpty
                                       ? ColorUtils.success600.withValues(
                                           alpha: 0.4,
                                         )
@@ -2329,22 +2329,22 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     height: 36,
                                     decoration: BoxDecoration(
                                       color:
-                                          (tujuanData != null &&
-                                                      tujuanData!.isNotEmpty
+                                          (goalData != null &&
+                                                      goalData!.isNotEmpty
                                                   ? ColorUtils.success600
                                                   : ColorUtils.corporateBlue600)
                                               .withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Icon(
-                                      tujuanData != null &&
-                                              tujuanData!.isNotEmpty
+                                      goalData != null &&
+                                              goalData!.isNotEmpty
                                           ? Icons.check_circle_rounded
                                           : Icons.groups_rounded,
                                       size: 18,
                                       color:
-                                          tujuanData != null &&
-                                              tujuanData!.isNotEmpty
+                                          goalData != null &&
+                                              goalData!.isNotEmpty
                                           ? ColorUtils.success600
                                           : ColorUtils.corporateBlue600,
                                     ),
@@ -2356,22 +2356,22 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          tujuanData != null &&
-                                                  tujuanData!.isNotEmpty
+                                          goalData != null &&
+                                                  goalData!.isNotEmpty
                                               ? 'Tujuan Dipilih'
                                               : 'Belum ada tujuan',
                                           style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
                                             color:
-                                                tujuanData != null &&
-                                                    tujuanData!.isNotEmpty
+                                                goalData != null &&
+                                                    goalData!.isNotEmpty
                                                 ? ColorUtils.success600
                                                 : ColorUtils.slate600,
                                           ),
                                         ),
                                         Text(
-                                          _getTujuanDescription(tujuanData),
+                                          _getGoalDescription(goalData),
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: ColorUtils.slate500,
@@ -2500,7 +2500,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 return;
                               }
 
-                              if (tujuanData == null) {
+                              if (goalData == null) {
                                                                 SnackBarUtils.showError(context, 'Tujuan pembayaran harus dipilih');
                                 return;
                               }
@@ -2517,17 +2517,17 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                   'status': status == 'aktif'
                                       ? 'active'
                                       : 'inactive',
-                                  'goal': tujuanData,
+                                  'goal': goalData,
                                 };
 
-                                if (jenisPembayaran == null) {
+                                if (paymentType == null) {
                                   await _apiService.post(
                                     '/payment-types',
                                     data,
                                   );
                                 } else {
                                   await _apiService.put(
-                                    '/payment-types/${jenisPembayaran['id']}',
+                                    '/payment-types/${paymentType['id']}',
                                     data,
                                   );
                                 }
@@ -2620,7 +2620,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     required List<String> items,
     required Function(String?) onChanged,
   }) {
-    // Pastikan value yang diberikan ada dalam items
+    // Ensure the given value exists in the items list
     String selectedValue = items.contains(value) ? value : items.first;
 
     return Container(
@@ -2632,7 +2632,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 12),
         child: DropdownButtonFormField<String>(
-          initialValue: selectedValue, // Gunakan value yang sudah divalidasi
+          initialValue: selectedValue, // Use the validated value
           decoration: InputDecoration(
             labelText: label,
             prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 20),
@@ -2670,8 +2670,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  Future<void> _deleteJenisPembayaran(
-    Map<String, dynamic> jenisPembayaran,
+  Future<void> _deletePaymentType(
+    Map<String, dynamic> paymentType,
   ) async {
     final confirmed = await showDialog(
       context: context,
@@ -2680,14 +2680,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           AppLocalizations.deletePaymentType,
         ),
         content:
-            'Yakin ingin menghapus jenis pembayaran "${jenisPembayaran['name']}"?',
+            'Yakin ingin menghapus jenis pembayaran "${paymentType['name']}"?',
         confirmColor: ColorUtils.error600,
       ),
     );
 
     if (confirmed == true) {
       try {
-        await _apiService.delete('/payment-type/${jenisPembayaran['id']}');
+        await _apiService.delete('/payment-type/${paymentType['id']}');
         if (mounted) {
                     SnackBarUtils.showSuccess(context, 'Jenis pembayaran berhasil dihapus');
         }
@@ -2702,7 +2702,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Future<void> _confirmGenerateBills(
-    Map<String, dynamic> jenisPembayaran,
+    Map<String, dynamic> paymentType,
   ) async {
     String selectedMonth = DateFormat('MMMM', 'id_ID').format(DateTime.now());
     String? selectedAcademicYearId;
@@ -2752,7 +2752,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
                     if (selectedAcademicYearId != null) {
                       ApiService.getGeneratedMonths(
-                        paymentTypeId: jenisPembayaran['id'].toString(),
+                        paymentTypeId: paymentType['id'].toString(),
                         academicYearId: selectedAcademicYearId!,
                       ).then((genMonths) {
                         if (context.mounted) {
@@ -2817,7 +2817,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 ),
                               ),
                               Text(
-                                jenisPembayaran['name'] ?? '',
+                                paymentType['name'] ?? '',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.white.withValues(alpha: 0.85),
@@ -2909,7 +2909,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                       generatedMonths = [];
                                     });
                                     ApiService.getGeneratedMonths(
-                                      paymentTypeId: jenisPembayaran['id']
+                                      paymentTypeId: paymentType['id']
                                           .toString(),
                                       academicYearId: val,
                                     ).then((genMonths) {
@@ -3126,7 +3126,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         }
 
         final response = await ApiService.generateBills(
-          paymentTypeId: jenisPembayaran['id'].toString(),
+          paymentTypeId: paymentType['id'].toString(),
           month: result['month'] ?? '',
           academicYearId: result['academicYearId'] ?? '',
         );
@@ -3161,7 +3161,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
   }
 
-  void _showVerifikasiDialog(Map<String, dynamic> pembayaran) {
+  void _showVerificationDialog(Map<String, dynamic> payment) {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -3226,35 +3226,35 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         // Info Pembayaran
                         _buildInfoItem(
                           'Siswa',
-                          pembayaran['siswa_nama'] ?? '-',
+                          payment['siswa_nama'] ?? '-',
                         ),
                         _buildInfoItem(
                           'Kelas',
-                          pembayaran['kelas_nama'] ?? '-',
+                          payment['kelas_nama'] ?? '-',
                         ),
                         _buildInfoItem(
                           languageProvider.getTranslatedText(
                             AppLocalizations.paymentTypes,
                           ),
-                          pembayaran['jenis_pembayaran_nama'] ?? '-',
+                          payment['jenis_pembayaran_nama'] ?? '-',
                         ),
                         _buildInfoItem(
                           'Jumlah Bayar',
-                          _formatCurrency(pembayaran['amount']),
+                          _formatCurrency(payment['amount']),
                         ),
                         _buildInfoItem(
                           'Metode Bayar',
-                          pembayaran['metode_bayar'] ?? '-',
+                          payment['metode_bayar'] ?? '-',
                         ),
 
                         SizedBox(height: AppSpacing.lg),
                         Divider(),
                         SizedBox(height: AppSpacing.lg),
 
-                        if (pembayaran['payment_receipt'] != null) ...[
+                        if (payment['payment_receipt'] != null) ...[
                           SizedBox(height: AppSpacing.md),
                           GestureDetector(
-                            onTap: () => _showBuktiPembayaran(pembayaran),
+                            onTap: () => _showPaymentProof(payment),
                             child: Container(
                               padding: EdgeInsets.all(AppSpacing.md),
                               decoration: BoxDecoration(
@@ -3363,7 +3363,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             onPressed: () async {
                               try {
                                 await _apiService.put(
-                                  '/payment/${pembayaran['id']}/verify',
+                                  '/payment/${payment['id']}/verify',
                                   {
                                     'status': status,
                                     'admin_notes':
@@ -3446,7 +3446,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   List<dynamic> _getFilteredJenisPembayaran() {
-    return _jenisPembayaranList.where((item) {
+    return _paymentTypeList.where((item) {
       final searchTerm = _searchController.text.toLowerCase();
       final nama = item['name']?.toString().toLowerCase() ?? '';
       final deskripsi = item['description']?.toString().toLowerCase() ?? '';
@@ -3474,7 +3474,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }).toList();
   }
 
-  Widget _buildJenisPembayaranCard(Map<String, dynamic> item, int index) {
+  Widget _buildPaymentTypeCard(Map<String, dynamic> item, int index) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
@@ -3660,7 +3660,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ConstrainedBox(
                               constraints: BoxConstraints(maxWidth: 160),
                               child: Text(
-                                _getTujuanDescription(item['goal']),
+                                _getGoalDescription(item['goal']),
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: ColorUtils.info600,
@@ -3693,14 +3693,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       icon: Icons.edit_rounded,
                       color: _getPrimaryColor(),
                       onPressed: () =>
-                          _showAddEditJenisPembayaran(jenisPembayaran: item),
+                          _showAddEditPaymentType(paymentType: item),
                       tooltip: AppLocalizations.edit.tr,
                     ),
                     SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.delete_rounded,
                       color: ColorUtils.error600,
-                      onPressed: () => _deleteJenisPembayaran(item),
+                      onPressed: () => _deletePaymentType(item),
                       tooltip: AppLocalizations.delete.tr,
                     ),
                   ],
@@ -3766,7 +3766,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           Expanded(
             child: _buildStatCard(
               icon: Icons.pending_actions_rounded,
-              value: '$_totalPembayaranPending',
+              value: '$_totalPendingPayments',
               label: languageProvider.getTranslatedText({
                 'en': 'Pending',
                 'id': 'Menunggu',
@@ -3840,8 +3840,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     List<dynamic> generatedBatches = _dashboardData['generated_batches'] ?? [];
 
     // Additional Fallback: If still empty but we have some tagihan, use them
-    if (generatedBatches.isEmpty && _tagihanList.isNotEmpty) {
-      generatedBatches = _calculateBatchesFromBills(_tagihanList);
+    if (generatedBatches.isEmpty && _billList.isNotEmpty) {
+      generatedBatches = _calculateBatchesFromBills(_billList);
     }
 
     return Column(
@@ -4075,7 +4075,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           return ErrorScreen(errorMessage: _errorMessage, onRetry: _loadData);
         }
 
-        final filteredJenisPembayaran = _getFilteredJenisPembayaran();
+        final filteredPaymentTypes = _getFilteredJenisPembayaran();
 
         return Scaffold(
           backgroundColor: ColorUtils.slate50,
@@ -4208,7 +4208,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           padding: EdgeInsets.only(bottom: 20),
                           children: [
                             _buildDashboardStats(),
-                            if (_pembayaranPendingList.isNotEmpty)
+                            if (_pendingPaymentList.isNotEmpty)
                               _buildPendingSection(),
                             _buildGeneratedPaymentTypesSection(),
                             SizedBox(height: AppSpacing.lg),
@@ -4401,13 +4401,13 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             SizedBox(height: AppSpacing.sm),
                           ],
 
-                          if (filteredJenisPembayaran.isNotEmpty)
+                          if (filteredPaymentTypes.isNotEmpty)
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 16),
                               child: Row(
                                 children: [
                                   Text(
-                                    '${filteredJenisPembayaran.length} jenis pembayaran ditemukan',
+                                    '${filteredPaymentTypes.length} jenis pembayaran ditemukan',
                                     style: TextStyle(
                                       color: ColorUtils.slate600,
                                       fontSize: 12,
@@ -4418,7 +4418,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ),
                           SizedBox(height: AppSpacing.xs),
                           Expanded(
-                            child: filteredJenisPembayaran.isEmpty
+                            child: filteredPaymentTypes.isEmpty
                                 ? EmptyState(
                                     title: 'Tidak ada jenis pembayaran',
                                     subtitle:
@@ -4429,10 +4429,10 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     icon: Icons.payment,
                                   )
                                 : ListView.builder(
-                                    itemCount: filteredJenisPembayaran.length,
+                                    itemCount: filteredPaymentTypes.length,
                                     itemBuilder: (context, index) {
-                                      return _buildJenisPembayaranCard(
-                                        filteredJenisPembayaran[index],
+                                      return _buildPaymentTypeCard(
+                                        filteredPaymentTypes[index],
                                         index,
                                       );
                                     },
@@ -4442,7 +4442,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       ),
 
                       // Tab Verifikasi
-                      _pembayaranPendingList.isEmpty
+                      _pendingPaymentList.isEmpty
                           ? EmptyState(
                               title: 'Tidak ada pembayaran menunggu verifikasi',
                               subtitle: 'Semua pembayaran telah diverifikasi',
@@ -4452,10 +4452,10 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               controller: _pendingScrollController,
                               physics: AlwaysScrollableScrollPhysics(),
                               itemCount:
-                                  _pembayaranPendingList.length +
+                                  _pendingPaymentList.length +
                                   (_hasMorePending ? 1 : 0),
                               itemBuilder: (context, index) {
-                                if (index == _pembayaranPendingList.length) {
+                                if (index == _pendingPaymentList.length) {
                                   return Padding(
                                     padding: EdgeInsets.all(16.0),
                                     child: Center(
@@ -4464,12 +4464,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                   );
                                 }
                                 return _buildPembayaranPendingCard(
-                                  _pembayaranPendingList[index],
+                                  _pendingPaymentList[index],
                                   index,
                                 );
                               },
                             ),
-                      _buildLaporanKelasTab(),
+                      _buildClassReportTab(),
                     ],
                   ),
                 ),
@@ -4500,7 +4500,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           AppLocalizations.verification,
         ),
         'index': 2,
-        'badge': _totalPembayaranPending,
+        'badge': _totalPendingPayments,
       },
       {
         'icon': Icons.school_rounded,
@@ -4692,7 +4692,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      '${_pembayaranPendingList.length} ${languageProvider.getTranslatedText({'en': 'payments need verification', 'id': 'pembayaran perlu diverifikasi'})}',
+                      '${_pendingPaymentList.length} ${languageProvider.getTranslatedText({'en': 'payments need verification', 'id': 'pembayaran perlu diverifikasi'})}',
                       style: TextStyle(
                         color: ColorUtils.slate500,
                         fontSize: 12,
@@ -4708,7 +4708,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${_pembayaranPendingList.length}',
+                  '${_pendingPaymentList.length}',
                   style: TextStyle(
                     color: ColorUtils.warning600,
                     fontSize: 13,
@@ -4763,7 +4763,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildPembayaranPendingCard(
-    Map<String, dynamic> pembayaran,
+    Map<String, dynamic> payment,
     int index,
   ) {
     return Container(
@@ -4772,7 +4772,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => _showVerifikasiDialog(pembayaran),
+          onTap: () => _showVerificationDialog(payment),
           child: Container(
             padding: EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
@@ -4803,7 +4803,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          (pembayaran['siswa_nama'] ?? '?')[0].toUpperCase(),
+                          (payment['siswa_nama'] ?? '?')[0].toUpperCase(),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -4818,7 +4818,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            pembayaran['siswa_nama'] ?? '-',
+                            payment['siswa_nama'] ?? '-',
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
@@ -4827,7 +4827,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'Kelas ${pembayaran['kelas_nama'] ?? '-'}',
+                            'Kelas ${payment['kelas_nama'] ?? '-'}',
                             style: TextStyle(
                               color: ColorUtils.slate500,
                               fontSize: 12,
@@ -4897,7 +4897,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ),
                           SizedBox(width: AppSpacing.xs),
                           Text(
-                            pembayaran['jenis_pembayaran_nama'] ?? '-',
+                            payment['jenis_pembayaran_nama'] ?? '-',
                             style: TextStyle(
                               fontSize: 11,
                               color: ColorUtils.slate600,
@@ -4923,7 +4923,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ),
                           SizedBox(width: AppSpacing.xs),
                           Text(
-                            _formatCurrency(pembayaran['amount']),
+                            _formatCurrency(payment['amount']),
                             style: TextStyle(
                               fontSize: 11,
                               color: ColorUtils.slate700,
@@ -4950,7 +4950,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ),
                           SizedBox(width: AppSpacing.xs),
                           Text(
-                            pembayaran['payment_date']?.split('T')[0] ?? '-',
+                            payment['payment_date']?.split('T')[0] ?? '-',
                             style: TextStyle(
                               fontSize: 11,
                               color: ColorUtils.slate600,
@@ -4963,10 +4963,10 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                 ),
 
                 // Bukti Pembayaran
-                if (pembayaran['payment_receipt'] != null) ...[
+                if (payment['payment_receipt'] != null) ...[
                   SizedBox(height: 10),
                   GestureDetector(
-                    onTap: () => _showBuktiPembayaran(pembayaran),
+                    onTap: () => _showPaymentProof(payment),
                     child: Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 10,
@@ -5018,7 +5018,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () => _showVerifikasiDialog(pembayaran),
+                      onPressed: () => _showVerificationDialog(payment),
                       icon: Icon(
                         Icons.verified_rounded,
                         size: 16,
@@ -5057,7 +5057,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     if (_currentTabIndex == 1) {
       // Tab Jenis Pembayaran
       return FloatingActionButton(
-        onPressed: () => _showAddEditJenisPembayaran(),
+        onPressed: () => _showAddEditPaymentType(),
         backgroundColor: _getPrimaryColor(),
         child: Icon(Icons.add, color: Colors.white),
       );
@@ -5067,9 +5067,9 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   // Restored methods needed by other dialogs
-  void _showBuktiPembayaran(Map<String, dynamic> pembayaran) {
+  void _showPaymentProof(Map<String, dynamic> payment) {
     final imageFile =
-        pembayaran['payment_proof'] ?? pembayaran['payment_receipt'];
+        payment['payment_proof'] ?? payment['payment_receipt'];
 
     if (imageFile == null) {
             SnackBarUtils.showWarning(context, 'Tidak ada bukti pembayaran');
@@ -5195,15 +5195,15 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       ),
                     ),
                     SizedBox(height: AppSpacing.sm),
-                    _buildInfoRow('Siswa', pembayaran['siswa_nama'] ?? '-'),
-                    _buildInfoRow('Kelas', pembayaran['kelas_nama'] ?? '-'),
+                    _buildInfoRow('Siswa', payment['siswa_nama'] ?? '-'),
+                    _buildInfoRow('Kelas', payment['kelas_nama'] ?? '-'),
                     _buildInfoRow(
                       'Jenis',
-                      pembayaran['jenis_pembayaran_nama'] ?? '-',
+                      payment['jenis_pembayaran_nama'] ?? '-',
                     ),
                     _buildInfoRow(
                       'Jumlah',
-                      _formatCurrency(pembayaran['amount']),
+                      _formatCurrency(payment['amount']),
                     ),
                   ],
                 ),

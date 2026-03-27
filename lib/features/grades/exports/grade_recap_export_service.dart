@@ -22,14 +22,14 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 ///
 /// Unlike other Excel services, this one has no local validation since the
 /// data is pre-aggregated by the UI/provider before export.
-class ExcelRekapNilaiService {
+class ExcelGradeRecapService {
   static String get baseUrl => '/grade-recaps';
 
   /// Export grade recapitulation to Excel via backend POST to `/grade-recaps/export`.
   /// [tableData] - rows of student scores. [chapters] - chapter metadata for headers.
   /// [className], [subjectName] - used for filename (sanitized with regex).
   /// Side effects: saves .xlsx to device documents dir and opens it.
-  static Future<void> exportRekapNilaiToExcel({
+  static Future<void> exportGradeRecapToExcel({
     required List<Map<String, dynamic>> tableData,
     required List<dynamic> chapters,
     required String className,

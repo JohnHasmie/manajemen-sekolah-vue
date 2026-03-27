@@ -938,7 +938,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     );
   }
 
-  // Dalam tagihan_wali.dart - Perbaiki _pickImage
+  // Fix _pickImage in parent billing
   Future<void> _pickImage(StateSetter setDialogState) async {
     try {
       final ImagePicker picker = ImagePicker();
@@ -971,7 +971,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         );
 
         if (file != null && context.mounted) {
-          // Validasi yang lebih ketat
+          // Stricter validation
           final allowedExtensions = ['.jpg', '.jpeg', '.png'];
           final filePath = file.path.toLowerCase();
 
@@ -1001,7 +1001,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     }
   }
 
-  // Tambahkan method ini di tagihan_wali.dart
+  // PDF picker method for parent billing
   Future<void> _pickPDF(StateSetter setDialogState) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -1800,7 +1800,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     required File file,
   }) async {
     try {
-      // Validasi file type sebelum upload
+      // Validate file type before upload
       final allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
       final filePath = file.path.toLowerCase();
 

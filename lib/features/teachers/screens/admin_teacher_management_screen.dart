@@ -667,10 +667,10 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                       }),
                                     ),
                                   ),
-                                  ..._availableClass.map((kelas) {
+                                  ..._availableClass.map((classItem) {
                                     return DropdownMenuItem<String>(
-                                      value: kelas['id'].toString(),
-                                      child: Text(kelas['name'].toString()),
+                                      value: classItem['id'].toString(),
+                                      child: Text(classItem['name'].toString()),
                                     );
                                   }),
                                 ],
@@ -940,7 +940,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      // Load subjects and classes (untuk dropdown/reference)
+      // Load subjects and classes (for dropdown/reference)
       final subjectData = await _subjectService.getSubject();
       final classData = await getIt<ApiClassService>().getClass(
         academicYearId: selectedYearId,
@@ -1405,6 +1405,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         backgroundColor: Colors.transparent,
         builder: (context) {
           final languageProvider = ref.watch(languageRiverpod);
+          bool isSaving = false;
             return StatefulBuilder(
               builder: (context, setState) {
                 return Padding(
@@ -1423,7 +1424,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                     child: SafeArea(
                       child: Column(
                         children: [
-                          // Header dengan gradient (Pattern #9)
+                          // Header with gradient (Pattern #9)
                           Container(
                             width: double.infinity,
                             padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
@@ -1866,10 +1867,11 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 SizedBox(width: AppSpacing.md),
                                 Expanded(
                                   child: ElevatedButton(
-                                    onPressed: () async {
+                                    onPressed: isSaving
+                                        ? null
+                                        : () async {
                                       final name = nameController.text.trim();
                                       final email = emailController.text.trim();
-                                      // final nip = nipController.text.trim(); // Removed unused variable
 
                                       // Validate required fields
                                       if (name.isEmpty ||
@@ -1892,6 +1894,8 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                         );
                                         return;
                                       }
+
+                                      setState(() => isSaving = true);
 
                                       try {
                                         final academicYearProvider =
@@ -1991,11 +1995,17 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                             ),
                                           );
                                         }
+                                      } finally {
+                                        if (context.mounted) {
+                                          setState(() => isSaving = false);
+                                        }
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor:
                                           ColorUtils.corporateBlue600,
+                                      disabledBackgroundColor:
+                                          ColorUtils.corporateBlue600.withValues(alpha: 0.6),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
@@ -2006,7 +2016,16 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                       shadowColor: ColorUtils.corporateBlue600
                                           .withValues(alpha: 0.4),
                                     ),
-                                    child: Text(
+                                    child: isSaving
+                                        ? SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Text(
                                       AppLocalizations.save.tr,
                                       style: TextStyle(
                                         color: Colors.white,

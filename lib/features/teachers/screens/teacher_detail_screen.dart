@@ -302,7 +302,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
       teachingClassNames = uniqueClassNames.toList()..sort();
     } else {
       // Fallback to legacy 'classes' if schedules empty (though user asked for schedules)
-      // actually user explicitly asked "pada kelas itu mengambil list kelasnya dari table teaching_schedules"
+      // actually user explicitly asked "for that class, get the class list from the teaching_schedules table"
       // so we prioritizing schedules.
       // If schedules specific logic returns empty, valid result is empty.
     }

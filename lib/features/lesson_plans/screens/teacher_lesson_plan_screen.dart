@@ -3,7 +3,7 @@
 //
 // Displays a list of RPPs with search, filter by status (draft/final),
 // CRUD operations, AI generation, and Word/PDF download. Also contains
-// the [RppFormDialog] for creating/editing RPPs.
+// the [LessonPlanFormDialog] for creating/editing RPPs.
 // In Laravel terms: `LessonPlanController@index`, `@store`, `@update`, `@destroy`.
 import 'dart:convert';
 import 'dart:io';
@@ -40,26 +40,26 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 ///
 /// Props (like Vue props): [teacherId], [teacherName].
 /// Contains the main list view and navigation to detail/AI screens.
-class RppScreen extends ConsumerStatefulWidget {
+class LessonPlanScreen extends ConsumerStatefulWidget {
   final String teacherId;
   final String teacherName;
 
-  const RppScreen({
+  const LessonPlanScreen({
     super.key,
     required this.teacherId,
     required this.teacherName,
   });
 
   @override
-  RppScreenState createState() => RppScreenState();
+  LessonPlanScreenState createState() => LessonPlanScreenState();
 }
 
-/// State for [RppScreen].
+/// State for [LessonPlanScreen].
 ///
 /// Like a Vue page component with `data() { return { rppList, isLoading, ... } }`.
 /// Manages the RPP list, search, status filter, and CRUD operations.
-class RppScreenState extends ConsumerState<RppScreen> {
-  List<dynamic> _rppList = [];
+class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
+  List<dynamic> _lessonPlanList = [];
   bool _isLoading = true;
   String? _errorMessage;
   final TextEditingController _searchController = TextEditingController();
@@ -75,7 +75,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
   @override
   void initState() {
     super.initState();
-    _loadRpp();
+    _loadLessonPlans();
   }
 
   /// Like Vue's `beforeUnmount()` -- disposes search controller.
@@ -349,7 +349,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                               });
                               _checkActiveFilter();
                               AppNavigator.pop(context);
-                              _loadRpp();
+                              _loadLessonPlans();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _getPrimaryColor(),
@@ -411,35 +411,35 @@ class RppScreenState extends ConsumerState<RppScreen> {
     return (provider.selectedAcademicYear?['id'] ?? provider.activeAcademicYear?['id'])?.toString();
   }
 
-  String _buildRppCacheKey() {
+  String _buildLessonPlanCacheKey() {
     final academicYearId = _getAcademicYearId() ?? '';
     return 'rpp_list_${widget.teacherId}_$academicYearId';
   }
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('rpp_');
-    _loadRpp(useCache: false);
+    _loadLessonPlans(useCache: false);
   }
 
   /// Fetches RPP list from API with cache-first strategy.
   /// Like `axios.get('/api/rpp')` in Vue with localStorage caching.
-  Future<void> _loadRpp({bool useCache = true}) async {
+  Future<void> _loadLessonPlans({bool useCache = true}) async {
     final isFilteredOrSearched = _searchController.text.isNotEmpty || _selectedStatusFilter != null;
-    final rppCacheKey = _buildRppCacheKey();
+    final lessonPlanCacheKey = _buildLessonPlanCacheKey();
 
     // Step 1: Try cache → return early (only for unfiltered default view)
     if (useCache && !isFilteredOrSearched) {
-      final cached = await LocalCacheService.load(rppCacheKey);
+      final cached = await LocalCacheService.load(lessonPlanCacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
         if (mounted) {
           setState(() {
-            _rppList = List<dynamic>.from(cached);
+            _lessonPlanList = List<dynamic>.from(cached);
             _isLoading = false;
             _errorMessage = null;
           });
           _checkAndShowTour();
         }
-        AppLogger.debug('lesson_plan', 'RppScreen: Data from cache (${cached.length})');
+        AppLogger.debug('lesson_plan', 'LessonPlanScreen: Data from cache (${cached.length})');
         return;
       }
     }
@@ -455,7 +455,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
     try {
       final academicYearId = _getAcademicYearId();
 
-      final rppData = await ApiService.getLessonPlans(
+      final lessonPlanData = await ApiService.getLessonPlans(
         teacherId: widget.teacherId,
         search: _searchController.text,
         status: _selectedStatusFilter,
@@ -464,7 +464,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
       if (mounted) {
         setState(() {
-          _rppList = rppData;
+          _lessonPlanList = lessonPlanData;
           _isLoading = false;
           _hasActiveFilter = _selectedStatusFilter != null;
         });
@@ -472,11 +472,11 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
       // Save to cache only for unfiltered default view
       if (!isFilteredOrSearched) {
-        await LocalCacheService.save(rppCacheKey, rppData);
+        await LocalCacheService.save(lessonPlanCacheKey, lessonPlanData);
       }
     } catch (e) {
       AppLogger.error('lesson_plan', 'Load RPP error: $e');
-      if (mounted && _rppList.isEmpty) {
+      if (mounted && _lessonPlanList.isEmpty) {
         setState(() {
           _isLoading = false;
           _errorMessage = ErrorUtils.getFriendlyMessage(e);
@@ -534,7 +534,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                   child: GestureDetector(
                     onTap: () {
                       AppNavigator.pop(context);
-                      _showRppFormDialog();
+                      _showLessonPlanFormDialog();
                     },
                     child: Container(
                       padding: EdgeInsets.all(AppSpacing.lg),
@@ -575,7 +575,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                   child: GestureDetector(
                     onTap: () {
                       AppNavigator.pop(context);
-                      _showGenerateRppFormDialog();
+                      _showGenerateLessonPlanFormDialog();
                     },
                     child: Container(
                       padding: EdgeInsets.all(AppSpacing.lg),
@@ -620,7 +620,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
     );
   }
 
-  void _showRppFormDialog() {
+  void _showLessonPlanFormDialog() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -629,12 +629,12 @@ class RppScreenState extends ConsumerState<RppScreen> {
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: RppFormDialog(teacherId: widget.teacherId, onSaved: _loadRpp),
+        child: LessonPlanFormDialog(teacherId: widget.teacherId, onSaved: _loadLessonPlans),
       ),
     );
   }
 
-  void _showGenerateRppFormDialog() {
+  void _showGenerateLessonPlanFormDialog() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -643,7 +643,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: GenerateRppFormDialog(
+        child: GenerateLessonPlanFormDialog(
           teacherId: widget.teacherId,
           onSaved: _forceRefresh,
         ),
@@ -651,7 +651,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
     );
   }
 
-  void _editRpp(Map<String, dynamic> rpp) {
+  void _editLessonPlan(Map<String, dynamic> lessonPlan) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -660,10 +660,10 @@ class RppScreenState extends ConsumerState<RppScreen> {
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: RppFormDialog(
+        child: LessonPlanFormDialog(
           teacherId: widget.teacherId,
-          onSaved: _loadRpp,
-          rppData: rpp,
+          onSaved: _loadLessonPlans,
+          lessonPlanData: lessonPlan,
         ),
       ),
     );
@@ -671,7 +671,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
   /// Deletes an RPP after confirmation dialog.
   /// Like `axios.delete('/api/rpp/{id}')` in Vue with a confirm modal.
-  Future<void> _deleteRpp(Map<String, dynamic> rpp) async {
+  Future<void> _deleteLessonPlan(Map<String, dynamic> lessonPlan) async {
     final languageProvider = ref.read(languageRiverpod);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -684,8 +684,8 @@ class RppScreenState extends ConsumerState<RppScreen> {
         ),
         content: Text(
           languageProvider.getTranslatedText({
-            'en': 'Are you sure you want to delete RPP "${rpp['judul']}"?',
-            'id': 'Apakah Anda yakin ingin menghapus RPP "${rpp['judul']}"?',
+            'en': 'Are you sure you want to delete RPP "${lessonPlan['judul']}"?',
+            'id': 'Apakah Anda yakin ingin menghapus RPP "${lessonPlan['judul']}"?',
           }),
         ),
         actions: [
@@ -721,9 +721,9 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
     if (confirmed == true) {
       try {
-        await ApiService.deleteLessonPlan(rpp['id']);
+        await ApiService.deleteLessonPlan(lessonPlan['id']);
         await LocalCacheService.clearStartingWith('rpp_');
-        _loadRpp(useCache: false);
+        _loadLessonPlans(useCache: false);
         if (mounted) {
                     SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                   'en': 'RPP deleted successfully',
@@ -739,16 +739,16 @@ class RppScreenState extends ConsumerState<RppScreen> {
     }
   }
 
-  Future<void> _lihatDetailRpp(Map<String, dynamic> rpp) async {
-    final id = rpp['id']?.toString();
+  Future<void> _viewLessonPlanDetail(Map<String, dynamic> lessonPlan) async {
+    final id = lessonPlan['id']?.toString();
     if (id == null || id.isEmpty) {
             SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(Exception('RPP ID tidak tersedia')));
       return;
     }
 
     try {
-      final fullRpp = await ApiService.getLessonPlanById(id);
-      AppNavigator.push(context, RPPDetailPage(rppData: fullRpp));
+      final fullLessonPlan = await ApiService.getLessonPlanById(id);
+      AppNavigator.push(context, RPPDetailPage(lessonPlanData: fullLessonPlan));
     } catch (e) {
       AppLogger.error('lesson_plan', 'Fetch RPP detail error: $e');
             SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
@@ -859,16 +859,16 @@ class RppScreenState extends ConsumerState<RppScreen> {
     );
   }
 
-  Widget _buildRppCard(Map<String, dynamic> rpp, int index) {
+  Widget _buildLessonPlanCard(Map<String, dynamic> lessonPlan, int index) {
     final accentColor = ColorUtils.getColorForIndex(index);
-    final statusColor = _getStatusColor(rpp['status'] ?? '');
+    final statusColor = _getStatusColor(lessonPlan['status'] ?? '');
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _lihatDetailRpp(rpp),
+          onTap: () => _viewLessonPlanDetail(lessonPlan),
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: EdgeInsets.all(AppSpacing.lg),
@@ -904,7 +904,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            rpp['judul'] ?? 'No Title',
+                            lessonPlan['judul'] ?? 'No Title',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -915,7 +915,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                           ),
                           SizedBox(height: 3),
                           Text(
-                            rpp['mata_pelajaran_nama'] ?? 'No Subject',
+                            lessonPlan['mata_pelajaran_nama'] ?? 'No Subject',
                             style: TextStyle(
                               fontSize: 12,
                               color: ColorUtils.slate500,
@@ -937,7 +937,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                         ),
                       ),
                       child: Text(
-                        _getStatusLabel(rpp['status']),
+                        _getStatusLabel(lessonPlan['status']),
                         style: TextStyle(
                           color: statusColor,
                           fontSize: 10,
@@ -957,7 +957,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                   children: [
                     _buildInfoTag(
                       icon: Icons.class_,
-                      label: rpp['kelas_nama'] ?? 'No Class',
+                      label: lessonPlan['kelas_nama'] ?? 'No Class',
                     ),
                   ],
                 ),
@@ -969,19 +969,19 @@ class RppScreenState extends ConsumerState<RppScreen> {
                     _buildCircleActionButton(
                       icon: Icons.visibility_outlined,
                       color: _getPrimaryColor(),
-                      onPressed: () => _lihatDetailRpp(rpp),
+                      onPressed: () => _viewLessonPlanDetail(lessonPlan),
                     ),
                     SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.edit_outlined,
                       color: ColorUtils.warning600,
-                      onPressed: () => _editRpp(rpp),
+                      onPressed: () => _editLessonPlan(lessonPlan),
                     ),
                     SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.delete_outlined,
                       color: ColorUtils.error600,
-                      onPressed: () => _deleteRpp(rpp),
+                      onPressed: () => _deleteLessonPlan(lessonPlan),
                     ),
                   ],
                 ),
@@ -1076,7 +1076,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
             ),
             SizedBox(height: AppSpacing.xl),
             ElevatedButton(
-              onPressed: _loadRpp,
+              onPressed: _loadLessonPlans,
               style: ElevatedButton.styleFrom(
                 backgroundColor: _getPrimaryColor(),
                 foregroundColor: Colors.white,
@@ -1102,13 +1102,13 @@ class RppScreenState extends ConsumerState<RppScreen> {
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.read(languageRiverpod);
-    final filteredRpp = _rppList;
+    final filteredLessonPlans = _lessonPlanList;
 
     return Scaffold(
       backgroundColor: ColorUtils.lightGray,
       body: Column(
         children: [
-          // Header dengan gradient
+          // Header with gradient
           Container(
             width: double.infinity,
             padding: EdgeInsets.only(
@@ -1242,7 +1242,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                                   ),
                                 ),
                                 onSubmitted: (_) {
-                                  _loadRpp();
+                                  _loadLessonPlans();
                                 },
                               ),
                             ),
@@ -1253,7 +1253,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                                   Icons.search,
                                   color: _getPrimaryColor(),
                                 ),
-                                onPressed: _loadRpp,
+                                onPressed: _loadLessonPlans,
                               ),
                             ),
                           ],
@@ -1370,10 +1370,10 @@ class RppScreenState extends ConsumerState<RppScreen> {
                 ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
                 : _errorMessage != null
                 ? _buildErrorState()
-                : filteredRpp.isEmpty
+                : filteredLessonPlans.isEmpty
                 ? _buildEmptyState(languageProvider)
                 : RefreshIndicator(
-                    onRefresh: _loadRpp,
+                    onRefresh: _loadLessonPlans,
                     child: ListView.builder(
                       padding: EdgeInsets.only(
                         top: 16,
@@ -1381,10 +1381,10 @@ class RppScreenState extends ConsumerState<RppScreen> {
                         left: 5,
                         right: 5,
                       ),
-                      itemCount: filteredRpp.length,
+                      itemCount: filteredLessonPlans.length,
                       itemBuilder: (context, index) {
-                        final rpp = filteredRpp[index];
-                        return _buildRppCard(rpp, index);
+                        final lessonPlan = filteredLessonPlans[index];
+                        return _buildLessonPlanCard(lessonPlan, index);
                       },
                     ),
                   ),
@@ -1547,69 +1547,69 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
 /// Dialog form for creating or editing an RPP (lesson plan).
 ///
-/// Like a Vue `<RppFormModal>` component. When [rppData] is null, it creates
+/// Like a Vue `<RppFormModal>` component. When [lessonPlanData] is null, it creates
 /// a new RPP; when provided, it edits the existing one.
-/// Props: [teacherId], [onSaved] callback, optional [rppData] for editing.
-class RppFormDialog extends ConsumerStatefulWidget {
+/// Props: [teacherId], [onSaved] callback, optional [lessonPlanData] for editing.
+class LessonPlanFormDialog extends ConsumerStatefulWidget {
   final String teacherId;
   final VoidCallback onSaved;
-  final Map<String, dynamic>? rppData;
+  final Map<String, dynamic>? lessonPlanData;
 
-  const RppFormDialog({
+  const LessonPlanFormDialog({
     super.key,
     required this.teacherId,
     required this.onSaved,
-    this.rppData,
+    this.lessonPlanData,
   });
 
   @override
-  ConsumerState<RppFormDialog> createState() => _RppFormDialogState();
+  ConsumerState<LessonPlanFormDialog> createState() => _LessonPlanFormDialogState();
 }
 
-class _RppFormDialogState extends ConsumerState<RppFormDialog> {
+class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _judulController = TextEditingController();
-  final _tahunAjaranController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _academicYearController = TextEditingController();
 
-  String? _selectedMataPelajaranId;
+  String? _selectedSubjectId;
   String? _selectedClassId;
   String? _selectedSemester = 'Ganjil';
   String? _selectedFileName;
   File? _selectedFile;
   bool _isUploading = false;
 
-  List<dynamic> _mataPelajaranList = [];
-  List<dynamic> _kelasList = [];
+  List<dynamic> _subjectList = [];
+  List<dynamic> _classList = [];
 
   @override
   void initState() {
     super.initState();
     _loadMataPelajaranByGuru();
 
-    // Jika mode edit, isi field dengan data RPP
-    if (widget.rppData != null) {
-      _judulController.text =
-          widget.rppData!['judul'] ?? widget.rppData!['title'] ?? '';
-      _tahunAjaranController.text =
-          widget.rppData!['academic_year'] ??
-          widget.rppData!['tahun_ajaran'] ??
+    // If in edit mode, fill fields with RPP data
+    if (widget.lessonPlanData != null) {
+      _titleController.text =
+          widget.lessonPlanData!['judul'] ?? widget.lessonPlanData!['title'] ?? '';
+      _academicYearController.text =
+          widget.lessonPlanData!['academic_year'] ??
+          widget.lessonPlanData!['tahun_ajaran'] ??
           '';
-      _selectedMataPelajaranId =
-          (widget.rppData!['subject_id'] ??
-                  widget.rppData!['mata_pelajaran_id'])
+      _selectedSubjectId =
+          (widget.lessonPlanData!['subject_id'] ??
+                  widget.lessonPlanData!['mata_pelajaran_id'])
               ?.toString();
       _selectedClassId =
-          (widget.rppData!['class_id'] ?? widget.rppData!['kelas_id'])
+          (widget.lessonPlanData!['class_id'] ?? widget.lessonPlanData!['kelas_id'])
               ?.toString();
-      _selectedSemester = widget.rppData!['semester'] ?? 'Ganjil';
-      _selectedFileName = widget.rppData!['file_path'];
+      _selectedSemester = widget.lessonPlanData!['semester'] ?? 'Ganjil';
+      _selectedFileName = widget.lessonPlanData!['file_path'];
 
-      if (_selectedMataPelajaranId != null) {
-        _loadKelasByMataPelajaran(_selectedMataPelajaranId!);
+      if (_selectedSubjectId != null) {
+        _loadClassesBySubject(_selectedSubjectId!);
       }
     } else {
-      // Mode tambah baru: set default tahun ajaran
-      _tahunAjaranController.text = DateTime.now().year.toString();
+      // New add mode: set default academic year
+      _academicYearController.text = DateTime.now().year.toString();
     }
   }
 
@@ -1622,17 +1622,17 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       setState(() {
         // Backend returns {success: true, data: [...], pagination: {...}}
         if (result is Map && result['data'] is List) {
-          _mataPelajaranList = result['data'];
+          _subjectList = result['data'];
         } else if (result is List) {
-          _mataPelajaranList = result;
+          _subjectList = result;
         } else {
-          _mataPelajaranList = [];
+          _subjectList = [];
         }
       });
       if (kDebugMode) {
-        AppLogger.info('lesson_plan', 'Loaded ${_mataPelajaranList.length} mata pelajaran');
-        if (_mataPelajaranList.isNotEmpty) {
-          AppLogger.debug('lesson_plan', 'DEBUG SUBJECT ITEM: ${_mataPelajaranList.first}');
+        AppLogger.info('lesson_plan', 'Loaded ${_subjectList.length} mata pelajaran');
+        if (_subjectList.isNotEmpty) {
+          AppLogger.debug('lesson_plan', 'DEBUG SUBJECT ITEM: ${_subjectList.first}');
         }
       }
     } catch (e) {
@@ -1648,11 +1648,11 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       setState(() {
         // Backend might return {success: true, data: [...]} or direct array
         if (result is Map && result['data'] is List) {
-          _mataPelajaranList = result['data'];
+          _subjectList = result['data'];
         } else if (result is List) {
-          _mataPelajaranList = result;
+          _subjectList = result;
         } else {
-          _mataPelajaranList = [];
+          _subjectList = [];
         }
       });
     } catch (e) {
@@ -1660,7 +1660,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
     }
   }
 
-  Future<void> _loadKelasByMataPelajaran(String subjectId) async {
+  Future<void> _loadClassesBySubject(String subjectId) async {
     try {
       final apiService = ApiService();
       final result = await apiService.get(
@@ -1669,24 +1669,24 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       setState(() {
         // Backend might return {success: true, data: [...]} or direct array
         if (result is Map && result['data'] is List) {
-          _kelasList = result['data'];
+          _classList = result['data'];
         } else if (result is List) {
-          _kelasList = result;
+          _classList = result;
         } else {
-          _kelasList = [];
+          _classList = [];
         }
       });
       if (kDebugMode) {
-        AppLogger.info('lesson_plan', 'Loaded ${_kelasList.length} kelas for mata pelajaran $subjectId',);
-        if (_kelasList.isNotEmpty) {
-          AppLogger.debug('lesson_plan', 'DEBUG CLASS ITEM: ${_kelasList.first}');
+        AppLogger.info('lesson_plan', 'Loaded ${_classList.length} kelas for mata pelajaran $subjectId',);
+        if (_classList.isNotEmpty) {
+          AppLogger.debug('lesson_plan', 'DEBUG CLASS ITEM: ${_classList.first}');
         }
       }
     } catch (e) {
       if (kDebugMode) {
         AppLogger.error('lesson_plan', 'Error loading kelas by mata pelajaran: $e');
         setState(() {
-          _kelasList = [];
+          _classList = [];
         });
       }
     }
@@ -1703,7 +1703,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       if (result != null && result.files.single.path != null) {
         PlatformFile file = result.files.first;
 
-        // Pastikan file benar-benar ada
+        // Make sure the file actually exists
         File selectedFile = File(file.path!);
         bool fileExists = await selectedFile.exists();
 
@@ -1725,7 +1725,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
   }
 
   Future<void> _viewCurrentFile() async {
-    final filePath = widget.rppData?['file_path'];
+    final filePath = widget.lessonPlanData?['file_path'];
     if (filePath != null) {
       // Use the helper function defined at the bottom of the file
       await _downloadAndOpenFile(context, filePath);
@@ -1797,7 +1797,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
     try {
       String? filePath;
 
-      // Debug: Cek apakah file ada
+      // Debug: Check if file exists
       AppLogger.debug('lesson_plan', 'File selected: $_selectedFile');
       AppLogger.debug('lesson_plan', 'File name: $_selectedFileName');
 
@@ -1811,39 +1811,39 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
           AppLogger.info('lesson_plan', 'File uploaded successfully: $filePath');
         } catch (uploadError) {
           AppLogger.error('lesson_plan', 'Error during file upload: $uploadError');
-          // Tetap lanjut tanpa file jika upload gagal
+          // Continue without file if upload fails
           filePath = null;
         }
       } else {
         AppLogger.debug('lesson_plan', 'No file selected for upload');
       }
 
-      // Debug data yang akan dikirim
+      // Debug data to be submitted
       AppLogger.debug('lesson_plan', 'Submitting RPP data:');
       AppLogger.debug('lesson_plan', '- Guru ID: ${widget.teacherId}');
-      AppLogger.debug('lesson_plan', '- Mata Pelajaran ID: $_selectedMataPelajaranId');
+      AppLogger.debug('lesson_plan', '- Mata Pelajaran ID: $_selectedSubjectId');
       AppLogger.debug('lesson_plan', '- Kelas ID: $_selectedClassId');
-      AppLogger.debug('lesson_plan', '- Judul: ${_judulController.text}');
+      AppLogger.debug('lesson_plan', '- Judul: ${_titleController.text}');
       AppLogger.debug('lesson_plan', '- File Path: $filePath');
 
-      final rppData = {
-        'subject_id': _selectedMataPelajaranId,
+      final lessonPlanData = {
+        'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
-        'title': _judulController.text,
+        'title': _titleController.text,
         'semester': _selectedSemester,
-        'academic_year': _tahunAjaranController.text,
+        'academic_year': _academicYearController.text,
         'file_path': filePath ?? _selectedFileName,
       };
 
-      // Submit data RPP (mode edit atau tambah)
-      if (widget.rppData != null) {
-        // Mode edit
-        await ApiService.updateRPP(widget.rppData!['id'], rppData);
+      // Submit RPP data (edit or add mode)
+      if (widget.lessonPlanData != null) {
+        // Edit mode
+        await ApiService.updateLessonPlan(widget.lessonPlanData!['id'], lessonPlanData);
         AppLogger.info('lesson_plan', 'RPP updated successfully');
       } else {
-        // Mode tambah baru
-        rppData['teacher_id'] = widget.teacherId;
-        await ApiService.createLessonPlan(rppData);
+        // New add mode
+        lessonPlanData['teacher_id'] = widget.teacherId;
+        await ApiService.createLessonPlan(lessonPlanData);
         AppLogger.info('lesson_plan', 'RPP created successfully');
       }
 
@@ -1852,7 +1852,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       widget.onSaved();
 
       final languageProvider = ref.read(languageRiverpod);
-            SnackBarUtils.showInfo(context, widget.rppData != null
+            SnackBarUtils.showInfo(context, widget.lessonPlanData != null
                 ? languageProvider.getTranslatedText({
                     'en': 'RPP updated successfully',
                     'id': 'RPP berhasil diupdate',
@@ -1946,7 +1946,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
     final primaryColor = _getPrimaryColor();
-    final isEditMode = widget.rppData != null;
+    final isEditMode = widget.lessonPlanData != null;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.92,
@@ -2068,7 +2068,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildDialogTextField(
-                      controller: _judulController,
+                      controller: _titleController,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Title', 'id': 'Judul'})} *',
                       icon: Icons.title_rounded,
@@ -2088,11 +2088,11 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
-                      value: _selectedMataPelajaranId,
+                      value: _selectedSubjectId,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})} *',
                       icon: Icons.book_outlined,
-                      items: _mataPelajaranList.map((mp) {
+                      items: _subjectList.map((mp) {
                         return DropdownMenuItem(
                           value: mp['id'],
                           child: Text(
@@ -2105,10 +2105,10 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedMataPelajaranId = value.toString();
+                          _selectedSubjectId = value.toString();
                           _selectedClassId = null;
                         });
-                        _loadKelasByMataPelajaran(value.toString());
+                        _loadClassesBySubject(value.toString());
                       },
                       validator: (value) {
                         if (value == null) {
@@ -2126,13 +2126,13 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})} *',
                       icon: Icons.class_outlined,
-                      items: _kelasList.map((kelas) {
+                      items: _classList.map((classItem) {
                         return DropdownMenuItem(
-                          value: kelas['id'],
+                          value: classItem['id'],
                           child: Text(
-                            kelas['name'] ??
-                                kelas['nama'] ??
-                                kelas['class_name'] ??
+                            classItem['name'] ??
+                                classItem['nama'] ??
+                                classItem['class_name'] ??
                                 'Tanpa Nama',
                           ),
                         );
@@ -2172,7 +2172,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
-                      controller: _tahunAjaranController,
+                      controller: _academicYearController,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Academic Year', 'id': 'Tahun Ajaran'})} *',
                       icon: Icons.calendar_today_rounded,
@@ -2265,7 +2265,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                             ),
                           ),
                           if (isEditMode &&
-                              widget.rppData!['file_path'] != null)
+                              widget.lessonPlanData!['file_path'] != null)
                             GestureDetector(
                               onTap: _viewCurrentFile,
                               child: Container(
@@ -2418,43 +2418,43 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
   }
 }
 
-class GenerateRppFormDialog extends ConsumerStatefulWidget {
+class GenerateLessonPlanFormDialog extends ConsumerStatefulWidget {
   final String teacherId;
   final VoidCallback onSaved;
 
-  const GenerateRppFormDialog({
+  const GenerateLessonPlanFormDialog({
     super.key,
     required this.teacherId,
     required this.onSaved,
   });
 
   @override
-  ConsumerState<GenerateRppFormDialog> createState() => _GenerateRppFormDialogState();
+  ConsumerState<GenerateLessonPlanFormDialog> createState() => _GenerateLessonPlanFormDialogState();
 }
 
-class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
+class _GenerateLessonPlanFormDialogState extends ConsumerState<GenerateLessonPlanFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _judulController = TextEditingController();
-  final _tahunAjaranController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _academicYearController = TextEditingController();
 
-  String? _selectedMataPelajaranId;
+  String? _selectedSubjectId;
   String? _selectedClassId;
-  String? _selectedBabId;
-  String? _selectedSubBabId;
+  String? _selectedChapterId;
+  String? _selectedSubChapterId;
   String? _selectedSemester = 'Ganjil';
   bool _isAutoGenerating = false;
   String _generationStatus = '';
 
-  List<dynamic> _mataPelajaranList = [];
-  List<dynamic> _kelasList = [];
-  List<dynamic> _babList = [];
-  List<dynamic> _subBabList = [];
+  List<dynamic> _subjectList = [];
+  List<dynamic> _classList = [];
+  List<dynamic> _chapterList = [];
+  List<dynamic> _subChapterList = [];
 
   @override
   void initState() {
     super.initState();
     _loadMataPelajaranByGuru();
-    _tahunAjaranController.text = DateTime.now().year.toString();
+    _academicYearController.text = DateTime.now().year.toString();
   }
 
   Future<void> _loadMataPelajaranByGuru() async {
@@ -2465,11 +2465,11 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       );
       setState(() {
         if (result is Map && result['data'] is List) {
-          _mataPelajaranList = result['data'];
+          _subjectList = result['data'];
         } else if (result is List) {
-          _mataPelajaranList = result;
+          _subjectList = result;
         } else {
-          _mataPelajaranList = [];
+          _subjectList = [];
         }
       });
     } catch (e) {
@@ -2483,11 +2483,11 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       final result = await apiService.get('/mata-pelajaran');
       setState(() {
         if (result is Map && result['data'] is List) {
-          _mataPelajaranList = result['data'];
+          _subjectList = result['data'];
         } else if (result is List) {
-          _mataPelajaranList = result;
+          _subjectList = result;
         } else {
-          _mataPelajaranList = [];
+          _subjectList = [];
         }
       });
     } catch (e) {
@@ -2495,7 +2495,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
     }
   }
 
-  Future<void> _loadKelasByMataPelajaran(String subjectId) async {
+  Future<void> _loadClassesBySubject(String subjectId) async {
     try {
       final apiService = ApiService();
       final result = await apiService.get(
@@ -2503,47 +2503,47 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       );
       setState(() {
         if (result is Map && result['data'] is List) {
-          _kelasList = result['data'];
+          _classList = result['data'];
         } else if (result is List) {
-          _kelasList = result;
+          _classList = result;
         } else {
-          _kelasList = [];
+          _classList = [];
         }
       });
     } catch (e) {
       setState(() {
-        _kelasList = [];
+        _classList = [];
       });
     }
   }
 
-  Future<void> _loadBabByMataPelajaran(String subjectId) async {
+  Future<void> _loadChaptersBySubject(String subjectId) async {
     try {
-      final result = await getIt<ApiSubjectService>().getBabMateri(subjectId: subjectId);
+      final result = await getIt<ApiSubjectService>().getChapterMaterials(subjectId: subjectId);
       setState(() {
-        _babList = result;
+        _chapterList = result;
       });
     } catch (e) {
       setState(() {
-        _babList = [];
+        _chapterList = [];
       });
     }
   }
 
-  Future<void> _loadSubBabByBab(String babId) async {
+  Future<void> _loadSubChaptersByChapter(String chapterId) async {
     try {
-      final result = await getIt<ApiSubjectService>().getSubBabMateri(babId: babId);
+      final result = await getIt<ApiSubjectService>().getSubChapterMaterials(chapterId: chapterId);
       setState(() {
-        _subBabList = result;
+        _subChapterList = result;
       });
     } catch (e) {
       setState(() {
-        _subBabList = [];
+        _subChapterList = [];
       });
     }
   }
 
-  // Helper untuk membersihkan HTML tag menjadi teks biasa
+  // Helper to strip HTML tags into plain text
   String _stripHtml(String html) {
     if (html.isEmpty) return '';
     var text = html.replaceAll(RegExp(r'<ul>|<ol>'), '\n');
@@ -2607,13 +2607,13 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       }
 
       final requestBody = {
-        'title': _judulController.text,
-        'subject_id': _selectedMataPelajaranId,
+        'title': _titleController.text,
+        'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
-        'chapter_id': _selectedBabId,
-        'sub_chapter_id': _selectedSubBabId,
+        'chapter_id': _selectedChapterId,
+        'sub_chapter_id': _selectedSubChapterId,
         'semester': _selectedSemester,
-        'academic_year': _tahunAjaranController.text,
+        'academic_year': _academicYearController.text,
         'teacher_id': widget.teacherId,
       };
 
@@ -2669,7 +2669,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
 
         if (!mounted) return;
 
-        AppNavigator.pushReplacement(context, RppAiResultScreen(
+        AppNavigator.pushReplacement(context, LessonPlanAiResultScreen(
               teacherId: widget.teacherId,
               onSaved: widget.onSaved,
               pollUrl: pollUrl,
@@ -2734,9 +2734,9 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
         throw Exception(message);
       }
 
-      final rppResponse = resultBody['data'] ?? resultBody;
+      final lessonPlanResponse = resultBody['data'] ?? resultBody;
 
-      await _processAndNavigate(rppResponse);
+      await _processAndNavigate(lessonPlanResponse);
     } catch (e) {
       AppLogger.error('lesson_plan', '🚨 _submitForm error: $e');
       if (mounted) {
@@ -2760,55 +2760,55 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
         ? (schoolObj['school_name'] ?? schoolObj['nama_sekolah'] ?? 'SD/MI')
         : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
 
-    final selectedSubject = _mataPelajaranList.firstWhere(
-      (m) => m['id'].toString() == _selectedMataPelajaranId,
+    final selectedSubject = _subjectList.firstWhere(
+      (m) => m['id'].toString() == _selectedSubjectId,
       orElse: () => {'name': 'Mata Pelajaran'},
     );
-    final mataPelajaranNama =
+    final subjectName =
         selectedSubject['name'] ?? selectedSubject['nama'] ?? 'Mata Pelajaran';
 
-    final selectedClass = _kelasList.firstWhere(
+    final selectedClass = _classList.firstWhere(
       (k) => k['id'].toString() == _selectedClassId,
       orElse: () => {'name': 'Kelas'},
     );
-    final kelasNama = selectedClass['name'] ?? selectedClass['nama'] ?? 'Kelas';
+    final className = selectedClass['name'] ?? selectedClass['nama'] ?? 'Kelas';
 
-    final babMap = _selectedBabId != null
-        ? _babList.firstWhere(
-            (b) => b['id'].toString() == _selectedBabId,
+    final chapterMap = _selectedChapterId != null
+        ? _chapterList.firstWhere(
+            (b) => b['id'].toString() == _selectedChapterId,
             orElse: () => <String, dynamic>{},
           )
         : <String, dynamic>{};
-    final babName = babMap.isNotEmpty
-        ? (babMap['judul_bab'] ?? babMap['title'] ?? babMap['judul'] ?? '')
+    final chapterName = chapterMap.isNotEmpty
+        ? (chapterMap['judul_bab'] ?? chapterMap['title'] ?? chapterMap['judul'] ?? '')
         : '';
 
-    final subBabMap = _selectedSubBabId != null
-        ? _subBabList.firstWhere(
-            (s) => s['id'].toString() == _selectedSubBabId,
+    final subChapterMap = _selectedSubChapterId != null
+        ? _subChapterList.firstWhere(
+            (s) => s['id'].toString() == _selectedSubChapterId,
             orElse: () => <String, dynamic>{},
           )
         : <String, dynamic>{};
-    final subBabName = subBabMap.isNotEmpty
-        ? (subBabMap['judul_sub_bab'] ??
-              subBabMap['title'] ??
-              subBabMap['judul'] ??
+    final subChapterName = subChapterMap.isNotEmpty
+        ? (subChapterMap['judul_sub_bab'] ??
+              subChapterMap['title'] ??
+              subChapterMap['judul'] ??
               '')
         : '';
 
     return {
-      'title': _judulController.text,
-      'mata_pelajaran_id': _selectedMataPelajaranId,
-      'mata_pelajaran_nama': mataPelajaranNama,
+      'title': _titleController.text,
+      'mata_pelajaran_id': _selectedSubjectId,
+      'mata_pelajaran_nama': subjectName,
       'satuan_pendidikan': schoolNameStr,
-      'bab_nama': babName,
-      'sub_bab_nama': subBabName,
-      'kelas_semester': '$kelasNama / ${_selectedSemester ?? 'Ganjil'}',
-      'alokasi_waktu': _tahunAjaranController.text,
+      'bab_nama': chapterName,
+      'sub_bab_nama': subChapterName,
+      'kelas_semester': '$className / ${_selectedSemester ?? 'Ganjil'}',
+      'alokasi_waktu': _academicYearController.text,
     };
   }
 
-  Future<void> _processAndNavigate(dynamic rppResponse) async {
+  Future<void> _processAndNavigate(dynamic lessonPlanResponse) async {
     if (!mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
@@ -2820,92 +2820,92 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
         ? (schoolObj['school_name'] ?? schoolObj['nama_sekolah'] ?? 'SD/MI')
         : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
 
-    final selectedSubject = _mataPelajaranList.firstWhere(
-      (m) => m['id'].toString() == _selectedMataPelajaranId,
+    final selectedSubject = _subjectList.firstWhere(
+      (m) => m['id'].toString() == _selectedSubjectId,
       orElse: () => {'name': 'Mata Pelajaran'},
     );
-    final mataPelajaranNama =
-        rppResponse['mata_pelajaran_nama'] ??
+    final subjectName =
+        lessonPlanResponse['mata_pelajaran_nama'] ??
         selectedSubject['name'] ??
         selectedSubject['nama'] ??
         'Mata Pelajaran';
 
-    final selectedClass = _kelasList.firstWhere(
+    final selectedClass = _classList.firstWhere(
       (k) => k['id'].toString() == _selectedClassId,
       orElse: () => {'name': 'Kelas'},
     );
-    final kelasNama =
-        rppResponse['kelas_nama'] ??
+    final className =
+        lessonPlanResponse['kelas_nama'] ??
         selectedClass['name'] ??
         selectedClass['nama'] ??
         'Kelas';
 
-    final babMap = _selectedBabId != null
-        ? _babList.firstWhere(
-            (b) => b['id'].toString() == _selectedBabId,
+    final chapterMap = _selectedChapterId != null
+        ? _chapterList.firstWhere(
+            (b) => b['id'].toString() == _selectedChapterId,
             orElse: () => <String, dynamic>{},
           )
         : <String, dynamic>{};
-    final babName = babMap.isNotEmpty
-        ? (babMap['judul_bab'] ??
-              babMap['title'] ??
-              babMap['judul'] ??
+    final chapterName = chapterMap.isNotEmpty
+        ? (chapterMap['judul_bab'] ??
+              chapterMap['title'] ??
+              chapterMap['judul'] ??
               'Tanpa Nama')
         : '';
 
-    final subBabMap = _selectedSubBabId != null
-        ? _subBabList.firstWhere(
-            (s) => s['id'].toString() == _selectedSubBabId,
+    final subChapterMap = _selectedSubChapterId != null
+        ? _subChapterList.firstWhere(
+            (s) => s['id'].toString() == _selectedSubChapterId,
             orElse: () => <String, dynamic>{},
           )
         : <String, dynamic>{};
-    final subBabName = subBabMap.isNotEmpty
-        ? (subBabMap['judul_sub_bab'] ??
-              subBabMap['title'] ??
-              subBabMap['judul'] ??
+    final subChapterName = subChapterMap.isNotEmpty
+        ? (subChapterMap['judul_sub_bab'] ??
+              subChapterMap['title'] ??
+              subChapterMap['judul'] ??
               'Tanpa Nama')
         : '';
 
-    final mappedRppData = {
+    final mappedLessonPlanData = {
       'id': null,
-      'judul': rppResponse['title'] ?? _judulController.text,
-      'mata_pelajaran_id': _selectedMataPelajaranId,
-      'mata_pelajaran_nama': mataPelajaranNama,
+      'judul': lessonPlanResponse['title'] ?? _titleController.text,
+      'mata_pelajaran_id': _selectedSubjectId,
+      'mata_pelajaran_nama': subjectName,
       'satuan_pendidikan': schoolNameStr,
-      'bab_nama': babName,
-      'sub_bab_nama': subBabName,
+      'bab_nama': chapterName,
+      'sub_bab_nama': subChapterName,
       'kelas_semester':
-          '$kelasNama / ${rppResponse['semester'] ?? _selectedSemester}',
-      'tema': rppResponse['title'],
+          '$className / ${lessonPlanResponse['semester'] ?? _selectedSemester}',
+      'tema': lessonPlanResponse['title'],
       'sub_tema': '',
       'pembelajaran_ke': '',
-      'alokasi_waktu': _tahunAjaranController.text,
+      'alokasi_waktu': _academicYearController.text,
       'waktu_pendahuluan': '15',
       'waktu_inti': '140',
       'waktu_penutup': '15',
       'kompetensi_inti': _stripHtml(
-        rppResponse['core_competence'] as String? ?? '',
+        lessonPlanResponse['core_competence'] as String? ?? '',
       ),
       'kompetensi_dasar': _stripHtml(
-        rppResponse['basic_competence'] as String? ?? '',
+        lessonPlanResponse['basic_competence'] as String? ?? '',
       ),
       'tujuan_pembelajaran': _stripHtml(
-        rppResponse['learning_objective'] as String? ?? '',
+        lessonPlanResponse['learning_objective'] as String? ?? '',
       ),
       'kegiatan_pendahuluan':
           '• Melakukan Pembukaan dengan Salam dan Membaca Doa\n• Mengaitkan Materi Sebelumnya dengan Materi yang akan dipelajari',
       'kegiatan_inti': _stripHtml(
-        rppResponse['learning_activities'] as String? ?? '',
+        lessonPlanResponse['learning_activities'] as String? ?? '',
       ),
       'kegiatan_penutup':
           '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa\n• Pemberian hadiah/pujian untuk pekerjaan yang benar',
-      'penilaian': _stripHtml(rppResponse['assessment'] as String? ?? ''),
+      'penilaian': _stripHtml(lessonPlanResponse['assessment'] as String? ?? ''),
       'is_ai_generated': true,
     };
 
     if (!mounted) return;
-    AppNavigator.pushReplacement(context, RppAiResultScreen(
-          rppData: mappedRppData,
+    AppNavigator.pushReplacement(context, LessonPlanAiResultScreen(
+          lessonPlanData: mappedLessonPlanData,
           teacherId: widget.teacherId,
           onSaved: () {
             widget.onSaved();
@@ -3112,7 +3112,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildDialogTextField(
-                      controller: _judulController,
+                      controller: _titleController,
                       label: '${AppLocalizations.title.tr} *',
                       icon: Icons.title_rounded,
                       hintText: languageProvider.getTranslatedText({
@@ -3128,10 +3128,10 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
-                      value: _selectedMataPelajaranId,
+                      value: _selectedSubjectId,
                       label: '${AppLocalizations.subject.tr} *',
                       icon: Icons.book_outlined,
-                      items: _mataPelajaranList.map((mp) {
+                      items: _subjectList.map((mp) {
                         return DropdownMenuItem(
                           value: mp['id'],
                           child: Text(
@@ -3144,15 +3144,15 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedMataPelajaranId = value.toString();
+                          _selectedSubjectId = value.toString();
                           _selectedClassId = null;
-                          _selectedBabId = null;
-                          _selectedSubBabId = null;
-                          _babList = [];
-                          _subBabList = [];
+                          _selectedChapterId = null;
+                          _selectedSubChapterId = null;
+                          _chapterList = [];
+                          _subChapterList = [];
                         });
-                        _loadKelasByMataPelajaran(value.toString());
-                        _loadBabByMataPelajaran(value.toString());
+                        _loadClassesBySubject(value.toString());
+                        _loadChaptersBySubject(value.toString());
                       },
                       validator: (value) {
                         if (value == null) {
@@ -3169,13 +3169,13 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                             value: _selectedClassId,
                             label: '${AppLocalizations.class_.tr} *',
                             icon: Icons.class_outlined,
-                            items: _kelasList.map((kelas) {
+                            items: _classList.map((classItem) {
                               return DropdownMenuItem(
-                                value: kelas['id'],
+                                value: classItem['id'],
                                 child: Text(
-                                  kelas['name'] ??
-                                      kelas['nama'] ??
-                                      kelas['class_name'] ??
+                                  classItem['name'] ??
+                                      classItem['nama'] ??
+                                      classItem['class_name'] ??
                                       'Tanpa Nama',
                                 ),
                               );
@@ -3216,28 +3216,28 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
-                      value: _selectedBabId,
+                      value: _selectedChapterId,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Chapter', 'id': 'Bab'})} *',
                       icon: Icons.bookmark_border_rounded,
-                      items: _babList.map((bab) {
+                      items: _chapterList.map((chapter) {
                         return DropdownMenuItem(
-                          value: bab['id'],
+                          value: chapter['id'],
                           child: Text(
-                            bab['judul_bab'] ??
-                                bab['title'] ??
-                                bab['judul'] ??
+                            chapter['judul_bab'] ??
+                                chapter['title'] ??
+                                chapter['judul'] ??
                                 'Tanpa Nama',
                           ),
                         );
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedBabId = value.toString();
-                          _selectedSubBabId = null;
-                          _subBabList = [];
+                          _selectedChapterId = value.toString();
+                          _selectedSubChapterId = null;
+                          _subChapterList = [];
                         });
-                        _loadSubBabByBab(value.toString());
+                        _loadSubChaptersByChapter(value.toString());
                       },
                       validator: (value) {
                         if (value == null) {
@@ -3251,7 +3251,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
-                      value: _selectedSubBabId,
+                      value: _selectedSubChapterId,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Sub Chapter', 'id': 'Sub Bab'})} (Opsional)',
                       icon: Icons.bookmark_add_outlined,
@@ -3266,13 +3266,13 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                             style: TextStyle(color: ColorUtils.slate400),
                           ),
                         ),
-                        ..._subBabList.map((subBab) {
+                        ..._subChapterList.map((subChapter) {
                           return DropdownMenuItem(
-                            value: subBab['id'],
+                            value: subChapter['id'],
                             child: Text(
-                              subBab['judul_sub_bab'] ??
-                                  subBab['title'] ??
-                                  subBab['judul'] ??
+                              subChapter['judul_sub_bab'] ??
+                                  subChapter['title'] ??
+                                  subChapter['judul'] ??
                                   'Tanpa Nama',
                             ),
                           );
@@ -3280,13 +3280,13 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
                       ],
                       onChanged: (value) {
                         setState(() {
-                          _selectedSubBabId = value?.toString();
+                          _selectedSubChapterId = value?.toString();
                         });
                       },
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
-                      controller: _tahunAjaranController,
+                      controller: _academicYearController,
                       label: '${AppLocalizations.academicYear.tr} *',
                       icon: Icons.calendar_today_rounded,
                       hintText: '2024/2025',

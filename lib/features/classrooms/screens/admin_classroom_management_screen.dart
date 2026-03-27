@@ -977,6 +977,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
       backgroundColor: Colors.transparent,
       builder: (context) {
         final languageProvider = ref.watch(languageRiverpod);
+        bool isSaving = false;
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return Padding(
@@ -1180,7 +1181,9 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                               SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () async {
+                                  onPressed: isSaving
+                                      ? null
+                                      : () async {
                                     final nama = nameController.text.trim();
 
                                     if (nama.isEmpty ||
@@ -1202,6 +1205,8 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                                       );
                                       return;
                                     }
+
+                                    setDialogState(() => isSaving = true);
 
                                     try {
                                       final academicYearProvider =
@@ -1286,11 +1291,17 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                                           ),
                                         );
                                       }
+                                    } finally {
+                                      if (context.mounted) {
+                                        setDialogState(() => isSaving = false);
+                                      }
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
                                         ColorUtils.corporateBlue600,
+                                    disabledBackgroundColor:
+                                        ColorUtils.corporateBlue600.withValues(alpha: 0.6),
                                     padding: EdgeInsets.symmetric(vertical: 14),
                                     elevation: 2,
                                     shadowColor: ColorUtils.corporateBlue600
@@ -1299,7 +1310,16 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  child: Text(
+                                  child: isSaving
+                                      ? SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
                                     isEdit
                                         ? languageProvider.getTranslatedText({
                                             'en': 'Update',
