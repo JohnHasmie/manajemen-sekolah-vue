@@ -15,7 +15,7 @@ import 'package:open_file/open_file.dart';
 ///
 /// All methods are `static` -- no instance needed, similar to Laravel's
 /// static helper methods or a Vue utility function.
-class RPPExportService {
+class LessonPlanExportService {
   /// Exports RPP content as a Word-like HTML document and opens it.
   /// Like calling a Laravel queue job that generates a .docx file.
   static Future<void> exportToWord(String content, String fileName) async {

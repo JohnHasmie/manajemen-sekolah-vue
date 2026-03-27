@@ -21,25 +21,25 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 ///
 /// Provides both server-side and local validation for RPP data, with status
 /// translation (Disetujui/Menunggu/Ditolak -> Approved/Pending/Rejected).
-class ExcelRppService {
+class ExcelLessonPlanService {
   static String get baseUrl => '/rpp';
 
   /// Export RPP data to Excel via backend POST to `/rpp/export`.
-  /// [rppList] - list of RPP records. [context] - for SnackBar and i18n.
+  /// [lessonPlanList] - list of RPP records. [context] - for SnackBar and i18n.
   /// Side effects: validates locally, sends to backend, saves .xlsx, opens file.
-  static Future<void> exportRppToExcel({
-    required List<dynamic> rppList,
+  static Future<void> exportLessonPlansToExcel({
+    required List<dynamic> lessonPlanList,
     required BuildContext context,
   }) async {
     
 
     try {
       // Validate data first
-      final validatedData = validateRppData(rppList);
+      final validatedData = validateLessonPlanData(lessonPlanList);
 
       final response = await dioClient.post<List<int>>(
         '$baseUrl/export',
-        data: {'rppList': validatedData},
+        data: {'lessonPlanList': validatedData},
         options: Options(responseType: ResponseType.bytes),
       );
 
@@ -69,13 +69,13 @@ class ExcelRppService {
 
   /// Server-side RPP validation via POST to `/rpp/validate`.
   /// Like a Laravel FormRequest for RPP data.
-  static Future<List<Map<String, dynamic>>> validateRppDataBackend(
-    List<dynamic> rppData,
+  static Future<List<Map<String, dynamic>>> validateLessonPlanDataBackend(
+    List<dynamic> lessonPlanData,
   ) async {
     try {
       final response = await dioClient.post(
         '$baseUrl/validate',
-        data: {'rppData': rppData},
+        data: {'rppData': lessonPlanData},
       );
 
       final responseData = response.data;
@@ -94,62 +94,62 @@ class ExcelRppService {
   /// Validates required fields (title, subject_name, class_name) and maps
   /// alternative field names to the backend's expected keys.
   /// Like a Laravel FormRequest with field aliasing (`$request->input('catatan_admin', $request->input('note_admin'))`).
-  static List<Map<String, dynamic>> validateRppData(List<dynamic> rppList) {
+  static List<Map<String, dynamic>> validateLessonPlanData(List<dynamic> lessonPlanList) {
     final List<Map<String, dynamic>> validatedData = [];
     final List<String> errors = [];
 
-    for (int i = 0; i < rppList.length; i++) {
-      final rpp = rppList[i];
-      final Map<String, dynamic> validatedRpp = {};
+    for (int i = 0; i < lessonPlanList.length; i++) {
+      final lessonPlan = lessonPlanList[i];
+      final Map<String, dynamic> validatedLessonPlan = {};
 
       // Validate required fields for export
-      if (rpp['title'] == null || rpp['title'].toString().isEmpty) {
+      if (lessonPlan['title'] == null || lessonPlan['title'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Judul RPP tidak boleh kosong');
       } else {
-        validatedRpp['title'] = rpp['title'];
+        validatedLessonPlan['title'] = lessonPlan['title'];
       }
 
-      if (rpp['subject_name'] == null ||
-          rpp['subject_name'].toString().isEmpty) {
+      if (lessonPlan['subject_name'] == null ||
+          lessonPlan['subject_name'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Mata pelajaran tidak boleh kosong');
       } else {
-        validatedRpp['subject_name'] = rpp['subject_name'];
+        validatedLessonPlan['subject_name'] = lessonPlan['subject_name'];
       }
 
-      if (rpp['class_name'] == null || rpp['class_name'].toString().isEmpty) {
+      if (lessonPlan['class_name'] == null || lessonPlan['class_name'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Kelas tidak boleh kosong');
       } else {
-        validatedRpp['class_name'] = rpp['class_name'];
+        validatedLessonPlan['class_name'] = lessonPlan['class_name'];
       }
 
       // Field lainnya
-      validatedRpp['teacher_name'] = rpp['teacher_name'] ?? '';
-      validatedRpp['semester'] = rpp['semester'] ?? '';
-      validatedRpp['academic_year'] = rpp['academic_year'] ?? '';
-      validatedRpp['status'] = rpp['status'] ?? '';
-      validatedRpp['created_at'] = rpp['created_at'] ?? '';
+      validatedLessonPlan['teacher_name'] = lessonPlan['teacher_name'] ?? '';
+      validatedLessonPlan['semester'] = lessonPlan['semester'] ?? '';
+      validatedLessonPlan['academic_year'] = lessonPlan['academic_year'] ?? '';
+      validatedLessonPlan['status'] = lessonPlan['status'] ?? '';
+      validatedLessonPlan['created_at'] = lessonPlan['created_at'] ?? '';
 
       // Map keys to match backend expectation
-      validatedRpp['note_admin'] =
-          rpp['catatan_admin'] ?? rpp['note_admin'] ?? '';
-      validatedRpp['basic_competence'] =
-          rpp['basic_competence'] ?? rpp['basic_competency'] ?? '';
-      validatedRpp['learning_objective'] =
-          rpp['learning_objective'] ?? rpp['learning_objectives'] ?? '';
-      validatedRpp['main_material'] =
-          rpp['main_material'] ?? rpp['learning_materials'] ?? '';
-      validatedRpp['learning_method'] =
-          rpp['learning_method'] ?? rpp['learning_methods'] ?? '';
-      validatedRpp['media_tools'] =
-          rpp['media_tools'] ?? rpp['learning_media'] ?? '';
-      validatedRpp['learning_source'] =
-          rpp['learning_source'] ?? rpp['learning_sources'] ?? '';
-      validatedRpp['learning_activities'] =
-          rpp['learning_activities'] ?? rpp['learning_steps'] ?? '';
-      validatedRpp['assessment'] = rpp['assessment'] ?? '';
+      validatedLessonPlan['note_admin'] =
+          lessonPlan['catatan_admin'] ?? lessonPlan['note_admin'] ?? '';
+      validatedLessonPlan['basic_competence'] =
+          lessonPlan['basic_competence'] ?? lessonPlan['basic_competency'] ?? '';
+      validatedLessonPlan['learning_objective'] =
+          lessonPlan['learning_objective'] ?? lessonPlan['learning_objectives'] ?? '';
+      validatedLessonPlan['main_material'] =
+          lessonPlan['main_material'] ?? lessonPlan['learning_materials'] ?? '';
+      validatedLessonPlan['learning_method'] =
+          lessonPlan['learning_method'] ?? lessonPlan['learning_methods'] ?? '';
+      validatedLessonPlan['media_tools'] =
+          lessonPlan['media_tools'] ?? lessonPlan['learning_media'] ?? '';
+      validatedLessonPlan['learning_source'] =
+          lessonPlan['learning_source'] ?? lessonPlan['learning_sources'] ?? '';
+      validatedLessonPlan['learning_activities'] =
+          lessonPlan['learning_activities'] ?? lessonPlan['learning_steps'] ?? '';
+      validatedLessonPlan['assessment'] = lessonPlan['assessment'] ?? '';
 
       if (errors.isEmpty) {
-        validatedData.add(validatedRpp);
+        validatedData.add(validatedLessonPlan);
       }
     }
 

@@ -353,7 +353,7 @@ class ApiSubjectService {
     return response.data;
   }
 
-  Future<List<dynamic>> getRPPByTeacher(String teacherId) async {
+  Future<List<dynamic>> getLessonPlansByTeacher(String teacherId) async {
     final response = await dioClient.get('/rpp?teacher_id=$teacherId');
 
     final result = response.data;
@@ -576,8 +576,8 @@ class ApiSubjectService {
   /// POST /api/lesson-plans/{id}/regen/{field}
   /// Max 2 regenerations per field.
   /// Returns raw Dio Response so callers can inspect statusCode (200, 202, 429).
-  Future<Response<dynamic>> regenRppFieldRaw(
-    String rppId,
+  Future<Response<dynamic>> regenLessonPlanFieldRaw(
+    String lessonPlanId,
     String field, {
     String? additionalText,
   }) async {
@@ -585,10 +585,10 @@ class ApiSubjectService {
     if (additionalText != null && additionalText.trim().isNotEmpty) {
       body['additional_text'] = additionalText.trim();
     }
-    AppLogger.debug('subject', 'Regen RPP field: /lesson-plans/$rppId/regen/$field');
+    AppLogger.debug('subject', 'Regen RPP field: /lesson-plans/$lessonPlanId/regen/$field');
     AppLogger.debug('subject', 'Regen RPP body: $body');
     final response = await _aiDio.post(
-      '/lesson-plans/$rppId/regen/$field',
+      '/lesson-plans/$lessonPlanId/regen/$field',
       data: body,
     );
     AppLogger.debug('subject', 'Regen RPP response: ${response.statusCode}');
@@ -597,10 +597,10 @@ class ApiSubjectService {
 
   /// Get RPP regen limits per field (Section 5.7)
   /// GET /api/lesson-plans/{id}/regen-limits
-  Future<dynamic> getRppRegenLimits(String rppId) async {
-    AppLogger.debug('subject', 'Regen limits: /lesson-plans/$rppId/regen-limits');
+  Future<dynamic> getLessonPlanRegenLimits(String lessonPlanId) async {
+    AppLogger.debug('subject', 'Regen limits: /lesson-plans/$lessonPlanId/regen-limits');
     final response = await _aiDio.get(
-      '/lesson-plans/$rppId/regen-limits',
+      '/lesson-plans/$lessonPlanId/regen-limits',
     );
     AppLogger.debug('subject', 'Regen limits response: ${response.statusCode}');
     // Check for HTML error page from proxy/CDN
@@ -615,12 +615,12 @@ class ApiSubjectService {
 
   /// Update RPP fields / auto-save (Section 5.5)
   /// PATCH /api/lesson-plans/{id}
-  Future<dynamic> updateRppFields(
-    String rppId,
+  Future<dynamic> updateLessonPlanFields(
+    String lessonPlanId,
     Map<String, dynamic> fields,
   ) async {
     final response = await _aiDio.patch(
-      '/lesson-plans/$rppId',
+      '/lesson-plans/$lessonPlanId',
       data: fields,
       options: Options(sendTimeout: const Duration(seconds: 30)),
     );
@@ -629,9 +629,9 @@ class ApiSubjectService {
 
   /// Get RPP detail from AI API (Section 5.4)
   /// GET /api/lesson-plans/{id}
-  Future<dynamic> getRppDetail(String rppId) async {
+  Future<dynamic> getLessonPlanDetail(String lessonPlanId) async {
     final response = await _aiDio.get(
-      '/lesson-plans/$rppId',
+      '/lesson-plans/$lessonPlanId',
     );
     return _handleAiResponse(response);
   }

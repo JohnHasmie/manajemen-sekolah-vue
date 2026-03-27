@@ -30,13 +30,13 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Shows all RPP sections in a structured view. Teachers can edit content,
 /// regenerate individual fields or all fields via AI, and export to PDF/Word.
 ///
-/// Props (like Vue props): [rppData] -- the RPP object, [isNew] -- whether
+/// Props (like Vue props): [lessonPlanData] -- the RPP object, [isNew] -- whether
 /// this is a newly created RPP (shows "new" badge).
 class RPPDetailPage extends StatefulWidget {
-  final Map<String, dynamic> rppData;
+  final Map<String, dynamic> lessonPlanData;
   final bool isNew;
 
-  const RPPDetailPage({super.key, required this.rppData, this.isNew = false});
+  const RPPDetailPage({super.key, required this.lessonPlanData, this.isNew = false});
 
   @override
   RPPDetailPageState createState() => RPPDetailPageState();
@@ -44,7 +44,7 @@ class RPPDetailPage extends StatefulWidget {
 
 /// State for [RPPDetailPage].
 ///
-/// Like a Vue component with `data() { return { isSaving, isEditing, rppData, ... } }`.
+/// Like a Vue component with `data() { return { isSaving, isEditing, lessonPlanData, ... } }`.
 /// Manages edit mode toggle, AI regeneration state per field, and export.
 class RPPDetailPageState extends State<RPPDetailPage> {
   bool _isSaving = false;
@@ -55,10 +55,10 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   Map<String, dynamic> _regenLimits = {};
   bool _isLoadingLimits = false;
   String? _regeneratingField; // null = not regenerating, 'all' = all fields
-  late Map<String, dynamic> _rppData;
+  late Map<String, dynamic> _lessonPlanData;
 
   // RPP content field definitions
-  static const List<Map<String, String>> _rppFields = [
+  static const List<Map<String, String>> _lessonPlanFields = [
     {'key': 'core_competence', 'label': 'Kompetensi Inti (KI)', 'altKey': 'kompetensi_inti'},
     {'key': 'basic_competence', 'label': 'Kompetensi Dasar (KD)', 'altKey': 'kompetensi_dasar'},
     {'key': 'indicator', 'label': 'Indikator', 'altKey': 'indikator'},
@@ -90,19 +90,19 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     ];
 
     return aiKeys.any((key) {
-      final value = _rppData[key];
+      final value = _lessonPlanData[key];
       return value != null && value.toString().trim().isNotEmpty;
     });
   }
 
   String get _teacherId {
-    return (_rppData['guru_id'] ?? _rppData['teacher_id'] ?? '')
+    return (_lessonPlanData['guru_id'] ?? _lessonPlanData['teacher_id'] ?? '')
         .toString();
   }
 
-  void _openAiRppScreen() {
-    AppNavigator.push(context, RppAiResultScreen(
-          rppData: _rppData,
+  void _openAiLessonPlanScreen() {
+    AppNavigator.push(context, LessonPlanAiResultScreen(
+          lessonPlanData: _lessonPlanData,
           teacherId: _teacherId,
           onSaved: () {
             // If you want to refresh the page after saving, add logic here.
@@ -113,30 +113,30 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         ));
   }
 
-  /// Like Vue's `mounted()` -- copies rppData to local mutable state and loads
+  /// Like Vue's `mounted()` -- copies lessonPlanData to local mutable state and loads
   /// regeneration limits from the API.
   @override
   void initState() {
     super.initState();
-    _rppData = Map<String, dynamic>.from(widget.rppData);
-    _editedContent = _formatRPPContent();
-    if (_hasAiAdditionalData && _rppId != null) {
+    _lessonPlanData = Map<String, dynamic>.from(widget.lessonPlanData);
+    _editedContent = _formatLessonPlanContent();
+    if (_hasAiAdditionalData && _lessonPlanId != null) {
       _loadRegenLimits();
     }
   }
 
-  String? get _rppId {
-    final id = _rppData['id'] ?? _rppData['rpp_id'] ?? _rppData['lesson_plan_id'];
+  String? get _lessonPlanId {
+    final id = _lessonPlanData['id'] ?? _lessonPlanData['rpp_id'] ?? _lessonPlanData['lesson_plan_id'];
     return id?.toString();
   }
 
   Future<void> _loadRegenLimits() async {
-    final rppId = _rppId;
-    if (rppId == null) return;
+    final lessonPlanId = _lessonPlanId;
+    if (lessonPlanId == null) return;
 
     setState(() => _isLoadingLimits = true);
     try {
-      final result = await getIt<ApiSubjectService>().getRppRegenLimits(rppId);
+      final result = await getIt<ApiSubjectService>().getLessonPlanRegenLimits(lessonPlanId);
       if (mounted) {
         setState(() {
           _regenLimits = (result is Map<String, dynamic>)
@@ -152,10 +152,10 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   String _getFieldValue(String key, String altKey) {
-    final val = _rppData[key];
+    final val = _lessonPlanData[key];
     if (val != null && val.toString().trim().isNotEmpty) return val.toString().trim();
     if (altKey.isNotEmpty) {
-      final altVal = _rppData[altKey];
+      final altVal = _lessonPlanData[altKey];
       if (altVal != null && altVal.toString().trim().isNotEmpty) return altVal.toString().trim();
     }
     return '';
@@ -341,17 +341,17 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   /// Like calling `axios.post('/api/rpp/{id}/regenerate-field')` in Vue.
   /// Uses polling to wait for the AI job to complete.
   Future<void> _regenerateField(String fieldKey, String fieldLabel, String additionalText) async {
-    final rppId = _rppId;
-    AppLogger.debug('lesson_plan', 'Regen field: $fieldKey, rppId: $rppId');
-    AppLogger.debug('lesson_plan', 'RPP data keys: ${_rppData.keys.toList()}');
-    AppLogger.debug('lesson_plan', 'RPP id fields: id=${_rppData['id']}, rpp_id=${_rppData['rpp_id']}, lesson_plan_id=${_rppData['lesson_plan_id']}');
-    if (rppId == null) return;
+    final lessonPlanId = _lessonPlanId;
+    AppLogger.debug('lesson_plan', 'Regen field: $fieldKey, lessonPlanId: $lessonPlanId');
+    AppLogger.debug('lesson_plan', 'RPP data keys: ${_lessonPlanData.keys.toList()}');
+    AppLogger.debug('lesson_plan', 'RPP id fields: id=${_lessonPlanData['id']}, rpp_id=${_lessonPlanData['rpp_id']}, lesson_plan_id=${_lessonPlanData['lesson_plan_id']}');
+    if (lessonPlanId == null) return;
 
     setState(() => _regeneratingField = fieldKey);
 
     try {
-      final response = await getIt<ApiSubjectService>().regenRppFieldRaw(
-        rppId,
+      final response = await getIt<ApiSubjectService>().regenLessonPlanFieldRaw(
+        lessonPlanId,
         fieldKey,
         additionalText: additionalText.isNotEmpty ? additionalText : null,
       );
@@ -386,15 +386,15 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         final data = body['data'] ?? body;
         if (data[fieldKey] != null) {
           setState(() {
-            _rppData[fieldKey] = data[fieldKey];
-            _editedContent = _formatRPPContent();
+            _lessonPlanData[fieldKey] = data[fieldKey];
+            _editedContent = _formatLessonPlanContent();
             _regeneratingField = null;
           });
           _loadRegenLimits();
                     SnackBarUtils.showInfo(context, '$fieldLabel berhasil di-regenerasi');
         } else {
           // Maybe full RPP data returned
-          _updateRppDataFromResponse(data);
+          _updateLessonPlanDataFromResponse(data);
           setState(() => _regeneratingField = null);
           _loadRegenLimits();
                     SnackBarUtils.showInfo(context, '$fieldLabel berhasil di-regenerasi');
@@ -424,15 +424,15 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Future<void> _regenerateAllFields(String additionalText) async {
-    final rppId = _rppId;
-    if (rppId == null) return;
+    final lessonPlanId = _lessonPlanId;
+    if (lessonPlanId == null) return;
 
     setState(() => _regeneratingField = 'all');
 
     int successCount = 0;
     int failCount = 0;
 
-    for (final field in _rppFields) {
+    for (final field in _lessonPlanFields) {
       final fieldKey = field['key']!;
       final fieldValue = _getFieldValue(fieldKey, field['altKey'] ?? '');
       if (fieldValue.isEmpty) continue; // Skip empty fields
@@ -445,8 +445,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       }
 
       try {
-        final response = await getIt<ApiSubjectService>().regenRppFieldRaw(
-          rppId,
+        final response = await getIt<ApiSubjectService>().regenLessonPlanFieldRaw(
+          lessonPlanId,
           fieldKey,
           additionalText: additionalText.isNotEmpty ? additionalText : null,
         );
@@ -461,9 +461,9 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         if (response.statusCode == 200 || response.statusCode == 201) {
           final data = body['data'] ?? body;
           if (data[fieldKey] != null) {
-            _rppData[fieldKey] = data[fieldKey];
+            _lessonPlanData[fieldKey] = data[fieldKey];
           } else {
-            _updateRppDataFromResponse(data);
+            _updateLessonPlanDataFromResponse(data);
           }
           successCount++;
         } else if (response.statusCode == 202) {
@@ -485,7 +485,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
     if (mounted) {
       setState(() {
-        _editedContent = _formatRPPContent();
+        _editedContent = _formatLessonPlanContent();
         _regeneratingField = null;
       });
       _loadRegenLimits();
@@ -517,12 +517,12 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           final result = jobData['result'] ?? jobData['data'] ?? body['result'] ?? body;
           if (result[fieldKey] != null) {
             setState(() {
-              _rppData[fieldKey] = result[fieldKey];
-              _editedContent = _formatRPPContent();
+              _lessonPlanData[fieldKey] = result[fieldKey];
+              _editedContent = _formatLessonPlanContent();
               _regeneratingField = null;
             });
           } else {
-            _updateRppDataFromResponse(result);
+            _updateLessonPlanDataFromResponse(result);
             setState(() => _regeneratingField = null);
           }
           _loadRegenLimits();
@@ -570,9 +570,9 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         if (status == 'completed' || status == 'success') {
           final result = jobData['result'] ?? jobData['data'] ?? body['result'] ?? body;
           if (result[fieldKey] != null) {
-            _rppData[fieldKey] = result[fieldKey];
+            _lessonPlanData[fieldKey] = result[fieldKey];
           } else {
-            _updateRppDataFromResponse(result);
+            _updateLessonPlanDataFromResponse(result);
           }
           return;
         } else if (status == 'failed' || status == 'error') {
@@ -584,22 +584,22 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     }
   }
 
-  void _updateRppDataFromResponse(Map<String, dynamic> data) {
-    for (final field in _rppFields) {
+  void _updateLessonPlanDataFromResponse(Map<String, dynamic> data) {
+    for (final field in _lessonPlanFields) {
       final key = field['key']!;
       if (data.containsKey(key) && data[key] != null) {
-        _rppData[key] = data[key];
+        _lessonPlanData[key] = data[key];
       }
     }
-    setState(() => _editedContent = _formatRPPContent());
+    setState(() => _editedContent = _formatLessonPlanContent());
   }
 
-  String _formatRPPContent() {
+  String _formatLessonPlanContent() {
     final buffer = StringBuffer();
 
     String getField(List<String> keys, {String defaultValue = ''}) {
       for (final key in keys) {
-        final value = _rppData[key];
+        final value = _lessonPlanData[key];
         if (value != null && value.toString().trim().isNotEmpty) {
           return value.toString().trim();
         }
@@ -669,8 +669,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
     // Check if RPP is AI-generated (10-component API format)
     final bool isAi =
-        _rppData['ai_generated'] == true ||
-        _rppData['is_ai_generated'] == true;
+        _lessonPlanData['ai_generated'] == true ||
+        _lessonPlanData['is_ai_generated'] == true;
 
     // Core Competencies & Basic Competencies (if available)
     final String kompetensiInti = getField([
@@ -883,8 +883,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     buffer.writeln('...................................');
     buffer.writeln('NIP ..............................');
 
-    if (_rppData['ai_generated'] == true ||
-        _rppData['is_ai_generated'] == true) {
+    if (_lessonPlanData['ai_generated'] == true ||
+        _lessonPlanData['is_ai_generated'] == true) {
       buffer.writeln();
       buffer.writeln('---');
       buffer.writeln('*RPP ini digenerate secara otomatis menggunakan AI*');
@@ -935,7 +935,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
   /// Saves the RPP to the API.
   /// Like `axios.put('/api/rpp/{id}')` in Vue.
-  Future<void> _saveRPP() async {
+  Future<void> _saveLessonPlan() async {
     setState(() {
       _isSaving = true;
     });
@@ -944,8 +944,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       // Map data (falling back to known AI-generated key names if available)
       String fallback(List<String> keys) {
         for (final k in keys) {
-          if (_rppData.containsKey(k) && _rppData[k] != null) {
-            return _rppData[k].toString();
+          if (_lessonPlanData.containsKey(k) && _lessonPlanData[k] != null) {
+            return _lessonPlanData[k].toString();
           }
         }
         return '';
@@ -1063,7 +1063,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       // Get directory with error handling
       final directory = await getTemporaryDirectory();
       final file = File(
-        '${directory.path}/RPP_${_rppData['judul']}_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        '${directory.path}/RPP_${_lessonPlanData['judul']}_${DateTime.now().millisecondsSinceEpoch}.pdf',
       );
       await file.writeAsBytes(bytes, flush: true);
 
@@ -1089,7 +1089,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
       final directory = await getTemporaryDirectory();
       final file = File(
-        '${directory.path}/RPP_${_rppData['judul']}_${DateTime.now().millisecondsSinceEpoch}.txt',
+        '${directory.path}/RPP_${_lessonPlanData['judul']}_${DateTime.now().millisecondsSinceEpoch}.txt',
       );
       await file.writeAsString(_editedContent, flush: true);
 
@@ -1109,7 +1109,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   bool _isDownloading = false;
 
   String? get _filePath {
-    final fp = _rppData['file_path'];
+    final fp = _lessonPlanData['file_path'];
     if (fp != null && fp.toString().trim().isNotEmpty) {
       return fp.toString().trim();
     }
@@ -1291,8 +1291,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      _rppData['judul']?.toString() ??
-                          _rppData['title']?.toString() ??
+                      _lessonPlanData['judul']?.toString() ??
+                          _lessonPlanData['title']?.toString() ??
                           'RPP',
                       style: TextStyle(
                         fontSize: 14,
@@ -1319,7 +1319,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           icon: Icons.save_rounded,
           onTap: () {
             _toggleEdit();
-            _saveRPP();
+            _saveLessonPlan();
           },
         ),
         SizedBox(width: AppSpacing.sm),
@@ -1335,7 +1335,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         _buildHeaderButton(
           icon: _isSaving ? null : Icons.save_rounded,
           isLoading: _isSaving,
-          onTap: _isSaving ? null : _saveRPP,
+          onTap: _isSaving ? null : _saveLessonPlan,
         ),
       if (!widget.isNew) ...[
         _buildHeaderButton(
@@ -1346,7 +1346,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         if (_hasAiAdditionalData) ...[
           _buildHeaderButton(
             icon: Icons.smart_toy_rounded,
-            onTap: _openAiRppScreen,
+            onTap: _openAiLessonPlanScreen,
           ),
           SizedBox(width: AppSpacing.sm),
         ],
@@ -1526,7 +1526,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Widget _buildPreview() {
-    final bool canRegen = _hasAiAdditionalData && _rppId != null;
+    final bool canRegen = _hasAiAdditionalData && _lessonPlanId != null;
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(AppSpacing.lg),
@@ -1652,7 +1652,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     ];
 
     // Field cards
-    final fieldWidgets = _rppFields.map((field) {
+    final fieldWidgets = _lessonPlanFields.map((field) {
       final fieldKey = field['key']!;
       final fieldLabel = field['label']!;
       final altKey = field['altKey'] ?? '';
@@ -1679,7 +1679,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   Widget _buildHeaderInfoCard() {
     String getField(List<String> keys, {String defaultValue = ''}) {
       for (final key in keys) {
-        final value = _rppData[key];
+        final value = _lessonPlanData[key];
         if (value != null && value.toString().trim().isNotEmpty) {
           return value.toString().trim();
         }
@@ -1956,7 +1956,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                 ),
               ],
             ),
-            if (_rppData['ai_generated'] == true || _rppData['is_ai_generated'] == true) ...[
+            if (_lessonPlanData['ai_generated'] == true || _lessonPlanData['is_ai_generated'] == true) ...[
               SizedBox(height: AppSpacing.lg),
               Divider(color: ColorUtils.slate200),
               SizedBox(height: AppSpacing.sm),

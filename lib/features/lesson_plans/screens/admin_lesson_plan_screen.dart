@@ -36,28 +36,28 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Admin lesson plan (RPP) review screen with drill-down navigation.
 ///
 /// Optionally accepts [teacherId]/[teacherName] to skip the teacher selection step.
-/// This is like a Vue page with optional route params (`/admin/rpp?teacherId=123`).
-class AdminRppScreen extends ConsumerStatefulWidget {
+/// This is like a Vue page with optional route params (`/admin/lessonPlan?teacherId=123`).
+class AdminLessonPlanScreen extends ConsumerStatefulWidget {
   final String? teacherId;
   final String? teacherName;
 
-  const AdminRppScreen({super.key, this.teacherId, this.teacherName});
+  const AdminLessonPlanScreen({super.key, this.teacherId, this.teacherName});
 
   @override
-  ConsumerState<AdminRppScreen> createState() => _AdminRppScreenState();
+  ConsumerState<AdminLessonPlanScreen> createState() => _AdminLessonPlanScreenState();
 }
 
-/// Mutable state for [AdminRppScreen].
+/// Mutable state for [AdminLessonPlanScreen].
 ///
 /// Key state (like Vue `data()`):
 /// - [_showTeacherList] - whether showing teacher list or RPP list (drill-down)
-/// - [_rppList] / [_teacherList] - paginated data lists
+/// - [_lessonPlanList] / [_teacherList] - paginated data lists
 /// - [_selectedStatusFilter] - filter by approval status (Pending/Approved/Rejected)
 /// - Pagination state for infinite scroll
 ///
 /// setState() triggers re-render like Vue's reactivity system.
-class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
-  List<dynamic> _rppList = [];
+class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
+  List<dynamic> _lessonPlanList = [];
   List<dynamic> _teacherList = [];
   bool _showTeacherList = true;
   String? _selectedTeacherId;
@@ -99,7 +99,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
         if (_showTeacherList && widget.teacherId == null) {
           _loadTeachersPaginated();
         } else {
-          _loadRppPaginated();
+          _loadLessonPlansPaginated();
         }
       }
     });
@@ -109,7 +109,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
       _showTeacherList = false;
       _selectedTeacherId = widget.teacherId;
       _selectedTeacherName = widget.teacherName;
-      _loadRppPaginated(reset: true);
+      _loadLessonPlansPaginated(reset: true);
     } else {
       _showTeacherList = true;
       _loadTeachersPaginated(reset: true);
@@ -437,7 +437,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
     return 'rpp_teacher_list';
   }
 
-  String? _buildRppCacheKey() {
+  String? _buildLessonPlanCacheKey() {
     if (_currentPage != 1) return null;
     if (_selectedStatusFilter != null ||
         _searchController.text.trim().isNotEmpty) {
@@ -456,24 +456,24 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
       if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);
       _loadTeachersPaginated(reset: true, useCache: false);
     } else {
-      final cacheKey = _buildRppCacheKey();
+      final cacheKey = _buildLessonPlanCacheKey();
       if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);
-      _loadRppPaginated(reset: true, useCache: false);
+      _loadLessonPlansPaginated(reset: true, useCache: false);
     }
   }
 
   Future<void> _exportToExcel() async {
-    await ExcelRppService.exportRppToExcel(rppList: _rppList, context: context);
+    await ExcelLessonPlanService.exportLessonPlansToExcel(lessonPlanList: _lessonPlanList, context: context);
   }
 
-  Future<void> _loadRppByTeacher() async {
+  Future<void> _loadLessonPlansByTeacher() async {
     try {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
-      await _loadRppPaginated(reset: true, useCache: false);
+      await _loadLessonPlansPaginated(reset: true, useCache: false);
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -482,14 +482,14 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
     }
   }
 
-  Future<void> _loadAllRpp() async {
+  Future<void> _loadAllLessonPlans() async {
     try {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
-      await _loadRppPaginated(reset: true, useCache: false);
+      await _loadLessonPlansPaginated(reset: true, useCache: false);
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -599,7 +599,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
     }
   }
 
-  Future<void> _loadRppPaginated({bool reset = false, bool useCache = true}) async {
+  Future<void> _loadLessonPlansPaginated({bool reset = false, bool useCache = true}) async {
     try {
       if (reset) {
         _currentPage = 1;
@@ -608,14 +608,14 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
 
       // Step 1: Try cache for instant display (only on reset/first load)
       if (useCache && reset) {
-        final cacheKey = _buildRppCacheKey();
+        final cacheKey = _buildLessonPlanCacheKey();
         if (cacheKey != null) {
           final cached = await LocalCacheService.load(cacheKey);
           if (cached != null && cached['data'] != null && mounted) {
             final cachedList = cached['data'] as List<dynamic>;
             if (cachedList.isNotEmpty) {
               setState(() {
-                _rppList = cachedList;
+                _lessonPlanList = cachedList;
                 _hasMoreData = cached['hasMoreData'] ?? true;
                 _isLoading = false;
               });
@@ -627,7 +627,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
       }
 
       // Show skeleton only if list is empty
-      if (reset && _rppList.isEmpty && mounted) {
+      if (reset && _lessonPlanList.isEmpty && mounted) {
         setState(() {
           _isLoading = true;
           _errorMessage = null;
@@ -661,9 +661,9 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
         if (mounted) {
           setState(() {
             if (reset) {
-              _rppList = data;
+              _lessonPlanList = data;
             } else {
-              _rppList.addAll(data);
+              _lessonPlanList.addAll(data);
             }
 
             _hasMoreData =
@@ -674,7 +674,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
 
           // Step 3: Save to cache (only page 1 default view, non-blocking)
           if (reset) {
-            final cacheKey = _buildRppCacheKey();
+            final cacheKey = _buildLessonPlanCacheKey();
             if (cacheKey != null) {
               LocalCacheService.save(cacheKey, {
                 'data': data,
@@ -688,7 +688,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
           setState(() {
             _isLoading = false;
             _isLoadingMore = false;
-            if (_rppList.isEmpty) {
+            if (_lessonPlanList.isEmpty) {
               _errorMessage = 'Failed to load RPP';
             }
           });
@@ -699,7 +699,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
         setState(() {
           _isLoading = false;
           _isLoadingMore = false;
-          if (_rppList.isEmpty) {
+          if (_lessonPlanList.isEmpty) {
             _errorMessage = ErrorUtils.getFriendlyMessage(e);
           }
         });
@@ -714,11 +714,11 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
           teacher['id'].toString(); // Try user_id first, fallback to id
       _selectedTeacherName = teacher['name'];
       _showTeacherList = false;
-      _rppList = [];
+      _lessonPlanList = [];
       _searchController.clear();
       _currentPage = 1;
     });
-    _loadRppPaginated(reset: true);
+    _loadLessonPlansPaginated(reset: true);
   }
 
   void _backToTeacherList() {
@@ -726,7 +726,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
       _selectedTeacherId = null;
       _selectedTeacherName = null;
       _showTeacherList = true;
-      _rppList = [];
+      _lessonPlanList = [];
       _searchController.clear();
       _currentPage = 1;
     });
@@ -737,30 +737,30 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
     if (_showTeacherList && widget.teacherId == null) {
       _loadTeachersPaginated(reset: true);
     } else {
-      _loadRppPaginated(reset: true);
+      _loadLessonPlansPaginated(reset: true);
     }
   }
 
-  void _updateStatus(String rppId, String status) {
-    final rpp = _rppList.firstWhere((rpp) => rpp['id'] == rppId);
+  void _updateStatus(String lessonPlanId, String status) {
+    final lessonPlan = _lessonPlanList.firstWhere((lp) => lp['id'] == lessonPlanId);
     showDialog(
       context: context,
       builder: (context) => UpdateStatusDialog(
-        rppId: rppId,
-        currentStatus: rpp['status'],
-        currentNote: rpp['catatan'],
-        onStatusUpdated: _loadAllRpp,
+        lessonPlanId: lessonPlanId,
+        currentStatus: lessonPlan['status'],
+        currentNote: lessonPlan['catatan'],
+        onStatusUpdated: _loadAllLessonPlans,
       ),
     );
   }
 
-  void _viewRppDetail(Map<String, dynamic> rpp) async {
-    await AppNavigator.push(context, RppAdminDetailPage(rpp: rpp));
+  void _viewLessonPlanDetail(Map<String, dynamic> lessonPlan) async {
+    await AppNavigator.push(context, LessonPlanAdminDetailPage(lessonPlan: lessonPlan));
     // Refresh list after returning
     if (_showTeacherList && _selectedTeacherName != null) {
-      _loadRppByTeacher();
+      _loadLessonPlansByTeacher();
     } else if (!_showTeacherList) {
-      _loadRppByTeacher(); // Or logic to reload current list
+      _loadLessonPlansByTeacher(); // Or logic to reload current list
     }
   }
 
@@ -869,16 +869,16 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
     );
   }
 
-  Widget _buildRppCard(Map<String, dynamic> rpp, int index) {
+  Widget _buildLessonPlanCard(Map<String, dynamic> lessonPlan, int index) {
     final accentColor = ColorUtils.getColorForIndex(index);
-    final statusColor = _getStatusColor(rpp['status'] ?? '');
+    final statusColor = _getStatusColor(lessonPlan['status'] ?? '');
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _viewRppDetail(rpp),
+          onTap: () => _viewLessonPlanDetail(lessonPlan),
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: EdgeInsets.all(AppSpacing.lg),
@@ -914,7 +914,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            rpp['judul'] ?? rpp['title'] ?? 'No Title',
+                            lessonPlan['judul'] ?? lessonPlan['title'] ?? 'No Title',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -925,8 +925,8 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                           ),
                           SizedBox(height: 3),
                           Text(
-                            rpp['mata_pelajaran_nama'] ??
-                                rpp['subject_name'] ??
+                            lessonPlan['mata_pelajaran_nama'] ??
+                                lessonPlan['subject_name'] ??
                                 'No Subject',
                             style: TextStyle(
                               fontSize: 12,
@@ -949,7 +949,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                         ),
                       ),
                       child: Text(
-                        _getStatusLabel(rpp['status']),
+                        _getStatusLabel(lessonPlan['status']),
                         style: TextStyle(
                           color: statusColor,
                           fontSize: 10,
@@ -970,13 +970,13 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                     _buildInfoTag(
                       icon: Icons.class_,
                       label:
-                          rpp['kelas_nama'] ?? rpp['class_name'] ?? 'No Class',
+                          lessonPlan['kelas_nama'] ?? lessonPlan['class_name'] ?? 'No Class',
                     ),
                     _buildInfoTag(
                       icon: Icons.person_outline,
                       label:
-                          rpp['teacher_name'] ??
-                          rpp['guru_nama'] ??
+                          lessonPlan['teacher_name'] ??
+                          lessonPlan['guru_nama'] ??
                           'No Teacher',
                     ),
                   ],
@@ -989,13 +989,13 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                     _buildCircleActionButton(
                       icon: Icons.visibility_outlined,
                       color: _getPrimaryColor(),
-                      onPressed: () => _viewRppDetail(rpp),
+                      onPressed: () => _viewLessonPlanDetail(lessonPlan),
                     ),
                     SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.edit_outlined,
                       color: ColorUtils.warning600,
-                      onPressed: () => _updateStatus(rpp['id'], rpp['status']),
+                      onPressed: () => _updateStatus(lessonPlan['id'], lessonPlan['status']),
                     ),
                   ],
                 ),
@@ -1095,12 +1095,12 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
         if (_errorMessage != null) {
           return ErrorScreen(
             errorMessage: _errorMessage!,
-            onRetry: _showTeacherList ? _loadTeachersPaginated : _loadAllRpp,
+            onRetry: _showTeacherList ? _loadTeachersPaginated : _loadAllLessonPlans,
           );
         }
 
         // Apply filters for RPP list (Teacher list is filtered by backend)
-        final filteredRpp = _rppList.where((rpp) {
+        final filteredLessonPlans = _lessonPlanList.where((lessonPlan) {
           if (_showTeacherList) {
             return true; // Don't filter if showing teachers (not used)
           }
@@ -1108,19 +1108,19 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
           final searchTerm = _searchController.text.toLowerCase();
           final matchesSearch =
               searchTerm.isEmpty ||
-              (rpp['judul']?.toLowerCase().contains(searchTerm) ?? false) ||
-              (rpp['mata_pelajaran_nama']?.toLowerCase().contains(searchTerm) ??
+              (lessonPlan['judul']?.toLowerCase().contains(searchTerm) ?? false) ||
+              (lessonPlan['mata_pelajaran_nama']?.toLowerCase().contains(searchTerm) ??
                   false) ||
-              (rpp['teacher_name']?.toLowerCase().contains(searchTerm) ??
+              (lessonPlan['teacher_name']?.toLowerCase().contains(searchTerm) ??
                   false) || // Updated to teacher_name
-              (rpp['guru_nama']?.toLowerCase().contains(searchTerm) ??
+              (lessonPlan['guru_nama']?.toLowerCase().contains(searchTerm) ??
                   false) || // Keep as fallback
-              (rpp['kelas_nama']?.toLowerCase().contains(searchTerm) ?? false);
+              (lessonPlan['kelas_nama']?.toLowerCase().contains(searchTerm) ?? false);
 
           // Status filter
           final matchesStatusFilter =
               _selectedStatusFilter == null ||
-              rpp['status'] == _selectedStatusFilter;
+              lessonPlan['status'] == _selectedStatusFilter;
 
           return matchesSearch && matchesStatusFilter;
         }).toList();
@@ -1515,7 +1515,7 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                           ),
                         );
                       })()
-                    : (filteredRpp.isEmpty
+                    : (filteredLessonPlans.isEmpty
                           ? EmptyState(
                               title: languageProvider.getTranslatedText({
                                 'en': 'No RPP',
@@ -1540,10 +1540,10 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                                 controller: _scrollController,
                                 padding: EdgeInsets.only(top: 16, bottom: 16),
                                 itemCount:
-                                    filteredRpp.length +
+                                    filteredLessonPlans.length +
                                     (_isLoadingMore ? 1 : 0),
                                 itemBuilder: (context, index) {
-                                  if (index >= filteredRpp.length) {
+                                  if (index >= filteredLessonPlans.length) {
                                     // loading indicator
                                     return Padding(
                                       padding: EdgeInsets.symmetric(
@@ -1555,8 +1555,8 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
                                     );
                                   }
 
-                                  final rpp = filteredRpp[index];
-                                  return _buildRppCard(rpp, index);
+                                  final lessonPlan = filteredLessonPlans[index];
+                                  return _buildLessonPlanCard(lessonPlan, index);
                                 },
                               ),
                             )),
@@ -1751,16 +1751,16 @@ class _AdminRppScreenState extends ConsumerState<AdminRppScreen> {
   }
 }
 
-// ... (UpdateStatusDialog dan RppAdminDetailPage tetap sama seperti sebelumnya)
+// ... (UpdateStatusDialog dan LessonPlanAdminDetailPage tetap sama seperti sebelumnya)
 class UpdateStatusDialog extends ConsumerStatefulWidget {
-  final String rppId;
+  final String lessonPlanId;
   final String currentStatus;
   final String? currentNote;
   final VoidCallback onStatusUpdated;
 
   const UpdateStatusDialog({
     super.key,
-    required this.rppId,
+    required this.lessonPlanId,
     required this.currentStatus,
     this.currentNote,
     required this.onStatusUpdated,
@@ -1843,7 +1843,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
 
     try {
       await ApiService.updateLessonPlanStatus(
-        widget.rppId,
+        widget.lessonPlanId,
         selectedStatus,
         catatan: catatanController.text.isNotEmpty
             ? catatanController.text
@@ -2122,17 +2122,17 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
 }
 
 // RPP Detail Page for Admin
-class RppAdminDetailPage extends StatelessWidget {
-  final Map<String, dynamic> rpp;
+class LessonPlanAdminDetailPage extends StatelessWidget {
+  final Map<String, dynamic> lessonPlan;
 
-  const RppAdminDetailPage({super.key, required this.rpp});
+  const LessonPlanAdminDetailPage({super.key, required this.lessonPlan});
   Color getPrimaryColor() {
     return ColorUtils.getRoleColor('admin');
   }
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = getStatusColor(rpp['status'] ?? '');
+    final statusColor = getStatusColor(lessonPlan['status'] ?? '');
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
@@ -2195,10 +2195,10 @@ class RppAdminDetailPage extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-                      if ((rpp['judul'] ?? rpp['title'] ?? '').isNotEmpty) ...[
+                      if ((lessonPlan['judul'] ?? lessonPlan['title'] ?? '').isNotEmpty) ...[
                         SizedBox(height: 2),
                         Text(
-                          rpp['judul'] ?? rpp['title'] ?? '',
+                          lessonPlan['judul'] ?? lessonPlan['title'] ?? '',
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.white.withValues(alpha: 0.9),
@@ -2283,7 +2283,7 @@ class RppAdminDetailPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          rpp['judul'] ?? rpp['title'] ?? '-',
+                          lessonPlan['judul'] ?? lessonPlan['title'] ?? '-',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -2316,7 +2316,7 @@ class RppAdminDetailPage extends StatelessWidget {
                               ),
                               SizedBox(width: 6),
                               Text(
-                                getStatusLabelDetail(rpp['status']),
+                                getStatusLabelDetail(lessonPlan['status']),
                                 style: TextStyle(
                                   color: statusColor,
                                   fontSize: 12,
@@ -2356,32 +2356,32 @@ class RppAdminDetailPage extends StatelessWidget {
                         SizedBox(height: AppSpacing.md),
                         buildDetailItem(
                           'Guru Pengajar',
-                          rpp['teacher_name'] ?? rpp['teacher']?['name'] ?? '-',
+                          lessonPlan['teacher_name'] ?? lessonPlan['teacher']?['name'] ?? '-',
                         ),
                         buildDetailItem(
                           'Mata Pelajaran',
-                          rpp['subject_name'] ??
-                              rpp['mata_pelajaran_nama'] ??
+                          lessonPlan['subject_name'] ??
+                              lessonPlan['mata_pelajaran_nama'] ??
                               '-',
                         ),
                         buildDetailItem(
                           'Kelas',
-                          rpp['class_name'] ?? rpp['kelas_nama'] ?? '-',
+                          lessonPlan['class_name'] ?? lessonPlan['kelas_nama'] ?? '-',
                         ),
                         buildDetailItem(
                           'Tahun Ajaran',
-                          '${rpp['academic_year'] ?? rpp['tahun_ajaran'] ?? '-'}',
+                          '${lessonPlan['academic_year'] ?? lessonPlan['tahun_ajaran'] ?? '-'}',
                         ),
-                        buildDetailItem('Semester', rpp['semester'] ?? '-'),
+                        buildDetailItem('Semester', lessonPlan['semester'] ?? '-'),
                         buildDetailItem(
                           'Tanggal Dibuat',
-                          rpp['created_at']?.toString().substring(0, 10) ?? '-',
+                          lessonPlan['created_at']?.toString().substring(0, 10) ?? '-',
                         ),
-                        if (rpp['catatan'] != null &&
-                            rpp['catatan'].toString().isNotEmpty)
-                          buildDetailItem('Catatan', rpp['catatan']),
+                        if (lessonPlan['catatan'] != null &&
+                            lessonPlan['catatan'].toString().isNotEmpty)
+                          buildDetailItem('Catatan', lessonPlan['catatan']),
 
-                        if (rpp['catatan_admin'] != null) ...[
+                        if (lessonPlan['catatan_admin'] != null) ...[
                           SizedBox(height: AppSpacing.sm),
                           Divider(),
                           SizedBox(height: AppSpacing.sm),
@@ -2395,7 +2395,7 @@ class RppAdminDetailPage extends StatelessWidget {
                           ),
                           SizedBox(height: AppSpacing.xs),
                           Text(
-                            rpp['catatan_admin']!,
+                            lessonPlan['catatan_admin']!,
                             style: TextStyle(
                               fontSize: 14,
                               color: ColorUtils.slate600,
@@ -2433,41 +2433,41 @@ class RppAdminDetailPage extends StatelessWidget {
                         SizedBox(height: AppSpacing.md),
                         buildContentSection(
                           'Kompetensi Inti',
-                          rpp['core_competence'],
+                          lessonPlan['core_competence'],
                         ),
                         buildContentSection(
                           'Kompetensi Dasar',
-                          rpp['basic_competence'],
+                          lessonPlan['basic_competence'],
                         ),
-                        buildContentSection('Indikator', rpp['indicator']),
+                        buildContentSection('Indikator', lessonPlan['indicator']),
                         buildContentSection(
                           'Tujuan Pembelajaran',
-                          rpp['learning_objective'],
+                          lessonPlan['learning_objective'],
                         ),
                         buildContentSection(
                           'Materi Pokok',
-                          rpp['main_material'],
+                          lessonPlan['main_material'],
                         ),
                         buildContentSection(
                           'Metode Pembelajaran',
-                          rpp['learning_method'],
+                          lessonPlan['learning_method'],
                         ),
-                        buildContentSection('Media/Alat', rpp['media_tools']),
+                        buildContentSection('Media/Alat', lessonPlan['media_tools']),
                         buildContentSection(
                           'Sumber Belajar',
-                          rpp['learning_source'],
+                          lessonPlan['learning_source'],
                         ),
                         buildContentSection(
                           'Langkah-langkah Pembelajaran',
-                          rpp['learning_activities'],
+                          lessonPlan['learning_activities'],
                         ),
-                        buildContentSection('Penilaian', rpp['assessment']),
+                        buildContentSection('Penilaian', lessonPlan['assessment']),
                       ],
                     ),
                   ),
 
                   // File Attachment
-                  if (rpp['file_path'] != null) ...[
+                  if (lessonPlan['file_path'] != null) ...[
                     SizedBox(height: AppSpacing.lg),
                     Container(
                       width: double.infinity,
@@ -2492,7 +2492,7 @@ class RppAdminDetailPage extends StatelessWidget {
                           SizedBox(height: AppSpacing.md),
                           ElevatedButton.icon(
                             onPressed: () =>
-                                downloadAndOpenFile(context, rpp['file_path']),
+                                downloadAndOpenFile(context, lessonPlan['file_path']),
                             icon: Icon(Icons.download),
                             label: Text('Download RPP'),
                             style: ElevatedButton.styleFrom(
@@ -2536,9 +2536,9 @@ class RppAdminDetailPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => UpdateStatusDialog(
-        rppId: rpp['id'],
-        currentStatus: rpp['status'],
-        currentNote: rpp['catatan'],
+        lessonPlanId: lessonPlan['id'],
+        currentStatus: lessonPlan['status'],
+        currentNote: lessonPlan['catatan'],
         onStatusUpdated: () {
           AppNavigator.pop(context); // Return to list
         },

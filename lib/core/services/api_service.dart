@@ -745,28 +745,28 @@ class ApiService {
     return response.data;
   }
 
-  static Future<dynamic> updateRPP(
-    String rppId,
+  static Future<dynamic> updateLessonPlan(
+    String lessonPlanId,
     Map<String, dynamic> data,
   ) async {
-    final response = await dioClient.put('/rpp/$rppId', data: data);
+    final response = await dioClient.put('/rpp/$lessonPlanId', data: data);
     return response.data;
   }
 
   static Future<dynamic> updateLessonPlanStatus(
-    String rppId,
+    String lessonPlanId,
     String status, {
     String? catatan,
   }) async {
     final response = await dioClient.put(
-      '/rpp/$rppId/status',
+      '/rpp/$lessonPlanId/status',
       data: {'status': status, 'catatan': catatan},
     );
     return response.data;
   }
 
-  static Future<dynamic> deleteLessonPlan(String rppId) async {
-    final response = await dioClient.delete('/rpp/$rppId');
+  static Future<dynamic> deleteLessonPlan(String lessonPlanId) async {
+    final response = await dioClient.delete('/rpp/$lessonPlanId');
     return response.data;
   }
 

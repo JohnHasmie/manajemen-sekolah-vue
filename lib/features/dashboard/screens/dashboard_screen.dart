@@ -2251,7 +2251,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
           rejected: _stats['rpp_rejected'] ?? 0,
           pending: _stats['rpp_pending'] ?? 0,
           onTap: () {
-            AppNavigator.push(context, RppScreen(
+            AppNavigator.push(context, LessonPlanScreen(
                   teacherId: _userData['id'].toString(),
                   teacherName: _userData['name'] ?? 'Guru',
                 ));
@@ -2573,7 +2573,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
       MenuItem(
         title: AppLocalizations.manageRpp.tr,
         icon: Icons.description_outlined,
-        onTap: () => AppNavigator.push(context, AdminRppScreen()),
+        onTap: () => AppNavigator.push(context, AdminLessonPlanScreen()),
       ),
       MenuItem(
         title: AppLocalizations.studentReport.tr,
@@ -2743,7 +2743,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, RppScreen(
+          AppNavigator.push(context, LessonPlanScreen(
                 teacherId: teacherData['id']!,
                 teacherName: teacherData['nama']!,
               ));

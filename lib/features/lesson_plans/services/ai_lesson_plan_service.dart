@@ -7,7 +7,7 @@
 import 'package:dio/dio.dart';
 
 /// Service that generates RPP (lesson plans) using the OpenAI GPT API.
-/// Like a Laravel service class (e.g., `App\Services\AIRPPService`) that:
+/// Like a Laravel service class (e.g., `App\Services\AILessonPlanService`) that:
 /// 1. Builds a structured prompt from teacher input
 /// 2. Calls the OpenAI chat completions endpoint
 /// 3. Parses the AI response into a structured RPP map
@@ -19,12 +19,12 @@ import 'package:dio/dio.dart';
 ///
 /// Note: This is an instance class (not static) unlike the Excel services,
 /// because it could potentially hold state for ongoing generation sessions.
-class RPPService {
+class LessonPlanService {
   /// Create a fallback/template RPP when the AI API call fails.
   /// Like a Laravel factory default: provides placeholder content so the
   /// user gets a skeleton RPP they can edit manually instead of nothing.
   /// [customContent] - optional AI-generated content to use for objectives.
-  Map<String, dynamic> _createFallbackRPP({
+  Map<String, dynamic> _createFallbackLessonPlan({
     required String title,
     required String subjectId,
     required String subjectName,
@@ -68,16 +68,16 @@ class RPPService {
 
   /// Generate a complete RPP using the OpenAI GPT-3.5-turbo model.
   /// Like a Laravel controller action that calls an AI service:
-  /// `$rpp = $aiService->generateRPP($request->validated());`
+  /// `$rpp = $aiService->generateLessonPlan($request->validated());`
   ///
   /// [title] - lesson plan title. [subjectId]/[subjectName] - subject info.
   /// [materialContent] - list of material/content maps to include.
   /// [learningObjectives] - optional custom learning objectives.
   /// [toolsMedia] - optional tools/media description.
   ///
-  /// Returns a structured RPP map. Falls back to [_createFallbackRPP] on any error
+  /// Returns a structured RPP map. Falls back to [_createFallbackLessonPlan] on any error
   /// (network failure, API error, parsing error) -- never throws.
-  Future<Map<String, dynamic>> generateRPP({
+  Future<Map<String, dynamic>> generateLessonPlan({
     required String title,
     required String subjectId,
     required String subjectName,
@@ -134,7 +134,7 @@ class RPPService {
       );
     } catch (e) {
       // Fallback: Create a simple RPP if AI fails
-      return _createFallbackRPP(
+      return _createFallbackLessonPlan(
         title: title,
         subjectId: subjectId,
         subjectName: subjectName,
@@ -236,7 +236,7 @@ class RPPService {
   /// Parse the raw AI text response into a structured RPP map.
   /// Extracts sections by their headers (A. TUJUAN, B. KEGIATAN, C. PENILAIAN).
   /// Like a Laravel service that parses unstructured text into a model's fields.
-  /// Falls back to [_createFallbackRPP] with the raw content if parsing fails.
+  /// Falls back to [_createFallbackLessonPlan] with the raw content if parsing fails.
   Map<String, dynamic> _parseAIResponse({
     required String content,
     required String title,
@@ -273,7 +273,7 @@ class RPPService {
         'is_ai_generated': true,
       };
     } catch (e) {
-      return _createFallbackRPP(
+      return _createFallbackLessonPlan(
         title: title,
         subjectId: subjectId,
         subjectName: subjectName,

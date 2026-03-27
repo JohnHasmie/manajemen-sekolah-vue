@@ -28,13 +28,13 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// AI-generated lesson plan viewer/editor with rich text editing.
 ///
 /// Supports two modes:
-/// 1. Direct mode -- [rppData] is provided, displays immediately
+/// 1. Direct mode -- [lessonPlanData] is provided, displays immediately
 /// 2. Polling mode -- [pollUrl]/[jobId] provided, polls for AI job completion
 ///
 /// Uses Flutter Quill for rich text editing (like Vue Quill / TinyMCE).
-/// Props: [rppData], [teacherId], [onSaved] callback, polling fields.
-class RppAiResultScreen extends StatefulWidget {
-  final Map<String, dynamic>? rppData;
+/// Props: [lessonPlanData], [teacherId], [onSaved] callback, polling fields.
+class LessonPlanAiResultScreen extends StatefulWidget {
+  final Map<String, dynamic>? lessonPlanData;
   final String teacherId;
   final VoidCallback onSaved;
 
@@ -43,12 +43,12 @@ class RppAiResultScreen extends StatefulWidget {
   final String? jobId;
   final String? token;
 
-  /// Metadata to build rppData after polling completes
+  /// Metadata to build lessonPlanData after polling completes
   final Map<String, dynamic>? pollingMetadata;
 
-  const RppAiResultScreen({
+  const LessonPlanAiResultScreen({
     super.key,
-    this.rppData,
+    this.lessonPlanData,
     required this.teacherId,
     required this.onSaved,
     this.pollUrl,
@@ -58,15 +58,15 @@ class RppAiResultScreen extends StatefulWidget {
   });
 
   @override
-  State<RppAiResultScreen> createState() => _RppAiResultScreenState();
+  State<LessonPlanAiResultScreen> createState() => _LessonPlanAiResultScreenState();
 }
 
-/// State for [RppAiResultScreen].
+/// State for [LessonPlanAiResultScreen].
 ///
 /// Like a Vue component with `data() { return { isSaving, isPolling, ... } }`.
-/// Manages multiple Quill controllers for each RPP section (tujuan, kegiatan
+/// Manages multiple Quill controllers for each lesson plan section (tujuan, kegiatan
 /// inti, penilaian, kompetensi) and text controllers for metadata fields.
-class _RppAiResultScreenState extends State<RppAiResultScreen> {
+class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
   bool _isSaving = false;
   bool _isRegenerating = false;
   bool _isPolling = false;
@@ -102,7 +102,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       _pollingStatus = 'RPP sedang disusun oleh AI...';
       _startPolling();
     } else {
-      _initControllers(widget.rppData ?? {});
+      _initControllers(widget.lessonPlanData ?? {});
     }
   }
 
@@ -171,11 +171,11 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
 
           if (status == 'completed' || status == 'success') {
             // Per docs Section 2.2: result is inside data.result
-            final rppResponse = jobData['result'] ??
+            final lessonPlanResponse = jobData['result'] ??
                 jobData['data'] ??
                 resultBody['result'] ??
                 resultBody;
-            _applyPollingResult(rppResponse);
+            _applyPollingResult(lessonPlanResponse);
             return;
           } else if (status == 'failed' || status == 'error') {
             setState(() {
@@ -219,26 +219,26 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     }
   }
 
-  void _applyPollingResult(dynamic rppResponse) {
+  void _applyPollingResult(dynamic lessonPlanResponse) {
     final metadata = widget.pollingMetadata ?? {};
 
     final mappedData = {
-      'judul': rppResponse['title'] ?? metadata['title'] ?? 'RPP AI',
+      'judul': lessonPlanResponse['title'] ?? metadata['title'] ?? 'RPP AI',
       'mata_pelajaran_id': metadata['mata_pelajaran_id'],
       'mata_pelajaran_nama': metadata['mata_pelajaran_nama'] ?? '',
       'satuan_pendidikan': metadata['satuan_pendidikan'] ?? 'SD/MI',
       'bab_nama': metadata['bab_nama'] ?? '',
       'sub_bab_nama': metadata['sub_bab_nama'] ?? '',
       'kelas_semester': metadata['kelas_semester'] ?? '',
-      'tema': rppResponse['title'],
+      'tema': lessonPlanResponse['title'],
       'sub_tema': '',
       'pembelajaran_ke': '',
       'alokasi_waktu': metadata['alokasi_waktu'] ?? '',
-      'kompetensi_inti': _stripHtml(rppResponse['core_competence'] as String? ?? ''),
-      'kompetensi_dasar': _stripHtml(rppResponse['basic_competence'] as String? ?? ''),
-      'tujuan_pembelajaran': _stripHtml(rppResponse['learning_objective'] as String? ?? ''),
-      'kegiatan_inti': _stripHtml(rppResponse['learning_activities'] as String? ?? ''),
-      'penilaian': _stripHtml(rppResponse['assessment'] as String? ?? ''),
+      'kompetensi_inti': _stripHtml(lessonPlanResponse['core_competence'] as String? ?? ''),
+      'kompetensi_dasar': _stripHtml(lessonPlanResponse['basic_competence'] as String? ?? ''),
+      'tujuan_pembelajaran': _stripHtml(lessonPlanResponse['learning_objective'] as String? ?? ''),
+      'kegiatan_inti': _stripHtml(lessonPlanResponse['learning_activities'] as String? ?? ''),
+      'penilaian': _stripHtml(lessonPlanResponse['assessment'] as String? ?? ''),
       'is_ai_generated': true,
     };
 
@@ -466,7 +466,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
             ElevatedButton(
               onPressed: () {
                 AppNavigator.pop(context);
-                _regenerateRPP(prompt: _promptController.text);
+                _regenerateLessonPlan(prompt: _promptController.text);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: ColorUtils.primary,
@@ -509,7 +509,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     );
   }
 
-  Future<void> _regenerateRPP({String prompt = ''}) async {
+  Future<void> _regenerateLessonPlan({String prompt = ''}) async {
     setState(() {
       _isRegenerating = true;
     });
@@ -711,7 +711,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     }
   }
 
-  Future<void> _saveRPP() async {
+  Future<void> _saveLessonPlan() async {
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -729,7 +729,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       final payloadData = {
         'guru_id': widget.teacherId,
         'mata_pelajaran_id':
-            widget.rppData?['mata_pelajaran_id'] ?? widget.rppData?['subject_id'],
+            widget.lessonPlanData?['mata_pelajaran_id'] ?? widget.lessonPlanData?['subject_id'],
         'judul': _titleController.text,
         'kompetensi_inti': _coreCompetencyController.document.toPlainText(),
         'kompetensi_dasar': _basicCompetencyController.document.toPlainText(),
@@ -976,7 +976,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                           ),
                         )
                       : Icon(Icons.save),
-                  onPressed: _isSaving ? null : _saveRPP,
+                  onPressed: _isSaving ? null : _saveLessonPlan,
                   tooltip: 'Simpan RPP',
                 ),
               ],
@@ -1042,7 +1042,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton.icon(
-                onPressed: _isSaving ? null : _saveRPP,
+                onPressed: _isSaving ? null : _saveLessonPlan,
                 icon: _isSaving
                     ? SizedBox(
                         width: 20,

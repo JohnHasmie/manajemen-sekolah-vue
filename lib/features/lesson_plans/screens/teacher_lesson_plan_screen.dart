@@ -3,7 +3,7 @@
 //
 // Displays a list of RPPs with search, filter by status (draft/final),
 // CRUD operations, AI generation, and Word/PDF download. Also contains
-// the [RppFormDialog] for creating/editing RPPs.
+// the [LessonPlanFormDialog] for creating/editing RPPs.
 // In Laravel terms: `LessonPlanController@index`, `@store`, `@update`, `@destroy`.
 import 'dart:convert';
 import 'dart:io';
@@ -40,26 +40,26 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 ///
 /// Props (like Vue props): [teacherId], [teacherName].
 /// Contains the main list view and navigation to detail/AI screens.
-class RppScreen extends ConsumerStatefulWidget {
+class LessonPlanScreen extends ConsumerStatefulWidget {
   final String teacherId;
   final String teacherName;
 
-  const RppScreen({
+  const LessonPlanScreen({
     super.key,
     required this.teacherId,
     required this.teacherName,
   });
 
   @override
-  RppScreenState createState() => RppScreenState();
+  LessonPlanScreenState createState() => LessonPlanScreenState();
 }
 
-/// State for [RppScreen].
+/// State for [LessonPlanScreen].
 ///
 /// Like a Vue page component with `data() { return { rppList, isLoading, ... } }`.
 /// Manages the RPP list, search, status filter, and CRUD operations.
-class RppScreenState extends ConsumerState<RppScreen> {
-  List<dynamic> _rppList = [];
+class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
+  List<dynamic> _lessonPlanList = [];
   bool _isLoading = true;
   String? _errorMessage;
   final TextEditingController _searchController = TextEditingController();
@@ -75,7 +75,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
   @override
   void initState() {
     super.initState();
-    _loadRpp();
+    _loadLessonPlans();
   }
 
   /// Like Vue's `beforeUnmount()` -- disposes search controller.
@@ -349,7 +349,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                               });
                               _checkActiveFilter();
                               AppNavigator.pop(context);
-                              _loadRpp();
+                              _loadLessonPlans();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _getPrimaryColor(),
@@ -411,35 +411,35 @@ class RppScreenState extends ConsumerState<RppScreen> {
     return (provider.selectedAcademicYear?['id'] ?? provider.activeAcademicYear?['id'])?.toString();
   }
 
-  String _buildRppCacheKey() {
+  String _buildLessonPlanCacheKey() {
     final academicYearId = _getAcademicYearId() ?? '';
     return 'rpp_list_${widget.teacherId}_$academicYearId';
   }
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('rpp_');
-    _loadRpp(useCache: false);
+    _loadLessonPlans(useCache: false);
   }
 
   /// Fetches RPP list from API with cache-first strategy.
   /// Like `axios.get('/api/rpp')` in Vue with localStorage caching.
-  Future<void> _loadRpp({bool useCache = true}) async {
+  Future<void> _loadLessonPlans({bool useCache = true}) async {
     final isFilteredOrSearched = _searchController.text.isNotEmpty || _selectedStatusFilter != null;
-    final rppCacheKey = _buildRppCacheKey();
+    final lessonPlanCacheKey = _buildLessonPlanCacheKey();
 
     // Step 1: Try cache → return early (only for unfiltered default view)
     if (useCache && !isFilteredOrSearched) {
-      final cached = await LocalCacheService.load(rppCacheKey);
+      final cached = await LocalCacheService.load(lessonPlanCacheKey);
       if (cached != null && cached is List && cached.isNotEmpty) {
         if (mounted) {
           setState(() {
-            _rppList = List<dynamic>.from(cached);
+            _lessonPlanList = List<dynamic>.from(cached);
             _isLoading = false;
             _errorMessage = null;
           });
           _checkAndShowTour();
         }
-        AppLogger.debug('lesson_plan', 'RppScreen: Data from cache (${cached.length})');
+        AppLogger.debug('lesson_plan', 'LessonPlanScreen: Data from cache (${cached.length})');
         return;
       }
     }
@@ -455,7 +455,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
     try {
       final academicYearId = _getAcademicYearId();
 
-      final rppData = await ApiService.getLessonPlans(
+      final lessonPlanData = await ApiService.getLessonPlans(
         teacherId: widget.teacherId,
         search: _searchController.text,
         status: _selectedStatusFilter,
@@ -464,7 +464,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
       if (mounted) {
         setState(() {
-          _rppList = rppData;
+          _lessonPlanList = lessonPlanData;
           _isLoading = false;
           _hasActiveFilter = _selectedStatusFilter != null;
         });
@@ -472,11 +472,11 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
       // Save to cache only for unfiltered default view
       if (!isFilteredOrSearched) {
-        await LocalCacheService.save(rppCacheKey, rppData);
+        await LocalCacheService.save(lessonPlanCacheKey, lessonPlanData);
       }
     } catch (e) {
       AppLogger.error('lesson_plan', 'Load RPP error: $e');
-      if (mounted && _rppList.isEmpty) {
+      if (mounted && _lessonPlanList.isEmpty) {
         setState(() {
           _isLoading = false;
           _errorMessage = ErrorUtils.getFriendlyMessage(e);
@@ -534,7 +534,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                   child: GestureDetector(
                     onTap: () {
                       AppNavigator.pop(context);
-                      _showRppFormDialog();
+                      _showLessonPlanFormDialog();
                     },
                     child: Container(
                       padding: EdgeInsets.all(AppSpacing.lg),
@@ -575,7 +575,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                   child: GestureDetector(
                     onTap: () {
                       AppNavigator.pop(context);
-                      _showGenerateRppFormDialog();
+                      _showGenerateLessonPlanFormDialog();
                     },
                     child: Container(
                       padding: EdgeInsets.all(AppSpacing.lg),
@@ -620,7 +620,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
     );
   }
 
-  void _showRppFormDialog() {
+  void _showLessonPlanFormDialog() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -629,12 +629,12 @@ class RppScreenState extends ConsumerState<RppScreen> {
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: RppFormDialog(teacherId: widget.teacherId, onSaved: _loadRpp),
+        child: LessonPlanFormDialog(teacherId: widget.teacherId, onSaved: _loadLessonPlans),
       ),
     );
   }
 
-  void _showGenerateRppFormDialog() {
+  void _showGenerateLessonPlanFormDialog() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -643,7 +643,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: GenerateRppFormDialog(
+        child: GenerateLessonPlanFormDialog(
           teacherId: widget.teacherId,
           onSaved: _forceRefresh,
         ),
@@ -651,7 +651,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
     );
   }
 
-  void _editRpp(Map<String, dynamic> rpp) {
+  void _editLessonPlan(Map<String, dynamic> lessonPlan) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -660,10 +660,10 @@ class RppScreenState extends ConsumerState<RppScreen> {
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: RppFormDialog(
+        child: LessonPlanFormDialog(
           teacherId: widget.teacherId,
-          onSaved: _loadRpp,
-          rppData: rpp,
+          onSaved: _loadLessonPlans,
+          lessonPlanData: lessonPlan,
         ),
       ),
     );
@@ -671,7 +671,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
   /// Deletes an RPP after confirmation dialog.
   /// Like `axios.delete('/api/rpp/{id}')` in Vue with a confirm modal.
-  Future<void> _deleteRpp(Map<String, dynamic> rpp) async {
+  Future<void> _deleteLessonPlan(Map<String, dynamic> lessonPlan) async {
     final languageProvider = ref.read(languageRiverpod);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -684,8 +684,8 @@ class RppScreenState extends ConsumerState<RppScreen> {
         ),
         content: Text(
           languageProvider.getTranslatedText({
-            'en': 'Are you sure you want to delete RPP "${rpp['judul']}"?',
-            'id': 'Apakah Anda yakin ingin menghapus RPP "${rpp['judul']}"?',
+            'en': 'Are you sure you want to delete RPP "${lessonPlan['judul']}"?',
+            'id': 'Apakah Anda yakin ingin menghapus RPP "${lessonPlan['judul']}"?',
           }),
         ),
         actions: [
@@ -721,9 +721,9 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
     if (confirmed == true) {
       try {
-        await ApiService.deleteLessonPlan(rpp['id']);
+        await ApiService.deleteLessonPlan(lessonPlan['id']);
         await LocalCacheService.clearStartingWith('rpp_');
-        _loadRpp(useCache: false);
+        _loadLessonPlans(useCache: false);
         if (mounted) {
                     SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
                   'en': 'RPP deleted successfully',
@@ -739,16 +739,16 @@ class RppScreenState extends ConsumerState<RppScreen> {
     }
   }
 
-  Future<void> _lihatDetailRpp(Map<String, dynamic> rpp) async {
-    final id = rpp['id']?.toString();
+  Future<void> _viewLessonPlanDetail(Map<String, dynamic> lessonPlan) async {
+    final id = lessonPlan['id']?.toString();
     if (id == null || id.isEmpty) {
             SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(Exception('RPP ID tidak tersedia')));
       return;
     }
 
     try {
-      final fullRpp = await ApiService.getLessonPlanById(id);
-      AppNavigator.push(context, RPPDetailPage(rppData: fullRpp));
+      final fullLessonPlan = await ApiService.getLessonPlanById(id);
+      AppNavigator.push(context, RPPDetailPage(lessonPlanData: fullLessonPlan));
     } catch (e) {
       AppLogger.error('lesson_plan', 'Fetch RPP detail error: $e');
             SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
@@ -859,16 +859,16 @@ class RppScreenState extends ConsumerState<RppScreen> {
     );
   }
 
-  Widget _buildRppCard(Map<String, dynamic> rpp, int index) {
+  Widget _buildLessonPlanCard(Map<String, dynamic> lessonPlan, int index) {
     final accentColor = ColorUtils.getColorForIndex(index);
-    final statusColor = _getStatusColor(rpp['status'] ?? '');
+    final statusColor = _getStatusColor(lessonPlan['status'] ?? '');
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _lihatDetailRpp(rpp),
+          onTap: () => _viewLessonPlanDetail(lessonPlan),
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: EdgeInsets.all(AppSpacing.lg),
@@ -904,7 +904,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            rpp['judul'] ?? 'No Title',
+                            lessonPlan['judul'] ?? 'No Title',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -915,7 +915,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                           ),
                           SizedBox(height: 3),
                           Text(
-                            rpp['mata_pelajaran_nama'] ?? 'No Subject',
+                            lessonPlan['mata_pelajaran_nama'] ?? 'No Subject',
                             style: TextStyle(
                               fontSize: 12,
                               color: ColorUtils.slate500,
@@ -937,7 +937,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                         ),
                       ),
                       child: Text(
-                        _getStatusLabel(rpp['status']),
+                        _getStatusLabel(lessonPlan['status']),
                         style: TextStyle(
                           color: statusColor,
                           fontSize: 10,
@@ -957,7 +957,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                   children: [
                     _buildInfoTag(
                       icon: Icons.class_,
-                      label: rpp['kelas_nama'] ?? 'No Class',
+                      label: lessonPlan['kelas_nama'] ?? 'No Class',
                     ),
                   ],
                 ),
@@ -969,19 +969,19 @@ class RppScreenState extends ConsumerState<RppScreen> {
                     _buildCircleActionButton(
                       icon: Icons.visibility_outlined,
                       color: _getPrimaryColor(),
-                      onPressed: () => _lihatDetailRpp(rpp),
+                      onPressed: () => _viewLessonPlanDetail(lessonPlan),
                     ),
                     SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.edit_outlined,
                       color: ColorUtils.warning600,
-                      onPressed: () => _editRpp(rpp),
+                      onPressed: () => _editLessonPlan(lessonPlan),
                     ),
                     SizedBox(width: AppSpacing.sm),
                     _buildCircleActionButton(
                       icon: Icons.delete_outlined,
                       color: ColorUtils.error600,
-                      onPressed: () => _deleteRpp(rpp),
+                      onPressed: () => _deleteLessonPlan(lessonPlan),
                     ),
                   ],
                 ),
@@ -1076,7 +1076,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
             ),
             SizedBox(height: AppSpacing.xl),
             ElevatedButton(
-              onPressed: _loadRpp,
+              onPressed: _loadLessonPlans,
               style: ElevatedButton.styleFrom(
                 backgroundColor: _getPrimaryColor(),
                 foregroundColor: Colors.white,
@@ -1102,7 +1102,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.read(languageRiverpod);
-    final filteredRpp = _rppList;
+    final filteredLessonPlans = _lessonPlanList;
 
     return Scaffold(
       backgroundColor: ColorUtils.lightGray,
@@ -1242,7 +1242,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                                   ),
                                 ),
                                 onSubmitted: (_) {
-                                  _loadRpp();
+                                  _loadLessonPlans();
                                 },
                               ),
                             ),
@@ -1253,7 +1253,7 @@ class RppScreenState extends ConsumerState<RppScreen> {
                                   Icons.search,
                                   color: _getPrimaryColor(),
                                 ),
-                                onPressed: _loadRpp,
+                                onPressed: _loadLessonPlans,
                               ),
                             ),
                           ],
@@ -1370,10 +1370,10 @@ class RppScreenState extends ConsumerState<RppScreen> {
                 ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
                 : _errorMessage != null
                 ? _buildErrorState()
-                : filteredRpp.isEmpty
+                : filteredLessonPlans.isEmpty
                 ? _buildEmptyState(languageProvider)
                 : RefreshIndicator(
-                    onRefresh: _loadRpp,
+                    onRefresh: _loadLessonPlans,
                     child: ListView.builder(
                       padding: EdgeInsets.only(
                         top: 16,
@@ -1381,10 +1381,10 @@ class RppScreenState extends ConsumerState<RppScreen> {
                         left: 5,
                         right: 5,
                       ),
-                      itemCount: filteredRpp.length,
+                      itemCount: filteredLessonPlans.length,
                       itemBuilder: (context, index) {
-                        final rpp = filteredRpp[index];
-                        return _buildRppCard(rpp, index);
+                        final lessonPlan = filteredLessonPlans[index];
+                        return _buildLessonPlanCard(lessonPlan, index);
                       },
                     ),
                   ),
@@ -1547,26 +1547,26 @@ class RppScreenState extends ConsumerState<RppScreen> {
 
 /// Dialog form for creating or editing an RPP (lesson plan).
 ///
-/// Like a Vue `<RppFormModal>` component. When [rppData] is null, it creates
+/// Like a Vue `<RppFormModal>` component. When [lessonPlanData] is null, it creates
 /// a new RPP; when provided, it edits the existing one.
-/// Props: [teacherId], [onSaved] callback, optional [rppData] for editing.
-class RppFormDialog extends ConsumerStatefulWidget {
+/// Props: [teacherId], [onSaved] callback, optional [lessonPlanData] for editing.
+class LessonPlanFormDialog extends ConsumerStatefulWidget {
   final String teacherId;
   final VoidCallback onSaved;
-  final Map<String, dynamic>? rppData;
+  final Map<String, dynamic>? lessonPlanData;
 
-  const RppFormDialog({
+  const LessonPlanFormDialog({
     super.key,
     required this.teacherId,
     required this.onSaved,
-    this.rppData,
+    this.lessonPlanData,
   });
 
   @override
-  ConsumerState<RppFormDialog> createState() => _RppFormDialogState();
+  ConsumerState<LessonPlanFormDialog> createState() => _LessonPlanFormDialogState();
 }
 
-class _RppFormDialogState extends ConsumerState<RppFormDialog> {
+class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _academicYearController = TextEditingController();
@@ -1587,22 +1587,22 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
     _loadMataPelajaranByGuru();
 
     // If in edit mode, fill fields with RPP data
-    if (widget.rppData != null) {
+    if (widget.lessonPlanData != null) {
       _titleController.text =
-          widget.rppData!['judul'] ?? widget.rppData!['title'] ?? '';
+          widget.lessonPlanData!['judul'] ?? widget.lessonPlanData!['title'] ?? '';
       _academicYearController.text =
-          widget.rppData!['academic_year'] ??
-          widget.rppData!['tahun_ajaran'] ??
+          widget.lessonPlanData!['academic_year'] ??
+          widget.lessonPlanData!['tahun_ajaran'] ??
           '';
       _selectedSubjectId =
-          (widget.rppData!['subject_id'] ??
-                  widget.rppData!['mata_pelajaran_id'])
+          (widget.lessonPlanData!['subject_id'] ??
+                  widget.lessonPlanData!['mata_pelajaran_id'])
               ?.toString();
       _selectedClassId =
-          (widget.rppData!['class_id'] ?? widget.rppData!['kelas_id'])
+          (widget.lessonPlanData!['class_id'] ?? widget.lessonPlanData!['kelas_id'])
               ?.toString();
-      _selectedSemester = widget.rppData!['semester'] ?? 'Ganjil';
-      _selectedFileName = widget.rppData!['file_path'];
+      _selectedSemester = widget.lessonPlanData!['semester'] ?? 'Ganjil';
+      _selectedFileName = widget.lessonPlanData!['file_path'];
 
       if (_selectedSubjectId != null) {
         _loadClassesBySubject(_selectedSubjectId!);
@@ -1725,7 +1725,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
   }
 
   Future<void> _viewCurrentFile() async {
-    final filePath = widget.rppData?['file_path'];
+    final filePath = widget.lessonPlanData?['file_path'];
     if (filePath != null) {
       // Use the helper function defined at the bottom of the file
       await _downloadAndOpenFile(context, filePath);
@@ -1826,7 +1826,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       AppLogger.debug('lesson_plan', '- Judul: ${_titleController.text}');
       AppLogger.debug('lesson_plan', '- File Path: $filePath');
 
-      final rppData = {
+      final lessonPlanData = {
         'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
         'title': _titleController.text,
@@ -1836,14 +1836,14 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       };
 
       // Submit RPP data (edit or add mode)
-      if (widget.rppData != null) {
+      if (widget.lessonPlanData != null) {
         // Edit mode
-        await ApiService.updateRPP(widget.rppData!['id'], rppData);
+        await ApiService.updateLessonPlan(widget.lessonPlanData!['id'], lessonPlanData);
         AppLogger.info('lesson_plan', 'RPP updated successfully');
       } else {
         // New add mode
-        rppData['teacher_id'] = widget.teacherId;
-        await ApiService.createLessonPlan(rppData);
+        lessonPlanData['teacher_id'] = widget.teacherId;
+        await ApiService.createLessonPlan(lessonPlanData);
         AppLogger.info('lesson_plan', 'RPP created successfully');
       }
 
@@ -1852,7 +1852,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
       widget.onSaved();
 
       final languageProvider = ref.read(languageRiverpod);
-            SnackBarUtils.showInfo(context, widget.rppData != null
+            SnackBarUtils.showInfo(context, widget.lessonPlanData != null
                 ? languageProvider.getTranslatedText({
                     'en': 'RPP updated successfully',
                     'id': 'RPP berhasil diupdate',
@@ -1946,7 +1946,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
     final primaryColor = _getPrimaryColor();
-    final isEditMode = widget.rppData != null;
+    final isEditMode = widget.lessonPlanData != null;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.92,
@@ -2265,7 +2265,7 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
                             ),
                           ),
                           if (isEditMode &&
-                              widget.rppData!['file_path'] != null)
+                              widget.lessonPlanData!['file_path'] != null)
                             GestureDetector(
                               onTap: _viewCurrentFile,
                               child: Container(
@@ -2418,21 +2418,21 @@ class _RppFormDialogState extends ConsumerState<RppFormDialog> {
   }
 }
 
-class GenerateRppFormDialog extends ConsumerStatefulWidget {
+class GenerateLessonPlanFormDialog extends ConsumerStatefulWidget {
   final String teacherId;
   final VoidCallback onSaved;
 
-  const GenerateRppFormDialog({
+  const GenerateLessonPlanFormDialog({
     super.key,
     required this.teacherId,
     required this.onSaved,
   });
 
   @override
-  ConsumerState<GenerateRppFormDialog> createState() => _GenerateRppFormDialogState();
+  ConsumerState<GenerateLessonPlanFormDialog> createState() => _GenerateLessonPlanFormDialogState();
 }
 
-class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
+class _GenerateLessonPlanFormDialogState extends ConsumerState<GenerateLessonPlanFormDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _academicYearController = TextEditingController();
@@ -2669,7 +2669,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
 
         if (!mounted) return;
 
-        AppNavigator.pushReplacement(context, RppAiResultScreen(
+        AppNavigator.pushReplacement(context, LessonPlanAiResultScreen(
               teacherId: widget.teacherId,
               onSaved: widget.onSaved,
               pollUrl: pollUrl,
@@ -2734,9 +2734,9 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
         throw Exception(message);
       }
 
-      final rppResponse = resultBody['data'] ?? resultBody;
+      final lessonPlanResponse = resultBody['data'] ?? resultBody;
 
-      await _processAndNavigate(rppResponse);
+      await _processAndNavigate(lessonPlanResponse);
     } catch (e) {
       AppLogger.error('lesson_plan', '🚨 _submitForm error: $e');
       if (mounted) {
@@ -2808,7 +2808,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
     };
   }
 
-  Future<void> _processAndNavigate(dynamic rppResponse) async {
+  Future<void> _processAndNavigate(dynamic lessonPlanResponse) async {
     if (!mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
@@ -2825,7 +2825,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       orElse: () => {'name': 'Mata Pelajaran'},
     );
     final subjectName =
-        rppResponse['mata_pelajaran_nama'] ??
+        lessonPlanResponse['mata_pelajaran_nama'] ??
         selectedSubject['name'] ??
         selectedSubject['nama'] ??
         'Mata Pelajaran';
@@ -2835,7 +2835,7 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       orElse: () => {'name': 'Kelas'},
     );
     final className =
-        rppResponse['kelas_nama'] ??
+        lessonPlanResponse['kelas_nama'] ??
         selectedClass['name'] ??
         selectedClass['nama'] ??
         'Kelas';
@@ -2866,17 +2866,17 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
               'Tanpa Nama')
         : '';
 
-    final mappedRppData = {
+    final mappedLessonPlanData = {
       'id': null,
-      'judul': rppResponse['title'] ?? _titleController.text,
+      'judul': lessonPlanResponse['title'] ?? _titleController.text,
       'mata_pelajaran_id': _selectedSubjectId,
       'mata_pelajaran_nama': subjectName,
       'satuan_pendidikan': schoolNameStr,
       'bab_nama': chapterName,
       'sub_bab_nama': subChapterName,
       'kelas_semester':
-          '$className / ${rppResponse['semester'] ?? _selectedSemester}',
-      'tema': rppResponse['title'],
+          '$className / ${lessonPlanResponse['semester'] ?? _selectedSemester}',
+      'tema': lessonPlanResponse['title'],
       'sub_tema': '',
       'pembelajaran_ke': '',
       'alokasi_waktu': _academicYearController.text,
@@ -2884,28 +2884,28 @@ class _GenerateRppFormDialogState extends ConsumerState<GenerateRppFormDialog> {
       'waktu_inti': '140',
       'waktu_penutup': '15',
       'kompetensi_inti': _stripHtml(
-        rppResponse['core_competence'] as String? ?? '',
+        lessonPlanResponse['core_competence'] as String? ?? '',
       ),
       'kompetensi_dasar': _stripHtml(
-        rppResponse['basic_competence'] as String? ?? '',
+        lessonPlanResponse['basic_competence'] as String? ?? '',
       ),
       'tujuan_pembelajaran': _stripHtml(
-        rppResponse['learning_objective'] as String? ?? '',
+        lessonPlanResponse['learning_objective'] as String? ?? '',
       ),
       'kegiatan_pendahuluan':
           '• Melakukan Pembukaan dengan Salam dan Membaca Doa\n• Mengaitkan Materi Sebelumnya dengan Materi yang akan dipelajari',
       'kegiatan_inti': _stripHtml(
-        rppResponse['learning_activities'] as String? ?? '',
+        lessonPlanResponse['learning_activities'] as String? ?? '',
       ),
       'kegiatan_penutup':
           '• Siswa membuat resume dengan bimbingan guru\n• Guru memeriksa pekerjaan siswa\n• Pemberian hadiah/pujian untuk pekerjaan yang benar',
-      'penilaian': _stripHtml(rppResponse['assessment'] as String? ?? ''),
+      'penilaian': _stripHtml(lessonPlanResponse['assessment'] as String? ?? ''),
       'is_ai_generated': true,
     };
 
     if (!mounted) return;
-    AppNavigator.pushReplacement(context, RppAiResultScreen(
-          rppData: mappedRppData,
+    AppNavigator.pushReplacement(context, LessonPlanAiResultScreen(
+          lessonPlanData: mappedLessonPlanData,
           teacherId: widget.teacherId,
           onSaved: () {
             widget.onSaved();

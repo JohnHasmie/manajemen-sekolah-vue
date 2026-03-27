@@ -121,7 +121,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
     }
   }
 
-  Future<void> _generateRPP() async {
+  Future<void> _generateLessonPlan() async {
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -196,8 +196,8 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
       });
 
       // Generate RPP using AI service
-      final RPPService rppService = RPPService();
-      final generatedRPP = await rppService.generateRPP(
+      final LessonPlanService lessonPlanService = LessonPlanService();
+      final generatedRPP = await lessonPlanService.generateLessonPlan(
         title: _titleController.text,
         subjectId: widget.selectedSubjectId,
         subjectName: widget.subjectName,
@@ -213,7 +213,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
 
       // Navigate ke halaman detail RPP
       if (mounted) {
-        AppNavigator.pushReplacement(context, RPPDetailPage(rppData: generatedRPP, isNew: true));
+        AppNavigator.pushReplacement(context, RPPDetailPage(lessonPlanData: generatedRPP, isNew: true));
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);
@@ -617,7 +617,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _isGenerating ? null : _generateRPP,
+        onPressed: _isGenerating ? null : _generateLessonPlan,
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorUtils.emerald500,
           foregroundColor: Colors.white,
