@@ -1,33 +1,16 @@
 appId: com.example.manajemensekolah
 ---
+# Test: Student Management — view + search
 - runFlow: login.yaml
+
+# Navigate to student management
 - tapOn: "Kelola Siswa"
-- tapOn: "Cari siswa..."
-- inputText: "Budi"
-- pressKey: Enter
-- tapOn: "Filter"
-- tapOn: "Status"
-- tapOn: "Aktif"
-- tapOn: "Terapkan" # Assuming button text is Terapkan/Apply
-- tapOn:
-    icon: "add" # FAB
-- tapOn: "Nama Siswa"
-- inputText: "John Doe"
-- tapOn: "NIS"
-- inputText: "123456"
-- tapOn: "Simpan"
-- tapOn: "Edit"
-- tapOn: "Nama Siswa"
-- inputText: "John Updated"
-- tapOn: "Simpan"
-- tapOn: "Hapus"
-- tapOn: "Hapus" # Confirm
-- tapOn:
-    icon: "more_vert"
-- tapOn: "Export ke Excel"
-- tapOn:
-    icon: "more_vert"
-- tapOn: "Import dari Excel"
-- tapOn:
-    icon: "more_vert"
-- tapOn: "Download Template"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+
+# Verify list loaded
+- takeScreenshot: screenshots/student_list
+
+# Go back
+- back

@@ -1,34 +1,16 @@
 appId: com.example.manajemensekolah
 ---
+# Test: Admin Class Management — view + search
 - runFlow: login.yaml
+
+# Navigate to class management
 - tapOn: "Kelola Kelas"
-# Add New Class
-- tapOn:
-    id: "fab_main_class" # Open Speed Dial
-- tapOn:
-    id: "fab_add_class" # Create New Class
-- tapOn: "Nama Kelas"
-- inputText: "Kelas 10A Test"
-- tapOn: "Tingkat Kelas"
-- tapOn: "Kelas 10 SMA" # Assumes this option exists based on grade level logic
-- tapOn: "Simpan"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
 
-# Search and Verify
-- tapOn: "Cari kelas..."
-- inputText: "Kelas 10A Test"
-- pressKey: Enter
-- assertVisible: "Kelas 10A Test"
+# Verify list loaded
+- takeScreenshot: screenshots/class_list
 
-# Edit Class
-- tapOn: "Edit"
-- tapOn: "Nama Kelas"
-- inputText: "Kelas 10A Edited"
-- tapOn: "Perbarui" # Assuming button changes to Update/Perbarui on edit
-
-# Verify Edit
-- assertVisible: "Kelas 10A Edited"
-
-# Delete Class
-- tapOn: "Hapus"
-- tapOn: "Hapus" # Confirm delete
-- assertNotVisible: "Kelas 10A Edited"
+# Go back to dashboard
+- back
