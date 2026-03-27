@@ -1,0 +1,148 @@
+appId: com.example.manajemensekolah
+---
+# ============================================================
+# FULL APP FLOW E2E TEST
+# Tests all critical paths in a single efficient run.
+# No re-login between tests — stays on dashboard and navigates.
+# ============================================================
+
+# ── Step 1: Login ──
+- runFlow: login.yaml
+
+# ── Step 2: Verify Dashboard Loaded ──
+- assertVisible:
+    text: ".*"  # Dashboard has content
+- takeScreenshot: screenshots/01_dashboard
+
+# ── Step 3: Navigate to each admin menu item ──
+
+# Student Management
+- runFlow:
+    when:
+      visible: "Kelola Siswa"
+    commands:
+      - tapOn: "Kelola Siswa"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+      - takeScreenshot: screenshots/02_student_management
+      - back
+
+# Teacher Management
+- runFlow:
+    when:
+      visible: "Kelola Guru"
+    commands:
+      - tapOn: "Kelola Guru"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+      - takeScreenshot: screenshots/03_teacher_management
+      - back
+
+# Class Management
+- runFlow:
+    when:
+      visible: "Kelola Kelas"
+    commands:
+      - tapOn: "Kelola Kelas"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+      - takeScreenshot: screenshots/04_class_management
+      - back
+
+# Subject Management
+- runFlow:
+    when:
+      visible: "Kelola Mapel"
+    commands:
+      - tapOn: "Kelola Mapel"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+      - takeScreenshot: screenshots/05_subject_management
+      - back
+
+# Schedule Management
+- runFlow:
+    when:
+      visible: "Jadwal Mengajar"
+    commands:
+      - tapOn: "Jadwal Mengajar"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+      - takeScreenshot: screenshots/06_schedule_management
+      - back
+
+# Finance
+- runFlow:
+    when:
+      visible: "Keuangan"
+    commands:
+      - tapOn: "Keuangan"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+      - takeScreenshot: screenshots/07_finance
+      - back
+
+# Announcements
+- runFlow:
+    when:
+      visible: "Pengumuman"
+    commands:
+      - tapOn: "Pengumuman"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+      - takeScreenshot: screenshots/08_announcements
+      - back
+
+# ── Step 4: Scroll down for more menu items ──
+- scroll:
+    direction: DOWN
+
+# Attendance Report
+- runFlow:
+    when:
+      visible: "Laporan Absensi"
+    commands:
+      - tapOn: "Laporan Absensi"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+      - takeScreenshot: screenshots/09_attendance_report
+      - back
+
+# Report Cards
+- runFlow:
+    when:
+      visible: "Raport"
+    commands:
+      - tapOn: "Raport"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+      - takeScreenshot: screenshots/10_report_cards
+      - back
+
+# ── Step 5: Settings ──
+- runFlow:
+    when:
+      visible: "Pengaturan"
+    commands:
+      - tapOn: "Pengaturan"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+      - takeScreenshot: screenshots/11_settings
+      - back
+
+# ── Step 6: Logout ──
+# Open profile/account section
+- scroll:
+    direction: UP
+
+- takeScreenshot: screenshots/12_before_logout

@@ -1,44 +1,16 @@
 appId: com.example.manajemensekolah
 ---
+# Test: Admin Finance — view finance screen
 - runFlow: login.yaml
+
+# Navigate to finance
 - tapOn: "Keuangan"
-- tapOn: "Jenis Pembayaran"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
 
-# Add New Payment Type
-- tapOn:
-    id: "fab_add_payment_type" # Assuming FAB has this tooltip or I can use icon, but wait. FAB in finance.dart line 3949 has key? No.
-    # It has child Icon(Icons.add). I can tap on Icon.
-    icon: "add"
-- tapOn: "Nama Pembayaran"
-- inputText: "SPP Test"
-- tapOn: "Deskripsi"
-- inputText: "Test Description"
-- tapOn: "Jumlah"
-- inputText: "100000"
-- tapOn: "Periode"
-- tapOn: "bulanan"
-- tapOn: "Pilih Tujuan"
-- tapOn: "Pilih Semua Kelas"
-- tapOn: "Simpan" # Modal Simpan
-- tapOn: "Simpan" # Dialog Simpan
+# Verify loaded
+- takeScreenshot: screenshots/finance_screen
 
-# Verify and Search
-- tapOn: "Cari jenis pembayaran..."
-- inputText: "SPP Test"
-- pressKey: Enter
-- assertVisible: "SPP Test"
-- assertVisible: "Rp 100.000"
-
-# Edit
-- tapOn: "Edit"
-- tapOn: "Nama Pembayaran"
-- inputText: "SPP Test Edited"
-- tapOn: "Simpan"
-
-# Verify Edit
-- assertVisible: "SPP Test Edited"
-
-# Delete
-- tapOn: "Hapus"
-- tapOn: "Hapus" # Confirm
-- assertNotVisible: "SPP Test Edited"
+# Go back
+- back

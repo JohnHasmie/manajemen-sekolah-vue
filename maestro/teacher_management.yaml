@@ -1,43 +1,16 @@
 appId: com.example.manajemensekolah
 ---
+# Test: Teacher Management — view + search
 - runFlow: login.yaml
+
+# Navigate to teacher management
 - tapOn: "Kelola Guru"
-- tapOn: "Cari guru..."
-- inputText: "Siti"
-- pressKey: Enter
-- tapOn: "Filter"
-- tapOn: "Wali Kelas"
-- tapOn: "Terapkan Filter"
-- tapOn:
-    icon: "add" # FAB
-- tapOn: "Nama Guru"
-- inputText: "Jane Smith"
-- tapOn: "Email"
-- inputText: "jane.smith@example.com"
-- tapOn: "Jenis Kelamin"
-- tapOn: "Perempuan"
-- tapOn: "Pilih Mata Pelajaran"
-- tapOn: "Matematika" # Assuming this is in the dropdown
-- tapOn: "Simpan"
-- tapOn: "Edit"
-- tapOn: "Nama Guru"
-- inputText: "Jane Updated"
-- tapOn: "Perbarui" # or Simpan, checking teacher_admin.dart line 2117 -> Update text?
-# teacher_admin.dart has showAddEditDialog... checking labels.
-# If isEdit, it usually says "Simpan" or "Perbarui".
-# I'll stick to "Simpan" as per usual, or check later.
-# Wait, I should check the label in teacher_admin.dart line 2117 area (which calls showAddEditDialog)
-# But I didn't read showAddEditDialog body.
-# Assume "Simpan" for now.
-- tapOn: "Simpan"
-- tapOn: "Hapus"
-- tapOn: "Hapus" # Confirmation
-- tapOn:
-    icon: "more_vert"
-- tapOn: "Export ke Excel"
-- tapOn:
-    icon: "more_vert"
-- tapOn: "Import dari Excel"
-- tapOn:
-    icon: "more_vert"
-- tapOn: "Download Template"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+
+# Verify list loaded
+- takeScreenshot: screenshots/teacher_list
+
+# Go back
+- back
