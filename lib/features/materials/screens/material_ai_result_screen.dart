@@ -28,14 +28,14 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// - [teacherId], [subjectId], [chapterId] -- context for AI generation
 /// - [subChapterId] -- optional sub-chapter filter
 /// - [title] -- display title for the material
-class MateriAiResultScreen extends StatefulWidget {
+class MaterialAiResultScreen extends StatefulWidget {
   final String teacherId;
   final String subjectId;
   final String chapterId;
   final String? subChapterId;
   final String title;
 
-  const MateriAiResultScreen({
+  const MaterialAiResultScreen({
     super.key,
     required this.teacherId,
     required this.subjectId,
@@ -45,10 +45,10 @@ class MateriAiResultScreen extends StatefulWidget {
   });
 
   @override
-  MateriAiResultScreenState createState() => MateriAiResultScreenState();
+  MaterialAiResultScreenState createState() => MaterialAiResultScreenState();
 }
 
-/// State for [MateriAiResultScreen].
+/// State for [MaterialAiResultScreen].
 ///
 /// Like a Vue component with `data() { return { isLoading, aiData, isPolling, ... } }`.
 /// Uses `SingleTickerProviderStateMixin` for the tab animation controller.
@@ -58,7 +58,7 @@ class MateriAiResultScreen extends StatefulWidget {
 /// - [_isPolling] / [_pollingStatus] -- tracks async AI job progress
 /// - [_isRegenerating] -- whether a regeneration request is in progress
 /// - [_tabController] -- manages the 3-tab layout (like Vue `<el-tabs>`)
-class MateriAiResultScreenState extends State<MateriAiResultScreen>
+class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;

@@ -1582,7 +1582,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   // ==================== SHARED HELPERS ====================
 
   void _navigateToAiResult() {
-    AppNavigator.push(context, MateriAiResultScreen(
+    AppNavigator.push(context, MaterialAiResultScreen(
           teacherId: widget.teacherId,
           subjectId: widget.subjectId,
           chapterId: widget.chapter['id'].toString(),

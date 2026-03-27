@@ -148,7 +148,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
                   const SizedBox(height: AppSpacing.lg),
 
                   // Catatan Wali Kelas
-                  _buildCatatanCard(),
+                  _buildNotesCard(),
                   const SizedBox(height: AppSpacing.lg),
 
                   // Keputusan
@@ -480,7 +480,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCatatanCard() {
+  Widget _buildNotesCard() {
     final notes = reportCardData['homeroom_notes']?.toString() ?? '';
     if (notes.isEmpty) return const SizedBox.shrink();
 

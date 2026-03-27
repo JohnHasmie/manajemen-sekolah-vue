@@ -3084,7 +3084,7 @@ class AddActivityDialog extends ConsumerStatefulWidget {
 class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _deskripsiController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final List<String> _selectedStudents = [];
 
   String? _selectedSubjectId;
@@ -3143,7 +3143,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     // If in edit mode, populate form with existing data
     if (widget.isEditMode && widget.activityData != null) {
       _titleController.text = widget.activityData['judul']?.toString() ?? '';
-      _deskripsiController.text =
+      _descriptionController.text =
           widget.activityData['deskripsi']?.toString() ?? '';
 
       // Parse deadline if exists
@@ -3220,7 +3220,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   @override
   void dispose() {
     _titleController.dispose();
-    _deskripsiController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -3571,7 +3571,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
         'title': _titleController.text,
-        'deskripsi': _deskripsiController.text,
+        'deskripsi': _descriptionController.text,
         'jenis': widget.activityType,
         'target': widget.initialTarget,
         'date': _selectedDate!.toIso8601String().split('T')[0],
@@ -4342,7 +4342,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
                     // Deskripsi
                     TextFormField(
-                      controller: _deskripsiController,
+                      controller: _descriptionController,
                       decoration: InputDecoration(
                         labelText: languageProvider.getTranslatedText({
                           'en': 'Description',

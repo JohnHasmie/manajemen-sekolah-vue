@@ -114,7 +114,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   // Edit Mode State
   bool _isEditMode = false;
   String? _editGradeType;
-  // Map to store controllers: key = "siswaId_field" (e.g. "123_nilai", "123_deskripsi")
+  // Map to store controllers: key = "studentId_field" (e.g. "123_score", "123_description")
   final Map<String, TextEditingController> _editControllers = {};
   final Map<String, FocusNode> _editFocusNodes = {};
 
@@ -314,10 +314,10 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           if (cached != null && mounted) {
             final cachedData = Map<String, dynamic>.from(cached);
             final studentData = List<dynamic>.from(cachedData['studentData'] ?? []);
-            final nilaiItems = List<dynamic>.from(cachedData['nilaiItems'] ?? []);
+            final gradeItems = List<dynamic>.from(cachedData['gradeItems'] ?? []);
             if (studentData.isNotEmpty) {
               setState(() {
-                _processAndApplyGradeData(studentData, nilaiItems);
+                _processAndApplyGradeData(studentData, gradeItems);
               });
               _filterStudents();
               // Trigger tour
@@ -376,7 +376,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       final cacheKey = _buildGradeCacheKey();
       LocalCacheService.save(cacheKey, {
         'studentData': studentData,
-        'nilaiItems': rawGradeItems,
+        'gradeItems': rawGradeItems,
       });
 
       // Trigger tour
@@ -600,14 +600,14 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           return false;
         }
 
-        final nilaiDate = gradeItem['tanggal']?.toString().split('T')[0];
-        final nilaiJenis = gradeItem['jenis']?.toString().toLowerCase();
+        final gradeDate = gradeItem['tanggal']?.toString().split('T')[0];
+        final gradeType = gradeItem['jenis']?.toString().toLowerCase();
 
         final nTitle = (gradeItem['title'] ?? '').toString().trim();
         final hTitle = (header['title'] ?? '').toString().trim();
 
-        return (nilaiJenis == type.toLowerCase() &&
-            nilaiDate == header['date'] &&
+        return (gradeType == type.toLowerCase() &&
+            gradeDate == header['date'] &&
             nTitle == hTitle);
       }, orElse: () => <String, dynamic>{});
 
@@ -835,21 +835,21 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
       // Initialize controllers for all students
       for (var student in _filteredStudentList) {
-        final nilaiData = _getGradeForStudentAndHeader(student, type, header);
+        final gradeData = _getGradeForStudentAndHeader(student, type, header);
 
-        final nilaiKey = "${student.id}_nilai";
-        _editControllers[nilaiKey] = TextEditingController(
-          text: _formatGradeValue(nilaiData?['nilai']),
+        final scoreKey = "${student.id}_score";
+        _editControllers[scoreKey] = TextEditingController(
+          text: _formatGradeValue(gradeData?['nilai']),
         );
-        _editFocusNodes[nilaiKey] = FocusNode();
-        _editFocusNodes[nilaiKey]!.addListener(() {
-          if (!_editFocusNodes[nilaiKey]!.hasFocus) {
+        _editFocusNodes[scoreKey] = FocusNode();
+        _editFocusNodes[scoreKey]!.addListener(() {
+          if (!_editFocusNodes[scoreKey]!.hasFocus) {
             _saveInlineGrade(
               student,
               type,
               header,
               'nilai',
-              _editControllers[nilaiKey]!.text,
+              _editControllers[scoreKey]!.text,
             );
           }
         });
@@ -857,7 +857,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         // Deskripsi Controller
         final deskripsiKey = "${student.id}_deskripsi";
         _editControllers[deskripsiKey] = TextEditingController(
-          text: nilaiData?['deskripsi']?.toString() ?? '',
+          text: gradeData?['deskripsi']?.toString() ?? '',
         );
         _editFocusNodes[deskripsiKey] = FocusNode();
         _editFocusNodes[deskripsiKey]!.addListener(() {
@@ -905,7 +905,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         'date': header['date'],
         'title': header['title'],
         'assessment_id': header['id'], // Include assessment ID if exists
-        'score': field == 'nilai'
+        'score': field == 'score'
             ? (value.isEmpty ? 0 : double.tryParse(value) ?? 0)
             : (currentData?['nilai'] ?? 0),
         'notes': field == 'deskripsi'
@@ -983,17 +983,17 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                   try {
                     // Iterate and save all
                     for (var student in _filteredStudentList) {
-                      final nilaiKey = "${student.id}_nilai";
+                      final scoreKey = "${student.id}_score";
                       final deskripsiKey = "${student.id}_deskripsi";
 
                       // Save Nilai
-                      if (_editControllers.containsKey(nilaiKey)) {
+                      if (_editControllers.containsKey(scoreKey)) {
                         await _saveInlineGrade(
                           student,
                           _editGradeType!,
                           _editHeader!,
                           'nilai',
-                          _editControllers[nilaiKey]!.text,
+                          _editControllers[scoreKey]!.text,
                           reload: false,
                         );
                       }
@@ -1106,7 +1106,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     ),
                     // Rows
                     ..._filteredStudentList.map((student) {
-                      final nilaiKey = "${student.id}_nilai";
+                      final scoreKey = "${student.id}_score";
                       final deskripsiKey = "${student.id}_deskripsi";
 
                       return Container(
@@ -1158,8 +1158,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                 ),
                               ),
                               child: TextFormField(
-                                controller: _editControllers[nilaiKey],
-                                focusNode: _editFocusNodes[nilaiKey],
+                                controller: _editControllers[scoreKey],
+                                focusNode: _editFocusNodes[scoreKey],
                                 enabled: !_isReadOnly,
                                 keyboardType: TextInputType.number,
                                 textAlign: TextAlign.center,
@@ -1255,17 +1255,17 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     // Calculate stats
     int totalSiswa = _studentList.length;
     int gradedCount = 0;
-    double totalNilai = 0;
+    double totalScore = 0;
 
     for (var student in _studentList) {
       final existingGrade = _getGradeForStudentAndHeader(student, type, header);
       if (existingGrade != null && existingGrade.isNotEmpty) {
         gradedCount++;
-        totalNilai += double.tryParse(existingGrade['nilai'].toString()) ?? 0.0;
+        totalScore += double.tryParse(existingGrade['nilai'].toString()) ?? 0.0;
       }
     }
 
-    double average = gradedCount > 0 ? totalNilai / gradedCount : 0;
+    double average = gradedCount > 0 ? totalScore / gradedCount : 0;
 
     showDialog(
       context: context,
@@ -1902,15 +1902,15 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     List<Widget> widgets = [];
 
                     for (var header in headers) {
-                      final nilai = _getGradeForStudentAndHeader(
+                      final gradeRecord = _getGradeForStudentAndHeader(
                         student,
                         type,
                         header,
                       );
-                      final nilaiText = nilai?.isNotEmpty == true
-                          ? _formatGradeValue(nilai!['nilai'])
+                      final scoreText = gradeRecord?.isNotEmpty == true
+                          ? _formatGradeValue(gradeRecord!['nilai'])
                           : '-';
-                      final hasValue = nilai?.isNotEmpty == true;
+                      final hasValue = gradeRecord?.isNotEmpty == true;
 
                       widgets.add(
                         Container(
@@ -1949,7 +1949,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                               ),
                               child: Center(
                                 child: Text(
-                                  nilaiText,
+                                  scoreText,
                                   style: TextStyle(
                                     fontWeight: hasValue
                                         ? FontWeight.bold
