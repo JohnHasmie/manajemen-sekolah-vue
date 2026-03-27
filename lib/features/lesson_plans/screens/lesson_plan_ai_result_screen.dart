@@ -82,7 +82,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
   late TextEditingController _judulController;
   late TextEditingController _satuanPendidikanController;
   late TextEditingController _mataPelajaranController;
-  late TextEditingController _babController;
+  late TextEditingController _chapterController;
   late TextEditingController _subChapterController;
   late TextEditingController _pembelajaranKeController;
   late TextEditingController _kelasSemesterController;
@@ -320,7 +320,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     _mataPelajaranController = TextEditingController(
       text: data['mata_pelajaran_nama'] ?? '',
     );
-    _babController = TextEditingController(text: data['bab_nama'] ?? '');
+    _chapterController = TextEditingController(text: data['bab_nama'] ?? '');
     _subChapterController = TextEditingController(text: data['sub_bab_nama'] ?? '');
     _pembelajaranKeController = TextEditingController(
       text: data['pembelajaran_ke'] ?? '',
@@ -376,7 +376,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
     _judulController.dispose();
     _satuanPendidikanController.dispose();
     _mataPelajaranController.dispose();
-    _babController.dispose();
+    _chapterController.dispose();
     _subChapterController.dispose();
     _pembelajaranKeController.dispose();
     _kelasSemesterController.dispose();
@@ -419,7 +419,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
                   _mataPelajaranController.text,
                 ),
                 SizedBox(height: AppSpacing.md),
-                _buildDialogField('Bab', _babController.text),
+                _buildDialogField('Bab', _chapterController.text),
                 SizedBox(height: AppSpacing.lg),
                 Text(
                   'Instruksi / Prompt Tambahan (Opsional)',
@@ -601,7 +601,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
       final metaData = [
         'Satuan Pendidikan : ${_satuanPendidikanController.text}',
         'Mata Pelajaran    : ${_mataPelajaranController.text}',
-        'Bab               : ${_babController.text}',
+        'Bab               : ${_chapterController.text}',
         'Sub Bab           : ${_subChapterController.text}',
         'Kelas/Semester    : ${_kelasSemesterController.text}',
         'Pembelajaran Ke   : ${_pembelajaranKeController.text}',
@@ -742,7 +742,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         'penilaian': _assessmentController.document.toPlainText(),
         'satuan_pendidikan': _satuanPendidikanController.text,
         'kelas_semester': _kelasSemesterController.text,
-        'tema': _babController.text, // Chapter as theme
+        'tema': _chapterController.text, // Chapter as theme
         'sub_tema': _subChapterController.text,
         'pembelajaran_ke': _pembelajaranKeController.text,
         'alokasi_waktu': _alokasiWaktuController.text,
@@ -1100,7 +1100,7 @@ class _RppAiResultScreenState extends State<RppAiResultScreen> {
         children: [
           _buildMetaRow('Satuan Pendidikan', _satuanPendidikanController),
           _buildMetaRow('Mata Pelajaran', _mataPelajaranController),
-          _buildMetaRow('Bab', _babController),
+          _buildMetaRow('Bab', _chapterController),
           _buildMetaRow('Sub Bab', _subChapterController),
           _buildMetaRow('Kelas/Semester', _kelasSemesterController),
           _buildMetaRow('Pembelajaran Ke', _pembelajaranKeController),

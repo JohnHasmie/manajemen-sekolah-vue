@@ -2701,7 +2701,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, RekapNilaiPage(teacher: teacherData));
+          AppNavigator.push(context, GradeRecapPage(teacher: teacherData));
         },
       ),
       MenuItem(

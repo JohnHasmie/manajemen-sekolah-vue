@@ -366,7 +366,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
                     ),
                   ),
                   // Display all sub-chapters in this chapter
-                  ..._getAllSubBabForBab(chapter['id']).map(
+                  ..._getAllSubChaptersForChapter(chapter['id']).map(
                     (subChapter) => Padding(
                       padding: EdgeInsets.only(left: 20, bottom: 6),
                       child: Row(
@@ -403,7 +403,7 @@ class RPPGeneratePageState extends State<RPPGeneratePage> {
     );
   }
 
-  List<Map<String, dynamic>> _getAllSubBabForBab(String babId) {
+  List<Map<String, dynamic>> _getAllSubChaptersForChapter(String chapterId) {
     // For real implementation, you need to fetch data from the API
     // Currently returns an empty list - needs to be implemented according to your data structure
     return [];

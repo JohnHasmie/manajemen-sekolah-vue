@@ -573,7 +573,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
   /// Like `axios.get('/api/subjects/{id}/chapters')` in Vue.
   /// Also loads progress data to mark generated/used chapters.
   Future<void> _loadChapterMaterials(String subjectId, {bool useCache = true}) async {
-    final babCacheKey = CacheKeyBuilder.custom('materi_bab', widget.teacher['id'].toString(), subjectId);
+    final chapterCacheKey = CacheKeyBuilder.custom('materi_bab', widget.teacher['id'].toString(), subjectId);
 
     // Show skeleton if list is empty
     if (_chapterMaterialList.isEmpty && mounted) {
@@ -583,7 +583,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     // Step 1: Try cache → return early if hit
     if (useCache && _chapterMaterialList.isEmpty) {
       try {
-        final cached = await LocalCacheService.load(babCacheKey, ttl: const Duration(hours: 3));
+        final cached = await LocalCacheService.load(chapterCacheKey, ttl: const Duration(hours: 3));
         if (cached != null && mounted) {
           final cachedData = Map<String, dynamic>.from(cached);
           final cachedChapters = List<dynamic>.from(cachedData['chapterMaterials'] ?? cachedData['babMateri'] ?? []);
@@ -677,7 +677,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
       });
 
       // Save to cache (non-blocking)
-      LocalCacheService.save(babCacheKey, {
+      LocalCacheService.save(chapterCacheKey, {
         'chapterMaterials': chapterMaterials,
         'subChapterMaterials': allSubChapters,
       });

@@ -3194,7 +3194,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
           // After bab list loaded, load sub bab if initial bab is provided
           if (_selectedChapterId != null) {
             AppLogger.debug('class_activity', 'Loading sub bab for bab: $_selectedChapterId');
-            _loadSubBabMateri(_selectedChapterId!).then((_) {
+            _loadSubChapterMaterials(_selectedChapterId!).then((_) {
               // After sub bab loaded, update title
               _updateTitleFromMateri();
             });
@@ -3330,12 +3330,12 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     }
   }
 
-  Future<void> _loadSubBabMateri(String babId) async {
+  Future<void> _loadSubChapterMaterials(String chapterId) async {
     try {
       AppLogger.debug('class_activity', '===== LOADING SUB BAB MATERI =====');
-      AppLogger.debug('class_activity', 'Bab ID: $babId');
+      AppLogger.debug('class_activity', 'Bab ID: $chapterId');
 
-      final subChapterList = await getIt<ApiSubjectService>().getSubChapterMaterials(chapterId: babId);
+      final subChapterList = await getIt<ApiSubjectService>().getSubChapterMaterials(chapterId: chapterId);
 
       if (kDebugMode) {
         AppLogger.debug('class_activity', 'API Response - Sub Bab count: ${subChapterList.length}');
@@ -4211,12 +4211,12 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                               );
                             }
                           }
-                          final List<DropdownMenuItem<String>> babItems =
+                          final List<DropdownMenuItem<String>> chapterItems =
                               uniqueChapterItems.values.toList();
 
                           return DropdownButtonFormField<String>(
                             key: ValueKey(
-                              'bab_${_selectedChapterId}_${babItems.length}',
+                              'bab_${_selectedChapterId}_${chapterItems.length}',
                             ),
                             decoration: InputDecoration(
                               labelText: languageProvider.getTranslatedText({
@@ -4227,14 +4227,14 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                               border: OutlineInputBorder(),
                             ),
                             initialValue:
-                                (babItems.any(
+                                (chapterItems.any(
                                   (item) => item.value == _selectedChapterId,
                                 ))
                                 ? _selectedChapterId
                                 : null,
                             isExpanded: true,
-                            items: babItems.isEmpty ? null : babItems,
-                            onChanged: babItems.isEmpty
+                            items: chapterItems.isEmpty ? null : chapterItems,
+                            onChanged: chapterItems.isEmpty
                                 ? null
                                 : (value) {
                                     setState(() {
@@ -4242,7 +4242,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                                       _selectedSubChapterId = null;
                                     });
                                     if (value != null) {
-                                      _loadSubBabMateri(value);
+                                      _loadSubChapterMaterials(value);
                                       _updateTitleFromMateri();
                                     }
                                   },
@@ -4250,12 +4250,12 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                               languageProvider.getTranslatedText({
                                 'en': _isLoadingChapters
                                     ? 'Loading chapters...'
-                                    : (babItems.isEmpty
+                                    : (chapterItems.isEmpty
                                           ? 'No chapters found'
                                           : 'Select Chapter'),
                                 'id': _isLoadingChapters
                                     ? 'Memuat bab...'
-                                    : (babItems.isEmpty
+                                    : (chapterItems.isEmpty
                                           ? 'Tidak ada bab'
                                           : 'Pilih Bab'),
                               }),
