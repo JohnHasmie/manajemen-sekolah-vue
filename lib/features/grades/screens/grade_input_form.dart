@@ -25,8 +25,8 @@ class GradeInputForm extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final Map<String, dynamic> subject;
   final Student student;
-  final String jenisNilai;
-  final Map<String, dynamic>? existingNilai;
+  final String gradeType;
+  final Map<String, dynamic>? existingGrade;
   final dynamic assessmentId; // Added assessmentId
   final DateTime? initialDate;
   final String? initialTitle;
@@ -36,8 +36,8 @@ class GradeInputForm extends ConsumerStatefulWidget {
     required this.teacher,
     required this.subject,
     required this.student,
-    required this.jenisNilai,
-    this.existingNilai,
+    required this.gradeType,
+    this.existingGrade,
     this.assessmentId, // Added assessmentId
     this.initialDate,
     this.initialTitle,
@@ -49,7 +49,7 @@ class GradeInputForm extends ConsumerStatefulWidget {
 
 class GradeInputFormState extends ConsumerState<GradeInputForm> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nilaiController = TextEditingController();
+  final TextEditingController _scoreController = TextEditingController();
   final TextEditingController _deskripsiController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
@@ -63,14 +63,14 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
   void initState() {
     super.initState();
     // Pre-fill data if editing
-    if (widget.existingNilai != null) {
-      _nilaiController.text = widget.existingNilai!['nilai'].toString();
+    if (widget.existingGrade != null) {
+      _scoreController.text = widget.existingGrade!['nilai'].toString();
       _deskripsiController.text =
-          widget.existingNilai!['deskripsi']?.toString() ?? '';
-      _titleController.text = widget.existingNilai!['title']?.toString() ?? '';
+          widget.existingGrade!['deskripsi']?.toString() ?? '';
+      _titleController.text = widget.existingGrade!['title']?.toString() ?? '';
 
-      if (widget.existingNilai!['tanggal'] != null) {
-        _selectedDate = DateTime.parse(widget.existingNilai!['tanggal']);
+      if (widget.existingGrade!['tanggal'] != null) {
+        _selectedDate = DateTime.parse(widget.existingGrade!['tanggal']);
       }
     } else {
       if (widget.initialDate != null) {
@@ -84,7 +84,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
 
   @override
   void dispose() {
-    _nilaiController.dispose();
+    _scoreController.dispose();
     _deskripsiController.dispose();
     _titleController.dispose();
     super.dispose();
@@ -104,7 +104,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
     }
   }
 
-  Future<void> _submitNilai() async {
+  Future<void> _submitGrade() async {
     if (_isReadOnly) {
       if (!mounted) return;
             SnackBarUtils.showError(context, ref.read(languageRiverpod).getTranslatedText({
@@ -125,12 +125,12 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
               widget.student.studentClassId, // Added for completeness
           'teacher_id': widget.teacher['id'],
           'subject_id': widget.subject['id'],
-          'type': widget.jenisNilai,
+          'type': widget.gradeType,
           'assessment_id':
               widget.assessmentId ??
               widget
-                  .existingNilai?['assessment_id'], // Priority on assessmentId
-          'score': int.parse(_nilaiController.text),
+                  .existingGrade?['assessment_id'], // Priority on assessmentId
+          'score': int.parse(_scoreController.text),
           'notes': _deskripsiController.text,
           'title': _titleController.text.isNotEmpty
               ? _titleController.text
@@ -139,10 +139,10 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
               '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
         };
 
-        if (widget.existingNilai != null) {
+        if (widget.existingGrade != null) {
           // Update existing grade
           await ApiService().put(
-            '/grades/${widget.existingNilai!['id']}',
+            '/grades/${widget.existingGrade!['id']}',
             data,
           );
         } else {
@@ -152,10 +152,10 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
 
         if (!mounted) return;
                 SnackBarUtils.showSuccess(context, ref.read(languageRiverpod).getTranslatedText({
-                'en': widget.existingNilai != null
+                'en': widget.existingGrade != null
                     ? 'Grade successfully updated'
                     : 'Grade successfully saved',
-                'id': widget.existingNilai != null
+                'id': widget.existingGrade != null
                     ? 'Nilai berhasil diupdate'
                     : 'Nilai berhasil disimpan',
               }));
@@ -170,8 +170,8 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
     }
   }
 
-  String _getGradeTypeLabel(String jenis, LanguageProvider languageProvider) {
-    switch (jenis) {
+  String _getGradeTypeLabel(String type, LanguageProvider languageProvider) {
+    switch (type) {
       case 'uh':
         return languageProvider.getTranslatedText({
           'en': 'Daily/Quiz',
@@ -200,7 +200,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
           'id': 'PAS',
         });
       default:
-        return jenis.toUpperCase();
+        return type.toUpperCase();
     }
   }
 
@@ -390,7 +390,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                                   'id': 'Jenis',
                                 }),
                                 _getGradeTypeLabel(
-                                  widget.jenisNilai,
+                                  widget.gradeType,
                                   languageProvider,
                                 ),
                               ),
@@ -454,7 +454,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                             border: Border.all(color: ColorUtils.slate200),
                           ),
                           child: TextFormField(
-                            controller: _nilaiController,
+                            controller: _scoreController,
                             style: TextStyle(color: ColorUtils.slate900),
                             decoration: InputDecoration(
                               labelText: languageProvider.getTranslatedText({
@@ -597,7 +597,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _isSaving ? null : _submitNilai,
+                            onPressed: _isSaving ? null : _submitGrade,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _getPrimaryColor(),
                               disabledBackgroundColor: _getPrimaryColor().withValues(alpha: 0.6),
@@ -617,7 +617,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                                     ),
                                   )
                                 : Text(
-                              widget.existingNilai != null
+                              widget.existingGrade != null
                                   ? languageProvider.getTranslatedText({
                                       'en': 'Update Grade',
                                       'id': 'Update Nilai',

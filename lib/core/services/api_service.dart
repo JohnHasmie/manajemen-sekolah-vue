@@ -545,14 +545,14 @@ class ApiService {
     String? studentId,
     String? teacherId,
     String? subjectId,
-    String? jenis,
+    String? gradeType,
     String? academicYearId,
   }) async {
     final queryParams = <String, dynamic>{};
     if (studentId != null) queryParams['student_id'] = studentId;
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
     if (subjectId != null) queryParams['subject_id'] = subjectId;
-    if (jenis != null) queryParams['grade_type'] = jenis;
+    if (gradeType != null) queryParams['grade_type'] = gradeType;
     if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
 
     final response = await dioClient.get(

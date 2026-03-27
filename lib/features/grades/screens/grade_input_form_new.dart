@@ -50,7 +50,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
 
   // State variables
   String? _selectedGradeType;
-  final List<String> _jenisNilaiList = [
+  final List<String> _gradeTypeList = [
     'uh',
     'tugas',
     'uts',
@@ -108,7 +108,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     }
   }
 
-  Future<void> _submitNilai() async {
+  Future<void> _submitGrade() async {
     final languageProvider = ref.read(languageRiverpod);
 
     if (_formKey.currentState!.validate()) {
@@ -155,7 +155,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
           // Fix: Send Student Class ID if available, fallback to student ID (for compatibility)
           final studentIdToSend = student.studentClassId ?? student.id;
 
-          // ... (inside _submitNilai)
+          // ... (inside _submitGrade)
           final data = {
             'student_id': student.id, // For legacy/history
             'student_class_id':
@@ -201,8 +201,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     }
   }
 
-  String _getGradeTypeLabel(String jenis, LanguageProvider languageProvider) {
-    switch (jenis) {
+  String _getGradeTypeLabel(String type, LanguageProvider languageProvider) {
+    switch (type) {
       case 'uh':
         return languageProvider.getTranslatedText({
           'en': 'Daily/Quiz',
@@ -231,7 +231,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
           'id': 'PAS',
         });
       default:
-        return jenis.toUpperCase();
+        return type.toUpperCase();
     }
   }
 
@@ -613,10 +613,10 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                   contentPadding: EdgeInsets.symmetric(vertical: 12),
                 ),
                 style: TextStyle(color: ColorUtils.slate900),
-                items: _jenisNilaiList.map((String jenis) {
+                items: _gradeTypeList.map((String type) {
                   return DropdownMenuItem<String>(
-                    value: jenis,
-                    child: Text(_getGradeTypeLabel(jenis, languageProvider)),
+                    value: type,
+                    child: Text(_getGradeTypeLabel(type, languageProvider)),
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
@@ -948,7 +948,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                             child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: _isSaving ? null : _submitNilai,
+                                onPressed: _isSaving ? null : _submitGrade,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: _getPrimaryColor(),
                                   disabledBackgroundColor: _getPrimaryColor().withValues(alpha: 0.6),
