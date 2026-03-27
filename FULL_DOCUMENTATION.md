@@ -4,9 +4,11 @@
 **Version:** 1.0.0+17
 **Framework:** Flutter (Dart SDK ^3.9.0)
 **Platforms:** iOS, Android, macOS, Web
-**Architecture:** Feature-based with Provider/Riverpod State Management
+**Architecture:** Feature-based Clean Architecture with Riverpod + get_it DI
+**HTTP Client:** Dio with interceptors (auth, error handling, logging)
+**Routing:** go_router with auth guard + AppNavigator wrapper
 **Design System:** Kamil Edu Professional Design System v2.16
-**Last Updated:** 2026-03-26
+**Last Updated:** 2026-03-27
 
 ---
 
@@ -41,13 +43,13 @@
 
 Kamil Edu is a comprehensive **SaaS School Management System** built with Flutter for cross-platform deployment. It serves as a complete digital solution for Indonesian K-12 schools, enabling administrators, teachers, and parents to manage academic operations seamlessly.
 
-The system integrates **AI-powered features** including automatic lesson plan generation (using OpenAI GPT-3.5-turbo) and personalized teaching recommendations (using KamillLabs Edu AI microservice), making it a next-generation educational platform.
+The system integrates **AI-powered features** including automatic lesson plan generation and personalized teaching recommendations via the KamillLabs Edu AI microservice (`edu-ai-api.kamillabs.com`), making it a next-generation educational platform.
 
 ### 1.2 Key Capabilities
 
 - **Multi-School SaaS** — A single user can belong to multiple schools; school switching is built into the auth flow
 - **Multi-Role System** — Users can hold different roles (Admin, Teacher/Guru, Parent/Wali, Staff) across schools
-- **AI Integration** — Automatic RPP (lesson plan) generation and personalized teaching recommendations
+- **AI Integration** — Automatic lesson plan generation and personalized teaching recommendations via KamillLabs Edu AI
 - **Real-Time Notifications** — Firebase Cloud Messaging for push notifications
 - **Comprehensive Data Export** — PDF and Excel export for attendance, grades, report cards, and more
 - **Bilingual Support** — English and Indonesian (Bahasa Indonesia)
@@ -62,7 +64,7 @@ graph TB
     end
 
     subgraph "State Management"
-        PROV[Provider / Riverpod<br/>ChangeNotifiers]
+        PROV[Riverpod<br/>ConsumerStatefulWidget + ref]
         DI[GetIt Service Locator<br/>Dependency Injection]
     end
 
@@ -71,12 +73,12 @@ graph TB
         TOKEN[TokenService<br/>Auth Management]
         CACHE[LocalCacheService<br/>In-Memory + Persistent]
         SECURE[SecureStorageService<br/>Encrypted Storage]
-        PREF[PreferencesService<br/>SharedPreferences]
+        PREF[PreferencesService + SecureStorage<br/>Encrypted tokens]
     end
 
     subgraph "External Services"
         BACKEND[Laravel Backend API<br/>REST API Server]
-        OPENAI[OpenAI GPT-3.5-turbo<br/>Lesson Plan AI]
+        EDUAI[KamillLabs Edu AI<br/>edu-ai-api.kamillabs.com]
         KAMILAI[KamillLabs Edu AI<br/>Recommendation Engine]
         FCM[Firebase Cloud Messaging<br/>Push Notifications]
         ANALYTICS[Firebase Analytics<br/>Usage Tracking]
@@ -127,16 +129,17 @@ kamiledu-mobile-flutter/
 │   │   │   ├── dio_client.dart            # Dio HTTP client setup
 │   │   │   └── api_exceptions.dart        # Custom exceptions
 │   │   ├── providers/
-│   │   │   ├── academic_year_provider.dart
-│   │   │   ├── teacher_provider.dart
-│   │   │   └── riverpod_providers.dart
+│   │   │   ├── academic_year_provider.dart  # ChangeNotifier wrapped by Riverpod
+│   │   │   ├── teacher_provider.dart        # ChangeNotifier wrapped by Riverpod
+│   │   │   └── riverpod_providers.dart      # Riverpod ChangeNotifierProvider wrappers
 │   │   ├── router/
 │   │   │   ├── app_router.dart            # GoRouter configuration
 │   │   │   └── app_navigator.dart         # Navigation helpers
 │   │   ├── services/
 │   │   │   ├── api_service.dart           # Central HTTP gateway (500+ lines)
 │   │   │   ├── token_service.dart         # JWT/Sanctum token management
-│   │   │   ├── preferences_service.dart   # SharedPreferences wrapper
+│   │   │   ├── preferences_service.dart   # SharedPreferences wrapper (sync access)
+│   │   │   ├── secure_storage_service.dart # Encrypted token/user storage
 │   │   │   ├── secure_storage_service.dart
 │   │   │   ├── cache_service.dart         # Local cache with TTL
 │   │   │   ├── fcm_service.dart           # Firebase Cloud Messaging
@@ -176,7 +179,7 @@ kamiledu-mobile-flutter/
 │       ├── schedule/                      # Schedule/timetable
 │       ├── attendance/                    # Attendance tracking
 │       ├── grades/                        # Grade management
-│       ├── lesson_plans/                  # RPP + AI generation
+│       ├── lesson_plans/                  # Lesson plan + AI generation
 │       ├── materials/                     # Learning materials
 │       ├── recommendations/              # AI recommendations
 │       ├── announcements/                # School announcements
@@ -203,12 +206,12 @@ The application follows a **Feature-Based Architecture** where each feature modu
 ```mermaid
 graph LR
     subgraph "Presentation Layer"
-        SCREENS[Screens<br/>StatelessWidget / StatefulWidget / ConsumerWidget]
+        SCREENS[Screens<br/>ConsumerStatefulWidget + ref]
         WIDGETS[Widgets<br/>Reusable UI Components]
     end
 
     subgraph "Business Logic Layer"
-        PROVIDERS[Providers<br/>ChangeNotifier / Riverpod]
+        PROVIDERS[Riverpod Providers<br/>ref.read / ref.watch]
         SERVICES[Feature Services<br/>API + Business Logic]
     end
 
@@ -233,12 +236,12 @@ graph LR
 | **Repository Pattern** | Feature services (`ApiStudentService`, `ApiGradeService`, etc.) | Abstracts data access from UI layer |
 | **Service Locator** | `GetIt` in `service_locator.dart` | Singleton service registration and resolution |
 | **Dependency Injection** | Constructor injection + GetIt | Loose coupling between services |
-| **Observer Pattern** | `ChangeNotifier` + Provider/Riverpod | Reactive state management |
+| **Observer Pattern** | Riverpod `ref.watch` + `ChangeNotifier` | Reactive state management |
 | **Interceptor Pattern** | Dio `Interceptor` classes | Middleware for auth, logging, error handling |
 | **Factory Pattern** | `fromJson()` methods on models | Object creation from API responses |
 | **Facade Pattern** | `PreferencesService`, `LocalCacheService` | Simplified interface to complex subsystems |
 | **Strategy Pattern** | Export services (PDF vs Excel) | Interchangeable export algorithms |
-| **Singleton Pattern** | Global `navigatorKey`, `languageProvider` | Single instance across app lifecycle |
+| **Singleton Pattern** | get_it service locator, `languageProvider` global | Single instance across app lifecycle |
 | **Builder Pattern** | `CacheKeyBuilder` | Fluent API for constructing cache keys |
 
 ### 2.3 Feature Module Structure
@@ -1280,7 +1283,7 @@ flowchart TD
 | `/wali` | `Dashboard(role: 'wali')` | Wali | Parent dashboard |
 | `/staff` | `Dashboard(role: 'staff')` | Staff | Staff dashboard |
 
-**Note:** Feature screens are navigated via `Navigator.push()` from the dashboard, not via GoRouter paths. GoRouter handles only the top-level role routing and auth redirects.
+**Note:** All navigation goes through `AppNavigator` wrapper (`lib/core/router/app_navigator.dart`). GoRouter handles top-level role routing and auth redirects via `MaterialApp.router`. Feature screens are navigated via `AppNavigator.push(context, Screen())` from the dashboard.
 
 ---
 
