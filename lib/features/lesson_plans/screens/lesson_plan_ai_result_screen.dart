@@ -99,7 +99,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       // Polling mode - init empty controllers and start polling
       _initControllers({});
       _isPolling = true;
-      _pollingStatus = 'RPP sedang disusun oleh AI...';
+      _pollingStatus = 'AI is generating lesson plan...';
       _startPolling();
     } else {
       _initControllers(widget.lessonPlanData ?? {});
@@ -223,22 +223,22 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
     final metadata = widget.pollingMetadata ?? {};
 
     final mappedData = {
-      'judul': lessonPlanResponse['title'] ?? metadata['title'] ?? 'RPP AI',
-      'mata_pelajaran_id': metadata['mata_pelajaran_id'],
-      'mata_pelajaran_nama': metadata['mata_pelajaran_nama'] ?? '',
-      'satuan_pendidikan': metadata['satuan_pendidikan'] ?? 'SD/MI',
-      'bab_nama': metadata['bab_nama'] ?? '',
-      'sub_bab_nama': metadata['sub_bab_nama'] ?? '',
-      'kelas_semester': metadata['kelas_semester'] ?? '',
-      'tema': lessonPlanResponse['title'],
-      'sub_tema': '',
-      'pembelajaran_ke': '',
-      'alokasi_waktu': metadata['alokasi_waktu'] ?? '',
-      'kompetensi_inti': _stripHtml(lessonPlanResponse['core_competence'] as String? ?? ''),
-      'kompetensi_dasar': _stripHtml(lessonPlanResponse['basic_competence'] as String? ?? ''),
-      'tujuan_pembelajaran': _stripHtml(lessonPlanResponse['learning_objective'] as String? ?? ''),
-      'kegiatan_inti': _stripHtml(lessonPlanResponse['learning_activities'] as String? ?? ''),
-      'penilaian': _stripHtml(lessonPlanResponse['assessment'] as String? ?? ''),
+      'title': lessonPlanResponse['title'] ?? metadata['title'] ?? 'Lesson Plan AI',
+      'subject_id': metadata['mata_pelajaran_id'],
+      'subject_name': metadata['mata_pelajaran_nama'] ?? '',
+      'education_unit': metadata['satuan_pendidikan'] ?? 'SD/MI',
+      'chapter_name': metadata['bab_nama'] ?? '',
+      'sub_chapter_name': metadata['sub_bab_nama'] ?? '',
+      'class_semester': metadata['kelas_semester'] ?? '',
+      'theme': lessonPlanResponse['title'],
+      'sub_theme': '',
+      'lesson_number': '',
+      'time_allocation': metadata['alokasi_waktu'] ?? '',
+      'core_competency': _stripHtml(lessonPlanResponse['core_competence'] as String? ?? ''),
+      'basic_competency': _stripHtml(lessonPlanResponse['basic_competence'] as String? ?? ''),
+      'learning_objectives': _stripHtml(lessonPlanResponse['learning_objective'] as String? ?? ''),
+      'core_activity': _stripHtml(lessonPlanResponse['learning_activities'] as String? ?? ''),
+      'assessment': _stripHtml(lessonPlanResponse['assessment'] as String? ?? ''),
       'is_ai_generated': true,
     };
 
@@ -311,54 +311,63 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
   }
 
   void _initControllers(Map<String, dynamic> data) {
+    // English keys first, fallback to Indonesian API keys
     _titleController = TextEditingController(
-      text: data['judul'] ?? data['title'] ?? 'RPP AI',
+      text: data['title'] ?? data['judul'] ?? 'Lesson Plan AI',
     );
     _educationUnitController = TextEditingController(
-      text: data['satuan_pendidikan'] ?? 'SD/MI',
+      text: data['education_unit'] ?? data['satuan_pendidikan'] ?? 'SD/MI',
     );
     _subjectNameController = TextEditingController(
-      text: data['mata_pelajaran_nama'] ?? '',
+      text: data['subject_name'] ?? data['mata_pelajaran_nama'] ?? '',
     );
-    _chapterController = TextEditingController(text: data['bab_nama'] ?? '');
-    _subChapterController = TextEditingController(text: data['sub_bab_nama'] ?? '');
+    _chapterController = TextEditingController(
+      text: data['chapter_name'] ?? data['bab_nama'] ?? '',
+    );
+    _subChapterController = TextEditingController(
+      text: data['sub_chapter_name'] ?? data['sub_bab_nama'] ?? '',
+    );
     _lessonNumberController = TextEditingController(
-      text: data['pembelajaran_ke'] ?? '',
+      text: data['lesson_number'] ?? data['pembelajaran_ke'] ?? '',
     );
     _classSemesterController = TextEditingController(
-      text: data['kelas_semester'] ?? '',
+      text: data['class_semester'] ?? data['kelas_semester'] ?? '',
     );
     _timeAllocationController = TextEditingController(
-      text: data['alokasi_waktu'] ?? '',
+      text: data['time_allocation'] ?? data['alokasi_waktu'] ?? '',
     );
 
     _coreCompetencyController = quill.QuillController(
-      document: _convertHtmlToQuill(data['kompetensi_inti'] ?? ''),
+      document: _convertHtmlToQuill(
+        data['core_competency'] ?? data['kompetensi_inti'] ?? '',
+      ),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
     _basicCompetencyController = quill.QuillController(
-      document: _convertHtmlToQuill(data['kompetensi_dasar'] ?? ''),
+      document: _convertHtmlToQuill(
+        data['basic_competency'] ?? data['kompetensi_dasar'] ?? '',
+      ),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
     _objectivesController = quill.QuillController(
       document: _convertHtmlToQuill(
-        data['tujuan_pembelajaran'] ?? data['learning_objective'] ?? '',
+        data['learning_objectives'] ?? data['tujuan_pembelajaran'] ?? data['learning_objective'] ?? '',
       ),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
     _coreActivityController = quill.QuillController(
       document: _convertHtmlToQuill(
-        data['kegiatan_inti'] ?? data['learning_activities'] ?? '',
+        data['core_activity'] ?? data['kegiatan_inti'] ?? data['learning_activities'] ?? '',
       ),
       selection: const TextSelection.collapsed(offset: 0),
     );
 
     _assessmentController = quill.QuillController(
       document: _convertHtmlToQuill(
-        data['penilaian'] ?? data['assessment'] ?? '',
+        data['assessment'] ?? data['penilaian'] ?? '',
       ),
       selection: const TextSelection.collapsed(offset: 0),
     );
