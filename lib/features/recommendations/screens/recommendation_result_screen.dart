@@ -743,7 +743,9 @@ class _LearningRecommendationResultScreenState
     );
   }
 
-  Widget _buildMaterialItem(Map<String, dynamic> mat) {
+  Widget _buildMaterialItem(dynamic matItem) {
+    if (matItem is! Map<String, dynamic>) return const SizedBox.shrink();
+    final mat = matItem;
     IconData iconData;
     Color iconColor;
 

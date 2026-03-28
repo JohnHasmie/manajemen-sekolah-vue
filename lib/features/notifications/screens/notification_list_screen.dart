@@ -114,7 +114,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     }
   }
 
-  bool _isUnread(Map<String, dynamic> n) {
+  bool _isUnread(dynamic n) {
+    if (n is! Map<String, dynamic>) return true;
     if (n['is_read'] is bool) return !(n['is_read'] as bool);
     if (n['is_read'] is int) return n['is_read'] != 1;
     return true;
