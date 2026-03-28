@@ -22,6 +22,7 @@ import 'package:manajemensekolah/features/lesson_plans/exports/lesson_plan_expor
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -643,7 +644,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
       final academicYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
-      final result = await ApiService.getLessonPlansPaginated(
+      final result = await LessonPlanService.getLessonPlansPaginated(
         page: _currentPage,
         limit: _perPage,
         teacherId: _selectedTeacherId,
@@ -1842,7 +1843,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
     });
 
     try {
-      await ApiService.updateLessonPlanStatus(
+      final response = await LessonPlanService.updateLessonPlanStatus(
         widget.lessonPlanId,
         selectedStatus,
         catatan: notesController.text.isNotEmpty

@@ -23,6 +23,7 @@ import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -455,7 +456,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
     try {
       final academicYearId = _getAcademicYearId();
 
-      final lessonPlanData = await ApiService.getLessonPlans(
+      final lessonPlanData = await LessonPlanService.getLessonPlans(
         teacherId: widget.teacherId,
         search: _searchController.text,
         status: _selectedStatusFilter,
@@ -721,7 +722,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
 
     if (confirmed == true) {
       try {
-        await ApiService.deleteLessonPlan(lessonPlan['id']);
+        await LessonPlanService.deleteLessonPlan(lessonPlan['id']);
         await LocalCacheService.clearStartingWith('rpp_');
         _loadLessonPlans(useCache: false);
         if (mounted) {
@@ -747,7 +748,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
     }
 
     try {
-      final fullLessonPlan = await ApiService.getLessonPlanById(id);
+      final fullLessonPlan = await LessonPlanService.getLessonPlanById(id);
       AppNavigator.push(context, RPPDetailPage(lessonPlanData: fullLessonPlan));
     } catch (e) {
       AppLogger.error('lesson_plan', 'Fetch RPP detail error: $e');
@@ -1804,7 +1805,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
       if (_selectedFile != null) {
         try {
           AppLogger.debug('lesson_plan', 'Starting file upload...');
-          final uploadResult = await ApiService.uploadLessonPlanFile(_selectedFile!);
+          final uploadResult = await LessonPlanService.uploadLessonPlanFile(_selectedFile!);
           AppLogger.debug('lesson_plan', 'Upload result: $uploadResult');
 
           filePath = uploadResult['file_path'];
@@ -1838,12 +1839,12 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
       // Submit RPP data (edit or add mode)
       if (widget.lessonPlanData != null) {
         // Edit mode
-        await ApiService.updateLessonPlan(widget.lessonPlanData!['id'], lessonPlanData);
+        await LessonPlanService.updateLessonPlan(widget.lessonPlanData!['id'], lessonPlanData);
         AppLogger.info('lesson_plan', 'RPP updated successfully');
       } else {
         // New add mode
         lessonPlanData['teacher_id'] = widget.teacherId;
-        await ApiService.createLessonPlan(lessonPlanData);
+        await LessonPlanService.createLessonPlan(lessonPlanData);
         AppLogger.info('lesson_plan', 'RPP created successfully');
       }
 
