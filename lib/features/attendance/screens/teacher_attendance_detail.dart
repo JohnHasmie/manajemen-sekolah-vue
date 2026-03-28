@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -14,8 +13,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 // ========== TEACHER ABSENSI DETAIL PAGE ==========
 class TeacherAbsensiDetailPage extends ConsumerStatefulWidget {
@@ -65,7 +67,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
   Future<void> _loadData() async {
     try {
       // 1. Load attendance data
-      final attendanceData = await ApiService.getAttendance(
+      final attendanceData = await AttendanceService.getAttendance(
         subjectId: widget.subjectId,
         date: DateFormat('yyyy-MM-dd').format(widget.date),
         teacherId: widget.teacher['id'],
@@ -211,7 +213,7 @@ class _TeacherAbsensiDetailPageState extends ConsumerState<TeacherAbsensiDetailP
 
             AppLogger.debug('attendance', 'Saving attendance for ${student.name} with lesson_hour_id: $targetLessonHourId',);
 
-            await ApiService.createAttendance({
+            await AttendanceService.createAttendance({
               'student_id': student.id,
               'teacher_id': widget.teacher['id'],
               'subject_id': widget.subjectId,

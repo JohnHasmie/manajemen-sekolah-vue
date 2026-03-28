@@ -12,17 +12,17 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/models/student.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -94,7 +94,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
 
   Future<void> _flushMarkReadSilently(List<String> ids) async {
     try {
-      await ApiService.markPresenceAsRead(ids);
+      await AttendanceService.markPresenceAsRead(ids);
     } catch (e) {
       AppLogger.error('attendance', e);
     }
@@ -140,7 +140,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
         }
       });
 
-      await ApiService.markPresenceAsRead(ids);
+      await AttendanceService.markPresenceAsRead(ids);
     } catch (e) {
       AppLogger.error('attendance', e);
     }
@@ -204,7 +204,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
           .map((s) => Student.fromJson(s))
           .firstWhere((s) => s.id == widget.studentId);
 
-      final attendanceData = await ApiService.getAttendance(
+      final attendanceData = await AttendanceService.getAttendance(
         studentId: widget.studentId,
         academicYearId: widget.academicYearId,
       );
@@ -227,7 +227,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
       final hasUnread = attendanceData.any((a) =>
           a['is_read'] != true && a['is_read'] != 1 && a['is_read'] != '1');
       if (hasUnread) {
-        ApiService.markAttendanceRead(studentId: widget.studentId);
+        AttendanceService.markAttendanceRead(studentId: widget.studentId);
       }
     } catch (e) {
       AppLogger.error('attendance', e);

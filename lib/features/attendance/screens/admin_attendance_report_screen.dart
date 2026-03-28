@@ -19,14 +19,16 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
-import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
+import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/attendance/exports/attendance_export_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
-import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
@@ -559,7 +561,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
           ?.toString();
 
       // Call paginated API
-      final result = await ApiService.getAttendanceSummaryPaginated(
+      final result = await AttendanceService.getAttendanceSummaryPaginated(
         page: _currentPage,
         limit: _perPage,
         subjectId: _selectedSubjectIds.isNotEmpty
@@ -1402,7 +1404,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         attendanceParams['academicYearId'] = academicYearId;
       }
 
-      final attendanceResult = await ApiService.getAttendancePaginated(
+      final attendanceResult = await AttendanceService.getAttendancePaginated(
         page: 1,
         limit: 1000,
         classId: classId,
@@ -2135,7 +2137,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     // 1. Fetch Data
     final students = await getIt<ApiClassService>().getStudentsByClassId(classId);
 
-    final attendanceResult = await ApiService.getAttendancePaginated(
+    final attendanceResult = await AttendanceService.getAttendancePaginated(
       page: 1,
       limit: 2000, // Ensure enough limit
       classId: classId,
@@ -2434,7 +2436,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
           _isLoadingSummary = true;
         });
 
-        await ApiService.deleteAttendance(
+        await AttendanceService.deleteAttendance(
           subjectId: summary.subjectId,
           classId: summary.classId,
           date: DateFormat('yyyy-MM-dd').format(summary.date),

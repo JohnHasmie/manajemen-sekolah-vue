@@ -13,8 +13,10 @@ import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/features/attendance/exports/attendance_export_service.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
@@ -72,7 +74,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
   Future<void> _loadData() async {
     try {
       // 1. Load attendance data
-      final attendanceData = await ApiService.getAttendance(
+      final attendanceData = await AttendanceService.getAttendance(
         subjectId: widget.subjectId,
         date: DateFormat('yyyy-MM-dd').format(widget.date),
         classId: widget.classId,
@@ -226,7 +228,7 @@ class _AdminAbsensiDetailPageState extends ConsumerState<AdminAbsensiDetailPage>
         try {
           final status = _tempAttendanceStatus[student.id] ?? 'alpha';
 
-          await ApiService.createAttendance({
+          await AttendanceService.createAttendance({
             'student_id': student.id,
             'teacher_id': teacherId,
             'subject_id': widget.subjectId,

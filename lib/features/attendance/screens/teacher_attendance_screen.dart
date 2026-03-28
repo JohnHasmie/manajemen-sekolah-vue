@@ -16,13 +16,14 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/tab_switcher.dart';
 import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -705,7 +706,7 @@ class PresencePageState extends ConsumerState<PresencePage>
           .selectedAcademicYear?['id']
           ?.toString();
 
-      final attendanceData = await ApiService.getAttendanceSummary(
+      final attendanceData = await AttendanceService.getAttendanceSummary(
         teacherId: widget.teacher['id'],
         academicYearId: academicYearId,
       );
@@ -3089,7 +3090,7 @@ class PresencePageState extends ConsumerState<PresencePage>
         try {
           final status = _attendanceStatus[student.id] ?? 'hadir';
 
-          await ApiService.createAttendance({
+          await AttendanceService.createAttendance({
             'student_id': student.id,
             'teacher_id': teacherId,
             'subject_id': _selectedSubjectId,
@@ -3332,7 +3333,7 @@ class PresencePageState extends ConsumerState<PresencePage>
     if (confirmed != true) return;
 
     try {
-      await ApiService.deleteAttendanceSummary(
+      await AttendanceService.deleteAttendanceSummary(
         teacherId: widget.teacher['id'],
         subjectId: summary.subjectId,
         date: DateFormat('yyyy-MM-dd').format(summary.date),

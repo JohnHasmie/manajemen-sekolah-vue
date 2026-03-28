@@ -6,7 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/mini_bar_chart.dart';
 import 'package:manajemensekolah/features/dashboard/widgets/schedule_slider_card.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -109,7 +109,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
     });
 
     try {
-      final fetchedData = await ApiService.getAttendanceDashboardChart(
+      final fetchedData = await AttendanceService.getAttendanceDashboardChart(
         academicYearId: widget.academicYearId,
         month: _selectedMonth,
         week: _selectedWeek,
