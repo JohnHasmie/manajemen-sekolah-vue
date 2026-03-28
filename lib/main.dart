@@ -161,6 +161,10 @@ void _setupErrorHandling() {
 /// - [MultiProvider]: Injects global state providers (like Vue's `app.use(store)`).
 /// - [MaterialApp]: Configures theming, localization, routing, and the auth gate.
 class SchoolManagementApp extends ConsumerStatefulWidget {
+  /// Set to true during integration tests to skip FCM initialization
+  /// (which triggers the notification permission dialog on iOS simulator).
+  static bool skipFCM = false;
+
   const SchoolManagementApp({super.key});
 
   @override
@@ -196,12 +200,16 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
       // Setup error handling
       _setupErrorHandling();
 
-      // Initialize FCM Service
-      try {
-        await FCMService().initialize();
-        AppLogger.info('init', 'FCM Service initialized in app');
-      } catch (e) {
-        AppLogger.warning('init', 'FCM Service initialization failed (non-critical): $e');
+      // Initialize FCM Service (skip if disabled, e.g. during integration tests)
+      if (!SchoolManagementApp.skipFCM) {
+        try {
+          await FCMService().initialize();
+          AppLogger.info('init', 'FCM Service initialized in app');
+        } catch (e) {
+          AppLogger.warning('init', 'FCM Service initialization failed (non-critical): $e');
+        }
+      } else {
+        AppLogger.info('init', 'FCM skipped (skipFCM=true)');
       }
 
       setState(() {

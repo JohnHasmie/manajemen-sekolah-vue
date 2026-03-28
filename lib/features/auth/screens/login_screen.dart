@@ -680,7 +680,7 @@ class LoginScreenState extends State<LoginScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Image.asset('assets/icon/kamiledu.png', height: 80),
+        Image.asset('assets/icon/KamilEdu.png', height: 80),
         SizedBox(height: AppSpacing.xl),
         Text(
           'Kamil Edu',
