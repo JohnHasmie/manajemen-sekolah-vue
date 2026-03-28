@@ -632,7 +632,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                               color: ColorUtils.info600,
                             ),
                             const SizedBox(width: AppSpacing.sm),
-                            const Text('Perbarui Data'),
+                            Text(AppLocalizations.updateData.tr),
                           ],
                         ),
                       ),

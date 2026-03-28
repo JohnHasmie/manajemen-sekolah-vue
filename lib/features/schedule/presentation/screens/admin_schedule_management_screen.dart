@@ -502,10 +502,10 @@ class TeachingScheduleManagementScreenState
                     teacher: List<dynamic>.from(cachedData['teachers'] ?? []),
                     subject: List<dynamic>.from(cachedData['subjects'] ?? []),
                     classData: List<dynamic>.from(cachedData['classes'] ?? []),
-                    days: List<dynamic>.from(cachedData['hari'] ?? []),
-                    semester: List<dynamic>.from(cachedData['semester'] ?? []),
+                    days: List<dynamic>.from(cachedData['days'] ?? []),
+                    semester: List<dynamic>.from(cachedData['semesters'] ?? []),
                     lessonHours: List<dynamic>.from(
-                      cachedData['jamPelajaran'] ?? [],
+                      cachedData['lessonHours'] ?? [],
                     ),
                   );
                 });

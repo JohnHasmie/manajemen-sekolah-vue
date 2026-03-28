@@ -956,7 +956,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                                 color: ColorUtils.info600,
                               ),
                               SizedBox(width: AppSpacing.sm),
-                              Text('Perbarui Data'),
+                              Text(AppLocalizations.updateData.tr),
                             ],
                           ),
                         ),

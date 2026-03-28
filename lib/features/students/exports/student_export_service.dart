@@ -181,7 +181,7 @@ class ExcelService {
 
       // Add notes
       sheet.getRangeByIndex(4, 1).setText('* Wajib diisi');
-      sheet.getRangeByIndex(5, 1).setText('Format tanggal: YYYY-MM-DD');
+      sheet.getRangeByIndex(5, 1).setText(AppLocalizations.dateFormatHint.tr);
       sheet
           .getRangeByIndex(6, 1)
           .setText('Jenis Kelamin: Laki-laki / Perempuan');

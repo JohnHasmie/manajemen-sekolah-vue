@@ -21,6 +21,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Shows AI-generated learning recommendations for a student in a class.
 ///
@@ -495,7 +496,7 @@ class _LearningRecommendationResultScreenState
                             color: ColorUtils.info600,
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          const Text('Perbarui Data'),
+                          Text(AppLocalizations.updateData.tr),
                         ],
                       ),
                     ),

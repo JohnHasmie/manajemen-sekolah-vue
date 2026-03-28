@@ -26,6 +26,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Displays a list of classes with AI learning recommendation summaries.
 ///
@@ -881,7 +882,7 @@ class _LearningRecommendationClassScreenState
                             color: ColorUtils.info600,
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          const Text('Perbarui Data'),
+                          Text(AppLocalizations.updateData.tr),
                         ],
                       ),
                     ),

@@ -206,7 +206,7 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
     }
 
     // 2. School Selection
-    if (responseData['pilih_sekolah'] == true) {
+    if (responseData['needsSchoolSelection'] == true) {
       if (responseData['sekolah_list'] == null ||
           (responseData['sekolah_list'] as List).isEmpty) {
         state = state.copyWith(isLoading: false);
@@ -232,7 +232,7 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
     }
 
     // 3. Role Selection
-    if (responseData['pilih_role'] == true) {
+    if (responseData['needsRoleSelection'] == true) {
       if (responseData['token'] != null) {
         await SecureStorageService().saveToken(responseData['token']);
         final prefs = PreferencesService();

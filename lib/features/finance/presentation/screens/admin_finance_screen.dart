@@ -4227,7 +4227,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             color: ColorUtils.info600,
                           ),
                           SizedBox(width: AppSpacing.sm),
-                          Text('Perbarui Data'),
+                          Text(AppLocalizations.updateData.tr),
                         ],
                       ),
                     ),

@@ -156,10 +156,10 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
                     ),
                   )
                 : _classesData.isEmpty
-                ? const SizedBox(
+                ? SizedBox(
                     height: 380,
                     child: Center(
-                      child: Text('Tidak ada data absensi untuk periode ini'),
+                      child: Text(AppLocalizations.noAttendanceData.tr),
                     ),
                   )
                 : SizedBox(

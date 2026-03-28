@@ -22,6 +22,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Parent's report card list -- shows children with semester selector.
 ///
@@ -286,7 +287,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                             color: ColorUtils.info600,
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          const Text('Perbarui Data'),
+                          Text(AppLocalizations.updateData.tr),
                         ],
                       ),
                     ),
@@ -350,7 +351,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                           const SizedBox(height: AppSpacing.lg),
                           ElevatedButton(
                             onPressed: _loadData,
-                            child: const Text('Coba Lagi'),
+                            child: Text(AppLocalizations.tryAgain.tr),
                           ),
                         ],
                       ),

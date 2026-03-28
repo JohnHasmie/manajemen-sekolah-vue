@@ -892,7 +892,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
             ElevatedButton.icon(
               onPressed: _generateMaterial,
               icon: Icon(Icons.refresh),
-              label: Text('Coba Lagi'),
+              label: Text(AppLocalizations.tryAgain.tr),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _getPrimaryColor(),
                 foregroundColor: Colors.white,

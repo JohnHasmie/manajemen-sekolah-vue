@@ -32,9 +32,11 @@ class AuthService {
       AppLogger.debug('auth_api', '📥 Login response data: $responseData');
 
       if (responseData['pilih_sekolah'] == true) {
+        responseData['needsSchoolSelection'] = true;
         return Map<String, dynamic>.from(responseData);
       }
       if (responseData['pilih_role'] == true) {
+        responseData['needsRoleSelection'] = true;
         return Map<String, dynamic>.from(responseData);
       }
       if (responseData['require_otp'] == true ||

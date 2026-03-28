@@ -909,7 +909,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           items: [
                             DropdownMenuItem(
                               value: 'Transfer Bank',
-                              child: Text('Transfer Bank'),
+                              child: Text(AppLocalizations.bankTransfer.tr),
                             ),
                             DropdownMenuItem(
                               value: 'Tunai',
@@ -917,7 +917,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                             ),
                             DropdownMenuItem(
                               value: 'Kartu Kredit/Debit',
-                              child: Text('Kartu Kredit/Debit'),
+                              child: Text(AppLocalizations.creditCard.tr),
                             ),
                             DropdownMenuItem(
                               value: 'Lainnya',
@@ -1717,7 +1717,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           items: [
                             DropdownMenuItem(
                               value: null,
-                              child: Text('Semua Bulan'),
+                              child: Text(AppLocalizations.allMonths.tr),
                             ),
                             ...months.map(
                               (m) => DropdownMenuItem(
@@ -1744,7 +1744,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           items: [
                             DropdownMenuItem(
                               value: null,
-                              child: Text('Semua Jenis'),
+                              child: Text(AppLocalizations.allTypes.tr),
                             ),
                             ...uniqueTypes.entries.map(
                               (e) => DropdownMenuItem(

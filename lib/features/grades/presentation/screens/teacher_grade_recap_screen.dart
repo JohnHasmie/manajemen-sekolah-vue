@@ -2113,7 +2113,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
                               color: ColorUtils.info600,
                             ),
                             SizedBox(width: AppSpacing.sm),
-                            Text('Perbarui Data'),
+                            Text(AppLocalizations.updateData.tr),
                           ],
                         ),
                       ),

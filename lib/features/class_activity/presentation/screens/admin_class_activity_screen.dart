@@ -26,6 +26,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Admin screen to monitor class activities (assignments, exams) per teacher/subject.
 ///
@@ -1273,7 +1274,7 @@ class AdminClassActivityScreenState
                                 color: ColorUtils.info600,
                               ),
                               SizedBox(width: AppSpacing.sm),
-                              Text('Perbarui Data'),
+                              Text(AppLocalizations.updateData.tr),
                             ],
                           ),
                         ),

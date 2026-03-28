@@ -1340,7 +1340,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                         items: [
                           DropdownMenuItem(
                             value: 'Transfer Bank',
-                            child: Text('Transfer Bank'),
+                            child: Text(AppLocalizations.bankTransfer.tr),
                           ),
                           DropdownMenuItem(
                             value: 'Tunai',
@@ -1348,7 +1348,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                           ),
                           DropdownMenuItem(
                             value: 'Kartu Kredit/Debit',
-                            child: Text('Kartu Kredit/Debit'),
+                            child: Text(AppLocalizations.creditCard.tr),
                           ),
                           DropdownMenuItem(
                             value: 'Lainnya',
@@ -2359,7 +2359,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                           color: ColorUtils.info600,
                         ),
                         const SizedBox(width: AppSpacing.sm),
-                        const Text('Perbarui Data'),
+                        Text(AppLocalizations.updateData.tr),
                       ],
                     ),
                   ),

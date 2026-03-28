@@ -370,10 +370,49 @@ class AppLocalizations {
     'id': 'Kelola RPP',
   };
 
-  // Tambahkan di class AppLocalizations
   static Map<String, String> get tryAgain => {
     'en': 'Try Again',
     'id': 'Coba Lagi',
+  };
+
+  static Map<String, String> get updateData => {
+    'en': 'Update Data',
+    'id': 'Perbarui Data',
+  };
+
+  static Map<String, String> get selectClass => {
+    'en': 'Select Class',
+    'id': 'Pilih Kelas',
+  };
+
+  static Map<String, String> get noAttendanceData => {
+    'en': 'No attendance data for this period',
+    'id': 'Tidak ada data absensi untuk periode ini',
+  };
+
+  static Map<String, String> get allMonths => {
+    'en': 'All Months',
+    'id': 'Semua Bulan',
+  };
+
+  static Map<String, String> get allTypes => {
+    'en': 'All Types',
+    'id': 'Semua Jenis',
+  };
+
+  static Map<String, String> get bankTransfer => {
+    'en': 'Bank Transfer',
+    'id': 'Transfer Bank',
+  };
+
+  static Map<String, String> get creditCard => {
+    'en': 'Credit/Debit Card',
+    'id': 'Kartu Kredit/Debit',
+  };
+
+  static Map<String, String> get dateFormatHint => {
+    'en': 'Format date: YYYY-MM-DD',
+    'id': 'Format tanggal: YYYY-MM-DD',
   };
 
   static Map<String, String> get close => {'en': 'Close', 'id': 'Tutup'};

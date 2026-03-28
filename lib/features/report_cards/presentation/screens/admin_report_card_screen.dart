@@ -537,7 +537,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
               Text('Error: $_errorMessage'),
               TextButton(
                 onPressed: _loadInitialData,
-                child: const Text('Coba Lagi'),
+                child: Text(AppLocalizations.tryAgain.tr),
               ),
             ],
           ),
@@ -647,7 +647,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                             color: ColorUtils.info600,
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          const Text('Perbarui Data'),
+                          Text(AppLocalizations.updateData.tr),
                         ],
                       ),
                     ),
@@ -774,7 +774,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
                   child: DropdownButton<Map<String, dynamic>>(
                     isExpanded: true,
                     value: _selectedClass,
-                    hint: const Text('Pilih Kelas'),
+                    hint: Text(AppLocalizations.selectClass.tr),
                     items: _classes.map((cls) {
                       return DropdownMenuItem<Map<String, dynamic>>(
                         value: cls,

@@ -517,7 +517,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
                             color: ColorUtils.info600,
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          const Text('Perbarui Data'),
+                          Text(AppLocalizations.updateData.tr),
                         ],
                       ),
                     ),
@@ -572,7 +572,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
               ElevatedButton.icon(
                 onPressed: _loadInitialData,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Coba Lagi'),
+                label: Text(AppLocalizations.tryAgain.tr),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _getPrimaryColor(),
                 ),

@@ -542,7 +542,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 color: ColorUtils.info600,
                               ),
                               SizedBox(width: AppSpacing.sm),
-                              Text('Perbarui Data'),
+                              Text(AppLocalizations.updateData.tr),
                             ],
                           ),
                         ),

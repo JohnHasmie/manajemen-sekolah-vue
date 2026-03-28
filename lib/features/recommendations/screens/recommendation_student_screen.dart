@@ -21,6 +21,7 @@ import 'package:manajemensekolah/features/recommendations/screens/recommendation
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Lists students in a class for the learning recommendation flow.
 ///
@@ -361,7 +362,7 @@ class _LearningRecommendationStudentScreenState
                             color: ColorUtils.info600,
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          const Text('Perbarui Data'),
+                          Text(AppLocalizations.updateData.tr),
                         ],
                       ),
                     ),
