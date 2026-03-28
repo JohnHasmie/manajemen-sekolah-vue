@@ -35,7 +35,7 @@ class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
   final String? academicYearId;
 
   const AdminAbsensiDetailPage({
-    Key? key,
+    super.key,
     required this.subjectId,
     required this.classId,
     required this.date,
@@ -44,7 +44,7 @@ class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
     this.lessonHourId,
     this.lessonHourName,
     this.academicYearId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<AdminAbsensiDetailPage> createState() => _AdminAbsensiDetailPageState();

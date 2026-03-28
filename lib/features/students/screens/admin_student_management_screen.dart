@@ -232,7 +232,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
     final languageProvider = ref.read(languageRiverpod);
 
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx', 'xls'],
         allowMultiple: false,
@@ -490,7 +490,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedStatusFilter != null) {
       final statusText = _selectedStatusFilter == 'active'
@@ -576,7 +576,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
     final languageProvider = ref.read(languageRiverpod);
 
     String? tempSelectedStatus = _selectedStatusFilter;
-    List<String> tempSelectedClass = List.from(_selectedClassIds);
+    final List<String> tempSelectedClass = List.from(_selectedClassIds);
     String? tempSelectedGender = _selectedGenderFilter;
     String? tempSelectedGuardian = _selectedGuardian;
 
@@ -2537,7 +2537,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
               ? null
               : FloatingActionButton(
                   key: _fabKey,
-                  onPressed: () => _showStudentDialog(),
+                  onPressed: _showStudentDialog,
                   backgroundColor: _getPrimaryColor(),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -2567,7 +2567,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -2594,7 +2594,7 @@ class StudentManagementScreenState extends ConsumerState<StudentManagementScreen
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(

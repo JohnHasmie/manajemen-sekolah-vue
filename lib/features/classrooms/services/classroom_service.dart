@@ -103,7 +103,7 @@ class ApiClassService {
     String? hasHomeroomTeacher,
     bool useCache = true,
   }) async {
-    Map<String, dynamic> queryParams = {
+    final Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
     };
@@ -125,7 +125,7 @@ class ApiClassService {
       queryParams['academic_year_id'] = academicYearId;
     }
 
-    String queryString = Uri(queryParameters: queryParams).query;
+    final String queryString = Uri(queryParameters: queryParams).query;
 
     // Get school_id context for cache key
     final prefs = PreferencesService();

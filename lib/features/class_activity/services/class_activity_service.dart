@@ -38,7 +38,7 @@ class ApiClassActivityService {
     String? endDate,
   }) async {
     // Build query parameters
-    Map<String, dynamic> queryParams = {
+    final Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
     };
@@ -82,7 +82,7 @@ class ApiClassActivityService {
     }
 
     // Build URI with query parameters
-    String queryString = Uri(queryParameters: queryParams).query;
+    final String queryString = Uri(queryParameters: queryParams).query;
 
     final response = await dioClient.get('/class-activity?$queryString');
 

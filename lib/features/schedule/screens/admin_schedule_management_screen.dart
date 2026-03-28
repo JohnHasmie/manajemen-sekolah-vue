@@ -711,7 +711,7 @@ class TeachingScheduleManagementScreenState
     final languageProvider = ref.read(languageRiverpod);
 
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx', 'xls'],
         allowMultiple: false,
@@ -953,7 +953,7 @@ class TeachingScheduleManagementScreenState
             '${schedule['jam_mulai'] ?? schedule['start_time'] ?? ''}-${schedule['jam_selesai'] ?? schedule['end_time'] ?? ''}';
 
         // Format to HH:mm for lookup consistency
-        List<String> parts = timeSlot.split('-');
+        final List<String> parts = timeSlot.split('-');
         String start = parts[0];
         String end = parts.length > 1 ? parts[1] : '';
         if (start.length > 5) start = start.substring(0, 5);
@@ -1278,7 +1278,7 @@ class TeachingScheduleManagementScreenState
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     // Add Day Filter Chip
     if (_selectedDayId != null) {
@@ -1286,7 +1286,7 @@ class TeachingScheduleManagementScreenState
         (d) => d['id'].toString() == _selectedDayId,
         orElse: () => {},
       );
-      String dayNameRaw = day.isNotEmpty
+      final String dayNameRaw = day.isNotEmpty
           ? (day['name'] ?? day['nama'] ?? '')
           : 'Day';
 
@@ -2370,9 +2370,7 @@ class TeachingScheduleManagementScreenState
                                 ),
                                 onSubmitted: (_) {
                                   if (_showTableView) {
-                                    setState(() {
-                                      _updateGridData();
-                                    });
+                                    setState(_updateGridData);
                                   } else {
                                     _loadData();
                                   }
@@ -2388,9 +2386,7 @@ class TeachingScheduleManagementScreenState
                                 ),
                                 onPressed: () {
                                   if (_showTableView) {
-                                    setState(() {
-                                      _updateGridData();
-                                    });
+                                    setState(_updateGridData);
                                   } else {
                                     _loadData();
                                   }
@@ -3174,7 +3170,7 @@ class TeachingScheduleManagementScreenState
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -3214,7 +3210,7 @@ class TeachingScheduleManagementScreenState
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(

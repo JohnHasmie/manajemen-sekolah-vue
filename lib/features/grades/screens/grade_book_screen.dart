@@ -248,7 +248,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       final type = gradeItem['jenis']?.toString().toLowerCase();
       if (type == null || !_allGradeTypeList.contains(type)) continue;
 
-      String? rawDate = gradeItem['tanggal'];
+      final String? rawDate = gradeItem['tanggal'];
       if (rawDate != null) {
         final datePart = rawDate.split('T')[0];
         final assessmentId = gradeItem['assessment_id'];
@@ -483,7 +483,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                             _gradeTypeFilter[key] = true;
                           }
                         });
-                        setState(() => _updateFilteredGradeTypes());
+                        setState(_updateFilteredGradeTypes);
                       },
                       child: Text(
                         'Reset',
@@ -519,7 +519,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                           setSheetState(() {
                             _gradeTypeFilter[type] = value ?? false;
                           });
-                          setState(() => _updateFilteredGradeTypes());
+                          setState(_updateFilteredGradeTypes);
                         },
                       );
                     }).toList(),
@@ -646,9 +646,9 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     Map<String, dynamic> header,
     LanguageProvider languageProvider,
   ) {
-    String date = header['date'];
-    String? title = header['title'];
-    String displayTitle = title != null && title.isNotEmpty
+    final String date = header['date'];
+    final String? title = header['title'];
+    final String displayTitle = title != null && title.isNotEmpty
         ? "$title (${_formatDateDisplay(date)})"
         : _formatDateDisplay(date);
 
@@ -810,7 +810,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
   String _formatGradeValue(dynamic value) {
     if (value == null) return '';
-    double? numVal = double.tryParse(value.toString());
+    final double? numVal = double.tryParse(value.toString());
     if (numVal == null) return '';
 
     // Check if integer
@@ -934,9 +934,9 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   Widget _buildEditTable(LanguageProvider languageProvider) {
-    String date = _editHeader?['date'] ?? '';
-    String? title = _editHeader?['title'];
-    String displayTitle = title != null && title.isNotEmpty
+    final String date = _editHeader?['date'] ?? '';
+    final String? title = _editHeader?['title'];
+    final String displayTitle = title != null && title.isNotEmpty
         ? "$title (${_formatDateDisplay(date)})"
         : _formatDateDisplay(date);
 
@@ -1250,10 +1250,10 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     Map<String, dynamic> header,
     LanguageProvider languageProvider,
   ) {
-    String date = header['date'];
-    String? title = header['title'];
+    final String date = header['date'];
+    final String? title = header['title'];
     // Calculate stats
-    int totalSiswa = _studentList.length;
+    final int totalSiswa = _studentList.length;
     int gradedCount = 0;
     double totalScore = 0;
 
@@ -1265,7 +1265,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       }
     }
 
-    double average = gradedCount > 0 ? totalScore / gradedCount : 0;
+    final double average = gradedCount > 0 ? totalScore / gradedCount : 0;
 
     showDialog(
       context: context,
@@ -1426,8 +1426,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     Map<String, dynamic> header,
     LanguageProvider languageProvider,
   ) {
-    String date = header['date'];
-    String? title = header['title'];
+    final String date = header['date'];
+    final String? title = header['title'];
 
     showDialog(
       context: context,
@@ -1611,7 +1611,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         // we might just be pointing to that one.
 
         // Check if we already have a header with this date and (null) title
-        bool exists = _assessmentHeaders[type]!.any(
+        final bool exists = _assessmentHeaders[type]!.any(
           (h) => h['date'] == dateStr && h['title'] == null,
         );
 
@@ -1785,12 +1785,12 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
               child: Row(
                 children: _filteredGradeTypeList.expand((type) {
                   final headers = _assessmentHeaders[type] ?? [];
-                  List<Widget> widgets = [];
+                  final List<Widget> widgets = [];
 
                   // Existing columns headers
                   for (var header in headers) {
-                    String date = header['date'];
-                    String? title = header['title'];
+                    final String date = header['date'];
+                    final String? title = header['title'];
                     final parts = date.split('-');
                     final displayDate = parts.length == 3
                         ? "${parts[2]}/${parts[1]}"
@@ -1899,7 +1899,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                 child: Row(
                   children: _filteredGradeTypeList.expand((type) {
                     final headers = _assessmentHeaders[type] ?? [];
-                    List<Widget> widgets = [];
+                    final List<Widget> widgets = [];
 
                     for (var header in headers) {
                       final gradeRecord = _getGradeForStudentAndHeader(
@@ -2440,7 +2440,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     TutorialCoachMark(
@@ -2462,7 +2462,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
 
     targets.add(
       TargetFocus(

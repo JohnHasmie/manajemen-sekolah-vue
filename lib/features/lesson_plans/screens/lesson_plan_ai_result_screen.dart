@@ -127,7 +127,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
     // Per docs Section 2.2: GET /api/ai-jobs/{id}
     // Extract the job ID for polling via getIt<ApiSubjectService>().pollAiJob
     final jobIdForPoll = widget.jobId ??
-        (widget.pollUrl != null ? widget.pollUrl!.split('/').last : null);
+        (widget.pollUrl?.split('/').last);
 
     if (jobIdForPoll == null) {
       if (mounted) {

@@ -363,7 +363,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     TutorialCoachMark(
@@ -390,7 +390,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
 
     targets.add(
       TargetFocus(
@@ -2066,7 +2066,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
   /// Builds quick action buttons (shortcuts to common tasks).
   /// Like a Vue component rendering a row of action buttons based on role.
   Widget _buildQuickActions() {
-    List<Widget> actions = _getQuickActions();
+    final List<Widget> actions = _getQuickActions();
 
     if (actions.isEmpty && _isStatsLoaded) {
       return SizedBox.shrink();

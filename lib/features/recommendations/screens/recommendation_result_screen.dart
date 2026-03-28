@@ -196,7 +196,7 @@ class _LearningRecommendationResultScreenState
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -224,7 +224,7 @@ class _LearningRecommendationResultScreenState
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
@@ -734,7 +734,7 @@ class _LearningRecommendationResultScreenState
                 ),
               ),
             ),
-            ...(rec['materials'] as List).map((mat) => _buildMaterialItem(mat)),
+            ...(rec['materials'] as List).map(_buildMaterialItem),
           ],
 
           const SizedBox(height: AppSpacing.xxl),

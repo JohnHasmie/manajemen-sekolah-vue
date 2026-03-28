@@ -67,7 +67,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   String _formatCurrency(dynamic amount) {
     if (amount == null) return 'Rp 0';
     try {
-      double value = double.parse(amount.toString());
+      final double value = double.parse(amount.toString());
       final formatter = NumberFormat.currency(
         locale: 'id_ID',
         symbol: 'Rp ',
@@ -173,7 +173,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -200,7 +200,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
@@ -332,7 +332,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedStatusFilter != null) {
       final statusText = _selectedStatusFilter == 'aktif'
@@ -875,7 +875,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       }
 
       // Group students by class
-      Map<String, List<dynamic>> studentsByClass = {};
+      final Map<String, List<dynamic>> studentsByClass = {};
       for (var student in allStudents) {
         String? classId = student['class_id']?.toString();
         // Fallback to nested class object if class_id is null (new schema)
@@ -924,7 +924,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       }
 
       // Group bills by student_id client-side
-      Map<String, List<dynamic>> tagihanBySiswa = {};
+      final Map<String, List<dynamic>> tagihanBySiswa = {};
       for (var bill in allBills) {
         final studentId = bill['student_id']?.toString();
         if (studentId != null) {
@@ -1187,7 +1187,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
       for (var classId in goal['kelas'] ?? []) {
         _selectedStudentsByClass[classId] = (goal['siswa']?[classId] ?? [])
-            .map((id) => _findStudentById(id))
+            .map(_findStudentById)
             .where((student) => student != null)
             .cast<Map<String, dynamic>>()
             .toList();
@@ -1365,8 +1365,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildSelectionSummary() {
-    int totalClasses = _selectedClasses.length;
-    int totalStudents = _selectedStudentsByClass.values.fold(
+    final int totalClasses = _selectedClasses.length;
+    final int totalStudents = _selectedStudentsByClass.values.fold(
       0,
       (sum, studentList) => sum + studentList.length,
     );
@@ -1975,7 +1975,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
 
     Map<String, dynamic>? goalData = paymentType != null
-        ? _parseGoal(paymentType!['goal'])
+        ? _parseGoal(paymentType['goal'])
         : null;
     String? status = (paymentType?['status'] == 'active')
         ? 'aktif'
@@ -2621,7 +2621,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     required Function(String?) onChanged,
   }) {
     // Ensure the given value exists in the items list
-    String selectedValue = items.contains(value) ? value : items.first;
+    final String selectedValue = items.contains(value) ? value : items.first;
 
     return Container(
       decoration: BoxDecoration(
@@ -5057,7 +5057,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     if (_currentTabIndex == 1) {
       // Tab Jenis Pembayaran
       return FloatingActionButton(
-        onPressed: () => _showAddEditPaymentType(),
+        onPressed: _showAddEditPaymentType,
         backgroundColor: _getPrimaryColor(),
         child: Icon(Icons.add, color: Colors.white),
       );

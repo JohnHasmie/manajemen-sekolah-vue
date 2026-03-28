@@ -255,7 +255,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedHomeroomFilter != null) {
       final statusText = _selectedHomeroomFilter == 'wali_kelas'
@@ -1131,7 +1131,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     final languageProvider = ref.read(languageRiverpod);
 
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx', 'xls'],
         allowMultiple: false,
@@ -1329,7 +1329,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     }
 
     // Normalize employment_status - convert Indonesian translations to English values
-    String? rawStatus = teacher?['employment_status']?.toString();
+    final String? rawStatus = teacher?['employment_status']?.toString();
     String? selectedStatus;
     if (rawStatus != null) {
       // Map Indonesian values to English values
@@ -2798,7 +2798,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
               ? null
               : FloatingActionButton(
                   key: _fabKey,
-                  onPressed: () => showAddEditDialog(),
+                  onPressed: showAddEditDialog,
                   backgroundColor: getPrimaryColor(),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -2832,7 +2832,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -2855,11 +2855,11 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         LocalCacheService.save(CacheKeyBuilder.tourStatus('teacher_admin_screen', 'admin'), {'should_show': false});
         return true;
       },
-    )..show(context: context);
+    ).show(context: context);
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(

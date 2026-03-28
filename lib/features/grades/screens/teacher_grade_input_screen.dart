@@ -86,7 +86,7 @@ class GradePageState extends ConsumerState<GradePage> {
 
   bool get _canEdit {
     final role = widget.teacher['role']?.toString().toLowerCase() ?? '';
-    bool canEditRole = role == 'guru' || role == 'teacher';
+    final bool canEditRole = role == 'guru' || role == 'teacher';
 
     // If viewing a subject, check if we have edit permission for it
     if (canEditRole &&
@@ -197,7 +197,7 @@ class GradePageState extends ConsumerState<GradePage> {
       if (isTeacher && useCache) {
         final teacherProvider = ref.read(teacherRiverpod);
         if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
-          List<dynamic> providerClasses = List.from(teacherProvider.allClasses);
+          final List<dynamic> providerClasses = List.from(teacherProvider.allClasses);
           _sortClassesByTodaySchedule(providerClasses);
           setState(() {
             _classList = providerClasses;
@@ -417,7 +417,7 @@ class GradePageState extends ConsumerState<GradePage> {
 
         for (var subject in allSubjects) {
           final subjectId = subject['id'].toString();
-          var s = Map<String, dynamic>.from(subject);
+          final s = Map<String, dynamic>.from(subject);
           // Editable if Admin OR if I teach it
           s['can_edit'] = isAdmin || mySubjectIds.contains(subjectId);
           uniqueSubjects[subjectId] = s;
@@ -430,7 +430,7 @@ class GradePageState extends ConsumerState<GradePage> {
           final subject = item['subject'] ?? item['mata_pelajaran'];
           if (subject != null) {
             final subjectId = subject['id'].toString();
-            var s = Map<String, dynamic>.from(subject);
+            final s = Map<String, dynamic>.from(subject);
             s['can_edit'] = true;
             uniqueSubjects[subjectId] = s;
           }
@@ -715,7 +715,7 @@ class GradePageState extends ConsumerState<GradePage> {
     }
 
     return RefreshIndicator(
-      onRefresh: () => _loadClasses(),
+      onRefresh: _loadClasses,
       child: ListView.builder(
         padding: EdgeInsets.only(top: 8, bottom: 80),
         itemCount: filtered.length + (_isLoadingMore ? 1 : 0),
@@ -910,7 +910,7 @@ class GradePageState extends ConsumerState<GradePage> {
     }
 
     return RefreshIndicator(
-      onRefresh: () => _loadSubjects(),
+      onRefresh: _loadSubjects,
       child: ListView.builder(
         padding: EdgeInsets.only(top: 8, bottom: 80),
         itemCount: filtered.length,

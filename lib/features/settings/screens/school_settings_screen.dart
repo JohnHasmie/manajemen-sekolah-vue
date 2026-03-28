@@ -66,7 +66,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -89,11 +89,11 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
         LocalCacheService.save(CacheKeyBuilder.tourStatus('school_settings', 'admin'), {'should_show': false});
         return true;
       },
-    )..show(context: context);
+    ).show(context: context);
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(

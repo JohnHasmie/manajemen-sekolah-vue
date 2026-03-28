@@ -1323,7 +1323,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => _showAddEditSessionDialog(),
+                  onPressed: _showAddEditSessionDialog,
                   icon: Icon(Icons.add_rounded, color: Colors.white),
                   label: Text(
                     'Tambah Jam Pelajaran',

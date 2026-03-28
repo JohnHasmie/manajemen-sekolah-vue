@@ -99,7 +99,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
   }
 
   String _buildFilterSummary(LanguageProvider languageProvider) {
-    List<String> filters = [];
+    final List<String> filters = [];
 
     if (_selectedStatusFilter != null) {
       filters.add(
@@ -1421,7 +1421,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -1448,7 +1448,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
@@ -1694,18 +1694,18 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
 
   void _showFilePickerDialog() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx'],
         allowMultiple: false,
       );
 
       if (result != null && result.files.single.path != null) {
-        PlatformFile file = result.files.first;
+        final PlatformFile file = result.files.first;
 
         // Make sure the file actually exists
-        File selectedFile = File(file.path!);
-        bool fileExists = await selectedFile.exists();
+        final File selectedFile = File(file.path!);
+        final bool fileExists = await selectedFile.exists();
 
         AppLogger.debug('lesson_plan', 'File picked: ${file.name}');
         AppLogger.debug('lesson_plan', 'File path: ${file.path}');
@@ -1779,7 +1779,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
     } catch (e) {
       AppLogger.error('lesson_plan', 'Error opening file: $e');
 
-      String message = e.toString().replaceFirst('Exception: ', '');
+      final String message = e.toString().replaceFirst('Exception: ', '');
 
             SnackBarUtils.showError(context, message);
     }

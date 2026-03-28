@@ -208,7 +208,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedStatusFilter != null) {
       final statusText = _selectedStatusFilter == 'active'
@@ -778,8 +778,8 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
 
   void _applySubjectExtractedData(List<dynamic> data) {
     // Extract unique class names and grade levels from subjects
-    Set<String> classNamesSet = {};
-    Set<String> gradeLevelsSet = {};
+    final Set<String> classNamesSet = {};
+    final Set<String> gradeLevelsSet = {};
 
     for (var subject in data) {
       // Support both naming conventions
@@ -949,8 +949,8 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
       final data = response['data'] ?? [];
 
       // Extract class names and grade levels
-      Set<String> classNamesSet = Set.from(_availableClassNames);
-      Set<String> gradeLevelsSet = Set.from(_availableGradeLevels);
+      final Set<String> classNamesSet = Set.from(_availableClassNames);
+      final Set<String> gradeLevelsSet = Set.from(_availableGradeLevels);
 
       for (var subject in data) {
         final classNames = subject['class_names']?.toString() ?? '';
@@ -1010,7 +1010,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
     final languageProvider = ref.read(languageRiverpod);
 
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx', 'xls'],
         allowMultiple: false,
@@ -2308,7 +2308,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
           ),
           floatingActionButton: FloatingActionButton(
             key: _fabKey,
-            onPressed: () => _showAddEditDialog(),
+            onPressed: _showAddEditDialog,
             backgroundColor: _getPrimaryColor(),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -2342,7 +2342,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -2367,7 +2367,7 @@ class SubjectManagementScreenState extends ConsumerState<SubjectManagementScreen
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(

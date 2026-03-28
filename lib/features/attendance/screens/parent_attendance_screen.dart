@@ -264,7 +264,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -291,7 +291,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
@@ -735,7 +735,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedMonthFilter != null) {
       final months = [
@@ -1301,7 +1301,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   String _getTranslatedStatus(String? status) {
     if (status == null) return '-';
     // Normalize status just in case
-    String s = status.trim();
+    final String s = status.trim();
     if (s.toLowerCase() == 'hadir') return AppLocalizations.present.tr;
     if (s.toLowerCase() == 'telat' || s.toLowerCase() == 'terlambat') {
       return AppLocalizations.late.tr;
@@ -1313,7 +1313,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   }
 
   String _normalizeStatus(dynamic rawStatus) {
-    String status = (rawStatus ?? 'alpha').toString().toLowerCase();
+    final String status = (rawStatus ?? 'alpha').toString().toLowerCase();
 
     // Map English/Mixed to standard keys
     if (status == 'present') return 'hadir';

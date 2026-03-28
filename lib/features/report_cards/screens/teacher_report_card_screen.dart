@@ -803,7 +803,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     TutorialCoachMark(
@@ -825,7 +825,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
 
     targets.add(
       TargetFocus(

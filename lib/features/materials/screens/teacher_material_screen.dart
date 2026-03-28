@@ -168,7 +168,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     // Prepare additional materials (all checked sub-chapters)
     // We pass ALL checked sub-chapters as "additional" materials.
     // The activity form logic will filter out the primary one if needed.
-    List<Map<String, dynamic>> additionalMaterials = [];
+    final List<Map<String, dynamic>> additionalMaterials = [];
     if (checkedSubChapters.isNotEmpty) {
       for (var sub in checkedSubChapters) {
         additionalMaterials.add({
@@ -435,8 +435,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
             if (cachedClasses != null && cachedClasses is List) {
               classes = List<dynamic>.from(cachedClasses);
               classes.sort((a, b) {
-                String nameA = (a['name'] ?? a['nama'] ?? '').toString();
-                String nameB = (b['name'] ?? b['nama'] ?? '').toString();
+                final String nameA = (a['name'] ?? a['nama'] ?? '').toString();
+                final String nameB = (b['name'] ?? b['nama'] ?? '').toString();
                 return nameA.compareTo(nameB);
               });
               AppLogger.debug('material', 'TeacherClasses: from cache (${classes.length})');
@@ -471,8 +471,8 @@ class MateriPageState extends ConsumerState<MateriPage> {
             classes = results[idx] as List<dynamic>;
             idx++;
             classes.sort((a, b) {
-              String nameA = (a['name'] ?? a['nama'] ?? '').toString();
-              String nameB = (b['name'] ?? b['nama'] ?? '').toString();
+              final String nameA = (a['name'] ?? a['nama'] ?? '').toString();
+              final String nameB = (b['name'] ?? b['nama'] ?? '').toString();
               return nameA.compareTo(nameB);
             });
             // Save classes to dedicated cache
@@ -1761,7 +1761,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     TutorialCoachMark(
@@ -1783,7 +1783,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
 
     targets.add(
       TargetFocus(

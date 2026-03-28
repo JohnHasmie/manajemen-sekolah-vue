@@ -199,9 +199,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
     } catch (e) {
       AppLogger.error('classroom', 'Error loading school settings: $e');
       // Fallback if failed
-      setState(() {
-        _generateGradeLevels();
-      });
+      setState(_generateGradeLevels);
     }
   }
 
@@ -288,7 +286,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedGradeFilter != null) {
       filterChips.add({
@@ -858,7 +856,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
     final languageProvider = ref.read(languageRiverpod);
 
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx', 'xls'],
         allowMultiple: false,
@@ -2673,7 +2671,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -2700,7 +2698,7 @@ class AdminClassManagementScreenState extends ConsumerState<AdminClassManagement
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(

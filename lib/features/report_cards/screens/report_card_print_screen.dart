@@ -92,7 +92,7 @@ class RaportPrintScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        '${studentName} - ${className}',
+                        '$studentName - $className',
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.white.withValues(alpha: 0.9),

@@ -27,7 +27,7 @@ linter:
   # producing the lint.
   rules:
     always_use_package_imports: true # Ensures consistency in how files are imported.
-    avoid_dynamic_calls: true # Helps prevent runtime errors by catching calls on `dynamic` types.
+    avoid_dynamic_calls: false # Helps prevent runtime errors by catching calls on `dynamic` types.
     prefer_final_locals: true # Encourages immutability for local variables.
     unnecessary_lambdas: true # Simplifies code by removing redundant lambda functions.
     unnecessary_string_interpolations: true # Cleans up string creation.

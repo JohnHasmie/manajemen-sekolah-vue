@@ -120,9 +120,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     return true;
   }
 
-  int get _unreadCount => _notifications.where((n) => _isUnread(n)).length;
+  int get _unreadCount => _notifications.where(_isUnread).length;
 
-  bool get _hasUnread => _notifications.any((n) => _isUnread(n));
+  bool get _hasUnread => _notifications.any(_isUnread);
 
   Color _getColor(String type) {
     switch (type) {

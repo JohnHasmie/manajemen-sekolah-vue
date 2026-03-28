@@ -961,7 +961,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     TutorialCoachMark(
@@ -986,7 +986,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
 
     targets.add(
       TargetFocus(

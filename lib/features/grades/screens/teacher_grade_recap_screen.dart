@@ -754,12 +754,12 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     List<dynamic> rawGrades,
     List<dynamic> recaps,
   ) {
-    List<Map<String, dynamic>> tableData = [];
+    final List<Map<String, dynamic>> tableData = [];
     _predikatControllers.clear();
     _deskripsiControllers.clear();
     _scoreControllers.clear();
 
-    String autoDeskripsi =
+    final String autoDeskripsi =
         "Telah memahami materi ${chapters.map((c) => c['judul_bab'] ?? c['judul'] ?? c['title'] ?? 'Bab').join(', ')} dengan cukup baik.";
 
     for (var studentRow in students) {
@@ -775,7 +775,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
       }).toList();
 
       // Group Harian
-      List<dynamic> harianGrades = studentGrades.where((g) {
+      final List<dynamic> harianGrades = studentGrades.where((g) {
         final typeStr =
             (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
         return [
@@ -793,22 +793,22 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
       );
 
       List<double?> chapterScores = [];
-      int numChapters = chapters.isNotEmpty ? chapters.length : 1;
+      final int numChapters = chapters.isNotEmpty ? chapters.length : 1;
 
       // Distribute harian grades into chapters evenly
       if (harianGrades.isNotEmpty && numChapters > 0) {
-        int itemsPerChapter = (harianGrades.length / numChapters).ceil();
+        final int itemsPerChapter = (harianGrades.length / numChapters).ceil();
         for (int i = 0; i < numChapters; i++) {
-          int start = i * itemsPerChapter;
-          int end = (start + itemsPerChapter > harianGrades.length)
+          final int start = i * itemsPerChapter;
+          final int end = (start + itemsPerChapter > harianGrades.length)
               ? harianGrades.length
               : start + itemsPerChapter;
 
           if (start < harianGrades.length) {
-            var chunk = harianGrades.sublist(start, end);
+            final chunk = harianGrades.sublist(start, end);
             double sum = 0;
             for (var c in chunk) {
-              double val =
+              final double val =
                   double.tryParse(
                     (c['score'] ?? c['nilai'] ?? '0').toString(),
                   ) ??
@@ -825,17 +825,17 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
       }
 
       // UTS/PTS & UAS/PAS
-      var utsGrade = studentGrades.firstWhere((g) {
+      final utsGrade = studentGrades.firstWhere((g) {
         final type = (g['type'] ?? g['jenis'])?.toString().toLowerCase();
         return type == 'uts' || type == 'pts';
       }, orElse: () => null);
-      var uasGrade = studentGrades.firstWhere((g) {
+      final uasGrade = studentGrades.firstWhere((g) {
         final type = (g['type'] ?? g['jenis'])?.toString().toLowerCase();
         return type == 'uas' || type == 'pas';
       }, orElse: () => null);
 
       // Check existing Recap
-      var existingRecap = recaps.firstWhere(
+      final existingRecap = recaps.firstWhere(
         (r) => r['student_class_id']?.toString() == studentClassId,
         orElse: () => null,
       );
@@ -890,20 +890,20 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         componentCount++;
       }
 
-      double finalAverage = componentCount > 0
+      final double finalAverage = componentCount > 0
           ? (finalScoreValue / componentCount)
           : 0;
 
-      double currentSkillScore =
+      final double currentSkillScore =
           (existingRecap != null && existingRecap['skill_score'] != null)
           ? (double.tryParse(existingRecap['skill_score'].toString()) ??
                 finalAverage)
           : finalAverage;
 
-      String currentPredikat = existingRecap != null
+      final String currentPredikat = existingRecap != null
           ? (existingRecap['predikat'] ?? '')
           : '';
-      String currentDeskripsi = existingRecap != null
+      final String currentDeskripsi = existingRecap != null
           ? (existingRecap['deskripsi'] ?? '')
           : (chapters.isNotEmpty ? autoDeskripsi : '');
 
@@ -991,7 +991,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     showDialog(
       context: context,
       builder: (context) {
-        List<dynamic> selectedItems = [];
+        final List<dynamic> selectedItems = [];
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
@@ -1167,7 +1167,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     showDialog(
       context: context,
       builder: (context) {
-        List<Map<String, dynamic>> selectedBulk = [];
+        final List<Map<String, dynamic>> selectedBulk = [];
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
@@ -1672,7 +1672,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   void _recalculateRow(Map<String, dynamic> row) {
     double sum = 0;
     int count = 0;
-    double oldFinalScore = row['final_score'] ?? 0.0;
+    final double oldFinalScore = row['final_score'] ?? 0.0;
 
     for (var s in row['bab_scores']) {
       if (s != null) {
@@ -1689,11 +1689,11 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
       count++;
     }
 
-    double newFinalScore = count > 0 ? sum / count : 0.0;
+    final double newFinalScore = count > 0 ? sum / count : 0.0;
     row['final_score'] = newFinalScore;
 
     // Auto-update skill_score if it was matching previous final_score or is 0
-    double currentSkill = row['skill_score'] ?? 0.0;
+    final double currentSkill = row['skill_score'] ?? 0.0;
     if (currentSkill == oldFinalScore || currentSkill == 0.0) {
       row['skill_score'] = newFinalScore;
       final studentClassId = row['student_class_id'];
@@ -1705,7 +1705,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   }
 
   void _updateAllDescriptions() {
-    String autoDeskripsiTemplate =
+    final String autoDeskripsiTemplate =
         "Telah memahami materi ${_chapters.map((c) => c['judul_bab'] ?? c['judul'] ?? c['title'] ?? 'Bab').join(', ')} dengan cukup baik.";
 
     setState(() {
@@ -1743,10 +1743,10 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         );
       }
 
-      List<Map<String, dynamic>> payload = [];
+      final List<Map<String, dynamic>> payload = [];
 
       for (var row in _tableData) {
-        String studentClassId = row['student_class_id'];
+        final String studentClassId = row['student_class_id'];
         payload.add({
           'student_class_id': studentClassId,
           'subject_id': _selectedSubject!['id'].toString(),
@@ -2406,7 +2406,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   Widget _buildRecapTable(LanguageProvider languageProvider) {
     if (_isLoading) return SkeletonListLoading(itemCount: 5, infoTagCount: 3, showActions: false);
 
-    int numChapters = _chapters.isNotEmpty ? _chapters.length : 1;
+    final int numChapters = _chapters.isNotEmpty ? _chapters.length : 1;
 
     // Frozen column width (Combined Name & NIS) using dynamic state
     final double leftWidth = _studentInfoWidth;
@@ -2416,7 +2416,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     const double predikatWidth = 80;
     const double deskripsiWidth = 280;
 
-    double rightSideWidth =
+    final double rightSideWidth =
         (numChapters * gradeCellWidth) +
         (gradeCellWidth * 2) + // UTS + UAS
         (finalScoreWidth * 2) + // Final + Skill
@@ -2738,7 +2738,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
 
             // Data Rows
             ..._tableData.map((row) {
-              String studentClassId = row['student_class_id'];
+              final String studentClassId = row['student_class_id'];
               return Container(
                 height: 75,
                 decoration: BoxDecoration(
@@ -2971,7 +2971,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     TutorialCoachMark(
@@ -2993,7 +2993,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
 
     targets.add(
       TargetFocus(

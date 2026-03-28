@@ -145,7 +145,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
   }
 
   String _buildFilterSummary(LanguageProvider languageProvider) {
-    List<String> filters = [];
+    final List<String> filters = [];
 
     if (_selectedStatusFilter != null) {
       filters.add(
@@ -1585,7 +1585,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -1612,7 +1612,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
@@ -1790,7 +1790,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
 
   void mapInitialStatus() {
     // Map Indonesian/Display status to Backend/Value status
-    String status = widget.currentStatus;
+    final String status = widget.currentStatus;
     if (status == 'Menunggu' || status == 'Pending') {
       selectedStatus = 'Pending';
     } else if (status == 'Disetujui' || status == 'Approved') {
@@ -1829,8 +1829,8 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
   }
 
   Future<void> updateStatus() async {
-    bool statusChanged = selectedStatus != widget.currentStatus;
-    bool noteChanged = notesController.text != (widget.currentNote ?? '');
+    final bool statusChanged = selectedStatus != widget.currentStatus;
+    final bool noteChanged = notesController.text != (widget.currentNote ?? '');
 
     if (!statusChanged && !noteChanged) {
       AppNavigator.pop(context);

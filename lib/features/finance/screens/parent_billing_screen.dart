@@ -86,7 +86,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
   String _formatCurrency(dynamic amount) {
     if (amount == null) return 'Rp 0';
     try {
-      double value = double.parse(amount.toString());
+      final double value = double.parse(amount.toString());
       final formatter = NumberFormat.currency(
         locale: 'id_ID',
         symbol: 'Rp ',
@@ -279,7 +279,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -306,7 +306,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(
@@ -558,7 +558,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedStatusFilter != null) {
       String statusText;
@@ -975,8 +975,8 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
           final allowedExtensions = ['.jpg', '.jpeg', '.png'];
           final filePath = file.path.toLowerCase();
 
-          bool isValidFile = allowedExtensions.any(
-            (ext) => filePath.endsWith(ext),
+          final bool isValidFile = allowedExtensions.any(
+            filePath.endsWith,
           );
 
           if (!isValidFile) {
@@ -1004,7 +1004,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
   // PDF picker method for parent billing
   Future<void> _pickPDF(StateSetter setDialogState) async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
         allowMultiple: false,
@@ -1804,7 +1804,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
       final allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
       final filePath = file.path.toLowerCase();
 
-      if (!allowedExtensions.any((ext) => filePath.endsWith(ext))) {
+      if (!allowedExtensions.any(filePath.endsWith)) {
         throw Exception(
           'Format file tidak didukung. Gunakan JPG, JPEG, PNG, atau PDF.',
         );
@@ -2288,7 +2288,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
               if (_students.length > 1)
                 GestureDetector(
                   key: _studentSelectorKey,
-                  onTap: () => _showStudentPicker(),
+                  onTap: _showStudentPicker,
                   child: Container(
                     width: 40,
                     height: 40,

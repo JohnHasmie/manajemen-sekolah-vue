@@ -51,7 +51,7 @@ class ExcelRaportService {
       // Get directory
       final Directory directory = await getApplicationDocumentsDirectory();
 
-      String formattedClass = className.replaceAll(
+      final String formattedClass = className.replaceAll(
         RegExp(r'[^a-zA-Z0-9]'),
         '_',
       );
@@ -103,7 +103,7 @@ class ExcelRaportService {
       // Get directory
       final Directory directory = await getApplicationDocumentsDirectory();
 
-      String formattedName = studentName.replaceAll(
+      final String formattedName = studentName.replaceAll(
         RegExp(r'[^a-zA-Z0-9]'),
         '_',
       );
@@ -154,7 +154,7 @@ class ExcelRaportService {
       // Get directory
       final Directory directory = await getApplicationDocumentsDirectory();
 
-      String formattedName = studentName.replaceAll(
+      final String formattedName = studentName.replaceAll(
         RegExp(r'[^a-zA-Z0-9]'),
         '_',
       );

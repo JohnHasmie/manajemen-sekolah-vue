@@ -134,9 +134,7 @@ void main() async {
         ),
       );
     },
-    (error, stack) {
-      LogService.sendError(error, stack);
-    },
+    LogService.sendError,
   );
 }
 

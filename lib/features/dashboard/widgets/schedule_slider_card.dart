@@ -246,7 +246,7 @@ class SmoothPageIndicator extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: List.generate(count, (index) {
             // Simple logic for active dot
-            bool isActive = (page.round() == index);
+            final bool isActive = (page.round() == index);
             return AnimatedContainer(
               duration: Duration(milliseconds: 200),
               margin: EdgeInsets.symmetric(horizontal: 2),

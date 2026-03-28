@@ -116,7 +116,7 @@ class ApiTeacherService {
     String? teacherId,
     bool useCache = true,
   }) async {
-    Map<String, dynamic> queryParams = {
+    final Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
     };
@@ -143,7 +143,7 @@ class ApiTeacherService {
       queryParams['teacher_id'] = teacherId;
     }
 
-    String queryString = Uri(queryParameters: queryParams).query;
+    final String queryString = Uri(queryParameters: queryParams).query;
     final cacheKey = CacheKeyBuilder.custom('teacher', 'paginated', queryString);
 
     if (useCache) {
@@ -191,7 +191,7 @@ class ApiTeacherService {
     String? employeeNumber,
     String? academicYearId,
   }) async {
-    Map<String, dynamic> queryParams = {};
+    final Map<String, dynamic> queryParams = {};
     if (gender != null && gender.isNotEmpty) queryParams['gender'] = gender;
     if (employmentStatus != null && employmentStatus.isNotEmpty) {
       queryParams['employment_status'] = employmentStatus;
@@ -204,7 +204,7 @@ class ApiTeacherService {
       queryParams['academic_year_id'] = academicYearId;
     }
 
-    String queryString = Uri(queryParameters: queryParams).query;
+    final String queryString = Uri(queryParameters: queryParams).query;
 
     try {
       final response = await dioClient.get('/teacher/stats?$queryString');
@@ -319,7 +319,7 @@ class ApiTeacherService {
     List<String>? subjectIds,
     String? academicYearId,
   }) async {
-    Map<String, dynamic> queryParams = {
+    final Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
     };
@@ -336,7 +336,7 @@ class ApiTeacherService {
       queryParams['academic_year_id'] = academicYearId;
     }
 
-    String queryString = Uri(queryParameters: queryParams).query;
+    final String queryString = Uri(queryParameters: queryParams).query;
 
     try {
       final response = await dioClient.get(

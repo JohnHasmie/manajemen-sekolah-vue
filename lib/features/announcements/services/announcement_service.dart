@@ -65,7 +65,7 @@ class ApiAnnouncementService {
     String? search,
   }) async {
     // Build query parameters
-    Map<String, dynamic> queryParams = {
+    final Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
     };
@@ -84,7 +84,7 @@ class ApiAnnouncementService {
     }
 
     // Build query string
-    String queryString = Uri(queryParameters: queryParams).query;
+    final String queryString = Uri(queryParameters: queryParams).query;
 
     try {
       final response = await dioClient.get('/announcement?$queryString');

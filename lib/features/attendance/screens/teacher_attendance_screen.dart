@@ -1535,9 +1535,9 @@ class PresencePageState extends ConsumerState<PresencePage>
     final languageProvider = ref.read(languageRiverpod);
 
     String? tempDateFilter = _selectedDateFilter;
-    List<String> tempSubjectIds = List.from(_selectedSubjectIds);
-    List<String> tempDayIds = List.from(_selectedDayIds);
-    List<String> tempLessonHourIds = List.from(_selectedLessonHourIds);
+    final List<String> tempSubjectIds = List.from(_selectedSubjectIds);
+    final List<String> tempDayIds = List.from(_selectedDayIds);
+    final List<String> tempLessonHourIds = List.from(_selectedLessonHourIds);
 
     final days = [
       {'en': 'Monday', 'id': 'Senin', 'val': '1'},
@@ -1973,7 +1973,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedDateFilter != null) {
       final label = _selectedDateFilter == 'today'
@@ -3081,7 +3081,7 @@ class PresencePageState extends ConsumerState<PresencePage>
     try {
       int successCount = 0;
       int errorCount = 0;
-      List<String> errorMessages = [];
+      final List<String> errorMessages = [];
 
       final date = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
@@ -3108,7 +3108,7 @@ class PresencePageState extends ConsumerState<PresencePage>
           AppLogger.error('attendance', 'Attendance save error for ${student.name}: $e');
 
           // Clean user-friendly message
-          String cleanerMessage = e.toString().replaceAll('Exception: ', '');
+          final String cleanerMessage = e.toString().replaceAll('Exception: ', '');
           errorMessages.add('${student.name}: $cleanerMessage');
         }
       }
@@ -3403,7 +3403,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     TutorialCoachMark(
@@ -3425,7 +3425,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
 
     targets.add(
       TargetFocus(

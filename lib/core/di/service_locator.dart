@@ -36,24 +36,24 @@ final GetIt getIt = GetIt.instance;
 /// Like Laravel's `AppServiceProvider::register()`.
 Future<void> setupServiceLocator() async {
   // Core services
-  getIt.registerLazySingleton<PreferencesService>(() => PreferencesService());
-  getIt.registerLazySingleton<SecureStorageService>(() => SecureStorageService());
-  getIt.registerLazySingleton<TokenService>(() => TokenService());
+  getIt.registerLazySingleton<PreferencesService>(PreferencesService.new);
+  getIt.registerLazySingleton<SecureStorageService>(SecureStorageService.new);
+  getIt.registerLazySingleton<TokenService>(TokenService.new);
   getIt.registerLazySingleton<Dio>(() => dioClient);
 
   // Feature services
-  getIt.registerLazySingleton<ApiGradeRecapService>(() => ApiGradeRecapService());
-  getIt.registerLazySingleton<ApiRaportService>(() => ApiRaportService());
-  getIt.registerLazySingleton<ApiNotificationService>(() => ApiNotificationService());
-  getIt.registerLazySingleton<ApiSettingsService>(() => ApiSettingsService());
-  getIt.registerLazySingleton<ApiAcademicServices>(() => ApiAcademicServices());
-  getIt.registerLazySingleton<ApiAnnouncementService>(() => ApiAnnouncementService());
-  getIt.registerLazySingleton<ApiClassService>(() => ApiClassService());
-  getIt.registerLazySingleton<ApiTeacherService>(() => ApiTeacherService());
-  getIt.registerLazySingleton<ApiStudentService>(() => ApiStudentService());
-  getIt.registerLazySingleton<ApiSubjectService>(() => ApiSubjectService());
-  getIt.registerLazySingleton<ApiScheduleService>(() => ApiScheduleService());
-  getIt.registerLazySingleton<ApiClassActivityService>(() => ApiClassActivityService());
-  getIt.registerLazySingleton<ApiTourService>(() => ApiTourService());
-  getIt.registerLazySingleton<ApiRecommendationService>(() => ApiRecommendationService());
+  getIt.registerLazySingleton<ApiGradeRecapService>(ApiGradeRecapService.new);
+  getIt.registerLazySingleton<ApiRaportService>(ApiRaportService.new);
+  getIt.registerLazySingleton<ApiNotificationService>(ApiNotificationService.new);
+  getIt.registerLazySingleton<ApiSettingsService>(ApiSettingsService.new);
+  getIt.registerLazySingleton<ApiAcademicServices>(ApiAcademicServices.new);
+  getIt.registerLazySingleton<ApiAnnouncementService>(ApiAnnouncementService.new);
+  getIt.registerLazySingleton<ApiClassService>(ApiClassService.new);
+  getIt.registerLazySingleton<ApiTeacherService>(ApiTeacherService.new);
+  getIt.registerLazySingleton<ApiStudentService>(ApiStudentService.new);
+  getIt.registerLazySingleton<ApiSubjectService>(ApiSubjectService.new);
+  getIt.registerLazySingleton<ApiScheduleService>(ApiScheduleService.new);
+  getIt.registerLazySingleton<ApiClassActivityService>(ApiClassActivityService.new);
+  getIt.registerLazySingleton<ApiTourService>(ApiTourService.new);
+  getIt.registerLazySingleton<ApiRecommendationService>(ApiRecommendationService.new);
 }

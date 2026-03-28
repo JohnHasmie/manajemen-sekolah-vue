@@ -273,9 +273,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
       });
     } catch (e) {
       AppLogger.error('classroom', e);
-      setState(() {
-        _generateGradeLevels();
-      });
+      setState(_generateGradeLevels);
       if (mounted) {
                 SnackBarUtils.showError(context, 'Gagal memuat pengaturan sekolah: ${ErrorUtils.getFriendlyMessage(e)}');
       }

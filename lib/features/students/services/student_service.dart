@@ -53,7 +53,7 @@ class ApiStudentService {
         final results = body['results'];
         if (results['failed'] is int && results['failed'] > 0) {
           // Handle failures
-          List<dynamic> errors = results['errors'] ?? [];
+          final List<dynamic> errors = results['errors'] ?? [];
           String errorMsg = errors.isNotEmpty
               ? errors.first.toString()
               : 'Import failed';
@@ -135,7 +135,7 @@ class ApiStudentService {
     String? guardianEmail,
   }) async {
     String url = '/student';
-    List<String> queryParams = [];
+    final List<String> queryParams = [];
 
     if (academicYearId != null) {
       queryParams.add('academic_year_id=$academicYearId');
@@ -218,7 +218,7 @@ class ApiStudentService {
     String? status,
     bool useCache = true,
   }) async {
-    Map<String, dynamic> queryParams = {
+    final Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
     };
@@ -245,7 +245,7 @@ class ApiStudentService {
       queryParams['status'] = status;
     }
 
-    String queryString = Uri(queryParameters: queryParams).query;
+    final String queryString = Uri(queryParameters: queryParams).query;
     final cacheKey = CacheKeyBuilder.custom('student', 'paginated', queryString);
 
     if (useCache) {
@@ -294,7 +294,7 @@ class ApiStudentService {
     String? academicYearId,
     String? status,
   }) async {
-    Map<String, dynamic> queryParams = {};
+    final Map<String, dynamic> queryParams = {};
     if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
     }
@@ -305,7 +305,7 @@ class ApiStudentService {
     }
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
 
-    String queryString = Uri(queryParameters: queryParams).query;
+    final String queryString = Uri(queryParameters: queryParams).query;
 
     try {
       final response = await dioClient.get('/student/stats?$queryString');

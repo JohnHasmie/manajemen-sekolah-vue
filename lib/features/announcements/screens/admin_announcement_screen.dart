@@ -262,7 +262,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedPriorityFilter != null) {
       filterChips.add({
@@ -868,7 +868,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
       // Check if response has the expected structure
       if (response.containsKey('data') && response.containsKey('pagination')) {
-        var fetchedList = response['data'] ?? [];
+        final fetchedList = response['data'] ?? [];
 
         setState(() {
           _announcements = fetchedList;
@@ -996,7 +996,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
       if (!mounted) return;
 
       if (response.containsKey('data') && response.containsKey('pagination')) {
-        var newItems = response['data'] ?? [];
+        final newItems = response['data'] ?? [];
 
         setState(() {
           if (newItems is List) {
@@ -1030,9 +1030,9 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
     final contentController = TextEditingController(
       text: announcementData?['content'] ?? '',
     );
-    String? selectedClassId = announcementData?['kelas_id'];
+    final String? selectedClassId = announcementData?['kelas_id'];
     String? selectedRole = announcementData?['role_target'] ?? 'all';
-    String? rawPriority = announcementData?['priority'];
+    final String? rawPriority = announcementData?['priority'];
     String? selectedPriority;
     if (rawPriority != null) {
       if (rawPriority.toLowerCase() == 'biasa') {
@@ -2607,7 +2607,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
 
   Future<void> _pickFile(StateSetter setDialogState) async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
       );
@@ -2969,7 +2969,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
                           'en': 'Create Announcement',
                           'id': 'Buat Pengumuman',
                         }),
-                        onPressed: () => _showAddEditDialog(),
+                        onPressed: _showAddEditDialog,
                       )
                     : RefreshIndicator(
                         onRefresh: _loadData,
@@ -3013,7 +3013,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
           // Floating Action Button
           floatingActionButton: FloatingActionButton(
             key: _addKey,
-            onPressed: () => _showAddEditDialog(),
+            onPressed: _showAddEditDialog,
             backgroundColor: _getPrimaryColor(),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
@@ -3043,7 +3043,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   }
 
   void showTour() {
-    List<TargetFocus> targets = createTourTargets();
+    final List<TargetFocus> targets = createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -3070,7 +3070,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
   }
 
   List<TargetFocus> createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(

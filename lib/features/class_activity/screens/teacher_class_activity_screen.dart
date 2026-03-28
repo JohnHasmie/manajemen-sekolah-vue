@@ -888,7 +888,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
       );
 
       // scheduleData is already guaranteed to be a List<dynamic> by the service
-      List<dynamic> schedules = scheduleData;
+      final List<dynamic> schedules = scheduleData;
 
       if (mounted) {
         setState(() {
@@ -987,7 +987,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
 
         for (var subject in allSubjects) {
           final subjectId = subject['id'].toString();
-          var s = Map<String, dynamic>.from(subject);
+          final s = Map<String, dynamic>.from(subject);
           s['can_edit'] = isAdmin || mySubjectIds.contains(subjectId);
           uniqueSubjects[subjectId] = s;
         }
@@ -999,7 +999,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
           final subject = item['subject'] ?? item['mata_pelajaran'];
           if (subject != null) {
             final subjectId = subject['id'].toString();
-            var s = Map<String, dynamic>.from(subject);
+            final s = Map<String, dynamic>.from(subject);
             s['can_edit'] = true;
             uniqueSubjects[subjectId] = s;
           }
@@ -1592,9 +1592,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                     margin: EdgeInsets.only(right: 4),
                     child: IconButton(
                       icon: Icon(Icons.search, color: _getPrimaryColor()),
-                      onPressed: () {
-                        _resetAndLoadActivities();
-                      },
+                      onPressed: _resetAndLoadActivities,
                     ),
                   ),
                 ],
@@ -1928,7 +1926,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedDateFilter != null) {
       final label = _selectedDateFilter == 'today'
@@ -2621,7 +2619,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
 
   // ========== HEADER BARU SEPERTI PRESENCE TEACHER ==========
   Widget _buildHeader(LanguageProvider languageProvider) {
-    String title = languageProvider.getTranslatedText({
+    final String title = languageProvider.getTranslatedText({
       'en': 'Class Activity',
       'id': 'Kegiatan Kelas',
     });
@@ -2887,7 +2885,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     TutorialCoachMark(
@@ -2909,7 +2907,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
 
     targets.add(
       TargetFocus(
@@ -3705,7 +3703,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
               _selectedChapterId != null) {
             for (var subId in _selectedSubChapterIds) {
               // Avoid duplicates
-              bool exists = progressItems.any(
+              final bool exists = progressItems.any(
                 (p) => p['sub_bab_id'].toString() == subId,
               );
               if (!exists) {

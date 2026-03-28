@@ -335,7 +335,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (_selectedDateFilter != null) {
       final label = _selectedDateFilter == 'today'
@@ -729,10 +729,10 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     final languageProvider = ref.read(languageRiverpod);
 
     String? tempSelectedDate = _selectedDateFilter;
-    List<String> tempSelectedSubjects = List.from(_selectedSubjectIds);
-    List<String> tempSelectedClasses = List.from(_selectedClassIds);
-    List<String> tempSelectedDays = List.from(_selectedDayIds);
-    List<String> tempSelectedLessonHours = List.from(_selectedLessonHourIds);
+    final List<String> tempSelectedSubjects = List.from(_selectedSubjectIds);
+    final List<String> tempSelectedClasses = List.from(_selectedClassIds);
+    final List<String> tempSelectedDays = List.from(_selectedDayIds);
+    final List<String> tempSelectedLessonHours = List.from(_selectedLessonHourIds);
 
     showModalBottomSheet(
       context: context,
@@ -1416,9 +1416,9 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
       if (!mounted) return;
 
       // Process Data
-      Set<String> dateSet = {};
-      Set<String> subjectIdSet = {};
-      Map<String, dynamic> attMap = {};
+      final Set<String> dateSet = {};
+      final Set<String> subjectIdSet = {};
+      final Map<String, dynamic> attMap = {};
 
       for (var record in attendanceData) {
         final String? date = record['date'];
@@ -1434,12 +1434,12 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
       }
 
       // Create Subject Map for labels
-      Map<String, dynamic> subjectMap = {};
+      final Map<String, dynamic> subjectMap = {};
       for (var s in _subjectList) {
         subjectMap[s['id'].toString()] = s['name'];
       }
 
-      List<PresenceGridData> gridData = [];
+      final List<PresenceGridData> gridData = [];
       for (var student in students) {
         // Handle student structure if it's nested or direct
         final sData = student is Map ? student : {};
@@ -1483,7 +1483,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
         // Build Date Labels (Day of month)
         _dateLabels.clear();
         for (var d in _uniqueDates) {
-          DateTime? dt = AppDateUtils.parseApiDate(d);
+          final DateTime? dt = AppDateUtils.parseApiDate(d);
           _dateLabels[d] = dt != null ? dt.day.toString() : d;
         }
 
@@ -1551,7 +1551,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     // Dynamic columns width?
 
     // Group dates by month
-    Map<String, List<String>> monthsMap = {};
+    final Map<String, List<String>> monthsMap = {};
     for (var dateStr in _uniqueDates) {
       try {
         final date = DateTime.parse(dateStr);
@@ -1981,13 +1981,13 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
     } catch (_) {}
 
     // Generate 12 months starting from July of startYear
-    List<DateTime> months = [];
+    final List<DateTime> months = [];
     for (int i = 0; i < 12; i++) {
       months.add(DateTime(startYear, 7 + i, 1));
     }
 
     // Default Selection
-    List<DateTime> selectedMonths = [];
+    final List<DateTime> selectedMonths = [];
 
     showDialog(
       context: context,
@@ -2152,12 +2152,12 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
 
     // 2. Map Data
     // Subject Map
-    Map<String, String> subjectMap = {};
+    final Map<String, String> subjectMap = {};
     for (var s in _subjectList) {
       subjectMap[s['id'].toString()] = s['name'];
     }
 
-    List<Map<String, dynamic>> exportList = [];
+    final List<Map<String, dynamic>> exportList = [];
 
     for (var record in attendanceData) {
       final sId = record['student_id'].toString();
@@ -2914,7 +2914,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     final languageProvider = ref.read(languageRiverpod);
@@ -2954,7 +2954,7 @@ class _AdminPresenceReportScreenState extends ConsumerState<AdminPresenceReportS
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
 
     targets.add(

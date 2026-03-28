@@ -760,7 +760,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    List<Map<String, dynamic>> filterChips = [];
+    final List<Map<String, dynamic>> filterChips = [];
 
     // Hari chips
     for (var dayId in _selectedDayIds) {
@@ -857,7 +857,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
           : dayRaw;
     }
 
-    List<String> tempDayIds = List.from(_selectedDayIds);
+    final List<String> tempDayIds = List.from(_selectedDayIds);
     String? tempClassId = _selectedClassId;
     String? tempSemester = _selectedFilterSemester ?? _selectedSemester;
 
@@ -1423,7 +1423,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
             name = weekdayToIndo[int.tryParse(id) ?? 0] ?? '';
           }
 
-          int idx = dayOrder.indexOf(name);
+          final int idx = dayOrder.indexOf(name);
           if (idx != -1 && idx < minIdx) minIdx = idx;
         }
         return minIdx;
@@ -1466,7 +1466,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     TutorialCoachMark(
@@ -1488,7 +1488,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
 
     targets.add(
       TargetFocus(
@@ -2242,7 +2242,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen> 
 
     final days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     final availableDays = days
-        .where((day) => scheduleMap.containsKey(day))
+        .where(scheduleMap.containsKey)
         .toList();
 
     // Get all unique session numbers

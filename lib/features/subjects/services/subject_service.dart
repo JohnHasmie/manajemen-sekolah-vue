@@ -41,7 +41,7 @@ class ApiSubjectService {
         schoolId = user['school_id']?.toString() ?? 'global';
       }
 
-      String cacheKey = CacheKeyBuilder.subjectFilters(schoolId);
+      final String cacheKey = CacheKeyBuilder.subjectFilters(schoolId);
 
       // 1. Try cache
       final cachedData = await LocalCacheService.load(
@@ -82,7 +82,7 @@ class ApiSubjectService {
     List<String>? subjectIds,
   }) async {
     // Build query parameters
-    Map<String, dynamic> queryParams = {
+    final Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
     };
@@ -102,7 +102,7 @@ class ApiSubjectService {
     }
 
     // Build query string
-    String queryString = Uri(queryParameters: queryParams).query;
+    final String queryString = Uri(queryParameters: queryParams).query;
 
     // Get school_id context for cache key
     final prefs = PreferencesService();
@@ -115,7 +115,7 @@ class ApiSubjectService {
       } catch (_) {}
     }
 
-    String cacheKey = CacheKeyBuilder.custom('subject', schoolId, queryString);
+    final String cacheKey = CacheKeyBuilder.custom('subject', schoolId, queryString);
 
     try {
       // 1. Try to get from cache

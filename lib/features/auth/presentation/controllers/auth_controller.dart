@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/services/analytics_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
@@ -309,4 +308,4 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
   }
 }
 
-final authProvider = AutoDisposeNotifierProvider<AuthNotifier, AuthState>(() => AuthNotifier());
+final authProvider = AutoDisposeNotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);

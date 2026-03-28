@@ -55,11 +55,11 @@ class ExcelGradeRecapService {
       // Get directory
       final Directory directory = await getApplicationDocumentsDirectory();
 
-      String formattedSubject = subjectName.replaceAll(
+      final String formattedSubject = subjectName.replaceAll(
         RegExp(r'[^a-zA-Z0-9]'),
         '_',
       );
-      String formattedClass = className.replaceAll(
+      final String formattedClass = className.replaceAll(
         RegExp(r'[^a-zA-Z0-9]'),
         '_',
       );

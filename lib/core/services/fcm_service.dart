@@ -143,7 +143,7 @@ class FCMService {
       AppLogger.debug('fcm', 'Initializing FCM Service...');
 
       // Request permission
-      NotificationSettings settings = await _firebaseMessaging
+      final NotificationSettings settings = await _firebaseMessaging
           .requestPermission(
             alert: true,
             announcement: false,
@@ -321,8 +321,8 @@ class FCMService {
   /// The message payload is encoded as JSON in the notification's `payload` field
   /// so it can be parsed when the user taps the notification.
   Future<void> _showLocalNotification(RemoteMessage message) async {
-    RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
+    final RemoteNotification? notification = message.notification;
+    final AndroidNotification? android = message.notification?.android;
 
     if (notification != null) {
       await _localNotifications.show(

@@ -846,7 +846,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
             ),
             SizedBox(height: AppSpacing.xxl),
             ElevatedButton.icon(
-              onPressed: () => _generateMaterial(),
+              onPressed: _generateMaterial,
               icon: Icon(Icons.refresh),
               label: Text('Coba Lagi'),
               style: ElevatedButton.styleFrom(
@@ -865,7 +865,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
 
   Widget _buildQuizCard(int idx, Map<String, dynamic> quiz) {
     Color diffColor = Colors.grey;
-    String difficulty =
+    final String difficulty =
         quiz['difficulty']?.toString().toLowerCase() ?? '';
     if (difficulty == 'easy') {
       diffColor = Colors.green;
@@ -965,7 +965,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: (quiz['options'] as List).map((opt) {
-                    bool isTargetAnswer = opt.toString().trim() ==
+                    final bool isTargetAnswer = opt.toString().trim() ==
                         quiz['correct_answer']?.toString().trim();
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 6),
@@ -1062,7 +1062,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
   }
 
   Widget _buildReferenceCard(Map<String, dynamic> ref) {
-    String refType = ref['type']
+    final String refType = ref['type']
             ?.toString()
             .replaceAll('_', ' ')
             .toUpperCase() ??

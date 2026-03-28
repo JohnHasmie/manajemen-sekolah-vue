@@ -121,7 +121,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       }
 
       // 4. Group bills by Student ID
-      Map<String, List<dynamic>> billsByStudent = {};
+      final Map<String, List<dynamic>> billsByStudent = {};
       for (var bill in bills) {
         final studentId = bill['student_id']?.toString();
         if (studentId != null) {
@@ -157,7 +157,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     List<dynamic> bills,
     List<dynamic> allPaymentTypes,
   ) {
-    Map<String, dynamic> paymentTypeMap = {
+    final Map<String, dynamic> paymentTypeMap = {
       for (var pt in allPaymentTypes) pt['id'].toString(): pt,
     };
 
@@ -168,7 +168,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     for (var bill in bills) {
       if (bill['due_date'] != null) {
         try {
-          DateTime d = DateTime.parse(bill['due_date']);
+          final DateTime d = DateTime.parse(bill['due_date']);
           if (earliestDate == null || d.isBefore(earliestDate)) {
             earliestDate = d;
           }
@@ -177,7 +177,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     }
 
     if (earliestDate != null) {
-      DateTime d = earliestDate;
+      final DateTime d = earliestDate;
       // Many schools start academic year in July (7)
       if (d.month >= 7) {
         startYear = d.year;
@@ -187,7 +187,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     }
 
     // 2. Generate 12 Months
-    List<String> monthKeys = [];
+    final List<String> monthKeys = [];
     for (int i = 0; i < 12; i++) {
       int monthNum = 7 + i;
       int year = startYear;
@@ -195,11 +195,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         monthNum -= 12;
         year += 1;
       }
-      String key = '$year-${monthNum.toString().padLeft(2, '0')}';
+      final String key = '$year-${monthNum.toString().padLeft(2, '0')}';
       monthKeys.add(key);
     }
 
-    Map<int, String> monthNames = {
+    final Map<int, String> monthNames = {
       1: 'Januari',
       2: 'Februari',
       3: 'Maret',
@@ -214,16 +214,16 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       12: 'Desember',
     };
 
-    List<MonthGroup> groups = [];
+    final List<MonthGroup> groups = [];
 
     // 3. Build Groups - DYNAMIC active types per month
     for (var monthKey in monthKeys) {
-      DateTime date = DateTime.parse('$monthKey-01');
-      String displayMonth = monthNames[date.month]!;
+      final DateTime date = DateTime.parse('$monthKey-01');
+      final String displayMonth = monthNames[date.month]!;
 
       // Find bills for THIS month (using due_date)
-      List<dynamic> monthlyBills = bills.where((b) {
-        String dueDate = b['due_date'] ?? '';
+      final List<dynamic> monthlyBills = bills.where((b) {
+        final String dueDate = b['due_date'] ?? '';
         // Approximate month match
         String bMonth = '';
         if (dueDate.length >= 7) bMonth = dueDate.substring(0, 7);
@@ -231,7 +231,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       }).toList();
 
       // Find unique payment types in these bills
-      Set<String> activeTypeIds = {};
+      final Set<String> activeTypeIds = {};
       for (var b in monthlyBills) {
         if (b['payment_type_id'] != null) {
           activeTypeIds.add(b['payment_type_id'].toString());
@@ -239,16 +239,16 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       }
 
       // Sort types
-      List<String> sortedIds = activeTypeIds.toList();
+      final List<String> sortedIds = activeTypeIds.toList();
       sortedIds.sort((a, b) {
-        String nameA = paymentTypeMap[a]?['name'] ?? '';
-        String nameB = paymentTypeMap[b]?['name'] ?? '';
+        final String nameA = paymentTypeMap[a]?['name'] ?? '';
+        final String nameB = paymentTypeMap[b]?['name'] ?? '';
         return nameA.compareTo(nameB);
       });
 
-      List<PaymentTypeColumn> columns = [];
+      final List<PaymentTypeColumn> columns = [];
       for (var typeId in sortedIds) {
-        var data = paymentTypeMap[typeId];
+        final data = paymentTypeMap[typeId];
         columns.add(
           PaymentTypeColumn(id: typeId, name: data?['name'] ?? 'Unknown'),
         );
@@ -270,8 +270,8 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
   // Helper to check status match
   bool _checkStatusMatch(dynamic bill, String filter) {
     if (filter == 'Semua') return true;
-    String status = bill['status'] ?? 'pending';
-    bool isPaid = status == 'verified';
+    final String status = bill['status'] ?? 'pending';
+    final bool isPaid = status == 'verified';
 
     if (filter == 'Lunas') return isPaid;
 
@@ -293,7 +293,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
   Widget _buildCustomTable() {
     // 1. Filter Data
     // Filter Students
-    List<dynamic> filteredStudents = _students.where((s) {
+    final List<dynamic> filteredStudents = _students.where((s) {
       if (_searchQuery.isNotEmpty &&
           !s['name'].toString().toLowerCase().contains(_searchQuery)) {
         return false;
@@ -303,8 +303,8 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       if (_selectedStatus != 'Semua') {
         // Determine if student has any matching bill
         bool match = false;
-        String studentId = s['id'].toString();
-        var bills = _billsByStudent[studentId] ?? [];
+        final String studentId = s['id'].toString();
+        final bills = _billsByStudent[studentId] ?? [];
 
         for (var bill in bills) {
           if (_checkStatusMatch(bill, _selectedStatus)) {
@@ -318,7 +318,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     }).toList();
 
     // Filter Columns (Months & Payment Types)
-    List<MonthGroup> filteredGroups = _monthGroups
+    final List<MonthGroup> filteredGroups = _monthGroups
         .where((m) {
           if (_selectedMonthKey != null && m.monthKey != _selectedMonthKey) {
             return false;
@@ -328,7 +328,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         .map((m) {
           // Deep copy needed for filtering inner list
           if (_selectedPaymentTypeId == null) return m;
-          var filteredTypes = m.paymentTypes
+          final filteredTypes = m.paymentTypes
               .where((p) => p.id == _selectedPaymentTypeId)
               .toList();
           return MonthGroup(
@@ -350,7 +350,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         if (scrollableWidth < 0) scrollableWidth = 0;
 
         // Fixed Column (Students)
-        List<Widget> fixedColumnWidgets = [];
+        final List<Widget> fixedColumnWidgets = [];
 
         // Header "Nama"
         fixedColumnWidgets.add(
@@ -378,7 +378,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
 
         // Data Rows "Nama"
         for (var i = 0; i < filteredStudents.length; i++) {
-          var student = filteredStudents[i];
+          final student = filteredStudents[i];
           fixedColumnWidgets.add(
             Container(
               width: 150,
@@ -417,14 +417,14 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
 
         // Scrollable Columns (Bills)
         // 1. Build Header Rows
-        List<Widget> monthHeaderWidgets = [];
-        List<Widget> typeHeaderWidgets = [];
+        final List<Widget> monthHeaderWidgets = [];
+        final List<Widget> typeHeaderWidgets = [];
 
         for (var group in filteredGroups) {
-          int colCount = group.paymentTypes.isNotEmpty
+          final int colCount = group.paymentTypes.isNotEmpty
               ? group.paymentTypes.length
               : 1;
-          double groupWidth = colCount * 100.0;
+          final double groupWidth = colCount * 100.0;
 
           // Month Header
           monthHeaderWidgets.add(
@@ -504,7 +504,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
           }
         }
 
-        Widget headerRow = Column(
+        final Widget headerRow = Column(
           children: [
             Row(children: monthHeaderWidgets),
             Row(children: typeHeaderWidgets),
@@ -512,13 +512,13 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         );
 
         // 2. Build Data Rows
-        List<Widget> dataRows = [];
+        final List<Widget> dataRows = [];
         for (var i = 0; i < filteredStudents.length; i++) {
-          var student = filteredStudents[i];
-          String studentId = student['id'].toString();
-          var studentBills = _billsByStudent[studentId] ?? [];
+          final student = filteredStudents[i];
+          final String studentId = student['id'].toString();
+          final studentBills = _billsByStudent[studentId] ?? [];
 
-          List<Widget> rowCells = [];
+          final List<Widget> rowCells = [];
 
           for (var group in filteredGroups) {
             if (group.paymentTypes.isEmpty) {
@@ -541,14 +541,14 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
             } else {
               for (var type in group.paymentTypes) {
                 // Find bill for this student, month, and type
-                var bill = studentBills.firstWhere((b) {
+                final bill = studentBills.firstWhere((b) {
                   // Match type
                   if (b['payment_type_id'].toString() != type.id) return false;
                   // Match month (due_date)
                   if (b['due_date'] == null) return false;
                   try {
-                    DateTime d = DateTime.parse(b['due_date']);
-                    String k =
+                    final DateTime d = DateTime.parse(b['due_date']);
+                    final String k =
                         "${d.year}-${d.month.toString().padLeft(2, '0')}";
                     return k == group.monthKey;
                   } catch (_) {
@@ -620,7 +620,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
   String _formatCurrency(dynamic amount) {
     if (amount == null) return 'Rp 0';
     try {
-      double value = double.parse(amount.toString());
+      final double value = double.parse(amount.toString());
       final formatter = NumberFormat.currency(
         locale: 'id_ID',
         symbol: 'Rp ',
@@ -742,7 +742,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
 
   Future<void> _pickPDF(StateSetter setDialogState) async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
         allowMultiple: false,
@@ -2118,9 +2118,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         // Check if there is an existing PENDING payment to update instead of creating new
         String? pendingPaymentId;
         if (bill['payments'] != null && (bill['payments'] as List).isNotEmpty) {
-          var payList = List.from(bill['payments']);
+          final payList = List.from(bill['payments']);
           // Find latest pending payment
-          var pendingPay = payList.lastWhere(
+          final pendingPay = payList.lastWhere(
             (p) => p['status'] == 'pending',
             orElse: () => null,
           );
@@ -2154,9 +2154,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
         String? paymentIdToCancel;
         if (bill['payments'] != null && (bill['payments'] as List).isNotEmpty) {
           // Sort or find the latest verified one
-          var payList = List.from(bill['payments']);
+          final payList = List.from(bill['payments']);
           // Assuming latest is last or sort by date if possible, but taking 'verified' one is safest
-          var verifiedPay = payList.lastWhere(
+          final verifiedPay = payList.lastWhere(
             (p) => p['status'] == 'verified',
             orElse: () => null,
           );

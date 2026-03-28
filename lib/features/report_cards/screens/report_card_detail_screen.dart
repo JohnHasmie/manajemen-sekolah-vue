@@ -352,7 +352,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
   void _syncSubjectsWithRecap(List<dynamic> initialGrades) {
     // Add missing subjects from recap
     for (var recapItem in initialGrades) {
-      bool exists = _subjects.any(
+      final bool exists = _subjects.any(
         (s) => s['subject_id'] == recapItem['subject_id'],
       );
       if (!exists) {
@@ -946,7 +946,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
             ),
           ],
         ),
-        ...List.generate(_extras.length, (index) => _buildExtraItem(index)),
+        ...List.generate(_extras.length, _buildExtraItem),
 
         const SizedBox(height: AppSpacing.xxl),
         const Divider(),
@@ -974,7 +974,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
         ),
         ...List.generate(
           _achievements.length,
-          (index) => _buildAchievementItem(index),
+          _buildAchievementItem,
         ),
       ],
     );
@@ -1307,7 +1307,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
   }
 
   void _showTour() {
-    List<TargetFocus> targets = _createTourTargets();
+    final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
     TutorialCoachMark(
@@ -1329,7 +1329,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
   }
 
   List<TargetFocus> _createTourTargets() {
-    List<TargetFocus> targets = [];
+    final List<TargetFocus> targets = [];
 
     targets.add(
       TargetFocus(

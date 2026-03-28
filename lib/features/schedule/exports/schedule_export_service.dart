@@ -145,14 +145,14 @@ class ExcelScheduleService {
       final Map<String, dynamic> validatedSchedule = {};
 
       // Validate required fields
-      var teacherName = schedule['teacher_name'] ?? schedule['guru_nama'];
+      final teacherName = schedule['teacher_name'] ?? schedule['guru_nama'];
       if (teacherName == null || teacherName.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama guru tidak boleh kosong');
       } else {
         validatedSchedule['teacher_name'] = teacherName;
       }
 
-      var subjectName =
+      final subjectName =
           schedule['subject_name'] ?? schedule['mata_pelajaran_nama'];
       if (subjectName == null || subjectName.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama mata pelajaran tidak boleh kosong');
@@ -160,7 +160,7 @@ class ExcelScheduleService {
         validatedSchedule['subject_name'] = subjectName;
       }
 
-      var className = schedule['class_name'] ?? schedule['kelas_nama'];
+      final className = schedule['class_name'] ?? schedule['kelas_nama'];
       if (className == null || className.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama kelas tidak boleh kosong');
       } else {

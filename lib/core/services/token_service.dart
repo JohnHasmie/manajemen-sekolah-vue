@@ -52,7 +52,7 @@ class TokenService {
       }
 
       try {
-        bool isExpired = JwtDecoder.isExpired(token);
+        final bool isExpired = JwtDecoder.isExpired(token);
         AppLogger.debug('auth', 'Token expired: $isExpired');
         if (!isExpired) {
           final expirationDate = JwtDecoder.getExpirationDate(token);

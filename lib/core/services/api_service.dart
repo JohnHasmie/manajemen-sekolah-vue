@@ -187,7 +187,7 @@ class ApiService {
     final token = prefs.getString('token');
     final userJson = prefs.getString('user');
 
-    Map<String, String> headers = {
+    final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
@@ -409,7 +409,7 @@ class ApiService {
     String? filterSubjectId, // Added based on queryParams
     String? date, // Added based on queryParams
   }) async {
-    Map<String, dynamic> queryParams = {
+    final Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
     };
@@ -480,7 +480,7 @@ class ApiService {
     String? paymentTypeId,
     String? classId,
   }) async {
-    Map<String, dynamic> queryParams = {
+    final Map<String, dynamic> queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
     };
