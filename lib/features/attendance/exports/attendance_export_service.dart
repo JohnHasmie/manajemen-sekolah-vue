@@ -32,10 +32,11 @@ class ExcelPresenceService {
     required BuildContext context,
     Map<String, dynamic> filters = const {},
   }) async {
-    
-
     try {
-      AppLogger.debug('attendance', 'Starting export with ${presenceData.length} records');
+      AppLogger.debug(
+        'attendance',
+        'Starting export with ${presenceData.length} records',
+      );
 
       // Validate data
       if (presenceData.isEmpty) {
@@ -65,18 +66,24 @@ class ExcelPresenceService {
       AppLogger.debug('attendance', 'Open file result: $result');
 
       if (context.mounted) {
-                SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-                'en': 'Presence data exported successfully',
-                'id': 'Data absensi berhasil diexport',
-              }));
+        SnackBarUtils.showSuccess(
+          context,
+          languageProvider.getTranslatedText({
+            'en': 'Presence data exported successfully',
+            'id': 'Data absensi berhasil diexport',
+          }),
+        );
       }
     } catch (e) {
       AppLogger.error('attendance', e);
       if (context.mounted) {
-                SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-                'en': 'Failed to export data: $e',
-                'id': 'Gagal mengexport data: $e',
-              }));
+        SnackBarUtils.showError(
+          context,
+          languageProvider.getTranslatedText({
+            'en': 'Failed to export data: $e',
+            'id': 'Gagal mengexport data: $e',
+          }),
+        );
       }
     }
   }
@@ -94,7 +101,8 @@ class ExcelPresenceService {
 
       final responseData = response.data;
 
-      if (responseData is Map<String, dynamic> && responseData['success'] == true) {
+      if (responseData is Map<String, dynamic> &&
+          responseData['success'] == true) {
         return List<Map<String, dynamic>>.from(responseData['validatedData']);
       } else {
         throw Exception(responseData['message'] ?? 'Validation failed');

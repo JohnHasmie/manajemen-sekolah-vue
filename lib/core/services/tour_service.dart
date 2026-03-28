@@ -35,11 +35,7 @@ class ApiTourService {
   }) async {
     final response = await dioClient.get(
       '/tours/status',
-      queryParameters: {
-        'platform': platform,
-        'role': role,
-        'name': name,
-      },
+      queryParameters: {'platform': platform, 'role': role, 'name': name},
     );
 
     return response.data as Map<String, dynamic>;
@@ -56,10 +52,7 @@ class ApiTourService {
   }) async {
     final response = await dioClient.post(
       '/tours/batch-status',
-      data: {
-        'platform': platform,
-        'tours': tours,
-      },
+      data: {'platform': platform, 'tours': tours},
     );
 
     final responseData = response.data as Map<String, dynamic>;
@@ -89,11 +82,7 @@ class ApiTourService {
   }) async {
     final response = await dioClient.post(
       '/tours/save-progress',
-      data: {
-        'tour_id': tourId,
-        'platform': platform,
-        'last_step': lastStep,
-      },
+      data: {'tour_id': tourId, 'platform': platform, 'last_step': lastStep},
     );
 
     return response.data as Map<String, dynamic>;

@@ -190,10 +190,7 @@ class AnalyticsService {
     try {
       await _analytics?.logEvent(
         name: 'feature_used',
-        parameters: {
-          'feature_name': featureName,
-          ...?parameters,
-        },
+        parameters: {'feature_name': featureName, ...?parameters},
       );
       AppLogger.info('analytics', 'Feature used: $featureName');
     } catch (e) {
@@ -256,10 +253,7 @@ class AnalyticsService {
     try {
       await _analytics?.logEvent(
         name: 'school_switch',
-        parameters: {
-          'school_name': schoolName,
-          'role': role,
-        },
+        parameters: {'school_name': schoolName, 'role': role},
       );
     } catch (e) {
       AppLogger.warning('analytics', 'Analytics logSchoolSwitch failed: $e');

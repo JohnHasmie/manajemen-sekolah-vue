@@ -13,6 +13,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 
 /// Manages the app's current language and notifies listeners on change.
@@ -83,6 +84,17 @@ extension LocalizedString on Map<String, String> {
     return languageProvider.getTranslatedText(this);
   }
 }
+
+/// Riverpod provider for [LanguageProvider].
+/// Uses the existing global singleton instance to stay in sync with
+/// the `.tr` extension and old Provider-based widgets.
+///
+/// Usage: `ref.watch(languageRiverpod)` for reactive language changes
+final languageRiverpod = riverpod.ChangeNotifierProvider<LanguageProvider>((
+  ref,
+) {
+  return languageProvider; // Global singleton from language_utils.dart
+});
 
 /// Static translation dictionary containing all app strings in English and Indonesian.
 /// Like Laravel's `resources/lang/en/messages.php` and `resources/lang/id/messages.php`
@@ -1433,10 +1445,7 @@ class AppLocalizations {
   };
 
   // Verification & OTP
-  static Map<String, String> get verify => {
-    'en': 'Verify',
-    'id': 'Verifikasi',
-  };
+  static Map<String, String> get verify => {'en': 'Verify', 'id': 'Verifikasi'};
 
   // AI Regeneration
   static Map<String, String> get regenerate => {
@@ -1547,125 +1556,123 @@ class AppLocalizations {
 
   // --- Auth & Login Additions ---
   static Map<String, String> get serverNotConnected => {
-        'en': 'Server not connected. Cannot login.',
-        'id': 'Server tidak terhubung. Tidak dapat login.'
-      };
+    'en': 'Server not connected. Cannot login.',
+    'id': 'Server tidak terhubung. Tidak dapat login.',
+  };
   static Map<String, String> get emailPasswordNotEmpty => {
-        'en': 'Email and password cannot be empty',
-        'id': 'Email dan password tidak boleh kosong'
-      };
+    'en': 'Email and password cannot be empty',
+    'id': 'Email dan password tidak boleh kosong',
+  };
   static Map<String, String> get emailInvalid => {
-        'en': 'Invalid email format',
-        'id': 'Format email tidak valid'
-      };
+    'en': 'Invalid email format',
+    'id': 'Format email tidak valid',
+  };
   static Map<String, String> get accountNotRegistered => {
-        'en': 'Account Not Registered',
-        'id': 'Akun Belum Terdaftar'
-      };
+    'en': 'Account Not Registered',
+    'id': 'Akun Belum Terdaftar',
+  };
   static Map<String, String> get accountNotRegisteredMsg => {
-        'en': 'Your account is not registered, please contact Admin.',
-        'id': 'Akun Anda belum terdaftar, silahkan hubungi Admin.'
-      };
+    'en': 'Your account is not registered, please contact Admin.',
+    'id': 'Akun Anda belum terdaftar, silahkan hubungi Admin.',
+  };
   static Map<String, String> get selectRole => {
-        'en': 'Select Role',
-        'id': 'Pilih Role'
-      };
+    'en': 'Select Role',
+    'id': 'Pilih Role',
+  };
   static Map<String, String> get selectRoleMsg => {
-        'en': 'Your account has multiple access roles. Please select a role.',
-        'id': 'Akun Anda memiliki beberapa akses. Silahkan pilih role Anda.'
-      };
+    'en': 'Your account has multiple access roles. Please select a role.',
+    'id': 'Akun Anda memiliki beberapa akses. Silahkan pilih role Anda.',
+  };
   static Map<String, String> get selectSchoolMsg => {
-        'en': 'Your account is registered in multiple schools. Please select a school.',
-        'id': 'Akun Anda terdaftar di beberapa sekolah. Silahkan pilih sekolah.'
-      };
+    'en':
+        'Your account is registered in multiple schools. Please select a school.',
+    'id': 'Akun Anda terdaftar di beberapa sekolah. Silahkan pilih sekolah.',
+  };
   static Map<String, String> get understand => {
-        'en': 'Understand',
-        'id': 'Mengerti'
-      };
+    'en': 'Understand',
+    'id': 'Mengerti',
+  };
   static Map<String, String> get loginFailed => {
-        'en': 'Login Failed',
-        'id': 'Login Gagal'
-      };
+    'en': 'Login Failed',
+    'id': 'Login Gagal',
+  };
   static Map<String, String> get backToLogin => {
-        'en': 'Back to Login',
-        'id': 'Kembali ke Login'
-      };
+    'en': 'Back to Login',
+    'id': 'Kembali ke Login',
+  };
   static Map<String, String> get continueText => {
-        'en': 'Continue',
-        'id': 'Lanjut'
-      };
+    'en': 'Continue',
+    'id': 'Lanjut',
+  };
   static Map<String, String> get verifyFailed => {
-        'en': 'Verification Failed:',
-        'id': 'Verifikasi Gagal:'
-      };
+    'en': 'Verification Failed:',
+    'id': 'Verifikasi Gagal:',
+  };
 
   // Login Screen - OTP Dialog
   static Map<String, String> get otpVerification => {
-        'en': 'OTP Verification',
-        'id': 'Verifikasi OTP'
-      };
+    'en': 'OTP Verification',
+    'id': 'Verifikasi OTP',
+  };
   static Map<String, String> get otpSentToEmail => {
-        'en': 'OTP code has been sent to email:',
-        'id': 'Kode OTP telah dikirim ke email:'
-      };
+    'en': 'OTP code has been sent to email:',
+    'id': 'Kode OTP telah dikirim ke email:',
+  };
   static Map<String, String> get enterOtpDigits => {
-        'en': 'Enter 6-digit OTP code:',
-        'id': 'Masukkan 6 digit kode OTP:'
-      };
+    'en': 'Enter 6-digit OTP code:',
+    'id': 'Masukkan 6 digit kode OTP:',
+  };
   static Map<String, String> get otpCode => {
-        'en': 'OTP Code',
-        'id': 'Kode OTP'
-      };
+    'en': 'OTP Code',
+    'id': 'Kode OTP',
+  };
 
   // Login Screen - Buttons & Labels
   static Map<String, String> get pleaseWait => {
-        'en': 'Please Wait...',
-        'id': 'Mohon Tunggu...'
-      };
+    'en': 'Please Wait...',
+    'id': 'Mohon Tunggu...',
+  };
   static Map<String, String> get signInWithGoogle => {
-        'en': 'Sign in with Google',
-        'id': 'Masuk dengan Google'
-      };
+    'en': 'Sign in with Google',
+    'id': 'Masuk dengan Google',
+  };
   static Map<String, String> get schoolNoName => {
-        'en': 'Unnamed School',
-        'id': 'Sekolah Tanpa Nama'
-      };
+    'en': 'Unnamed School',
+    'id': 'Sekolah Tanpa Nama',
+  };
 
   // Login Screen - Role Descriptions
   static Map<String, String> get accessAs => {
-        'en': 'Access as',
-        'id': 'Akses sebagai'
-      };
+    'en': 'Access as',
+    'id': 'Akses sebagai',
+  };
   static Map<String, String> get roleDescAdmin => {
-        'en': 'School system administrator',
-        'id': 'Pengelola sistem sekolah'
-      };
+    'en': 'School system administrator',
+    'id': 'Pengelola sistem sekolah',
+  };
   static Map<String, String> get roleDescTeacher => {
-        'en': 'Teacher and education',
-        'id': 'Pengajar dan pendidikan'
-      };
+    'en': 'Teacher and education',
+    'id': 'Pengajar dan pendidikan',
+  };
   static Map<String, String> get roleDescParent => {
-        'en': 'Parent/guardian',
-        'id': 'Orang tua/wali siswa'
-      };
+    'en': 'Parent/guardian',
+    'id': 'Orang tua/wali siswa',
+  };
   static Map<String, String> get roleDescStaff => {
-        'en': 'Administrative staff',
-        'id': 'Staff administrasi'
-      };
+    'en': 'Administrative staff',
+    'id': 'Staff administrasi',
+  };
   static Map<String, String> get roleDescDefault => {
-        'en': 'System user',
-        'id': 'Pengguna sistem'
-      };
+    'en': 'System user',
+    'id': 'Pengguna sistem',
+  };
 
   // Login Screen - Greeting
-  static Map<String, String> get hello => {
-        'en': 'Hello',
-        'id': 'Halo'
-      };
+  static Map<String, String> get hello => {'en': 'Hello', 'id': 'Halo'};
   static Map<String, String> get schoolLabel => {
-        'en': 'School',
-        'id': 'Sekolah'
-      };
+    'en': 'School',
+    'id': 'Sekolah',
+  };
 }
 
 /// Convenience extension that provides pre-resolved translated strings as static getters.

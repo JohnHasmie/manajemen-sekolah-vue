@@ -12,20 +12,20 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
-import 'package:manajemensekolah/features/grades/services/grade_recap_service.dart';
-import 'package:manajemensekolah/features/report_cards/services/report_card_service.dart';
-import 'package:manajemensekolah/features/notifications/services/notification_service.dart';
-import 'package:manajemensekolah/features/settings/services/settings_service.dart';
-import 'package:manajemensekolah/features/settings/services/academic_service.dart';
-import 'package:manajemensekolah/features/announcements/services/announcement_service.dart';
-import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
-import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
-import 'package:manajemensekolah/features/students/services/student_service.dart';
-import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
-import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
-import 'package:manajemensekolah/features/class_activity/services/class_activity_service.dart';
+import 'package:manajemensekolah/features/grades/data/grade_recap_service.dart';
+import 'package:manajemensekolah/features/report_cards/data/report_card_service.dart';
+import 'package:manajemensekolah/features/notifications/data/notification_service.dart';
+import 'package:manajemensekolah/features/settings/data/settings_service.dart';
+import 'package:manajemensekolah/features/settings/data/academic_service.dart';
+import 'package:manajemensekolah/features/announcements/data/announcement_service.dart';
+import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
+import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
+import 'package:manajemensekolah/features/students/data/student_service.dart';
+import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
+import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
+import 'package:manajemensekolah/features/class_activity/data/class_activity_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
-import 'package:manajemensekolah/features/recommendations/services/recommendation_service.dart';
+import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 
 /// Global service locator instance. Like Laravel's `app()` helper.
 /// Access any registered service via `getIt<ServiceType>()`.
@@ -44,16 +44,24 @@ Future<void> setupServiceLocator() async {
   // Feature services
   getIt.registerLazySingleton<ApiGradeRecapService>(ApiGradeRecapService.new);
   getIt.registerLazySingleton<ApiRaportService>(ApiRaportService.new);
-  getIt.registerLazySingleton<ApiNotificationService>(ApiNotificationService.new);
+  getIt.registerLazySingleton<ApiNotificationService>(
+    ApiNotificationService.new,
+  );
   getIt.registerLazySingleton<ApiSettingsService>(ApiSettingsService.new);
   getIt.registerLazySingleton<ApiAcademicServices>(ApiAcademicServices.new);
-  getIt.registerLazySingleton<ApiAnnouncementService>(ApiAnnouncementService.new);
+  getIt.registerLazySingleton<ApiAnnouncementService>(
+    ApiAnnouncementService.new,
+  );
   getIt.registerLazySingleton<ApiClassService>(ApiClassService.new);
   getIt.registerLazySingleton<ApiTeacherService>(ApiTeacherService.new);
   getIt.registerLazySingleton<ApiStudentService>(ApiStudentService.new);
   getIt.registerLazySingleton<ApiSubjectService>(ApiSubjectService.new);
   getIt.registerLazySingleton<ApiScheduleService>(ApiScheduleService.new);
-  getIt.registerLazySingleton<ApiClassActivityService>(ApiClassActivityService.new);
+  getIt.registerLazySingleton<ApiClassActivityService>(
+    ApiClassActivityService.new,
+  );
   getIt.registerLazySingleton<ApiTourService>(ApiTourService.new);
-  getIt.registerLazySingleton<ApiRecommendationService>(ApiRecommendationService.new);
+  getIt.registerLazySingleton<ApiRecommendationService>(
+    ApiRecommendationService.new,
+  );
 }

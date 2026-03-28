@@ -37,7 +37,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:manajemensekolah/core/widgets/error_handler.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/firebase_options.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_router.dart';
@@ -69,73 +70,72 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 /// 6. Language provider (load saved locale preference).
 /// 7. Error handling setup.
 void main() async {
-  runZonedGuarded(
-    () async {
-      WidgetsFlutterBinding.ensureInitialized();
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-      // Load environment variables
-      try {
-        await dotenv.load(fileName: ".env");
-        AppLogger.info('init', '.env loaded');
-      } catch (e, stack) {
-        AppLogger.warning('init', 'Failed to load .env: $e');
-        LogService.sendError(e, stack);
-      }
+    // Load environment variables
+    try {
+      await dotenv.load(fileName: ".env");
+      AppLogger.info('init', '.env loaded');
+    } catch (e, stack) {
+      AppLogger.warning('init', 'Failed to load .env: $e');
+      LogService.sendError(e, stack);
+    }
 
-      // Initialize PreferencesService (SharedPreferences wrapper)
-      await PreferencesService().init();
-      AppLogger.info('init', 'PreferencesService initialized');
+    // Initialize PreferencesService (SharedPreferences wrapper)
+    await PreferencesService().init();
+    AppLogger.info('init', 'PreferencesService initialized');
 
-      // Initialize ApiService FIRST (before anything else)
-      await ApiService.init();
-      AppLogger.info('init', 'ApiService initialized');
+    // Initialize ApiService FIRST (before anything else)
+    await ApiService.init();
+    AppLogger.info('init', 'ApiService initialized');
 
-      // Initialize Dio HTTP client with interceptors
-      createDioClient(ApiService.baseUrl);
-      AppLogger.info('init', 'Dio client initialized');
+    // Initialize Dio HTTP client with interceptors
+    createDioClient(ApiService.baseUrl);
+    AppLogger.info('init', 'Dio client initialized');
 
-      // Setup dependency injection
-      await setupServiceLocator();
-      AppLogger.info('init', 'Service locator initialized');
+    // Setup dependency injection
+    await setupServiceLocator();
+    AppLogger.info('init', 'Service locator initialized');
 
-      // Initialize Firebase
-      try {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-        AppLogger.info('init', 'Firebase initialized');
-      } catch (e, stack) {
-        AppLogger.error('init', 'Firebase initialization error: $e');
-        AppLogger.warning('init', 'Please configure Firebase using FlutterFire CLI or update firebase_options.dart');
-        LogService.sendError(e, stack);
-      }
-
-      // Initialize Firebase Analytics & Performance
-      try {
-        await AnalyticsService.initialize();
-        await PerformanceService.initialize();
-        // Set user if already logged in previously
-        await AnalyticsService.setUserFromPrefs();
-      } catch (e) {
-        AppLogger.warning('init', 'Analytics/Performance init failed (non-critical): $e');
-      }
-
-      await initializeDateFormatting('id_ID', null);
-
-      // Initialize language provider and load saved language
-      await languageProvider.loadSavedLanguage();
-
-      // Setup error handling (non-blocking)
-      _setupErrorHandling();
-
-      runApp(
-        ProviderScope(
-          child: SchoolManagementApp(),
-        ),
+    // Initialize Firebase
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
       );
-    },
-    LogService.sendError,
-  );
+      AppLogger.info('init', 'Firebase initialized');
+    } catch (e, stack) {
+      AppLogger.error('init', 'Firebase initialization error: $e');
+      AppLogger.warning(
+        'init',
+        'Please configure Firebase using FlutterFire CLI or update firebase_options.dart',
+      );
+      LogService.sendError(e, stack);
+    }
+
+    // Initialize Firebase Analytics & Performance
+    try {
+      await AnalyticsService.initialize();
+      await PerformanceService.initialize();
+      // Set user if already logged in previously
+      await AnalyticsService.setUserFromPrefs();
+    } catch (e) {
+      AppLogger.warning(
+        'init',
+        'Analytics/Performance init failed (non-critical): $e',
+      );
+    }
+
+    await initializeDateFormatting('id_ID', null);
+
+    // Initialize language provider and load saved language
+    await languageProvider.loadSavedLanguage();
+
+    // Setup error handling (non-blocking)
+    _setupErrorHandling();
+
+    runApp(ProviderScope(child: SchoolManagementApp()));
+  }, LogService.sendError);
 }
 
 /// Top-level error handling setup (called from `main`).
@@ -166,7 +166,8 @@ class SchoolManagementApp extends ConsumerStatefulWidget {
   const SchoolManagementApp({super.key});
 
   @override
-  ConsumerState<SchoolManagementApp> createState() => _SchoolManagementAppState();
+  ConsumerState<SchoolManagementApp> createState() =>
+      _SchoolManagementAppState();
 }
 
 class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
@@ -204,7 +205,10 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
           await FCMService().initialize();
           AppLogger.info('init', 'FCM Service initialized in app');
         } catch (e) {
-          AppLogger.warning('init', 'FCM Service initialization failed (non-critical): $e');
+          AppLogger.warning(
+            'init',
+            'FCM Service initialization failed (non-critical): $e',
+          );
         }
       } else {
         AppLogger.info('init', 'FCM skipped (skipFCM=true)');
@@ -313,5 +317,4 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
       debugShowCheckedModeBanner: false,
     );
   }
-
 }

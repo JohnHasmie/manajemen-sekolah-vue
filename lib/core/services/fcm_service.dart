@@ -9,11 +9,11 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart'; // Required for MaterialPageRoute
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manajemensekolah/main.dart'; // Import navigatorKey
-import 'package:manajemensekolah/features/announcements/screens/admin_announcement_screen.dart';
-import 'package:manajemensekolah/features/announcements/screens/parent_announcement_screen.dart';
-import 'package:manajemensekolah/features/class_activity/screens/parent_class_activity_screen.dart';
-import 'package:manajemensekolah/features/grades/screens/parent_grade_screen.dart';
-import 'package:manajemensekolah/features/attendance/screens/parent_attendance_screen.dart';
+import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
+import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
+import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
 import 'package:manajemensekolah/core/constants/api_endpoints.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -155,7 +155,10 @@ class FCMService {
             sound: true,
           );
 
-      AppLogger.info('fcm', 'Permission status: ${settings.authorizationStatus}');
+      AppLogger.info(
+        'fcm',
+        'Permission status: ${settings.authorizationStatus}',
+      );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
@@ -272,7 +275,10 @@ class FCMService {
         Future.delayed(const Duration(milliseconds: 100), () {
           syncTrigger.value = null;
         });
-        AppLogger.debug('fcm', 'Teacher & Class cache invalidated in foreground');
+        AppLogger.debug(
+          'fcm',
+          'Teacher & Class cache invalidated in foreground',
+        );
         return;
       }
 
@@ -376,19 +382,34 @@ class FCMService {
 
     if (type == 'absensi' || type == 'attendance') {
       _navigateToPresenceScreen(data);
-      AppLogger.info('fcm', 'Navigate to absensi screen for siswa: ${data['student_id']}');
+      AppLogger.info(
+        'fcm',
+        'Navigate to absensi screen for siswa: ${data['student_id']}',
+      );
     } else if (type == 'class_activity' || type == 'class_activity_detail') {
       _navigateToClassActivityScreen();
-      AppLogger.info('fcm', 'Navigate to class activity for kegiatan: ${data['activity_id']}',);
+      AppLogger.info(
+        'fcm',
+        'Navigate to class activity for kegiatan: ${data['activity_id']}',
+      );
     } else if (type == 'pengumuman' || type == 'announcement') {
       // Navigate to announcement screen
       AppLogger.info('fcm', 'navigating to announcement screen');
 
       _navigateToAnnouncementScreen();
 
-      AppLogger.info('fcm', 'Navigate to pengumuman: ${data['announcement_id']}');
-      AppLogger.debug('fcm', 'Title: ${data['title']}, Priority: ${data['priority']}');
-      AppLogger.debug('fcm', 'Target: ${data['target_role']}, Class: ${data['class_name']}');
+      AppLogger.info(
+        'fcm',
+        'Navigate to pengumuman: ${data['announcement_id']}',
+      );
+      AppLogger.debug(
+        'fcm',
+        'Title: ${data['title']}, Priority: ${data['priority']}',
+      );
+      AppLogger.debug(
+        'fcm',
+        'Target: ${data['target_role']}, Class: ${data['class_name']}',
+      );
     } else if (type == 'tagihan') {
       // Navigate to tagihan (billing) screen
       // This will be handled by the app's navigation system

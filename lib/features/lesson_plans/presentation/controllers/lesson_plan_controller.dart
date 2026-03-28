@@ -8,11 +8,11 @@ final lessonPlanServiceProvider = Provider<LessonPlanService>((ref) {
   return LessonPlanService();
 });
 
-/// A lightweight AsyncNotifier to manage global Lesson Plan invalidations 
+/// A lightweight AsyncNotifier to manage global Lesson Plan invalidations
 /// or generic listing states if needed across multiple screens.
-/// 
-/// Note: Complex pagination and form states are currently retained in their respective 
-/// ConsumerStatefulWidgets (Admin & Teacher RPP Screens) to avoid prop drilling 
+///
+/// Note: Complex pagination and form states are currently retained in their respective
+/// ConsumerStatefulWidgets (Admin & Teacher RPP Screens) to avoid prop drilling
 /// massive multipart file upload states.
 class LessonPlanController extends AutoDisposeAsyncNotifier<void> {
   @override
@@ -21,7 +21,11 @@ class LessonPlanController extends AutoDisposeAsyncNotifier<void> {
   }
 
   /// Example of delegating mutations through Riverpod instead of static classes
-  Future<void> updateStatus(String lessonPlanId, String status, {String? catatan}) async {
+  Future<void> updateStatus(
+    String lessonPlanId,
+    String status, {
+    String? catatan,
+  }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       await LessonPlanService.updateLessonPlanStatus(
@@ -33,6 +37,7 @@ class LessonPlanController extends AutoDisposeAsyncNotifier<void> {
   }
 }
 
-final lessonPlanControllerProvider = AsyncNotifierProvider.autoDispose<LessonPlanController, void>(() {
-  return LessonPlanController();
-});
+final lessonPlanControllerProvider =
+    AsyncNotifierProvider.autoDispose<LessonPlanController, void>(() {
+      return LessonPlanController();
+    });

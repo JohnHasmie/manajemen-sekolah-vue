@@ -309,7 +309,8 @@ class ColorUtils {
   static Color get corporateBlue800 => Color(0xFF1E40AF);
   static Color get corporateBlue700 => Color(0xFF1D4ED8); // Primary actions
   static Color get corporateBlue600 => Color(0xFF2563EB);
-  static Color get corporateBlue500 => Color(0xFF3B82F6); // Interactive elements
+  static Color get corporateBlue500 =>
+      Color(0xFF3B82F6); // Interactive elements
   static Color get corporateBlue400 => Color(0xFF60A5FA);
   static Color get corporateBlue300 => Color(0xFF93C5FD);
   static Color get corporateBlue200 => Color(0xFFBFDBFE);
@@ -345,12 +346,7 @@ class ColorUtils {
     return BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(12), // Sharper than default 16
-      border: withBorder
-          ? Border.all(
-              color: slate200,
-              width: 1,
-            )
-          : null,
+      border: withBorder ? Border.all(color: slate200, width: 1) : null,
       boxShadow: corporateShadow(),
     );
   }
@@ -391,10 +387,7 @@ class ColorUtils {
     return BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: slate200,
-        width: 1,
-      ),
+      border: Border.all(color: slate200, width: 1),
       boxShadow: [
         BoxShadow(
           color: accentColor.withValues(alpha: 0.08),
@@ -418,10 +411,7 @@ class ColorUtils {
     return BoxDecoration(
       color: accentColor.withValues(alpha: 0.05),
       borderRadius: BorderRadius.circular(8),
-      border: Border.all(
-        color: accentColor.withValues(alpha: 0.2),
-        width: 1,
-      ),
+      border: Border.all(color: accentColor.withValues(alpha: 0.2), width: 1),
     );
   }
 

@@ -8,8 +8,8 @@
 // `PUT /api/settings/lesson-hours` with per-day session definitions.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
-import 'package:manajemensekolah/features/settings/services/settings_service.dart';
+import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
+import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
@@ -77,7 +77,10 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       AppLogger.error('settings', e);
       if (mounted) {
         setState(() => _isLoadingTime = false);
-                SnackBarUtils.showError(context, 'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}');
+        SnackBarUtils.showError(
+          context,
+          'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
+        );
       }
     }
   }
@@ -368,7 +371,8 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
 
   Future<void> _refreshSessions() async {
     try {
-      final allSettings = await getIt<ApiSettingsService>().getLessonHourSettings();
+      final allSettings = await getIt<ApiSettingsService>()
+          .getLessonHourSettings();
       final dayId = widget.day['id'].toString();
       final updated = allSettings
           .where((s) => s['day_id'].toString() == dayId)
@@ -382,7 +386,10 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
     } catch (e) {
       AppLogger.error('settings', e);
       if (mounted) {
-                SnackBarUtils.showError(context, 'Gagal memuat ulang sesi: ${ErrorUtils.getFriendlyMessage(e)}');
+        SnackBarUtils.showError(
+          context,
+          'Gagal memuat ulang sesi: ${ErrorUtils.getFriendlyMessage(e)}',
+        );
       }
     }
   }
@@ -418,320 +425,331 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       builder: (context) {
         bool isSaving = false;
         return StatefulBuilder(
-        builder: (context, setModalState) {
-          Future<void> pickTime(bool isStart) async {
-            final picked = await showTimePicker(
-              context: context,
-              initialTime: isStart ? startTime : endTime,
-            );
-            if (picked != null) {
-              setModalState(() {
-                if (isStart) {
-                  startTime = picked;
-                } else {
-                  endTime = picked;
-                }
-              });
+          builder: (context, setModalState) {
+            Future<void> pickTime(bool isStart) async {
+              final picked = await showTimePicker(
+                context: context,
+                initialTime: isStart ? startTime : endTime,
+              );
+              if (picked != null) {
+                setModalState(() {
+                  if (isStart) {
+                    startTime = picked;
+                  } else {
+                    endTime = picked;
+                  }
+                });
+              }
             }
-          }
 
-          Widget buildTimeField(String label, TimeOfDay time, bool isStart) {
-            return Expanded(
-              child: InkWell(
-                onTap: () => pickTime(isStart),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: ColorUtils.slate50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: ColorUtils.slate200),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.access_time_rounded,
-                        size: 16,
-                        color: ColorUtils.corporateBlue600,
-                      ),
-                      SizedBox(width: AppSpacing.sm),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            label,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: ColorUtils.slate500,
-                            ),
-                          ),
-                          SizedBox(height: 1),
-                          Text(
-                            time.format(context),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: ColorUtils.slate900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }
-
-          return Container(
-            margin: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 20,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Gradient Header (Pattern #10)
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(AppSpacing.xl),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        ColorUtils.corporateBlue600,
-                        ColorUtils.corporateBlue600.withValues(alpha: 0.85),
-                      ],
+            Widget buildTimeField(String label, TimeOfDay time, bool isStart) {
+              return Expanded(
+                child: InkWell(
+                  onTap: () => pickTime(isStart),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: ColorUtils.slate50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: ColorUtils.slate200),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 16,
+                          color: ColorUtils.corporateBlue600,
                         ),
-                        child: Icon(
-                          isEdit ? Icons.edit_rounded : Icons.add_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                      SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
+                        SizedBox(width: AppSpacing.sm),
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isEdit ? 'Edit Sesi' : 'Tambah Sesi',
+                              label,
                               style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                fontSize: 10,
+                                color: ColorUtils.slate500,
                               ),
                             ),
-                            SizedBox(height: 2),
+                            SizedBox(height: 1),
                             Text(
-                              'Atur jam pelajaran untuk hari ini',
+                              time.format(context),
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.85),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: ColorUtils.slate900,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Form
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.all(AppSpacing.xl),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: hourController,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: 'Jam Ke-',
-                              prefixIcon: Icon(
-                                Icons.tag_rounded,
-                                color: ColorUtils.corporateBlue600,
-                                size: 20,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: ColorUtils.slate200,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: ColorUtils.slate200,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: ColorUtils.corporateBlue600,
-                                  width: 1.5,
-                                ),
-                              ),
-                              filled: true,
-                              fillColor: ColorUtils.slate50,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 14,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: AppSpacing.md),
-                          Row(
-                            children: [
-                              buildTimeField('Mulai', startTime, true),
-                              SizedBox(width: 10),
-                              buildTimeField('Selesai', endTime, false),
-                            ],
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
-                // Enhanced Footer Actions
-                Container(
-                  padding: EdgeInsets.all(AppSpacing.xl),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ColorUtils.slate900.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: Offset(0, -2),
+              );
+            }
+
+            return Container(
+              margin: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 20,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Gradient Header (Pattern #10)
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(AppSpacing.xl),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          ColorUtils.corporateBlue600,
+                          ColorUtils.corporateBlue600.withValues(alpha: 0.85),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: SafeArea(
-                    top: false,
+                    ),
                     child: Row(
                       children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => AppNavigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              side: BorderSide(color: ColorUtils.slate300),
-                            ),
-                            child: Text(
-                              AppLocalizations.cancel.tr,
-                              style: TextStyle(
-                                color: ColorUtils.slate700,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            isEdit ? Icons.edit_rounded : Icons.add_rounded,
+                            color: Colors.white,
+                            size: 22,
                           ),
                         ),
-                        SizedBox(width: AppSpacing.md),
+                        SizedBox(width: 14),
                         Expanded(
-                          child: ElevatedButton(
-                            onPressed: isSaving
-                                ? null
-                                : () async {
-                              if (hourController.text.isEmpty) return;
-                              setModalState(() => isSaving = true);
-                              final messenger = ScaffoldMessenger.of(context);
-                              final startStr =
-                                  '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00';
-                              final endStr =
-                                  '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00';
-                              final hourNum =
-                                  int.tryParse(hourController.text) ?? 0;
-                              try {
-                                if (isEdit) {
-                                  await getIt<ApiSettingsService>().updateLessonSession(
-                                    id: session['id'].toString(),
-                                    startTime: startStr,
-                                    endTime: endStr,
-                                    hourNumber: hourNum,
-                                  );
-                                } else {
-                                  await getIt<ApiSettingsService>().createLessonSession(
-                                    dayId: widget.day['id'].toString(),
-                                    hourNumber: hourNum,
-                                    startTime: startStr,
-                                    endTime: endStr,
-                                  );
-                                }
-                                AppNavigator.pop(context);
-                                await _refreshSessions();
-                              } catch (e) {
-                                AppLogger.error('settings', e);
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
-                                    ),
-                                    backgroundColor: ColorUtils.error600,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              } finally {
-                                if (context.mounted) {
-                                  setModalState(() => isSaving = false);
-                                }
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorUtils.corporateBlue600,
-                              disabledBackgroundColor: ColorUtils.corporateBlue600.withValues(alpha: 0.6),
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEdit ? 'Edit Sesi' : 'Tambah Sesi',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
-                              elevation: 2,
-                            ),
-                            child: isSaving
-                                ? SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : Text(
-                              AppLocalizations.save.tr,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                              SizedBox(height: 2),
+                              Text(
+                                'Atur jam pelajaran untuk hari ini',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
+                  // Form
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: EdgeInsets.all(AppSpacing.xl),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: hourController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: 'Jam Ke-',
+                                prefixIcon: Icon(
+                                  Icons.tag_rounded,
+                                  color: ColorUtils.corporateBlue600,
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: ColorUtils.slate200,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: ColorUtils.slate200,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: ColorUtils.corporateBlue600,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: ColorUtils.slate50,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 14,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: AppSpacing.md),
+                            Row(
+                              children: [
+                                buildTimeField('Mulai', startTime, true),
+                                SizedBox(width: 10),
+                                buildTimeField('Selesai', endTime, false),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Enhanced Footer Actions
+                  Container(
+                    padding: EdgeInsets.all(AppSpacing.xl),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border(
+                        top: BorderSide(color: ColorUtils.slate200),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ColorUtils.slate900.withValues(alpha: 0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: SafeArea(
+                      top: false,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => AppNavigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                side: BorderSide(color: ColorUtils.slate300),
+                              ),
+                              child: Text(
+                                AppLocalizations.cancel.tr,
+                                style: TextStyle(
+                                  color: ColorUtils.slate700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: isSaving
+                                  ? null
+                                  : () async {
+                                      if (hourController.text.isEmpty) return;
+                                      setModalState(() => isSaving = true);
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
+                                      final startStr =
+                                          '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00';
+                                      final endStr =
+                                          '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00';
+                                      final hourNum =
+                                          int.tryParse(hourController.text) ??
+                                          0;
+                                      try {
+                                        if (isEdit) {
+                                          await getIt<ApiSettingsService>()
+                                              .updateLessonSession(
+                                                id: session['id'].toString(),
+                                                startTime: startStr,
+                                                endTime: endStr,
+                                                hourNumber: hourNum,
+                                              );
+                                        } else {
+                                          await getIt<ApiSettingsService>()
+                                              .createLessonSession(
+                                                dayId: widget.day['id']
+                                                    .toString(),
+                                                hourNumber: hourNum,
+                                                startTime: startStr,
+                                                endTime: endStr,
+                                              );
+                                        }
+                                        AppNavigator.pop(context);
+                                        await _refreshSessions();
+                                      } catch (e) {
+                                        AppLogger.error('settings', e);
+                                        messenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+                                            ),
+                                            backgroundColor:
+                                                ColorUtils.error600,
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      } finally {
+                                        if (context.mounted) {
+                                          setModalState(() => isSaving = false);
+                                        }
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: ColorUtils.corporateBlue600,
+                                disabledBackgroundColor: ColorUtils
+                                    .corporateBlue600
+                                    .withValues(alpha: 0.6),
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 2,
+                              ),
+                              child: isSaving
+                                  ? SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      AppLocalizations.save.tr,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
       },
     );
   }
@@ -760,13 +778,16 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       if (mounted) AppNavigator.pop(context);
       await _refreshSessions();
       if (mounted) {
-                SnackBarUtils.showSuccess(context, 'Berhasil menyalin jadwal');
+        SnackBarUtils.showSuccess(context, 'Berhasil menyalin jadwal');
       }
     } catch (e) {
       AppLogger.error('settings', e);
       if (mounted) AppNavigator.pop(context);
       if (mounted) {
-                SnackBarUtils.showError(context, 'Gagal menyalin: ${ErrorUtils.getFriendlyMessage(e)}');
+        SnackBarUtils.showError(
+          context,
+          'Gagal menyalin: ${ErrorUtils.getFriendlyMessage(e)}',
+        );
       }
     }
   }
@@ -1025,7 +1046,10 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
     } catch (e) {
       AppLogger.error('settings', e);
       if (mounted) {
-                SnackBarUtils.showError(context, 'Gagal menghapus: ${ErrorUtils.getFriendlyMessage(e)}');
+        SnackBarUtils.showError(
+          context,
+          'Gagal menghapus: ${ErrorUtils.getFriendlyMessage(e)}',
+        );
       }
     }
   }
@@ -1215,7 +1239,8 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                 : ListView.separated(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     itemCount: _sessions.length,
-                    separatorBuilder: (_, __) => SizedBox(height: AppSpacing.sm),
+                    separatorBuilder: (_, __) =>
+                        SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
                       final session = _sessions[index];
                       return Container(

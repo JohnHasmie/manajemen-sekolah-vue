@@ -35,8 +35,6 @@ class ExcelRaportService {
     required String className,
     required BuildContext context,
   }) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/export',
@@ -65,15 +63,21 @@ class ExcelRaportService {
       // Open the file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Raport exported successfully',
-              'id': 'Raport berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Raport exported successfully',
+          'id': 'Raport berhasil diexport',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
     }
   }
 
@@ -87,8 +91,6 @@ class ExcelRaportService {
     required String studentName,
     required BuildContext context,
   }) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/export-pdf',
@@ -117,15 +119,21 @@ class ExcelRaportService {
       // Open the file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'PDF downloaded successfully',
-              'id': 'PDF berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'PDF downloaded successfully',
+          'id': 'PDF berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download PDF: $e',
-              'id': 'Gagal mengunduh PDF: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download PDF: $e',
+          'id': 'Gagal mengunduh PDF: $e',
+        }),
+      );
     }
   }
 
@@ -138,8 +146,6 @@ class ExcelRaportService {
     required String studentName,
     required BuildContext context,
   }) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/export-certificate-pdf',
@@ -168,15 +174,21 @@ class ExcelRaportService {
       // Open the file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Certificate PDF downloaded successfully',
-              'id': 'Sertifikat PDF berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Certificate PDF downloaded successfully',
+          'id': 'Sertifikat PDF berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download Certificate PDF: $e',
-              'id': 'Gagal mengunduh Sertifikat PDF: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download Certificate PDF: $e',
+          'id': 'Gagal mengunduh Sertifikat PDF: $e',
+        }),
+      );
     }
   }
 }

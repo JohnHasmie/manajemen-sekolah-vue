@@ -23,6 +23,7 @@ class AttendanceController extends AutoDisposeAsyncNotifier<void> {
   }
 }
 
-final attendanceControllerProvider = AsyncNotifierProvider.autoDispose<AttendanceController, void>(() {
-  return AttendanceController();
-});
+final attendanceControllerProvider =
+    AsyncNotifierProvider.autoDispose<AttendanceController, void>(() {
+      return AttendanceController();
+    });

@@ -25,7 +25,10 @@ class AuthService {
       final response = await dioClient.post(ApiEndpoints.login, data: body);
       final responseData = response.data;
 
-      AppLogger.debug('auth_api', '📥 Login response status: ${response.statusCode}');
+      AppLogger.debug(
+        'auth_api',
+        '📥 Login response status: ${response.statusCode}',
+      );
       AppLogger.debug('auth_api', '📥 Login response data: $responseData');
 
       if (responseData['pilih_sekolah'] == true) {
@@ -40,14 +43,20 @@ class AuthService {
         return Map<String, dynamic>.from(responseData);
       }
 
-      if (responseData['token'] == null) throw Exception('Server tidak mengembalikan token');
-      if (responseData['user'] == null) throw Exception('Server tidak mengembalikan data user');
+      if (responseData['token'] == null)
+        throw Exception('Server tidak mengembalikan token');
+      if (responseData['user'] == null)
+        throw Exception('Server tidak mengembalikan data user');
 
       return Map<String, dynamic>.from(responseData);
     } on DioException catch (e) {
       final responseData = e.response?.data;
       if (responseData is Map) {
-        throw Exception(responseData['error'] ?? responseData['message'] ?? 'Login failed with status: ${e.response?.statusCode}');
+        throw Exception(
+          responseData['error'] ??
+              responseData['message'] ??
+              'Login failed with status: ${e.response?.statusCode}',
+        );
       }
       if (e.error is Exception) throw e.error as Exception;
       rethrow;
@@ -72,7 +81,10 @@ class AuthService {
     } on DioException catch (e) {
       final responseData = e.response?.data;
       if (responseData is Map) {
-        throw Exception(responseData['error'] ?? 'OTP verification failed with status: ${e.response?.statusCode}');
+        throw Exception(
+          responseData['error'] ??
+              'OTP verification failed with status: ${e.response?.statusCode}',
+        );
       }
       if (e.error is Exception) throw e.error as Exception;
       rethrow;
@@ -94,12 +106,19 @@ class AuthService {
         'id_token': idToken,
       };
 
-      final response = await dioClient.post(ApiEndpoints.googleLogin, data: body);
+      final response = await dioClient.post(
+        ApiEndpoints.googleLogin,
+        data: body,
+      );
       return Map<String, dynamic>.from(response.data);
     } on DioException catch (e) {
       final responseData = e.response?.data;
       if (responseData is Map) {
-        throw Exception(responseData['error'] ?? responseData['message'] ?? 'Google Login failed with status: ${e.response?.statusCode}');
+        throw Exception(
+          responseData['error'] ??
+              responseData['message'] ??
+              'Google Login failed with status: ${e.response?.statusCode}',
+        );
       }
       if (e.error is Exception) throw e.error as Exception;
       rethrow;
@@ -117,13 +136,13 @@ class AuthService {
   static Future<Map<String, dynamic>> switchRole(String role) async {
     final secureStorage = SecureStorageService();
     var userJson = await secureStorage.getUserDataJson();
-    
+
     // Fallback to PreferencesService if missing
     if (userJson == null) {
       final prefs = PreferencesService();
       userJson = prefs.getString('user');
     }
-    
+
     if (userJson == null) throw Exception('User data not found');
 
     final user = json.decode(userJson);
@@ -142,7 +161,10 @@ class AuthService {
   }
 
   /// Switches the user's active school context (multi-tenant).
-  static Future<Map<String, dynamic>> switchSchool(String schoolId, {String? role}) async {
+  static Future<Map<String, dynamic>> switchSchool(
+    String schoolId, {
+    String? role,
+  }) async {
     final Map<String, dynamic> body = {'school_id': schoolId};
     if (role != null) body['role'] = role;
 

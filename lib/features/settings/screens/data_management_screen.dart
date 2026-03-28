@@ -5,13 +5,13 @@
 // In Laravel terms, this is like a resource index that links to individual
 // resource controllers (StudentController, TeacherController, etc.).
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/features/classrooms/screens/admin_classroom_management_screen.dart';
-import 'package:manajemensekolah/features/students/screens/admin_student_management_screen.dart';
-import 'package:manajemensekolah/features/subjects/screens/admin_subject_management_screen.dart';
-import 'package:manajemensekolah/features/teachers/screens/admin_teacher_management_screen.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/screens/admin_classroom_management_screen.dart';
+import 'package:manajemensekolah/features/students/presentation/screens/admin_student_management_screen.dart';
+import 'package:manajemensekolah/features/subjects/presentation/screens/admin_subject_management_screen.dart';
+import 'package:manajemensekolah/features/teachers/presentation/screens/admin_teacher_management_screen.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/features/dashboard/widgets/menu_item_card.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
@@ -42,7 +42,8 @@ class AdminDataManagementScreen extends StatelessWidget {
                 MenuItemCard(
                   title: AppLocalizations.manageStudents.tr,
                   icon: Icons.people_alt_outlined,
-                  onTap: () => AppNavigator.push(context, StudentManagementScreen()),
+                  onTap: () =>
+                      AppNavigator.push(context, StudentManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 SizedBox(height: AppSpacing.sm),
@@ -56,14 +57,16 @@ class AdminDataManagementScreen extends StatelessWidget {
                 MenuItemCard(
                   title: AppLocalizations.manageClasses.tr,
                   icon: Icons.class_outlined,
-                  onTap: () => AppNavigator.push(context, AdminClassManagementScreen()),
+                  onTap: () =>
+                      AppNavigator.push(context, AdminClassManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 SizedBox(height: AppSpacing.sm),
                 MenuItemCard(
                   title: AppLocalizations.manageSubjects.tr,
                   icon: Icons.book_outlined,
-                  onTap: () => AppNavigator.push(context, SubjectManagementScreen()),
+                  onTap: () =>
+                      AppNavigator.push(context, SubjectManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 SizedBox(height: AppSpacing.xxl),
@@ -115,11 +118,7 @@ class AdminDataManagementScreen extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
             ),
           ),
           SizedBox(width: AppSpacing.md),

@@ -56,10 +56,7 @@ class ConfirmationDialog extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  confirmColor,
-                  confirmColor.withValues(alpha: 0.8),
-                ],
+                colors: [confirmColor, confirmColor.withValues(alpha: 0.8)],
               ),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),

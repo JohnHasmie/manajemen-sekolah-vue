@@ -37,8 +37,6 @@ class ExcelService {
     required List<dynamic> students,
     required BuildContext context,
   }) async {
-    
-
     try {
       // Create a new Excel document
       final Workbook workbook = Workbook();
@@ -124,15 +122,21 @@ class ExcelService {
       // Open the file
       await OpenFile.open(path);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Student data exported successfully',
-              'id': 'Data siswa berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Student data exported successfully',
+          'id': 'Data siswa berhasil diexport',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
     }
   }
 
@@ -141,8 +145,6 @@ class ExcelService {
   /// a template with `WithHeadings` and sample rows for user guidance.
   /// Fields marked with `*` are required.
   static Future<void> downloadTemplate(BuildContext context) async {
-    
-
     try {
       // Create a new Excel document
       final Workbook workbook = Workbook();
@@ -202,23 +204,27 @@ class ExcelService {
       // Open the file
       await OpenFile.open(path);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Template downloaded successfully',
-              'id': 'Template berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Template downloaded successfully',
+          'id': 'Template berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download template: $e',
-              'id': 'Gagal mengunduh template: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download template: $e',
+          'id': 'Gagal mengunduh template: $e',
+        }),
+      );
     }
   }
 
   /// Generate and download a CSV import template as a simpler alternative to Excel.
   /// Like a plain-text version of the template for users without Excel software.
   static Future<void> downloadTemplateCSV(BuildContext context) async {
-    
-
     try {
       final String csvContent =
           '''NIS*,Name*,Class*,Gender*,Date of Birth*,Address*,Parent Name*,Parent Email,Phone Number*
@@ -234,15 +240,21 @@ class ExcelService {
       // Open the file
       await OpenFile.open(path);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'CSV Template downloaded successfully',
-              'id': 'Template CSV berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'CSV Template downloaded successfully',
+          'id': 'Template CSV berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download CSV template: $e',
-              'id': 'Gagal mengunduh template CSV: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download CSV template: $e',
+          'id': 'Gagal mengunduh template CSV: $e',
+        }),
+      );
     }
   }
 
@@ -280,5 +292,4 @@ class ExcelService {
       return date;
     }
   }
-
 }

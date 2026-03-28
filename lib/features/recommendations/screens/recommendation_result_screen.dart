@@ -9,11 +9,12 @@ import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/recommendations/screens/recommendation_edit_screen.dart';
-import 'package:manajemensekolah/features/recommendations/services/recommendation_service.dart';
+import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -65,10 +66,13 @@ class _LearningRecommendationResultScreenState
   }
 
   String _buildRecommendationsCacheKey() {
-    final teacherId = widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
+    final teacherId =
+        widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
     final classId = widget.classData['id']?.toString() ?? '';
-    final studentId = widget.student['student_id']?.toString() ??
-        widget.student['id']?.toString() ?? '';
+    final studentId =
+        widget.student['student_id']?.toString() ??
+        widget.student['id']?.toString() ??
+        '';
     return 'recommendation_result_${teacherId}_${classId}_$studentId';
   }
 
@@ -94,7 +98,10 @@ class _LearningRecommendationResultScreenState
           _isLoading = false;
           _errorMessage = '';
         });
-        AppLogger.debug('recommendation', 'RecommendationResult: from cache (${cached.length})');
+        AppLogger.debug(
+          'recommendation',
+          'RecommendationResult: from cache (${cached.length})',
+        );
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _checkAndShowTour();
         });
@@ -110,18 +117,25 @@ class _LearningRecommendationResultScreenState
     }
 
     try {
-      final teacherId = widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
+      final teacherId =
+          widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
       final classId = widget.classData['id']?.toString() ?? '';
-      final studentId = widget.student['student_id']?.toString() ??
-          widget.student['id']?.toString() ?? '';
+      final studentId =
+          widget.student['student_id']?.toString() ??
+          widget.student['id']?.toString() ??
+          '';
 
-      AppLogger.debug('recommendation', 'Fetching recommendations: teacherId=$teacherId, classId=$classId, studentId=$studentId');
-
-      final response = await getIt<ApiRecommendationService>().getRecommendations(
-        teacherId: teacherId,
-        classId: classId,
-        studentId: studentId,
+      AppLogger.debug(
+        'recommendation',
+        'Fetching recommendations: teacherId=$teacherId, classId=$classId, studentId=$studentId',
       );
+
+      final response = await getIt<ApiRecommendationService>()
+          .getRecommendations(
+            teacherId: teacherId,
+            classId: classId,
+            studentId: studentId,
+          );
 
       if (response['success'] == true) {
         final data = response['data'];
@@ -134,7 +148,10 @@ class _LearningRecommendationResultScreenState
           recommendations = [];
         }
 
-        AppLogger.debug('recommendation', 'Recommendations count: ${recommendations.length}');
+        AppLogger.debug(
+          'recommendation',
+          'Recommendations count: ${recommendations.length}',
+        );
 
         await LocalCacheService.save(cacheKey, recommendations);
 
@@ -154,7 +171,8 @@ class _LearningRecommendationResultScreenState
         if (!mounted) return;
         if (_recommendations.isEmpty) {
           setState(() {
-            _errorMessage = response['message'] ?? 'Gagal mengambil rekomendasi.';
+            _errorMessage =
+                response['message'] ?? 'Gagal mengambil rekomendasi.';
             _isLoading = false;
           });
         }
@@ -177,10 +195,16 @@ class _LearningRecommendationResultScreenState
   }
 
   Future<void> _checkAndShowTour() async {
-    final tourCacheKey = CacheKeyBuilder.tourStatus('recommendation_result_screen', 'guru');
+    final tourCacheKey = CacheKeyBuilder.tourStatus(
+      'recommendation_result_screen',
+      'guru',
+    );
     try {
       // Cache-only: tour status pre-fetched from dashboard
-      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      final cached = await LocalCacheService.load(
+        tourCacheKey,
+        ttl: const Duration(hours: 24),
+      );
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true) {
           if (mounted) {
@@ -212,12 +236,26 @@ class _LearningRecommendationResultScreenState
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        getIt<ApiTourService>().completeTour(name: 'learning_recommendation_result_tour', role: 'guru', platform: 'mobile');
-        LocalCacheService.save(CacheKeyBuilder.tourStatus('recommendation_result_screen', 'guru'), {'should_show': false});
+        getIt<ApiTourService>().completeTour(
+          name: 'learning_recommendation_result_tour',
+          role: 'guru',
+          platform: 'mobile',
+        );
+        LocalCacheService.save(
+          CacheKeyBuilder.tourStatus('recommendation_result_screen', 'guru'),
+          {'should_show': false},
+        );
       },
       onSkip: () {
-        getIt<ApiTourService>().completeTour(name: 'learning_recommendation_result_tour', role: 'guru', platform: 'mobile');
-        LocalCacheService.save(CacheKeyBuilder.tourStatus('recommendation_result_screen', 'guru'), {'should_show': false});
+        getIt<ApiTourService>().completeTour(
+          name: 'learning_recommendation_result_tour',
+          role: 'guru',
+          platform: 'mobile',
+        );
+        LocalCacheService.save(
+          CacheKeyBuilder.tourStatus('recommendation_result_screen', 'guru'),
+          {'should_show': false},
+        );
         return true;
       },
     ).show(context: context);
@@ -346,11 +384,14 @@ class _LearningRecommendationResultScreenState
   }
 
   void _navigateToEdit() async {
-    final result = await AppNavigator.push(context, LearningRecommendationEditScreen(
-          teacher: widget.teacher,
-          student: widget.student,
-          recommendations: _recommendations,
-        ));
+    final result = await AppNavigator.push(
+      context,
+      LearningRecommendationEditScreen(
+        teacher: widget.teacher,
+        student: widget.student,
+        recommendations: _recommendations,
+      ),
+    );
 
     if (result == true) {
       await LocalCacheService.invalidate(_buildRecommendationsCacheKey());
@@ -448,7 +489,11 @@ class _LearningRecommendationResultScreenState
                       value: 'refresh',
                       child: Row(
                         children: [
-                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          Icon(
+                            Icons.refresh,
+                            size: 20,
+                            color: ColorUtils.info600,
+                          ),
                           const SizedBox(width: AppSpacing.sm),
                           const Text('Perbarui Data'),
                         ],
@@ -459,7 +504,11 @@ class _LearningRecommendationResultScreenState
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit_note, size: 20, color: ColorUtils.slate600),
+                            Icon(
+                              Icons.edit_note,
+                              size: 20,
+                              color: ColorUtils.slate600,
+                            ),
                             const SizedBox(width: AppSpacing.sm),
                             const Text('Edit Hasil'),
                           ],

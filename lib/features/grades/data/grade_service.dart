@@ -18,7 +18,8 @@ class GradeService {
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
     if (subjectId != null) queryParams['subject_id'] = subjectId;
     if (gradeType != null) queryParams['grade_type'] = gradeType;
-    if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
+    if (academicYearId != null)
+      queryParams['academic_year_id'] = academicYearId;
 
     final response = await dioClient.get(
       ApiEndpoints.grades,
@@ -87,7 +88,10 @@ class GradeService {
   static Future<void> markGradeAsRead(List<String> gradeIds) async {
     if (gradeIds.isEmpty) return;
     try {
-      await dioClient.post(ApiEndpoints.gradeMarkRead, data: {'grade_ids': gradeIds});
+      await dioClient.post(
+        ApiEndpoints.gradeMarkRead,
+        data: {'grade_ids': gradeIds},
+      );
     } catch (e) {
       AppLogger.error('api', 'Error marking grades as read: $e');
     }

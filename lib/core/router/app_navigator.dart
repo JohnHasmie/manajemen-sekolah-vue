@@ -31,7 +31,10 @@ class AppNavigator {
   }
 
   /// Replace current screen with a new one (no back button).
-  static Future<T?> pushReplacement<T, TO>(BuildContext context, Widget screen) {
+  static Future<T?> pushReplacement<T, TO>(
+    BuildContext context,
+    Widget screen,
+  ) {
     return Navigator.pushReplacement<T, TO>(
       context,
       MaterialPageRoute(builder: (_) => screen),

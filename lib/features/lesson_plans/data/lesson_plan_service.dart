@@ -16,7 +16,8 @@ class LessonPlanService {
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
     if (status != null) queryParams['status'] = status;
     if (search != null) queryParams['search'] = search;
-    if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
+    if (academicYearId != null)
+      queryParams['academic_year_id'] = academicYearId;
 
     final response = await dioClient.get(
       ApiEndpoints.lessonPlans,
@@ -61,18 +62,26 @@ class LessonPlanService {
       'limit': limit.toString(),
     };
 
-    if (teacherId != null && teacherId.isNotEmpty) queryParams['teacher_id'] = teacherId;
+    if (teacherId != null && teacherId.isNotEmpty)
+      queryParams['teacher_id'] = teacherId;
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
-    if (subjectId != null && subjectId.isNotEmpty) queryParams['subject_id'] = subjectId;
-    if (filterSubjectId != null && filterSubjectId.isNotEmpty) queryParams['mataPelajaranId'] = filterSubjectId;
+    if (subjectId != null && subjectId.isNotEmpty)
+      queryParams['subject_id'] = subjectId;
+    if (filterSubjectId != null && filterSubjectId.isNotEmpty)
+      queryParams['mataPelajaranId'] = filterSubjectId;
     if (classId != null && classId.isNotEmpty) queryParams['classId'] = classId;
     if (date != null && date.isNotEmpty) queryParams['tanggal'] = date;
-    if (dateStart != null && dateStart.isNotEmpty) queryParams['tanggalStart'] = dateStart;
-    if (dateEnd != null && dateEnd.isNotEmpty) queryParams['tanggalEnd'] = dateEnd;
-    if (academicYearId != null && academicYearId.isNotEmpty) queryParams['academic_year_id'] = academicYearId;
-    if (semester != null && semester.isNotEmpty) queryParams['semester'] = semester;
-    if (academicYear != null && academicYear.isNotEmpty) queryParams['tahun_ajaran'] = academicYear;
+    if (dateStart != null && dateStart.isNotEmpty)
+      queryParams['tanggalStart'] = dateStart;
+    if (dateEnd != null && dateEnd.isNotEmpty)
+      queryParams['tanggalEnd'] = dateEnd;
+    if (academicYearId != null && academicYearId.isNotEmpty)
+      queryParams['academic_year_id'] = academicYearId;
+    if (semester != null && semester.isNotEmpty)
+      queryParams['semester'] = semester;
+    if (academicYear != null && academicYear.isNotEmpty)
+      queryParams['tahun_ajaran'] = academicYear;
 
     final response = await dioClient.get(
       ApiEndpoints.lessonPlans,
@@ -137,7 +146,10 @@ class LessonPlanService {
         ),
       });
 
-      final response = await dioClient.post(ApiEndpoints.uploadLessonPlan, data: formData);
+      final response = await dioClient.post(
+        ApiEndpoints.uploadLessonPlan,
+        data: formData,
+      );
 
       AppLogger.debug('api', 'Upload Response Status: ${response.statusCode}');
       AppLogger.debug('api', 'Upload Response Data: ${response.data}');

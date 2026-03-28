@@ -31,8 +31,6 @@ class ExcelLessonPlanService {
     required List<dynamic> lessonPlanList,
     required BuildContext context,
   }) async {
-    
-
     try {
       // Validate data first
       final validatedData = validateLessonPlanData(lessonPlanList);
@@ -55,15 +53,21 @@ class ExcelLessonPlanService {
       // Open file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'RPP data exported successfully',
-              'id': 'Data RPP berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'RPP data exported successfully',
+          'id': 'Data RPP berhasil diexport',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export RPP data: $e',
-              'id': 'Gagal mengexport data RPP: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export RPP data: $e',
+          'id': 'Gagal mengexport data RPP: $e',
+        }),
+      );
     }
   }
 
@@ -80,7 +84,8 @@ class ExcelLessonPlanService {
 
       final responseData = response.data;
 
-      if (responseData is Map<String, dynamic> && responseData['success'] == true) {
+      if (responseData is Map<String, dynamic> &&
+          responseData['success'] == true) {
         return List<Map<String, dynamic>>.from(responseData['validatedData']);
       } else {
         throw Exception(responseData['message'] ?? 'RPP validation failed');
@@ -94,7 +99,9 @@ class ExcelLessonPlanService {
   /// Validates required fields (title, subject_name, class_name) and maps
   /// alternative field names to the backend's expected keys.
   /// Like a Laravel FormRequest with field aliasing (`$request->input('catatan_admin', $request->input('note_admin'))`).
-  static List<Map<String, dynamic>> validateLessonPlanData(List<dynamic> lessonPlanList) {
+  static List<Map<String, dynamic>> validateLessonPlanData(
+    List<dynamic> lessonPlanList,
+  ) {
     final List<Map<String, dynamic>> validatedData = [];
     final List<String> errors = [];
 
@@ -103,7 +110,8 @@ class ExcelLessonPlanService {
       final Map<String, dynamic> validatedLessonPlan = {};
 
       // Validate required fields for export
-      if (lessonPlan['title'] == null || lessonPlan['title'].toString().isEmpty) {
+      if (lessonPlan['title'] == null ||
+          lessonPlan['title'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Judul RPP tidak boleh kosong');
       } else {
         validatedLessonPlan['title'] = lessonPlan['title'];
@@ -116,7 +124,8 @@ class ExcelLessonPlanService {
         validatedLessonPlan['subject_name'] = lessonPlan['subject_name'];
       }
 
-      if (lessonPlan['class_name'] == null || lessonPlan['class_name'].toString().isEmpty) {
+      if (lessonPlan['class_name'] == null ||
+          lessonPlan['class_name'].toString().isEmpty) {
         errors.add('Baris ${i + 1}: Kelas tidak boleh kosong');
       } else {
         validatedLessonPlan['class_name'] = lessonPlan['class_name'];
@@ -133,9 +142,13 @@ class ExcelLessonPlanService {
       validatedLessonPlan['note_admin'] =
           lessonPlan['catatan_admin'] ?? lessonPlan['note_admin'] ?? '';
       validatedLessonPlan['basic_competence'] =
-          lessonPlan['basic_competence'] ?? lessonPlan['basic_competency'] ?? '';
+          lessonPlan['basic_competence'] ??
+          lessonPlan['basic_competency'] ??
+          '';
       validatedLessonPlan['learning_objective'] =
-          lessonPlan['learning_objective'] ?? lessonPlan['learning_objectives'] ?? '';
+          lessonPlan['learning_objective'] ??
+          lessonPlan['learning_objectives'] ??
+          '';
       validatedLessonPlan['main_material'] =
           lessonPlan['main_material'] ?? lessonPlan['learning_materials'] ?? '';
       validatedLessonPlan['learning_method'] =
@@ -145,7 +158,9 @@ class ExcelLessonPlanService {
       validatedLessonPlan['learning_source'] =
           lessonPlan['learning_source'] ?? lessonPlan['learning_sources'] ?? '';
       validatedLessonPlan['learning_activities'] =
-          lessonPlan['learning_activities'] ?? lessonPlan['learning_steps'] ?? '';
+          lessonPlan['learning_activities'] ??
+          lessonPlan['learning_steps'] ??
+          '';
       validatedLessonPlan['assessment'] = lessonPlan['assessment'] ?? '';
 
       if (errors.isEmpty) {
@@ -159,5 +174,4 @@ class ExcelLessonPlanService {
 
     return validatedData;
   }
-
 }

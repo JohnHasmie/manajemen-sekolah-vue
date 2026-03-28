@@ -129,7 +129,11 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
     try {
       Map<String, dynamic> responseData;
       if (state.otpCode != null && state.currentEmail != null) {
-        responseData = await AuthService.verifyOtp(state.currentEmail!, state.otpCode!, schoolId: schoolId);
+        responseData = await AuthService.verifyOtp(
+          state.currentEmail!,
+          state.otpCode!,
+          schoolId: schoolId,
+        );
       } else {
         // Assume Google Login generated a token earlier in this flow, or normal password fallback
         final prefs = PreferencesService();
@@ -151,13 +155,23 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
   Future<AuthResponse> selectRole(String role) async {
     state = state.copyWith(isLoading: true);
     try {
-      final schoolId = state.selectedSchool?['id']?.toString() ?? state.selectedSchool?['school_id']?.toString();
+      final schoolId =
+          state.selectedSchool?['id']?.toString() ??
+          state.selectedSchool?['school_id']?.toString();
       Map<String, dynamic> responseData;
 
       if (state.otpCode != null && state.currentEmail != null) {
-        responseData = await AuthService.verifyOtp(state.currentEmail!, state.otpCode!, schoolId: schoolId, role: role);
+        responseData = await AuthService.verifyOtp(
+          state.currentEmail!,
+          state.otpCode!,
+          schoolId: schoolId,
+          role: role,
+        );
       } else {
-        responseData = await AuthService.switchSchool(schoolId ?? '', role: role);
+        responseData = await AuthService.switchSchool(
+          schoolId ?? '',
+          role: role,
+        );
       }
       return await _handleLoginResponse(responseData);
     } catch (e) {
@@ -177,20 +191,29 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
     }
   }
 
-  Future<AuthResponse> _handleLoginResponse(Map<String, dynamic> responseData) async {
+  Future<AuthResponse> _handleLoginResponse(
+    Map<String, dynamic> responseData,
+  ) async {
     // 1. Check OTP requirement
     if (responseData['require_otp'] == true ||
         responseData['otp_debug'] != null ||
         responseData['message'] == 'OTP sent to email') {
       state = state.copyWith(isLoading: false);
-      return AuthResponse(AuthEvent.requiresOtp, debugOtp: responseData['otp_debug']);
+      return AuthResponse(
+        AuthEvent.requiresOtp,
+        debugOtp: responseData['otp_debug'],
+      );
     }
 
     // 2. School Selection
     if (responseData['pilih_sekolah'] == true) {
-      if (responseData['sekolah_list'] == null || (responseData['sekolah_list'] as List).isEmpty) {
+      if (responseData['sekolah_list'] == null ||
+          (responseData['sekolah_list'] as List).isEmpty) {
         state = state.copyWith(isLoading: false);
-        return AuthResponse(AuthEvent.error, message: 'Akun Anda belum terdaftar pada sekolah manapun');
+        return AuthResponse(
+          AuthEvent.error,
+          message: 'Akun Anda belum terdaftar pada sekolah manapun',
+        );
       }
 
       if (responseData['token'] != null) {
@@ -216,16 +239,23 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
         await prefs.setString('token', responseData['token']);
       }
 
-      if (responseData['role_list'] == null || (responseData['role_list'] as List).isEmpty) {
+      if (responseData['role_list'] == null ||
+          (responseData['role_list'] as List).isEmpty) {
         state = state.copyWith(isLoading: false);
-        return AuthResponse(AuthEvent.error, message: 'Daftar role tidak tersedia untuk akun Anda');
+        return AuthResponse(
+          AuthEvent.error,
+          message: 'Daftar role tidak tersedia untuk akun Anda',
+        );
       }
 
       state = state.copyWith(
         step: AuthStep.roleSelection,
         roleList: responseData['role_list'],
         userData: responseData['user'],
-        selectedSchool: responseData['school'] ?? responseData['sekolah'] ?? state.selectedSchool,
+        selectedSchool:
+            responseData['school'] ??
+            responseData['sekolah'] ??
+            state.selectedSchool,
         isLoading: false,
       );
       return AuthResponse(AuthEvent.none);
@@ -234,7 +264,10 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
     // 4. Successful login
     if (responseData['token'] == null || responseData['user'] == null) {
       state = state.copyWith(isLoading: false);
-      return AuthResponse(AuthEvent.error, message: 'Data login tidak lengkap dari server');
+      return AuthResponse(
+        AuthEvent.error,
+        message: 'Data login tidak lengkap dari server',
+      );
     }
 
     await _saveLoginData(responseData);
@@ -242,7 +275,10 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
 
     final String userRole = responseData['user']['role']?.toString() ?? '';
     if (userRole.isEmpty) {
-      return AuthResponse(AuthEvent.error, message: 'Role user tidak ditemukan');
+      return AuthResponse(
+        AuthEvent.error,
+        message: 'Role user tidak ditemukan',
+      );
     }
 
     return AuthResponse(AuthEvent.success, message: userRole);
@@ -251,7 +287,9 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
   Future<void> _saveLoginData(Map<String, dynamic> responseData) async {
     final secureStorage = SecureStorageService();
     await secureStorage.saveToken(responseData['token']);
-    await secureStorage.saveUserData(responseData['user'] as Map<String, dynamic>);
+    await secureStorage.saveUserData(
+      responseData['user'] as Map<String, dynamic>,
+    );
     await secureStorage.setForceLogout(false);
 
     final prefs = PreferencesService();
@@ -268,7 +306,11 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
         name: user['name'] ?? user['nama'] ?? '',
         schoolName: user['school_name'] ?? user['nama_sekolah'] ?? '',
       );
-      await AnalyticsService.logLogin(method: 'app_login', email: user['email'] ?? '', role: user['role'] ?? '');
+      await AnalyticsService.logLogin(
+        method: 'app_login',
+        email: user['email'] ?? '',
+        role: user['role'] ?? '',
+      );
     }
 
     // Background FCM refresh
@@ -287,7 +329,8 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
 
   AuthResponse _handleError(Object error) {
     final errorStr = error.toString().toLowerCase();
-    final isUnregistered = errorStr.contains('email tidak terdaftar') ||
+    final isUnregistered =
+        errorStr.contains('email tidak terdaftar') ||
         errorStr.contains('email not registered') ||
         errorStr.contains('user not found') ||
         errorStr.contains('user tidak ditemukan') ||
@@ -299,13 +342,16 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
     if (isUnregistered) {
       return AuthResponse(AuthEvent.unregistered);
     }
-    
-    final friendlyMessage = (errorStr.contains('401') || errorStr.contains('unauthorized'))
+
+    final friendlyMessage =
+        (errorStr.contains('401') || errorStr.contains('unauthorized'))
         ? 'Email atau password salah, atau akun belum terdaftar. Silakan periksa kembali.'
         : error.toString().replaceAll('Exception: ', '');
-        
+
     return AuthResponse(AuthEvent.error, message: friendlyMessage);
   }
 }
 
-final authProvider = AutoDisposeNotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider = AutoDisposeNotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);

@@ -9,13 +9,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
-import 'package:manajemensekolah/features/recommendations/services/recommendation_service.dart';
-import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
-import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
+import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
+import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
+import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
@@ -136,7 +137,10 @@ class _LearningRecommendationClassScreenState
         }
       }
     } catch (e) {
-      AppLogger.debug('recommendation', 'Could not resolve teacher profile ID: $e');
+      AppLogger.debug(
+        'recommendation',
+        'Could not resolve teacher profile ID: $e',
+      );
     }
   }
 
@@ -168,7 +172,9 @@ class _LearningRecommendationClassScreenState
     }
 
     try {
-      final summary = await getIt<ApiRecommendationService>().getClassSummary(classId);
+      final summary = await getIt<ApiRecommendationService>().getClassSummary(
+        classId,
+      );
       if (mounted) {
         setState(() {
           _classSummaries[classId] = summary['data'] ?? {};
@@ -262,11 +268,13 @@ class _LearningRecommendationClassScreenState
 
       final history = grouped.values.toList()
         ..sort((a, b) {
-          final dateCompare =
-              (b['date'] as String).compareTo(a['date'] as String);
+          final dateCompare = (b['date'] as String).compareTo(
+            a['date'] as String,
+          );
           if (dateCompare != 0) return dateCompare;
-          return (a['trigger_source'] as String)
-              .compareTo(b['trigger_source'] as String);
+          return (a['trigger_source'] as String).compareTo(
+            b['trigger_source'] as String,
+          );
         });
 
       setState(() {
@@ -329,13 +337,16 @@ class _LearningRecommendationClassScreenState
     final subjects = <Map<String, String>>[];
 
     for (final schedule in _teacherSchedules) {
-      final scheduleClassId = schedule['class_id']?.toString() ??
+      final scheduleClassId =
+          schedule['class_id']?.toString() ??
           schedule['class']?['id']?.toString();
       if (scheduleClassId != classId) continue;
 
-      final subjectId = schedule['subject_id']?.toString() ??
+      final subjectId =
+          schedule['subject_id']?.toString() ??
           schedule['subject']?['id']?.toString();
-      final subjectName = schedule['subject']?['name']?.toString() ??
+      final subjectName =
+          schedule['subject']?['name']?.toString() ??
           schedule['subject_name']?.toString() ??
           'Mata Pelajaran';
 
@@ -358,7 +369,10 @@ class _LearningRecommendationClassScreenState
     final subjects = _getSubjectsForClass(classId);
     if (subjects.isEmpty) {
       if (mounted) {
-                SnackBarUtils.showInfo(context, 'Tidak ada mata pelajaran ditemukan untuk kelas ini');
+        SnackBarUtils.showInfo(
+          context,
+          'Tidak ada mata pelajaran ditemukan untuk kelas ini',
+        );
       }
       return;
     }
@@ -389,7 +403,10 @@ class _LearningRecommendationClassScreenState
     AppLogger.debug('recommendation', '   teacherId: $_effectiveTeacherId');
     AppLogger.debug('recommendation', '   classId: $classId');
     AppLogger.debug('recommendation', '   subjectId: ${selectedSubject['id']}');
-    AppLogger.debug('recommendation', '   subjectName: ${selectedSubject['name']}');
+    AppLogger.debug(
+      'recommendation',
+      '   subjectName: ${selectedSubject['name']}',
+    );
     AppLogger.debug('recommendation', '   includeOnTrack: $includeOnTrack');
     AppLogger.debug('recommendation', '   className: $className');
 
@@ -404,42 +421,55 @@ class _LearningRecommendationClassScreenState
       if (result['async'] == true) {
         final jobId = result['job_id']?.toString();
         if (jobId != null && mounted) {
-                    SnackBarUtils.showInfo(context, result['message'] ?? 'Sedang memproses...');
+          SnackBarUtils.showInfo(
+            context,
+            result['message'] ?? 'Sedang memproses...',
+          );
 
           try {
             await getIt<ApiRecommendationService>().pollJobUntilComplete(
               jobId,
               onProgress: (status, attempt) {
-                AppLogger.debug('recommendation', 'Job $jobId: $status (attempt $attempt)');
+                AppLogger.debug(
+                  'recommendation',
+                  'Job $jobId: $status (attempt $attempt)',
+                );
               },
             );
             if (mounted) {
-                            SnackBarUtils.showSuccess(context, 'Rekomendasi berhasil dibuat!');
+              SnackBarUtils.showSuccess(
+                context,
+                'Rekomendasi berhasil dibuat!',
+              );
             }
           } catch (e) {
             if (mounted) {
-                            SnackBarUtils.showError(context, 'Gagal: $e');
+              SnackBarUtils.showError(context, 'Gagal: $e');
             }
           }
         }
       } else {
         if (mounted) {
-                    SnackBarUtils.showSuccess(context, 'Rekomendasi berhasil dibuat!');
+          SnackBarUtils.showSuccess(context, 'Rekomendasi berhasil dibuat!');
         }
       }
 
       // Invalidate cache and refresh data
-      await LocalCacheService.clearStartingWith('recommendation_summary_$classId');
-      await LocalCacheService.clearStartingWith('recommendation_history_$classId');
+      await LocalCacheService.clearStartingWith(
+        'recommendation_summary_$classId',
+      );
+      await LocalCacheService.clearStartingWith(
+        'recommendation_history_$classId',
+      );
       _loadClassSummary(classId, useCache: false);
       _loadClassHistory(classId, useCache: false);
     } on RateLimitException catch (e) {
       if (mounted) {
-                SnackBarUtils.showWarning(context, e.message);
+        SnackBarUtils.showWarning(context, e.message);
       }
     } catch (e) {
       if (mounted) {
-                SnackBarUtils.showError(context, 'Error: $e');
+        SnackBarUtils.showError(context, 'Error: $e');
       }
     } finally {
       if (mounted) setState(() => _generating[classId] = false);
@@ -480,10 +510,7 @@ class _LearningRecommendationClassScreenState
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Generate rekomendasi AI untuk $className',
-              style: TextStyle(
-                fontSize: 13,
-                color: ColorUtils.slate500,
-              ),
+              style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             ),
             const SizedBox(height: AppSpacing.lg),
             _buildScopeOption(
@@ -568,8 +595,11 @@ class _LearningRecommendationClassScreenState
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded,
-                    size: 20, color: ColorUtils.slate400),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: ColorUtils.slate400,
+                ),
               ],
             ),
           ),
@@ -581,10 +611,16 @@ class _LearningRecommendationClassScreenState
   // ==================== TOUR ====================
 
   Future<void> _checkAndShowTour() async {
-    final tourCacheKey = CacheKeyBuilder.tourStatus('recommendation_class_screen', 'guru');
+    final tourCacheKey = CacheKeyBuilder.tourStatus(
+      'recommendation_class_screen',
+      'guru',
+    );
     try {
       // Cache-only: tour status pre-fetched from dashboard
-      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      final cached = await LocalCacheService.load(
+        tourCacheKey,
+        ttl: const Duration(hours: 24),
+      );
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true) {
           if (mounted) {
@@ -616,12 +652,26 @@ class _LearningRecommendationClassScreenState
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        getIt<ApiTourService>().completeTour(name: 'learning_recommendation_class_tour', role: 'guru', platform: 'mobile');
-        LocalCacheService.save(CacheKeyBuilder.tourStatus('recommendation_class_screen', 'guru'), {'should_show': false});
+        getIt<ApiTourService>().completeTour(
+          name: 'learning_recommendation_class_tour',
+          role: 'guru',
+          platform: 'mobile',
+        );
+        LocalCacheService.save(
+          CacheKeyBuilder.tourStatus('recommendation_class_screen', 'guru'),
+          {'should_show': false},
+        );
       },
       onSkip: () {
-        getIt<ApiTourService>().completeTour(name: 'learning_recommendation_class_tour', role: 'guru', platform: 'mobile');
-        LocalCacheService.save(CacheKeyBuilder.tourStatus('recommendation_class_screen', 'guru'), {'should_show': false});
+        getIt<ApiTourService>().completeTour(
+          name: 'learning_recommendation_class_tour',
+          role: 'guru',
+          platform: 'mobile',
+        );
+        LocalCacheService.save(
+          CacheKeyBuilder.tourStatus('recommendation_class_screen', 'guru'),
+          {'should_show': false},
+        );
         return true;
       },
     ).show(context: context);
@@ -814,14 +864,22 @@ class _LearningRecommendationClassScreenState
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.more_vert,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   itemBuilder: (BuildContext context) => [
                     PopupMenuItem<String>(
                       value: 'refresh',
                       child: Row(
                         children: [
-                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          Icon(
+                            Icons.refresh,
+                            size: 20,
+                            color: ColorUtils.info600,
+                          ),
                           const SizedBox(width: AppSpacing.sm),
                           const Text('Perbarui Data'),
                         ],
@@ -850,8 +908,7 @@ class _LearningRecommendationClassScreenState
                   final isLoading = _loadingSummaries[classId] == true;
                   final isGenerating = _generating[classId] == true;
                   final history = _classHistory[classId] ?? [];
-                  final isLoadingHistory =
-                      _loadingHistory[classId] == true;
+                  final isLoadingHistory = _loadingHistory[classId] == true;
                   final isExpanded = _expandedClass[classId] == true;
 
                   return Padding(
@@ -924,9 +981,7 @@ class _LearningRecommendationClassScreenState
               },
               borderRadius: BorderRadius.vertical(
                 top: const Radius.circular(16),
-                bottom: isExpanded
-                    ? Radius.zero
-                    : const Radius.circular(16),
+                bottom: isExpanded ? Radius.zero : const Radius.circular(16),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -1029,8 +1084,11 @@ class _LearningRecommendationClassScreenState
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   children: [
-                    Icon(Icons.lightbulb_outline_rounded,
-                        size: 32, color: ColorUtils.slate300),
+                    Icon(
+                      Icons.lightbulb_outline_rounded,
+                      size: 32,
+                      color: ColorUtils.slate300,
+                    ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       'Belum ada riwayat rekomendasi',
@@ -1056,10 +1114,11 @@ class _LearningRecommendationClassScreenState
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 8),
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 itemCount: history.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: 6),
+                separatorBuilder: (_, __) => const SizedBox(height: 6),
                 itemBuilder: (context, index) {
                   final entry = history[index];
                   return _buildHistoryItem(
@@ -1073,8 +1132,7 @@ class _LearningRecommendationClassScreenState
             // Generate button
             if (_schedulesLoaded) ...[
               Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
                 child: SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -1090,12 +1148,13 @@ class _LearningRecommendationClassScreenState
                               color: primaryColor,
                             ),
                           )
-                        : Icon(Icons.auto_awesome,
-                            size: 16, color: primaryColor),
+                        : Icon(
+                            Icons.auto_awesome,
+                            size: 16,
+                            color: primaryColor,
+                          ),
                     label: Text(
-                      isGenerating
-                          ? 'Memproses...'
-                          : 'Generate Rekomendasi AI',
+                      isGenerating ? 'Memproses...' : 'Generate Rekomendasi AI',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -1113,8 +1172,7 @@ class _LearningRecommendationClassScreenState
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
                 ),
@@ -1132,7 +1190,9 @@ class _LearningRecommendationClassScreenState
     required String classId,
   }) {
     final date = entry['date'] as String;
-    final count = entry['count'] is int ? entry['count'] as int : int.tryParse(entry['count'].toString()) ?? 0;
+    final count = entry['count'] is int
+        ? entry['count'] as int
+        : int.tryParse(entry['count'].toString()) ?? 0;
     final triggerSource = entry['trigger_source']?.toString() ?? 'on_demand';
     final byStatus = _toCountMap(entry['by_status']);
     final byPriority = _toCountMap(entry['by_priority']);
@@ -1142,7 +1202,7 @@ class _LearningRecommendationClassScreenState
 
     final periodInfo = _getPeriodInfo(triggerSource);
 
-    return Material(  
+    return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
@@ -1152,10 +1212,13 @@ class _LearningRecommendationClassScreenState
             teacherWithProfileId['teacher_id'] = _teacherProfileId!;
           }
 
-          AppNavigator.push(context, LearningRecommendationStudentScreen(
-                teacher: teacherWithProfileId,
-                classData: classData,
-              )).then((_) {
+          AppNavigator.push(
+            context,
+            LearningRecommendationStudentScreen(
+              teacher: teacherWithProfileId,
+              classData: classData,
+            ),
+          ).then((_) {
             _loadClassSummary(classId);
             _loadClassHistory(classId);
           });
@@ -1181,11 +1244,7 @@ class _LearningRecommendationClassScreenState
                     color: periodInfo.color.withValues(alpha: 0.2),
                   ),
                 ),
-                child: Icon(
-                  periodInfo.icon,
-                  size: 18,
-                  color: periodInfo.color,
-                ),
+                child: Icon(periodInfo.icon, size: 18, color: periodInfo.color),
               ),
               const SizedBox(width: AppSpacing.md),
               // Info
@@ -1273,7 +1332,8 @@ class _LearningRecommendationClassScreenState
 
   /// Map trigger_source back to period display info
   ({Color color, String label, IconData icon}) _getPeriodInfo(
-      String triggerSource) {
+    String triggerSource,
+  ) {
     switch (triggerSource) {
       case 'weekly_review':
         return (
@@ -1305,18 +1365,20 @@ class _LearningRecommendationClassScreenState
 
   Map<String, int> _toCountMap(dynamic data) {
     if (data is Map) {
-      return data.map((k, v) => MapEntry(
-          k.toString(), v is int ? v : int.tryParse(v.toString()) ?? 0));
+      return data.map(
+        (k, v) => MapEntry(
+          k.toString(),
+          v is int ? v : int.tryParse(v.toString()) ?? 0,
+        ),
+      );
     }
     if (data is List) {
       final map = <String, int>{};
       for (final item in data) {
         if (item is Map) {
-          final key = (item['status'] ??
-                  item['priority'] ??
-                  item['category'] ??
-                  '')
-              .toString();
+          final key =
+              (item['status'] ?? item['priority'] ?? item['category'] ?? '')
+                  .toString();
           final count = item['count'] is int
               ? item['count']
               : int.tryParse(item['count'].toString()) ?? 0;
@@ -1389,65 +1451,57 @@ class _SubjectPickerSheet extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Generate rekomendasi AI untuk $className',
-            style: TextStyle(
-              fontSize: 13,
-              color: ColorUtils.slate500,
-            ),
+            style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
           ),
           const SizedBox(height: AppSpacing.lg),
-          ...subjects.map((subject) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => AppNavigator.pop(context, subject),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: ColorUtils.slate200,
-                          width: 1,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: primaryColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.menu_book_outlined,
-                              size: 18,
-                              color: primaryColor,
-                            ),
+          ...subjects.map(
+            (subject) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => AppNavigator.pop(context, subject),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: ColorUtils.slate200, width: 1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Text(
-                              subject['name'] ?? 'Mata Pelajaran',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: ColorUtils.slate800,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.auto_awesome,
+                          child: Icon(
+                            Icons.menu_book_outlined,
                             size: 18,
                             color: primaryColor,
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Text(
+                            subject['name'] ?? 'Mata Pelajaran',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: ColorUtils.slate800,
+                            ),
+                          ),
+                        ),
+                        Icon(Icons.auto_awesome, size: 18, color: primaryColor),
+                      ],
                     ),
                   ),
                 ),
-              )),
+              ),
+            ),
+          ),
           const SizedBox(height: AppSpacing.sm),
         ],
       ),

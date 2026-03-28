@@ -54,10 +54,7 @@ class ApiService {
   /// Performs an authenticated GET request.
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? params}) async {
     try {
-      final response = await dioClient.get(
-        endpoint,
-        queryParameters: params,
-      );
+      final response = await dioClient.get(endpoint, queryParameters: params);
       return response.data;
     } on DioException catch (e) {
       if (e.error is Exception) throw e.error as Exception;

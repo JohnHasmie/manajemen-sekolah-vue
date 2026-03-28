@@ -74,7 +74,9 @@ mixin PaginationMixin<T extends StatefulWidget> on State<T> {
 
     final lastPage = meta['last_page'] ?? meta['total_pages'];
     if (lastPage != null) {
-      hasMoreData = currentPage < (lastPage is int ? lastPage : int.tryParse(lastPage.toString()) ?? 1);
+      hasMoreData =
+          currentPage <
+          (lastPage is int ? lastPage : int.tryParse(lastPage.toString()) ?? 1);
     } else {
       hasMoreData = meta['has_next_page'] == true;
     }

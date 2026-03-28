@@ -5,7 +5,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manajemensekolah/core/models/student.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 void main() {
   group('Student.fromJson', () {

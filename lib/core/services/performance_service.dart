@@ -172,7 +172,9 @@ class PerformanceService {
       trace?.putAttribute('status', 'error');
       trace?.putAttribute(
         'error',
-        e.toString().length > 100 ? e.toString().substring(0, 100) : e.toString(),
+        e.toString().length > 100
+            ? e.toString().substring(0, 100)
+            : e.toString(),
       );
       rethrow;
     } finally {

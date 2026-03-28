@@ -169,7 +169,7 @@ class _LearningRecommendationEditScreenState
 
     if (mounted) {
       setState(() => _isSaving = false);
-            SnackBarUtils.showInfo(context, 'Perubahan berhasil disimpan!');
+      SnackBarUtils.showInfo(context, 'Perubahan berhasil disimpan!');
       AppNavigator.pop(context, true); // Return true to indicate data changed
     }
   }

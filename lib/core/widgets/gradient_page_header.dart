@@ -121,7 +121,10 @@ class GradientPageHeader extends StatelessWidget {
             ],
           ),
 
-          if (searchBar != null) ...[const SizedBox(height: AppSpacing.lg), searchBar!],
+          if (searchBar != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            searchBar!,
+          ],
 
           if (filterChips != null) ...[
             const SizedBox(height: AppSpacing.md),

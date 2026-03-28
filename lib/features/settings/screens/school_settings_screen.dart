@@ -1,5 +1,6 @@
 // School settings hub - navigation to school info and time settings sub-screens.
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/settings/school.vue` - a menu page linking to:
@@ -49,8 +50,14 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      final tourCacheKey = CacheKeyBuilder.tourStatus('school_settings', 'admin');
-      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      final tourCacheKey = CacheKeyBuilder.tourStatus(
+        'school_settings',
+        'admin',
+      );
+      final cached = await LocalCacheService.load(
+        tourCacheKey,
+        ttl: const Duration(hours: 24),
+      );
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true) {
           if (mounted) {
@@ -81,12 +88,26 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        getIt<ApiTourService>().completeTour(name: 'admin_school_settings_tour', role: 'admin', platform: 'mobile');
-        LocalCacheService.save(CacheKeyBuilder.tourStatus('school_settings', 'admin'), {'should_show': false});
+        getIt<ApiTourService>().completeTour(
+          name: 'admin_school_settings_tour',
+          role: 'admin',
+          platform: 'mobile',
+        );
+        LocalCacheService.save(
+          CacheKeyBuilder.tourStatus('school_settings', 'admin'),
+          {'should_show': false},
+        );
       },
       onSkip: () {
-        getIt<ApiTourService>().completeTour(name: 'admin_school_settings_tour', role: 'admin', platform: 'mobile');
-        LocalCacheService.save(CacheKeyBuilder.tourStatus('school_settings', 'admin'), {'should_show': false});
+        getIt<ApiTourService>().completeTour(
+          name: 'admin_school_settings_tour',
+          role: 'admin',
+          platform: 'mobile',
+        );
+        LocalCacheService.save(
+          CacheKeyBuilder.tourStatus('school_settings', 'admin'),
+          {'should_show': false},
+        );
         return true;
       },
     ).show(context: context);

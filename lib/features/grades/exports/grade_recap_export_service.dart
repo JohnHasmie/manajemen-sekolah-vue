@@ -36,8 +36,6 @@ class ExcelGradeRecapService {
     required String subjectName,
     required BuildContext context,
   }) async {
-    
-
     try {
       final Map<String, dynamic> payload = {
         'tableData': tableData,
@@ -73,15 +71,21 @@ class ExcelGradeRecapService {
       // Open the file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Grade Rekap exported successfully',
-              'id': 'Rekap nilai berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Grade Rekap exported successfully',
+          'id': 'Rekap nilai berhasil diexport',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
     }
   }
 }

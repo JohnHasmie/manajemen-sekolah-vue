@@ -5,7 +5,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:manajemensekolah/core/models/attendance_summary.dart';
+import 'package:manajemensekolah/features/attendance/domain/models/attendance_summary.dart';
 
 void main() {
   group('AttendanceSummary.fromJson', () {

@@ -59,10 +59,13 @@ class FinanceService {
     List<String>? billIds,
   }) async {
     try {
-      await dioClient.post(ApiEndpoints.billMarkRead, data: {
-        if (studentId != null) 'student_id': studentId,
-        if (billIds != null) 'bill_ids': billIds,
-      });
+      await dioClient.post(
+        ApiEndpoints.billMarkRead,
+        data: {
+          if (studentId != null) 'student_id': studentId,
+          if (billIds != null) 'bill_ids': billIds,
+        },
+      );
     } catch (e) {
       AppLogger.error('api', 'Error marking bills read: $e');
     }
@@ -93,7 +96,10 @@ class FinanceService {
   // Manual payment entry by admin (for offline/cash payments)
   static Future<dynamic> inputManualPayment(Map<String, dynamic> data) async {
     try {
-      final response = await dioClient.post(ApiEndpoints.paymentManual, data: data);
+      final response = await dioClient.post(
+        ApiEndpoints.paymentManual,
+        data: data,
+      );
       return response.data;
     } catch (e) {
       AppLogger.error('api', 'Error input pembayaran manual: $e');
@@ -115,7 +121,10 @@ class FinanceService {
       if (paymentTypeId != null) {
         body['payment_type_id'] = paymentTypeId;
       }
-      final response = await dioClient.post(ApiEndpoints.generateBill, data: body);
+      final response = await dioClient.post(
+        ApiEndpoints.generateBill,
+        data: body,
+      );
       return response.data;
     } catch (e) {
       AppLogger.error('api', 'Error generating bills: $e');

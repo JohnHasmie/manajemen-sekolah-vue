@@ -7,12 +7,13 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/classrooms/services/classroom_service.dart';
+import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
@@ -83,7 +84,10 @@ class _LearningRecommendationStudentScreenState
           _isLoading = false;
           _errorMessage = '';
         });
-        AppLogger.debug('recommendation', 'RecommendationStudents: from cache (${cached.length})');
+        AppLogger.debug(
+          'recommendation',
+          'RecommendationStudents: from cache (${cached.length})',
+        );
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _checkAndShowTour();
         });
@@ -129,10 +133,16 @@ class _LearningRecommendationStudentScreenState
   }
 
   Future<void> _checkAndShowTour() async {
-    final tourCacheKey = CacheKeyBuilder.tourStatus('recommendation_student_screen', 'guru');
+    final tourCacheKey = CacheKeyBuilder.tourStatus(
+      'recommendation_student_screen',
+      'guru',
+    );
     try {
       // Cache-only: tour status pre-fetched from dashboard
-      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      final cached = await LocalCacheService.load(
+        tourCacheKey,
+        ttl: const Duration(hours: 24),
+      );
       if (cached != null && cached is Map) {
         if (cached['should_show'] == true) {
           if (mounted) {
@@ -164,12 +174,26 @@ class _LearningRecommendationStudentScreenState
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-        getIt<ApiTourService>().completeTour(name: 'learning_recommendation_student_tour', role: 'guru', platform: 'mobile');
-        LocalCacheService.save(CacheKeyBuilder.tourStatus('recommendation_student_screen', 'guru'), {'should_show': false});
+        getIt<ApiTourService>().completeTour(
+          name: 'learning_recommendation_student_tour',
+          role: 'guru',
+          platform: 'mobile',
+        );
+        LocalCacheService.save(
+          CacheKeyBuilder.tourStatus('recommendation_student_screen', 'guru'),
+          {'should_show': false},
+        );
       },
       onSkip: () {
-        getIt<ApiTourService>().completeTour(name: 'learning_recommendation_student_tour', role: 'guru', platform: 'mobile');
-        LocalCacheService.save(CacheKeyBuilder.tourStatus('recommendation_student_screen', 'guru'), {'should_show': false});
+        getIt<ApiTourService>().completeTour(
+          name: 'learning_recommendation_student_tour',
+          role: 'guru',
+          platform: 'mobile',
+        );
+        LocalCacheService.save(
+          CacheKeyBuilder.tourStatus('recommendation_student_screen', 'guru'),
+          {'should_show': false},
+        );
         return true;
       },
     ).show(context: context);
@@ -331,7 +355,11 @@ class _LearningRecommendationStudentScreenState
                       value: 'refresh',
                       child: Row(
                         children: [
-                          Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                          Icon(
+                            Icons.refresh,
+                            size: 20,
+                            color: ColorUtils.info600,
+                          ),
                           const SizedBox(width: AppSpacing.sm),
                           const Text('Perbarui Data'),
                         ],
@@ -402,11 +430,14 @@ class _LearningRecommendationStudentScreenState
                             color: ColorUtils.slate400,
                           ),
                           onTap: () {
-                            AppNavigator.push(context, LearningRecommendationResultScreen(
-                                      teacher: widget.teacher,
-                                      student: student,
-                                      classData: widget.classData,
-                                    ));
+                            AppNavigator.push(
+                              context,
+                              LearningRecommendationResultScreen(
+                                teacher: widget.teacher,
+                                student: student,
+                                classData: widget.classData,
+                              ),
+                            );
                           },
                         ),
                       );

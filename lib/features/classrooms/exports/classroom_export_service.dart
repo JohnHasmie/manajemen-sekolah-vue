@@ -37,8 +37,6 @@ class ExcelClassService {
     required List<dynamic> classes,
     required BuildContext context,
   }) async {
-    
-
     try {
       // Validate data first
       final validatedData = validateClassData(classes);
@@ -61,15 +59,21 @@ class ExcelClassService {
       // Open file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Class data exported successfully',
-              'id': 'Data kelas berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Class data exported successfully',
+          'id': 'Data kelas berhasil diexport',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
     }
   }
 
@@ -77,8 +81,6 @@ class ExcelClassService {
   /// Like a Laravel route that returns `Excel::download(new ClassTemplateExport)`.
   /// Provides users with a pre-formatted .xlsx file to fill in and import.
   static Future<void> downloadTemplate(BuildContext context) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/template',
@@ -96,23 +98,27 @@ class ExcelClassService {
       // Open file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Template downloaded successfully',
-              'id': 'Template berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Template downloaded successfully',
+          'id': 'Template berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download template: $e',
-              'id': 'Gagal mengunduh template: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download template: $e',
+          'id': 'Gagal mengunduh template: $e',
+        }),
+      );
     }
   }
 
   /// Download a CSV import template from the backend GET `/class/template/csv`.
   /// Alternative to the Excel template for users who prefer CSV format.
   static Future<void> downloadTemplateCSV(BuildContext context) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/template/csv',
@@ -130,15 +136,21 @@ class ExcelClassService {
       // Open file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'CSV Template downloaded successfully',
-              'id': 'Template CSV berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'CSV Template downloaded successfully',
+          'id': 'Template CSV berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download CSV template: $e',
-              'id': 'Gagal mengunduh template CSV: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download CSV template: $e',
+          'id': 'Gagal mengunduh template CSV: $e',
+        }),
+      );
     }
   }
 
@@ -156,7 +168,8 @@ class ExcelClassService {
 
       final responseData = response.data;
 
-      if (responseData is Map<String, dynamic> && responseData['success'] == true) {
+      if (responseData is Map<String, dynamic> &&
+          responseData['success'] == true) {
         return List<Map<String, dynamic>>.from(responseData['validatedData']);
       } else {
         throw Exception(responseData['message'] ?? 'Validation failed');
@@ -226,5 +239,4 @@ class ExcelClassService {
 
     return validatedData;
   }
-
 }

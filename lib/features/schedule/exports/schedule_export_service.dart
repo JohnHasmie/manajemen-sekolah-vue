@@ -31,8 +31,6 @@ class ExcelScheduleService {
     required List<dynamic> schedules,
     required BuildContext context,
   }) async {
-    
-
     try {
       // Validate data first
       final validatedData = validateScheduleData(schedules);
@@ -61,23 +59,27 @@ class ExcelScheduleService {
       // Open file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Schedule data exported successfully',
-              'id': 'Data jadwal mengajar berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Schedule data exported successfully',
+          'id': 'Data jadwal mengajar berhasil diexport',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
     }
   }
 
   /// Download a schedule import template from GET `/teaching-schedule/template`.
   /// Like Laravel returning `Excel::download(new ScheduleTemplateExport)`.
   static Future<void> downloadTemplate(BuildContext context) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/template',
@@ -96,15 +98,21 @@ class ExcelScheduleService {
       // Open file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Template downloaded successfully',
-              'id': 'Template berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Template downloaded successfully',
+          'id': 'Template berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download template: $e',
-              'id': 'Gagal mengunduh template: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download template: $e',
+          'id': 'Gagal mengunduh template: $e',
+        }),
+      );
     }
   }
 
@@ -120,7 +128,8 @@ class ExcelScheduleService {
 
       final responseData = response.data;
 
-      if (responseData is Map<String, dynamic> && responseData['success'] == true) {
+      if (responseData is Map<String, dynamic> &&
+          responseData['success'] == true) {
         return List<Map<String, dynamic>>.from(responseData['validatedData']);
       } else {
         throw Exception(responseData['message'] ?? 'Validation failed');

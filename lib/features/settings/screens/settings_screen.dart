@@ -1,5 +1,6 @@
 // User profile/settings screen - displays user profile info and app settings.
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer, ChangeNotifierProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    hide Provider, Consumer, ChangeNotifierProvider;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/settings.vue` or `pages/profile.vue` - shared across all roles
@@ -11,7 +12,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/settings/services/settings_service.dart';
+import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -118,7 +119,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       // Only show error if no cached data
       if (_profileData.isEmpty) {
         setState(() => _isLoading = false);
-                SnackBarUtils.showError(context, '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToLoadProfile)}: ${ErrorUtils.getFriendlyMessage(e)}');
+        SnackBarUtils.showError(
+          context,
+          '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToLoadProfile)}: ${ErrorUtils.getFriendlyMessage(e)}',
+        );
       }
     }
   }
@@ -177,9 +181,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            ref.read(languageRiverpod).getTranslatedText(
-                              AppLocalizations.editProfile,
-                            ),
+                            ref
+                                .read(languageRiverpod)
+                                .getTranslatedText(
+                                  AppLocalizations.editProfile,
+                                ),
                             style: TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
@@ -207,26 +213,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   children: [
                     _buildDialogTextField(
                       controller: nameController,
-                      label: ref.read(languageRiverpod).getTranslatedText(
-                        AppLocalizations.fullName,
-                      ),
+                      label: ref
+                          .read(languageRiverpod)
+                          .getTranslatedText(AppLocalizations.fullName),
                       icon: Icons.person_outline_rounded,
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
                       controller: phoneController,
-                      label: ref.read(languageRiverpod).getTranslatedText(
-                        AppLocalizations.phoneNumber,
-                      ),
+                      label: ref
+                          .read(languageRiverpod)
+                          .getTranslatedText(AppLocalizations.phoneNumber),
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
                       controller: addressController,
-                      label: ref.read(languageRiverpod).getTranslatedText(
-                        AppLocalizations.address,
-                      ),
+                      label: ref
+                          .read(languageRiverpod)
+                          .getTranslatedText(AppLocalizations.address),
                       icon: Icons.location_on_outlined,
                       maxLines: 2,
                     ),
@@ -255,9 +261,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ),
                           child: Text(
-                            ref.read(languageRiverpod).getTranslatedText(
-                              AppLocalizations.cancel,
-                            ),
+                            ref
+                                .read(languageRiverpod)
+                                .getTranslatedText(AppLocalizations.cancel),
                             style: TextStyle(color: ColorUtils.slate600),
                           ),
                         ),
@@ -274,7 +280,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 phoneNumber: phoneController.text,
                                 address: addressController.text,
                               );
-                              await LocalCacheService.invalidate(_profileCacheKey);
+                              await LocalCacheService.invalidate(
+                                _profileCacheKey,
+                              );
                               if (mounted) {
                                 AppNavigator.pop(context);
                                 _loadProfile(useCache: false);
@@ -314,9 +322,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             elevation: 0,
                           ),
                           child: Text(
-                            ref.read(languageRiverpod).getTranslatedText(
-                              AppLocalizations.save,
-                            ),
+                            ref
+                                .read(languageRiverpod)
+                                .getTranslatedText(AppLocalizations.save),
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
@@ -491,9 +499,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   backgroundColor: _primaryColor,
                   iconTheme: IconThemeData(color: Colors.white),
                   title: Text(
-                    ref.watch(languageRiverpod).getTranslatedText(
-                      AppLocalizations.userProfile,
-                    ),
+                    ref
+                        .watch(languageRiverpod)
+                        .getTranslatedText(AppLocalizations.userProfile),
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -528,7 +536,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           value: 'refresh',
                           child: Row(
                             children: [
-                              Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                              Icon(
+                                Icons.refresh,
+                                size: 20,
+                                color: ColorUtils.info600,
+                              ),
                               SizedBox(width: AppSpacing.sm),
                               Text('Perbarui Data'),
                             ],
@@ -647,13 +659,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         // Personal Information Card
                         _buildSectionCard(
                           sectionIcon: Icons.person_outline_rounded,
-                          sectionTitle: ref.read(languageRiverpod)
+                          sectionTitle: ref
+                              .read(languageRiverpod)
                               .getTranslatedText(
                                 AppLocalizations.personalInformation,
                               ),
                           children: [
                             _buildInfoRow(
-                              ref.read(languageRiverpod)
+                              ref
+                                  .read(languageRiverpod)
                                   .getTranslatedText(AppLocalizations.fullName),
                               _profileData['name'] ?? '',
                               Icons.person_rounded,
@@ -683,20 +697,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         // Account Information Card
                         _buildSectionCard(
                           sectionIcon: Icons.manage_accounts_rounded,
-                          sectionTitle: ref.read(languageRiverpod)
+                          sectionTitle: ref
+                              .read(languageRiverpod)
                               .getTranslatedText(
                                 AppLocalizations.accountInformation,
                               ),
                           children: [
                             _buildInfoRow(
-                              ref.read(languageRiverpod)
+                              ref
+                                  .read(languageRiverpod)
                                   .getTranslatedText(AppLocalizations.role),
                               role,
                               Icons.badge_rounded,
                             ),
                             SizedBox(height: AppSpacing.md),
                             _buildInfoRow(
-                              ref.read(languageRiverpod)
+                              ref
+                                  .read(languageRiverpod)
                                   .getTranslatedText(AppLocalizations.school),
                               _profileData['school_name'] ?? '',
                               Icons.school_rounded,
@@ -717,7 +734,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               size: 20,
                             ),
                             label: Text(
-                              ref.watch(languageRiverpod)
+                              ref
+                                  .watch(languageRiverpod)
                                   .getTranslatedText(
                                     AppLocalizations.changePassword,
                                   ),
@@ -778,13 +796,19 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
 
       if (!mounted) return;
       AppNavigator.pop(context);
-            SnackBarUtils.showSuccess(context, ref.read(languageRiverpod).getTranslatedText(
-              AppLocalizations.passwordChangedSuccess,
-            ));
+      SnackBarUtils.showSuccess(
+        context,
+        ref
+            .read(languageRiverpod)
+            .getTranslatedText(AppLocalizations.passwordChangedSuccess),
+      );
     } catch (e) {
       AppLogger.error('settings', e);
       if (!mounted) return;
-            SnackBarUtils.showError(context, '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToChangePassword)}: ${ErrorUtils.getFriendlyMessage(e)}');
+      SnackBarUtils.showError(
+        context,
+        '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToChangePassword)}: ${ErrorUtils.getFriendlyMessage(e)}',
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -803,9 +827,9 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
       validator:
           validator ??
           (val) => val == null || val.isEmpty
-              ? ref.read(languageRiverpod).getTranslatedText(
-                  AppLocalizations.required,
-                )
+              ? ref
+                    .read(languageRiverpod)
+                    .getTranslatedText(AppLocalizations.required)
               : null,
       decoration: InputDecoration(
         labelText: label,
@@ -894,9 +918,11 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          ref.read(languageRiverpod).getTranslatedText(
-                            AppLocalizations.changePassword,
-                          ),
+                          ref
+                              .read(languageRiverpod)
+                              .getTranslatedText(
+                                AppLocalizations.changePassword,
+                              ),
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
@@ -927,9 +953,9 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                   children: [
                     _buildPasswordField(
                       controller: _oldPasswordController,
-                      label: ref.read(languageRiverpod).getTranslatedText(
-                        AppLocalizations.oldPassword,
-                      ),
+                      label: ref
+                          .read(languageRiverpod)
+                          .getTranslatedText(AppLocalizations.oldPassword),
                       obscure: _obscureOld,
                       onToggle: () =>
                           setState(() => _obscureOld = !_obscureOld),
@@ -937,9 +963,9 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                     SizedBox(height: AppSpacing.md),
                     _buildPasswordField(
                       controller: _newPasswordController,
-                      label: ref.read(languageRiverpod).getTranslatedText(
-                        AppLocalizations.newPassword,
-                      ),
+                      label: ref
+                          .read(languageRiverpod)
+                          .getTranslatedText(AppLocalizations.newPassword),
                       obscure: _obscureNew,
                       onToggle: () =>
                           setState(() => _obscureNew = !_obscureNew),
@@ -977,15 +1003,16 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                     SizedBox(height: AppSpacing.md),
                     _buildPasswordField(
                       controller: _confirmPasswordController,
-                      label: ref.read(languageRiverpod).getTranslatedText(
-                        AppLocalizations.confirmPassword,
-                      ),
+                      label: ref
+                          .read(languageRiverpod)
+                          .getTranslatedText(AppLocalizations.confirmPassword),
                       obscure: _obscureConfirm,
                       onToggle: () =>
                           setState(() => _obscureConfirm = !_obscureConfirm),
                       validator: (val) {
                         if (val != _newPasswordController.text) {
-                          return ref.read(languageRiverpod)
+                          return ref
+                              .read(languageRiverpod)
                               .getTranslatedText(
                                 AppLocalizations.passwordMismatch,
                               );
@@ -1020,9 +1047,9 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                           ),
                         ),
                         child: Text(
-                          ref.read(languageRiverpod).getTranslatedText(
-                            AppLocalizations.cancel,
-                          ),
+                          ref
+                              .read(languageRiverpod)
+                              .getTranslatedText(AppLocalizations.cancel),
                           style: TextStyle(color: ColorUtils.slate600),
                         ),
                       ),
@@ -1049,7 +1076,8 @@ class __ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                                 ),
                               )
                             : Text(
-                                ref.read(languageRiverpod)
+                                ref
+                                    .read(languageRiverpod)
                                     .getTranslatedText(AppLocalizations.save),
                                 style: TextStyle(
                                   color: Colors.white,

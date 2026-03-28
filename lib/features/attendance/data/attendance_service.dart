@@ -20,10 +20,14 @@ class AttendanceService {
     if (subjectId != null) queryParams['mataPelajaranId'] = subjectId;
     if (studentId != null) queryParams['student_id'] = studentId;
     if (classId != null) queryParams['classId'] = classId;
-    if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
+    if (academicYearId != null)
+      queryParams['academic_year_id'] = academicYearId;
     if (lessonHourId != null) queryParams['lesson_hour_id'] = lessonHourId;
 
-    AppLogger.debug('api', '📍 Calling getAbsensi: ${ApiEndpoints.attendance} with params: $queryParams');
+    AppLogger.debug(
+      'api',
+      '📍 Calling getAbsensi: ${ApiEndpoints.attendance} with params: $queryParams',
+    );
 
     final response = await dioClient.get(
       ApiEndpoints.attendance,
@@ -36,7 +40,7 @@ class AttendanceService {
       AppLogger.debug('api', 'Absensi response type: ${result.runtimeType}');
       if (result is Map) {
         if (result.containsKey('data')) {
-           // debug info handled in base api
+          // debug info handled in base api
         }
       }
     }
@@ -59,7 +63,8 @@ class AttendanceService {
     String? classId,
     String? lessonHourId,
   }) async {
-    String query = '${ApiEndpoints.attendance}?teacher_id=$teacherId&subject_id=$subjectId&date=$date';
+    String query =
+        '${ApiEndpoints.attendance}?teacher_id=$teacherId&subject_id=$subjectId&date=$date';
     if (classId != null && classId.isNotEmpty) {
       query += '&class_id=$classId';
     }
@@ -88,14 +93,19 @@ class AttendanceService {
         'page': page.toString(),
         'limit': limit.toString(),
       };
-      if (teacherId != null && teacherId.isNotEmpty) params['teacher_id'] = teacherId;
+      if (teacherId != null && teacherId.isNotEmpty)
+        params['teacher_id'] = teacherId;
       if (date != null && date.isNotEmpty) params['date'] = date;
-      if (subjectId != null && subjectId.isNotEmpty) params['subject_id'] = subjectId;
-      if (studentId != null && studentId.isNotEmpty) params['student_id'] = studentId;
+      if (subjectId != null && subjectId.isNotEmpty)
+        params['subject_id'] = subjectId;
+      if (studentId != null && studentId.isNotEmpty)
+        params['student_id'] = studentId;
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
-      if (dateStart != null && dateStart.isNotEmpty) params['tanggalStart'] = dateStart;
+      if (dateStart != null && dateStart.isNotEmpty)
+        params['tanggalStart'] = dateStart;
       if (dateEnd != null && dateEnd.isNotEmpty) params['tanggalEnd'] = dateEnd;
-      if (academicYearId != null && academicYearId.isNotEmpty) params['academic_year_id'] = academicYearId;
+      if (academicYearId != null && academicYearId.isNotEmpty)
+        params['academic_year_id'] = academicYearId;
 
       final response = await dioClient.get(
         ApiEndpoints.attendance,
@@ -139,7 +149,8 @@ class AttendanceService {
     if (date != null) queryParams['date'] = date;
     if (subjectId != null) queryParams['subjectId'] = subjectId;
     if (classId != null) queryParams['classId'] = classId;
-    if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
+    if (academicYearId != null)
+      queryParams['academic_year_id'] = academicYearId;
 
     final response = await dioClient.get(
       ApiEndpoints.attendanceSummary,
@@ -174,14 +185,19 @@ class AttendanceService {
       if (academicYearId != null && academicYearId.isNotEmpty) {
         params['academic_year_id'] = academicYearId;
       }
-      if (teacherId != null && teacherId.isNotEmpty) params['teacher_id'] = teacherId;
-      if (subjectId != null && subjectId.isNotEmpty) params['mataPelajaranId'] = subjectId;
+      if (teacherId != null && teacherId.isNotEmpty)
+        params['teacher_id'] = teacherId;
+      if (subjectId != null && subjectId.isNotEmpty)
+        params['mataPelajaranId'] = subjectId;
       if (classId != null && classId.isNotEmpty) params['classId'] = classId;
       if (date != null && date.isNotEmpty) params['tanggal'] = date;
-      if (dateStart != null && dateStart.isNotEmpty) params['tanggalStart'] = dateStart;
+      if (dateStart != null && dateStart.isNotEmpty)
+        params['tanggalStart'] = dateStart;
       if (dateEnd != null && dateEnd.isNotEmpty) params['tanggalEnd'] = dateEnd;
-      if (dayIds != null && dayIds.isNotEmpty) params['day_ids'] = dayIds.join(',');
-      if (lessonHourIds != null && lessonHourIds.isNotEmpty) params['lesson_hour_ids'] = lessonHourIds.join(',');
+      if (dayIds != null && dayIds.isNotEmpty)
+        params['day_ids'] = dayIds.join(',');
+      if (lessonHourIds != null && lessonHourIds.isNotEmpty)
+        params['lesson_hour_ids'] = lessonHourIds.join(',');
 
       final response = await dioClient.get(
         ApiEndpoints.attendanceSummary,
@@ -259,10 +275,14 @@ class AttendanceService {
   }) async {
     final queryParams = <String, dynamic>{};
     if (date != null && date.isNotEmpty) queryParams['tanggal'] = date;
-    if (classId != null && classId.isNotEmpty) queryParams['class_id'] = classId;
-    if (subjectId != null && subjectId.isNotEmpty) queryParams['subject_id'] = subjectId;
-    if (teacherId != null && teacherId.isNotEmpty) queryParams['teacher_id'] = teacherId;
-    if (lessonHourId != null && lessonHourId.isNotEmpty) queryParams['lesson_hour_id'] = lessonHourId;
+    if (classId != null && classId.isNotEmpty)
+      queryParams['class_id'] = classId;
+    if (subjectId != null && subjectId.isNotEmpty)
+      queryParams['subject_id'] = subjectId;
+    if (teacherId != null && teacherId.isNotEmpty)
+      queryParams['teacher_id'] = teacherId;
+    if (lessonHourId != null && lessonHourId.isNotEmpty)
+      queryParams['lesson_hour_id'] = lessonHourId;
 
     try {
       final response = await dioClient.get(

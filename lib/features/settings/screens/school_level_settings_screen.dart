@@ -6,7 +6,7 @@
 // In Laravel terms, this calls `GET /api/settings/school` and `PUT /api/settings/school`.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/settings/services/settings_service.dart';
+import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
@@ -62,7 +62,10 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
       AppLogger.error('settings', e);
       if (mounted) {
         setState(() => _isLoading = false);
-                SnackBarUtils.showError(context, 'Gagal memuat pengaturan: ${ErrorUtils.getFriendlyMessage(e)}');
+        SnackBarUtils.showError(
+          context,
+          'Gagal memuat pengaturan: ${ErrorUtils.getFriendlyMessage(e)}',
+        );
       }
     }
   }
@@ -80,251 +83,277 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
       builder: (context) {
         bool isSaving = false;
         return StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Gradient Header (Pattern #10)
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(AppSpacing.xl),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        ColorUtils.corporateBlue600,
-                        ColorUtils.corporateBlue600.withValues(alpha: 0.85),
-                      ],
+          builder: (context, setDialogState) => Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Gradient Header (Pattern #10)
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(AppSpacing.xl),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          ColorUtils.corporateBlue600,
+                          ColorUtils.corporateBlue600.withValues(alpha: 0.85),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.school_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                      SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Edit Informasi Sekolah',
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Perbarui data informasi sekolah',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.85),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Form Fields
-                Padding(
-                  padding: EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    children: [
-                      _buildStyledTextField(
-                        controller: nameController,
-                        label: 'Nama Sekolah',
-                        icon: Icons.school_outlined,
-                      ),
-                      SizedBox(height: AppSpacing.md),
-                      _buildStyledTextField(
-                        controller: addressController,
-                        label: 'Alamat Sekolah',
-                        icon: Icons.location_on_outlined,
-                        maxLines: 2,
-                      ),
-                      SizedBox(height: AppSpacing.md),
-                      DropdownButtonFormField<String>(
-                        initialValue: tempJenjang,
-                        decoration: InputDecoration(
-                          labelText: 'Jenjang Sekolah',
-                          prefixIcon: Icon(
-                            Icons.stairs_rounded,
-                            color: ColorUtils.corporateBlue600,
-                            size: 20,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: ColorUtils.slate200),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: ColorUtils.slate200),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: ColorUtils.corporateBlue600,
-                              width: 1.5,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: ColorUtils.slate50,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 14,
-                          ),
-                        ),
-                        items: _jenjangOptions
-                            .map(
-                              (j) => DropdownMenuItem(value: j, child: Text(j)),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setDialogState(() => tempJenjang = value);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                // Footer
-                Container(
-                  padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border(top: BorderSide(color: ColorUtils.slate100)),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 16),
                     child: Row(
                       children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => AppNavigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 13),
-                              side: BorderSide(color: ColorUtils.slate300),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              AppLocalizations.cancel.tr,
-                              style: TextStyle(color: ColorUtils.slate600),
-                            ),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.school_rounded,
+                            color: Colors.white,
+                            size: 22,
                           ),
                         ),
-                        SizedBox(width: AppSpacing.md),
+                        SizedBox(width: 14),
                         Expanded(
-                          child: ElevatedButton(
-                            onPressed: isSaving
-                                ? null
-                                : () async {
-                              final name = nameController.text.trim();
-                              if (name.length < 3) {
-                                                                SnackBarUtils.showError(context, AppLocalizations.schoolNameMinChars.tr);
-                                return;
-                              }
-
-                              setDialogState(() => isSaving = true);
-
-                              final messenger = ScaffoldMessenger.of(context);
-                              try {
-                                await getIt<ApiSettingsService>().updateSchoolSettings(
-                                  schoolName: name,
-                                  address: addressController.text.trim(),
-                                  jenjang: tempJenjang,
-                                );
-                                if (mounted) {
-                                  AppNavigator.pop(context);
-                                  _loadSettings();
-                                  messenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        AppLocalizations.settingsSavedSuccess.tr,
-                                      ),
-                                      backgroundColor: ColorUtils.success600,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                AppLogger.error('settings', e);
-                                if (mounted) {
-                                  messenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
-                                      ),
-                                      backgroundColor: ColorUtils.error600,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                }
-                              } finally {
-                                if (context.mounted) {
-                                  setDialogState(() => isSaving = false);
-                                }
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorUtils.corporateBlue600,
-                              disabledBackgroundColor: ColorUtils.corporateBlue600.withValues(alpha: 0.6),
-                              padding: EdgeInsets.symmetric(vertical: 13),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Edit Informasi Sekolah',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
-                              elevation: 0,
-                            ),
-                            child: isSaving
-                                ? SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : Text(
-                              AppLocalizations.save.tr,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                              SizedBox(height: 2),
+                              Text(
+                                'Perbarui data informasi sekolah',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
+                  // Form Fields
+                  Padding(
+                    padding: EdgeInsets.all(AppSpacing.xl),
+                    child: Column(
+                      children: [
+                        _buildStyledTextField(
+                          controller: nameController,
+                          label: 'Nama Sekolah',
+                          icon: Icons.school_outlined,
+                        ),
+                        SizedBox(height: AppSpacing.md),
+                        _buildStyledTextField(
+                          controller: addressController,
+                          label: 'Alamat Sekolah',
+                          icon: Icons.location_on_outlined,
+                          maxLines: 2,
+                        ),
+                        SizedBox(height: AppSpacing.md),
+                        DropdownButtonFormField<String>(
+                          initialValue: tempJenjang,
+                          decoration: InputDecoration(
+                            labelText: 'Jenjang Sekolah',
+                            prefixIcon: Icon(
+                              Icons.stairs_rounded,
+                              color: ColorUtils.corporateBlue600,
+                              size: 20,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: ColorUtils.slate200,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: ColorUtils.slate200,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: ColorUtils.corporateBlue600,
+                                width: 1.5,
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: ColorUtils.slate50,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 14,
+                            ),
+                          ),
+                          items: _jenjangOptions
+                              .map(
+                                (j) =>
+                                    DropdownMenuItem(value: j, child: Text(j)),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setDialogState(() => tempJenjang = value);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Footer
+                  Container(
+                    padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border(
+                        top: BorderSide(color: ColorUtils.slate100),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => AppNavigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(vertical: 13),
+                                side: BorderSide(color: ColorUtils.slate300),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                AppLocalizations.cancel.tr,
+                                style: TextStyle(color: ColorUtils.slate600),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: isSaving
+                                  ? null
+                                  : () async {
+                                      final name = nameController.text.trim();
+                                      if (name.length < 3) {
+                                        SnackBarUtils.showError(
+                                          context,
+                                          AppLocalizations
+                                              .schoolNameMinChars
+                                              .tr,
+                                        );
+                                        return;
+                                      }
+
+                                      setDialogState(() => isSaving = true);
+
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
+                                      try {
+                                        await getIt<ApiSettingsService>()
+                                            .updateSchoolSettings(
+                                              schoolName: name,
+                                              address: addressController.text
+                                                  .trim(),
+                                              jenjang: tempJenjang,
+                                            );
+                                        if (mounted) {
+                                          AppNavigator.pop(context);
+                                          _loadSettings();
+                                          messenger.showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                AppLocalizations
+                                                    .settingsSavedSuccess
+                                                    .tr,
+                                              ),
+                                              backgroundColor:
+                                                  ColorUtils.success600,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        AppLogger.error('settings', e);
+                                        if (mounted) {
+                                          messenger.showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+                                              ),
+                                              backgroundColor:
+                                                  ColorUtils.error600,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        }
+                                      } finally {
+                                        if (context.mounted) {
+                                          setDialogState(
+                                            () => isSaving = false,
+                                          );
+                                        }
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: ColorUtils.corporateBlue600,
+                                disabledBackgroundColor: ColorUtils
+                                    .corporateBlue600
+                                    .withValues(alpha: 0.6),
+                                padding: EdgeInsets.symmetric(vertical: 13),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: isSaving
+                                  ? SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      AppLocalizations.save.tr,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      );
+        );
       },
     );
   }

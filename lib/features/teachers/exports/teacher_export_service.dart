@@ -30,8 +30,6 @@ class ExcelTeacherService {
     required List<dynamic> teachers,
     required BuildContext context,
   }) async {
-    
-
     try {
       final response = await dioClient.post<List<int>>(
         '$baseUrl/export',
@@ -51,24 +49,28 @@ class ExcelTeacherService {
       await OpenFile.open(filePath);
 
       if (!context.mounted) return;
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Teacher data exported successfully',
-              'id': 'Data guru berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Teacher data exported successfully',
+          'id': 'Data guru berhasil diexport',
+        }),
+      );
     } catch (e) {
       if (!context.mounted) return;
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
     }
   }
 
   /// Download teacher import template from GET `/teacher/template/download`.
   /// Like a Laravel route returning `Excel::download(new TeacherTemplateExport)`.
   static Future<void> downloadTemplate(BuildContext context) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/template/download',
@@ -86,16 +88,22 @@ class ExcelTeacherService {
       await OpenFile.open(filePath);
 
       if (!context.mounted) return;
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Template downloaded successfully',
-              'id': 'Template berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Template downloaded successfully',
+          'id': 'Template berhasil diunduh',
+        }),
+      );
     } catch (e) {
       if (!context.mounted) return;
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download template: $e',
-              'id': 'Gagal mengunduh template: $e',
-            }));
+      SnackBarUtils.showError(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download template: $e',
+          'id': 'Gagal mengunduh template: $e',
+        }),
+      );
     }
   }
 }
