@@ -48,6 +48,7 @@ import 'package:manajemensekolah/features/attendance/screens/parent_attendance_s
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
+import 'package:manajemensekolah/features/finance/data/finance_service.dart';
 import 'package:manajemensekolah/features/auth/data/auth_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -1047,7 +1048,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         freshAttendance = List<Map<String, dynamic>>.from(attendanceDataList);
 
         if (_effectiveRole == 'admin') {
-          final financeDataList = await ApiService.getFinanceDashboardChart(
+          final financeDataList = await FinanceService.getFinanceDashboardChart(
             academicYearId: academicYearId,
           );
           freshFinance = List<Map<String, dynamic>>.from(financeDataList);
@@ -1175,7 +1176,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
   // Load Finance Stats (Admin Only)
   Future<void> _loadFinanceStats() async {
     try {
-      final financeStats = await ApiService.getFinanceDashboardStats();
+      final financeStats = await FinanceService.getFinanceDashboardStats();
       if (mounted && financeStats.containsKey('pembayaran_pending')) {
         setState(() {
           _unverifiedPaymentCount =

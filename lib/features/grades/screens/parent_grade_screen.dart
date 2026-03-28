@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/grades/data/grade_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
@@ -71,7 +72,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
 
   Future<void> _flushMarkReadSilently(List<String> ids) async {
     try {
-      await ApiService.markGradeAsRead(ids);
+      await GradeService.markGradeAsRead(ids);
     } catch (e) {
       AppLogger.error('grades', e);
     }
@@ -116,7 +117,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
         }
       });
 
-      await ApiService.markGradeAsRead(ids);
+      await GradeService.markGradeAsRead(ids);
     } catch (e) {
       AppLogger.error('grades', e);
     }
@@ -261,7 +262,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
     }
 
     try {
-      final grades = await ApiService.getGrades(
+      final grades = await GradeService.getGrades(
         studentId: _selectedStudentId,
         academicYearId: widget.academicYearId,
       );

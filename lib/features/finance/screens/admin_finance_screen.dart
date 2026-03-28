@@ -26,6 +26,7 @@ import 'package:manajemensekolah/features/finance/screens/class_finance_report_s
 import 'package:manajemensekolah/features/settings/services/academic_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/finance/data/finance_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -1730,7 +1731,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         _isLoadingMore = !resetPage;
       });
 
-      final res = await ApiService.getBillsPaginated(
+      final res = await FinanceService.getBillsPaginated(
         page: _currentPage,
         limit: _perPage,
         status: _selectedStatusFilter,
@@ -1899,7 +1900,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         // Fallback: If generated_batches is empty, fetch more bills to calculate summary
         final List<dynamic> batches = data['generated_batches'] ?? [];
         if (batches.isEmpty) {
-          final res = await ApiService.getBillsPaginated(limit: 500);
+          final res = await FinanceService.getBillsPaginated(limit: 500);
           final List<dynamic>? billsData = res['data'] is List
               ? res['data']
               : (res is List ? res : null);
@@ -2751,7 +2752,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                     });
 
                     if (selectedAcademicYearId != null) {
-                      ApiService.getGeneratedMonths(
+                      FinanceService.getGeneratedMonths(
                         paymentTypeId: paymentType['id'].toString(),
                         academicYearId: selectedAcademicYearId!,
                       ).then((genMonths) {
@@ -2908,7 +2909,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                       isLoadingGenerated = true;
                                       generatedMonths = [];
                                     });
-                                    ApiService.getGeneratedMonths(
+                                    FinanceService.getGeneratedMonths(
                                       paymentTypeId: paymentType['id']
                                           .toString(),
                                       academicYearId: val,
@@ -3125,7 +3126,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           setState(() => _isLoading = true);
         }
 
-        final response = await ApiService.generateBills(
+        final response = await FinanceService.generateBills(
           paymentTypeId: paymentType['id'].toString(),
           month: result['month'] ?? '',
           academicYearId: result['academicYearId'] ?? '',
@@ -4031,7 +4032,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     if (confirmed == true) {
       try {
         setState(() => _isLoading = true);
-        await ApiService.deleteBillsByType(
+        await FinanceService.deleteBillsByType(
           item['payment_type_id'].toString(),
           month: monthStr,
         );

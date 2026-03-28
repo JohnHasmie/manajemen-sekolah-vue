@@ -20,6 +20,7 @@ import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/models/student.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/finance/data/finance_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -457,7 +458,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     final hasUnread = _billingList.any((b) =>
         b['is_read'] != true && b['is_read'] != 1 && b['is_read'] != '1');
     if (hasUnread) {
-      ApiService.markBillRead(studentId: _selectedStudentId!);
+      FinanceService.markBillRead(studentId: _selectedStudentId!);
     }
   }
 
@@ -487,7 +488,7 @@ class ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     }
 
     try {
-      await ApiService.markBillRead(
+      await FinanceService.markBillRead(
         studentId: _selectedStudentId!,
         billIds: ids,
       );

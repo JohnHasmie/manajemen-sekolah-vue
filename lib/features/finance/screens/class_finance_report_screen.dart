@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/finance/data/finance_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -110,7 +111,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       }
 
       // 3. Fetch Bills
-      final billsResponse = await ApiService.getBillsPaginated(
+      final billsResponse = await FinanceService.getBillsPaginated(
         limit: 1000,
         classId: widget.classId,
       );
