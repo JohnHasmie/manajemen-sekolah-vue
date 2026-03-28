@@ -1544,6 +1544,60 @@ class AppLocalizations {
     'en': 'Enter 6-digit OTP code',
     'id': 'Masukkan 6 digit kode OTP',
   };
+
+  // --- Auth & Login Additions ---
+  static Map<String, String> get serverNotConnected => {
+        'en': 'Server not connected. Cannot login.',
+        'id': 'Server tidak terhubung. Tidak dapat login.'
+      };
+  static Map<String, String> get emailPasswordNotEmpty => {
+        'en': 'Email and password cannot be empty',
+        'id': 'Email dan password tidak boleh kosong'
+      };
+  static Map<String, String> get emailInvalid => {
+        'en': 'Invalid email format',
+        'id': 'Format email tidak valid'
+      };
+  static Map<String, String> get accountNotRegistered => {
+        'en': 'Account Not Registered',
+        'id': 'Akun Belum Terdaftar'
+      };
+  static Map<String, String> get accountNotRegisteredMsg => {
+        'en': 'Your account is not registered, please contact Admin.',
+        'id': 'Akun Anda belum terdaftar, silahkan hubungi Admin.'
+      };
+  static Map<String, String> get selectRole => {
+        'en': 'Select Role',
+        'id': 'Pilih Role'
+      };
+  static Map<String, String> get selectRoleMsg => {
+        'en': 'Your account has multiple access roles. Please select a role.',
+        'id': 'Akun Anda memiliki beberapa akses. Silahkan pilih role Anda.'
+      };
+  static Map<String, String> get selectSchoolMsg => {
+        'en': 'Your account is registered in multiple schools. Please select a school.',
+        'id': 'Akun Anda terdaftar di beberapa sekolah. Silahkan pilih sekolah.'
+      };
+  static Map<String, String> get understand => {
+        'en': 'Understand',
+        'id': 'Mengerti'
+      };
+  static Map<String, String> get loginFailed => {
+        'en': 'Login Failed',
+        'id': 'Login Gagal'
+      };
+  static Map<String, String> get backToLogin => {
+        'en': 'Back to Login',
+        'id': 'Kembali ke Login'
+      };
+  static Map<String, String> get continueText => {
+        'en': 'Continue',
+        'id': 'Lanjut'
+      };
+  static Map<String, String> get verifyFailed => {
+        'en': 'Verification Failed:',
+        'id': 'Verifikasi Gagal:'
+      };
 }
 
 /// Convenience extension that provides pre-resolved translated strings as static getters.

@@ -47,6 +47,7 @@ import 'package:manajemensekolah/features/report_cards/screens/parent_report_car
 import 'package:manajemensekolah/features/attendance/screens/parent_attendance_screen.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/auth/data/auth_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
@@ -651,7 +652,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
     if (!mounted) return;
 
     try {
-      final roles = await ApiService.getUserRoles();
+      final roles = await AuthService.getUserRoles();
       if (!mounted) return;
       setState(() {
         _availableRoles = roles;
@@ -666,7 +667,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
   /// the new role's dashboard route. Clears cache to ensure fresh data.
   Future<void> _switchRole(String role) async {
     try {
-      final response = await ApiService.switchRole(role);
+      final response = await AuthService.switchRole(role);
 
       // Update token dan user data
       await SecureStorageService().saveToken(response['token']);
@@ -846,7 +847,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
     });
 
     try {
-      final schools = await ApiService.getUserSchools();
+      final schools = await AuthService.getUserSchools();
       if (!mounted) return;
       setState(() {
         _accessibleSchools = schools;
@@ -1198,7 +1199,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
     );
 
     try {
-      final response = await ApiService.switchSchool(school['school_id']);
+      final response = await AuthService.switchSchool(school['school_id']);
 
       // Close Loading Indicator
       if (mounted) AppNavigator.pop(context);
