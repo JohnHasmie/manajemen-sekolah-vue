@@ -20,6 +20,7 @@ import 'package:manajemensekolah/features/announcements/services/announcement_se
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/announcements/data/announcement_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
@@ -158,7 +159,7 @@ class AdminAnnouncementScreenState extends ConsumerState<AdminAnnouncementScreen
         }
       });
 
-      await ApiService.markAnnouncementRead(ids);
+      await AnnouncementService.markAnnouncementRead(ids);
     } catch (e) {
       AppLogger.error('announcement', "Error auto-marking read: $e");
     }

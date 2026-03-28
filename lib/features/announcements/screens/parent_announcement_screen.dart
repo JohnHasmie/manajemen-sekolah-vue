@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/features/announcements/data/announcement_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -86,7 +87,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
 
   Future<void> _flushMarkReadSilently(List<String> ids) async {
     try {
-      await ApiService.markAnnouncementRead(ids);
+      await AnnouncementService.markAnnouncementRead(ids);
     } catch (e) {
       AppLogger.error('announcement', e);
     }
@@ -132,7 +133,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
         }
       });
 
-      await ApiService.markAnnouncementRead(ids);
+      await AnnouncementService.markAnnouncementRead(ids);
     } catch (e) {
       AppLogger.error('announcement', e);
     }

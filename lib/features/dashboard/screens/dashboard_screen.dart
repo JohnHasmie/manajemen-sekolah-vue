@@ -46,9 +46,10 @@ import 'package:manajemensekolah/features/grades/screens/parent_grade_screen.dar
 import 'package:manajemensekolah/features/report_cards/screens/parent_report_card_screen.dart';
 import 'package:manajemensekolah/features/attendance/screens/parent_attendance_screen.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/features/finance/data/finance_service.dart';
+import 'package:manajemensekolah/features/dashboard/data/dashboard_service.dart';
+import 'package:manajemensekolah/features/announcements/data/announcement_service.dart';
 import 'package:manajemensekolah/features/auth/data/auth_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -1017,7 +1018,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
             ?.toString();
       }
 
-      final dashboardData = await ApiService.getDashboardStats(
+      final dashboardData = await DashboardService.getDashboardStats(
         role: _effectiveRole,
         academicYearId: academicYearId,
       );
@@ -1373,7 +1374,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         if (_effectiveRole == 'wali' ||
             _effectiveRole == 'admin' ||
             _effectiveRole == 'guru') {
-          ApiService.getUnreadAnnouncementCount().then((count) {
+          AnnouncementService.getUnreadAnnouncementCount().then((count) {
             if (mounted) {
               setState(() {
                 _stats['unread_announcements'] = count;

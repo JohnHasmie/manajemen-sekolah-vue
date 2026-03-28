@@ -14,7 +14,8 @@ import 'package:manajemensekolah/features/announcements/screens/parent_announcem
 import 'package:manajemensekolah/features/class_activity/screens/parent_class_activity_screen.dart';
 import 'package:manajemensekolah/features/grades/screens/parent_grade_screen.dart';
 import 'package:manajemensekolah/features/attendance/screens/parent_attendance_screen.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/constants/api_endpoints.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -409,10 +410,18 @@ class FCMService {
     try {
       AppLogger.debug('fcm', 'Sending FCM token to backend...');
 
-      await ApiService.sendFCMToken(token, 'mobile');
+      final prefs = PreferencesService();
+      final authToken = prefs.getString('token');
+      if (authToken == null) {
+        throw Exception('No auth token found');
+      }
+
+      await dioClient.post(
+        ApiEndpoints.fcmTokenEndpoint,
+        data: {'token': token, 'device_type': 'mobile'},
+      );
 
       AppLogger.info('fcm', 'FCM token sent to backend successfully');
-
       return true;
     } catch (e) {
       AppLogger.error('fcm', 'Error sending FCM token to backend: $e');
@@ -427,7 +436,16 @@ class FCMService {
       if (_fcmToken != null) {
         AppLogger.debug('fcm', 'Deleting FCM token from backend...');
 
-        await ApiService.deleteFCMToken(_fcmToken!);
+        final prefs = PreferencesService();
+        final authToken = prefs.getString('token');
+        if (authToken == null) {
+          throw Exception('No auth token found');
+        }
+
+        await dioClient.delete(
+          ApiEndpoints.fcmTokenEndpoint,
+          data: {'token': _fcmToken!},
+        );
 
         AppLogger.info('fcm', 'FCM token deleted from backend');
       }

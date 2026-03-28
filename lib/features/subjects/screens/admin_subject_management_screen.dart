@@ -22,6 +22,7 @@ import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/constants/api_endpoints.dart';
 import 'package:manajemensekolah/features/subjects/services/subject_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
@@ -2601,10 +2602,19 @@ class SubjectClassManagementPageState
       final allClassesResponse = await apiService.get('/class');
 
       // Load classes already assigned to this subject
-      // getKelasByMataPelajaran already returns List<dynamic>
-      final assignedClasses = await apiService.getClassBySubjectId(
-        widget.subject['id'].toString(),
+      final assignedClassesRaw = await apiService.get(
+        '${ApiEndpoints.classBySubject}?subject_id=${widget.subject['id'].toString()}',
       );
+
+      // Handle Map format (pagination) or direct List
+      List<dynamic> assignedClasses;
+      if (assignedClassesRaw is Map<String, dynamic>) {
+        assignedClasses = assignedClassesRaw['data'] ?? [];
+      } else if (assignedClassesRaw is List) {
+        assignedClasses = assignedClassesRaw;
+      } else {
+        assignedClasses = [];
+      }
 
       // Handle both Map (pagination) and List formats for allClasses
       List<dynamic> allClasses;
