@@ -47,6 +47,7 @@ import 'package:manajemensekolah/features/report_cards/screens/parent_report_car
 import 'package:manajemensekolah/features/attendance/screens/parent_attendance_screen.dart';
 import 'package:manajemensekolah/features/schedule/services/schedule_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/features/auth/data/auth_service.dart';
 import 'package:manajemensekolah/features/students/services/student_service.dart';
 import 'package:manajemensekolah/features/teachers/services/teacher_service.dart';
@@ -1037,7 +1038,7 @@ class _DashboardState extends ConsumerState<Dashboard> with TickerProviderStateM
         if (weekNum > 5) weekNum = 5;
         final currentWeekStr = 'Pekan $weekNum';
 
-        final attendanceDataList = await ApiService.getAttendanceDashboardChart(
+        final attendanceDataList = await AttendanceService.getAttendanceDashboardChart(
           academicYearId: academicYearId,
           month: currentMonthStr,
           week: currentWeekStr,
