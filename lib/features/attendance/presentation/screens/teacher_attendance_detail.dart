@@ -9,15 +9,13 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 // ========== TEACHER ABSENSI DETAIL PAGE ==========
 class TeacherAbsensiDetailPage extends ConsumerStatefulWidget {
@@ -49,7 +47,7 @@ class TeacherAbsensiDetailPage extends ConsumerStatefulWidget {
 
 class _TeacherAbsensiDetailPageState
     extends ConsumerState<TeacherAbsensiDetailPage> {
-  List<dynamic> _attendanceData = [];
+  List<Attendance> _attendanceData = [];
   List<Student> _studentList = [];
   bool _isLoading = true;
   bool _isEditing = false;
@@ -85,9 +83,7 @@ class _TeacherAbsensiDetailPageState
       } else {
         // Fallback: if no classId provided, try to get from attendance data
         if (attendanceData.isNotEmpty) {
-          final classIdFromData =
-              attendanceData.first['class_id']?.toString() ??
-              attendanceData.first['kelas_id']?.toString();
+          final classIdFromData = attendanceData.first.classId;
 
           if (classIdFromData != null && classIdFromData.isNotEmpty) {
             _detectedClassId = classIdFromData;
@@ -208,10 +204,9 @@ class _TeacherAbsensiDetailPageState
             if (targetLessonHourId == null) {
               try {
                 final existingRecord = _attendanceData.firstWhere(
-                  (a) => a['student_id'].toString() == student.id.toString(),
+                  (a) => a.studentId.toString() == student.id.toString(),
                 );
-                targetLessonHourId = existingRecord['lesson_hour_id']
-                    ?.toString();
+                targetLessonHourId = existingRecord.lessonHourId;
                 AppLogger.debug(
                   'attendance',
                   'Found existing record for ${student.name}, resolved lesson_hour_id: $targetLessonHourId',
@@ -301,12 +296,15 @@ class _TeacherAbsensiDetailPageState
   String _getStudentStatus(String studentId) {
     try {
       final attendanceRecord = _attendanceData.firstWhere(
-        (a) => a['student_id']?.toString() == studentId.toString(),
-        orElse: () => {'status': 'absent'}, // Fallback if not found
+        (a) => a.studentId.toString() == studentId.toString(),
+        orElse: () => Attendance(
+          id: '',
+          studentId: studentId,
+          date: DateTime.now(),
+          status: 'absent',
+        ), // Fallback if not found
       );
-      final status = (attendanceRecord['status'] ?? 'absent')
-          .toString()
-          .toLowerCase();
+      final status = attendanceRecord.status.toLowerCase();
 
       // Normalize Indonesian terms to English keys
       if (status == 'hadir') return 'present';

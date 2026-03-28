@@ -13,6 +13,7 @@ import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
+import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -60,7 +61,7 @@ class PresenceParentPage extends ConsumerStatefulWidget {
 ///
 /// `setState()` is like Vue's reactivity -- triggers a re-render.
 class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
-  List<dynamic> _attendanceData = [];
+  List<Attendance> _attendanceData = [];
   Student? _student;
   bool _isLoading = true;
   String? _selectedMonthFilter;
@@ -101,12 +102,9 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
     }
   }
 
-  void _onItemVisible(Map<String, dynamic> record) {
-    final id = record['id'].toString();
-    final isRead =
-        record['is_read'] == true ||
-        record['is_read'] == 1 ||
-        record['is_read'] == '1';
+  void _onItemVisible(Attendance record) {
+    final id = record.id;
+    final isRead = record.isRead;
 
     if (!isRead && !_processedIds.contains(id)) {
       _processedIds.add(id);
@@ -137,11 +135,12 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
       // Optimistic Update (update local list UI immediately)
       if (!mounted) return;
       setState(() {
-        for (var item in _attendanceData) {
-          if (ids.contains(item['id'].toString())) {
-            item['is_read'] = true;
+        _attendanceData = _attendanceData.map((item) {
+          if (ids.contains(item.id)) {
+            return item.copyWith(isRead: true);
           }
-        }
+          return item;
+        }).toList();
       });
 
       await AttendanceService.markPresenceAsRead(ids);
@@ -176,7 +175,9 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
         if (!mounted) return;
         if (cached['attendanceData'] != null) {
           setState(() {
-            _attendanceData = cached['attendanceData'] as List;
+            _attendanceData = (cached['attendanceData'] as List)
+                .map((json) => Attendance.fromJson(Map<String, dynamic>.from(json)))
+                .toList();
             if (cached['studentData'] != null) {
               _student = Student.fromJson(
                 Map<String, dynamic>.from(cached['studentData'] as Map),
@@ -234,9 +235,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
       });
 
       // Mark notifications as read — only if there are unread items
-      final hasUnread = attendanceData.any(
-        (a) => a['is_read'] != true && a['is_read'] != 1 && a['is_read'] != '1',
-      );
+      final hasUnread = attendanceData.any((a) => !a.isRead);
       if (hasUnread) {
         AttendanceService.markAttendanceRead(studentId: widget.studentId);
       }
@@ -431,7 +430,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
     _monthlySummary.updateAll((key, value) => 0);
 
     for (var record in _attendanceData) {
-      final date = _parseLocalDate(record['tanggal']);
+      final date = record.date;
 
       // Apply same filter logic for summary
       if (_selectedMonthFilter != null) {
@@ -444,7 +443,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
         if (semester != _selectedSemesterFilter) continue;
       }
 
-      final status = _normalizeStatus(record['status']);
+      final status = _normalizeStatus(record.status);
       _monthlySummary[status] = (_monthlySummary[status] ?? 0) + 1;
     }
   }
@@ -1036,7 +1035,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   Widget _buildAttendanceList() {
     final filteredAttendance =
         _attendanceData.where((record) {
-          final date = _parseLocalDate(record['tanggal']);
+          final date = record.date;
 
           // Month Filter
           if (_selectedMonthFilter != null) {
@@ -1057,10 +1056,9 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
           // Search Filter
           if (_searchController.text.isNotEmpty) {
             final query = _searchController.text.toLowerCase();
-            final subject = (record['mata_pelajaran_nama'] ?? '')
-                .toString()
+            final subject = (record.subjectName ?? '')
                 .toLowerCase();
-            final status = (record['status'] ?? '').toString().toLowerCase();
+            final status = record.status.toLowerCase();
             if (!subject.contains(query) && !status.contains(query)) {
               return false;
             }
@@ -1068,8 +1066,8 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
 
           return true;
         }).toList()..sort((a, b) {
-          final dateA = a['tanggal']?.toString() ?? '';
-          final dateB = b['tanggal']?.toString() ?? '';
+          final dateA = a.date.toIso8601String();
+          final dateB = b.date.toIso8601String();
           return dateB.compareTo(dateA);
         });
 
@@ -1134,11 +1132,11 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   }
 
   // Pattern #8: Material > InkWell > Container with corporateShadow
-  Widget _buildAttendanceItem(Map<String, dynamic> record) {
-    final status = _normalizeStatus(record['status']);
-    final date = _parseLocalDate(record['tanggal']);
+  Widget _buildAttendanceItem(Attendance record) {
+    final status = _normalizeStatus(record.status);
+    final date = record.date;
     final subjectName =
-        record['mata_pelajaran_nama'] ?? AppLocalizations.subject.tr;
+        record.subjectName ?? AppLocalizations.subject.tr;
     final Color statusColor = _getStatusColor(status);
     final String statusText = _getTranslatedStatus(status);
     final String day = DateFormat(
@@ -1146,19 +1144,10 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
       ref.watch(languageRiverpod).currentLanguage == 'id' ? 'id_ID' : 'en_US',
     ).format(date);
 
-    final isRead =
-        record['is_read'] == true ||
-        record['is_read'] == 1 ||
-        record['is_read'] == '1';
+    final isRead = record.isRead;
 
     // Get lesson hour name
-    final lessonHourName =
-        (record['lesson_hour_name'] ??
-                record['jam_pelajaran_nama'] ??
-                (record['lesson_hour'] != null
-                    ? record['lesson_hour']['name']
-                    : null))
-            ?.toString();
+    final lessonHourName = record.lessonHourName ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

@@ -1,34 +1,39 @@
-/// user.dart - Authenticated user data model.
-/// Like Laravel's User Eloquent Model but simpler - just a data class (DTO).
-/// In Vue terms, this is the TypeScript interface for the logged-in user object stored in Vuex/Pinia.
-library;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-/// Represents an authenticated user of the school management system.
-/// Like a Laravel Eloquent Model but simpler - just a data class with no ORM.
-///
-/// Key properties:
-/// - [name]: User's display name.
-/// - [email]: Login email address.
-/// - [password]: User's password (used only for dummy/seed data - real auth uses tokens).
-/// - [role]: Authorization role string - one of 'admin', 'guru' (teacher), 'staff', or 'wali' (parent).
-///   Like Laravel's role/permission system (e.g., Spatie roles).
-/// - [classroom]: Optional class assignment for teachers (nullable for non-teacher roles).
-class User {
-  final String id;
-  final String name;
-  final String email;
-  final String password;
-  final String role;
-  final String? classroom;
+part 'user.freezed.dart';
+part 'user.g.dart';
 
-  /// Creates a [User] instance.
-  /// [classroom] is optional since only teachers may have an assigned class.
-  User({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.password,
-    required this.role,
-    this.classroom,
-  });
+/// User model representing a profile with specific roles and school assignments.
+@freezed
+class User with _$User {
+  const factory User({
+    required String id,
+    required String name,
+    required String email,
+    required String role,
+    @JsonKey(name: 'school_id') String? schoolId,
+    @JsonKey(name: 'school_name') String? schoolName,
+    @JsonKey(name: 'profile_picture_url') String? profilePictureUrl,
+  }) = _User;
+
+  /// Custom fromJson to handle Indonesian key variations by standardizing them
+  /// into the backend-expected English snake_case keys before generation.
+  factory User.fromJson(Map<String, dynamic> json) => 
+      _$UserFromJson(_standardizeJson(json));
+
+  static Map<String, dynamic> _standardizeJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> mapped = Map<String, dynamic>.from(json);
+    
+    // Fallback for Indonesian keys to standard English keys
+    mapped['name'] ??= mapped['nama'];
+    mapped['school_id'] ??= mapped['sekolah_id'] ?? mapped['school_id'];
+    mapped['school_name'] ??= mapped['nama_sekolah'] ?? mapped['school_name'];
+    mapped['profile_picture_url'] ??= mapped['foto_profil'] ?? mapped['profile_picture_url'];
+    
+    // Force string types for IDs to avoid type cast errors
+    if (mapped['id'] != null) mapped['id'] = mapped['id'].toString();
+    if (mapped['school_id'] != null) mapped['school_id'] = mapped['school_id'].toString();
+    
+    return mapped;
+  }
 }

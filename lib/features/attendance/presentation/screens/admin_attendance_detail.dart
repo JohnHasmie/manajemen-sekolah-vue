@@ -12,6 +12,7 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
+import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
 import 'package:manajemensekolah/features/attendance/exports/attendance_export_service.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -19,10 +20,8 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
@@ -55,7 +54,7 @@ class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
 
 class _AdminAbsensiDetailPageState
     extends ConsumerState<AdminAbsensiDetailPage> {
-  List<dynamic> _attendanceData = [];
+  List<Attendance> _attendanceData = [];
   List<Student> _studentList = [];
   bool _isLoading = true;
   bool _isEditing = false;
@@ -98,7 +97,7 @@ class _AdminAbsensiDetailPageState
       } else {
         // Fallback: if no classId provided, try to get from attendance data
         if (attendanceData.isNotEmpty) {
-          final classIdFromData = attendanceData.first['class_id']?.toString();
+          final classIdFromData = attendanceData.first.classId;
           if (classIdFromData != null && classIdFromData.isNotEmpty) {
             studentData = await getIt<ApiStudentService>().getStudentByClass(
               classIdFromData,
@@ -195,10 +194,15 @@ class _AdminAbsensiDetailPageState
   String _getStudentStatus(String studentId) {
     try {
       final attendanceRecord = _attendanceData.firstWhere(
-        (a) => a['student_id']?.toString() == studentId.toString(),
-        orElse: () => {'status': 'alpha'}, // Fallback if not found
+        (a) => a.studentId.toString() == studentId.toString(),
+        orElse: () => Attendance(
+          id: '',
+          studentId: studentId,
+          date: widget.date,
+          status: 'alpha',
+        ),
       );
-      return (attendanceRecord['status'] ?? 'alpha').toString().toLowerCase();
+      return (attendanceRecord.status).toLowerCase();
     } catch (e) {
       return 'alpha';
     }
@@ -229,9 +233,7 @@ class _AdminAbsensiDetailPageState
 
     String? teacherId;
     if (_attendanceData.isNotEmpty) {
-      teacherId =
-          _attendanceData.first['teacher_id']?.toString() ??
-          _attendanceData.first['guru_id']?.toString();
+      teacherId = _attendanceData.first.teacherId;
     }
 
     if (teacherId == null) {

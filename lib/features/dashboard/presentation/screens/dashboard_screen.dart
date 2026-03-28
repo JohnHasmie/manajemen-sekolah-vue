@@ -52,6 +52,7 @@ import 'package:manajemensekolah/features/dashboard/data/dashboard_service.dart'
 import 'package:manajemensekolah/features/announcements/data/announcement_service.dart';
 import 'package:manajemensekolah/features/auth/data/auth_service.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
+import 'package:manajemensekolah/features/auth/domain/models/user.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
@@ -133,17 +134,19 @@ class _DashboardState extends ConsumerState<Dashboard>
 
   // Data statistik
   Map<String, dynamic> _stats = {
-    'total_siswa': 0,
-    'total_guru': 0,
-    'total_kelas': 0,
-    'total_mapel': 0,
-    'kelas_hari_ini': 0,
-    'total_materi': 0,
-    'total_rpp': 0,
-    'anak_terdaftar': 0,
-    'pengumuman_terbaru': 0,
-    'unread_billing': 0,
+    'total_students': 0,
+    'total_teachers': 0,
+    'total_classes': 0,
+    'total_subjects': 0,
+    'classes_today': 0,
+    'total_materialsals': 0,
+    'total_rppss': 0,
+    'children_registered': 0,
+    'latest_announcements': 0,
+    'unread_billingss': 0,
   };
+
+  User? _user; // Typed user model for English property access
 
   // State for Schedule Slider
   List<dynamic> _todaysScheduleList = [];
@@ -850,30 +853,15 @@ class _DashboardState extends ConsumerState<Dashboard>
       final prefs = PreferencesService();
       await prefs.setString('token', response['token']);
 
-      // Prefer response data if available, otherwise manual fallback
-      Map<String, dynamic> updatedUserData;
-      if (response['user'] != null) {
-        updatedUserData = Map<String, dynamic>.from(response['user']);
-        // Backfill essential fields if missing
-        if (updatedUserData['nama'] == null) {
-          updatedUserData['nama'] = _userData['name'] ?? _userData['nama'];
-        }
-      } else {
-        updatedUserData = Map<String, dynamic>.from(_userData);
-      }
+      // Standardize user data using User model
+      final User user = response['user'] != null 
+          ? User.fromJson(response['user'])
+          : User.fromJson(_userData).copyWith(role: role);
+      
+      final standardizedUser = user.toJson();
 
-      updatedUserData['role'] = role;
-
-      // Preserve existing teacher/student IDs if switching within same account
-      if (_userData['teacher_id'] != null) {
-        updatedUserData['teacher_id'] = _userData['teacher_id'];
-      }
-      if (_userData['user_id'] != null) {
-        updatedUserData['user_id'] = _userData['user_id'];
-      }
-
-      await SecureStorageService().saveUserData(updatedUserData);
-      await prefs.setString('user', json.encode(updatedUserData));
+      await SecureStorageService().saveUserData(standardizedUser);
+      await prefs.setString('user', json.encode(standardizedUser));
 
       if (!mounted) return;
 
@@ -897,9 +885,10 @@ class _DashboardState extends ConsumerState<Dashboard>
     final userString = prefs.getString('user');
     if (userString != null) {
       if (!mounted) return;
-      final localUserData = json.decode(userString);
+      final localUserMap = json.decode(userString);
       setState(() {
-        _userData = localUserData;
+        _userData = localUserMap;
+        _user = User.fromJson(localUserMap);
       });
     }
   }
@@ -1163,11 +1152,11 @@ class _DashboardState extends ConsumerState<Dashboard>
         _todaysScheduleList = todaysScheduleList;
         _materialOverview = materialOverviewList;
         _stats = {
-          'total_siswa': dashboardData['total_siswa'] ?? 0,
-          'total_kelas': dashboardData['total_kelas'] ?? 0,
-          'kelas_hari_ini': dashboardData['kelas_hari_ini'] ?? 0,
-          'total_materi': dashboardData['total_materi'] ?? 0,
-          'total_rpp': dashboardData['total_rpp'] ?? 0,
+          'total_students': dashboardData['total_students'] ?? 0,
+          'total_classes': dashboardData['total_classes'] ?? 0,
+          'classes_today': dashboardData['classes_today'] ?? 0,
+          'total_materials': dashboardData['total_materials'] ?? 0,
+          'total_rpps': dashboardData['total_rpps'] ?? 0,
           'rpp_approved': dashboardData['rpp_approved'] ?? 0,
           'rpp_rejected': dashboardData['rpp_rejected'] ?? 0,
           'rpp_pending': dashboardData['rpp_pending'] ?? 0,
@@ -1187,10 +1176,10 @@ class _DashboardState extends ConsumerState<Dashboard>
           _financeChartData = financeChart;
         }
         _stats = {
-          'total_siswa': dashboardData['total_siswa'] ?? 0,
-          'total_guru': dashboardData['total_guru'] ?? 0,
-          'total_kelas': dashboardData['total_kelas'] ?? 0,
-          'total_mapel': dashboardData['total_mapel'] ?? 0,
+          'total_students': dashboardData['total_students'] ?? 0,
+          'total_teachers': dashboardData['total_teachers'] ?? 0,
+          'total_classes': dashboardData['total_classes'] ?? 0,
+          'total_subjects': dashboardData['total_subjects'] ?? 0,
           'unread_announcements': dashboardData['unread_announcements'] ?? 0,
           'unread_class_activities':
               dashboardData['unread_class_activities'] ?? 0,
@@ -1203,13 +1192,13 @@ class _DashboardState extends ConsumerState<Dashboard>
           _attendanceChartData = attendanceChart;
         }
         _stats = {
-          'anak_terdaftar': dashboardData['anak_terdaftar'] ?? 0,
+          'children_registered': dashboardData['children_registered'] ?? 0,
           'unread_announcements': dashboardData['unread_announcements'] ?? 0,
           'unread_class_activities':
               dashboardData['unread_class_activities'] ?? 0,
           'unread_grades': dashboardData['unread_grades'] ?? 0,
           'unread_presence': dashboardData['unread_presence'] ?? 0,
-          'unread_billing': dashboardData['unread_billing'] ?? 0,
+          'unread_billings': dashboardData['unread_billings'] ?? 0,
         };
       });
     }
@@ -1317,23 +1306,23 @@ class _DashboardState extends ConsumerState<Dashboard>
           _isStatsLoaded = true;
           if (_effectiveRole == 'guru') {
             _stats = {
-              'total_siswa': 24,
-              'total_kelas': 1,
-              'kelas_hari_ini': 2,
-              'total_materi': 5,
-              'total_rpp': 3,
+              'total_students': 24,
+              'total_classes': 1,
+              'classes_today': 2,
+              'total_materials': 5,
+              'total_rpps': 3,
             };
           } else if (_effectiveRole == 'admin') {
             _stats = {
-              'total_siswa': 150,
-              'total_guru': 25,
-              'total_kelas': 12,
-              'total_mapel': 15,
+              'total_students': 150,
+              'total_teachers': 25,
+              'total_classes': 12,
+              'total_subjects': 15,
             };
           } else if (_effectiveRole == 'wali') {
             _stats = {
-              'anak_terdaftar': 2,
-              'pengumuman_terbaru': 3,
+              'children_registered': 2,
+              'latest_announcements': 3,
               'unread_grades': 0,
               'unread_presence': 0,
             };
@@ -2220,22 +2209,22 @@ class _DashboardState extends ConsumerState<Dashboard>
       return [
         _buildHeroStat(
           Icons.people_outline,
-          _stats['total_siswa']?.toString() ?? '0',
+          _stats['total_students']?.toString() ?? '0',
           lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
         ),
         _buildHeroStat(
           Icons.school_outlined,
-          _stats['total_guru']?.toString() ?? '0',
+          _stats['total_teachers']?.toString() ?? '0',
           lp.getTranslatedText({'en': 'Teachers', 'id': 'Guru'}),
         ),
         _buildHeroStat(
           Icons.class_outlined,
-          _stats['total_kelas']?.toString() ?? '0',
+          _stats['total_classes']?.toString() ?? '0',
           lp.getTranslatedText({'en': 'Classes', 'id': 'Kelas'}),
         ),
         _buildHeroStat(
           Icons.book_outlined,
-          _stats['total_mapel']?.toString() ?? '0',
+          _stats['total_subjects']?.toString() ?? '0',
           lp.getTranslatedText({'en': 'Subjects', 'id': 'Mapel'}),
         ),
       ];
@@ -2243,22 +2232,22 @@ class _DashboardState extends ConsumerState<Dashboard>
       return [
         _buildHeroStat(
           Icons.people_outline,
-          _stats['total_siswa']?.toString() ?? '0',
+          _stats['total_students']?.toString() ?? '0',
           lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
         ),
         _buildHeroStat(
           Icons.class_outlined,
-          _stats['total_kelas']?.toString() ?? '0',
+          _stats['total_classes']?.toString() ?? '0',
           lp.getTranslatedText({'en': 'Classes', 'id': 'Kelas'}),
         ),
         _buildHeroStat(
           Icons.schedule_outlined,
-          _stats['kelas_hari_ini']?.toString() ?? '0',
+          _stats['classes_today']?.toString() ?? '0',
           lp.getTranslatedText({'en': 'Today', 'id': 'Hari Ini'}),
         ),
         _buildHeroStat(
           Icons.assignment_outlined,
-          _stats['total_rpp']?.toString() ?? '0',
+          _stats['total_rpps']?.toString() ?? '0',
           lp.getTranslatedText({'en': 'Plans', 'id': 'RPP'}),
         ),
       ];
@@ -2266,12 +2255,12 @@ class _DashboardState extends ConsumerState<Dashboard>
       return [
         _buildHeroStat(
           Icons.child_care_outlined,
-          _stats['anak_terdaftar']?.toString() ?? '0',
+          _stats['children_registered']?.toString() ?? '0',
           lp.getTranslatedText({'en': 'Children', 'id': 'Anak'}),
         ),
         _buildHeroStat(
           Icons.announcement_outlined,
-          _stats['pengumuman_terbaru']?.toString() ?? '0',
+          _stats['latest_announcements']?.toString() ?? '0',
           lp.getTranslatedText({'en': 'News', 'id': 'Info'}),
         ),
         _buildHeroStat(
@@ -2465,7 +2454,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           ),
         OverviewCard(
           title: AppLocalizations.activeTeachers.tr,
-          value: _stats['total_guru']?.toString() ?? '0',
+          value: _stats['total_teachers']?.toString() ?? '0',
           subtitle: AppLocalizations.currentlyTeaching.tr,
           icon: Icons.people_alt_outlined,
           accentColor: ColorUtils.success600,
@@ -2475,7 +2464,7 @@ class _DashboardState extends ConsumerState<Dashboard>
         ),
         OverviewCard(
           title: AppLocalizations.announcements.tr,
-          value: _stats['pengumuman_terbaru']?.toString() ?? '0',
+          value: _stats['latest_announcements']?.toString() ?? '0',
           subtitle: AppLocalizations.recentUpdates.tr,
           icon: Icons.campaign_outlined,
           accentColor: ColorUtils.info600,
@@ -2538,7 +2527,7 @@ class _DashboardState extends ConsumerState<Dashboard>
       return [
         OverviewCard(
           title: AppLocalizations.myChildren.tr,
-          value: _stats['anak_terdaftar']?.toString() ?? '0',
+          value: _stats['children_registered']?.toString() ?? '0',
           subtitle: AppLocalizations.registeredStudents.tr,
           icon: Icons.family_restroom_outlined,
           accentColor: ColorUtils.corporateBlue600,
@@ -2593,7 +2582,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           ),
         OverviewCard(
           title: AppLocalizations.announcements.tr,
-          value: _stats['pengumuman_terbaru']?.toString() ?? '0',
+          value: _stats['latest_announcements']?.toString() ?? '0',
           subtitle: AppLocalizations.latestInformation.tr,
           icon: Icons.announcement_outlined,
           accentColor: ColorUtils.info600,
@@ -2699,7 +2688,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           label: AppLocalizations.billing.tr,
           icon: Icons.account_balance_wallet_outlined,
           color: ColorUtils.error600,
-          badgeCount: _stats['unread_billing'],
+          badgeCount: _stats['unread_billings'],
           onTap: () async {
             await AppNavigator.push(context, ParentBillingScreen());
             _loadStats();
@@ -3164,7 +3153,7 @@ class _DashboardState extends ConsumerState<Dashboard>
       MenuItem(
         title: AppLocalizations.billing.tr,
         icon: Icons.account_balance_wallet_outlined,
-        badgeCount: _stats['unread_billing'],
+        badgeCount: _stats['unread_billings'],
         onTap: () async {
           await AppNavigator.push(context, ParentBillingScreen());
           _loadStats();

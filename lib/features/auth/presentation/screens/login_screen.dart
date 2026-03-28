@@ -75,7 +75,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       case AuthEvent.error:
         SnackBarUtils.showError(
           context,
-          response.message ?? AppLocalizations.loginFailed.tr,
+          response.messageMap?.tr ??
+              response.message ??
+              AppLocalizations.loginFailed.tr,
         );
         break;
       case AuthEvent.requiresOtp:
@@ -141,7 +143,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _handleAuthResponse(response);
     } catch (error) {
       if (mounted) {
-        SnackBarUtils.showError(context, 'Google Sign-In Error: $error');
+        SnackBarUtils.showError(
+          context,
+          '${AppLocalizations.googleSignInError.tr}: $error',
+        );
       }
     }
   }

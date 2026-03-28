@@ -15,17 +15,30 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
+Student _$StudentFromJson(Map<String, dynamic> json) {
+  return _Student.fromJson(json);
+}
+
 /// @nodoc
 mixin _$Student {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
+  @JsonKey(name: 'class_name')
   String get className => throw _privateConstructorUsedError;
+  @JsonKey(name: 'student_number')
   String get studentNumber => throw _privateConstructorUsedError;
   String get address => throw _privateConstructorUsedError;
+  @JsonKey(name: 'guardian_name')
   String get guardianName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'phone_number')
   String get phoneNumber => throw _privateConstructorUsedError;
+  @JsonKey(name: 'class_id')
   String? get classId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'student_class_id')
   String? get studentClassId => throw _privateConstructorUsedError;
+
+  /// Serializes this Student to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
   /// Create a copy of Student
   /// with the given fields replaced by the non-null parameter values.
@@ -41,13 +54,13 @@ abstract class $StudentCopyWith<$Res> {
   $Res call({
     String id,
     String name,
-    String className,
-    String studentNumber,
+    @JsonKey(name: 'class_name') String className,
+    @JsonKey(name: 'student_number') String studentNumber,
     String address,
-    String guardianName,
-    String phoneNumber,
-    String? classId,
-    String? studentClassId,
+    @JsonKey(name: 'guardian_name') String guardianName,
+    @JsonKey(name: 'phone_number') String phoneNumber,
+    @JsonKey(name: 'class_id') String? classId,
+    @JsonKey(name: 'student_class_id') String? studentClassId,
   });
 }
 
@@ -131,13 +144,13 @@ abstract class _$$StudentImplCopyWith<$Res> implements $StudentCopyWith<$Res> {
   $Res call({
     String id,
     String name,
-    String className,
-    String studentNumber,
+    @JsonKey(name: 'class_name') String className,
+    @JsonKey(name: 'student_number') String studentNumber,
     String address,
-    String guardianName,
-    String phoneNumber,
-    String? classId,
-    String? studentClassId,
+    @JsonKey(name: 'guardian_name') String guardianName,
+    @JsonKey(name: 'phone_number') String phoneNumber,
+    @JsonKey(name: 'class_id') String? classId,
+    @JsonKey(name: 'student_class_id') String? studentClassId,
   });
 }
 
@@ -209,43 +222,46 @@ class __$$StudentImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
+@JsonSerializable()
 class _$StudentImpl extends _Student {
   const _$StudentImpl({
     required this.id,
-    this.name = '',
-    this.className = '',
-    this.studentNumber = '',
-    this.address = '',
-    this.guardianName = '',
-    this.phoneNumber = '',
-    this.classId,
-    this.studentClassId,
+    required this.name,
+    @JsonKey(name: 'class_name') required this.className,
+    @JsonKey(name: 'student_number') required this.studentNumber,
+    required this.address,
+    @JsonKey(name: 'guardian_name') required this.guardianName,
+    @JsonKey(name: 'phone_number') required this.phoneNumber,
+    @JsonKey(name: 'class_id') this.classId,
+    @JsonKey(name: 'student_class_id') this.studentClassId,
   }) : super._();
+
+  factory _$StudentImpl.fromJson(Map<String, dynamic> json) =>
+      _$$StudentImplFromJson(json);
 
   @override
   final String id;
   @override
-  @JsonKey()
   final String name;
   @override
-  @JsonKey()
+  @JsonKey(name: 'class_name')
   final String className;
   @override
-  @JsonKey()
+  @JsonKey(name: 'student_number')
   final String studentNumber;
   @override
-  @JsonKey()
   final String address;
   @override
-  @JsonKey()
+  @JsonKey(name: 'guardian_name')
   final String guardianName;
   @override
-  @JsonKey()
+  @JsonKey(name: 'phone_number')
   final String phoneNumber;
   @override
+  @JsonKey(name: 'class_id')
   final String? classId;
   @override
+  @JsonKey(name: 'student_class_id')
   final String? studentClassId;
 
   @override
@@ -274,6 +290,7 @@ class _$StudentImpl extends _Student {
                 other.studentClassId == studentClassId));
   }
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
     runtimeType,
@@ -295,39 +312,52 @@ class _$StudentImpl extends _Student {
   @pragma('vm:prefer-inline')
   _$$StudentImplCopyWith<_$StudentImpl> get copyWith =>
       __$$StudentImplCopyWithImpl<_$StudentImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$StudentImplToJson(this);
+  }
 }
 
 abstract class _Student extends Student {
   const factory _Student({
     required final String id,
-    final String name,
-    final String className,
-    final String studentNumber,
-    final String address,
-    final String guardianName,
-    final String phoneNumber,
-    final String? classId,
-    final String? studentClassId,
+    required final String name,
+    @JsonKey(name: 'class_name') required final String className,
+    @JsonKey(name: 'student_number') required final String studentNumber,
+    required final String address,
+    @JsonKey(name: 'guardian_name') required final String guardianName,
+    @JsonKey(name: 'phone_number') required final String phoneNumber,
+    @JsonKey(name: 'class_id') final String? classId,
+    @JsonKey(name: 'student_class_id') final String? studentClassId,
   }) = _$StudentImpl;
   const _Student._() : super._();
+
+  factory _Student.fromJson(Map<String, dynamic> json) = _$StudentImpl.fromJson;
 
   @override
   String get id;
   @override
   String get name;
   @override
+  @JsonKey(name: 'class_name')
   String get className;
   @override
+  @JsonKey(name: 'student_number')
   String get studentNumber;
   @override
   String get address;
   @override
+  @JsonKey(name: 'guardian_name')
   String get guardianName;
   @override
+  @JsonKey(name: 'phone_number')
   String get phoneNumber;
   @override
+  @JsonKey(name: 'class_id')
   String? get classId;
   @override
+  @JsonKey(name: 'student_class_id')
   String? get studentClassId;
 
   /// Create a copy of Student

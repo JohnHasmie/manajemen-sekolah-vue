@@ -7,6 +7,8 @@ import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/auth/data/auth_service.dart';
+import 'package:manajemensekolah/features/auth/domain/models/user.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 enum AuthStep { login, schoolSelection, roleSelection }
 
@@ -63,9 +65,10 @@ class AuthState {
 class AuthResponse {
   final AuthEvent event;
   final String? message;
+  final Map<String, String>? messageMap;
   final String? debugOtp;
 
-  AuthResponse(this.event, {this.message, this.debugOtp});
+  AuthResponse(this.event, {this.message, this.messageMap, this.debugOtp});
 }
 
 class AuthNotifier extends AutoDisposeNotifier<AuthState> {
@@ -212,7 +215,7 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
         state = state.copyWith(isLoading: false);
         return AuthResponse(
           AuthEvent.error,
-          message: 'Akun Anda belum terdaftar pada sekolah manapun',
+          messageMap: AppLocalizations.authAccountNotRegisteredInAnySchool,
         );
       }
 
@@ -244,7 +247,7 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
         state = state.copyWith(isLoading: false);
         return AuthResponse(
           AuthEvent.error,
-          message: 'Daftar role tidak tersedia untuk akun Anda',
+          messageMap: AppLocalizations.authRolesNotAvailable,
         );
       }
 
@@ -266,18 +269,19 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
       state = state.copyWith(isLoading: false);
       return AuthResponse(
         AuthEvent.error,
-        message: 'Data login tidak lengkap dari server',
+        messageMap: AppLocalizations.authIncompleteLoginData,
       );
     }
 
     await _saveLoginData(responseData);
     state = state.copyWith(isLoading: false);
 
-    final String userRole = responseData['user']['role']?.toString() ?? '';
+    final user = User.fromJson(responseData['user']);
+    final String userRole = user.role;
     if (userRole.isEmpty) {
       return AuthResponse(
         AuthEvent.error,
-        message: 'Role user tidak ditemukan',
+        messageMap: AppLocalizations.authUserRoleNotFound,
       );
     }
 
@@ -297,19 +301,20 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
     await prefs.setString('user', json.encode(responseData['user']));
     await prefs.setBool('force_logout', false);
 
-    final user = responseData['user'];
-    if (user != null) {
+    final userMap = responseData['user'] as Map<String, dynamic>?;
+    if (userMap != null) {
+      final user = User.fromJson(userMap);
       await AnalyticsService.setUser(
-        userId: user['id']?.toString() ?? '',
-        email: user['email'] ?? '',
-        role: user['role'] ?? '',
-        name: user['name'] ?? user['nama'] ?? '',
-        schoolName: user['school_name'] ?? user['nama_sekolah'] ?? '',
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+        schoolName: user.schoolName ?? '',
       );
       await AnalyticsService.logLogin(
         method: 'app_login',
-        email: user['email'] ?? '',
-        role: user['role'] ?? '',
+        email: user.email,
+        role: user.role,
       );
     }
 
@@ -343,12 +348,11 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
       return AuthResponse(AuthEvent.unregistered);
     }
 
-    final friendlyMessage =
-        (errorStr.contains('401') || errorStr.contains('unauthorized'))
-        ? 'Email atau password salah, atau akun belum terdaftar. Silakan periksa kembali.'
-        : error.toString().replaceAll('Exception: ', '');
+    final messageMap = (errorStr.contains('401') || errorStr.contains('unauthorized'))
+        ? AppLocalizations.authInvalidCredentials
+        : {'en': error.toString().replaceAll('Exception: ', ''), 'id': error.toString().replaceAll('Exception: ', '')};
 
-    return AuthResponse(AuthEvent.error, message: friendlyMessage);
+    return AuthResponse(AuthEvent.error, messageMap: messageMap);
   }
 }
 

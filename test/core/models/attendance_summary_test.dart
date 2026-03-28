@@ -1,9 +1,3 @@
-/// Tests for AttendanceSummary model — fromJson serialization.
-///
-/// Verifies that Indonesian API field names (mata_pelajaran_id, tanggal, hadir,
-/// tidak_hadir, etc.) are correctly mapped to English property names.
-library;
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/attendance/domain/models/attendance_summary.dart';
 
@@ -17,7 +11,9 @@ void main() {
         'tanggal': '2026-03-25',
         'total_siswa': 30,
         'hadir': 28,
-        'tidak_hadir': 2,
+        'sakit': 1,
+        'izin': 1,
+        'alpha': 0,
       };
 
       final summary = AttendanceSummary.fromJson(json);
@@ -28,10 +24,12 @@ void main() {
       expect(summary.date, DateTime(2026, 3, 25));
       expect(summary.totalStudents, 30);
       expect(summary.present, 28);
-      expect(summary.absent, 2);
+      expect(summary.sick, 1);
+      expect(summary.excused, 1);
+      expect(summary.absent, 0);
     });
 
-    test('handles string id and subject id', () {
+    test('handles Indonesian aliases (alpa, tanggal, hadir)', () {
       final json = {
         'id': 'uuid-abc',
         'mata_pelajaran_id': 'uuid-def',
@@ -39,13 +37,16 @@ void main() {
         'tanggal': '2026-01-15',
         'total_siswa': 25,
         'hadir': 20,
-        'tidak_hadir': 5,
+        'alpa': 5,
       };
 
       final summary = AttendanceSummary.fromJson(json);
 
       expect(summary.id, 'uuid-abc');
       expect(summary.subjectId, 'uuid-def');
+      expect(summary.date, DateTime(2026, 1, 15));
+      expect(summary.absent, 5);
+      expect(summary.present, 20);
     });
 
     test('handles missing optional fields with defaults', () {
@@ -55,16 +56,16 @@ void main() {
 
       final summary = AttendanceSummary.fromJson(json);
 
-      expect(summary.id, '');
-      expect(summary.subjectId, '');
-      expect(summary.subjectName, '');
+      expect(summary.id, isNull);
+      expect(summary.subjectId, isNull);
+      expect(summary.subjectName, isNull);
       expect(summary.date, DateTime(2026, 6, 1));
       expect(summary.totalStudents, 0);
       expect(summary.present, 0);
       expect(summary.absent, 0);
     });
 
-    test('handles null id and mata_pelajaran_id gracefully', () {
+    test('handles null id and subject_id gracefully', () {
       final json = {
         'id': null,
         'mata_pelajaran_id': null,
@@ -72,14 +73,14 @@ void main() {
         'tanggal': '2026-12-31',
         'total_siswa': null,
         'hadir': null,
-        'tidak_hadir': null,
+        'alpha': null,
       };
 
       final summary = AttendanceSummary.fromJson(json);
 
-      expect(summary.id, '');
-      expect(summary.subjectId, '');
-      expect(summary.subjectName, '');
+      expect(summary.id, isNull);
+      expect(summary.subjectId, isNull);
+      expect(summary.subjectName, isNull);
       expect(summary.totalStudents, 0);
       expect(summary.present, 0);
       expect(summary.absent, 0);

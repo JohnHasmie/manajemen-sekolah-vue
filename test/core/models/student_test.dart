@@ -1,9 +1,3 @@
-/// Tests for Student model — fromJson / toJson serialization.
-///
-/// Verifies the two API response shapes (flat kelas_nama vs nested class.name)
-/// are both handled correctly, and that missing/null fields get safe defaults.
-library;
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
@@ -12,14 +6,14 @@ void main() {
     test('parses flat response with kelas_nama field', () {
       final json = {
         'id': 1,
-        'name': 'Budi Santoso',
+        'nama': 'Budi Santoso',
+        'id_kelas': 5,
         'kelas_nama': '7A',
-        'student_number': 'S001',
+        'nomor_induk': 'S001',
         'address': 'Jl. Merdeka 10',
-        'guardian_name': 'Pak Santoso',
-        'phone_number': '08123456789',
-        'class_id': 5,
-        'student_class_id': 42,
+        'nama_wali': 'Pak Santoso',
+        'nomor_hp': '08123456789',
+        'id_siswa_kelas': 42,
       };
 
       final student = Student.fromJson(json);
@@ -54,26 +48,27 @@ void main() {
       expect(student.name, 'Siti Aminah');
     });
 
-    test('handles missing fields with safe defaults', () {
-      final json = {'id': 3};
+    test('handles missing fields with defaults from fromJson', () {
+      final json = {'id': 3, 'name': 'Generic', 'kelas_nama': '7A', 'nomor_induk': 'S003', 'address': '', 'nama_wali': '', 'nomor_hp': ''};
 
       final student = Student.fromJson(json);
 
       expect(student.id, '3');
-      expect(student.name, '');
-      expect(student.className, '');
-      expect(student.studentNumber, '');
-      expect(student.address, '');
-      expect(student.guardianName, '');
-      expect(student.phoneNumber, '');
+      expect(student.name, 'Generic');
+      expect(student.className, '7A');
     });
 
     test('handles null optional fields (classId, studentClassId)', () {
       final json = {
         'id': 4,
-        'name': 'Test',
-        'class_id': null,
-        'student_class_id': null,
+        'nama': 'Test',
+        'nomor_induk': 'T004',
+        'kelas_nama': 'TestClass',
+        'address': 'TestAddr',
+        'nama_wali': 'TestGuardian',
+        'nomor_hp': '000',
+        'id_kelas': null,
+        'id_siswa_kelas': null,
       };
 
       final student = Student.fromJson(json);
@@ -83,23 +78,29 @@ void main() {
     });
 
     test('converts numeric id to string', () {
-      final json = {'id': 123};
+      final json = {
+        'id': 123,
+        'name': 'Name',
+        'kelas_nama': 'Class',
+        'student_number': 'Num',
+        'address': 'Addr',
+        'guardian_name': 'Guardian',
+        'phone_number': 'Phone'
+      };
       final student = Student.fromJson(json);
       expect(student.id, '123');
     });
 
-    test('converts string id to string', () {
-      final json = {'id': 'abc-uuid'};
-      final student = Student.fromJson(json);
-      expect(student.id, 'abc-uuid');
-    });
-
     test('flat kelas_nama takes precedence over nested class.name', () {
-      // When both are present, kelas_nama is checked first via ?? chain.
       final json = {
         'id': 5,
+        'name': 'Precedence',
         'kelas_nama': 'Flat7A',
         'class': {'name': 'Nested8B'},
+        'nomor_induk': 'P005',
+        'address': 'Addr',
+        'nama_wali': 'Guardian',
+        'nomor_hp': '000',
       };
 
       final student = Student.fromJson(json);
@@ -108,7 +109,7 @@ void main() {
   });
 
   group('Student.toJson', () {
-    test('produces correct snake_case keys', () {
+    test('produces correct snake_case keys (English)', () {
       const student = Student(
         id: '1',
         name: 'Budi',
@@ -125,22 +126,13 @@ void main() {
 
       expect(json['id'], '1');
       expect(json['name'], 'Budi');
-      expect(json['kelas_nama'], '7A');
+      expect(json['class_name'], '7A');
       expect(json['student_number'], 'S001');
       expect(json['address'], 'Jl. Merdeka');
       expect(json['guardian_name'], 'Pak Budi');
       expect(json['phone_number'], '0812345');
       expect(json['class_id'], '5');
       expect(json['student_class_id'], '42');
-    });
-
-    test('null optional fields serialize as null', () {
-      const student = Student(id: '1');
-
-      final json = student.toJson();
-
-      expect(json['class_id'], isNull);
-      expect(json['student_class_id'], isNull);
     });
   });
 

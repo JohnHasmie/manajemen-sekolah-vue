@@ -15,15 +15,29 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
+AttendanceSummary _$AttendanceSummaryFromJson(Map<String, dynamic> json) {
+  return _AttendanceSummary.fromJson(json);
+}
+
 /// @nodoc
 mixin _$AttendanceSummary {
-  String get id => throw _privateConstructorUsedError;
-  String get subjectId => throw _privateConstructorUsedError;
-  String get subjectName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'id')
+  String? get id => throw _privateConstructorUsedError;
+  @JsonKey(name: 'date')
   DateTime get date => throw _privateConstructorUsedError;
-  int get totalStudents => throw _privateConstructorUsedError;
   int get present => throw _privateConstructorUsedError;
+  int get sick => throw _privateConstructorUsedError;
+  int get excused => throw _privateConstructorUsedError;
   int get absent => throw _privateConstructorUsedError;
+  @JsonKey(name: 'total_students')
+  int get totalStudents => throw _privateConstructorUsedError;
+  @JsonKey(name: 'subject_name')
+  String? get subjectName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'subject_id')
+  String? get subjectId => throw _privateConstructorUsedError;
+
+  /// Serializes this AttendanceSummary to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
   /// Create a copy of AttendanceSummary
   /// with the given fields replaced by the non-null parameter values.
@@ -40,13 +54,15 @@ abstract class $AttendanceSummaryCopyWith<$Res> {
   ) = _$AttendanceSummaryCopyWithImpl<$Res, AttendanceSummary>;
   @useResult
   $Res call({
-    String id,
-    String subjectId,
-    String subjectName,
-    DateTime date,
-    int totalStudents,
+    @JsonKey(name: 'id') String? id,
+    @JsonKey(name: 'date') DateTime date,
     int present,
+    int sick,
+    int excused,
     int absent,
+    @JsonKey(name: 'total_students') int totalStudents,
+    @JsonKey(name: 'subject_name') String? subjectName,
+    @JsonKey(name: 'subject_id') String? subjectId,
   });
 }
 
@@ -65,44 +81,54 @@ class _$AttendanceSummaryCopyWithImpl<$Res, $Val extends AttendanceSummary>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
-    Object? subjectId = null,
-    Object? subjectName = null,
+    Object? id = freezed,
     Object? date = null,
-    Object? totalStudents = null,
     Object? present = null,
+    Object? sick = null,
+    Object? excused = null,
     Object? absent = null,
+    Object? totalStudents = null,
+    Object? subjectName = freezed,
+    Object? subjectId = freezed,
   }) {
     return _then(
       _value.copyWith(
-            id: null == id
+            id: freezed == id
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
-                      as String,
-            subjectId: null == subjectId
-                ? _value.subjectId
-                : subjectId // ignore: cast_nullable_to_non_nullable
-                      as String,
-            subjectName: null == subjectName
-                ? _value.subjectName
-                : subjectName // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
             date: null == date
                 ? _value.date
                 : date // ignore: cast_nullable_to_non_nullable
                       as DateTime,
-            totalStudents: null == totalStudents
-                ? _value.totalStudents
-                : totalStudents // ignore: cast_nullable_to_non_nullable
-                      as int,
             present: null == present
                 ? _value.present
                 : present // ignore: cast_nullable_to_non_nullable
+                      as int,
+            sick: null == sick
+                ? _value.sick
+                : sick // ignore: cast_nullable_to_non_nullable
+                      as int,
+            excused: null == excused
+                ? _value.excused
+                : excused // ignore: cast_nullable_to_non_nullable
                       as int,
             absent: null == absent
                 ? _value.absent
                 : absent // ignore: cast_nullable_to_non_nullable
                       as int,
+            totalStudents: null == totalStudents
+                ? _value.totalStudents
+                : totalStudents // ignore: cast_nullable_to_non_nullable
+                      as int,
+            subjectName: freezed == subjectName
+                ? _value.subjectName
+                : subjectName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            subjectId: freezed == subjectId
+                ? _value.subjectId
+                : subjectId // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -119,13 +145,15 @@ abstract class _$$AttendanceSummaryImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    String id,
-    String subjectId,
-    String subjectName,
-    DateTime date,
-    int totalStudents,
+    @JsonKey(name: 'id') String? id,
+    @JsonKey(name: 'date') DateTime date,
     int present,
+    int sick,
+    int excused,
     int absent,
+    @JsonKey(name: 'total_students') int totalStudents,
+    @JsonKey(name: 'subject_name') String? subjectName,
+    @JsonKey(name: 'subject_id') String? subjectId,
   });
 }
 
@@ -143,86 +171,108 @@ class __$$AttendanceSummaryImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
-    Object? subjectId = null,
-    Object? subjectName = null,
+    Object? id = freezed,
     Object? date = null,
-    Object? totalStudents = null,
     Object? present = null,
+    Object? sick = null,
+    Object? excused = null,
     Object? absent = null,
+    Object? totalStudents = null,
+    Object? subjectName = freezed,
+    Object? subjectId = freezed,
   }) {
     return _then(
       _$AttendanceSummaryImpl(
-        id: null == id
+        id: freezed == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
-                  as String,
-        subjectId: null == subjectId
-            ? _value.subjectId
-            : subjectId // ignore: cast_nullable_to_non_nullable
-                  as String,
-        subjectName: null == subjectName
-            ? _value.subjectName
-            : subjectName // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
         date: null == date
             ? _value.date
             : date // ignore: cast_nullable_to_non_nullable
                   as DateTime,
-        totalStudents: null == totalStudents
-            ? _value.totalStudents
-            : totalStudents // ignore: cast_nullable_to_non_nullable
-                  as int,
         present: null == present
             ? _value.present
             : present // ignore: cast_nullable_to_non_nullable
+                  as int,
+        sick: null == sick
+            ? _value.sick
+            : sick // ignore: cast_nullable_to_non_nullable
+                  as int,
+        excused: null == excused
+            ? _value.excused
+            : excused // ignore: cast_nullable_to_non_nullable
                   as int,
         absent: null == absent
             ? _value.absent
             : absent // ignore: cast_nullable_to_non_nullable
                   as int,
+        totalStudents: null == totalStudents
+            ? _value.totalStudents
+            : totalStudents // ignore: cast_nullable_to_non_nullable
+                  as int,
+        subjectName: freezed == subjectName
+            ? _value.subjectName
+            : subjectName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        subjectId: freezed == subjectId
+            ? _value.subjectId
+            : subjectId // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
 }
 
 /// @nodoc
-
+@JsonSerializable()
 class _$AttendanceSummaryImpl implements _AttendanceSummary {
   const _$AttendanceSummaryImpl({
-    this.id = '',
-    this.subjectId = '',
-    this.subjectName = '',
-    required this.date,
-    this.totalStudents = 0,
+    @JsonKey(name: 'id') this.id,
+    @JsonKey(name: 'date') required this.date,
     this.present = 0,
+    this.sick = 0,
+    this.excused = 0,
     this.absent = 0,
+    @JsonKey(name: 'total_students') this.totalStudents = 0,
+    @JsonKey(name: 'subject_name') this.subjectName,
+    @JsonKey(name: 'subject_id') this.subjectId,
   });
 
+  factory _$AttendanceSummaryImpl.fromJson(Map<String, dynamic> json) =>
+      _$$AttendanceSummaryImplFromJson(json);
+
   @override
-  @JsonKey()
-  final String id;
+  @JsonKey(name: 'id')
+  final String? id;
   @override
-  @JsonKey()
-  final String subjectId;
-  @override
-  @JsonKey()
-  final String subjectName;
-  @override
+  @JsonKey(name: 'date')
   final DateTime date;
-  @override
-  @JsonKey()
-  final int totalStudents;
   @override
   @JsonKey()
   final int present;
   @override
   @JsonKey()
+  final int sick;
+  @override
+  @JsonKey()
+  final int excused;
+  @override
+  @JsonKey()
   final int absent;
+  @override
+  @JsonKey(name: 'total_students')
+  final int totalStudents;
+  @override
+  @JsonKey(name: 'subject_name')
+  final String? subjectName;
+  @override
+  @JsonKey(name: 'subject_id')
+  final String? subjectId;
 
   @override
   String toString() {
-    return 'AttendanceSummary(id: $id, subjectId: $subjectId, subjectName: $subjectName, date: $date, totalStudents: $totalStudents, present: $present, absent: $absent)';
+    return 'AttendanceSummary(id: $id, date: $date, present: $present, sick: $sick, excused: $excused, absent: $absent, totalStudents: $totalStudents, subjectName: $subjectName, subjectId: $subjectId)';
   }
 
   @override
@@ -231,27 +281,32 @@ class _$AttendanceSummaryImpl implements _AttendanceSummary {
         (other.runtimeType == runtimeType &&
             other is _$AttendanceSummaryImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.subjectId, subjectId) ||
-                other.subjectId == subjectId) &&
-            (identical(other.subjectName, subjectName) ||
-                other.subjectName == subjectName) &&
             (identical(other.date, date) || other.date == date) &&
+            (identical(other.present, present) || other.present == present) &&
+            (identical(other.sick, sick) || other.sick == sick) &&
+            (identical(other.excused, excused) || other.excused == excused) &&
+            (identical(other.absent, absent) || other.absent == absent) &&
             (identical(other.totalStudents, totalStudents) ||
                 other.totalStudents == totalStudents) &&
-            (identical(other.present, present) || other.present == present) &&
-            (identical(other.absent, absent) || other.absent == absent));
+            (identical(other.subjectName, subjectName) ||
+                other.subjectName == subjectName) &&
+            (identical(other.subjectId, subjectId) ||
+                other.subjectId == subjectId));
   }
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
     runtimeType,
     id,
-    subjectId,
-    subjectName,
     date,
-    totalStudents,
     present,
+    sick,
+    excused,
     absent,
+    totalStudents,
+    subjectName,
+    subjectId,
   );
 
   /// Create a copy of AttendanceSummary
@@ -264,33 +319,52 @@ class _$AttendanceSummaryImpl implements _AttendanceSummary {
         this,
         _$identity,
       );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$AttendanceSummaryImplToJson(this);
+  }
 }
 
 abstract class _AttendanceSummary implements AttendanceSummary {
   const factory _AttendanceSummary({
-    final String id,
-    final String subjectId,
-    final String subjectName,
-    required final DateTime date,
-    final int totalStudents,
+    @JsonKey(name: 'id') final String? id,
+    @JsonKey(name: 'date') required final DateTime date,
     final int present,
+    final int sick,
+    final int excused,
     final int absent,
+    @JsonKey(name: 'total_students') final int totalStudents,
+    @JsonKey(name: 'subject_name') final String? subjectName,
+    @JsonKey(name: 'subject_id') final String? subjectId,
   }) = _$AttendanceSummaryImpl;
 
+  factory _AttendanceSummary.fromJson(Map<String, dynamic> json) =
+      _$AttendanceSummaryImpl.fromJson;
+
   @override
-  String get id;
+  @JsonKey(name: 'id')
+  String? get id;
   @override
-  String get subjectId;
-  @override
-  String get subjectName;
-  @override
+  @JsonKey(name: 'date')
   DateTime get date;
-  @override
-  int get totalStudents;
   @override
   int get present;
   @override
+  int get sick;
+  @override
+  int get excused;
+  @override
   int get absent;
+  @override
+  @JsonKey(name: 'total_students')
+  int get totalStudents;
+  @override
+  @JsonKey(name: 'subject_name')
+  String? get subjectName;
+  @override
+  @JsonKey(name: 'subject_id')
+  String? get subjectId;
 
   /// Create a copy of AttendanceSummary
   /// with the given fields replaced by the non-null parameter values.
