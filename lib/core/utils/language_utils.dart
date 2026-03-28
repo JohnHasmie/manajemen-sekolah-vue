@@ -1598,6 +1598,74 @@ class AppLocalizations {
         'en': 'Verification Failed:',
         'id': 'Verifikasi Gagal:'
       };
+
+  // Login Screen - OTP Dialog
+  static Map<String, String> get otpVerification => {
+        'en': 'OTP Verification',
+        'id': 'Verifikasi OTP'
+      };
+  static Map<String, String> get otpSentToEmail => {
+        'en': 'OTP code has been sent to email:',
+        'id': 'Kode OTP telah dikirim ke email:'
+      };
+  static Map<String, String> get enterOtpDigits => {
+        'en': 'Enter 6-digit OTP code:',
+        'id': 'Masukkan 6 digit kode OTP:'
+      };
+  static Map<String, String> get otpCode => {
+        'en': 'OTP Code',
+        'id': 'Kode OTP'
+      };
+
+  // Login Screen - Buttons & Labels
+  static Map<String, String> get pleaseWait => {
+        'en': 'Please Wait...',
+        'id': 'Mohon Tunggu...'
+      };
+  static Map<String, String> get signInWithGoogle => {
+        'en': 'Sign in with Google',
+        'id': 'Masuk dengan Google'
+      };
+  static Map<String, String> get schoolNoName => {
+        'en': 'Unnamed School',
+        'id': 'Sekolah Tanpa Nama'
+      };
+
+  // Login Screen - Role Descriptions
+  static Map<String, String> get accessAs => {
+        'en': 'Access as',
+        'id': 'Akses sebagai'
+      };
+  static Map<String, String> get roleDescAdmin => {
+        'en': 'School system administrator',
+        'id': 'Pengelola sistem sekolah'
+      };
+  static Map<String, String> get roleDescTeacher => {
+        'en': 'Teacher and education',
+        'id': 'Pengajar dan pendidikan'
+      };
+  static Map<String, String> get roleDescParent => {
+        'en': 'Parent/guardian',
+        'id': 'Orang tua/wali siswa'
+      };
+  static Map<String, String> get roleDescStaff => {
+        'en': 'Administrative staff',
+        'id': 'Staff administrasi'
+      };
+  static Map<String, String> get roleDescDefault => {
+        'en': 'System user',
+        'id': 'Pengguna sistem'
+      };
+
+  // Login Screen - Greeting
+  static Map<String, String> get hello => {
+        'en': 'Hello',
+        'id': 'Halo'
+      };
+  static Map<String, String> get schoolLabel => {
+        'en': 'School',
+        'id': 'Sekolah'
+      };
 }
 
 /// Convenience extension that provides pre-resolved translated strings as static getters.

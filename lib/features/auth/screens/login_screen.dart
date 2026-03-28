@@ -169,20 +169,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text('Verifikasi OTP'),
+        title: Text(AppLocalizations.otpVerification.tr),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Kode OTP telah dikirim ke email:', style: TextStyle(fontSize: 12)),
+            Text(AppLocalizations.otpSentToEmail.tr, style: TextStyle(fontSize: 12)),
             Text(email, style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: AppSpacing.lg),
-            Text('Masukkan 6 digit kode OTP:'),
+            Text(AppLocalizations.enterOtpDigits.tr),
             SizedBox(height: AppSpacing.sm),
             TextField(
               controller: otpController,
               decoration: InputDecoration(
-                labelText: 'Kode OTP',
+                labelText: AppLocalizations.otpCode.tr,
                 border: OutlineInputBorder(),
                 counterText: '',
                 contentPadding: EdgeInsets.symmetric(horizontal: 10),
@@ -290,7 +290,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         SizedBox(height: 10),
         Text(
-          'Halo ${authState.userData?['name'] ?? authState.userData?['nama'] ?? 'User'},',
+          '${AppLocalizations.hello.tr} ${authState.userData?['name'] ?? authState.userData?['nama'] ?? 'User'},',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         Text(
@@ -309,7 +309,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: ListTile(
                 key: ValueKey('school_${sekolah['school_id'] ?? index}'),
                 leading: Icon(Icons.school, color: ColorUtils.darkBlue),
-                title: Text(sekolah['school_name'] ?? 'Sekolah Tanpa Nama'),
+                title: Text(sekolah['school_name'] ?? AppLocalizations.schoolNoName.tr),
                 subtitle: Text(sekolah['address'] ?? ''),
                 trailing: Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: authState.isLoading ? null : () async {
@@ -346,11 +346,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         SizedBox(height: 10),
         Text(
-          'Halo ${authState.userData?['name'] ?? authState.userData?['nama'] ?? 'User'},',
+          '${AppLocalizations.hello.tr} ${authState.userData?['name'] ?? authState.userData?['nama'] ?? 'User'},',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         Text(
-          'Sekolah: $schoolName',
+          '${AppLocalizations.schoolLabel.tr}: $schoolName',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         SizedBox(height: AppSpacing.xl),
@@ -366,7 +366,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 key: ValueKey('role_$role'),
                 leading: _getRoleIcon(role),
                 title: Text(_getRoleDisplayName(role)),
-                subtitle: Text('Akses sebagai ${_getRoleDescription(role)}'),
+                subtitle: Text('${AppLocalizations.accessAs.tr} ${_getRoleDescription(role)}'),
                 trailing: Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: authState.isLoading ? null : () async {
                   final response = await ref.read(authProvider.notifier).selectRole(role.toString());
@@ -484,7 +484,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     width: 20,
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                   )
-                : const Text('LOGIN', style: TextStyle(color: Colors.white)),
+                : Text(AppLocalizations.login.tr.toUpperCase(), style: const TextStyle(color: Colors.white)),
           ),
         ),
         const SizedBox(height: 15),
@@ -498,7 +498,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               errorBuilder: (c, o, s) => const Icon(Icons.login),
             ),
             label: Text(
-              authState.isLoading ? 'Mohon Tunggu...' : 'Masuk dengan Google',
+              authState.isLoading ? AppLocalizations.pleaseWait.tr : AppLocalizations.signInWithGoogle.tr,
               style: TextStyle(color: authState.isLoading ? Colors.grey : ColorUtils.darkBlue),
             ),
             style: OutlinedButton.styleFrom(
@@ -549,11 +549,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   String _getRoleDescription(String role) {
     switch (role) {
-      case 'admin': return 'Pengelola sistem sekolah';
-      case 'guru': return 'Pengajar dan pendidikan';
-      case 'wali': return 'Orang tua/wali siswa';
-      case 'staff': return 'Staff administrasi';
-      default: return 'Pengguna sistem';
+      case 'admin': return AppLocalizations.roleDescAdmin.tr;
+      case 'guru': return AppLocalizations.roleDescTeacher.tr;
+      case 'wali': return AppLocalizations.roleDescParent.tr;
+      case 'staff': return AppLocalizations.roleDescStaff.tr;
+      default: return AppLocalizations.roleDescDefault.tr;
     }
   }
 }
