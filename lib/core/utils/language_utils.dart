@@ -1745,6 +1745,50 @@ class AppLocalizations {
     'en': 'Google Sign-In Error',
     'id': 'Gagal Masuk dengan Google',
   };
+
+  // Common
+  static Map<String, String> get information => {'en': 'Information', 'id': 'Informasi'};
+  static Map<String, String> get ok => {'en': 'OK', 'id': 'OK'};
+
+  // Dashboard & Navigation
+  static Map<String, String> get selectAcademicYear => {
+    'en': 'Select Academic Year',
+    'id': 'Pilih Tahun Ajaran',
+  };
+  static Map<String, String> get schoolSwitched => {
+    'en': 'School switched',
+    'id': 'Sekolah berhasil diganti',
+  };
+  static Map<String, String> get classNotAvailable => {
+    'en': 'Class not available',
+    'id': 'Kelas tidak tersedia',
+  };
+  static Map<String, String> get noStudentLinked => {
+    'en': 'No student data linked to this parent account. Please contact the administrator.',
+    'id': 'Tidak ada data siswa yang terhubung dengan akun wali murid ini. Silakan hubungi administrator.',
+  };
+  static Map<String, String> get errorAdminIdNotFound => {
+    'en': 'Error: Admin ID not found',
+    'id': 'Error: ID Admin tidak ditemukan',
+  };
+  static Map<String, String> get errorTeacherIdNotFound => {
+    'en': 'Error: Teacher ID not found',
+    'id': 'Error: ID Guru tidak ditemukan',
+  };
+
+  // Notifications
+  static Map<String, String> get noNotifications => {
+    'en': 'No Notifications',
+    'id': 'Tidak Ada Notifikasi',
+  };
+  static Map<String, String> get allNotificationsWillAppear => {
+    'en': 'All notifications will appear here.',
+    'id': 'Semua notifikasi akan muncul di sini.',
+  };
+  static Map<String, String> get justNow => {'en': 'Just now', 'id': 'Baru saja'};
+  static Map<String, String> get minutesAgo => {'en': 'minutes ago', 'id': 'menit lalu'};
+  static Map<String, String> get hoursAgo => {'en': 'hours ago', 'id': 'jam lalu'};
+  static Map<String, String> get daysAgo => {'en': 'days ago', 'id': 'hari lalu'};
 }
 
 /// Convenience extension that provides pre-resolved translated strings as static getters.

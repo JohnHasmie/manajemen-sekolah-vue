@@ -199,7 +199,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          notif['title'] ?? 'Informasi',
+                          notif['title'] ?? AppLocalizations.information.tr,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -275,10 +275,10 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
       final date = DateTime.parse(dateStr).toLocal();
       final now = DateTime.now();
       final diff = now.difference(date);
-      if (diff.inMinutes < 1) return 'Baru saja';
-      if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
-      if (diff.inHours < 24) return '${diff.inHours} jam lalu';
-      if (diff.inDays < 7) return '${diff.inDays} hari lalu';
+      if (diff.inMinutes < 1) return AppLocalizations.justNow.tr;
+      if (diff.inMinutes < 60) return '${diff.inMinutes} ${AppLocalizations.minutesAgo.tr}';
+      if (diff.inHours < 24) return '${diff.inHours} ${AppLocalizations.hoursAgo.tr}';
+      if (diff.inDays < 7) return '${diff.inDays} ${AppLocalizations.daysAgo.tr}';
       return DateFormat('dd MMM yyyy, HH:mm').format(date);
     } catch (_) {
       return dateStr;
@@ -340,7 +340,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
               ),
               loading: () => SkeletonListLoading(itemCount: 8, infoTagCount: 1),
               error: (e, _) => Center(
-                child: Text('Error: $e'),
+                child: Text('${AppLocalizations.error.tr}: $e'),
               ),
             ),
           ),
@@ -477,7 +477,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
               ),
               SizedBox(height: AppSpacing.lg),
               Text(
-                'Tidak Ada Notifikasi',
+                AppLocalizations.noNotifications.tr,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -486,7 +486,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
               ),
               SizedBox(height: 6),
               Text(
-                'Semua notifikasi akan muncul di sini.',
+                AppLocalizations.allNotificationsWillAppear.tr,
                 style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
               ),
             ],

@@ -708,7 +708,7 @@ class _DashboardState extends ConsumerState<Dashboard>
     showDialog(
       context: context,
       builder: (context) => SimpleDialog(
-        title: Text('Pilih Tahun Ajaran'),
+        title: Text(AppLocalizations.selectAcademicYear.tr),
         children: years.map((year) {
           final isSelected = provider.selectedAcademicYear?['id'] == year['id'];
           return SimpleDialogOption(
@@ -1354,7 +1354,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           };
           if (adminData['id']!.isEmpty) {
             if (context.mounted) {
-              SnackBarUtils.showInfo(context, 'Error: Admin ID not found');
+              SnackBarUtils.showInfo(context, AppLocalizations.errorAdminIdNotFound.tr);
             }
             return;
           }
@@ -1445,7 +1445,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
+              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
             }
             return;
           }
@@ -1465,7 +1465,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
+              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
             }
             return;
           }
@@ -1492,7 +1492,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
+              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
             }
             return;
           }
@@ -1513,7 +1513,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
+              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
             }
             return;
           }
@@ -1534,7 +1534,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
+              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
             }
             return;
           }
@@ -1555,7 +1555,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           };
           if (teacherData['id']!.isEmpty) {
             if (context.mounted) {
-              SnackBarUtils.showInfo(context, 'Error: Teacher ID not found');
+              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
             }
             return;
           }
@@ -2531,7 +2531,7 @@ class _DashboardState extends ConsumerState<Dashboard>
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Pilih Anak',
+          AppLocalizations.selectChild.tr,
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: SizedBox(
@@ -2559,7 +2559,7 @@ class _DashboardState extends ConsumerState<Dashboard>
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    student['kelas_nama'] ?? 'Kelas tidak tersedia',
+                    student['kelas_nama'] ?? AppLocalizations.classNotAvailable.tr,
                   ),
                   onTap: () async {
                     AppNavigator.pop(context);
@@ -2586,14 +2586,12 @@ class _DashboardState extends ConsumerState<Dashboard>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Informasi'),
-        content: Text(
-          'Tidak ada data siswa yang terhubung dengan akun wali murid ini. Silakan hubungi administrator.',
-        ),
+        title: Text(AppLocalizations.information.tr),
+        content: Text(AppLocalizations.noStudentLinked.tr),
         actions: [
           TextButton(
             onPressed: () => AppNavigator.pop(context),
-            child: Text('OK'),
+            child: Text(AppLocalizations.ok.tr),
           ),
         ],
       ),

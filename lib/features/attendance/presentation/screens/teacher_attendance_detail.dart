@@ -568,7 +568,7 @@ class _TeacherAbsensiDetailPageState
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                '${state.students.length} siswa',
+                                '${state.students.length} ${AppLocalizations.students.tr}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: ColorUtils.slate600,

@@ -67,7 +67,7 @@ class BillingList extends ConsumerWidget {
         );
       },
       loading: () => const SkeletonListLoading(padding: EdgeInsets.only(top: 8, bottom: 80)),
-      error: (error, _) => Center(child: Text('Error: $error')),
+      error: (error, _) => Center(child: Text('${AppLocalizations.error.tr}: $error')),
     );
   }
 }
