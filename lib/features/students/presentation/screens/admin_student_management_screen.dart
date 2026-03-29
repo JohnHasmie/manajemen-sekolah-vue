@@ -234,7 +234,7 @@ class StudentManagementScreenState
         context,
         ref.read(languageRiverpod).getTranslatedText({
           'en': 'Failed to export: ${ErrorUtils.getFriendlyMessage(e)}',
-          'id': 'Gagal mengexport: ${ErrorUtils.getFriendlyMessage(e)}',
+          'id': '${AppLocalizations.failedToExport.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         }),
       );
     }
@@ -274,7 +274,7 @@ class StudentManagementScreenState
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to import file: ${ErrorUtils.getFriendlyMessage(e)}',
-          'id': 'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(e)}',
+          'id': '${AppLocalizations.failedToImport.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         }),
       );
     }
@@ -413,7 +413,7 @@ class StudentManagementScreenState
           'en':
               'Failed to load student/class data: ${ErrorUtils.getFriendlyMessage(e)}',
           'id':
-              'Gagal memuat data siswa/kelas: ${ErrorUtils.getFriendlyMessage(e)}',
+              '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         }),
       );
     } finally {
@@ -1969,7 +1969,7 @@ class StudentManagementScreenState
               'en':
                   'Failed to delete student: ${ErrorUtils.getFriendlyMessage(e)}',
               'id':
-                  'Gagal menghapus siswa: ${ErrorUtils.getFriendlyMessage(e)}',
+                  '${AppLocalizations.failedToDelete.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
             }),
           );
         }

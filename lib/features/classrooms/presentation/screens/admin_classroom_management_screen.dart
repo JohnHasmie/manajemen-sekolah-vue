@@ -1304,12 +1304,7 @@ class AdminClassManagementScreenState
                                             ).showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                  languageProvider.getTranslatedText({
-                                                    'en':
-                                                        'Failed to save class: ${ErrorUtils.getFriendlyMessage(e)}',
-                                                    'id':
-                                                        'Gagal menyimpan kelas: ${ErrorUtils.getFriendlyMessage(e)}',
-                                                  }),
+                                                  '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
                                                 ),
                                                 backgroundColor: Colors.red,
                                               ),

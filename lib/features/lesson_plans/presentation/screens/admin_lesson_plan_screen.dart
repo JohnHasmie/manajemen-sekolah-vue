@@ -1887,11 +1887,11 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
       if (mounted) {
         AppNavigator.pop(context);
         widget.onStatusUpdated();
-        SnackBarUtils.showSuccess(context, 'Status RPP berhasil diupdate');
+        SnackBarUtils.showSuccess(context, AppLocalizations.rppStatusUpdated.tr);
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(context, 'Gagal mengupdate: $e');
+        SnackBarUtils.showError(context, '${AppLocalizations.failedToUpdate.tr}: $e');
       }
     } finally {
       if (mounted) {
@@ -2702,21 +2702,21 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
       await file.writeAsBytes(response.data ?? []);
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      SnackBarUtils.showInfo(context, 'Download berhasil! Membuka file...');
+      SnackBarUtils.showInfo(context, AppLocalizations.downloadSuccessful.tr);
 
       final result = await OpenFile.open(file.path);
 
       if (result.type != ResultType.done) {
         SnackBarUtils.showInfo(
           context,
-          'Gagal membuka file: ${result.message}',
+          '${AppLocalizations.failedToOpenFile.tr}: ${result.message}',
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Gagal mengunduh file: $e')));
+      ).showSnackBar(SnackBar(content: Text('${AppLocalizations.failedToDownload.tr}: $e')));
     }
   }
 

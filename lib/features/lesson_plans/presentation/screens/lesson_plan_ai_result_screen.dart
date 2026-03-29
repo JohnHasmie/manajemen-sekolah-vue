@@ -570,7 +570,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       });
 
       if (mounted) {
-        SnackBarUtils.showSuccess(context, 'RPP berhasil di-generate ulang!');
+        SnackBarUtils.showSuccess(context, AppLocalizations.rppRegeneratedSuccessfully.tr);
       }
     } catch (e) {
       if (mounted) {
@@ -735,7 +735,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       await OpenFile.open(file.path);
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showInfo(context, 'Gagal membuat preview PDF: $e');
+        SnackBarUtils.showInfo(context, '${AppLocalizations.failedToCreatePdfPreview.tr}: $e');
       }
     }
   }
@@ -787,7 +787,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       await getIt<ApiSubjectService>().saveRPP(payloadData);
 
       if (mounted) {
-        SnackBarUtils.showSuccess(context, 'RPP AI berhasil disimpan!');
+        SnackBarUtils.showSuccess(context, AppLocalizations.rppSavedSuccessfully.tr);
         AppNavigator.pop(
           context,
         ); // Return to RPP list (PopScope triggers onSaved)
@@ -930,7 +930,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
             ),
             SizedBox(height: AppSpacing.xl),
             Text(
-              'Gagal Generate RPP',
+              AppLocalizations.failedToGenerateRpp.tr,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1039,7 +1039,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                           SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
-                              'RPP berhasil di-generate menggunakan format 10 Komponen AI dan telah dipetakan ke 3 Komponen K-13. Anda bisa menyesuaikan teks di bawah ini sebelum menyimpan.',
+                              AppLocalizations.rppAiGeneratedDescription.tr,
                               style: TextStyle(
                                 color: Colors.blue.shade800,
                                 fontSize: 13,

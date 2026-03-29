@@ -1789,6 +1789,65 @@ class AppLocalizations {
   static Map<String, String> get minutesAgo => {'en': 'minutes ago', 'id': 'menit lalu'};
   static Map<String, String> get hoursAgo => {'en': 'hours ago', 'id': 'jam lalu'};
   static Map<String, String> get daysAgo => {'en': 'days ago', 'id': 'hari lalu'};
+
+  // Generic error/success patterns
+  static Map<String, String> get failedToLoad => {'en': 'Failed to load', 'id': 'Gagal memuat'};
+  static Map<String, String> get failedToDelete => {'en': 'Failed to delete', 'id': 'Gagal menghapus'};
+  static Map<String, String> get failedToExport => {'en': 'Failed to export', 'id': 'Gagal mengexport'};
+  static Map<String, String> get failedToImport => {'en': 'Failed to import file', 'id': 'Gagal mengimpor file'};
+  static Map<String, String> get failedToGenerate => {'en': 'Failed to generate', 'id': 'Gagal generate'};
+  static Map<String, String> get failedToUpdate => {'en': 'Failed to update', 'id': 'Gagal mengupdate'};
+  static Map<String, String> get failedToVerify => {'en': 'Failed to verify', 'id': 'Gagal memverifikasi'};
+  static Map<String, String> get failedToDownload => {'en': 'Failed to download file', 'id': 'Gagal mengunduh file'};
+  static Map<String, String> get failedToOpenFile => {'en': 'Failed to open file', 'id': 'Gagal membuka file'};
+  static Map<String, String> get failedToProcess => {'en': 'Failed to process', 'id': 'Gagal memproses'};
+  static Map<String, String> get failedToLoadInitialData => {'en': 'Failed to load initial data', 'id': 'Gagal memuat data awal'};
+  static Map<String, String> get failedToLoadDetail => {'en': 'Failed to load detail', 'id': 'Gagal memuat detail'};
+  static Map<String, String> get failedToLoadImage => {'en': 'Failed to load image', 'id': 'Gagal memuat gambar'};
+  static Map<String, String> get failedToLoadSchedule => {'en': 'Failed to load schedule data', 'id': 'Gagal memuat data jadwal'};
+  static Map<String, String> get failedToLoadTeacherSubjects => {'en': 'Failed to load teacher subjects', 'id': 'Gagal memuat mata pelajaran guru'};
+  static Map<String, String> get failedToCreatePdfPreview => {'en': 'Failed to create PDF preview', 'id': 'Gagal membuat preview PDF'};
+  static Map<String, String> get failedToGetJobId => {'en': 'Failed to get job ID', 'id': 'Gagal mendapatkan job ID'};
+  static Map<String, String> get dataSavedSuccessfully => {'en': 'Data saved successfully', 'id': 'Data berhasil disimpan'};
+  static Map<String, String> get downloadSuccessful => {'en': 'Download successful! Opening file...', 'id': 'Download berhasil! Membuka file...'};
+  static Map<String, String> get fileSavedSuccessfully => {'en': 'File downloaded successfully', 'id': 'File berhasil diunduh'};
+  static Map<String, String> get noDataToExport => {'en': 'No data to export', 'id': 'Tidak ada data kegiatan untuk diexport'};
+  static Map<String, String> get noStudentsFoundForCriteria => {'en': 'No students found for the selected class and criteria.', 'id': 'Tidak ada siswa yang ditemukan untuk kelas dan kriteria yang dipilih.'};
+  static Map<String, String> get noStudentsMatchSearch => {'en': 'No students match the search', 'id': 'Tidak ada siswa yang cocok dengan pencarian'};
+  static Map<String, String> get noPaymentProof => {'en': 'No payment proof', 'id': 'Tidak ada bukti pembayaran'};
+  static Map<String, String> get noTeachingSubjects => {'en': 'No teaching subjects. Please check your schedule.', 'id': 'Tidak ada mata pelajaran mengajar. Silakan periksa jadwal Anda.'};
+  static Map<String, String> get noClassesForSubject => {'en': 'No classes for this subject.', 'id': 'Tidak ada kelas untuk mata pelajaran ini.'};
+  static Map<String, String> get noActiveClasses => {'en': 'No active classes at this time. You can fill in from lesson start time up to +23 hours.', 'id': 'Tidak ada kelas aktif saat ini. Anda dapat mengisi dari jam pelajaran mulai sampai +23 jam.'};
+  static Map<String, String> get noChapters => {'en': 'No chapters', 'id': 'Tidak ada bab'};
+  static Map<String, String> get noStudentsInClass => {'en': 'No students', 'id': 'Tidak ada siswa'};
+  static Map<String, String> get noAnnouncementsMatchSearch => {'en': 'No announcements match your search', 'id': 'Tidak ada pengumuman yang sesuai dengan pencarian'};
+  static Map<String, String> get noAnnouncementsAvailable => {'en': 'No announcements available at this time', 'id': 'Tidak ada pengumuman yang tersedia saat ini'};
+  static Map<String, String> get failedToLoadReportCard => {'en': 'Failed to load e-report card.', 'id': 'Gagal memuat e-raport.'};
+  static Map<String, String> get failedToSaveReportCard => {'en': 'Failed to save report card.', 'id': 'Gagal menyimpan raport.'};
+  static Map<String, String> get failedToLoadMaterial => {'en': 'Failed to load material.', 'id': 'Gagal memuat materi.'};
+
+  // Finance
+  static Map<String, String> get paymentRecordedSuccessfully => {'en': 'Payment recorded successfully', 'id': 'Pembayaran berhasil dicatat'};
+  static Map<String, String> get paymentCancelled => {'en': 'Payment cancelled', 'id': 'Pembayaran dibatalkan'};
+  static Map<String, String> get paymentVerifiedSuccessfully => {'en': 'Payment verified successfully', 'id': 'Pembayaran berhasil diverifikasi'};
+  static Map<String, String> get paymentRejectedSuccessfully => {'en': 'Payment rejected successfully', 'id': 'Pembayaran berhasil ditolak'};
+
+  // Grades
+  static Map<String, String> get gradeRecapSaved => {'en': 'Grade recap saved successfully', 'id': 'Rekap Nilai berhasil disimpan'};
+
+  // Lesson Plans (RPP)
+  static Map<String, String> get rppRegeneratedSuccessfully => {'en': 'RPP regenerated successfully!', 'id': 'RPP berhasil di-generate ulang!'};
+  static Map<String, String> get rppSavedSuccessfully => {'en': 'RPP AI saved successfully!', 'id': 'RPP AI berhasil disimpan!'};
+  static Map<String, String> get rppExportedToText => {'en': 'RPP exported to text file successfully', 'id': 'RPP berhasil diexport ke file text'};
+  static Map<String, String> get rppCopiedToClipboard => {'en': 'RPP copied to clipboard', 'id': 'RPP berhasil disalin ke clipboard'};
+  static Map<String, String> get fieldRegeneratedSuccessfully => {'en': 'regenerated successfully', 'id': 'berhasil di-regenerasi'};
+  static Map<String, String> get failedExceededLimit => {'en': 'failed/exceeded limit', 'id': 'gagal/melewati batas'};
+  static Map<String, String> get rppAiGeneratedDescription => {
+    'en': 'RPP AI has been generated using the 10-Component AI format and mapped to the 3-Component K-13. You can adjust the text below before saving.',
+    'id': 'RPP berhasil di-generate menggunakan format 10 Komponen AI dan telah dipetakan ke 3 Komponen K-13. Anda bisa menyesuaikan teks di bawah ini sebelum menyimpan.',
+  };
+  static Map<String, String> get failedToGenerateRpp => {'en': 'Failed to Generate RPP', 'id': 'Gagal Generate RPP'};
+  static Map<String, String> get failedToGenerateMaterial => {'en': 'Failed to Generate Material', 'id': 'Gagal Generate Materi'};
 }
 
 /// Convenience extension that provides pre-resolved translated strings as static getters.

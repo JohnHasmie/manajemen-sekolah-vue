@@ -1841,7 +1841,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
 
       if (mounted) {
         setState(() => _hasUnsavedChanges = false);
-        SnackBarUtils.showInfo(context, 'Rekap Nilai berhasil disimpan');
+        SnackBarUtils.showInfo(context, AppLocalizations.gradeRecapSaved.tr);
       }
     } catch (e) {
       if (mounted) {

@@ -1036,8 +1036,8 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                           ? 'No announcements found for your search'
                           : 'There are no announcements available at the moment',
                       'id': _searchController.text.isNotEmpty
-                          ? 'Tidak ada pengumuman yang sesuai dengan pencarian'
-                          : 'Tidak ada pengumuman yang tersedia saat ini',
+                          ? AppLocalizations.noAnnouncementsMatchSearch.tr
+                          : AppLocalizations.noAnnouncementsAvailable.tr,
                     }),
                     buttonText: languageProvider.getTranslatedText({
                       'en': 'Refresh',

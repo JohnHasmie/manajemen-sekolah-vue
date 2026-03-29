@@ -1019,7 +1019,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         context,
         ref.read(languageRiverpod).getTranslatedText({
           'en': 'Failed to load data: ${ErrorUtils.getFriendlyMessage(e)}',
-          'id': 'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
+          'id': '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         }),
       );
     } finally {
@@ -1155,7 +1155,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         context,
         ref.read(languageRiverpod).getTranslatedText({
           'en': 'Failed to export: ${ErrorUtils.getFriendlyMessage(e)}',
-          'id': 'Gagal mengexport: ${ErrorUtils.getFriendlyMessage(e)}',
+          'id': '${AppLocalizations.failedToExport.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         }),
       );
     }
@@ -1223,7 +1223,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
               'en':
                   'Failed to import file: ${ErrorUtils.getFriendlyMessage(apiError)}',
               'id':
-                  'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(apiError)}',
+                  '${AppLocalizations.failedToImport.tr}: ${ErrorUtils.getFriendlyMessage(apiError)}',
             }),
           );
         }
@@ -1235,7 +1235,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to import file: ${ErrorUtils.getFriendlyMessage(e)}',
-          'id': 'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(e)}',
+          'id': '${AppLocalizations.failedToImport.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         }),
       );
     }
@@ -1344,7 +1344,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
           'en':
               'Failed to update teacher subjects: ${ErrorUtils.getFriendlyMessage(error)}',
           'id':
-              'Gagal mengupdate mata pelajaran guru: ${ErrorUtils.getFriendlyMessage(error)}',
+              '${AppLocalizations.failedToUpdate.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
         }),
       );
     }

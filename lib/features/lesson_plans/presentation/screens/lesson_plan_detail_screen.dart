@@ -133,7 +133,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         onSaved: () {
           // If you want to refresh the page after saving, add logic here.
           if (mounted) {
-            SnackBarUtils.showInfo(context, 'RPP AI berhasil disimpan');
+            SnackBarUtils.showInfo(context, AppLocalizations.rppSavedSuccessfully.tr);
           }
         },
       ),
@@ -460,13 +460,13 @@ class RPPDetailPageState extends State<RPPDetailPage> {
             _regeneratingField = null;
           });
           _loadRegenLimits();
-          SnackBarUtils.showInfo(context, '$fieldLabel berhasil di-regenerasi');
+          SnackBarUtils.showInfo(context, '$fieldLabel ${AppLocalizations.fieldRegeneratedSuccessfully.tr}');
         } else {
           // Maybe full RPP data returned
           _updateLessonPlanDataFromResponse(data);
           setState(() => _regeneratingField = null);
           _loadRegenLimits();
-          SnackBarUtils.showInfo(context, '$fieldLabel berhasil di-regenerasi');
+          SnackBarUtils.showInfo(context, '$fieldLabel ${AppLocalizations.fieldRegeneratedSuccessfully.tr}');
         }
       } else if (response.statusCode == 202) {
         // Async job - need to poll
@@ -478,11 +478,11 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           _pollRegenJob(jobId, pollUrl, fieldKey, fieldLabel);
         } else {
           setState(() => _regeneratingField = null);
-          SnackBarUtils.showError(context, 'Gagal mendapatkan job ID');
+          SnackBarUtils.showError(context, AppLocalizations.failedToGetJobId.tr);
         }
       } else {
         setState(() => _regeneratingField = null);
-        final msg = body['message'] ?? 'Gagal regenerasi $fieldLabel';
+        final msg = body['message'] ?? '${AppLocalizations.failedToGenerate.tr}: $fieldLabel';
         SnackBarUtils.showError(context, msg);
       }
     } catch (e) {
@@ -562,8 +562,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       });
       _loadRegenLimits();
 
-      String msg = '$successCount field berhasil di-regenerasi';
-      if (failCount > 0) msg += ', $failCount gagal/melewati batas';
+      String msg = '$successCount field ${AppLocalizations.fieldRegeneratedSuccessfully.tr}';
+      if (failCount > 0) msg += ', $failCount ${AppLocalizations.failedExceededLimit.tr}';
       SnackBarUtils.showInfo(context, msg);
     }
   }
@@ -610,7 +610,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           if (mounted) {
             SnackBarUtils.showInfo(
               context,
-              '$fieldLabel berhasil di-regenerasi',
+              '$fieldLabel ${AppLocalizations.fieldRegeneratedSuccessfully.tr}',
             );
           }
           return;
@@ -1191,7 +1191,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       await OpenFile.open(file.path);
 
       if (mounted) {
-        SnackBarUtils.showInfo(context, 'RPP berhasil diexport ke file text');
+        SnackBarUtils.showInfo(context, AppLocalizations.rppExportedToText.tr);
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);
@@ -1278,7 +1278,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       await OpenFile.open(localFile.path);
 
       if (mounted) {
-        SnackBarUtils.showInfo(context, 'File berhasil diunduh');
+        SnackBarUtils.showInfo(context, AppLocalizations.fileSavedSuccessfully.tr);
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);
@@ -2353,6 +2353,6 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
   Future<void> _copyToClipboard() async {
     await Clipboard.setData(ClipboardData(text: _editedContent));
-    SnackBarUtils.showInfo(context, 'RPP berhasil disalin ke clipboard');
+    SnackBarUtils.showInfo(context, AppLocalizations.rppCopiedToClipboard.tr);
   }
 }

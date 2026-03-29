@@ -1473,7 +1473,7 @@ class AdminAnnouncementScreenState
                                                     'en':
                                                         'Failed to save announcement: $e',
                                                     'id':
-                                                        'Gagal menyimpan pengumuman: $e',
+                                                        '${AppLocalizations.failedToSave.tr}: $e',
                                                   }),
                                                 ),
                                                 backgroundColor:

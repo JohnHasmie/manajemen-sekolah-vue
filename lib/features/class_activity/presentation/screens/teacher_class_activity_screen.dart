@@ -4250,12 +4250,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       Padding(
                         padding: EdgeInsets.only(top: 4, left: 12),
                         child: Text(
-                          languageProvider.getTranslatedText({
-                            'en':
-                                'No teaching subjects found. Please check your schedule.',
-                            'id':
-                                'Tidak ada mata pelajaran mengajar. Silakan periksa jadwal Anda.',
-                          }),
+                          AppLocalizations.noTeachingSubjects.tr,
                           style: TextStyle(
                             color: ColorUtils.error600,
                             fontSize: 12,
@@ -4334,17 +4329,8 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                         padding: EdgeInsets.only(top: 4, left: 12),
                         child: Text(
                           widget.initialTarget == 'khusus'
-                              ? languageProvider.getTranslatedText({
-                                  'en': 'No classes found for this subject.',
-                                  'id':
-                                      'Tidak ada kelas untuk mata pelajaran ini.',
-                                })
-                              : languageProvider.getTranslatedText({
-                                  'en':
-                                      'No active classes now. You can fill from class start time until +23 hours.',
-                                  'id':
-                                      'Tidak ada kelas aktif saat ini. Anda dapat mengisi dari jam pelajaran mulai sampai +23 jam.',
-                                }),
+                              ? AppLocalizations.noClassesForSubject.tr
+                              : AppLocalizations.noActiveClasses.tr,
                           style: TextStyle(
                             color: ColorUtils.warning600,
                             fontSize: 12,
@@ -4442,12 +4428,12 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                                 'en': _isLoadingChapters
                                     ? 'Loading chapters...'
                                     : (chapterItems.isEmpty
-                                          ? 'No chapters found'
+                                          ? AppLocalizations.noChapters['en']!
                                           : 'Select Chapter'),
                                 'id': _isLoadingChapters
                                     ? 'Memuat bab...'
                                     : (chapterItems.isEmpty
-                                          ? 'Tidak ada bab'
+                                          ? AppLocalizations.noChapters['id']!
                                           : 'Pilih Bab'),
                               }),
                             ),
@@ -4669,7 +4655,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                         child: _isLoadingStudents
                             ? Center(child: CircularProgressIndicator())
                             : _studentList.isEmpty
-                            ? Center(child: Text('Tidak ada siswa'))
+                            ? Center(child: Text(AppLocalizations.noStudentsInClass.tr))
                             : SingleChildScrollView(
                                 child: Column(
                                   children: _studentList.map((student) {

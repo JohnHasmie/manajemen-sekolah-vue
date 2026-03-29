@@ -155,7 +155,7 @@ class _AdminAbsensiDetailPageState
     if (_attendanceData.isEmpty) {
       SnackBarUtils.showWarning(
         context,
-        'Tidak ada data kegiatan untuk diexport',
+        AppLocalizations.noDataToExport.tr,
       );
       return;
     }
@@ -289,13 +289,13 @@ class _AdminAbsensiDetailPageState
         });
         _loadData(); // Reload to get fresh data from server
       } else {
-        throw Exception('Gagal menyimpan semua data. Terakhir: $lastError');
+        throw Exception('${AppLocalizations.failedToSave.tr}: $lastError');
       }
     } catch (e) {
       setState(() => _isSaving = false);
       SnackBarUtils.showError(
         context,
-        'Gagal menyimpan perubahan: ${ErrorUtils.getFriendlyMessage(e)}',
+        '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }
@@ -986,12 +986,7 @@ class _AdminAbsensiDetailPageState
                         'en': 'No Students Found',
                         'id': 'Siswa Tidak Ditemukan',
                       }),
-                      subtitle: languageProvider.getTranslatedText({
-                        'en':
-                            'No students were found matching the selected class and criteria.',
-                        'id':
-                            'Tidak ada siswa yang ditemukan untuk kelas dan kriteria yang dipilih.',
-                      }),
+                      subtitle: AppLocalizations.noStudentsFoundForCriteria.tr,
                     ),
                   )
                 : ListView.builder(

@@ -351,7 +351,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
           'en': message,
           'id': message.replaceAll(
             'Failed to load teacher subjects',
-            'Gagal memuat mata pelajaran guru',
+            AppLocalizations.failedToLoadTeacherSubjects.tr,
           ),
         }),
       );

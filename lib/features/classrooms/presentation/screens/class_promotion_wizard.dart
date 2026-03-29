@@ -128,7 +128,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          'Gagal memuat data awal: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoadInitialData.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {
@@ -151,7 +151,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          'Gagal memuat daftar siswa: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {
@@ -180,7 +180,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          'Gagal memuat kelas tujuan: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {
@@ -202,7 +202,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          'Gagal memuat data guru: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     }
@@ -292,7 +292,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          'Gagal memuat pengaturan sekolah: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     }
@@ -1786,7 +1786,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          'Gagal memproses kenaikan kelas: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToProcess.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {
@@ -1982,7 +1982,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                                 if (mounted) {
                                   SnackBarUtils.showError(
                                     context,
-                                    'Gagal membuat kelas: ${ErrorUtils.getFriendlyMessage(e)}',
+                                    '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
                                   );
                                 }
                               }

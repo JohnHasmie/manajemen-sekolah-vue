@@ -926,7 +926,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          'Gagal memuat data kelas: ${ErrorUtils.getFriendlyMessage(error)}',
+          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
         );
       }
     }
@@ -1311,7 +1311,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                 Padding(
                   padding: EdgeInsets.all(AppSpacing.lg),
                   child: Text(
-                    'Tidak ada siswa yang cocok dengan pencarian',
+                    AppLocalizations.noStudentsMatchSearch.tr,
                     style: TextStyle(
                       color: ColorUtils.slate400,
                       fontStyle: FontStyle.italic,
@@ -1745,7 +1745,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          'Gagal memuat jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
+          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
         );
       }
     }
@@ -1799,7 +1799,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          'Gagal memuat daftar tagihan: ${ErrorUtils.getFriendlyMessage(error)}',
+          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
         );
       }
     } finally {
@@ -2579,7 +2579,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 if (context.mounted) {
                                   SnackBarUtils.showSuccess(
                                     context,
-                                    'Data berhasil disimpan',
+                                    AppLocalizations.dataSavedSuccessfully.tr,
                                   );
                                 }
                               } catch (error) {
@@ -2587,7 +2587,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 if (context.mounted) {
                                   SnackBarUtils.showError(
                                     context,
-                                    'Gagal menyimpan jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
+                                    '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
                                   );
                                 }
                               }
@@ -2743,7 +2743,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
         if (mounted) {
           SnackBarUtils.showError(
             context,
-            'Gagal menghapus jenis pembayaran: ${ErrorUtils.getFriendlyMessage(error)}',
+            '${AppLocalizations.failedToDelete.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
           );
         }
       }
@@ -3201,7 +3201,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           setState(() => _isLoading = false);
           SnackBarUtils.showError(
             context,
-            'Gagal mengenerate tagihan: ${ErrorUtils.getFriendlyMessage(error)}',
+            '${AppLocalizations.failedToGenerate.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
           );
         }
       } finally {
@@ -3423,7 +3423,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
                                   SnackBarUtils.showSuccess(
                                     context,
-                                    'Pembayaran berhasil ${status == 'verified' ? 'diverifikasi' : 'ditolak'}',
+                                    status == 'verified' ? AppLocalizations.paymentVerifiedSuccessfully.tr : AppLocalizations.paymentRejectedSuccessfully.tr,
                                   );
                                 }
                               } catch (error) {
@@ -3431,7 +3431,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 if (context.mounted) {
                                   SnackBarUtils.showError(
                                     context,
-                                    'Gagal memverifikasi: ${ErrorUtils.getFriendlyMessage(error)}',
+                                    '${AppLocalizations.failedToVerify.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
                                   );
                                 }
                               }
@@ -4096,7 +4096,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          SnackBarUtils.showError(context, 'Gagal menghapus tagihan: $e');
+          SnackBarUtils.showError(context, '${AppLocalizations.failedToDelete.tr}: $e');
         }
       }
     }
@@ -5120,7 +5120,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     final imageFile = payment['payment_proof'] ?? payment['payment_receipt'];
 
     if (imageFile == null) {
-      SnackBarUtils.showWarning(context, 'Tidak ada bukti pembayaran');
+      SnackBarUtils.showWarning(context, AppLocalizations.noPaymentProof.tr);
       return;
     }
 
@@ -5202,7 +5202,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ),
                             SizedBox(height: AppSpacing.sm),
                             Text(
-                              'Gagal memuat gambar',
+                              AppLocalizations.failedToLoadImage.tr,
                               style: TextStyle(color: ColorUtils.error600),
                             ),
                             SizedBox(height: AppSpacing.sm),

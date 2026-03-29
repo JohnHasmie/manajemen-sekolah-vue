@@ -1057,7 +1057,7 @@ class SubjectManagementScreenState
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to import file: ${ErrorUtils.getFriendlyMessage(e)}',
-          'id': 'Gagal mengimpor file: ${ErrorUtils.getFriendlyMessage(e)}',
+          'id': '${AppLocalizations.failedToImport.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         }),
       );
     }
@@ -1522,9 +1522,9 @@ class SubjectManagementScreenState
                                               content: Text(
                                                 languageProvider.getTranslatedText({
                                                   'en':
-                                                      'Data saved successfully',
+                                                      AppLocalizations.dataSavedSuccessfully.tr,
                                                   'id':
-                                                      'Data berhasil disimpan',
+                                                      AppLocalizations.dataSavedSuccessfully.tr,
                                                 }),
                                               ),
                                               backgroundColor:

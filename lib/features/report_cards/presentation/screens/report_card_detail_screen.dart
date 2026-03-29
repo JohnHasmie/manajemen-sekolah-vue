@@ -251,7 +251,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
       } else if (initialData != null) {
         _populateFromInitial(initialData);
       } else {
-        throw Exception("Gagal mengambil data awal.");
+        throw Exception(AppLocalizations.failedToLoadInitialData.tr);
       }
 
       setState(() {
@@ -432,7 +432,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
           }
         }
       } else {
-        throw Exception("Gagal menyimpan raport.");
+        throw Exception(AppLocalizations.failedToSaveReportCard.tr);
       }
     } catch (e) {
       if (mounted) {

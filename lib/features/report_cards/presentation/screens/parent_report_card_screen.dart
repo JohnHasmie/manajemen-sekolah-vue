@@ -185,8 +185,8 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
     } else {
       throw Exception(
         jsonResponse is Map
-            ? (jsonResponse['message'] ?? 'Gagal memuat e-raport.')
-            : 'Gagal memuat e-raport.',
+            ? (jsonResponse['message'] ?? AppLocalizations.failedToLoadReportCard.tr)
+            : AppLocalizations.failedToLoadReportCard.tr,
       );
     }
   }

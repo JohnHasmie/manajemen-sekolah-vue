@@ -220,7 +220,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
       }
 
       // Other errors
-      throw Exception(resultBody['message'] ?? 'Gagal generate materi');
+      throw Exception(resultBody['message'] ?? AppLocalizations.failedToGenerateMaterial.tr);
     } catch (e) {
       if (!mounted) return;
       AppLogger.error('material', e);
@@ -386,7 +386,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
       setState(() => _isRegenerating = false);
       SnackBarUtils.showInfo(
         context,
-        'Gagal regenerasi kuis: ${ErrorUtils.getFriendlyMessage(e)}',
+        '${AppLocalizations.failedToGenerate.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }
@@ -419,7 +419,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
       setState(() => _isRegenerating = false);
       SnackBarUtils.showInfo(
         context,
-        'Gagal regenerasi referensi: ${ErrorUtils.getFriendlyMessage(e)}',
+        '${AppLocalizations.failedToGenerate.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }
@@ -875,7 +875,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
             Icon(Icons.error_outline, size: 60, color: Colors.red.shade400),
             SizedBox(height: AppSpacing.lg),
             Text(
-              'Gagal Generate Materi',
+              AppLocalizations.failedToGenerateMaterial.tr,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -1536,10 +1536,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                 : _aiData == null
                 ? Center(
                     child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Failed to load material.',
-                        'id': 'Gagal memuat materi.',
-                      }),
+                      AppLocalizations.failedToLoadMaterial.tr,
                     ),
                   )
                 : Column(

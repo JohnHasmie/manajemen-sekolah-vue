@@ -14,6 +14,7 @@ import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -98,7 +99,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
       if (!mounted) return;
       SnackBarUtils.showError(
         context,
-        'Gagal memuat detail guru: ${ErrorUtils.getFriendlyMessage(e)}',
+        '${AppLocalizations.failedToLoadDetail.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }

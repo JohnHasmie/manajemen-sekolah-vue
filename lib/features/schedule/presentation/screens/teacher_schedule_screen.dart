@@ -759,7 +759,7 @@ class TeachingScheduleScreenState
           'en': message,
           'id': message.replaceAll(
             'Failed to load schedule data:',
-            'Gagal memuat data jadwal:',
+            '${AppLocalizations.failedToLoadSchedule.tr}:',
           ),
         }),
       );

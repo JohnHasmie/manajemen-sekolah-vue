@@ -84,7 +84,7 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
       });
       SnackBarUtils.showError(
         context,
-        'Gagal memuat detail siswa: ${ErrorUtils.getFriendlyMessage(e)}',
+        '${AppLocalizations.failedToLoadDetail.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }

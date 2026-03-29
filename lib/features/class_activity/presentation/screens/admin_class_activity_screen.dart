@@ -214,7 +214,7 @@ class AdminClassActivityScreenState
           });
         }
         _showErrorSnackBar(
-          'Gagal memuat data guru: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     }
@@ -225,7 +225,7 @@ class AdminClassActivityScreenState
     if (_activityList.isEmpty) {
       SnackBarUtils.showWarning(
         context,
-        'Tidak ada data kegiatan untuk diexport',
+        AppLocalizations.noDataToExport.tr,
       );
       return;
     }
@@ -326,7 +326,7 @@ class AdminClassActivityScreenState
           });
         }
         _showErrorSnackBar(
-          'Gagal memuat data mata pelajaran: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     }
@@ -410,7 +410,7 @@ class AdminClassActivityScreenState
           });
         }
         _showErrorSnackBar(
-          'Gagal memuat data kegiatan: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     }
