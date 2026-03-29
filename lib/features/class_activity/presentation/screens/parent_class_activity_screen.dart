@@ -21,7 +21,6 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, Consumer, ChangeNotifierProvider;
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -29,6 +28,11 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_detail_row.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_empty_state.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_info_tag.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/parent_class_activity_header.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/parent_student_selector.dart';
 
 /// Parent's read-only view of class activities with read tracking.
 ///
@@ -503,128 +507,6 @@ class ParentClassActivityScreenState
     return targets;
   }
 
-  Widget _buildStudentSelector() {
-    if (_studentList.isEmpty) {
-      return Container(
-        margin: EdgeInsets.all(AppSpacing.lg),
-        padding: EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: ColorUtils.warning600.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: ColorUtils.warning600.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: ColorUtils.warning600.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.warning_amber_rounded,
-                color: ColorUtils.warning600,
-                size: 20,
-              ),
-            ),
-            SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                AppLocalizations.noChildrenLinked.tr,
-                style: TextStyle(
-                  color: ColorUtils.slate700,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      key: _studentSelectorKey,
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(
-              AppLocalizations.selectChild.tr,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: ColorUtils.slate700,
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ColorUtils.slate200),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            padding: EdgeInsets.symmetric(horizontal: 14),
-            child: DropdownButton<String>(
-              value: _selectedStudentId,
-              isExpanded: true,
-              underline: SizedBox(),
-              icon: Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: ColorUtils.slate500,
-              ),
-              items: _studentList.map((student) {
-                return DropdownMenuItem<String>(
-                  value: student['id'],
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          student['name'] ??
-                              AppLocalizations.nameNotAvailable.tr,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            color: ColorUtils.slate900,
-                          ),
-                        ),
-                        Text(
-                          '${AppLocalizations.classString.tr}: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorUtils.slate500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedStudentId = value;
-                  _activityList = [];
-                  _hasFreshData = false;
-                });
-                _loadActivities();
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showActivityDetail(Map<String, dynamic> activity) {
     final languageProvider = ref.read(languageRiverpod);
     final primaryColor = _getPrimaryColor();
@@ -713,61 +595,69 @@ class ParentClassActivityScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDetailRow(
-                      Icons.person_rounded,
-                      languageProvider.getTranslatedText({
+                    ActivityDetailRow(
+                      icon: Icons.person_rounded,
+                      label: languageProvider.getTranslatedText({
                         'en': 'Teacher',
                         'id': 'Guru Pengajar',
                       }),
-                      activity['teacher_name'] ??
+                      value: activity['teacher_name'] ??
                           activity['guru_nama'] ??
                           AppLocalizations.unknown.tr,
+                      primaryColor: _getPrimaryColor(),
                     ),
-                    _buildDetailRow(
-                      Icons.menu_book_rounded,
-                      languageProvider.getTranslatedText({
+                    ActivityDetailRow(
+                      icon: Icons.menu_book_rounded,
+                      label: languageProvider.getTranslatedText({
                         'en': 'Subject',
                         'id': 'Mata Pelajaran',
                       }),
-                      activity['subject_name'] ??
+                      value: activity['subject_name'] ??
                           activity['mata_pelajaran_nama'] ??
                           '-',
+                      primaryColor: _getPrimaryColor(),
                     ),
-                    _buildDetailRow(
-                      Icons.calendar_today_rounded,
-                      languageProvider.getTranslatedText({
+                    ActivityDetailRow(
+                      icon: Icons.calendar_today_rounded,
+                      label: languageProvider.getTranslatedText({
                         'en': 'Date',
                         'id': 'Tanggal',
                       }),
-                      '${activity['day'] ?? activity['hari'] ?? '-'} • ${_formatDate(activity['date'] ?? activity['tanggal'])}',
+                      value:
+                          '${activity['day'] ?? activity['hari'] ?? '-'} • ${_formatDate(activity['date'] ?? activity['tanggal'])}',
+                      primaryColor: _getPrimaryColor(),
                     ),
                     if (isAssignment &&
                         (activity['deadline'] ?? activity['batas_waktu']) !=
                             null)
-                      _buildDetailRow(
-                        Icons.access_time_rounded,
-                        AppLocalizations.deadline.tr,
-                        _formatDate(
+                      ActivityDetailRow(
+                        icon: Icons.access_time_rounded,
+                        label: AppLocalizations.deadline.tr,
+                        value: _formatDate(
                           activity['deadline'] ?? activity['batas_waktu'],
                         ),
+                        primaryColor: _getPrimaryColor(),
                         iconColor: ColorUtils.error600,
                       ),
                     if (activity['deskripsi'] != null &&
                         activity['deskripsi'].toString().isNotEmpty &&
                         activity['deskripsi'] != 'null')
-                      _buildDetailRow(
-                        Icons.description_rounded,
-                        AppLocalizations.description.tr,
-                        activity['deskripsi'].toString(),
+                      ActivityDetailRow(
+                        icon: Icons.description_rounded,
+                        label: AppLocalizations.description.tr,
+                        value: activity['deskripsi'].toString(),
+                        primaryColor: _getPrimaryColor(),
                       ),
                     if (activity['judul_bab'] != null)
-                      _buildDetailRow(
-                        Icons.auto_stories_rounded,
-                        languageProvider.getTranslatedText({
+                      ActivityDetailRow(
+                        icon: Icons.auto_stories_rounded,
+                        label: languageProvider.getTranslatedText({
                           'en': 'Chapter',
                           'id': 'Materi',
                         }),
-                        '${activity['judul_bab']}${activity['judul_sub_bab'] != null ? '\n• ${activity['judul_sub_bab']}' : ''}',
+                        value:
+                            '${activity['judul_bab']}${activity['judul_sub_bab'] != null ? '\n• ${activity['judul_sub_bab']}' : ''}',
+                        primaryColor: _getPrimaryColor(),
                       ),
                     if (activity['additional_material'] != null &&
                         activity['additional_material'] is List &&
@@ -775,11 +665,12 @@ class ParentClassActivityScreenState
                       ...(activity['additional_material'] as List).map<Widget>((
                         item,
                       ) {
-                        return _buildDetailRow(
-                          Icons.bookmark_add_rounded,
-                          AppLocalizations.additionalSubChapter.tr,
-                          item['sub_chapter_title'] ??
+                        return ActivityDetailRow(
+                          icon: Icons.bookmark_add_rounded,
+                          label: AppLocalizations.additionalSubChapter.tr,
+                          value: item['sub_chapter_title'] ??
                               AppLocalizations.unknown.tr,
+                          primaryColor: _getPrimaryColor(),
                         );
                       }),
                   ],
@@ -818,96 +709,13 @@ class ParentClassActivityScreenState
     );
   }
 
-  Widget _buildDetailRow(
-    IconData icon,
-    String label,
-    String value, {
-    Color? iconColor,
-  }) {
-    final c = iconColor ?? _getPrimaryColor();
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: c.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 18, color: c),
-          ),
-          SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: ColorUtils.slate500,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: ColorUtils.slate800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Pattern #8 info tag chip
-  Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
-    final c = tagColor ?? ColorUtils.slate600;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: tagColor != null
-            ? tagColor.withValues(alpha: 0.08)
-            : ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: tagColor != null
-              ? tagColor.withValues(alpha: 0.3)
-              : ColorUtils.slate200,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: c),
-          SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 10,
-              color: c,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildActivityList() {
     final languageProvider = ref.read(languageRiverpod);
 
     if (_selectedStudentId == null) {
-      return _buildEmptyState(AppLocalizations.selectChildToViewActivity.tr);
+      return ActivityEmptyState(
+        message: AppLocalizations.selectChildToViewActivity.tr,
+      );
     }
 
     if (_isLoading) {
@@ -915,7 +723,9 @@ class ParentClassActivityScreenState
     }
 
     if (_activityList.isEmpty) {
-      return _buildEmptyState(AppLocalizations.noActivityForChild.tr);
+      return ActivityEmptyState(
+        message: AppLocalizations.noActivityForChild.tr,
+      );
     }
 
     return ListView.builder(
@@ -1074,24 +884,25 @@ class ParentClassActivityScreenState
                                 spacing: 6,
                                 runSpacing: 6,
                                 children: [
-                                  _buildInfoTag(
-                                    isAssignment
+                                  ActivityInfoTag(
+                                    icon: isAssignment
                                         ? Icons.assignment_outlined
                                         : Icons.menu_book_outlined,
-                                    isAssignment
+                                    label: isAssignment
                                         ? AppLocalizations.assignment.tr
                                         : AppLocalizations.material.tr,
                                     tagColor: accentColor,
                                   ),
-                                  _buildInfoTag(
-                                    Icons.calendar_today_outlined,
-                                    '${activity['hari'] ?? '-'} • ${_formatDate(activity['tanggal'])}',
+                                  ActivityInfoTag(
+                                    icon: Icons.calendar_today_outlined,
+                                    label:
+                                        '${activity['hari'] ?? '-'} • ${_formatDate(activity['tanggal'])}',
                                   ),
-                                  _buildInfoTag(
-                                    isSpecificTarget
+                                  ActivityInfoTag(
+                                    icon: isSpecificTarget
                                         ? Icons.person_outlined
                                         : Icons.group_outlined,
-                                    isSpecificTarget
+                                    label: isSpecificTarget
                                         ? languageProvider.getTranslatedText({
                                             'en': 'Specific',
                                             'id': 'Khusus',
@@ -1106,18 +917,21 @@ class ParentClassActivityScreenState
                                   ),
                                   if (isAssignment &&
                                       activity['batas_waktu'] != null)
-                                    _buildInfoTag(
-                                      Icons.access_time_rounded,
-                                      '${languageProvider.getTranslatedText({'en': 'Due', 'id': 'Batas'})}: ${_formatDate(activity['batas_waktu'])}',
+                                    ActivityInfoTag(
+                                      icon: Icons.access_time_rounded,
+                                      label:
+                                          '${languageProvider.getTranslatedText({'en': 'Due', 'id': 'Batas'})}: ${_formatDate(activity['batas_waktu'])}',
                                       tagColor: ColorUtils.error600,
                                     ),
                                   if (isSpecificTarget && isForThisStudent)
-                                    _buildInfoTag(
-                                      Icons.star_outline_rounded,
-                                      languageProvider.getTranslatedText({
-                                        'en': 'For this child',
-                                        'id': 'Untuk anak ini',
-                                      }),
+                                    ActivityInfoTag(
+                                      icon: Icons.star_outline_rounded,
+                                      label: languageProvider.getTranslatedText(
+                                        {
+                                          'en': 'For this child',
+                                          'id': 'Untuk anak ini',
+                                        },
+                                      ),
                                       tagColor: ColorUtils.corporateBlue600,
                                     ),
                                 ],
@@ -1134,42 +948,6 @@ class ParentClassActivityScreenState
           },
         );
       },
-    );
-  }
-
-  Widget _buildEmptyState(String message) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: ColorUtils.slate100,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.event_note_outlined,
-                size: 36,
-                color: ColorUtils.slate400,
-              ),
-            ),
-            SizedBox(height: AppSpacing.lg),
-            Text(
-              message,
-              style: TextStyle(
-                fontSize: 14,
-                color: ColorUtils.slate500,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1200,156 +978,34 @@ class ParentClassActivityScreenState
     );
   }
 
-  Widget _buildHeader() {
-    final languageProvider = ref.read(languageRiverpod);
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: _getCardGradient(),
-        boxShadow: [
-          BoxShadow(
-            color: _getPrimaryColor().withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => AppNavigator.pop(context),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                ),
-              ),
-              SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppLocalizations.childClassActivity.tr,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      AppLocalizations.monitorChildActivity.tr,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.white),
-                onSelected: (value) {
-                  if (value == 'refresh') _forceRefresh();
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'refresh',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.refresh,
-                          size: 20,
-                          color: ColorUtils.info600,
-                        ),
-                        SizedBox(width: AppSpacing.sm),
-                        Text(AppLocalizations.updateData.tr),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: AppSpacing.md),
-          Container(
-            padding: EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.family_restroom,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _parentName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        '${_studentList.length} ${languageProvider.getTranslatedText({'en': 'Children', 'id': 'Anak'})}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          _buildHeader(),
+          ParentClassActivityHeader(
+            parentName: _parentName,
+            studentCount: _studentList.length,
+            gradient: _getCardGradient(),
+            primaryColor: _getPrimaryColor(),
+            onRefresh: _forceRefresh,
+          ),
 
           // Student Selector
-          _buildStudentSelector(),
+          ParentStudentSelector(
+            studentList: _studentList,
+            selectedStudentId: _selectedStudentId,
+            selectorKey: _studentSelectorKey,
+            onStudentChanged: (value) {
+              setState(() {
+                _selectedStudentId = value;
+                _activityList = [];
+                _hasFreshData = false;
+              });
+              _loadActivities();
+            },
+          ),
 
           // Activities List
           Expanded(child: _buildActivityList()),

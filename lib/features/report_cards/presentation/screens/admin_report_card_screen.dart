@@ -26,6 +26,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/widgets/admin_report_card_body.dart';
 
 /// Admin report card screen - select class, view students, export/publish raports.
 ///
@@ -658,7 +659,26 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen> {
           ),
 
           // Body Content
-          Expanded(child: _buildBody()),
+          Expanded(
+            child: AdminReportCardBody(
+              classes: _classes,
+              selectedClass: _selectedClass,
+              students: _students,
+              isLoadingStudents: _isLoadingStudents,
+              primaryColor: _getPrimaryColor(),
+              selectClassKey: _selectClassKey,
+              studentListKey: _studentListKey,
+              onClassChanged: (value) {
+                setState(() {
+                  _selectedClass = value;
+                  _students = [];
+                });
+                _loadStudents();
+              },
+              onViewDetail: _viewReportCardDetail,
+              onDownloadPdf: _downloadStudentPdf,
+            ),
+          ),
         ],
       ),
       bottomNavigationBar:
@@ -740,229 +760,6 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen> {
               ),
             )
           : null,
-    );
-  }
-
-  Widget _buildBody() {
-    return Column(
-      children: [
-        // Class Selection
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          color: Colors.white,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Pilih Kelas',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: ColorUtils.slate700,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Container(
-                key: _selectClassKey,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.grey[50],
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<Map<String, dynamic>>(
-                    isExpanded: true,
-                    value: _selectedClass,
-                    hint: Text(AppLocalizations.selectClass.tr),
-                    items: _classes.map((cls) {
-                      return DropdownMenuItem<Map<String, dynamic>>(
-                        value: cls,
-                        child: Text(cls['name']?.toString() ?? 'Unknown'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedClass = value;
-                        _students = [];
-                      });
-                      _loadStudents();
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const Divider(height: 1),
-
-        // Students List
-        Expanded(
-          child: _isLoadingStudents
-              ? const Center(child: CircularProgressIndicator())
-              : _selectedClass == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.class_outlined,
-                        size: 48,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        'Silakan pilih kelas terlebih dahulu',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                )
-              : _students.isEmpty
-              ? Center(
-                  child: Text(
-                    'Tidak ada data siswa',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                )
-              : ListView.builder(
-                  key: _studentListKey,
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  itemCount: _students.length,
-                  itemBuilder: (context, index) {
-                    final student = _students[index];
-                    final status = student['raport_status'] ?? 'draft';
-
-                    Color statusColor;
-                    String statusText;
-                    IconData statusIcon;
-
-                    if (status == 'published') {
-                      statusColor = Colors.green;
-                      statusText = 'Terkirim';
-                      statusIcon = Icons.check_circle;
-                    } else if (status == 'final') {
-                      statusColor = Colors.blue;
-                      statusText = 'Final';
-                      statusIcon = Icons.save;
-                    } else {
-                      statusColor = Colors.orange;
-                      statusText = 'Draft';
-                      statusIcon = Icons.edit_note;
-                    }
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey[200]!),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () => _viewReportCardDetail(student),
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: _getPrimaryColor().withValues(
-                                  alpha: 0.1,
-                                ),
-                                child: Text(
-                                  (student['student_name'] ?? '?')[0]
-                                      .toUpperCase(),
-                                  style: TextStyle(
-                                    color: _getPrimaryColor(),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.lg),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      student['student_name'] ?? 'Unknown',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    const SizedBox(height: AppSpacing.xs),
-                                    Text(
-                                      'NIS: ${student['student_number'] ?? '-'}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      statusIcon,
-                                      size: 14,
-                                      color: statusColor,
-                                    ),
-                                    const SizedBox(width: AppSpacing.xs),
-                                    Text(
-                                      statusText,
-                                      style: TextStyle(
-                                        color: statusColor,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.picture_as_pdf,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () => _downloadStudentPdf(student),
-                                tooltip: 'Cetak PDF',
-                                constraints: const BoxConstraints(),
-                                padding: const EdgeInsets.all(AppSpacing.xs),
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              Icon(
-                                Icons.chevron_right,
-                                color: Colors.grey[400],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
     );
   }
 

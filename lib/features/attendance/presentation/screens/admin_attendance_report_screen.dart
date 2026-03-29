@@ -18,7 +18,6 @@ import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
@@ -31,14 +30,15 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
-import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_report_filter_sheet.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_grid_data.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/admin_attendance_summary_card.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_class_list_view.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_table_view.dart';
 
 /// Data model for a single attendance summary record.
 /// Like a Laravel Eloquent model or a TypeScript interface in Vue.
@@ -787,120 +787,6 @@ class _AdminAttendanceReportScreenState
     );
   }
 
-  Widget _buildClassList(LanguageProvider languageProvider) {
-    if (_isLoadingClasses) {
-      return SkeletonListLoading(
-        itemCount: 8,
-        infoTagCount: 1,
-        showActions: false,
-      );
-    }
-
-    final searchTerm = _searchController.text.toLowerCase();
-    final filteredClasses = _classList.where((cls) {
-      final className = cls['name']?.toString().toLowerCase() ?? '';
-      return className.contains(searchTerm);
-    }).toList();
-
-    if (filteredClasses.isEmpty) {
-      return Center(
-        child: Text(
-          languageProvider.getTranslatedText({
-            'en': 'No classes found',
-            'id': 'Tidak ada data kelas',
-          }),
-          style: TextStyle(color: ColorUtils.slate400),
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _forceRefresh,
-      color: _getPrimaryColor(),
-      child: ListView.builder(
-        padding: EdgeInsets.all(AppSpacing.lg),
-        physics: AlwaysScrollableScrollPhysics(),
-        itemCount: filteredClasses.length,
-        itemBuilder: (context, index) {
-          final classItem = filteredClasses[index];
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  _selectedClassData = classItem;
-                  _selectedClassIds.clear();
-                  _selectedClassIds.add(classItem['id'].toString());
-                  _loadData();
-                });
-              },
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                margin: EdgeInsets.only(bottom: 10),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: ColorUtils.slate200),
-                  boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: _getPrimaryColor().withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: _getPrimaryColor().withValues(alpha: 0.15),
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.class_,
-                        color: _getPrimaryColor(),
-                        size: 22,
-                      ),
-                    ),
-                    SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            classItem['name'] ?? 'Unknown Class',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              color: ColorUtils.slate900,
-                            ),
-                          ),
-                          SizedBox(height: 3),
-                          Text(
-                            '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${classItem['grade_level'] ?? '-'}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: ColorUtils.slate600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 14,
-                      color: ColorUtils.slate400,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   Future<void> _loadTableData() async {
     if (!mounted) return;
     if (_selectedClassIds.isEmpty) {
@@ -1070,465 +956,6 @@ class _AdminAttendanceReportScreenState
         SnackBarUtils.showInfo(context, 'Failed to load table data: $e');
       }
     }
-  }
-
-  Widget _buildTableView() {
-    final languageProvider = ref.read(languageRiverpod);
-
-    if (_isTableLoading) {
-      return SkeletonListLoading(
-        itemCount: 10,
-        infoTagCount: 1,
-        showActions: false,
-      );
-    }
-
-    if (_selectedClassIds.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.class_outlined, size: 64, color: ColorUtils.slate400),
-            SizedBox(height: AppSpacing.lg),
-            Text(
-              languageProvider.getTranslatedText({
-                'en': 'Please select a class to view the table',
-                'id': 'Silakan pilih kelas untuk melihat tabel',
-              }),
-              style: TextStyle(color: ColorUtils.slate600),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_attendanceDataSource == null || _studentList.isEmpty) {
-      return EmptyState(
-        title: languageProvider.getTranslatedText({
-          'en': 'No data available',
-          'id': 'Tidak ada data',
-        }),
-        subtitle: languageProvider.getTranslatedText({
-          'en': 'Please select a different class or criteria',
-          'id': 'Silakan pilih kelas atau kriteria lain',
-        }),
-      );
-    }
-
-    // Calculate columns
-    // Dynamic columns width?
-
-    // Group dates by month
-    final Map<String, List<String>> monthsMap = {};
-    for (var dateStr in _uniqueDates) {
-      try {
-        final date = DateTime.parse(dateStr);
-        final monthKey = DateFormat(
-          'MMMM yyyy',
-          languageProvider.currentLanguage,
-        ).format(date);
-        monthsMap.putIfAbsent(monthKey, () => []).add(dateStr);
-      } catch (e) {
-        monthsMap.putIfAbsent('', () => []).add(dateStr);
-      }
-    }
-
-    return Container(
-      margin: EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: ColorUtils.slate100,
-            blurRadius: 10,
-            spreadRadius: 2,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: SfDataGrid(
-          source: _attendanceDataSource!,
-          frozenColumnsCount: 1,
-          gridLinesVisibility: GridLinesVisibility.horizontal,
-          headerGridLinesVisibility: GridLinesVisibility.horizontal,
-          rowHeight: 60,
-          headerRowHeight: 50,
-          stackedHeaderRows: [
-            if (monthsMap.isNotEmpty)
-              StackedHeaderRow(
-                cells: [
-                  StackedHeaderCell(
-                    child: Container(
-                      color: _getPrimaryColor().withValues(alpha: 0.05),
-                    ),
-                    columnNames: ['student_info'],
-                  ),
-                  ...monthsMap.entries.map((entry) {
-                    final columns = entry.value
-                        .expand(
-                          (date) =>
-                              _uniqueSubjectIds.map((sId) => '$date-$sId'),
-                        )
-                        .toList();
-
-                    return StackedHeaderCell(
-                      child: Container(
-                        color: _getPrimaryColor(),
-                        alignment: Alignment.center,
-                        child: Text(
-                          entry.key.toUpperCase(),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 12,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                      ),
-                      columnNames: columns,
-                    );
-                  }),
-                ],
-              ),
-            StackedHeaderRow(
-              cells: [
-                StackedHeaderCell(
-                  child: Container(
-                    color: _getPrimaryColor().withValues(alpha: 0.05),
-                    alignment: Alignment.centerLeft,
-                    padding: EdgeInsets.only(left: 16),
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'STUDENT INFO',
-                        'id': 'INFORMASI SISWA',
-                      }),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: _getPrimaryColor(),
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                  columnNames: ['student_info'],
-                ),
-                ..._uniqueDates.map((dateStr) {
-                  String dayLabel = '';
-                  try {
-                    final date = DateTime.parse(dateStr);
-                    dayLabel = DateFormat('d').format(date);
-                  } catch (_) {
-                    dayLabel = dateStr;
-                  }
-
-                  return StackedHeaderCell(
-                    child: Container(
-                      color: _getPrimaryColor().withValues(alpha: 0.1),
-                      alignment: Alignment.center,
-                      child: Text(
-                        dayLabel,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: _getPrimaryColor(),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    columnNames: _uniqueSubjectIds
-                        .map((sId) => '$dateStr-$sId')
-                        .toList(),
-                  );
-                }),
-              ],
-            ),
-          ],
-          columns: [
-            GridColumn(
-              columnName: 'student_info',
-              width: 250,
-              label: Container(
-                color: _getPrimaryColor().withValues(alpha: 0.05),
-              ),
-            ),
-            ..._uniqueDates.expand((date) {
-              return _uniqueSubjectIds.map((sId) {
-                final subjectName =
-                    _attendanceDataSource?.subjectMap[sId] ?? sId;
-                return GridColumn(
-                  columnName: '$date-$sId',
-                  width: 100,
-                  label: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        right: BorderSide(
-                          color: ColorUtils.slate200,
-                          width: 0.5,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      subjectName,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: ColorUtils.slate600,
-                      ),
-                    ),
-                  ),
-                );
-              });
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(
-    AttendanceSummary summary,
-    LanguageProvider languageProvider,
-    int index,
-  ) {
-    final attendanceRate = summary.totalStudents > 0
-        ? (summary.present / summary.totalStudents * 100).round()
-        : 0;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _navigateToAttendanceDetail(summary),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          padding: EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: ColorUtils.slate200),
-            boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row: subject name + student count badge + delete button
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Subject icon
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor().withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: _getPrimaryColor().withValues(alpha: 0.15),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.book_outlined,
-                      color: _getPrimaryColor(),
-                      size: 20,
-                    ),
-                  ),
-                  SizedBox(width: AppSpacing.md),
-                  // Subject + class + date info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          summary.subjectName,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate900,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.class_outlined,
-                              size: 12,
-                              color: _getPrimaryColor(),
-                            ),
-                            SizedBox(width: AppSpacing.xs),
-                            Text(
-                              summary.className,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: _getPrimaryColor(),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            if (summary.lessonHourName != null &&
-                                summary.lessonHourName!.isNotEmpty) ...[
-                              Text(
-                                ' • ',
-                                style: TextStyle(
-                                  color: ColorUtils.slate400,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              Text(
-                                summary.lessonHourName!,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: ColorUtils.slate600,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          DateFormat(
-                            'EEEE, dd MMMM yyyy',
-                            'id_ID',
-                          ).format(summary.date),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: ColorUtils.slate500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: AppSpacing.sm),
-                  // Delete button
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => _deleteAttendance(summary, languageProvider),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: ColorUtils.error600.withValues(alpha: 0.08),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: ColorUtils.error600.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.delete_outline,
-                          size: 16,
-                          color: ColorUtils.error600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: AppSpacing.md),
-              Divider(color: ColorUtils.slate100, height: 1),
-              SizedBox(height: 10),
-
-              // Attendance info row
-              Row(
-                children: [
-                  _buildInfoTag(
-                    icon: Icons.check_circle_outline,
-                    label: '${summary.present} Hadir',
-                    tagColor: ColorUtils.success600,
-                  ),
-                  SizedBox(width: AppSpacing.sm),
-                  _buildInfoTag(
-                    icon: Icons.cancel_outlined,
-                    label: '${summary.absent} Absen',
-                    tagColor: ColorUtils.error600,
-                  ),
-                  SizedBox(width: AppSpacing.sm),
-                  _buildInfoTag(
-                    icon: Icons.people_outline,
-                    label: '${summary.totalStudents} Siswa',
-                    tagColor: _getPrimaryColor(),
-                  ),
-                  Spacer(),
-                  // Detail button
-                  GestureDetector(
-                    onTap: () => _navigateToAttendanceDetail(summary),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getPrimaryColor().withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: _getPrimaryColor().withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.visibility_outlined,
-                            size: 12,
-                            color: _getPrimaryColor(),
-                          ),
-                          SizedBox(width: AppSpacing.xs),
-                          Text(
-                            'Detail',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: _getPrimaryColor(),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 10),
-
-              // Progress bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: summary.totalStudents > 0
-                      ? summary.present / summary.totalStudents
-                      : 0,
-                  minHeight: 6,
-                  backgroundColor: ColorUtils.slate200,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    attendanceRate >= 80
-                        ? ColorUtils.success600
-                        : attendanceRate >= 60
-                        ? ColorUtils.warning600
-                        : ColorUtils.error600,
-                  ),
-                ),
-              ),
-              SizedBox(height: AppSpacing.xs),
-              Text(
-                '$attendanceRate% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
-                style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   void _showExportDialog() {
@@ -1771,46 +1198,13 @@ class _AdminAttendanceReportScreenState
     if (exportList.isEmpty) return;
 
     // 3. Call Service
+    // Guard against widget being unmounted before the async work completes.
+    if (!mounted) return;
     // We pass context for Localization
     await ExcelPresenceService.exportPresenceToExcel(
       presenceData: exportList,
       context: context,
       filters: {},
-    );
-  }
-
-  Widget _buildInfoTag({
-    required IconData icon,
-    required String label,
-    Color? tagColor,
-  }) {
-    final color = tagColor ?? ColorUtils.slate600;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: color),
-          SizedBox(width: AppSpacing.xs),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -2014,6 +1408,7 @@ class _AdminAttendanceReportScreenState
           lessonHourId: summary.lessonHourId,
         );
 
+        if (!mounted) return;
         SnackBarUtils.showSuccess(
           context,
           languageProvider.getTranslatedText({
@@ -2027,6 +1422,7 @@ class _AdminAttendanceReportScreenState
         setState(() {
           _isLoadingSummary = false;
         });
+        if (!mounted) return;
         SnackBarUtils.showError(
           context,
           'Gagal menghapus absensi: ${ErrorUtils.getFriendlyMessage(e)}',
@@ -2433,9 +1829,33 @@ class _AdminAttendanceReportScreenState
           ),
           Expanded(
             child: _selectedClassData == null
-                ? _buildClassList(languageProvider)
+                ? AttendanceClassListView(
+                    isLoading: _isLoadingClasses,
+                    classList: _classList,
+                    searchTerm: _searchController.text.toLowerCase(),
+                    primaryColor: _getPrimaryColor(),
+                    languageProvider: languageProvider,
+                    onRefresh: _forceRefresh,
+                    onClassSelected: (classItem) {
+                      setState(() {
+                        _selectedClassData = classItem;
+                        _selectedClassIds.clear();
+                        _selectedClassIds.add(classItem['id'].toString());
+                        _loadData();
+                      });
+                    },
+                  )
                 : _showTableView
-                ? _buildTableView()
+                ? AttendanceTableView(
+                    isLoading: _isTableLoading,
+                    selectedClassIds: _selectedClassIds,
+                    attendanceDataSource: _attendanceDataSource,
+                    studentList: _studentList,
+                    uniqueDates: _uniqueDates,
+                    uniqueSubjectIds: _uniqueSubjectIds,
+                    primaryColor: _getPrimaryColor(),
+                    languageProvider: languageProvider,
+                  )
                 : _isLoadingSummary
                 ? SkeletonListLoading(
                     itemCount: 8,
@@ -2465,10 +1885,13 @@ class _AdminAttendanceReportScreenState
                     itemCount: filteredSummaries.length,
                     itemBuilder: (context, index) {
                       final summary = filteredSummaries[index];
-                      return _buildSummaryCard(
-                        summary,
-                        languageProvider,
-                        index,
+                      return AdminAttendanceSummaryCard(
+                        summary: summary,
+                        primaryColor: _getPrimaryColor(),
+                        languageProvider: languageProvider,
+                        onTap: () => _navigateToAttendanceDetail(summary),
+                        onDelete: () =>
+                            _deleteAttendance(summary, languageProvider),
                       );
                     },
                   ),

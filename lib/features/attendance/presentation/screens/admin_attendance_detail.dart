@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
 import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
 import 'package:manajemensekolah/features/attendance/exports/attendance_export_service.dart';
@@ -23,6 +22,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_stat_card.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_student_card.dart';
 
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
 class AdminAttendanceDetailPage extends ConsumerStatefulWidget {
@@ -243,7 +244,6 @@ class _AdminAttendanceDetailPageState
     }
 
     int successCount = 0;
-    int errorCount = 0;
     String lastError = '';
 
     try {
@@ -265,7 +265,6 @@ class _AdminAttendanceDetailPageState
           });
           successCount++;
         } catch (e) {
-          errorCount++;
           lastError = e.toString();
           AppLogger.error(
             'attendance',
@@ -275,6 +274,7 @@ class _AdminAttendanceDetailPageState
       }
 
       if (successCount > 0) {
+        if (!mounted) return;
         SnackBarUtils.showInfo(
           context,
           languageProvider.getTranslatedText({
@@ -293,142 +293,12 @@ class _AdminAttendanceDetailPageState
       }
     } catch (e) {
       setState(() => _isSaving = false);
+      if (!mounted) return;
       SnackBarUtils.showError(
         context,
         '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
-  }
-
-  Widget _buildStudentCard(
-    Student student,
-    LanguageProvider languageProvider,
-    int index,
-  ) {
-    final status = _getStudentStatus(student.id);
-    final Color statusColor = _getStatusColor(status);
-    final String statusText = _getStatusText(status, languageProvider);
-    final avatarColor = ColorUtils.getColorForIndex(index);
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ColorUtils.slate200),
-        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: avatarColor.withValues(alpha: 0.15),
-                  child: Text(
-                    student.name.isNotEmpty
-                        ? student.name[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: avatarColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        student.name,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'NIS: ${student.studentNumber}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: statusColor.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (_isEditing) ...[
-              SizedBox(height: AppSpacing.md),
-              Container(
-                decoration: BoxDecoration(
-                  color: ColorUtils.slate50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: ColorUtils.slate200),
-                ),
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildQuickStatusButton(
-                      'hadir',
-                      'H',
-                      ColorUtils.success600,
-                      student.id,
-                    ),
-                    _buildQuickStatusButton(
-                      'sakit',
-                      'S',
-                      ColorUtils.warning600,
-                      student.id,
-                    ),
-                    _buildQuickStatusButton(
-                      'izin',
-                      'I',
-                      ColorUtils.info600,
-                      student.id,
-                    ),
-                    _buildQuickStatusButton(
-                      'alpha',
-                      'A',
-                      ColorUtils.error600,
-                      student.id,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
   }
 
   // Helper functions
@@ -539,89 +409,6 @@ class _AdminAttendanceDetailPageState
       'alpha': alpha,
       'total': _studentList.length,
     };
-  }
-
-  Widget _buildStatCard(String label, int count, Color color, IconData icon) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4),
-      child: Container(
-        width: 90,
-        padding: EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            SizedBox(height: AppSpacing.sm),
-            Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: color,
-              ),
-            ),
-            SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withValues(alpha: 0.8),
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickStatusButton(
-    String status,
-    String label,
-    Color color,
-    String studentId,
-  ) {
-    final isSelected = _tempAttendanceStatus[studentId] == status;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _tempAttendanceStatus[studentId] = status;
-        });
-      },
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: isSelected ? color : color.withValues(alpha: 0.1),
-          shape: BoxShape.circle,
-          border: Border.all(color: color, width: 1.5),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : color,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   @override
@@ -894,52 +681,52 @@ class _AdminAttendanceDetailPageState
               scrollDirection: Axis.horizontal,
               padding: EdgeInsets.symmetric(horizontal: 16),
               children: [
-                _buildStatCard(
-                  languageProvider.getTranslatedText({
+                AttendanceStatCard(
+                  label: languageProvider.getTranslatedText({
                     'en': 'Present',
                     'id': 'Hadir',
                   }),
-                  stats['hadir']!,
-                  ColorUtils.success600,
-                  Icons.check_circle,
+                  count: stats['hadir']!,
+                  color: ColorUtils.success600,
+                  icon: Icons.check_circle,
                 ),
-                _buildStatCard(
-                  languageProvider.getTranslatedText({
+                AttendanceStatCard(
+                  label: languageProvider.getTranslatedText({
                     'en': 'Late',
                     'id': 'Terlambat',
                   }),
-                  stats['terlambat']!,
-                  ColorUtils.warning600,
-                  Icons.access_time,
+                  count: stats['terlambat']!,
+                  color: ColorUtils.warning600,
+                  icon: Icons.access_time,
                 ),
-                _buildStatCard(
-                  languageProvider.getTranslatedText({
+                AttendanceStatCard(
+                  label: languageProvider.getTranslatedText({
                     'en': 'Absent',
                     'id': 'Tidak Hadir',
                   }),
-                  totalAbsent,
-                  ColorUtils.error600,
-                  Icons.cancel,
+                  count: totalAbsent,
+                  color: ColorUtils.error600,
+                  icon: Icons.cancel,
                 ),
                 if (stats['izin']! > 0)
-                  _buildStatCard(
-                    languageProvider.getTranslatedText({
+                  AttendanceStatCard(
+                    label: languageProvider.getTranslatedText({
                       'en': 'Permission',
                       'id': 'Izin',
                     }),
-                    stats['izin']!,
-                    ColorUtils.info600,
-                    Icons.event_note,
+                    count: stats['izin']!,
+                    color: ColorUtils.info600,
+                    icon: Icons.event_note,
                   ),
                 if (stats['sakit']! > 0)
-                  _buildStatCard(
-                    languageProvider.getTranslatedText({
+                  AttendanceStatCard(
+                    label: languageProvider.getTranslatedText({
                       'en': 'Sick',
                       'id': 'Sakit',
                     }),
-                    stats['sakit']!,
-                    ColorUtils.violet700,
-                    Icons.medical_services,
+                    count: stats['sakit']!,
+                    color: ColorUtils.violet700,
+                    icon: Icons.medical_services,
                   ),
               ],
             ),
@@ -992,11 +779,24 @@ class _AdminAttendanceDetailPageState
                 : ListView.builder(
                     padding: EdgeInsets.only(bottom: 16),
                     itemCount: _studentList.length,
-                    itemBuilder: (context, index) => _buildStudentCard(
-                      _studentList[index],
-                      languageProvider,
-                      index,
-                    ),
+                    itemBuilder: (context, index) {
+                      final student = _studentList[index];
+                      final status = _getStudentStatus(student.id);
+                      return AttendanceStudentCard(
+                        student: student,
+                        index: index,
+                        currentStatus: status,
+                        statusText: _getStatusText(status, languageProvider),
+                        statusColor: _getStatusColor(status),
+                        isEditing: _isEditing,
+                        tempStatus: _tempAttendanceStatus[student.id],
+                        onStatusChanged: (newStatus) {
+                          setState(() {
+                            _tempAttendanceStatus[student.id] = newStatus;
+                          });
+                        },
+                      );
+                    },
                   ),
           ),
         ],

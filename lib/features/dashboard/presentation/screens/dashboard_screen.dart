@@ -54,15 +54,20 @@ import 'package:manajemensekolah/features/dashboard/presentation/widgets/attenda
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/overview_card.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/quick_action_button.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/schedule_slider_card.dart';
+
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/language_option_tile.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_hero_section.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_quick_actions_section.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_todays_overview.dart';
 
 /// The main dashboard widget. Like a Vue page component (`pages/dashboard.vue`).
 ///
@@ -106,7 +111,6 @@ class _DashboardState extends ConsumerState<Dashboard>
   }
 
   late AnimationController _animationController;
-  bool _tourShown = false;
 
   // Global Keys for Tour & Animations
   final GlobalKey _profileHeaderKey = GlobalKey();
@@ -187,15 +191,47 @@ class _DashboardState extends ConsumerState<Dashboard>
     LanguageProvider languageProvider,
     DashboardState state,
   ) {
+    final primaryColor = _getPrimaryColor();
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          _buildModernAppBar(context, languageProvider, state),
-          SliverToBoxAdapter(child: _buildHeroSection(state)),
-          SliverToBoxAdapter(child: _buildQuickActions(state)),
-          SliverToBoxAdapter(child: _buildTodaysOverview(state)),
+          DashboardAppBar(
+            schoolName: state.userData['nama_sekolah'],
+            primaryColor: primaryColor,
+            unreadAnnouncements: state.stats['unread_announcements'],
+            profileHeaderKey: _profileHeaderKey,
+            onLanguageTap: () => _showLanguageDialog(context, languageProvider),
+            onNotificationTap: () => AppNavigator.push(
+              context,
+              NotificationListScreen(role: widget.role),
+            ),
+            onAccountTap: () => _showAccountBottomSheet(context, state),
+          ),
+          SliverToBoxAdapter(
+            child: DashboardHeroSection(
+              primaryColor: primaryColor,
+              effectiveRole: _effectiveRole,
+              state: state,
+              heroSectionKey: _heroSectionKey,
+              onAcademicYearTap: () => _showAcademicYearDialog(context),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: DashboardQuickActionsSection(
+              actions: _getQuickActions(state),
+              isLoaded: state.isStatsLoaded,
+              quickActionsKey: _quickActionsKey,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: DashboardTodaysOverview(
+              cards: _getTodaysOverviewCards(state),
+              isLoaded: state.isStatsLoaded,
+              statsSectionKey: _statsSectionKey,
+            ),
+          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
@@ -223,483 +259,55 @@ class _DashboardState extends ConsumerState<Dashboard>
   }
 
   Widget _buildLoadingState(BuildContext context, LanguageProvider languageProvider) {
+    final primaryColor = _getPrimaryColor();
+    const emptyState = DashboardState(isStatsLoaded: false);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: CustomScrollView(
         physics: const NeverScrollableScrollPhysics(),
         slivers: [
-          _buildModernAppBar(context, languageProvider, const DashboardState()),
-          SliverToBoxAdapter(child: _buildHeroSection(const DashboardState(isStatsLoaded: false))),
-          SliverToBoxAdapter(child: _buildQuickActions(const DashboardState(isStatsLoaded: false))),
-          SliverToBoxAdapter(child: _buildTodaysOverview(const DashboardState(isStatsLoaded: false))),
+          DashboardAppBar(
+            schoolName: null,
+            primaryColor: primaryColor,
+            unreadAnnouncements: null,
+            profileHeaderKey: _profileHeaderKey,
+            onLanguageTap: () => _showLanguageDialog(context, languageProvider),
+            onNotificationTap: () => AppNavigator.push(
+              context,
+              NotificationListScreen(role: widget.role),
+            ),
+            onAccountTap: () => _showAccountBottomSheet(context, emptyState),
+          ),
+          SliverToBoxAdapter(
+            child: DashboardHeroSection(
+              primaryColor: primaryColor,
+              effectiveRole: _effectiveRole,
+              state: emptyState,
+              heroSectionKey: _heroSectionKey,
+              onAcademicYearTap: () => _showAcademicYearDialog(context),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: DashboardQuickActionsSection(
+              actions: const [],
+              isLoaded: false,
+              quickActionsKey: _quickActionsKey,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: DashboardTodaysOverview(
+              cards: const [],
+              isLoaded: false,
+              statsSectionKey: _statsSectionKey,
+            ),
+          ),
           const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
         ],
       ),
     );
   }
 
-  // ==================== SKELETON SHIMMER HELPERS ====================
-
-  Widget _buildShimmerBox({
-    double width = double.infinity,
-    double height = 16,
-    double borderRadius = 8,
-  }) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-    );
-  }
-
-  Widget _buildHeroStatSkeleton() {
-    return Shimmer.fromColors(
-      baseColor: Colors.white.withValues(alpha: 0.15),
-      highlightColor: Colors.white.withValues(alpha: 0.35),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 35,
-            height: 35,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          SizedBox(height: 6),
-          Container(
-            width: 28,
-            height: 17,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          SizedBox(height: AppSpacing.xs),
-          Container(
-            width: 36,
-            height: 9,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOverviewCardSkeleton() {
-    return Shimmer.fromColors(
-      baseColor: ColorUtils.shimmerBaseColor,
-      highlightColor: ColorUtils.shimmerHighlightColor,
-      child: Container(
-        padding: EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: ColorUtils.slate200, width: 1),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildShimmerBox(width: 36, height: 36, borderRadius: 10),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildShimmerBox(width: 40, height: 20, borderRadius: 4),
-                      SizedBox(height: AppSpacing.xs),
-                      _buildShimmerBox(width: 70, height: 11, borderRadius: 4),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: AppSpacing.sm),
-            _buildShimmerBox(width: 100, height: 10, borderRadius: 4),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionSkeleton() {
-    return Shimmer.fromColors(
-      baseColor: ColorUtils.shimmerBaseColor,
-      highlightColor: ColorUtils.shimmerHighlightColor,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 65,
-            height: 54,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          SizedBox(height: 6),
-          Container(
-            width: 50,
-            height: 11,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==================== NEW MODERN UI COMPONENTS ====================
-
-  Widget _buildModernAppBar(
-    BuildContext context,
-    LanguageProvider languageProvider,
-    DashboardState state,
-  ) {
-    return SliverAppBar(
-      floating: false,
-      pinned: true,
-      elevation: 0,
-      backgroundColor: Colors.white,
-      toolbarHeight: 50,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            bottom: BorderSide(color: ColorUtils.slate200, width: 1),
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                // Logo - simpler design
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: _getPrimaryColor(),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.school, color: Colors.white, size: 18),
-                ),
-                SizedBox(width: AppSpacing.md),
-
-                // Title - single line
-                Expanded(
-                  child: Text(
-                    state.userData['nama_sekolah'] ?? AppLocalizations.appTitle.tr,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: ColorUtils.slate900,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-
-                // Actions - more compact
-                IconButton(
-                  icon: Icon(
-                    Icons.language,
-                    size: 20,
-                    color: ColorUtils.slate600,
-                  ),
-                  iconSize: 20,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  splashRadius: 18,
-                  onPressed: () =>
-                      _showLanguageDialog(context, languageProvider),
-                ),
-                Stack(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.notifications_outlined,
-                        size: 20,
-                        color: ColorUtils.slate600,
-                      ),
-                      iconSize: 20,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                      splashRadius: 18,
-                      onPressed: () {
-                        AppNavigator.push(
-                          context,
-                          NotificationListScreen(role: widget.role),
-                        );
-                      },
-                    ),
-                    if (state.stats['unread_announcements'] != null &&
-                        state.stats['unread_announcements'] > 0)
-                      Positioned(
-                        right: 4,
-                        top: 2,
-                        child: Container(
-                          padding: EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: ColorUtils.error600,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: BoxConstraints(
-                            minWidth: 14,
-                            minHeight: 14,
-                          ),
-                          child: Text(
-                            state.stats['unread_announcements'] > 9
-                                ? '9+'
-                                : state.stats['unread_announcements'].toString(),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 7,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                IconButton(
-                  key: _profileHeaderKey,
-                  icon: Icon(
-                    Icons.account_circle,
-                    size: 20,
-                    color: ColorUtils.slate600,
-                  ),
-                  iconSize: 20,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  splashRadius: 18,
-                  onPressed: () => _showAccountBottomSheet(context, state),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Builds the hero section with key stats (total students, teachers, etc.).
-  /// Like a Vue dashboard header component showing KPI cards.
-  Widget _buildHeroSection(DashboardState state) {
-    final primaryColor = _getPrimaryColor();
-
-    return Container(
-      key: _heroSectionKey,
-      margin: EdgeInsets.fromLTRB(12, 8, 12, 0),
-      decoration: BoxDecoration(
-        gradient: ColorUtils.heroGradient(primaryColor: primaryColor),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            // Decorative circle - top right
-            Positioned(
-              top: -40,
-              right: -30,
-              child: Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            // Decorative circle - bottom left
-            Positioned(
-              bottom: -25,
-              left: 15,
-              child: Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-            // Small accent dot
-            Positioned(
-              top: 20,
-              right: 70,
-              child: Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.3),
-                ),
-              ),
-            ),
-
-            // Academic Year & Semester - Top Right
-            Positioned(
-              top: 10,
-              right: 12,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _showAcademicYearDialog(context),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(AppSpacing.xs),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.calendar_today_outlined,
-                            size: 12,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
-                        SizedBox(width: AppSpacing.sm),
-                        Builder(
-                          builder: (context) {
-                            final provider = ref.watch(academicYearRiverpod);
-                            final academicYear =
-                                provider.selectedAcademicYear?['year'] ?? '-';
-                            final semester = state.currentSemesterLabel ?? '-';
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  academicYear,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.1,
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  semester,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.1,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Main content
-            Padding(
-              padding: EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Greeting
-                  Row(
-                    children: [
-                      Text(
-                        _getGreeting(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      SizedBox(width: AppSpacing.xs),
-                      Text(_getGreetingEmoji(), style: TextStyle(fontSize: 14)),
-                    ],
-                  ),
-                  SizedBox(height: 3),
-                  Text(
-                    state.userData['name'] ?? state.userData['nama'] ?? 'User',
-                    style: TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 14),
-
-                  // 4-Column Stats Grid
-                  Row(
-                    children: state.isStatsLoaded
-                        ? _buildFourColumnStats(state)
-                              .map((stat) => Expanded(child: stat))
-                              .toList()
-                        : List.generate(
-                            4,
-                            (_) => Expanded(child: _buildHeroStatSkeleton()),
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // ==================== DIALOGS & HELPERS ====================
 
   void _showAcademicYearDialog(BuildContext context) {
     final provider = ref.read(academicYearRiverpod);
@@ -742,222 +350,6 @@ class _DashboardState extends ConsumerState<Dashboard>
             ),
           );
         }).toList(),
-      ),
-    );
-  }
-
-  String _getGreetingEmoji() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return '🌅';
-    if (hour < 17) return '☀️';
-    return '🌙';
-  }
-
-  List<Widget> _buildFourColumnStats(DashboardState state) {
-    final lp = languageProvider;
-    if (_effectiveRole == 'admin') {
-      return [
-        _buildHeroStat(
-          Icons.people_outline,
-          state.stats['total_students']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
-        ),
-        _buildHeroStat(
-          Icons.school_outlined,
-          state.stats['total_teachers']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Teachers', 'id': 'Guru'}),
-        ),
-        _buildHeroStat(
-          Icons.class_outlined,
-          state.stats['total_classes']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Classes', 'id': 'Kelas'}),
-        ),
-        _buildHeroStat(
-          Icons.book_outlined,
-          state.stats['total_subjects']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Subjects', 'id': 'Mapel'}),
-        ),
-      ];
-    } else if (_effectiveRole == 'guru') {
-      return [
-        _buildHeroStat(
-          Icons.people_outline,
-          state.stats['total_students']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
-        ),
-        _buildHeroStat(
-          Icons.class_outlined,
-          state.stats['total_classes']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Classes', 'id': 'Kelas'}),
-        ),
-        _buildHeroStat(
-          Icons.schedule_outlined,
-          state.stats['classes_today']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Today', 'id': 'Hari Ini'}),
-        ),
-        _buildHeroStat(
-          Icons.assignment_outlined,
-          state.stats['total_rpps']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Plans', 'id': 'RPP'}),
-        ),
-      ];
-    } else {
-      return [
-        _buildHeroStat(
-          Icons.child_care_outlined,
-          state.stats['children_registered']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Children', 'id': 'Anak'}),
-        ),
-        _buildHeroStat(
-          Icons.announcement_outlined,
-          state.stats['unread_announcements']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'News', 'id': 'Info'}),
-        ),
-        _buildHeroStat(
-          Icons.grade_outlined,
-          state.stats['unread_grades']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Grades', 'id': 'Nilai'}),
-        ),
-        _buildHeroStat(
-          Icons.calendar_today_outlined,
-          state.stats['unread_presence']?.toString() ?? '0',
-          lp.getTranslatedText({'en': 'Attendance', 'id': 'Absen'}),
-        ),
-      ];
-    }
-  }
-
-  Widget _buildHeroStat(IconData icon, String value, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Icon with glass morphism effect
-        Container(
-          padding: EdgeInsets.all(9),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
-              width: 1,
-            ),
-          ),
-          child: Icon(icon, color: Colors.white, size: 17),
-        ),
-        SizedBox(height: 6),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-            letterSpacing: -0.3,
-          ),
-        ),
-        SizedBox(height: 1),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 9,
-            color: Colors.white.withValues(alpha: 0.85),
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  /// Builds quick action buttons (shortcuts to common tasks).
-  /// Like a Vue component rendering a row of action buttons based on role.
-  Widget _buildQuickActions(DashboardState state) {
-    final List<Widget> actions = _getQuickActions(state);
-
-    if (actions.isEmpty && state.isStatsLoaded) {
-      return SizedBox.shrink();
-    }
-
-    return Padding(
-      key: _quickActionsKey,
-      padding: EdgeInsets.fromLTRB(12, 12, 12, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Section header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppLocalizations.quickAccess.tr,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: ColorUtils.slate900,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: AppSpacing.md),
-          // Action buttons or skeleton
-          SizedBox(
-            height: 85,
-            child: state.isStatsLoaded
-                ? ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    physics: BouncingScrollPhysics(),
-                    itemCount: actions.length,
-                    separatorBuilder: (context, index) => SizedBox(width: 10),
-                    itemBuilder: (context, index) => actions[index],
-                  )
-                : ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: 4,
-                    separatorBuilder: (context, index) => SizedBox(width: 10),
-                    itemBuilder: (context, index) =>
-                        _buildQuickActionSkeleton(),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Builds today's overview section with schedule slider, attendance, and charts.
-  /// Renders different content per role using conditional logic (like Vue `v-if`).
-  Widget _buildTodaysOverview(DashboardState state) {
-    return Padding(
-      key: _statsSectionKey,
-      padding: EdgeInsets.fromLTRB(12, 6, 12, 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            AppLocalizations.todaysOverview.tr,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: ColorUtils.slate900,
-            ),
-          ),
-          GridView.count(
-            padding: EdgeInsets.only(top: 12),
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 1.4,
-            children: state.isStatsLoaded
-                ? _getTodaysOverviewCards(state)
-                : List.generate(4, (_) => _buildOverviewCardSkeleton()),
-          ),
-        ],
       ),
     );
   }
@@ -1740,65 +1132,20 @@ class _DashboardState extends ConsumerState<Dashboard>
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildLanguageOption(
-              context,
-              languageProvider,
-              'Indonesia',
-              'id',
-              Colors.green,
+            LanguageOptionTile(
+              languageProvider: languageProvider,
+              language: 'Indonesia',
+              code: 'id',
+              color: Colors.green,
             ),
             SizedBox(height: AppSpacing.md),
-            _buildLanguageOption(
-              context,
-              languageProvider,
-              'English',
-              'en',
-              Colors.blue,
+            LanguageOptionTile(
+              languageProvider: languageProvider,
+              language: 'English',
+              code: 'en',
+              color: Colors.blue,
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLanguageOption(
-    BuildContext context,
-    LanguageProvider languageProvider,
-    String language,
-    String code,
-    Color color,
-  ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () async {
-          AppNavigator.pop(context);
-          await languageProvider.setLanguage(code);
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.language, color: color),
-              SizedBox(width: AppSpacing.md),
-              Text(
-                language,
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade700,
-                ),
-              ),
-              Spacer(),
-              if (languageProvider.currentLanguage == code)
-                Icon(Icons.check_circle, color: color),
-            ],
-          ),
         ),
       ),
     );
@@ -2224,7 +1571,7 @@ class _DashboardState extends ConsumerState<Dashboard>
   }
 
   void _showSchoolSelectionDialog(BuildContext outerContext, DashboardState state) {
-    final dashboardContext = this.context; // Stable widget context
+    final dashboardContext = context; // Stable widget context — captured before any async gap
     showDialog(
       context: dashboardContext,
       builder: (dialogContext) => AlertDialog(
@@ -2258,6 +1605,8 @@ class _DashboardState extends ConsumerState<Dashboard>
                           ? null
                           : () async {
                               AppNavigator.pop(dialogContext);
+                              // Capture router before any async gap so it's safe to use after await
+                              final router = GoRouter.of(dashboardContext);
 
                               try {
                                 final schoolId = school['school_id'].toString();
@@ -2268,6 +1617,7 @@ class _DashboardState extends ConsumerState<Dashboard>
                                 if (result['needsRoleSelection'] == true) {
                                   final roleList = List<String>.from(result['role_list'] ?? []);
                                   if (roleList.isEmpty) return;
+                                  // ignore: use_build_context_synchronously
                                   _showRolePickerDialog(dashboardContext, schoolId, roleList);
                                   return;
                                 }
@@ -2281,12 +1631,13 @@ class _DashboardState extends ConsumerState<Dashboard>
                                     // Same role — force rebuild by invalidating the provider
                                     ref.invalidate(dashboardProvider);
                                   } else {
-                                    dashboardContext.go('/$newRole');
+                                    router.go('/$newRole');
                                   }
                                 }
                               } catch (e) {
                                 AppLogger.error('dashboard', 'Switch school error: $e');
                                 if (mounted) {
+                                  // ignore: use_build_context_synchronously
                                   SnackBarUtils.showError(dashboardContext, e.toString().replaceAll('Exception: ', ''));
                                 }
                               }
@@ -2372,7 +1723,7 @@ class _DashboardState extends ConsumerState<Dashboard>
   void _showRolePickerDialog(BuildContext context, String schoolId, List<String> roleList) {
     final lp = ref.read(languageRiverpod);
 
-    IconData _roleIcon(String role) {
+    IconData roleIcon(String role) {
       switch (role) {
         case 'admin': return Icons.admin_panel_settings;
         case 'guru': return Icons.school;
@@ -2382,7 +1733,7 @@ class _DashboardState extends ConsumerState<Dashboard>
       }
     }
 
-    String _roleName(String role) {
+    String roleName(String role) {
       switch (role) {
         case 'admin': return 'Administrator';
         case 'guru': return lp.getTranslatedText({'en': 'Teacher', 'id': 'Guru'});
@@ -2417,9 +1768,11 @@ class _DashboardState extends ConsumerState<Dashboard>
                 child: InkWell(
                   onTap: () async {
                     AppNavigator.pop(dialogContext);
+                    // Capture router before any async gap
+                    final router = GoRouter.of(context);
                     try {
                       final result = await ref.read(dashboardProvider.notifier).switchSchool(schoolId, role: role);
-                      if (!context.mounted) return;
+                      if (!mounted) return;
                       final newRole = result['user']?['role']?.toString() ?? role;
                       await LocalCacheService.clearAll();
                       ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
@@ -2427,11 +1780,12 @@ class _DashboardState extends ConsumerState<Dashboard>
                         if (newRole == widget.role) {
                           ref.invalidate(dashboardProvider);
                         } else {
-                          context.go('/$newRole');
+                          router.go('/$newRole');
                         }
                       }
                     } catch (e) {
                       if (mounted) {
+                        // ignore: use_build_context_synchronously
                         SnackBarUtils.showError(context, e.toString().replaceAll('Exception: ', ''));
                       }
                     }
@@ -2446,9 +1800,9 @@ class _DashboardState extends ConsumerState<Dashboard>
                     ),
                     child: Row(
                       children: [
-                        Icon(_roleIcon(role), color: _getPrimaryColor()),
+                        Icon(roleIcon(role), color: _getPrimaryColor()),
                         SizedBox(width: AppSpacing.md),
-                        Text(_roleName(role), style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+                        Text(roleName(role), style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
                         const Spacer(),
                         Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
                       ],
@@ -2491,32 +1845,6 @@ class _DashboardState extends ConsumerState<Dashboard>
       end: Alignment.bottomRight,
       colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.7)],
     );
-  }
-
-  String _getRoleTitle() {
-    switch (_effectiveRole) {
-      case 'admin':
-        return AppLocalizations.adminRole.tr;
-      case 'guru':
-        return AppLocalizations.teacherRole.tr;
-      case 'staff':
-        return AppLocalizations.staffRole.tr;
-      case 'wali':
-        return AppLocalizations.parentRole.tr;
-      default:
-        return 'User';
-    }
-  }
-
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) {
-      return AppLocalizations.goodMorning.tr;
-    } else if (hour < 17) {
-      return AppLocalizations.goodAfternoon.tr;
-    } else {
-      return AppLocalizations.goodEvening.tr;
-    }
   }
 
   Future<void> _showStudentSelectionDialog(

@@ -10,7 +10,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/grades/data/grade_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
@@ -21,7 +20,6 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, Consumer, ChangeNotifierProvider;
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -29,6 +27,10 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_empty_state.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_header.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_list_view.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_student_selector.dart';
 
 /// Parent's read-only view of student grades with read tracking.
 ///
@@ -488,126 +490,18 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
     );
   }
 
-  Widget _buildStudentSelector() {
-    if (_studentList.isEmpty) {
-      return Container(
-        margin: EdgeInsets.all(AppSpacing.lg),
-        padding: EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: ColorUtils.warning600.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: ColorUtils.warning600.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: ColorUtils.warning600.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.warning_amber_rounded,
-                color: ColorUtils.warning600,
-                size: 20,
-              ),
-            ),
-            SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                AppLocalizations.noChildrenLinked.tr,
-                style: TextStyle(
-                  color: ColorUtils.slate700,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
+  Widget _buildStudentSelector() => ParentGradeStudentSelector(
+        studentList: _studentList,
+        selectedStudentId: _selectedStudentId,
+        selectorKey: _studentSelectorKey,
+        onStudentChanged: (value) {
+          setState(() {
+            _selectedStudentId = value;
+            _gradeList = [];
+          });
+          _loadGrades();
+        },
       );
-    }
-
-    return Container(
-      key: _studentSelectorKey,
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(
-              AppLocalizations.selectChild.tr,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: ColorUtils.slate700,
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ColorUtils.slate200),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            padding: EdgeInsets.symmetric(horizontal: 14),
-            child: DropdownButton<String>(
-              value: _selectedStudentId,
-              isExpanded: true,
-              underline: SizedBox(),
-              icon: Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: ColorUtils.slate500,
-              ),
-              items: _studentList.map((student) {
-                return DropdownMenuItem<String>(
-                  value: student['id'],
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          student['name'] ??
-                              AppLocalizations.nameNotAvailable.tr,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            color: ColorUtils.slate900,
-                          ),
-                        ),
-                        Text(
-                          '${AppLocalizations.classString.tr}: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorUtils.slate500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedStudentId = value;
-                  _gradeList = [];
-                });
-                _loadGrades();
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showGradeDetail(Map<String, dynamic> grade) {
     final primaryColor = _getPrimaryColor();
@@ -832,38 +726,8 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
     }
   }
 
-  Widget _buildEmptyState(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: ColorUtils.slate100,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              Icons.assignment_outlined,
-              size: 36,
-              color: ColorUtils.slate400,
-            ),
-          ),
-          SizedBox(height: AppSpacing.lg),
-          Text(
-            message,
-            style: TextStyle(
-              color: ColorUtils.slate500,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildEmptyState(String message) =>
+      ParentGradeEmptyState(message: message);
 
   Widget _buildLoadingState() {
     return SkeletonListLoading(
@@ -871,40 +735,6 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
       infoTagCount: 2,
       baseColor: _getPrimaryColor().withValues(alpha: 0.15),
       highlightColor: _getPrimaryColor().withValues(alpha: 0.05),
-    );
-  }
-
-  // Pattern #8 info tag chip
-  Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
-    final c = tagColor ?? ColorUtils.slate600;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: tagColor != null
-            ? tagColor.withValues(alpha: 0.08)
-            : ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: tagColor != null
-              ? tagColor.withValues(alpha: 0.3)
-              : ColorUtils.slate200,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: c),
-          SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 10,
-              color: c,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -924,256 +754,31 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
   }
 
   Widget _buildGradeList() {
-    if (_selectedStudentId == null) {
-      return _buildEmptyState(AppLocalizations.selectChildToViewGrades.tr);
-    }
+    // Determine what to show when the list is empty: skeleton or empty-state.
+    // This is passed to ParentGradeListView as `loadingWidget` so the widget
+    // stays stateless — like passing a v-slot to a Vue component.
+    final fallback = _isLoading
+        ? _buildLoadingState()
+        : _buildEmptyState(AppLocalizations.noGradesData.tr);
 
-    if (_isLoading) {
-      return _buildLoadingState();
-    }
-
-    if (_gradeList.isEmpty) {
-      return _buildEmptyState(AppLocalizations.noGradesData.tr);
-    }
-
-    return ListView.builder(
-      key: _gradeListKey,
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: _gradeList.length,
-      itemBuilder: (context, index) {
-        final grade = _gradeList[index];
-        final type = grade['type']?.toString().toLowerCase() ?? 'tugas';
-        final typeColor =
-            _gradeTypeColorMap[type] ?? ColorUtils.corporateBlue600;
-        final score = double.tryParse(grade['score']?.toString() ?? '0') ?? 0;
-        final assessmentTitle = grade['title']?.toString();
-        final isRead =
-            grade['is_read'] == true ||
-            grade['is_read'] == 1 ||
-            grade['is_read'] == '1';
-
-        return Builder(
-          builder: (context) {
-            _onItemVisible(grade);
-            return Container(
-              margin: EdgeInsets.symmetric(vertical: 5),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _showGradeDetail(grade),
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    padding: EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: ColorUtils.slate200),
-                      boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Score container
-                        Container(
-                          width: 54,
-                          height: 54,
-                          decoration: BoxDecoration(
-                            color: typeColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: typeColor.withValues(alpha: 0.25),
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                score.toStringAsFixed(0) == score.toString()
-                                    ? score.toStringAsFixed(0)
-                                    : score.toString(),
-                                style: TextStyle(
-                                  color: typeColor,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: AppSpacing.md),
-                        // Content
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      grade['subject_name'] ??
-                                          grade['mata_pelajaran'] ??
-                                          AppLocalizations.subject.tr,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 14,
-                                        color: ColorUtils.slate900,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  // Unread dot
-                                  if (!isRead) ...[
-                                    SizedBox(width: AppSpacing.sm),
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: ColorUtils.error600,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              if (assessmentTitle != null &&
-                                  assessmentTitle.isNotEmpty) ...[
-                                SizedBox(height: 3),
-                                Text(
-                                  assessmentTitle,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: ColorUtils.slate600,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                              SizedBox(height: AppSpacing.sm),
-                              // Info tags
-                              Wrap(
-                                spacing: 6,
-                                runSpacing: 6,
-                                children: [
-                                  _buildInfoTag(
-                                    Icons.category_outlined,
-                                    _getGradeTypeLabel(type),
-                                    tagColor: typeColor,
-                                  ),
-                                  _buildInfoTag(
-                                    Icons.calendar_today_outlined,
-                                    _formatDate(grade['date']),
-                                  ),
-                                  if (grade['teacher_name'] != null)
-                                    _buildInfoTag(
-                                      Icons.person_outlined,
-                                      grade['teacher_name'],
-                                    ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+    return ParentGradeListView(
+      gradeList: _gradeList,
+      selectedStudentId: _selectedStudentId,
+      loadingWidget: fallback,
+      listKey: _gradeListKey,
+      gradeTypeColorMap: _gradeTypeColorMap,
+      formatDate: _formatDate,
+      getGradeTypeLabel: _getGradeTypeLabel,
+      onItemVisible: _onItemVisible,
+      onGradeTap: _showGradeDetail,
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
+  Widget _buildHeader() => ParentGradeHeader(
         gradient: _getCardGradient(),
-        boxShadow: [
-          BoxShadow(
-            color: _getPrimaryColor().withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => AppNavigator.pop(context),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                ),
-              ),
-              SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppLocalizations.childAcademicGrades.tr,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      AppLocalizations.monitorChildGrades.tr,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.white),
-                onSelected: (value) {
-                  if (value == 'refresh') _forceRefresh();
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'refresh',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.refresh,
-                          size: 20,
-                          color: ColorUtils.info600,
-                        ),
-                        SizedBox(width: AppSpacing.sm),
-                        Text(AppLocalizations.updateData.tr),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+        primaryColor: _getPrimaryColor(),
+        onRefresh: _forceRefresh,
+      );
 
   @override
   Widget build(BuildContext context) {

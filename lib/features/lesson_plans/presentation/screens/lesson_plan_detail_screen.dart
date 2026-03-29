@@ -24,6 +24,13 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_editor_view.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_field_card.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_file_card.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_formatted_content.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_header_info_card.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_regen_all_button.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_signature_card.dart';
 
 /// RPP detail viewer with inline editing and AI regeneration.
 ///
@@ -1211,47 +1218,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     return null;
   }
 
-  String _getFileExtension(String filePath) {
-    final fileName = _getFileName(filePath);
-    final dotIndex = fileName.lastIndexOf('.');
-    if (dotIndex == -1) return '';
-    return fileName.substring(dotIndex).toLowerCase();
-  }
-
   String _getFileName(String filePath) {
     return Uri.parse(filePath).pathSegments.last;
-  }
-
-  IconData _getFileIcon(String ext) {
-    switch (ext) {
-      case '.pdf':
-        return Icons.picture_as_pdf;
-      case '.doc':
-      case '.docx':
-        return Icons.description;
-      case '.jpg':
-      case '.jpeg':
-      case '.png':
-        return Icons.image;
-      default:
-        return Icons.insert_drive_file;
-    }
-  }
-
-  Color _getFileIconColor(String ext) {
-    switch (ext) {
-      case '.pdf':
-        return Colors.red;
-      case '.doc':
-      case '.docx':
-        return Colors.blue;
-      case '.jpg':
-      case '.jpeg':
-      case '.png':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
   }
 
   Future<void> _downloadAndOpenFile() async {
@@ -1516,95 +1484,10 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Widget _buildEditor() {
-    return Padding(
-      padding: EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        children: [
-          // Toolbar
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: ColorUtils.slate200),
-              boxShadow: [
-                BoxShadow(
-                  color: _primaryColor.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-                BoxShadow(
-                  color: ColorUtils.slate900.withValues(alpha: 0.04),
-                  blurRadius: 4,
-                  offset: Offset(0, 1),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildFormatButton('B', Icons.format_bold, () {}),
-                _buildFormatButton('I', Icons.format_italic, () {}),
-                _buildFormatButton('U', Icons.format_underlined, () {}),
-                _buildFormatButton('H1', Icons.title, () {}),
-                _buildFormatButton('Table', Icons.table_chart, () {}),
-                _buildFormatButton('List', Icons.list, () {}),
-              ],
-            ),
-          ),
-          SizedBox(height: AppSpacing.lg),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: ColorUtils.slate200),
-                boxShadow: [
-                  BoxShadow(
-                    color: _primaryColor.withValues(alpha: 0.06),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                  BoxShadow(
-                    color: ColorUtils.slate900.withValues(alpha: 0.04),
-                    blurRadius: 4,
-                    offset: Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: TextField(
-                controller: TextEditingController(text: _editedContent),
-                onChanged: _updateContent,
-                maxLines: null,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(AppSpacing.lg),
-                  hintText: 'Ketik RPP disini...',
-                  hintStyle: TextStyle(color: ColorUtils.slate400),
-                ),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontFamily: 'Courier',
-                  height: 1.5,
-                  color: ColorUtils.slate800,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFormatButton(
-    String text,
-    IconData icon,
-    VoidCallback onPressed,
-  ) {
-    return IconButton(
-      icon: Icon(icon, size: 20, color: ColorUtils.slate600),
-      onPressed: onPressed,
-      tooltip: text,
+    return RppEditorView(
+      content: _editedContent,
+      primaryColor: _primaryColor,
+      onChanged: _updateContent,
     );
   }
 
@@ -1657,84 +1540,10 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Widget _buildRegenAllButton() {
-    final isRegenerating = _regeneratingField == 'all';
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _primaryColor.withValues(alpha: 0.08),
-            _primaryColor.withValues(alpha: 0.04),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _primaryColor.withValues(alpha: 0.2)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: isRegenerating ? null : _showRegenAllDialog,
-          borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: _primaryColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _primaryColor.withValues(alpha: 0.15),
-                    ),
-                  ),
-                  child: isRegenerating
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: _primaryColor,
-                          ),
-                        )
-                      : Icon(
-                          Icons.auto_awesome,
-                          color: _primaryColor,
-                          size: 20,
-                        ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isRegenerating
-                            ? 'Sedang memproses...'
-                            : 'Regenerasi Semua Field',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: ColorUtils.slate800,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Generate ulang seluruh konten RPP dengan AI',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: ColorUtils.slate400),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return RppRegenAllButton(
+      isRegenerating: _regeneratingField == 'all',
+      primaryColor: _primaryColor,
+      onTap: _showRegenAllDialog,
     );
   }
 
@@ -1754,7 +1563,18 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       if (value.isEmpty) return SizedBox.shrink();
       return Padding(
         padding: EdgeInsets.only(bottom: 12),
-        child: _buildFieldCard(fieldKey, fieldLabel, value),
+        child: RppFieldCard(
+          fieldKey: fieldKey,
+          fieldLabel: fieldLabel,
+          value: value,
+          regenInfo: _getFieldRegenInfo(fieldKey),
+          isLoadingLimits: _isLoadingLimits,
+          isRegeneratingThis:
+              _regeneratingField == fieldKey || _regeneratingField == 'all',
+          primaryColor: _primaryColor,
+          onRegenTap: () => _showRegenDialog(fieldKey, fieldLabel),
+          stripHtml: _stripHtml,
+        ),
       );
     }).toList();
 
@@ -1767,587 +1587,35 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Widget _buildHeaderInfoCard() {
-    String getField(List<String> keys, {String defaultValue = ''}) {
-      for (final key in keys) {
-        final value = _lessonPlanData[key];
-        if (value != null && value.toString().trim().isNotEmpty) {
-          return value.toString().trim();
-        }
-      }
-      return defaultValue;
-    }
-
-    final title = getField(['judul', 'title'], defaultValue: 'RPP');
-    final subjectName = getField(['mata_pelajaran_nama', 'subject_name']);
-    final className = getField(['kelas_nama', 'class_name']);
-    final semester = getField(['semester']);
-    final academicYear = getField(['tahun_ajaran', 'academic_year']);
-    final teacherName = getField(['guru_nama', 'teacher_name']);
-    final status = getField(['status']);
-
-    final infoItems = <MapEntry<String, String>>[
-      if (subjectName.isNotEmpty) MapEntry('Mata Pelajaran', subjectName),
-      if (className.isNotEmpty) MapEntry('Kelas', className),
-      if (semester.isNotEmpty) MapEntry('Semester', semester),
-      if (academicYear.isNotEmpty) MapEntry('Tahun Ajaran', academicYear),
-      if (teacherName.isNotEmpty) MapEntry('Guru', teacherName),
-      if (status.isNotEmpty) MapEntry('Status', status),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ColorUtils.slate200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: _primaryColor.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: Offset(0, 3),
-          ),
-          BoxShadow(
-            color: ColorUtils.slate900.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'RENCANA PELAKSANAAN PEMBELAJARAN (RPP)',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: _primaryColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: AppSpacing.xs),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: ColorUtils.slate800,
-              ),
-            ),
-            if (infoItems.isNotEmpty) ...[
-              SizedBox(height: AppSpacing.md),
-              ...infoItems.map(
-                (item) => Padding(
-                  padding: EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 120,
-                        child: Text(
-                          item.key,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: ColorUtils.slate500,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        ': ',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: ColorUtils.slate500,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          item.value,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: ColorUtils.slate700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+    return RppHeaderInfoCard(
+      lessonPlanData: _lessonPlanData,
+      primaryColor: _primaryColor,
     );
   }
 
-  Widget _buildFieldCard(String fieldKey, String fieldLabel, String value) {
-    final regenInfo = _getFieldRegenInfo(fieldKey);
-    final remaining = regenInfo?['remaining'] ?? 2;
-    final max = regenInfo?['max'] ?? 2;
-    final used = regenInfo?['used'] ?? 0;
-    final isRegeneratingThis =
-        _regeneratingField == fieldKey || _regeneratingField == 'all';
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ColorUtils.slate200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: _primaryColor.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: Offset(0, 3),
-          ),
-          BoxShadow(
-            color: ColorUtils.slate900.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Field header with regen button
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: _primaryColor.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(14),
-                topRight: Radius.circular(14),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    fieldLabel,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: _primaryColor,
-                    ),
-                  ),
-                ),
-                // Regen limit indicator
-                if (regenInfo != null && !_isLoadingLimits) ...[
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: remaining > 0
-                          ? _primaryColor.withValues(alpha: 0.1)
-                          : ColorUtils.slate200,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '$used/$max',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: remaining > 0
-                            ? _primaryColor
-                            : ColorUtils.slate400,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: AppSpacing.sm),
-                ],
-                // Regen button
-                Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                  child: InkWell(
-                    onTap: isRegeneratingThis
-                        ? null
-                        : () => _showRegenDialog(fieldKey, fieldLabel),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: remaining > 0
-                            ? _primaryColor.withValues(alpha: 0.1)
-                            : ColorUtils.slate100,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: remaining > 0
-                              ? _primaryColor.withValues(alpha: 0.2)
-                              : ColorUtils.slate200,
-                        ),
-                      ),
-                      child: isRegeneratingThis
-                          ? SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: _primaryColor,
-                              ),
-                            )
-                          : Icon(
-                              Icons.star_rounded,
-                              size: 16,
-                              color: remaining > 0
-                                  ? _primaryColor
-                                  : ColorUtils.slate400,
-                            ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Field content
-          Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
-            child: SelectableText(
-              _stripHtml(value),
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.6,
-                color: ColorUtils.slate700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSignatureCard() {
-    return Container(
-      margin: EdgeInsets.only(top: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ColorUtils.slate200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: _primaryColor.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: Offset(0, 3),
-          ),
-          BoxShadow(
-            color: ColorUtils.slate900.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xxl),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      Text(
-                        'Mengetahui',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: AppSpacing.xs),
-                      Text('Kepala Sekolah', style: TextStyle(fontSize: 13)),
-                      SizedBox(height: 40),
-                      Text(
-                        '...................................',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      Text(
-                        'NIP ..............................',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: ColorUtils.slate500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Text('', style: TextStyle(fontSize: 13)),
-                      SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'Guru Mata Pelajaran',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                      SizedBox(height: 40),
-                      Text(
-                        '...................................',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      Text(
-                        'NIP ..............................',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: ColorUtils.slate500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (_lessonPlanData['ai_generated'] == true ||
-                _lessonPlanData['is_ai_generated'] == true) ...[
-              SizedBox(height: AppSpacing.lg),
-              Divider(color: ColorUtils.slate200),
-              SizedBox(height: AppSpacing.sm),
-              Text(
-                'RPP ini digenerate secara otomatis menggunakan AI',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                  color: ColorUtils.slate400,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+    return RppSignatureCard(
+      isAiGenerated:
+          _lessonPlanData['ai_generated'] == true ||
+          _lessonPlanData['is_ai_generated'] == true,
+      primaryColor: _primaryColor,
     );
   }
 
   Widget _buildFileCard() {
-    final filePath = _filePath!;
-    final ext = _getFileExtension(filePath);
-    final fileName = _getFileName(filePath);
-
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _primaryColor.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: _primaryColor.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: Offset(0, 3),
-          ),
-          BoxShadow(
-            color: ColorUtils.slate900.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: _isDownloading ? null : _downloadAndOpenFile,
-          borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: _getFileIconColor(ext).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _getFileIconColor(ext).withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Icon(
-                    _getFileIcon(ext),
-                    color: _getFileIconColor(ext),
-                    size: 28,
-                  ),
-                ),
-                SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'File Lampiran RPP',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: ColorUtils.slate800,
-                        ),
-                      ),
-                      SizedBox(height: AppSpacing.xs),
-                      Text(
-                        fileName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: AppSpacing.sm),
-                _isDownloading
-                    ? SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: _primaryColor,
-                        ),
-                      )
-                    : Container(
-                        padding: EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: _primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: _primaryColor.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.download_rounded,
-                          color: _primaryColor,
-                          size: 20,
-                        ),
-                      ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return RppFileCard(
+      filePath: _filePath!,
+      isDownloading: _isDownloading,
+      primaryColor: _primaryColor,
+      onTap: _downloadAndOpenFile,
     );
   }
 
   Widget _buildFormattedContent() {
-    final lines = _editedContent.split('\n');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: lines.map((line) {
-        if (line.trim().isEmpty) {
-          return SizedBox(height: AppSpacing.lg);
-        }
-
-        if (line.startsWith('RENCANA PELAKSANAAN PEMBELAJARAN')) {
-          return Column(
-            children: [
-              Text(
-                line,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: _primaryColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: AppSpacing.sm),
-            ],
-          );
-        }
-
-        if (line.startsWith('=')) {
-          return Container(
-            height: 2,
-            color: ColorUtils.slate200,
-            margin: EdgeInsets.symmetric(vertical: 8),
-          );
-        }
-
-        if (line.startsWith('|')) {
-          return _buildTableRow(line);
-        }
-
-        if (line.startsWith('A.') ||
-            line.startsWith('B.') ||
-            line.startsWith('C.')) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: AppSpacing.lg),
-              Text(
-                line,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: _primaryColor,
-                ),
-              ),
-              SizedBox(height: AppSpacing.sm),
-            ],
-          );
-        }
-
-        if (line.contains('Media :') || line.contains('Alat/Bahan :')) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: 4),
-            child: Text(
-              line,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: ColorUtils.slate700,
-              ),
-            ),
-          );
-        }
-
-        if (line.startsWith('•') ||
-            line.startsWith('1.') ||
-            line.startsWith('2.')) {
-          return Padding(
-            padding: EdgeInsets.only(left: 16, bottom: 4),
-            child: Text(line, style: TextStyle(fontSize: 14, height: 1.5)),
-          );
-        }
-
-        if (line.contains('Mengetahui') ||
-            line.contains('Kepala Sekolah') ||
-            line.contains('Guru Mata Pelajaran')) {
-          return Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: Text(
-              line,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
-          );
-        }
-
-        return Padding(
-          padding: EdgeInsets.only(bottom: 8),
-          child: Text(line, style: TextStyle(fontSize: 14, height: 1.5)),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildTableRow(String line) {
-    final cells = line
-        .split('|')
-        .where((cell) => cell.trim().isNotEmpty)
-        .toList();
-
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: ColorUtils.slate200)),
-      child: Row(
-        children: cells.map((cell) {
-          return Expanded(
-            flex: 2,
-            child: Container(
-              padding: EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                border: Border.all(color: ColorUtils.slate200),
-              ),
-              child: Text(
-                cell.trim(),
-                style: TextStyle(fontSize: 12, color: ColorUtils.slate700),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+    return RppFormattedContent(
+      content: _editedContent,
+      primaryColor: _primaryColor,
     );
   }
 

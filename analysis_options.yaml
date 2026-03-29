@@ -13,6 +13,10 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+  errors:
+    # Freezed 2.x generates @JsonKey on constructor params which json_annotation 4.7+
+    # flags as invalid_annotation_target — this is a known false positive.
+    invalid_annotation_target: ignore
 
 linter:
   # The lint rules applied to this project can be customized in the

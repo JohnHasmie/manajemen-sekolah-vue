@@ -98,7 +98,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
     });
 
     try {
-      final response = await LessonPlanService.updateLessonPlanStatus(
+      await LessonPlanService.updateLessonPlanStatus(
         widget.lessonPlanId,
         selectedStatus,
         catatan: notesController.text.isNotEmpty ? notesController.text : null,

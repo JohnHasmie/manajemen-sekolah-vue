@@ -276,7 +276,7 @@ class DashboardNotifier extends AutoDisposeAsyncNotifier<DashboardState> {
         PreferencesService().setString('dashboard_last_year_id', academicYearId);
       }
 
-    } catch (e, st) {
+    } catch (e) {
       AppLogger.error('dashboard_controller', 'Error fetching fresh dashboard data: $e');
       // If we have cached data, we don't necessarily want to show an error screen
     }

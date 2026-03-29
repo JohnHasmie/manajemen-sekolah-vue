@@ -1,0 +1,156 @@
+// ParentStudentSelector — dropdown for a parent to pick which child's activities to view.
+//
+// Extracted from `ParentClassActivityScreenState._buildStudentSelector`.
+// Like a Vue `<StudentSelector :students="list" :selected="id" @change="onChanged" />`.
+
+import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
+
+/// A student-picker dropdown used by the parent class activity screen.
+///
+/// When a parent has multiple children this renders a labelled [DropdownButton]
+/// so they can switch between them. When [studentList] is empty it shows a
+/// warning banner instead (no children are linked to this account).
+///
+/// Props (constructor params — like Vue props):
+/// - [studentList]        — raw API list of student maps for this parent
+/// - [selectedStudentId]  — currently selected student id (null = none chosen)
+/// - [selectorKey]        — [GlobalKey] for the tutorial coach-mark target
+/// - [onStudentChanged]   — callback fired with the newly selected student id;
+///                          the parent is responsible for calling setState and
+///                          re-loading activities — no setState inside this widget
+class ParentStudentSelector extends StatelessWidget {
+  final List<dynamic> studentList;
+  final String? selectedStudentId;
+  final GlobalKey selectorKey;
+
+  /// Called when the user picks a different student from the dropdown.
+  /// Receives the new student id. Parent handles setState + data reload.
+  final ValueChanged<String?> onStudentChanged;
+
+  const ParentStudentSelector({
+    super.key,
+    required this.studentList,
+    required this.selectedStudentId,
+    required this.selectorKey,
+    required this.onStudentChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (studentList.isEmpty) {
+      return Container(
+        margin: EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: ColorUtils.warning600.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: ColorUtils.warning600.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: ColorUtils.warning600.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                color: ColorUtils.warning600,
+                size: 20,
+              ),
+            ),
+            SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                AppLocalizations.noChildrenLinked.tr,
+                style: TextStyle(
+                  color: ColorUtils.slate700,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      key: selectorKey,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              AppLocalizations.selectChild.tr,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: ColorUtils.slate700,
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: DropdownButton<String>(
+              value: selectedStudentId,
+              isExpanded: true,
+              underline: const SizedBox(),
+              icon: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: ColorUtils.slate500,
+              ),
+              items: studentList.map((student) {
+                return DropdownMenuItem<String>(
+                  value: student['id'],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          student['name'] ??
+                              AppLocalizations.nameNotAvailable.tr,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: ColorUtils.slate900,
+                          ),
+                        ),
+                        Text(
+                          '${AppLocalizations.classString.tr}: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorUtils.slate500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: onStudentChanged,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

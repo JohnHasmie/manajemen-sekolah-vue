@@ -1,6 +1,5 @@
 // Schedule form dialog for creating and editing teaching schedules.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like a Vue component `<ScheduleFormModal>` -- a large form inside a bottom
 // sheet with multiple dependent dropdowns (teacher -> subject, day -> time slots).

@@ -17,7 +17,6 @@ import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
-import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/students/presentation/screens/student_detail_screen.dart';
@@ -36,6 +35,11 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/students/presentation/widgets/student_card.dart';
+import 'package:manajemensekolah/features/students/presentation/widgets/filter_choice_chip.dart';
+import 'package:manajemensekolah/features/students/presentation/widgets/student_dialog_text_field.dart';
+import 'package:manajemensekolah/features/students/presentation/widgets/student_dialog_dropdown.dart';
+import 'package:manajemensekolah/features/students/presentation/widgets/student_management_header.dart';
 
 /// Admin student management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -831,39 +835,42 @@ class StudentManagementScreenState
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              _buildStatusChip(
+                              FilterChoiceChip(
                                 label: languageProvider.getTranslatedText({
                                   'en': 'All',
                                   'id': 'Semua',
                                 }),
                                 value: null,
                                 selectedValue: tempSelectedStatus,
+                                primaryColor: _getPrimaryColor(),
                                 onSelected: () {
                                   setModalState(() {
                                     tempSelectedStatus = null;
                                   });
                                 },
                               ),
-                              _buildStatusChip(
+                              FilterChoiceChip(
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Active',
                                   'id': 'Aktif',
                                 }),
                                 value: 'active',
                                 selectedValue: tempSelectedStatus,
+                                primaryColor: _getPrimaryColor(),
                                 onSelected: () {
                                   setModalState(() {
                                     tempSelectedStatus = 'active';
                                   });
                                 },
                               ),
-                              _buildStatusChip(
+                              FilterChoiceChip(
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Inactive',
                                   'id': 'Tidak Aktif',
                                 }),
                                 value: 'inactive',
                                 selectedValue: tempSelectedStatus,
+                                primaryColor: _getPrimaryColor(),
                                 onSelected: () {
                                   setModalState(() {
                                     tempSelectedStatus = 'inactive';
@@ -983,39 +990,42 @@ class StudentManagementScreenState
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              _buildGenderChip(
+                              FilterChoiceChip(
                                 label: languageProvider.getTranslatedText({
                                   'en': 'All',
                                   'id': 'Semua',
                                 }),
                                 value: null,
                                 selectedValue: tempSelectedGender,
+                                primaryColor: _getPrimaryColor(),
                                 onSelected: () {
                                   setModalState(() {
                                     tempSelectedGender = null;
                                   });
                                 },
                               ),
-                              _buildGenderChip(
+                              FilterChoiceChip(
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Male',
                                   'id': 'Laki-laki',
                                 }),
                                 value: 'M',
                                 selectedValue: tempSelectedGender,
+                                primaryColor: _getPrimaryColor(),
                                 onSelected: () {
                                   setModalState(() {
                                     tempSelectedGender = 'M';
                                   });
                                 },
                               ),
-                              _buildGenderChip(
+                              FilterChoiceChip(
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Female',
                                   'id': 'Perempuan',
                                 }),
                                 value: 'F',
                                 selectedValue: tempSelectedGender,
+                                primaryColor: _getPrimaryColor(),
                                 onSelected: () {
                                   setModalState(() {
                                     tempSelectedGender = 'F';
@@ -1111,52 +1121,6 @@ class StudentManagementScreenState
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildStatusChip({
-    required String label,
-    required String? value,
-    required String? selectedValue,
-    required VoidCallback onSelected,
-  }) {
-    final isSelected = selectedValue == value;
-
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onSelected(),
-      selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
-      labelStyle: TextStyle(
-        color: isSelected ? _getPrimaryColor() : ColorUtils.slate700,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      side: BorderSide(
-        color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
-      ),
-    );
-  }
-
-  Widget _buildGenderChip({
-    required String label,
-    required String? value,
-    required String? selectedValue,
-    required VoidCallback onSelected,
-  }) {
-    final isSelected = selectedValue == value;
-
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onSelected(),
-      selectedColor: _getPrimaryColor().withValues(alpha: 0.2),
-      labelStyle: TextStyle(
-        color: isSelected ? _getPrimaryColor() : ColorUtils.slate700,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      side: BorderSide(
-        color: isSelected ? _getPrimaryColor() : ColorUtils.slate300,
       ),
     );
   }
@@ -1316,7 +1280,8 @@ class StudentManagementScreenState
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _buildDialogTextField(
+                              StudentDialogTextField(
+                                primaryColor: _getPrimaryColor(),
                                 controller: nameController,
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Name',
@@ -1325,14 +1290,16 @@ class StudentManagementScreenState
                                 icon: Icons.person,
                               ),
                               SizedBox(height: AppSpacing.md),
-                              _buildDialogTextField(
+                              StudentDialogTextField(
+                                primaryColor: _getPrimaryColor(),
                                 controller: nisController,
                                 label: 'NIS',
                                 icon: Icons.badge,
                                 keyboardType: TextInputType.number,
                               ),
                               SizedBox(height: AppSpacing.md),
-                              _buildDialogDropdown(
+                              StudentDialogDropdown(
+                                primaryColor: _getPrimaryColor(),
                                 value: selectedClassId,
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Class',
@@ -1359,7 +1326,8 @@ class StudentManagementScreenState
                                 },
                               ),
                               SizedBox(height: AppSpacing.md),
-                              _buildDialogTextField(
+                              StudentDialogTextField(
+                                primaryColor: _getPrimaryColor(),
                                 controller: addressController,
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Address',
@@ -1369,7 +1337,8 @@ class StudentManagementScreenState
                                 maxLines: 2,
                               ),
                               SizedBox(height: AppSpacing.md),
-                              _buildDialogTextField(
+                              StudentDialogTextField(
+                                primaryColor: _getPrimaryColor(),
                                 controller: birthDateController,
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Birth Date',
@@ -1412,7 +1381,8 @@ class StudentManagementScreenState
                                 },
                               ),
                               SizedBox(height: AppSpacing.md),
-                              _buildDialogDropdown(
+                              StudentDialogDropdown(
+                                primaryColor: _getPrimaryColor(),
                                 value: selectedGender,
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Gender',
@@ -1495,7 +1465,8 @@ class StudentManagementScreenState
                                     },
                                   ),
                                 ),
-                              _buildDialogTextField(
+                              StudentDialogTextField(
+                                primaryColor: _getPrimaryColor(),
                                 controller: parentNameController,
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Parent Name',
@@ -1504,7 +1475,8 @@ class StudentManagementScreenState
                                 icon: Icons.family_restroom,
                               ),
                               SizedBox(height: AppSpacing.md),
-                              _buildDialogTextField(
+                              StudentDialogTextField(
+                                primaryColor: _getPrimaryColor(),
                                 controller: emailParentController,
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Parent Email',
@@ -1515,7 +1487,8 @@ class StudentManagementScreenState
                                 hintText: 'wali@example.com',
                               ),
                               SizedBox(height: AppSpacing.md),
-                              _buildDialogTextField(
+                              StudentDialogTextField(
+                                primaryColor: _getPrimaryColor(),
                                 controller: phoneController,
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Phone Number',
@@ -1848,85 +1821,6 @@ class StudentManagementScreenState
     );
   }
 
-  Widget _buildDialogTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType? keyboardType,
-    int maxLines = 1,
-    String? hintText,
-    VoidCallback? onTap,
-    bool readOnly = false,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-          hintText: hintText,
-          hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
-          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
-          border: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: _getPrimaryColor(), width: 1.5),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        ),
-        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        onTap: onTap,
-        readOnly: readOnly,
-      ),
-    );
-  }
-
-  Widget _buildDialogDropdown({
-    required String? value,
-    required String label,
-    required IconData icon,
-    required List<DropdownMenuItem<String>> items,
-    required Function(String?) onChanged,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: DropdownButtonFormField<String>(
-        initialValue: value,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
-          border: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: _getPrimaryColor(), width: 1.5),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
-        ),
-        items: items,
-        onChanged: onChanged,
-        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
-        dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        icon: Icon(
-          Icons.keyboard_arrow_down_rounded,
-          color: ColorUtils.slate500,
-        ),
-      ),
-    );
-  }
-
   Future<void> _deleteStudent(Map<String, dynamic> student) async {
     final confirmed = await showDialog(
       context: context,
@@ -2010,196 +1904,6 @@ class StudentManagementScreenState
     }
   }
 
-  Widget _buildStudentCard(Map<String, dynamic> student, int index) {
-    final languageProvider = ref.read(languageRiverpod);
-    final avatarColor = ColorUtils.getColorForIndex(index);
-    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
-    final className = student['class']?['name'] ?? '-';
-    final genderText = _getGenderText(student['gender'], languageProvider);
-
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _navigateToStudentDetail(student),
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            child: Row(
-              children: [
-                // Compact Avatar
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: avatarColor.withValues(alpha: 0.15),
-                  child: Text(
-                    (student['name'] ?? 'N')[0].toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: avatarColor,
-                    ),
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-
-                // Student Info (expanded)
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Name row
-                      Text(
-                        student['name'] ?? 'No Name',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: AppSpacing.xs),
-                      // Compact info chips
-                      Row(
-                        children: [
-                          // Class chip
-                          _buildInfoTag(Icons.school_outlined, className),
-                          SizedBox(width: 6),
-                          // Gender chip
-                          _buildInfoTag(Icons.person_outline, genderText),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: AppSpacing.sm),
-
-                // Right side: status + actions
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Status dot
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: ColorUtils.success600.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: ColorUtils.success600.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: ColorUtils.success600,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.xs),
-                          Text(
-                            'Active',
-                            style: TextStyle(
-                              color: ColorUtils.success600,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!isReadOnly) ...[
-                      SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          // Edit button
-                          InkWell(
-                            onTap: () => _showStudentDialog(student: student),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.edit_outlined,
-                                size: 16,
-                                color: _getPrimaryColor(),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 6),
-                          // Delete button
-                          InkWell(
-                            onTap: () => _deleteStudent(student),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: ColorUtils.error600.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.delete_outline,
-                                size: 16,
-                                color: ColorUtils.error600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoTag(IconData icon, String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: ColorUtils.slate600),
-          SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11,
-              color: ColorUtils.slate700,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor('admin');
   }
@@ -2209,291 +1913,6 @@ class StudentManagementScreenState
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
-    );
-  }
-
-  Widget _buildGradientHeader(
-    BuildContext context,
-    LanguageProvider languageProvider,
-  ) {
-    return GradientPageHeader(
-      title: languageProvider.getTranslatedText({
-        'en': 'Student Management',
-        'id': 'Manajemen Siswa',
-      }),
-      subtitle: languageProvider.getTranslatedText({
-        'en': 'Manage and monitor students',
-        'id': 'Kelola dan pantau siswa',
-      }),
-      primaryColor: _getPrimaryColor(),
-      actionMenu: PopupMenuButton<String>(
-        key: _menuKey,
-        onSelected: (value) {
-          switch (value) {
-            case 'refresh':
-              _forceRefresh();
-              break;
-            case 'export':
-              _exportToExcel();
-              break;
-            case 'import':
-              _importFromExcel();
-              break;
-            case 'template':
-              _downloadTemplate();
-              break;
-          }
-        },
-        icon: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(Icons.more_vert, color: Colors.white, size: 20),
-        ),
-        itemBuilder: (BuildContext context) => [
-          PopupMenuItem<String>(
-            value: 'refresh',
-            child: Row(
-              children: [
-                Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                SizedBox(width: AppSpacing.sm),
-                Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Refresh Data',
-                    'id': 'Perbarui Data',
-                  }),
-                ),
-              ],
-            ),
-          ),
-          PopupMenuItem<String>(
-            value: 'export',
-            child: Row(
-              children: [
-                Icon(Icons.download, size: 20),
-                SizedBox(width: AppSpacing.sm),
-                Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Export to Excel',
-                    'id': 'Export ke Excel',
-                  }),
-                ),
-              ],
-            ),
-          ),
-          PopupMenuItem<String>(
-            value: 'import',
-            child: Row(
-              children: [
-                Icon(Icons.upload, size: 20),
-                SizedBox(width: AppSpacing.sm),
-                Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Import from Excel',
-                    'id': 'Import dari Excel',
-                  }),
-                ),
-              ],
-            ),
-          ),
-          PopupMenuItem<String>(
-            value: 'template',
-            child: Row(
-              children: [
-                Icon(Icons.file_download, size: 20),
-                SizedBox(width: AppSpacing.sm),
-                Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Download Template',
-                    'id': 'Download Template',
-                  }),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      searchBar: Row(
-        children: [
-          Expanded(
-            child: Container(
-              key: _searchKey,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(color: Colors.black87),
-                      decoration: InputDecoration(
-                        hintText: languageProvider.getTranslatedText({
-                          'en': 'Search students...',
-                          'id': 'Cari siswa...',
-                        }),
-                        hintStyle: TextStyle(color: ColorUtils.slate400),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: ColorUtils.slate400,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      onSubmitted: (_) {
-                        setState(() {
-                          _currentPage = 1;
-                        });
-                        _loadData();
-                      },
-                    ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.only(right: 4),
-                    child: IconButton(
-                      icon: Icon(Icons.search, color: _getPrimaryColor()),
-                      onPressed: () {
-                        setState(() {
-                          _currentPage = 1;
-                        });
-                        _loadData();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(width: AppSpacing.sm),
-          Container(
-            key: _filterKey,
-            decoration: BoxDecoration(
-              color: _hasActiveFilter
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-            ),
-            child: Stack(
-              children: [
-                IconButton(
-                  onPressed: _showFilterSheet,
-                  icon: Icon(
-                    Icons.tune,
-                    color: _hasActiveFilter ? _getPrimaryColor() : Colors.white,
-                  ),
-                  tooltip: languageProvider.getTranslatedText({
-                    'en': 'Filter',
-                    'id': 'Filter',
-                  }),
-                ),
-                if (_hasActiveFilter)
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      padding: EdgeInsets.all(AppSpacing.xs),
-                      decoration: BoxDecoration(
-                        color: ColorUtils.error600,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: BoxConstraints(minWidth: 8, minHeight: 8),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      filterChips: _hasActiveFilter
-          ? SizedBox(
-              height: 42,
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.filter_alt,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        ..._buildFilterChips(languageProvider).map((filter) {
-                          return Container(
-                            margin: EdgeInsets.only(right: 6),
-                            child: Chip(
-                              label: Text(
-                                filter['label'],
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: _getPrimaryColor(),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              deleteIcon: Icon(
-                                Icons.close,
-                                size: 16,
-                                color: ColorUtils.error600,
-                              ),
-                              onDeleted: filter['onRemove'],
-                              backgroundColor: Colors.white.withValues(
-                                alpha: 0.2,
-                              ),
-                              side: BorderSide(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 1,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              labelPadding: EdgeInsets.only(left: 4),
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: AppSpacing.sm),
-                  InkWell(
-                    onTap: _clearAllFilters,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: ColorUtils.error600,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.clear_all,
-                        size: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : null,
     );
   }
 
@@ -2519,7 +1938,40 @@ class StudentManagementScreenState
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          _buildGradientHeader(context, languageProvider),
+          StudentManagementHeader(
+            primaryColor: _getPrimaryColor(),
+            languageProvider: languageProvider,
+            searchController: _searchController,
+            hasActiveFilter: _hasActiveFilter,
+            filterChips: _buildFilterChips(languageProvider),
+            menuKey: _menuKey,
+            searchKey: _searchKey,
+            filterKey: _filterKey,
+            onSearch: () {
+              setState(() {
+                _currentPage = 1;
+              });
+              _loadData();
+            },
+            onMenuSelected: (value) {
+              switch (value) {
+                case 'refresh':
+                  _forceRefresh();
+                  break;
+                case 'export':
+                  _exportToExcel();
+                  break;
+                case 'import':
+                  _importFromExcel();
+                  break;
+                case 'template':
+                  _downloadTemplate();
+                  break;
+              }
+            },
+            onFilterTap: _showFilterSheet,
+            onClearFilters: _clearAllFilters,
+          ),
 
           Expanded(
             child: MediaQuery.removePadding(
@@ -2563,7 +2015,16 @@ class StudentManagementScreenState
                           }
 
                           final student = filteredStudents[index];
-                          return _buildStudentCard(student, index);
+                          return StudentCard(
+                            student: student,
+                            index: index,
+                            isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
+                            primaryColor: _getPrimaryColor(),
+                            genderText: _getGenderText(student['gender'], ref.read(languageRiverpod)),
+                            onTap: () => _navigateToStudentDetail(student),
+                            onEdit: () => _showStudentDialog(student: student),
+                            onDelete: () => _deleteStudent(student),
+                          );
                         },
                       ),
                     ),

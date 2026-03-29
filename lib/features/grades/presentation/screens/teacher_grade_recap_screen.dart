@@ -11,7 +11,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
-import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
 import 'package:manajemensekolah/features/grades/data/grade_recap_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -31,9 +30,15 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_selection_dialog.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/bulk_selection_dialog.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/edit_deskripsi_dialog.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_editable_cell.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_class_list.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_subject_list.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_search_bar.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_app_bar.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_table_view.dart';
 
 /// Grade recap wizard: class selection -> subject selection -> recap table.
 ///
@@ -298,34 +303,6 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
 
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
-  }
-
-  Widget _buildInfoTag(IconData icon, String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: ColorUtils.slate600),
-          SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11,
-              color: ColorUtils.slate700,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
   }
 
   // ==================== CACHE ====================
@@ -1074,225 +1051,27 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   }
 
   void _showBulkSelectionDialog(String type, [int? chapterIndex]) {
-    // 1. Get unique assessments for bulk filling
-    final assessmentMap = <String, Map<String, dynamic>>{};
-    for (var g in _rawGrades) {
-      final typeStr = (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
-
-      // Filter by requested type (harian types for bab, or specific uts/uas map)
-      bool match = false;
-      if (type == 'bab') {
-        match = [
-          'uh',
-          'tugas',
-          'praktek',
-          'formatif',
-          'sumatif',
-        ].contains(typeStr);
-      } else if (type == 'uts') {
-        match = typeStr == 'uts' || typeStr == 'pts';
-      } else if (type == 'uas') {
-        match = typeStr == 'uas' || typeStr == 'pas';
-      } else {
-        match = typeStr == type.toLowerCase();
-      }
-
-      if (match) {
-        final title =
-            g['assessment']?['title'] ?? g['title'] ?? g['judul'] ?? 'Nilai';
-        final date =
-            g['assessment']?['date'] ?? g['date'] ?? g['tanggal'] ?? '';
-        final key = '$title|$date';
-        if (!assessmentMap.containsKey(key)) {
-          assessmentMap[key] = {'title': title, 'date': date};
-        }
-      }
-    }
-    final assessments = assessmentMap.values.toList();
-
-    showDialog(
+    showBulkSelectionDialog(
       context: context,
-      builder: (context) {
-        final List<Map<String, dynamic>> selectedBulk = [];
-
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return DefaultTabController(
-              length: 2,
-              child: AlertDialog(
-                title: Text(
-                  type == 'bab'
-                      ? 'Pengaturan Kolom Bab ${chapterIndex! + 1}'
-                      : 'Pengaturan Kolom ${type.toUpperCase()}',
-                ),
-                contentPadding: EdgeInsets.zero,
-                content: SizedBox(
-                  width: double.maxFinite,
-                  height: 400,
-                  child: Column(
-                    children: [
-                      TabBar(
-                        labelColor: ColorUtils.primary,
-                        unselectedLabelColor: ColorUtils.slate500,
-                        indicatorColor: ColorUtils.primary,
-                        tabs: [
-                          if (type == 'bab') Tab(text: 'Nama Materi'),
-                          Tab(text: 'Isi Otomatis'),
-                        ],
-                      ),
-                      Expanded(
-                        child: TabBarView(
-                          children: [
-                            // Tab 1: Material Selection (Only for Bab)
-                            if (type == 'bab')
-                              Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: TextField(
-                                      decoration: InputDecoration(
-                                        labelText: 'Nama Materi Manual',
-                                        hintText:
-                                            'Ketik nama materi di sini...',
-                                        border: OutlineInputBorder(),
-                                        suffixIcon: Icon(Icons.edit),
-                                      ),
-                                      onSubmitted: (val) {
-                                        if (val.isNotEmpty) {
-                                          setState(() {
-                                            _chapters[chapterIndex!] = {
-                                              'judul_bab': val,
-                                              'judul': val,
-                                              'title': val,
-                                            };
-                                          });
-                                          _updateAllDescriptions();
-                                          AppNavigator.pop(context);
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  Divider(),
-                                  Expanded(
-                                    child: ListView.builder(
-                                      padding: EdgeInsets.all(8.0),
-                                      itemCount: _allAvailableChapters.length,
-                                      itemBuilder: (context, i) {
-                                        final c = _allAvailableChapters[i];
-                                        final title =
-                                            c['judul_bab'] ??
-                                            c['judul'] ??
-                                            c['title'] ??
-                                            'Bab';
-                                        return ListTile(
-                                          title: Text(title),
-                                          onTap: () {
-                                            setState(() {
-                                              _chapters[chapterIndex!] = c;
-                                            });
-                                            _updateAllDescriptions();
-                                            AppNavigator.pop(context);
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            // Tab 2: Bulk Fill from History (Multi-select)
-                            Column(
-                              children: [
-                                if (assessments.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      'Pilih satu atau lebih nilai untuk dirata-ratakan ke seluruh murid.',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: ColorUtils.slate500,
-                                      ),
-                                    ),
-                                  ),
-                                Expanded(
-                                  child: assessments.isEmpty
-                                      ? Center(
-                                          child: Text(
-                                            'Tidak ada riwayat nilai.',
-                                          ),
-                                        )
-                                      : ListView.builder(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 8.0,
-                                          ),
-                                          itemCount: assessments.length,
-                                          itemBuilder: (context, i) {
-                                            final a = assessments[i];
-                                            final isSelected = selectedBulk
-                                                .contains(a);
-                                            return CheckboxListTile(
-                                              title: Text(a['title']),
-                                              subtitle: Text(a['date']),
-                                              value: isSelected,
-                                              activeColor: ColorUtils.primary,
-                                              onChanged: (val) {
-                                                setDialogState(() {
-                                                  if (val == true) {
-                                                    selectedBulk.add(a);
-                                                  } else {
-                                                    selectedBulk.remove(a);
-                                                  }
-                                                });
-                                              },
-                                            );
-                                          },
-                                        ),
-                                ),
-                                if (selectedBulk.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: ColorUtils.primary,
-                                          foregroundColor: Colors.white,
-                                        ),
-                                        onPressed: () {
-                                          _applyBulkGrades(
-                                            type,
-                                            selectedBulk,
-                                            chapterIndex,
-                                          );
-                                          AppNavigator.pop(context);
-                                        },
-                                        child: Text(
-                                          'Gunakan Rata-rata (${selectedBulk.length})',
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => AppNavigator.pop(context),
-                    child: Text(AppLocalizations.cancel.tr),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
+      type: type,
+      chapterIndex: chapterIndex,
+      rawGrades: _rawGrades,
+      allAvailableChapters: _allAvailableChapters,
+      onApplyBulkGrades: (selectedBulk) {
+        _applyBulkGrades(type, selectedBulk, chapterIndex);
+      },
+      onChapterNameChanged: (c) {
+        setState(() {
+          _chapters[chapterIndex!] = c;
+        });
+        _updateAllDescriptions();
       },
     );
   }
 
+  /// Builds an editable grade cell for the recap table.
+  /// Delegates to [GradeRecapEditableCell]; callbacks keep setState in this
+  /// StatefulWidget rather than inside the extracted widget.
   Widget _buildEditableGradeCell(
     String studentClassId,
     String type,
@@ -1303,34 +1082,12 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
 
     if (controller == null) return Text('-');
 
-    return SizedBox(
-      width: 100,
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.numberWithOptions(decimal: true),
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 13),
-        decoration: InputDecoration(
-          isDense: true,
-          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-          border: OutlineInputBorder(),
-          suffixIcon: InkWell(
-            onTap: () =>
-                _showGradeSelectionDialog(studentClassId, type, chapterIndex),
-            child: Icon(Icons.history, size: 14, color: ColorUtils.slate400),
-          ),
-          suffixIconConstraints: BoxConstraints(minWidth: 24, minHeight: 24),
-        ),
-        onChanged: (val) {
-          final newValue = double.tryParse(val) ?? 0.0;
-          _updateTableValueSilently(
-            studentClassId,
-            type,
-            chapterIndex,
-            newValue,
-          );
-        },
-      ),
+    return GradeRecapEditableCell(
+      controller: controller,
+      onHistoryTap: () =>
+          _showGradeSelectionDialog(studentClassId, type, chapterIndex),
+      onChanged: (newValue) =>
+          _updateTableValueSilently(studentClassId, type, chapterIndex, newValue),
     );
   }
 
@@ -1817,176 +1574,52 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         backgroundColor: ColorUtils.slate50,
         body: Column(
           children: [
-            // Pattern #7 Gradient Header
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 16,
-                left: 16,
-                right: 16,
-                bottom: 20,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    _getPrimaryColor(),
-                    _getPrimaryColor().withValues(alpha: 0.8),
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _getPrimaryColor().withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: _handleBackButton,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Grade Recap',
-                            'id': 'Rekap Nilai',
-                          }),
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          _currentStep == 0
-                              ? languageProvider.getTranslatedText({
-                                  'en': 'Select Class',
-                                  'id': 'Pilih Kelas',
-                                })
-                              : _currentStep == 1
-                              ? (_selectedClass?['nama'] ??
-                                    _selectedClass?['name'] ??
-                                    '')
-                              : (_selectedSubject?['nama'] ??
-                                    _selectedSubject?['name'] ??
-                                    ''),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (_currentStep == 2)
-                    GestureDetector(
-                      key: _saveKey,
-                      onTap: _isSaving ? null : _saveRecaps,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        margin: EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: _isSaving
-                            ? Center(
-                                child: SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              )
-                            : Icon(Icons.save, color: Colors.white, size: 20),
-                      ),
-                    ),
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'refresh') {
-                        _forceRefresh();
-                      }
-                      if (value == 'export_excel' && !_isExporting) {
-                        _exportToExcel();
-                      }
-                    },
-                    icon: Container(
-                      key: _currentStep == 2 ? _exportKey : null,
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.more_vert,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    itemBuilder: (BuildContext context) => [
-                      PopupMenuItem<String>(
-                        value: 'refresh',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.refresh,
-                              size: 20,
-                              color: ColorUtils.info600,
-                            ),
-                            SizedBox(width: AppSpacing.sm),
-                            Text(AppLocalizations.updateData.tr),
-                          ],
-                        ),
-                      ),
-                      if (_currentStep == 2)
-                        PopupMenuItem<String>(
-                          value: 'export_excel',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.table_view,
-                                size: 20,
-                                color: Colors.green,
-                              ),
-                              SizedBox(width: AppSpacing.sm),
-                              Text('Export Excel'),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
+            // Pattern #7 Gradient Header — extracted to GradeRecapAppBar
+            GradeRecapAppBar(
+              currentStep: _currentStep,
+              primaryColor: _getPrimaryColor(),
+              title: languageProvider.getTranslatedText({
+                'en': 'Grade Recap',
+                'id': 'Rekap Nilai',
+              }),
+              selectClassLabel: languageProvider.getTranslatedText({
+                'en': 'Select Class',
+                'id': 'Pilih Kelas',
+              }),
+              selectedClassName:
+                  _selectedClass?['nama'] ?? _selectedClass?['name'] ?? '',
+              selectedSubjectName:
+                  _selectedSubject?['nama'] ?? _selectedSubject?['name'] ?? '',
+              updateDataLabel: AppLocalizations.updateData.tr,
+              saveKey: _saveKey,
+              exportKey: _exportKey,
+              isSaving: _isSaving,
+              onBack: _handleBackButton,
+              onSave: _saveRecaps,
+              onRefresh: _forceRefresh,
+              onExportExcel: () {
+                if (!_isExporting) _exportToExcel();
+              },
             ),
 
             // Step indicator or search bar
-            if (_currentStep < 2) _buildTopControls(languageProvider),
+            if (_currentStep < 2)
+              GradeRecapSearchBar(
+                controller: _searchController,
+                hintText: languageProvider.getTranslatedText({
+                  'en': _currentStep == 0
+                      ? 'Search classes...'
+                      : 'Search subjects...',
+                  'id': _currentStep == 0
+                      ? 'Cari kelas...'
+                      : 'Cari mata pelajaran...',
+                }),
+                onChanged: (_) => setState(() {}),
+                onClear: () {
+                  _searchController.clear();
+                  setState(() {});
+                },
+              ),
 
             Expanded(child: _buildBody(languageProvider)),
           ],
@@ -1995,140 +1628,86 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     );
   }
 
-  Widget _buildTopControls(LanguageProvider languageProvider) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(16, 10, 16, 10),
-      color: Colors.white,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: ColorUtils.slate200),
-          boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
-        ),
-        child: TextField(
-          controller: _searchController,
-          onChanged: (_) => setState(() {}),
-          style: TextStyle(color: ColorUtils.slate900),
-          decoration: InputDecoration(
-            hintText: languageProvider.getTranslatedText({
-              'en': _currentStep == 0
-                  ? 'Search classes...'
-                  : 'Search subjects...',
-              'id': _currentStep == 0
-                  ? 'Cari kelas...'
-                  : 'Cari mata pelajaran...',
-            }),
-            hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 14),
-            prefixIcon: Icon(
-              Icons.search,
-              color: ColorUtils.slate400,
-              size: 20,
-            ),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: Icon(
-                      Icons.clear,
-                      size: 18,
-                      color: ColorUtils.slate400,
-                    ),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() {});
-                    },
-                  )
-                : null,
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildBody(LanguageProvider languageProvider) {
     if (_currentStep == 0) return _buildClassList(languageProvider);
     if (_currentStep == 1) return _buildSubjectList(languageProvider);
-    return _buildRecapTable(languageProvider);
-  }
 
-  Widget _buildClassList(LanguageProvider languageProvider) {
-    if (_isLoading) return SkeletonListLoading();
-
-    final query = _searchController.text.toLowerCase();
-    final filteredList = _classList.where((item) {
-      final name = (item['nama'] ?? item['name'] ?? '')
-          .toString()
-          .toLowerCase();
-      final level = (item['grade_level'] ?? '').toString().toLowerCase();
-      return name.contains(query) || level.contains(query);
-    }).toList();
-
-    if (filteredList.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 64, color: ColorUtils.slate300),
-            SizedBox(height: AppSpacing.lg),
-            Text(
-              languageProvider.getTranslatedText({
-                'en': 'No classes found',
-                'id': 'Kelas tidak ditemukan',
-              }),
-              style: TextStyle(color: ColorUtils.slate500, fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
-      itemCount: filteredList.length + (_isLoadingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == filteredList.length) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-
-        final item = filteredList[index];
-        return _buildClassCard(item, languageProvider);
+    // Step 2 — recap table, delegated to [GradeRecapTableView].
+    // All state mutations (resize, chapter add/delete, dialog triggers) flow
+    // back here via callbacks — the extracted widget is purely presentational.
+    return GradeRecapTableView(
+      tableData: _tableData,
+      chapters: _chapters,
+      isLoading: _isLoading,
+      studentInfoWidth: _studentInfoWidth,
+      primaryColor: _getPrimaryColor(),
+      addChapterKey: _addChapterKey,
+      labels: {
+        'studentInfo': languageProvider.getTranslatedText({
+          'en': 'STUDENT INFO',
+          'id': 'INFO SISWA',
+        }),
+        'finalLabel': languageProvider.getTranslatedText({
+          'en': 'Final',
+          'id': 'Akhir',
+        }),
+        'skillLabel': languageProvider.getTranslatedText({
+          'en': 'Skill',
+          'id': 'Keterampilan',
+        }),
+        'gradeLabel': languageProvider.getTranslatedText({
+          'en': 'Grade',
+          'id': 'Pred',
+        }),
+        'descLabel': languageProvider.getTranslatedText({
+          'en': 'Description',
+          'id': 'Deskripsi',
+        }),
+        'gradeData': languageProvider.getTranslatedText({
+          'en': 'Grade Data',
+          'id': 'Data Nilai',
+        }),
+        'addBab': languageProvider.getTranslatedText({
+          'en': 'Add Bab',
+          'id': 'Tambah Bab',
+        }),
       },
+      predikatControllers: _predikatControllers,
+      deskripsiControllers: _deskripsiControllers,
+      cellBuilder: _buildEditableGradeCell,
+      onWidthChanged: (newWidth) {
+        setState(() {
+          _studentInfoWidth = newWidth.clamp(100.0, 350.0);
+        });
+      },
+      onBulkSelect: _showBulkSelectionDialog,
+      onDeleteChapter: _deleteChapter,
+      onAddChapter: _addChapter,
+      onDeskripsiTap: _showEditDeskripsiDialog,
     );
   }
 
-  Widget _buildClassCard(dynamic item, LanguageProvider languageProvider) {
-    final classId = item['id']?.toString();
-    final isToday = _todaySchedules.any(
-      (s) => s['class_id']?.toString() == classId,
-    );
-    final ht = item['homeroom_teacher'];
-    final wk = item['wali_kelas'];
-
-    String waliKelas = '-';
-    if (ht is Map) {
-      waliKelas = ht['name']?.toString() ?? '-';
-    } else if (ht is List && ht.isNotEmpty && ht[0] is Map) {
-      waliKelas = ht[0]['name']?.toString() ?? '-';
-    } else if (wk is Map) {
-      waliKelas = wk['nama']?.toString() ?? wk['name']?.toString() ?? '-';
-    } else if (wk is List && wk.isNotEmpty && wk[0] is Map) {
-      waliKelas = wk[0]['nama']?.toString() ?? wk[0]['name']?.toString() ?? '-';
-    } else {
-      waliKelas =
-          item['wali_kelas_name']?.toString() ??
-          item['homeroom_teacher_name']?.toString() ??
-          '-';
-    }
-
-    return GestureDetector(
-      onTap: () {
+  /// Delegates to [GradeRecapClassList].
+  /// All wizard-state mutations (setState + _loadSubjects) stay here via
+  /// the [onClassTap] callback — the extracted widget is purely presentational.
+  Widget _buildClassList(LanguageProvider languageProvider) {
+    return GradeRecapClassList(
+      classList: _classList,
+      searchQuery: _searchController.text.toLowerCase(),
+      isLoading: _isLoading,
+      isLoadingMore: _isLoadingMore,
+      primaryColor: _getPrimaryColor(),
+      todaySchedules: _todaySchedules,
+      todayLabel: languageProvider.getTranslatedText({
+        'en': 'TODAY',
+        'id': 'HARI INI',
+      }),
+      emptyLabel: languageProvider.getTranslatedText({
+        'en': 'No classes found',
+        'id': 'Kelas tidak ditemukan',
+      }),
+      scrollController: _scrollController,
+      onClassTap: (item) {
         setState(() {
           _selectedClass = item;
           _currentStep = 1;
@@ -2136,144 +1715,22 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         });
         _loadSubjects();
       },
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: ColorUtils.corporateShadow(),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: _getPrimaryColor().withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.class_outlined,
-                    color: _getPrimaryColor(),
-                    size: 26,
-                  ),
-                ),
-              ),
-              SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item['nama'] ?? item['name'] ?? '-',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: ColorUtils.slate900,
-                            ),
-                          ),
-                        ),
-                        if (isToday)
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: ColorUtils.success600.withValues(
-                                alpha: 0.1,
-                              ),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'TODAY',
-                                'id': 'HARI INI',
-                              }),
-                              style: TextStyle(
-                                color: ColorUtils.success600,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: AppSpacing.sm),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        _buildInfoTag(
-                          Icons.layers_outlined,
-                          '${item['grade_level'] ?? '-'}',
-                        ),
-                        _buildInfoTag(Icons.person_outline, waliKelas),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, color: ColorUtils.slate300),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
+  /// Delegates to [GradeRecapSubjectList].
+  /// All wizard-state mutations (setState + _loadRecapData) stay here via
+  /// the [onSubjectTap] callback — the extracted widget is purely presentational.
   Widget _buildSubjectList(LanguageProvider languageProvider) {
-    if (_isLoading) return SkeletonListLoading();
-
-    final query = _searchController.text.toLowerCase();
-    final filteredList = _subjectList.where((item) {
-      final name = (item['nama'] ?? item['name'] ?? '')
-          .toString()
-          .toLowerCase();
-      return name.contains(query);
-    }).toList();
-
-    if (filteredList.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 64, color: ColorUtils.slate300),
-            SizedBox(height: AppSpacing.lg),
-            Text(
-              languageProvider.getTranslatedText({
-                'en': 'No subjects found',
-                'id': 'Mata pelajaran tidak ditemukan',
-              }),
-              style: TextStyle(color: ColorUtils.slate500, fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
-      itemCount: filteredList.length,
-      itemBuilder: (context, index) {
-        final item = filteredList[index];
-        return _buildSubjectCard(item, languageProvider);
-      },
-    );
-  }
-
-  Widget _buildSubjectCard(dynamic item, LanguageProvider languageProvider) {
-    // Highlighting current class/subject combo is usually overkill for rekap,
-    // but we can check if it's the same category.
-
-    return GestureDetector(
-      onTap: () {
+    return GradeRecapSubjectList(
+      subjectList: _subjectList,
+      searchQuery: _searchController.text.toLowerCase(),
+      isLoading: _isLoading,
+      emptyLabel: languageProvider.getTranslatedText({
+        'en': 'No subjects found',
+        'id': 'Mata pelajaran tidak ditemukan',
+      }),
+      onSubjectTap: (item) {
         setState(() {
           _selectedSubject = item;
           _currentStep = 2;
@@ -2281,613 +1738,6 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         });
         _loadRecapData();
       },
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: ColorUtils.corporateShadow(),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: ColorUtils.warning600.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.book_outlined,
-                    color: ColorUtils.warning600,
-                    size: 26,
-                  ),
-                ),
-              ),
-              SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['nama'] ?? item['name'] ?? '-',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: ColorUtils.slate900,
-                      ),
-                    ),
-                    SizedBox(height: AppSpacing.sm),
-                    _buildInfoTag(
-                      Icons.history_edu_outlined,
-                      item['subject_code'] ?? 'Mata Pelajaran',
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, color: ColorUtils.slate300),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecapTable(LanguageProvider languageProvider) {
-    if (_isLoading) {
-      return SkeletonListLoading(
-        itemCount: 5,
-        infoTagCount: 3,
-        showActions: false,
-      );
-    }
-
-    final int numChapters = _chapters.isNotEmpty ? _chapters.length : 1;
-
-    // Frozen column width (Combined Name & NIS) using dynamic state
-    final double leftWidth = _studentInfoWidth;
-
-    const double gradeCellWidth = 110; // Bab, UTS, UAS
-    const double finalScoreWidth = 80;
-    const double predikatWidth = 80;
-    const double deskripsiWidth = 280;
-
-    final double rightSideWidth =
-        (numChapters * gradeCellWidth) +
-        (gradeCellWidth * 2) + // UTS + UAS
-        (finalScoreWidth * 2) + // Final + Skill
-        predikatWidth +
-        deskripsiWidth +
-        60; // Extra horizontal margin for safety
-
-    // Left Side: Frozen column (Combined Name & NIS)
-    final leftSide = Container(
-      width: leftWidth,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(right: BorderSide(color: ColorUtils.slate200, width: 2)),
-      ),
-      child: Column(
-        children: [
-          // Header with Resize Handle
-          Stack(
-            children: [
-              Container(
-                height: 60,
-                width: leftWidth,
-                padding: EdgeInsets.only(left: 16, right: 8),
-                alignment: Alignment.centerLeft,
-                decoration: BoxDecoration(
-                  color: ColorUtils.slate50,
-                  border: Border(
-                    bottom: BorderSide(color: ColorUtils.slate200),
-                  ),
-                ),
-                child: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'STUDENT INFO',
-                    'id': 'INFO SISWA',
-                  }),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: ColorUtils.slate700,
-                    fontSize: 12,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // Resize Handle
-              Positioned(
-                right: 0,
-                top: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onHorizontalDragUpdate: (details) {
-                    setState(() {
-                      _studentInfoWidth += details.delta.dx;
-                      // Constraints: min 100, max 350
-                      if (_studentInfoWidth < 100) _studentInfoWidth = 100;
-                      if (_studentInfoWidth > 350) _studentInfoWidth = 350;
-                    });
-                  },
-                  child: Container(
-                    width: 10,
-                    color: Colors.transparent,
-                    child: Center(
-                      child: Container(
-                        width: 2,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: ColorUtils.slate300,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          // Student Rows
-          ..._tableData.map((row) {
-            return Container(
-              height: 75,
-              width: leftWidth,
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.centerLeft,
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    row['nama'] ?? '-',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: ColorUtils.slate800,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'NIS: ${row['nis'] ?? '-'}',
-                    style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-
-    // Right Side: Scrollable columns
-    final rightSide = SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SizedBox(
-        width: rightSideWidth,
-        child: Column(
-          children: [
-            // Header Row
-            Container(
-              height: 60,
-              decoration: BoxDecoration(
-                color: ColorUtils.slate50,
-                border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
-              ),
-              child: Row(
-                children: [
-                  // Dynamic Bab Columns
-                  for (int i = 0; i < numChapters; i++)
-                    Container(
-                      width: gradeCellWidth,
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: InkWell(
-                              onTap: () => _showBulkSelectionDialog('bab', i),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      _chapters.length > i
-                                          ? (_chapters[i]['judul_bab'] ??
-                                                _chapters[i]['judul'] ??
-                                                _chapters[i]['title'] ??
-                                                'Bab ${i + 1}')
-                                          : 'Bab ${i + 1}',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: ColorUtils.slate700,
-                                        fontSize: 11,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  SizedBox(width: AppSpacing.xs),
-                                  Icon(
-                                    Icons.edit_outlined,
-                                    size: 12,
-                                    color: ColorUtils.slate400,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () => _deleteChapter(i),
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 4.0),
-                              child: Icon(
-                                Icons.close,
-                                size: 14,
-                                color: Colors.red.withValues(alpha: 0.7),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  // UTS Header
-                  Container(
-                    width: gradeCellWidth,
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    alignment: Alignment.center,
-                    child: InkWell(
-                      onTap: () => _showBulkSelectionDialog('uts'),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'PTS/UTS',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: ColorUtils.slate700,
-                              fontSize: 12,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.xs),
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 12,
-                            color: ColorUtils.slate400,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // UAS Header
-                  Container(
-                    width: gradeCellWidth,
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    alignment: Alignment.center,
-                    child: InkWell(
-                      onTap: () => _showBulkSelectionDialog('uas'),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'PAS/UAS',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: ColorUtils.slate700,
-                              fontSize: 12,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.xs),
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 12,
-                            color: ColorUtils.slate400,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Final Header
-                  Container(
-                    width: finalScoreWidth,
-                    alignment: Alignment.center,
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Final',
-                        'id': 'Akhir',
-                      }),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: ColorUtils.slate700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-
-                  // Skill Header
-                  Container(
-                    width: finalScoreWidth,
-                    alignment: Alignment.center,
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Skill',
-                        'id': 'Keterampilan',
-                      }),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: ColorUtils.slate700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-
-                  // Pred Header
-                  Container(
-                    width: predikatWidth,
-                    alignment: Alignment.center,
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Grade',
-                        'id': 'Pred',
-                      }),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: ColorUtils.slate700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-
-                  // Deskripsi Header
-                  Container(
-                    width: deskripsiWidth,
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Description',
-                        'id': 'Deskripsi',
-                      }),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: ColorUtils.slate700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Data Rows
-            ..._tableData.map((row) {
-              final String studentClassId = row['student_class_id'];
-              return Container(
-                height: 75,
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: ColorUtils.slate200),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // Bab cells
-                    for (int i = 0; i < numChapters; i++)
-                      Container(
-                        width: gradeCellWidth,
-                        alignment: Alignment.center,
-                        child: _buildEditableGradeCell(
-                          studentClassId,
-                          'bab',
-                          i,
-                        ),
-                      ),
-
-                    // UTS cell
-                    Container(
-                      width: gradeCellWidth,
-                      alignment: Alignment.center,
-                      child: _buildEditableGradeCell(
-                        studentClassId,
-                        'uts',
-                        null,
-                      ),
-                    ),
-
-                    // UAS cell
-                    Container(
-                      width: gradeCellWidth,
-                      alignment: Alignment.center,
-                      child: _buildEditableGradeCell(
-                        studentClassId,
-                        'uas',
-                        null,
-                      ),
-                    ),
-
-                    // Final Score
-                    Container(
-                      width: finalScoreWidth,
-                      alignment: Alignment.center,
-                      child: Text(
-                        row['final_score']?.toStringAsFixed(1) ?? '0.0',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: _getPrimaryColor(),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-
-                    // Skill Score Editable
-                    Container(
-                      width: finalScoreWidth,
-                      alignment: Alignment.center,
-                      child: _buildEditableGradeCell(
-                        studentClassId,
-                        'skill_score',
-                        null,
-                      ),
-                    ),
-
-                    // Predikat
-                    Container(
-                      width: predikatWidth,
-                      alignment: Alignment.center,
-                      child: SizedBox(
-                        width: 60,
-                        child: TextField(
-                          controller: _predikatControllers[studentClassId],
-                          style: TextStyle(fontSize: 13),
-                          textAlign: TextAlign.center,
-                          decoration: InputDecoration(
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 10,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: ColorUtils.slate200,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: ColorUtils.slate200,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Deskripsi
-                    Container(
-                      width: deskripsiWidth,
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      alignment: Alignment.centerLeft,
-                      child: TextField(
-                        controller: _deskripsiControllers[studentClassId],
-                        maxLines: 2,
-                        style: TextStyle(fontSize: 12),
-                        readOnly: true,
-                        onTap: () {
-                          final studentName = row['nama'] ?? 'Siswa';
-                          _showEditDeskripsiDialog(studentClassId, studentName);
-                        },
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding: EdgeInsets.all(10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: ColorUtils.slate200),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: ColorUtils.slate200),
-                          ),
-                          fillColor: ColorUtils.slate50,
-                          filled: true,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-
-    return Column(
-      children: [
-        // Action Bar for Table
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          color: Colors.white,
-          child: Row(
-            children: [
-              Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Grade Data',
-                  'id': 'Data Nilai',
-                }),
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: ColorUtils.slate700,
-                ),
-              ),
-              Spacer(),
-              OutlinedButton.icon(
-                key: _addChapterKey,
-                onPressed: _addChapter,
-                icon: Icon(Icons.add, size: 16),
-                label: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Add Bab',
-                    'id': 'Tambah Bab',
-                  }),
-                  style: TextStyle(fontSize: 12),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _getPrimaryColor(),
-                  side: BorderSide(color: _getPrimaryColor()),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            padding: EdgeInsets.all(AppSpacing.lg),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: ColorUtils.corporateShadow(),
-                border: Border.all(color: ColorUtils.slate200),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      leftSide,
-                      Expanded(child: rightSide),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 

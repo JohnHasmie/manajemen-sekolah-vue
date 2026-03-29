@@ -21,8 +21,9 @@ class AttendanceService {
     if (subjectId != null) queryParams['mataPelajaranId'] = subjectId;
     if (studentId != null) queryParams['student_id'] = studentId;
     if (classId != null) queryParams['classId'] = classId;
-    if (academicYearId != null)
+    if (academicYearId != null) {
       queryParams['academic_year_id'] = academicYearId;
+    }
     if (lessonHourId != null) queryParams['lesson_hour_id'] = lessonHourId;
 
     AppLogger.debug(
@@ -94,19 +95,24 @@ class AttendanceService {
         'page': page.toString(),
         'limit': limit.toString(),
       };
-      if (teacherId != null && teacherId.isNotEmpty)
+      if (teacherId != null && teacherId.isNotEmpty) {
         params['teacher_id'] = teacherId;
+      }
       if (date != null && date.isNotEmpty) params['date'] = date;
-      if (subjectId != null && subjectId.isNotEmpty)
+      if (subjectId != null && subjectId.isNotEmpty) {
         params['subject_id'] = subjectId;
-      if (studentId != null && studentId.isNotEmpty)
+      }
+      if (studentId != null && studentId.isNotEmpty) {
         params['student_id'] = studentId;
+      }
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
-      if (dateStart != null && dateStart.isNotEmpty)
+      if (dateStart != null && dateStart.isNotEmpty) {
         params['tanggalStart'] = dateStart;
+      }
       if (dateEnd != null && dateEnd.isNotEmpty) params['tanggalEnd'] = dateEnd;
-      if (academicYearId != null && academicYearId.isNotEmpty)
+      if (academicYearId != null && academicYearId.isNotEmpty) {
         params['academic_year_id'] = academicYearId;
+      }
 
       final response = await dioClient.get(
         ApiEndpoints.attendance,
@@ -150,8 +156,9 @@ class AttendanceService {
     if (date != null) queryParams['date'] = date;
     if (subjectId != null) queryParams['subjectId'] = subjectId;
     if (classId != null) queryParams['classId'] = classId;
-    if (academicYearId != null)
+    if (academicYearId != null) {
       queryParams['academic_year_id'] = academicYearId;
+    }
 
     final response = await dioClient.get(
       ApiEndpoints.attendanceSummary,
@@ -186,19 +193,24 @@ class AttendanceService {
       if (academicYearId != null && academicYearId.isNotEmpty) {
         params['academic_year_id'] = academicYearId;
       }
-      if (teacherId != null && teacherId.isNotEmpty)
+      if (teacherId != null && teacherId.isNotEmpty) {
         params['teacher_id'] = teacherId;
-      if (subjectId != null && subjectId.isNotEmpty)
+      }
+      if (subjectId != null && subjectId.isNotEmpty) {
         params['mataPelajaranId'] = subjectId;
+      }
       if (classId != null && classId.isNotEmpty) params['classId'] = classId;
       if (date != null && date.isNotEmpty) params['tanggal'] = date;
-      if (dateStart != null && dateStart.isNotEmpty)
+      if (dateStart != null && dateStart.isNotEmpty) {
         params['tanggalStart'] = dateStart;
+      }
       if (dateEnd != null && dateEnd.isNotEmpty) params['tanggalEnd'] = dateEnd;
-      if (dayIds != null && dayIds.isNotEmpty)
+      if (dayIds != null && dayIds.isNotEmpty) {
         params['day_ids'] = dayIds.join(',');
-      if (lessonHourIds != null && lessonHourIds.isNotEmpty)
+      }
+      if (lessonHourIds != null && lessonHourIds.isNotEmpty) {
         params['lesson_hour_ids'] = lessonHourIds.join(',');
+      }
 
       final response = await dioClient.get(
         ApiEndpoints.attendanceSummary,
@@ -276,14 +288,18 @@ class AttendanceService {
   }) async {
     final queryParams = <String, dynamic>{};
     if (date != null && date.isNotEmpty) queryParams['tanggal'] = date;
-    if (classId != null && classId.isNotEmpty)
+    if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
-    if (subjectId != null && subjectId.isNotEmpty)
+    }
+    if (subjectId != null && subjectId.isNotEmpty) {
       queryParams['subject_id'] = subjectId;
-    if (teacherId != null && teacherId.isNotEmpty)
+    }
+    if (teacherId != null && teacherId.isNotEmpty) {
       queryParams['teacher_id'] = teacherId;
-    if (lessonHourId != null && lessonHourId.isNotEmpty)
+    }
+    if (lessonHourId != null && lessonHourId.isNotEmpty) {
       queryParams['lesson_hour_id'] = lessonHourId;
+    }
 
     try {
       final response = await dioClient.get(

@@ -14,7 +14,6 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -22,8 +21,12 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-// Note: ensure AppLocalizations and Provider are imported if needed,
-// but here we use common styling.
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_polling_skeleton_body.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_polling_error_body.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_meta_row.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_plain_text_field.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_rich_text_field.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_dialog_field.dart';
 
 /// AI-generated lesson plan viewer/editor with rich text editing.
 ///
@@ -443,12 +446,12 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                   style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
                 ),
                 SizedBox(height: AppSpacing.lg),
-                _buildDialogField(
-                  'Mata Pelajaran',
-                  _subjectNameController.text,
+                RppDialogField(
+                  label: 'Mata Pelajaran',
+                  value: _subjectNameController.text,
                 ),
                 SizedBox(height: AppSpacing.md),
-                _buildDialogField('Bab', _chapterController.text),
+                RppDialogField(label: 'Bab', value: _chapterController.text),
                 SizedBox(height: AppSpacing.lg),
                 Text(
                   'Instruksi / Prompt Tambahan (Opsional)',
@@ -512,31 +515,6 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
     );
   }
 
-  Widget _buildDialogField(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(color: ColorUtils.slate500, fontSize: 12)),
-        SizedBox(height: AppSpacing.xs),
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Text(
-            value.isEmpty ? '-' : value,
-            style: TextStyle(
-              color: ColorUtils.slate800,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Future<void> _regenerateLessonPlan({String prompt = ''}) async {
     setState(() {
@@ -806,163 +784,6 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
     }
   }
 
-  Widget _buildPollingSkeletonBody() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Status banner
-          Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.2),
-              ),
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: ColorUtils.getRoleColor('guru'),
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'AI sedang menyusun RPP...',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: ColorUtils.getRoleColor('guru'),
-                          fontSize: 14,
-                        ),
-                      ),
-                      SizedBox(height: AppSpacing.xs),
-                      Text(
-                        _pollingStatus,
-                        style: TextStyle(
-                          color: ColorUtils.slate500,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: AppSpacing.xxl),
-          // Skeleton sections
-          _buildSkeletonSection('Judul RPP', height: 48),
-          SizedBox(height: AppSpacing.xl),
-          _buildSkeletonSection('Informasi Umum', height: 200),
-          SizedBox(height: AppSpacing.xl),
-          _buildSkeletonSection('A. Kompetensi Inti (KI)', height: 120),
-          SizedBox(height: AppSpacing.xl),
-          _buildSkeletonSection('B. Kompetensi Dasar (KD)', height: 120),
-          SizedBox(height: AppSpacing.xl),
-          _buildSkeletonSection('C. Tujuan Pembelajaran', height: 120),
-          SizedBox(height: AppSpacing.xl),
-          _buildSkeletonSection('D. Kegiatan Pembelajaran', height: 150),
-          SizedBox(height: AppSpacing.xl),
-          _buildSkeletonSection('E. Penilaian (Asesmen)', height: 120),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSkeletonSection(String title, {double height = 120}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: ColorUtils.slate800,
-          ),
-        ),
-        SizedBox(height: AppSpacing.sm),
-        Shimmer.fromColors(
-          baseColor: ColorUtils.shimmerBaseColor,
-          highlightColor: ColorUtils.shimmerHighlightColor,
-          child: Container(
-            width: double.infinity,
-            height: height,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPollingErrorBody() {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xxl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: ColorUtils.error600.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.error_outline_rounded,
-                size: 36,
-                color: ColorUtils.error600,
-              ),
-            ),
-            SizedBox(height: AppSpacing.xl),
-            Text(
-              AppLocalizations.failedToGenerateRpp.tr,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: ColorUtils.slate700,
-              ),
-            ),
-            SizedBox(height: AppSpacing.sm),
-            Text(
-              _pollingError ?? '',
-              style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: AppSpacing.xl),
-            ElevatedButton(
-              onPressed: () => AppNavigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ColorUtils.getRoleColor('guru'),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: Text('Kembali'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -1018,9 +839,12 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                 ],
         ),
         body: _isPolling
-            ? _buildPollingSkeletonBody()
+            ? LessonPlanPollingSkeletonBody(pollingStatus: _pollingStatus)
             : _pollingError != null
-            ? _buildPollingErrorBody()
+            ? LessonPlanPollingErrorBody(
+                pollingError: _pollingError,
+                onBack: () => AppNavigator.pop(context),
+              )
             : SingleChildScrollView(
                 padding: EdgeInsets.all(AppSpacing.lg),
                 child: Column(
@@ -1052,29 +876,29 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                     ),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('Judul RPP'),
-                    _buildTextField(_titleController, maxLines: 1),
+                    RppPlainTextField(controller: _titleController, maxLines: 1),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('Informasi Umum'),
                     _buildMetaInfoPanel(),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('A. Kompetensi Inti (KI)'),
-                    _buildRichTextField(_coreCompetencyController),
+                    RppRichTextField(controller:_coreCompetencyController),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader(
                       'B. Kompetensi Dasar (KD) dan Indikator (IPK)',
                     ),
-                    _buildRichTextField(_basicCompetencyController),
+                    RppRichTextField(controller:_basicCompetencyController),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('C. Tujuan Pembelajaran'),
-                    _buildRichTextField(_objectivesController),
+                    RppRichTextField(controller:_objectivesController),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader(
                       'D. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup)',
                     ),
-                    _buildRichTextField(_coreActivityController),
+                    RppRichTextField(controller:_coreActivityController),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('E. Penilaian (Asesmen)'),
-                    _buildRichTextField(_assessmentController),
+                    RppRichTextField(controller:_assessmentController),
                     SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
@@ -1136,136 +960,16 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       ),
       child: Column(
         children: [
-          _buildMetaRow('Satuan Pendidikan', _educationUnitController),
-          _buildMetaRow('Mata Pelajaran', _subjectNameController),
-          _buildMetaRow('Bab', _chapterController),
-          _buildMetaRow('Sub Bab', _subChapterController),
-          _buildMetaRow('Kelas/Semester', _classSemesterController),
-          _buildMetaRow('Pembelajaran Ke', _lessonNumberController),
-          _buildMetaRow('Alokasi Waktu', _timeAllocationController),
+          RppMetaRow(label: 'Satuan Pendidikan', controller: _educationUnitController),
+          RppMetaRow(label: 'Mata Pelajaran', controller: _subjectNameController),
+          RppMetaRow(label: 'Bab', controller: _chapterController),
+          RppMetaRow(label: 'Sub Bab', controller: _subChapterController),
+          RppMetaRow(label: 'Kelas/Semester', controller: _classSemesterController),
+          RppMetaRow(label: 'Pembelajaran Ke', controller: _lessonNumberController),
+          RppMetaRow(label: 'Alokasi Waktu', controller: _timeAllocationController),
         ],
       ),
     );
   }
 
-  Widget _buildMetaRow(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: ColorUtils.slate700,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(' : ', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style: TextStyle(fontSize: 13, color: ColorUtils.slate900),
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 10,
-                ),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: ColorUtils.slate300),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField(TextEditingController controller, {int maxLines = 4}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        maxLines: maxLines,
-        style: TextStyle(fontSize: 14, height: 1.6, color: ColorUtils.slate800),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.all(AppSpacing.lg),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRichTextField(quill.QuillController controller) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-            child: quill.QuillSimpleToolbar(
-              controller: controller,
-              config: const quill.QuillSimpleToolbarConfig(
-                showFontFamily: false,
-                showFontSize: false,
-                showInlineCode: false,
-                showListCheck: false,
-                showCodeBlock: false,
-                showQuote: false,
-                showUndo: false,
-                showRedo: false,
-                showSearchButton: false,
-                showSubscript: false,
-                showSuperscript: false,
-              ),
-            ),
-          ),
-          Divider(height: 1, color: ColorUtils.slate200),
-          Container(
-            height: 200,
-            padding: EdgeInsets.all(AppSpacing.lg),
-            child: quill.QuillEditor.basic(
-              controller: controller,
-              config: const quill.QuillEditorConfig(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

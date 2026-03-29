@@ -27,6 +27,10 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/admin_teacher_card.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/admin_subject_card.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/admin_activity_card.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/admin_activity_detail_item.dart';
 
 /// Admin screen to monitor class activities (assignments, exams) per teacher/subject.
 ///
@@ -484,344 +488,31 @@ class AdminClassActivityScreenState
 
   // ─── Pattern #8: Teacher Card ──────────────────────────────────────────────
   Widget _buildTeacherCard(Map<String, dynamic> teacher, int index) {
-    final teacherName = teacher['name']?.toString() ?? 'Nama tidak tersedia';
-    final teacherEmail = teacher['email']?.toString() ?? '';
-    final teacherNip = teacher['nip']?.toString() ?? '';
-    final avatarColor = ColorUtils.getColorForIndex(index);
-
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () =>
-              _loadSubjectsByTeacher(teacher['id'].toString(), teacherName),
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            child: Row(
-              children: [
-                // CircleAvatar with first letter
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: avatarColor.withValues(alpha: 0.15),
-                  child: Text(
-                    teacherName[0].toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: avatarColor,
-                    ),
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                // Teacher info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        teacherName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (teacherEmail.isNotEmpty || teacherNip.isNotEmpty) ...[
-                        SizedBox(height: 5),
-                        Wrap(
-                          spacing: 5,
-                          runSpacing: 4,
-                          children: [
-                            if (teacherEmail.isNotEmpty)
-                              _buildInfoTag(Icons.email_outlined, teacherEmail),
-                            if (teacherNip.isNotEmpty)
-                              _buildInfoTag(
-                                Icons.badge_outlined,
-                                'NIP: $teacherNip',
-                              ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                SizedBox(width: AppSpacing.sm),
-                // Chevron
-                Container(
-                  padding: EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: ColorUtils.slate100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: ColorUtils.slate500,
-                    size: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return AdminTeacherCard(
+      teacher: teacher,
+      index: index,
+      onTap: () =>
+          _loadSubjectsByTeacher(teacher['id'].toString(), teacher['name']?.toString() ?? ''),
     );
   }
 
   // ─── Pattern #8: Subject Card ──────────────────────────────────────────────
   Widget _buildSubjectCard(Map<String, dynamic> subject, int index) {
-    final subjectName = subject['name']?.toString() ?? 'Mata Pelajaran';
-    final subjectColor = ColorUtils.getColorForIndex(index);
-
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () =>
-              _loadActivitiesBySubject(subject['id'].toString(), subjectName),
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            child: Row(
-              children: [
-                // Colored icon container
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: subjectColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: subjectColor.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.menu_book_rounded,
-                    color: subjectColor,
-                    size: 22,
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                // Subject name + hint
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        subjectName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'Ketuk untuk melihat kegiatan',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: AppSpacing.sm),
-                Container(
-                  padding: EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: ColorUtils.slate100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: ColorUtils.slate500,
-                    size: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+    return AdminSubjectCard(
+      subject: subject,
+      index: index,
+      onTap: () => _loadActivitiesBySubject(
+        subject['id'].toString(),
+        subject['name']?.toString() ?? '',
       ),
     );
   }
 
   // ─── Pattern #8: Activity Card ─────────────────────────────────────────────
   Widget _buildActivityCard(Map<String, dynamic> activity, int index) {
-    final isAssignment = activity['type'] == 'assignment';
-    final isSpecificTarget = activity['target'] == 'specific';
-    final accentColor = isAssignment
-        ? ColorUtils.corporateBlue600
-        : ColorUtils.success600;
-
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showActivityDetail(activity),
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Icon container (tugas vs materi)
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: accentColor.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  child: Icon(
-                    isAssignment
-                        ? Icons.assignment_outlined
-                        : Icons.menu_book_outlined,
-                    color: accentColor,
-                    size: 22,
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        activity['title'] ?? 'Judul Kegiatan',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        '${activity['subject_name'] ?? '-'} • ${activity['class_name'] ?? '-'}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: 5,
-                        runSpacing: 4,
-                        children: [
-                          _buildInfoTag(
-                            Icons.calendar_today_outlined,
-                            '${activity['day'] ?? '-'} • ${_formatDate(activity['date'])}',
-                          ),
-                          _buildInfoTag(
-                            isAssignment
-                                ? Icons.assignment_outlined
-                                : Icons.menu_book_outlined,
-                            isAssignment ? 'Tugas' : 'Materi',
-                            tagColor: accentColor,
-                          ),
-                          _buildInfoTag(
-                            isSpecificTarget
-                                ? Icons.person_outline
-                                : Icons.group_outlined,
-                            isSpecificTarget ? 'Khusus' : 'Semua',
-                            tagColor: isSpecificTarget
-                                ? ColorUtils.corporateBlue600
-                                : ColorUtils.success600,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: AppSpacing.sm),
-                Container(
-                  padding: EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: ColorUtils.slate100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: ColorUtils.slate500,
-                    size: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─── Reusable info chip (Pattern #8) ──────────────────────────────────────
-  Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
-    final c = tagColor ?? ColorUtils.slate600;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: tagColor != null
-            ? tagColor.withValues(alpha: 0.08)
-            : ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: tagColor != null
-              ? tagColor.withValues(alpha: 0.3)
-              : ColorUtils.slate200,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: c),
-          SizedBox(width: 3),
-          Flexible(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 10,
-                color: c,
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
+    return AdminActivityCard(
+      activity: activity,
+      onTap: () => _showActivityDetail(activity),
     );
   }
 
@@ -902,36 +593,42 @@ class AdminClassActivityScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDetailItem(
+                    AdminActivityDetailItem(
                       icon: Icons.person,
                       label: 'Guru Pengajar',
                       value: activity['guru_nama'] ?? 'Tidak Diketahui',
+                      primaryColor: _getPrimaryColor(),
                     ),
-                    _buildDetailItem(
+                    AdminActivityDetailItem(
                       icon: Icons.calendar_today,
                       label: 'Hari',
                       value: activity['hari'] ?? '-',
+                      primaryColor: _getPrimaryColor(),
                     ),
-                    _buildDetailItem(
+                    AdminActivityDetailItem(
                       icon: Icons.date_range,
                       label: 'Tanggal',
                       value: _formatDate(activity['tanggal']),
+                      primaryColor: _getPrimaryColor(),
                     ),
                     if (isAssignment)
-                      _buildDetailItem(
+                      AdminActivityDetailItem(
                         icon: Icons.access_time,
                         label: 'Batas Waktu',
                         value: _formatDate(activity['batas_waktu']),
+                        primaryColor: _getPrimaryColor(),
                       ),
-                    _buildDetailItem(
+                    AdminActivityDetailItem(
                       icon: Icons.category,
                       label: 'Jenis Kegiatan',
                       value: isAssignment ? 'Tugas' : 'Materi',
+                      primaryColor: _getPrimaryColor(),
                     ),
-                    _buildDetailItem(
+                    AdminActivityDetailItem(
                       icon: Icons.group,
                       label: 'Target Siswa',
                       value: isSpecificTarget ? 'Khusus Siswa' : 'Semua Siswa',
+                      primaryColor: _getPrimaryColor(),
                     ),
 
                     if (activity['deskripsi'] != null &&
@@ -977,16 +674,18 @@ class AdminClassActivityScreenState
                       ),
                       SizedBox(height: AppSpacing.sm),
                       if (activity['judul_bab'] != null)
-                        _buildDetailItem(
+                        AdminActivityDetailItem(
                           icon: Icons.menu_book,
                           label: 'Bab',
                           value: activity['judul_bab']!,
+                          primaryColor: _getPrimaryColor(),
                         ),
                       if (activity['judul_sub_bab'] != null)
-                        _buildDetailItem(
+                        AdminActivityDetailItem(
                           icon: Icons.bookmark,
                           label: 'Sub Bab (Utama)',
                           value: activity['judul_sub_bab']!,
+                          primaryColor: _getPrimaryColor(),
                         ),
                       if (activity['additional_material'] != null &&
                           activity['additional_material'] is List &&
@@ -995,10 +694,11 @@ class AdminClassActivityScreenState
                         SizedBox(height: AppSpacing.xs),
                         ...(activity['additional_material'] as List)
                             .map<Widget>((item) {
-                              return _buildDetailItem(
+                              return AdminActivityDetailItem(
                                 icon: Icons.bookmark_add,
                                 label: 'Sub Bab (Tambahan)',
                                 value: item['sub_chapter_title'] ?? 'Unknown',
+                                primaryColor: _getPrimaryColor(),
                               );
                             }),
                       ],
@@ -1037,55 +737,6 @@ class AdminClassActivityScreenState
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDetailItem({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: _getPrimaryColor().withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 18, color: _getPrimaryColor()),
-          ),
-          SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: ColorUtils.slate500,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: ColorUtils.slate800,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

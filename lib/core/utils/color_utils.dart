@@ -255,9 +255,9 @@ class ColorUtils {
   static Color getTextColorForBackground(Color backgroundColor) {
     // Calculate the perceptive luminance
     final luminance =
-        (0.299 * backgroundColor.red +
-            0.587 * backgroundColor.green +
-            0.114 * backgroundColor.blue) /
+        (0.299 * ((backgroundColor.r * 255.0).round() & 0xff) +
+            0.587 * ((backgroundColor.g * 255.0).round() & 0xff) +
+            0.114 * ((backgroundColor.b * 255.0).round() & 0xff)) /
         255;
 
     return luminance > 0.5 ? Colors.black : Colors.white;

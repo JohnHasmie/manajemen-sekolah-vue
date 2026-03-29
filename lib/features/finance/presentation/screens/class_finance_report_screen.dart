@@ -23,6 +23,9 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/class_finance_table.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/finance_dialog_text_field.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/finance_report_models.dart';
 
 /// Class finance report screen - shows billing/payment details for a specific class.
 ///
@@ -268,356 +271,6 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     return groups;
   }
 
-  // Helper to check status match
-  bool _checkStatusMatch(dynamic bill, String filter) {
-    if (filter == 'Semua') return true;
-    final String status = bill['status'] ?? 'pending';
-    final bool isPaid = status == 'verified';
-
-    if (filter == 'Lunas') return isPaid;
-
-    // For pending, check if it has pending payments or not
-    if (!isPaid) {
-      bool hasPendingPayment = false;
-      if (bill['payments'] != null) {
-        for (var p in bill['payments']) {
-          if (p['status'] == 'pending') hasPendingPayment = true;
-        }
-      }
-
-      if (filter == 'Belum Dibayar') return !hasPendingPayment;
-      if (filter == 'Belum Diverifikasi') return hasPendingPayment;
-    }
-    return false;
-  }
-
-  Widget _buildCustomTable() {
-    // 1. Filter Data
-    // Filter Students
-    final List<dynamic> filteredStudents = _students.where((s) {
-      if (_searchQuery.isNotEmpty &&
-          !s['name'].toString().toLowerCase().contains(_searchQuery)) {
-        return false;
-      }
-
-      // Status Filter (Show student if they have AT LEAST one bill matching the status, OR if filter is 'Semua')
-      if (_selectedStatus != 'Semua') {
-        // Determine if student has any matching bill
-        bool match = false;
-        final String studentId = s['id'].toString();
-        final bills = _billsByStudent[studentId] ?? [];
-
-        for (var bill in bills) {
-          if (_checkStatusMatch(bill, _selectedStatus)) {
-            match = true;
-            break;
-          }
-        }
-        return match;
-      }
-      return true;
-    }).toList();
-
-    // Filter Columns (Months & Payment Types)
-    final List<MonthGroup> filteredGroups = _monthGroups
-        .where((m) {
-          if (_selectedMonthKey != null && m.monthKey != _selectedMonthKey) {
-            return false;
-          }
-          return true;
-        })
-        .map((m) {
-          // Deep copy needed for filtering inner list
-          if (_selectedPaymentTypeId == null) return m;
-          final filteredTypes = m.paymentTypes
-              .where((p) => p.id == _selectedPaymentTypeId)
-              .toList();
-          return MonthGroup(
-            monthKey: m.monthKey,
-            monthName: m.monthName,
-            paymentTypes: filteredTypes,
-          );
-        })
-        .toList();
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double totalWidth = constraints.maxWidth;
-        if (totalWidth.isInfinite) {
-          totalWidth = MediaQuery.of(context).size.width;
-        }
-
-        double scrollableWidth = totalWidth - 150 - 5;
-        if (scrollableWidth < 0) scrollableWidth = 0;
-
-        // Fixed Column (Students)
-        final List<Widget> fixedColumnWidgets = [];
-
-        // Header "Nama"
-        fixedColumnWidgets.add(
-          Container(
-            width: 150,
-            height: 60,
-            alignment: Alignment.centerLeft,
-            padding: EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(color: ColorUtils.slate300),
-                bottom: BorderSide(color: ColorUtils.slate300),
-              ),
-              color: ColorUtils.slate100,
-            ),
-            child: Text(
-              'Nama Siswa',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: ColorUtils.slate700,
-              ),
-            ),
-          ),
-        );
-
-        // Data Rows "Nama"
-        for (var i = 0; i < filteredStudents.length; i++) {
-          final student = filteredStudents[i];
-          fixedColumnWidgets.add(
-            Container(
-              width: 150,
-              height: 50,
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(color: ColorUtils.slate300),
-                  bottom: BorderSide(color: ColorUtils.slate200),
-                ),
-                color: i % 2 == 0 ? Colors.white : ColorUtils.slate50,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    student['name'] ?? '-',
-                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (student['student_number'] != null)
-                    Text(
-                      student['student_number'],
-                      style: TextStyle(
-                        color: ColorUtils.slate400,
-                        fontSize: 11,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        // Scrollable Columns (Bills)
-        // 1. Build Header Rows
-        final List<Widget> monthHeaderWidgets = [];
-        final List<Widget> typeHeaderWidgets = [];
-
-        for (var group in filteredGroups) {
-          final int colCount = group.paymentTypes.isNotEmpty
-              ? group.paymentTypes.length
-              : 1;
-          final double groupWidth = colCount * 100.0;
-
-          // Month Header
-          monthHeaderWidgets.add(
-            Container(
-              width: groupWidth, // Span all child columns
-              height: 30, // Half of 60
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(color: ColorUtils.slate300),
-                  bottom: BorderSide(color: ColorUtils.slate300),
-                ),
-                color: ColorUtils.corporateBlue600,
-              ),
-              child: Text(
-                group.monthName,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          );
-
-          // Type Headers
-          if (group.paymentTypes.isEmpty) {
-            // Render empty placeholder column for this month
-            typeHeaderWidgets.add(
-              Container(
-                width: 100,
-                height: 30,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  border: Border(
-                    right: BorderSide(color: ColorUtils.slate300),
-                    bottom: BorderSide(color: ColorUtils.slate300),
-                  ),
-                  color: ColorUtils.slate100,
-                ),
-                child: Text(
-                  '-',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: ColorUtils.slate400,
-                  ),
-                ),
-              ),
-            );
-          } else {
-            for (var type in group.paymentTypes) {
-              typeHeaderWidgets.add(
-                Container(
-                  width: 100,
-                  height: 30,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      right: BorderSide(color: ColorUtils.slate300),
-                      bottom: BorderSide(color: ColorUtils.slate300),
-                    ),
-                    color: ColorUtils.slate100,
-                  ),
-                  child: Text(
-                    type.name,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: ColorUtils.slate600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              );
-            }
-          }
-        }
-
-        final Widget headerRow = Column(
-          children: [
-            Row(children: monthHeaderWidgets),
-            Row(children: typeHeaderWidgets),
-          ],
-        );
-
-        // 2. Build Data Rows
-        final List<Widget> dataRows = [];
-        for (var i = 0; i < filteredStudents.length; i++) {
-          final student = filteredStudents[i];
-          final String studentId = student['id'].toString();
-          final studentBills = _billsByStudent[studentId] ?? [];
-
-          final List<Widget> rowCells = [];
-
-          for (var group in filteredGroups) {
-            if (group.paymentTypes.isEmpty) {
-              // Render empty placeholder cell for this month
-              rowCells.add(
-                Container(
-                  width: 100,
-                  height: 50,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      right: BorderSide(color: ColorUtils.slate200),
-                      bottom: BorderSide(color: ColorUtils.slate200),
-                    ),
-                    color: i % 2 == 0 ? Colors.white : ColorUtils.slate50,
-                  ),
-                  child: SizedBox(), // Empty content
-                ),
-              );
-            } else {
-              for (var type in group.paymentTypes) {
-                // Find bill for this student, month, and type
-                final bill = studentBills.firstWhere((b) {
-                  // Match type
-                  if (b['payment_type_id'].toString() != type.id) return false;
-                  // Match month (due_date)
-                  if (b['due_date'] == null) return false;
-                  try {
-                    final DateTime d = DateTime.parse(b['due_date']);
-                    final String k =
-                        "${d.year}-${d.month.toString().padLeft(2, '0')}";
-                    return k == group.monthKey;
-                  } catch (_) {
-                    return false;
-                  }
-                }, orElse: () => null);
-
-                rowCells.add(
-                  Container(
-                    width: 100,
-                    height: 50,
-                    alignment: Alignment.center,
-                    // padding: EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        right: BorderSide(color: ColorUtils.slate200),
-                        bottom: BorderSide(color: ColorUtils.slate200),
-                      ),
-                      color: i % 2 == 0 ? Colors.white : ColorUtils.slate50,
-                    ),
-                    child: _buildStatusCell(bill),
-                  ),
-                );
-              }
-            }
-          }
-          dataRows.add(Row(children: rowCells));
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Fixed Column
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: ColorUtils.slate900.withValues(alpha: 0.05),
-                    offset: Offset(4, 0),
-                    blurRadius: 5,
-                    spreadRadius: 0,
-                  ),
-                ],
-              ),
-              width: 150,
-              child: Column(children: fixedColumnWidgets),
-            ),
-
-            // Scrollable Area
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    headerRow,
-                    Column(children: dataRows),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   String _formatCurrency(dynamic amount) {
     if (amount == null) return 'Rp 0';
     try {
@@ -641,35 +294,6 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     );
   }
 
-  Widget _buildDialogTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    String? hint,
-    TextInputType keyboardType = TextInputType.text,
-    VoidCallback? onTap,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        onTap: onTap,
-        readOnly: onTap != null,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 20),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        ),
-      ),
-    );
-  }
 
   Widget _buildInfoItem(String label, String value) {
     return Padding(
@@ -931,17 +555,19 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           },
                         ),
                         SizedBox(height: AppSpacing.md),
-                        _buildDialogTextField(
+                        FinanceDialogTextField(
                           controller: amountController,
                           label: 'Jumlah Bayar',
                           icon: Icons.attach_money,
+                          primaryColor: _getPrimaryColor(),
                           keyboardType: TextInputType.number,
                         ),
                         SizedBox(height: AppSpacing.md),
-                        _buildDialogTextField(
+                        FinanceDialogTextField(
                           controller: paymentDateController,
                           label: 'Tanggal Bayar',
                           icon: Icons.calendar_today,
+                          primaryColor: _getPrimaryColor(),
                           onTap: () async {
                             final date = await showDatePicker(
                               context: context,
@@ -1430,7 +1056,16 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                     )
                   : SingleChildScrollView(
                       scrollDirection: Axis.vertical,
-                      child: _buildCustomTable(),
+                      child: ClassFinanceTable(
+                        students: _students,
+                        billsByStudent: _billsByStudent,
+                        monthGroups: _monthGroups,
+                        searchQuery: _searchQuery,
+                        selectedPaymentTypeId: _selectedPaymentTypeId,
+                        selectedMonthKey: _selectedMonthKey,
+                        selectedStatus: _selectedStatus,
+                        onBillTap: _showPaymentOptions,
+                      ),
                     ),
             ),
           ),
@@ -1827,74 +1462,6 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
     );
   }
 
-  // UI Polish: Status Pills with Interaction
-  Widget _buildStatusCell(dynamic bill) {
-    if (bill == null) return SizedBox();
-
-    final status = bill['status'];
-    Color color;
-    String text;
-
-    // 1. Check Verified/Lunas
-    if (status == 'verified') {
-      color = ColorUtils.success600;
-      text = 'Lunas';
-    }
-    // 2. Check Pending Verification (Menunggu)
-    else {
-      bool hasPendingPayment = false;
-      if (bill['payments'] != null && bill['payments'] is List) {
-        for (var p in bill['payments']) {
-          final pStatus = p['status'];
-          if (pStatus == 'pending' || pStatus == 'test_status') {
-            hasPendingPayment = true;
-            break;
-          }
-        }
-      }
-
-      if (hasPendingPayment) {
-        color = ColorUtils.warning600;
-        text = 'Menunggu';
-      } else {
-        // 3. Fallback: Not Paid
-        color = ColorUtils.error600;
-        text = 'Belum';
-      }
-    }
-
-    return InkWell(
-      onTap: () => _showPaymentOptions(bill),
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 5,
-              height: 5,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            SizedBox(width: AppSpacing.xs),
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showPaymentOptions(dynamic bill) {
     showModalBottomSheet(
@@ -2270,20 +1837,3 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
   }
 }
 
-class MonthGroup {
-  final String monthKey;
-  final String monthName;
-  final List<PaymentTypeColumn> paymentTypes;
-
-  MonthGroup({
-    required this.monthKey,
-    required this.monthName,
-    required this.paymentTypes,
-  });
-}
-
-class PaymentTypeColumn {
-  final String id;
-  final String name;
-  PaymentTypeColumn({required this.id, required this.name});
-}

@@ -45,10 +45,12 @@ class AuthService {
         return normalized;
       }
 
-      if (normalized['token'] == null)
+      if (normalized['token'] == null) {
         throw Exception('Server tidak mengembalikan token');
-      if (normalized['user'] == null)
+      }
+      if (normalized['user'] == null) {
         throw Exception('Server tidak mengembalikan data user');
+      }
 
       return normalized;
     } on DioException catch (e) {

@@ -16,7 +16,6 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, Consumer, ChangeNotifierProvider;
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 

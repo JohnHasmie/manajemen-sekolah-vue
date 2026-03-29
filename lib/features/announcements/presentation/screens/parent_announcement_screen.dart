@@ -27,7 +27,6 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -35,6 +34,8 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_detail_row.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_info_tag.dart';
 
 /// School announcements list with automatic read tracking.
 ///
@@ -297,39 +298,6 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
     }
   }
 
-  // Pattern #8 info tag chip
-  Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
-    final c = tagColor ?? ColorUtils.slate600;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: tagColor != null
-            ? tagColor.withValues(alpha: 0.08)
-            : ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: tagColor != null
-              ? tagColor.withValues(alpha: 0.3)
-              : ColorUtils.slate200,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: c),
-          SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 10,
-              color: c,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showAnnouncementDetail(Map<String, dynamic> announcementData) {
     final languageProvider = ref.read(languageRiverpod);
@@ -553,7 +521,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                       ),
                       child: Column(
                         children: [
-                          _buildDetailRow(
+                          AnnouncementDetailRow(
                             icon: Icons.person,
                             label: languageProvider.getTranslatedText({
                               'en': 'Created by',
@@ -561,9 +529,10 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                             }),
                             value:
                                 announcementData['pembuat_nama'] ?? 'Unknown',
+                            primaryColor: _getPrimaryColor(),
                           ),
                           SizedBox(height: AppSpacing.sm),
-                          _buildDetailRow(
+                          AnnouncementDetailRow(
                             icon: Icons.people,
                             label: languageProvider.getTranslatedText({
                               'en': 'Target Role',
@@ -573,11 +542,12 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                               announcementData,
                               languageProvider,
                             ),
+                            primaryColor: _getPrimaryColor(),
                           ),
                           if (announcementData['start_date'] != null)
                             SizedBox(height: AppSpacing.sm),
                           if (announcementData['start_date'] != null)
-                            _buildDetailRow(
+                            AnnouncementDetailRow(
                               icon: Icons.calendar_today,
                               label: languageProvider.getTranslatedText({
                                 'en': 'Start Date',
@@ -586,17 +556,19 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                               value: _formatDate(
                                 announcementData['start_date'],
                               ),
+                              primaryColor: _getPrimaryColor(),
                             ),
                           if (announcementData['end_date'] != null)
                             SizedBox(height: AppSpacing.sm),
                           if (announcementData['end_date'] != null)
-                            _buildDetailRow(
+                            AnnouncementDetailRow(
                               icon: Icons.event_busy,
                               label: languageProvider.getTranslatedText({
                                 'en': 'End Date',
                                 'id': 'Tanggal Berakhir',
                               }),
                               value: _formatDate(announcementData['end_date']),
+                              primaryColor: _getPrimaryColor(),
                             ),
                         ],
                       ),
@@ -677,38 +649,6 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
     }
   }
 
-  Widget _buildDetailRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: _getPrimaryColor()),
-        SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
-              ),
-              SizedBox(height: 2),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorUtils.slate800,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
   // Pattern #8: Material > InkWell > Container with corporateShadow
   Widget _buildAnnouncementCard(
@@ -801,22 +741,22 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         spacing: 5,
                         runSpacing: 4,
                         children: [
-                          _buildInfoTag(
-                            Icons.access_time_outlined,
-                            _formatDate(announcementData['created_at']),
+                          AnnouncementInfoTag(
+                            icon: Icons.access_time_outlined,
+                            text: _formatDate(announcementData['created_at']),
                           ),
-                          _buildInfoTag(
-                            Icons.person_outline,
-                            announcementData['pembuat_nama'] ?? 'Unknown',
+                          AnnouncementInfoTag(
+                            icon: Icons.person_outline,
+                            text: announcementData['pembuat_nama'] ?? 'Unknown',
                           ),
-                          _buildInfoTag(
-                            Icons.people_outline,
-                            _getTargetText(announcementData, languageProvider),
+                          AnnouncementInfoTag(
+                            icon: Icons.people_outline,
+                            text: _getTargetText(announcementData, languageProvider),
                           ),
                           if (isImportant)
-                            _buildInfoTag(
-                              Icons.warning_amber_rounded,
-                              languageProvider.getTranslatedText({
+                            AnnouncementInfoTag(
+                              icon: Icons.warning_amber_rounded,
+                              text: languageProvider.getTranslatedText({
                                 'en': 'Important',
                                 'id': 'Penting',
                               }),

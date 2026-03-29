@@ -9,7 +9,6 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/main.dart';
 
 bool _initialized = false;

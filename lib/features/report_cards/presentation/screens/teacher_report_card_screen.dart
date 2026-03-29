@@ -10,7 +10,6 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/screens/report_card_detail_screen.dart';
 import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
 import 'package:manajemensekolah/features/report_cards/data/report_card_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -27,6 +26,8 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_class_selector.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_student_list.dart';
 
 /// Report card list screen -- shows classes and their students for raport entry.
 ///
@@ -596,239 +597,27 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
   }
 
   Widget _buildClassSelector() {
-    return Container(
-      key: _classSelectorKey,
-      margin: const EdgeInsets.all(AppSpacing.lg),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: ColorUtils.corporateShadow(),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: ColorUtils.slate50,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.class_outlined,
-              color: ColorUtils.slate600,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _languageProvider.getTranslatedText({
-                    'en': 'Select Class',
-                    'id': 'Pilih Kelas',
-                  }),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: ColorUtils.slate500,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                if (_classes.isNotEmpty)
-                  DropdownButtonHideUnderline(
-                    child: DropdownButton<Map<String, dynamic>>(
-                      isExpanded: true,
-                      value: _selectedClass,
-                      icon: Icon(
-                        Icons.keyboard_arrow_down,
-                        color: ColorUtils.slate400,
-                      ),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: ColorUtils.slate800,
-                      ),
-                      onChanged: (newValue) {
-                        if (newValue != null) {
-                          setState(() {
-                            _selectedClass = newValue;
-                            _students = [];
-                          });
-                          _loadStudentsForClass();
-                        }
-                      },
-                      items: _classes.map((cls) {
-                        return DropdownMenuItem<Map<String, dynamic>>(
-                          value: cls,
-                          child: Text(cls['name'] ?? 'Unknown Class'),
-                        );
-                      }).toList(),
-                    ),
-                  )
-                else
-                  Text(
-                    _languageProvider.getTranslatedText({
-                      'en': 'No classes available',
-                      'id': 'Tidak ada kelas',
-                    }),
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: ColorUtils.slate800,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStudentList() {
-    if (_students.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Tidak ada data siswa',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      itemCount: _students.length,
-      itemBuilder: (context, index) {
-        final student = _students[index];
-        final bool hasReportCard = student['has_raport'] ?? false;
-        final String status = student['raport_status'] ?? 'Belum ada';
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: ColorUtils.corporateShadow(),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                AppNavigator.push(
-                  context,
-                  ReportCardDetailScreen(
-                    studentClassId: student['student_class_id'].toString(),
-                    studentName: student['student_name'] ?? 'Siswa',
-                    className: _selectedClass?['name'] ?? '',
-                  ),
-                ).then((_) => _loadStudentsForClass());
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: ColorUtils.slate50,
-                      child: Text(
-                        (student['student_name'] ?? '?')[0].toUpperCase(),
-                        style: TextStyle(
-                          color: ColorUtils.slate600,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.lg),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            student['student_name'] ?? 'Unknown',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: ColorUtils.slate800,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            'NIS: ${student['student_number'] ?? '-'}',
-                            style: TextStyle(
-                              color: ColorUtils.slate500,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _buildStatusBadge(hasReportCard, status),
-                    const SizedBox(width: AppSpacing.sm),
-                    if (status.toLowerCase() == 'final' ||
-                        status.toLowerCase() == 'published')
-                      IconButton(
-                        icon: const Icon(
-                          Icons.picture_as_pdf,
-                          color: Colors.red,
-                        ),
-                        tooltip: 'Cetak PDF',
-                        onPressed: () => _downloadStudentPdf(student),
-                        padding: const EdgeInsets.all(AppSpacing.xs),
-                        constraints: const BoxConstraints(),
-                      ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Icon(Icons.chevron_right, color: ColorUtils.slate400),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
+    return ReportCardClassSelector(
+      selectorKey: _classSelectorKey,
+      classes: _classes,
+      selectedClass: _selectedClass,
+      languageProvider: _languageProvider,
+      onClassChanged: (newValue) {
+        setState(() {
+          _selectedClass = newValue;
+          _students = [];
+        });
+        _loadStudentsForClass();
       },
     );
   }
 
-  Widget _buildStatusBadge(bool hasReportCard, String status) {
-    Color bgColor;
-    Color textColor;
-    String label;
-
-    if (!hasReportCard) {
-      bgColor = Colors.grey.shade100;
-      textColor = Colors.grey.shade600;
-      label = 'Belum Isi';
-    } else if (status.toLowerCase() == 'draft') {
-      bgColor = Colors.orange.shade50;
-      textColor = ColorUtils.warning600;
-      label = 'Draft';
-    } else {
-      bgColor = Colors.green.shade50;
-      textColor = ColorUtils.success600;
-      label = 'Selesai';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+  Widget _buildStudentList() {
+    return ReportCardStudentList(
+      students: _students,
+      selectedClass: _selectedClass,
+      onDownloadPdf: _downloadStudentPdf,
+      onReturnFromDetail: _loadStudentsForClass,
     );
   }
 

@@ -163,7 +163,7 @@ class TeacherAttendanceController
       // Re-initialize to get fresh server data after save
       if (successCount > 0) {
         state = const AsyncLoading();
-        state = await AsyncValue.guard(() => _initialize());
+        state = await AsyncValue.guard(_initialize);
       } else {
         state = AsyncData(currentState.copyWith(isSaving: false, isEditing: false));
       }
@@ -204,4 +204,4 @@ class TeacherAttendanceController
 final teacherAttendanceProvider = AutoDisposeAsyncNotifierProviderFamily<
     TeacherAttendanceController,
     TeacherAttendanceState,
-    TeacherAttendanceParams>(() => TeacherAttendanceController());
+    TeacherAttendanceParams>(TeacherAttendanceController.new);

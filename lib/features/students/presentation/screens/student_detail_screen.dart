@@ -1,7 +1,6 @@
 // Student detail view screen - shows full profile info for a single student.
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, Consumer, ChangeNotifierProvider;
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/students/{id}.vue` - a detail/show page that displays
 // all student information (personal data, class, guardian, etc.).
@@ -18,6 +17,8 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/students/presentation/widgets/student_info_row.dart';
+import 'package:manajemensekolah/features/students/presentation/widgets/student_section_header.dart';
 
 /// Student detail screen - displays full profile for a single student.
 ///
@@ -114,131 +115,6 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
   String _formatDate(String? date) {
     if (date == null) return '-';
     return AppDateUtils.formatDateString(date, format: 'dd/MM/yyyy');
-  }
-
-  Widget _buildInfoRow(
-    String label,
-    String value, {
-    IconData? icon,
-    bool isMultiline = false,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: ColorUtils.slate100),
-      ),
-      child: Row(
-        crossAxisAlignment: isMultiline
-            ? CrossAxisAlignment.start
-            : CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: _getPrimaryColor().withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: _getPrimaryColor().withValues(alpha: 0.15),
-              ),
-            ),
-            child: Icon(
-              icon ?? _getIconForLabel(label),
-              size: 18,
-              color: _getPrimaryColor(),
-            ),
-          ),
-          SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: ColorUtils.slate500,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  value.isNotEmpty ? value : 'Tidak ada',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: ColorUtils.slate800,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: isMultiline ? 3 : 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(IconData icon, String title) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border(left: BorderSide(color: _getPrimaryColor(), width: 3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: _getPrimaryColor()),
-          SizedBox(width: AppSpacing.sm),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: ColorUtils.slate800,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  IconData _getIconForLabel(String label) {
-    switch (label) {
-      case 'Kelas':
-      case 'Class':
-        return Icons.school;
-      case 'Jenis Kelamin':
-      case 'Gender':
-        return Icons.transgender;
-      case 'Tanggal Lahir':
-      case 'Birth Date':
-        return Icons.cake;
-      case 'Alamat':
-      case 'Address':
-        return Icons.location_on;
-      case 'Nama Wali':
-      case 'Parent Name':
-        return Icons.person;
-      case 'No. Telepon':
-      case 'Phone Number':
-        return Icons.phone;
-      case 'Email Wali':
-      case 'Parent Email':
-        return Icons.email;
-      case 'NIS':
-        return Icons.badge;
-      default:
-        return Icons.info;
-    }
   }
 
   @override
@@ -663,51 +539,57 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildSectionHeader(
-                                Icons.person_rounded,
-                                languageProvider.getTranslatedText({
+                              StudentSectionHeader(
+                                icon: Icons.person_rounded,
+                                title: languageProvider.getTranslatedText({
                                   'en': 'Personal Information',
                                   'id': 'Informasi Pribadi',
                                 }),
+                                primaryColor: _getPrimaryColor(),
                               ),
-                              _buildInfoRow(
-                                'NIS',
-                                student['student_number']?.toString() ?? '-',
+                              StudentInfoRow(
+                                label: 'NIS',
+                                value: student['student_number']?.toString() ?? '-',
+                                primaryColor: _getPrimaryColor(),
                                 icon: Icons.badge,
                               ),
-                              _buildInfoRow(
-                                languageProvider.getTranslatedText({
+                              StudentInfoRow(
+                                label: languageProvider.getTranslatedText({
                                   'en': 'Class',
                                   'id': 'Kelas',
                                 }),
-                                student['class']?['name'] ?? 'No Class',
+                                value: student['class']?['name'] ?? 'No Class',
+                                primaryColor: _getPrimaryColor(),
                                 icon: Icons.school,
                               ),
-                              _buildInfoRow(
-                                languageProvider.getTranslatedText({
+                              StudentInfoRow(
+                                label: languageProvider.getTranslatedText({
                                   'en': 'Gender',
                                   'id': 'Jenis Kelamin',
                                 }),
-                                _getGenderText(
+                                value: _getGenderText(
                                   student['gender'],
                                   languageProvider,
                                 ),
+                                primaryColor: _getPrimaryColor(),
                                 icon: Icons.transgender,
                               ),
-                              _buildInfoRow(
-                                languageProvider.getTranslatedText({
+                              StudentInfoRow(
+                                label: languageProvider.getTranslatedText({
                                   'en': 'Birth Date',
                                   'id': 'Tanggal Lahir',
                                 }),
-                                _formatDate(student['date_of_birth']),
+                                value: _formatDate(student['date_of_birth']),
+                                primaryColor: _getPrimaryColor(),
                                 icon: Icons.cake,
                               ),
-                              _buildInfoRow(
-                                languageProvider.getTranslatedText({
+                              StudentInfoRow(
+                                label: languageProvider.getTranslatedText({
                                   'en': 'Address',
                                   'id': 'Alamat',
                                 }),
-                                student['address'] ?? 'No Address',
+                                value: student['address'] ?? 'No Address',
+                                primaryColor: _getPrimaryColor(),
                                 icon: Icons.location_on,
                                 isMultiline: true,
                               ),
@@ -731,20 +613,22 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildSectionHeader(
-                                  Icons.history_rounded,
-                                  languageProvider.getTranslatedText({
+                                StudentSectionHeader(
+                                  icon: Icons.history_rounded,
+                                  title: languageProvider.getTranslatedText({
                                     'en': 'Class History',
                                     'id': 'Riwayat Kelas',
                                   }),
+                                  primaryColor: _getPrimaryColor(),
                                 ),
                                 ...classes.map<Widget>((classItem) {
                                   final year =
                                       classItem['academic_year']?['year'] ??
                                       'Unknown Year';
-                                  return _buildInfoRow(
-                                    year,
-                                    classItem['name'] ?? 'Unknown Class',
+                                  return StudentInfoRow(
+                                    label: year,
+                                    value: classItem['name'] ?? 'Unknown Class',
+                                    primaryColor: _getPrimaryColor(),
                                     icon: Icons.history,
                                   );
                                 }),
@@ -768,37 +652,41 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildSectionHeader(
-                                Icons.family_restroom_rounded,
-                                languageProvider.getTranslatedText({
+                              StudentSectionHeader(
+                                icon: Icons.family_restroom_rounded,
+                                title: languageProvider.getTranslatedText({
                                   'en': 'Parent Information',
                                   'id': 'Informasi Wali',
                                 }),
+                                primaryColor: _getPrimaryColor(),
                               ),
-                              _buildInfoRow(
-                                languageProvider.getTranslatedText({
+                              StudentInfoRow(
+                                label: languageProvider.getTranslatedText({
                                   'en': 'Parent Name',
                                   'id': 'Nama Wali',
                                 }),
-                                student['guardian_name'] ?? 'No Parent Name',
+                                value: student['guardian_name'] ?? 'No Parent Name',
+                                primaryColor: _getPrimaryColor(),
                                 icon: Icons.person,
                               ),
-                              _buildInfoRow(
-                                languageProvider.getTranslatedText({
+                              StudentInfoRow(
+                                label: languageProvider.getTranslatedText({
                                   'en': 'Phone Number',
                                   'id': 'No. Telepon',
                                 }),
-                                student['phone_number'] ?? 'No Phone',
+                                value: student['phone_number'] ?? 'No Phone',
+                                primaryColor: _getPrimaryColor(),
                                 icon: Icons.phone,
                               ),
-                              _buildInfoRow(
-                                languageProvider.getTranslatedText({
+                              StudentInfoRow(
+                                label: languageProvider.getTranslatedText({
                                   'en': 'Parent Email',
                                   'id': 'Email Wali',
                                 }),
-                                student['parent_email'] ??
+                                value: student['parent_email'] ??
                                     student['guardian_email'] ??
                                     'No Email',
+                                primaryColor: _getPrimaryColor(),
                                 icon: Icons.email,
                               ),
                             ],

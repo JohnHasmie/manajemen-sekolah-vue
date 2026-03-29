@@ -17,12 +17,9 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
-import 'package:manajemensekolah/core/widgets/enhanced_search_bar.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
-import 'package:manajemensekolah/core/constants/api_endpoints.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
@@ -37,7 +34,10 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_card.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_class_management_page.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_dialog_text_field.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_filter_section_header.dart';
 
 /// Admin subject management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -123,7 +123,7 @@ class SubjectManagementScreenState
   }
 
   void _onSyncTriggered() {
-    if (FCMService().syncTrigger.value == 'refresh_subjects') {
+    if (FCMService().syncTrigger.value?['type'] == 'refresh_subjects') {
       AppLogger.debug('subject', 'Refreshing subjects due to FCM sync trigger');
       _loadSubjects(resetPage: true, useCache: false).then((_) {
         // Optional: show a small snackbar if item count changed
@@ -393,13 +393,13 @@ class SubjectManagementScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Status Filter
-                        _buildFilterSectionHeader(
-                          languageProvider.getTranslatedText({
+                        SubjectFilterSectionHeader(
+          title: languageProvider.getTranslatedText({
                             'en': 'Status',
                             'id': 'Status',
                           }),
-                          Icons.circle_outlined,
-                        ),
+          icon: Icons.circle_outlined,
+        ),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -470,13 +470,13 @@ class SubjectManagementScreenState
                         ),
 
                         // Status Kelas Filter
-                        _buildFilterSectionHeader(
-                          languageProvider.getTranslatedText({
+                        SubjectFilterSectionHeader(
+          title: languageProvider.getTranslatedText({
                             'en': 'Classes Status',
                             'id': 'Status Kelas',
                           }),
-                          Icons.class_outlined,
-                        ),
+          icon: Icons.class_outlined,
+        ),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -540,13 +540,13 @@ class SubjectManagementScreenState
                         ),
 
                         // Tingkat Kelas Filter
-                        _buildFilterSectionHeader(
-                          languageProvider.getTranslatedText({
+                        SubjectFilterSectionHeader(
+          title: languageProvider.getTranslatedText({
                             'en': 'Grade Level',
                             'id': 'Tingkat Kelas',
                           }),
-                          Icons.layers_outlined,
-                        ),
+          icon: Icons.layers_outlined,
+        ),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -604,13 +604,13 @@ class SubjectManagementScreenState
 
                         // Class Name Filter (Dynamic)
                         if (_availableClassNames.isNotEmpty) ...[
-                          _buildFilterSectionHeader(
-                            languageProvider.getTranslatedText({
+                          SubjectFilterSectionHeader(
+          title: languageProvider.getTranslatedText({
                               'en': 'Class Name',
                               'id': 'Nama Kelas',
                             }),
-                            Icons.school_outlined,
-                          ),
+          icon: Icons.school_outlined,
+        ),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
@@ -742,26 +742,6 @@ class SubjectManagementScreenState
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildFilterSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: EdgeInsets.only(top: 20, bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: ColorUtils.slate600),
-          SizedBox(width: AppSpacing.sm),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: ColorUtils.slate800,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1216,7 +1196,7 @@ class SubjectManagementScreenState
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _buildDialogTextField(
+                            SubjectDialogTextField(
                               controller: codeController,
                               label: languageProvider.getTranslatedText({
                                 'en': 'Code',
@@ -1289,7 +1269,7 @@ class SubjectManagementScreenState
                                     >(
                                       valueListenable: fieldController,
                                       builder: (context, value, _) {
-                                        return _buildDialogTextField(
+                                        return SubjectDialogTextField(
                                           controller: fieldController,
                                           focusNode: fieldFocusNode,
                                           label: languageProvider
@@ -1353,7 +1333,7 @@ class SubjectManagementScreenState
                             SizedBox(height: AppSpacing.md),
 
                             // Subject Name (Standard TextField)
-                            _buildDialogTextField(
+                            SubjectDialogTextField(
                               controller: nameController,
                               label: languageProvider.getTranslatedText({
                                 'en': 'Subject Name',
@@ -1362,7 +1342,7 @@ class SubjectManagementScreenState
                               icon: Icons.menu_book,
                             ),
                             SizedBox(height: AppSpacing.md),
-                            _buildDialogTextField(
+                            SubjectDialogTextField(
                               controller: descriptionController,
                               label: languageProvider.getTranslatedText({
                                 'en': 'Description',
@@ -1595,44 +1575,6 @@ class SubjectManagementScreenState
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildDialogTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    int maxLines = 1,
-    FocusNode? focusNode,
-    Widget? suffixIcon,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 14),
-          prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 20),
-          suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: ColorUtils.corporateBlue600,
-              width: 1.5,
-            ),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        ),
       ),
     );
   }
@@ -2006,236 +1948,6 @@ class SubjectManagementScreenState
     );
   }
 
-  Widget _buildSubjectCard(Map<String, dynamic> subject, int index) {
-    final languageProvider = ref.read(languageRiverpod);
-    final classCount = subject['jumlah_kelas'] ?? 0;
-    final isActive = subject['is_active'] ?? true;
-    final avatarColor = ColorUtils.getColorForIndex(index);
-    final subjectCode = subject['code'] ?? subject['kode'] ?? '-';
-    final classNames = (subject['kelas_names']?.toString() ?? '')
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ColorUtils.slate200, width: 1),
-        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: () => _navigateToClassManagement(subject),
-          borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: EdgeInsets.all(14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // CircleAvatar with first letter
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: avatarColor.withValues(alpha: 0.15),
-                  child: Text(
-                    (subject['name'] ?? 'S')[0].toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: avatarColor,
-                    ),
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Subject name
-                      Text(
-                        subject['name'] ?? 'No Name',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: ColorUtils.slate800,
-                        ),
-                      ),
-                      SizedBox(height: AppSpacing.xs),
-                      // Subject code and status
-                      Row(
-                        children: [
-                          Text(
-                            subjectCode,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: ColorUtils.slate500,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.sm),
-                          Container(
-                            width: 4,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: ColorUtils.slate300,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.sm),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isActive
-                                  ? ColorUtils.success600.withValues(alpha: 0.1)
-                                  : ColorUtils.error600.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 5,
-                                  height: 5,
-                                  decoration: BoxDecoration(
-                                    color: isActive
-                                        ? ColorUtils.success600
-                                        : ColorUtils.error600,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                SizedBox(width: AppSpacing.xs),
-                                Text(
-                                  isActive
-                                      ? languageProvider.getTranslatedText({
-                                          'en': 'Active',
-                                          'id': 'Aktif',
-                                        })
-                                      : languageProvider.getTranslatedText({
-                                          'en': 'Inactive',
-                                          'id': 'Tidak Aktif',
-                                        }),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: isActive
-                                        ? ColorUtils.success600
-                                        : ColorUtils.error600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: AppSpacing.md),
-                      // Info tags
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _buildInfoTag(
-                            Icons.class_outlined,
-                            '$classCount ${languageProvider.getTranslatedText({'en': 'Classes', 'id': 'Kelas'})}',
-                          ),
-                          if (classNames.isNotEmpty)
-                            _buildInfoTag(
-                              Icons.groups_outlined,
-                              classNames.join(', '),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // Actions column
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _buildCircleActionButton(
-                      icon: Icons.edit_outlined,
-                      color: _getPrimaryColor(),
-                      onPressed: () => _showAddEditDialog(subject: subject),
-                    ),
-                    SizedBox(height: AppSpacing.sm),
-                    _buildCircleActionButton(
-                      icon: Icons.delete_outline,
-                      color: ColorUtils.error600,
-                      onPressed: () => _deleteSubject(subject),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoTag(IconData icon, String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: ColorUtils.slate600),
-          SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11,
-              color: ColorUtils.slate700,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCircleActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.15),
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(icon, size: 16, color: color),
-      ),
-    );
-  }
-
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor('admin');
   }
@@ -2303,9 +2015,19 @@ class SubjectManagementScreenState
                           );
                         }
 
-                        return _buildSubjectCard(
-                          filteredSubjects[index],
-                          index,
+                        return SubjectCard(
+                          subject: filteredSubjects[index],
+                          index: index,
+                          primaryColor: _getPrimaryColor(),
+                          onTap: () => _navigateToClassManagement(
+                            filteredSubjects[index],
+                          ),
+                          onEdit: () => _showAddEditDialog(
+                            subject: filteredSubjects[index],
+                          ),
+                          onDelete: () => _deleteSubject(
+                            filteredSubjects[index],
+                          ),
                         );
                       },
                     ),

@@ -8,14 +8,13 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
-import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/features/grades/presentation/controllers/teacher_grade_state.dart';
 
 final teacherGradeProvider =
     AutoDisposeAsyncNotifierProviderFamily<TeacherGradeController, TeacherGradeState, TeacherGradeParams>(
-  () => TeacherGradeController(),
+  TeacherGradeController.new,
 );
 
 class TeacherGradeController
@@ -124,8 +123,8 @@ class TeacherGradeController
     final role = arg.teacher['role']?.toString().toLowerCase() ?? '';
     final isTeacher = role.contains('guru') || role.contains('teacher');
 
-    int page = resetPage ? 1 : currentState.currentPage;
-    List<dynamic> classList = resetPage ? [] : List.from(currentState.classList);
+    final int page = resetPage ? 1 : currentState.currentPage;
+    final List<dynamic> classList = resetPage ? [] : List.from(currentState.classList);
 
     if (resetPage) {
       // 1. Try TeacherProvider

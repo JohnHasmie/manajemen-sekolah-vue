@@ -8,6 +8,12 @@
 // and target class/year configuration.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/widgets/promotion_step_indicator.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/promotion_stat_row.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/promotion_dropdown.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/promotion_info_row.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/promotion_section_header.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/promotion_grade_level_dropdown.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/promotion_homeroom_teacher_dropdown.dart';
 import 'package:manajemensekolah/features/settings/data/academic_service.dart';
 import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
 import 'package:manajemensekolah/features/settings/data/settings_service.dart';
@@ -333,92 +339,6 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     );
   }
 
-  // --- Section Header ---
-  Widget _buildSectionHeader(IconData icon, String title) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border(left: BorderSide(color: _getPrimaryColor(), width: 3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: _getPrimaryColor()),
-          SizedBox(width: AppSpacing.sm),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: ColorUtils.slate800,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- Info Row (reusable for summary) ---
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: ColorUtils.slate100),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: _getPrimaryColor().withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: _getPrimaryColor().withValues(alpha: 0.15),
-              ),
-            ),
-            child: Icon(icon, size: 18, color: _getPrimaryColor()),
-          ),
-          SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: ColorUtils.slate500,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: ColorUtils.slate800,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -672,12 +592,13 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader(
-          Icons.school_rounded,
-          languageProvider.getTranslatedText({
+        PromotionSectionHeader(
+          icon: Icons.school_rounded,
+          title: languageProvider.getTranslatedText({
             'en': 'Select Source Class',
             'id': 'Pilih Kelas Asal',
           }),
+          primaryColor: _getPrimaryColor(),
         ),
         SizedBox(height: AppSpacing.xs),
         Container(
@@ -818,12 +739,13 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader(
-          Icons.people_rounded,
-          languageProvider.getTranslatedText({
+        PromotionSectionHeader(
+          icon: Icons.people_rounded,
+          title: languageProvider.getTranslatedText({
             'en': 'Student Selection',
             'id': 'Pilih Siswa',
           }),
+          primaryColor: _getPrimaryColor(),
         ),
         SizedBox(height: AppSpacing.xs),
 
@@ -838,7 +760,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
           ),
           child: Column(
             children: [
-              _buildStatRow(
+              PromotionStatRow(
                 icon: Icons.groups_rounded,
                 label: languageProvider.getTranslatedText({
                   'en': 'Total Students',
@@ -848,7 +770,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 color: _getPrimaryColor(),
               ),
               SizedBox(height: AppSpacing.sm),
-              _buildStatRow(
+              PromotionStatRow(
                 icon: Icons.check_circle_rounded,
                 label: languageProvider.getTranslatedText({
                   'en': 'Eligible for Promotion',
@@ -859,7 +781,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
               ),
               if (alreadyPromotedCount > 0) ...[
                 SizedBox(height: AppSpacing.sm),
-                _buildStatRow(
+                PromotionStatRow(
                   icon: Icons.warning_rounded,
                   label: languageProvider.getTranslatedText({
                     'en': 'Already Promoted',
@@ -1003,54 +925,6 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     );
   }
 
-  Widget _buildStatRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 16, color: color),
-          ),
-          SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: ColorUtils.slate700,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ==============================
   // STEP 3: TARGET
   // ==============================
@@ -1058,12 +932,13 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader(
-          Icons.school_rounded,
-          languageProvider.getTranslatedText({
+        PromotionSectionHeader(
+          icon: Icons.school_rounded,
+          title: languageProvider.getTranslatedText({
             'en': 'Target Configuration',
             'id': 'Konfigurasi Tujuan',
           }),
+          primaryColor: _getPrimaryColor(),
         ),
         SizedBox(height: AppSpacing.xs),
         Container(
@@ -1076,7 +951,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
           ),
           child: Column(
             children: [
-              _buildDropdown(
+              PromotionDropdown(
                 label: languageProvider.getTranslatedText({
                   'en': 'Target Academic Year',
                   'id': 'Tahun Ajaran Tujuan',
@@ -1102,9 +977,10 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                   if (val != null) _loadTargetClasses(val);
                 },
                 icon: Icons.calendar_today_rounded,
+                primaryColor: _getPrimaryColor(),
               ),
               SizedBox(height: AppSpacing.lg),
-              _buildDropdown(
+              PromotionDropdown(
                 label: languageProvider.getTranslatedText({
                   'en': 'Target Class',
                   'id': 'Kelas Tujuan',
@@ -1133,6 +1009,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                       })
                     : null,
                 icon: Icons.class_rounded,
+                primaryColor: _getPrimaryColor(),
               ),
               SizedBox(height: AppSpacing.xl),
               SizedBox(
@@ -1170,70 +1047,6 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     );
   }
 
-  Widget _buildDropdown({
-    required String label,
-    required String? value,
-    required List<DropdownMenuItem<String>>? items,
-    required Function(String?) onChanged,
-    String? hint,
-    IconData? icon,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: ColorUtils.slate600,
-          ),
-        ),
-        SizedBox(height: AppSpacing.sm),
-        Container(
-          decoration: BoxDecoration(
-            color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: ColorUtils.slate200),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 18, color: _getPrimaryColor()),
-                SizedBox(width: AppSpacing.sm),
-              ],
-              Expanded(
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: value,
-                    isExpanded: true,
-                    icon: Icon(
-                      Icons.arrow_drop_down,
-                      color: ColorUtils.slate500,
-                    ),
-                    items: items,
-                    onChanged: onChanged,
-                    hint: hint != null
-                        ? Text(
-                            hint,
-                            style: TextStyle(
-                              color: ColorUtils.slate400,
-                              fontSize: 14,
-                            ),
-                          )
-                        : null,
-                    style: TextStyle(color: ColorUtils.slate800, fontSize: 14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   // ==============================
   // STEP 4: SUMMARY
   // ==============================
@@ -1258,12 +1071,13 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader(
-          Icons.summarize_rounded,
-          languageProvider.getTranslatedText({
+        PromotionSectionHeader(
+          icon: Icons.summarize_rounded,
+          title: languageProvider.getTranslatedText({
             'en': 'Promotion Summary',
             'id': 'Ringkasan Kenaikan',
           }),
+          primaryColor: _getPrimaryColor(),
         ),
         SizedBox(height: AppSpacing.xs),
 
@@ -1278,37 +1092,41 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
           ),
           child: Column(
             children: [
-              _buildInfoRow(
+              PromotionInfoRow(
                 icon: Icons.school_rounded,
                 label: languageProvider.getTranslatedText({
                   'en': 'Source Class',
                   'id': 'Kelas Asal',
                 }),
                 value: sourceClass['name'] ?? '-',
+                primaryColor: _getPrimaryColor(),
               ),
-              _buildInfoRow(
+              PromotionInfoRow(
                 icon: Icons.arrow_forward_rounded,
                 label: languageProvider.getTranslatedText({
                   'en': 'Target Class',
                   'id': 'Kelas Tujuan',
                 }),
                 value: targetClass['name'] ?? '-',
+                primaryColor: _getPrimaryColor(),
               ),
-              _buildInfoRow(
+              PromotionInfoRow(
                 icon: Icons.calendar_today_rounded,
                 label: languageProvider.getTranslatedText({
                   'en': 'Target Academic Year',
                   'id': 'Tahun Ajaran Tujuan',
                 }),
                 value: targetYear['year'] ?? '-',
+                primaryColor: _getPrimaryColor(),
               ),
-              _buildInfoRow(
+              PromotionInfoRow(
                 icon: Icons.people_rounded,
                 label: languageProvider.getTranslatedText({
                   'en': 'Students to Promote',
                   'id': 'Siswa yang Dinaikkan',
                 }),
                 value: '${selectedStudentsList.length} siswa',
+                primaryColor: _getPrimaryColor(),
               ),
             ],
           ),
@@ -1316,12 +1134,13 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
         SizedBox(height: AppSpacing.lg),
 
         // Student list
-        _buildSectionHeader(
-          Icons.list_rounded,
-          languageProvider.getTranslatedText({
+        PromotionSectionHeader(
+          icon: Icons.list_rounded,
+          title: languageProvider.getTranslatedText({
             'en': 'Selected Students (${selectedStudentsList.length})',
             'id': 'Siswa Terpilih (${selectedStudentsList.length})',
           }),
+          primaryColor: _getPrimaryColor(),
         ),
         SizedBox(height: AppSpacing.xs),
         Container(
@@ -1897,7 +1716,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                           icon: Icons.school_rounded,
                         ),
                         SizedBox(height: AppSpacing.md),
-                        _buildGradeLevelDropdown(
+                        PromotionGradeLevelDropdown(
                           value: selectedGradeLevel,
                           onChanged: (val) {
                             setDialogState(() {
@@ -1905,9 +1724,11 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                             });
                           },
                           languageProvider: languageProvider,
+                          availableGradeLevels: _availableGradeLevels,
+                          primaryColor: _getPrimaryColor(),
                         ),
                         SizedBox(height: AppSpacing.md),
-                        _buildHomeroomTeacherDropdown(
+                        PromotionHomeroomTeacherDropdown(
                           value: selectedHomeroomTeacherId,
                           onChanged: (val) {
                             setDialogState(() {
@@ -1915,6 +1736,8 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                             });
                           },
                           languageProvider: languageProvider,
+                          teachers: _teachers,
+                          primaryColor: _getPrimaryColor(),
                         ),
                       ],
                     ),
@@ -2047,120 +1870,4 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
     );
   }
 
-  Widget _buildGradeLevelDropdown({
-    required String? value,
-    required Function(String?) onChanged,
-    required LanguageProvider languageProvider,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: DropdownButtonFormField<String>(
-        initialValue: value,
-        decoration: InputDecoration(
-          labelText: languageProvider.getTranslatedText({
-            'en': 'Grade Level',
-            'id': 'Tingkat Kelas',
-          }),
-          labelStyle: TextStyle(color: ColorUtils.slate600, fontSize: 13),
-          prefixIcon: Icon(
-            Icons.grade_rounded,
-            color: _getPrimaryColor(),
-            size: 18,
-          ),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
-        ),
-        items: _availableGradeLevels.map((gradeStr) {
-          final grade = int.tryParse(gradeStr) ?? 0;
-          String gradeText;
-          if (grade <= 6) {
-            gradeText = 'Kelas $grade SD';
-          } else if (grade <= 9) {
-            gradeText = 'Kelas $grade SMP';
-          } else {
-            gradeText = 'Kelas $grade SMA';
-          }
-
-          return DropdownMenuItem<String>(
-            value: gradeStr,
-            child: Text(gradeText),
-          );
-        }).toList(),
-        onChanged: onChanged,
-        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
-      ),
-    );
-  }
-
-  Widget _buildHomeroomTeacherDropdown({
-    required String? value,
-    required Function(String?) onChanged,
-    required LanguageProvider languageProvider,
-  }) {
-    final uniqueTeachers = <String, Map<String, dynamic>>{};
-    for (var teacher in _teachers) {
-      if (teacher['id'] != null) {
-        uniqueTeachers[teacher['id'].toString()] = teacher;
-      }
-    }
-    String? validValue = value;
-    if (validValue != null && !uniqueTeachers.containsKey(validValue)) {
-      validValue = null;
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: DropdownButtonFormField<String>(
-        isExpanded: true,
-        initialValue: validValue,
-        decoration: InputDecoration(
-          labelText: languageProvider.getTranslatedText({
-            'en': 'Homeroom Teacher',
-            'id': 'Wali Kelas',
-          }),
-          labelStyle: TextStyle(color: ColorUtils.slate600, fontSize: 13),
-          prefixIcon: Icon(
-            Icons.person_rounded,
-            color: _getPrimaryColor(),
-            size: 18,
-          ),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        ),
-        items: [
-          DropdownMenuItem<String>(
-            value: null,
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'No Homeroom Teacher',
-                'id': 'Tidak ada wali kelas',
-              }),
-              style: TextStyle(color: ColorUtils.slate500),
-            ),
-          ),
-          ...uniqueTeachers.values.map((teacher) {
-            final teacherName = teacher['name'] ?? 'Unknown';
-            final teacherNip = teacher['nip']?.toString() ?? '';
-            final displayText = teacherNip.isNotEmpty
-                ? '$teacherName (NIP: $teacherNip)'
-                : teacherName;
-            return DropdownMenuItem<String>(
-              value: teacher['id'].toString(),
-              child: Text(displayText, overflow: TextOverflow.ellipsis),
-            );
-          }),
-        ],
-        onChanged: onChanged,
-        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
-      ),
-    );
-  }
 }

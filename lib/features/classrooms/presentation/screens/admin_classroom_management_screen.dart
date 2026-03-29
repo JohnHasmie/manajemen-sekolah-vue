@@ -17,7 +17,6 @@ import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/screens/class_promotion_wizard.dart';
-import 'package:manajemensekolah/features/students/presentation/screens/admin_student_management_screen.dart';
 import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
 import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -37,6 +36,9 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/class_detail_dialog.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/classroom_card.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/classroom_form_fields.dart';
 
 /// Admin class management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -1123,7 +1125,7 @@ class AdminClassManagementScreenState
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _buildDialogTextField(
+                              ClassroomDialogTextField(
                                 controller: nameController,
                                 label: languageProvider.getTranslatedText({
                                   'en': 'Class Name',
@@ -1132,23 +1134,25 @@ class AdminClassManagementScreenState
                                 icon: Icons.school,
                               ),
                               SizedBox(height: AppSpacing.md),
-                              _buildGradeLevelDropdown(
+                              ClassroomGradeLevelDropdown(
                                 value: selectedGradeLevel,
                                 onChanged: (value) {
                                   setDialogState(() {
                                     selectedGradeLevel = value;
                                   });
                                 },
+                                availableGradeLevels: _availableGradeLevels,
                                 languageProvider: languageProvider,
                               ),
                               SizedBox(height: AppSpacing.md),
-                              _buildHomeroomTeacherDropdown(
+                              ClassroomHomeroomTeacherDropdown(
                                 value: selectedHomeroomTeacherId,
                                 onChanged: (value) {
                                   setDialogState(() {
                                     selectedHomeroomTeacherId = value;
                                   });
                                 },
+                                teachers: _teachers,
                                 languageProvider: languageProvider,
                               ),
                             ],
@@ -1370,182 +1374,6 @@ class AdminClassManagementScreenState
     );
   }
 
-  Widget _buildDialogTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-          prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
-          border: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: ColorUtils.corporateBlue600,
-              width: 1.5,
-            ),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        ),
-        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
-      ),
-    );
-  }
-
-  Widget _buildGradeLevelDropdown({
-    required String? value,
-    required Function(String?) onChanged,
-    required LanguageProvider languageProvider,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: DropdownButtonFormField<String>(
-        initialValue: value,
-        decoration: InputDecoration(
-          labelText: languageProvider.getTranslatedText({
-            'en': 'Grade Level',
-            'id': 'Tingkat Kelas',
-          }),
-          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-          prefixIcon: Icon(
-            Icons.layers_outlined,
-            color: ColorUtils.corporateBlue600,
-            size: 18,
-          ),
-          border: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: ColorUtils.corporateBlue600,
-              width: 1.5,
-            ),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
-        ),
-        items: _availableGradeLevels.map((gradeStr) {
-          final grade = int.tryParse(gradeStr) ?? 0;
-          String gradeText;
-          if (grade <= 6) {
-            gradeText = 'Kelas $grade SD';
-          } else if (grade <= 9) {
-            gradeText = 'Kelas $grade SMP';
-          } else {
-            gradeText = 'Kelas $grade SMA';
-          }
-          return DropdownMenuItem<String>(
-            value: gradeStr,
-            child: Text(gradeText),
-          );
-        }).toList(),
-        onChanged: onChanged,
-        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
-        dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        icon: Icon(
-          Icons.keyboard_arrow_down_rounded,
-          color: ColorUtils.slate500,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHomeroomTeacherDropdown({
-    required String? value,
-    required Function(String?) onChanged,
-    required LanguageProvider languageProvider,
-  }) {
-    // Deduplicate teachers based on ID
-    final uniqueTeachers = <String, Map<String, dynamic>>{};
-    for (var teacher in _teachers) {
-      if (teacher['id'] != null) {
-        uniqueTeachers[teacher['id'].toString()] = teacher;
-      }
-    }
-
-    // Validate value - ensure it exists in the list
-    String? validValue = value;
-    if (validValue != null && !uniqueTeachers.containsKey(validValue)) {
-      validValue = null;
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: DropdownButtonFormField<String>(
-        isExpanded: true,
-        initialValue: validValue,
-        decoration: InputDecoration(
-          labelText: languageProvider.getTranslatedText({
-            'en': 'Homeroom Teacher',
-            'id': 'Wali Kelas',
-          }),
-          labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-          prefixIcon: Icon(
-            Icons.person_outline,
-            color: ColorUtils.corporateBlue600,
-            size: 18,
-          ),
-          border: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: ColorUtils.corporateBlue600,
-              width: 1.5,
-            ),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        ),
-        items: [
-          DropdownMenuItem<String>(
-            value: null,
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'No Homeroom Teacher',
-                'id': 'Tidak ada wali kelas',
-              }),
-            ),
-          ),
-          ...uniqueTeachers.values.map((teacher) {
-            final teacherName = teacher['name'] ?? 'Unknown';
-            final teacherNip = teacher['nip']?.toString() ?? '';
-            final displayText = teacherNip.isNotEmpty
-                ? '$teacherName (NIP: $teacherNip)'
-                : teacherName;
-            return DropdownMenuItem<String>(
-              value: teacher['id'].toString(),
-              child: Text(displayText, overflow: TextOverflow.ellipsis),
-            );
-          }),
-        ],
-        onChanged: onChanged,
-        style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
-        dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        icon: Icon(
-          Icons.keyboard_arrow_down_rounded,
-          color: ColorUtils.slate500,
-        ),
-      ),
-    );
-  }
-
   Future<void> _deleteClass(Map<String, dynamic> classData) async {
     final confirmed = await showDialog(
       context: context,
@@ -1590,581 +1418,18 @@ class AdminClassManagementScreenState
     }
   }
 
-  Widget _buildClassCard(Map<String, dynamic> classData, int index) {
-    final languageProvider = ref.read(languageRiverpod);
-    final avatarColor = ColorUtils.getColorForIndex(index);
-    final className = classData['name'] ?? 'Class';
-    final gradeText = _getGradeLevelText(
-      classData['grade_level'],
-      languageProvider,
-    );
-    final studentCount = classData['student_count'] ?? 0;
-    final teacherName =
-        (classData['homeroom_teacher'] is List &&
-            (classData['homeroom_teacher'] as List).isNotEmpty)
-        ? classData['homeroom_teacher'][0]['name']
-        : (classData['homeroom_teacher'] is Map
-              ? classData['homeroom_teacher']['name']
-              : classData['homeroom_teacher_name'] ??
-                    classData['wali_kelas_nama'] ??
-                    languageProvider.getTranslatedText({
-                      'en': 'Not Assigned',
-                      'id': 'Belum Ditugaskan',
-                    }));
-
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showClassDetail(classData),
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            child: Row(
-              children: [
-                // Colored initial avatar
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: avatarColor.withValues(alpha: 0.15),
-                  child: Text(
-                    className.isNotEmpty ? className[0].toUpperCase() : 'C',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: avatarColor,
-                    ),
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                // Name + info tags
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        className,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: AppSpacing.xs),
-                      _buildInfoTag(Icons.layers_outlined, gradeText),
-                      SizedBox(height: AppSpacing.xs),
-                      _buildInfoTag(Icons.person_outline, teacherName),
-                    ],
-                  ),
-                ),
-                SizedBox(width: AppSpacing.sm),
-                // Student count chip + action buttons
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: ColorUtils.corporateBlue600.withValues(
-                          alpha: 0.1,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: ColorUtils.corporateBlue600.withValues(
-                            alpha: 0.3,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: ColorUtils.corporateBlue600,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.xs),
-                          Text(
-                            '$studentCount ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
-                            style: TextStyle(
-                              color: ColorUtils.corporateBlue600,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Builder(
-                      builder: (context) {
-                        final academicYearProvider = ref.watch(
-                          academicYearRiverpod,
-                        );
-                        if (academicYearProvider.isReadOnly) {
-                          return SizedBox.shrink();
-                        }
-                        return Column(
-                          children: [
-                            SizedBox(height: AppSpacing.sm),
-                            Row(
-                              children: [
-                                InkWell(
-                                  onTap: () =>
-                                      _showAddEditDialog(classData: classData),
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Container(
-                                    padding: EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: ColorUtils.corporateBlue600
-                                          .withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      Icons.edit_outlined,
-                                      size: 16,
-                                      color: ColorUtils.corporateBlue600,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 6),
-                                InkWell(
-                                  onTap: () => _deleteClass(classData),
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Container(
-                                    padding: EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: ColorUtils.error600.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      Icons.delete_outline,
-                                      size: 16,
-                                      color: ColorUtils.error600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoTag(IconData icon, String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: ColorUtils.slate600),
-          SizedBox(width: 3),
-          Flexible(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 11,
-                color: ColorUtils.slate700,
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showClassDetail(Map<String, dynamic> classData) {
-    final languageProvider = ref.read(languageRiverpod);
-
-    showDialog(
+    ClassDetailDialog.show(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header: colored avatar + grade badge + X close (Pattern #10)
-              Builder(
-                builder: (context) {
-                  final name = classData['name'] ?? 'C';
-                  final nameHash = name.codeUnits.fold(0, (sum, c) => sum + c);
-                  final avatarColor = ColorUtils.getColorForIndex(nameHash);
-                  final gradeText = _getGradeLevelText(
-                    classData['grade_level'],
-                    languageProvider,
-                  );
-                  return Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          ColorUtils.corporateBlue600,
-                          ColorUtils.corporateBlue600.withValues(alpha: 0.8),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
-                    ),
-                    child: Stack(
-                      children: [
-                        Column(
-                          children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: avatarColor,
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.4),
-                                  width: 3,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  name.isNotEmpty ? name[0].toUpperCase() : 'C',
-                                  style: TextStyle(
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: AppSpacing.md),
-                            Text(
-                              name,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            SizedBox(height: 6),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.layers_outlined,
-                                        size: 12,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(width: AppSpacing.xs),
-                                      Text(
-                                        gradeText,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: () => AppNavigator.pop(context),
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.close_rounded,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-
-              // Content
-              Padding(
-                padding: EdgeInsets.all(AppSpacing.xl),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDetailItem(
-                      icon: Icons.people,
-                      label: languageProvider.getTranslatedText({
-                        'en': 'Total Students',
-                        'id': 'Jumlah Siswa',
-                      }),
-                      value:
-                          '${classData['student_count'] ?? 0} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
-                    ),
-                    _buildDetailItem(
-                      icon: Icons.person,
-                      label: languageProvider.getTranslatedText({
-                        'en': 'Homeroom Teacher',
-                        'id': 'Wali Kelas',
-                      }),
-                      value:
-                          // Handle Pivot/List structure for display
-                          (classData['homeroom_teacher'] is List &&
-                              (classData['homeroom_teacher'] as List)
-                                  .isNotEmpty)
-                          ? classData['homeroom_teacher'][0]['name']
-                          : (classData['homeroom_teacher'] is Map
-                                ? classData['homeroom_teacher']['name']
-                                : classData['homeroom_teacher_name'] ??
-                                      classData['wali_kelas_nama'] ??
-                                      languageProvider.getTranslatedText({
-                                        'en': 'Not Assigned',
-                                        'id': 'Belum Ditugaskan',
-                                      })),
-                    ),
-
-                    SizedBox(height: AppSpacing.xl),
-
-                    // View Students Button (Full Width)
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          AppNavigator.pop(context);
-                          // Navigate to student management screen with class filter
-                          AppNavigator.push(
-                            context,
-                            StudentManagementScreen(
-                              initialClassId: classData['id'].toString(),
-                            ),
-                          );
-                        },
-                        icon: Icon(Icons.list, color: Colors.white),
-                        label: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'View Students',
-                            'id': 'Lihat Daftar Siswa',
-                          }),
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _getPrimaryColor(),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: AppSpacing.xl),
-                    // Footer buttons (Pattern #10)
-                    Container(
-                      padding: EdgeInsets.only(top: 12),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: ColorUtils.slate100),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => AppNavigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(vertical: 13),
-                                side: BorderSide(color: ColorUtils.slate300),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Close',
-                                  'id': 'Tutup',
-                                }),
-                                style: TextStyle(
-                                  color: ColorUtils.slate700,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (!ref.read(academicYearRiverpod).isReadOnly) ...[
-                            SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  AppNavigator.pop(context);
-                                  _showAddEditDialog(classData: classData);
-                                },
-                                icon: Icon(
-                                  Icons.edit_rounded,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                                label: Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Edit',
-                                    'id': 'Edit',
-                                  }),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: ColorUtils.corporateBlue600,
-                                  padding: EdgeInsets.symmetric(vertical: 13),
-                                  elevation: 2,
-                                  shadowColor: ColorUtils.corporateBlue600
-                                      .withValues(alpha: 0.4),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+      classData: classData,
+      gradeText: _getGradeLevelText(
+        classData['grade_level'],
+        ref.read(languageRiverpod),
       ),
-    );
-  }
-
-  Widget _buildDetailItem({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: ColorUtils.slate100),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
-              ),
-            ),
-            child: Icon(icon, size: 18, color: ColorUtils.corporateBlue600),
-          ),
-          SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: ColorUtils.slate500,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: ColorUtils.slate800,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      primaryColor: _getPrimaryColor(),
+      isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
+      onEdit: () => _showAddEditDialog(classData: classData),
+      languageProvider: ref.read(languageRiverpod),
     );
   }
 
@@ -2536,7 +1801,18 @@ class AdminClassManagementScreenState
                         }
 
                         final classItem = filteredClasses[index];
-                        return _buildClassCard(classItem, index);
+                        return ClassroomCard(
+                          classData: classItem,
+                          index: index,
+                          gradeText: _getGradeLevelText(
+                            classItem['grade_level'],
+                            languageProvider,
+                          ),
+                          onTap: () => _showClassDetail(classItem),
+                          onEdit: () =>
+                              _showAddEditDialog(classData: classItem),
+                          onDelete: () => _deleteClass(classItem),
+                        );
                       },
                     ),
                   ),

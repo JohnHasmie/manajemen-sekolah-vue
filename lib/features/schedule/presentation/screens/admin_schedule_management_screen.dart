@@ -22,6 +22,10 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_dialog.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/timetable_data_source.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_card_widgets.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_table_view.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_detail_dialog.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_card.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
@@ -38,8 +42,6 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:syncfusion_flutter_core/theme.dart';
-import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -956,7 +958,7 @@ class TeachingScheduleManagementScreenState
                 .replaceAll(']', '')
                 .split(',');
             daysIds.addAll(parsed);
-          } catch (e) {}
+          } catch (e) {} // ignore: empty_catches
         }
       }
       if (daysIds.isEmpty) {
@@ -1210,83 +1212,6 @@ class TeachingScheduleManagementScreenState
     return ColorUtils.getRoleColor('admin');
   }
 
-  Widget _buildFilterSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: ColorUtils.slate700),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: ColorUtils.slate900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoTag(IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: ColorUtils.slate600),
-          const SizedBox(width: AppSpacing.xs),
-          Flexible(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 11,
-                color: ColorUtils.slate700,
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCircleActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.15),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(icon, size: 16, color: color),
-      ),
-    );
-  }
-
   void _checkActiveFilter() {
     setState(() {
       _hasActiveFilter =
@@ -1523,12 +1448,12 @@ class TeachingScheduleManagementScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Day Filter
-                          _buildFilterSectionHeader(
-                            languageProvider.getTranslatedText({
+                          ScheduleFilterSectionHeader(
+                            title: languageProvider.getTranslatedText({
                               'en': 'Day',
                               'id': 'Hari',
                             }),
-                            Icons.calendar_today_outlined,
+                            icon: Icons.calendar_today_outlined,
                           ),
                           Wrap(
                             spacing: 8,
@@ -1602,12 +1527,12 @@ class TeachingScheduleManagementScreenState
                           ),
 
                           // Class Filter
-                          _buildFilterSectionHeader(
-                            languageProvider.getTranslatedText({
+                          ScheduleFilterSectionHeader(
+                            title: languageProvider.getTranslatedText({
                               'en': 'Class',
                               'id': 'Kelas',
                             }),
-                            Icons.class_outlined,
+                            icon: Icons.class_outlined,
                           ),
                           Wrap(
                             spacing: 8,
@@ -1656,12 +1581,12 @@ class TeachingScheduleManagementScreenState
                           ),
 
                           // Semester Filter
-                          _buildFilterSectionHeader(
-                            languageProvider.getTranslatedText({
+                          ScheduleFilterSectionHeader(
+                            title: languageProvider.getTranslatedText({
                               'en': 'Semester',
                               'id': 'Semester',
                             }),
-                            Icons.school_outlined,
+                            icon: Icons.school_outlined,
                           ),
                           Wrap(
                             spacing: 8,
@@ -1718,12 +1643,12 @@ class TeachingScheduleManagementScreenState
                           ),
 
                           // Jam Pelajaran Filter
-                          _buildFilterSectionHeader(
-                            languageProvider.getTranslatedText({
+                          ScheduleFilterSectionHeader(
+                            title: languageProvider.getTranslatedText({
                               'en': 'Lesson Hour',
                               'id': 'Jam Pelajaran',
                             }),
-                            Icons.access_time_outlined,
+                            icon: Icons.access_time_outlined,
                           ),
                           Builder(
                             builder: (context) {
@@ -1969,260 +1894,23 @@ class TeachingScheduleManagementScreenState
   }
 
   Widget _buildTableView() {
-    final languageProvider = ref.read(languageRiverpod);
-
-    // Ensure data source is ready
+    // Guard: data source must be ready before rendering the grid.
     if (_timetableDataSource == null) {
-      return Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
 
-    final days = _dayList
-        .map(
-          (d) => _translateDay(
-            d['name'] ?? d['nama'] ?? '',
-            languageProvider.currentLanguage,
-          ),
-        )
-        .where((d) => d.isNotEmpty)
-        .toSet()
-        .toList();
-
-    final classNames = _classList
-        .where(
-          (cls) =>
-              _selectedClassId == null ||
-              cls['id'].toString() == _selectedClassId,
-        )
-        .map((cls) => cls['name'] ?? cls['nama'] ?? '')
-        .toList();
-
-    return Column(
-      children: [
-        // ── Table info bar ──
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: ColorUtils.slate200),
-            boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: _getPrimaryColor().withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.table_chart_outlined,
-                  size: 18,
-                  color: _getPrimaryColor(),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Weekly Schedule Table',
-                        'id': 'Tabel Jadwal Mingguan',
-                      }),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: ColorUtils.slate900,
-                      ),
-                    ),
-                    Text(
-                      '${_gridData.length} ${languageProvider.getTranslatedText({'en': 'schedule entries', 'id': 'entri jadwal'})}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: ColorUtils.slate500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: _exportToExcel,
-                icon: const Icon(Icons.file_download_outlined, size: 16),
-                label: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Export',
-                    'id': 'Ekspor',
-                  }),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _getPrimaryColor(),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: AppSpacing.md),
-
-        // ── DataGrid with styled card ──
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: ColorUtils.slate200),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: SfDataGridTheme(
-              data: SfDataGridThemeData(
-                gridLineColor: ColorUtils.slate200,
-                gridLineStrokeWidth: 1.0,
-                headerColor: _getPrimaryColor(),
-              ),
-              child: SfDataGrid(
-                source: _timetableDataSource!,
-                frozenColumnsCount: 1,
-                columnWidthMode: ColumnWidthMode.none,
-                gridLinesVisibility: GridLinesVisibility.both,
-                headerGridLinesVisibility: GridLinesVisibility.both,
-                headerRowHeight: 72,
-                onQueryRowHeight: (RowHeightDetails details) {
-                  if (details.rowIndex == 0) return 72.0;
-
-                  final String timeSlot =
-                      _timetableDataSource!.timeSlots[details.rowIndex - 1];
-                  final rowDays = _timetableDataSource!.days;
-
-                  int maxSchedules = 0;
-                  for (var day in rowDays) {
-                    final count = _gridData
-                        .where((d) => d.timeSlot == timeSlot && d.day == day)
-                        .length;
-                    if (count > maxSchedules) maxSchedules = count;
-                  }
-
-                  if (maxSchedules == 0) return 40.0;
-                  return (maxSchedules * 32.0 + 10.0).clamp(40.0, 500.0);
-                },
-                columns: [
-                  GridColumn(
-                    columnName: 'waktu',
-                    width: 100,
-                    label: Container(
-                      color: _getPrimaryColor(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 6,
-                      ),
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            color: Colors.white.withValues(alpha: 0.85),
-                            size: 14,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Time',
-                              'id': 'Waktu',
-                            }),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  ...days.map((day) {
-                    return GridColumn(
-                      columnName: day,
-                      width: 150,
-                      label: Container(
-                        color: _getPrimaryColor(),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 6,
-                        ),
-                        alignment: Alignment.center,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              day,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Flexible(
-                              child: Wrap(
-                                spacing: 3,
-                                runSpacing: 2,
-                                alignment: WrapAlignment.center,
-                                children: classNames.map((className) {
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.22,
-                                      ),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      className.toString().length > 4
-                                          ? className.toString().substring(0, 4)
-                                          : className.toString(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
+    // Delegate all rendering to the extracted ScheduleTableView widget.
+    // This screen retains ownership of state; the widget is purely presentational.
+    return ScheduleTableView(
+      timetableDataSource: _timetableDataSource!,
+      dayList: _dayList,
+      classList: _classList,
+      selectedClassId: _selectedClassId,
+      gridData: _gridData,
+      primaryColor: _getPrimaryColor(),
+      languageProvider: ref.read(languageRiverpod),
+      onExport: _exportToExcel,
+      translateDay: _translateDay,
     );
   }
 
@@ -2632,118 +2320,18 @@ class TeachingScheduleManagementScreenState
   }
 
   Widget _buildScheduleCard(Map<String, dynamic> schedule, int index) {
-    final color = ColorUtils.getColorForIndex(index);
-    final subjectName = schedule['mata_pelajaran_nama'] ?? 'No Subject';
-    final teacherName = schedule['guru_nama'] ?? '-';
-    final className = schedule['kelas_nama'] ?? '-';
-    final dayLabel = _formatScheduleDays(schedule);
-    final timeLabel = _formatTime(schedule);
-    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showScheduleDetail(schedule),
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Colored icon container
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(11),
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.calendar_today_rounded,
-                    color: color,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                // Main content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Subject name
-                      Text(
-                        subjectName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      // Teacher name
-                      Text(
-                        teacherName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate500,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      // Info tags row
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          _buildInfoTag(Icons.school_outlined, className),
-                          _buildInfoTag(Icons.today_outlined, dayLabel),
-                          _buildInfoTag(Icons.access_time_outlined, timeLabel),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // Action buttons column
-                if (!isReadOnly) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildCircleActionButton(
-                        icon: Icons.edit_outlined,
-                        color: _getPrimaryColor(),
-                        onPressed: () => _editSchedule(schedule),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      _buildCircleActionButton(
-                        icon: Icons.delete_outline,
-                        color: ColorUtils.error600,
-                        onPressed: () => _deleteSchedule(schedule['id']),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
+    // Delegate rendering to the extracted AdminScheduleCard widget.
+    // All data is resolved here so the widget stays StatelessWidget.
+    return AdminScheduleCard(
+      schedule: schedule,
+      index: index,
+      isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
+      primaryColor: _getPrimaryColor(),
+      dayLabel: _formatScheduleDays(schedule),
+      timeLabel: _formatTime(schedule),
+      onTap: () => _showScheduleDetail(schedule),
+      onEdit: () => _editSchedule(schedule),
+      onDelete: () => _deleteSchedule(schedule['id']),
     );
   }
 
@@ -2890,287 +2478,19 @@ class TeachingScheduleManagementScreenState
   }
 
   void _showScheduleDetail(Map<String, dynamic> schedule) {
-    final languageProvider = ref.read(languageRiverpod);
-    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
-
+    // Delegate rendering to the extracted ScheduleDetailDialog widget.
+    // All callbacks stay in this state class so no business logic moves.
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── Pattern #10 Gradient Header ──
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    _getPrimaryColor(),
-                    _getPrimaryColor().withValues(alpha: 0.82),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.calendar_today_rounded,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Schedule Details',
-                            'id': 'Detail Jadwal',
-                          }),
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          schedule['mata_pelajaran_nama'] ?? '-',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.85),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => AppNavigator.pop(context),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Detail rows ──
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                children: [
-                  _buildDetailItem(
-                    icon: Icons.subject_outlined,
-                    title: languageProvider.getTranslatedText({
-                      'en': 'Subject',
-                      'id': 'Mata Pelajaran',
-                    }),
-                    value: schedule['mata_pelajaran_nama'] ?? '-',
-                  ),
-                  _buildDetailItem(
-                    icon: Icons.person_outline,
-                    title: languageProvider.getTranslatedText({
-                      'en': 'Teacher',
-                      'id': 'Guru',
-                    }),
-                    value: schedule['guru_nama'] ?? '-',
-                  ),
-                  _buildDetailItem(
-                    icon: Icons.school_outlined,
-                    title: languageProvider.getTranslatedText({
-                      'en': 'Class',
-                      'id': 'Kelas',
-                    }),
-                    value: schedule['kelas_nama'] ?? '-',
-                  ),
-                  _buildDetailItem(
-                    icon: Icons.today_outlined,
-                    title: languageProvider.getTranslatedText({
-                      'en': 'Day',
-                      'id': 'Hari',
-                    }),
-                    value: _formatScheduleDays(schedule, languageProvider),
-                  ),
-                  _buildDetailItem(
-                    icon: Icons.access_time_outlined,
-                    title: languageProvider.getTranslatedText({
-                      'en': 'Time',
-                      'id': 'Waktu',
-                    }),
-                    value: _formatTime(schedule),
-                  ),
-                  _buildDetailItem(
-                    icon: Icons.grade_outlined,
-                    title: languageProvider.getTranslatedText({
-                      'en': 'Grade Level',
-                      'id': 'Tingkat Kelas',
-                    }),
-                    value: _getGradeLevel(schedule['class_id'] ?? ''),
-                    isLast: true,
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Footer ──
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: ColorUtils.slate100, width: 1),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => AppNavigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        side: BorderSide(color: ColorUtils.slate300),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Close',
-                          'id': 'Tutup',
-                        }),
-                        style: TextStyle(color: ColorUtils.slate600),
-                      ),
-                    ),
-                  ),
-                  if (!isReadOnly) ...[
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          AppNavigator.pop(context);
-                          _editSchedule(schedule);
-                        },
-                        icon: const Icon(
-                          Icons.edit_outlined,
-                          size: 18,
-                          color: Colors.white,
-                        ),
-                        label: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Edit',
-                            'id': 'Edit',
-                          }),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _getPrimaryColor(),
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailItem({
-    required IconData icon,
-    required String title,
-    required String value,
-    bool isLast = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : Border(bottom: BorderSide(color: ColorUtils.slate100, width: 1)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: _getPrimaryColor().withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: _getPrimaryColor().withValues(alpha: 0.15),
-              ),
-            ),
-            child: Icon(icon, size: 18, color: _getPrimaryColor()),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: ColorUtils.slate500,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: ColorUtils.slate900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      builder: (context) => ScheduleDetailDialog(
+        schedule: schedule,
+        primaryColor: _getPrimaryColor(),
+        languageProvider: ref.read(languageRiverpod),
+        isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
+        formatTime: _formatTime,
+        formatScheduleDays: _formatScheduleDays,
+        getGradeLevel: _getGradeLevel,
+        onEdit: _editSchedule,
       ),
     );
   }

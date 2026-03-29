@@ -25,6 +25,9 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_grade_tab.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_tambahan_tab.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_info_tab.dart';
 
 /// Report card detail form for a single student.
 ///
@@ -685,9 +688,54 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
                       controller: _tabController,
                       children: [
                         _buildSikapTab(),
-                        _buildGradeTab(),
-                        _buildTambahanTab(),
-                        _buildInfoTab(),
+                        ReportCardGradeTab(
+                          subjects: _subjects,
+                          onSubjectChanged: (index, field, value) {
+                            setState(() => _subjects[index][field] = value);
+                          },
+                          onMarkUnsaved: _markUnsaved,
+                        ),
+                        ReportCardTambahanTab(
+                          extras: _extras,
+                          achievements: _achievements,
+                          onAddExtra: () => setState(
+                            () => _extras.add(
+                              {'name': '', 'score': '', 'description': ''},
+                            ),
+                          ),
+                          onAddAchievement: () => setState(
+                            () => _achievements.add(
+                              {'name': '', 'type': '', 'description': ''},
+                            ),
+                          ),
+                          onExtraChanged: (index, field, value) {
+                            setState(() => _extras[index][field] = value);
+                          },
+                          onDeleteExtra: (index) {
+                            setState(() => _extras.removeAt(index));
+                          },
+                          onAchievementChanged: (index, field, value) {
+                            setState(
+                              () => _achievements[index][field] = value,
+                            );
+                          },
+                          onDeleteAchievement: (index) {
+                            setState(() => _achievements.removeAt(index));
+                          },
+                          onMarkUnsaved: _markUnsaved,
+                        ),
+                        ReportCardInfoTab(
+                          sickCtrl: _sickCtrl,
+                          permitCtrl: _permitCtrl,
+                          absentCtrl: _absentCtrl,
+                          notesCtrl: _notesCtrl,
+                          promotionDecision: _promotionDecision,
+                          decisions: _decisions,
+                          onPromotionChanged: (v) {
+                            setState(() => _promotionDecision = v!);
+                            _markUnsaved();
+                          },
+                        ),
                       ],
                     ),
             ),
@@ -813,365 +861,6 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
     );
   }
 
-  // --- TAB 2: NILAI ---
-  Widget _buildGradeTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      itemCount: _subjects.length,
-      itemBuilder: (context, index) {
-        final subject = _subjects[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
-            ),
-            boxShadow: [...ColorUtils.corporateShadow()],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subject['subject_name'] ?? 'Mapel',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: ColorUtils.slate800,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-
-                // Pengetahuan
-                const Text(
-                  'Aspek Pengetahuan',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.blueGrey,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: _buildCompactTextField(
-                        'Nilai',
-                        subject['knowledge_score'],
-                        (v) {
-                          _subjects[index]['knowledge_score'] = v;
-                          _markUnsaved();
-                        },
-                        isNumber: true,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      flex: 1,
-                      child: _buildCompactTextField(
-                        'Predikat',
-                        subject['knowledge_predicate'],
-                        (v) {
-                          _subjects[index]['knowledge_predicate'] = v;
-                          _markUnsaved();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _buildCompactTextField(
-                  'Deskripsi',
-                  subject['knowledge_description'],
-                  (v) {
-                    _subjects[index]['knowledge_description'] = v;
-                    _markUnsaved();
-                  },
-                  maxLines: 2,
-                ),
-
-                const SizedBox(height: AppSpacing.lg),
-                const Divider(),
-                const SizedBox(height: AppSpacing.lg),
-
-                // Keterampilan
-                const Text(
-                  'Aspek Keterampilan',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.blueGrey,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: _buildCompactTextField(
-                        'Nilai',
-                        subject['skill_score'],
-                        (v) {
-                          _subjects[index]['skill_score'] = v;
-                          _markUnsaved();
-                        },
-                        isNumber: true,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      flex: 1,
-                      child: _buildCompactTextField(
-                        'Predikat',
-                        subject['skill_predicate'],
-                        (v) {
-                          _subjects[index]['skill_predicate'] = v;
-                          _markUnsaved();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _buildCompactTextField(
-                  'Deskripsi',
-                  subject['skill_description'],
-                  (v) {
-                    _subjects[index]['skill_description'] = v;
-                    _markUnsaved();
-                  },
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // --- TAB 3: TAMBAHAN ---
-  Widget _buildTambahanTab() {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildSectionTitle('Ekstrakurikuler'),
-            TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  _extras.add({'name': '', 'score': '', 'description': ''});
-                });
-                _markUnsaved();
-              },
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(AppLocalizations.add.tr),
-            ),
-          ],
-        ),
-        ...List.generate(_extras.length, _buildExtraItem),
-
-        const SizedBox(height: AppSpacing.xxl),
-        const Divider(),
-        const SizedBox(height: AppSpacing.lg),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildSectionTitle(AppLocalizations.achievements.tr),
-            TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  _achievements.add({
-                    'name': '',
-                    'type': '',
-                    'description': '',
-                  });
-                });
-                _markUnsaved();
-              },
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(AppLocalizations.add.tr),
-            ),
-          ],
-        ),
-        ...List.generate(_achievements.length, _buildAchievementItem),
-      ],
-    );
-  }
-
-  Widget _buildExtraItem(int index) {
-    final extra = _extras[index];
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
-        ),
-        boxShadow: [...ColorUtils.corporateShadow()],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _buildCompactTextField(
-                    'Nama Ekstrakurikuler',
-                    extra['name'],
-                    (v) {
-                      _extras[index]['name'] = v;
-                      _markUnsaved();
-                    },
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  flex: 1,
-                  child: _buildCompactTextField('Nilai', extra['score'], (v) {
-                    _extras[index]['score'] = v;
-                    _markUnsaved();
-                  }),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () {
-                    setState(() => _extras.removeAt(index));
-                    _markUnsaved();
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _buildCompactTextField('Keterangan', extra['description'], (v) {
-              _extras[index]['description'] = v;
-              _markUnsaved();
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAchievementItem(int index) {
-    final ach = _achievements[index];
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
-        ),
-        boxShadow: [...ColorUtils.corporateShadow()],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _buildCompactTextField('Nama Prestasi', ach['name'], (
-                    v,
-                  ) {
-                    _achievements[index]['name'] = v;
-                    _markUnsaved();
-                  }),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  flex: 1,
-                  child: _buildCompactTextField(
-                    'Jenis (Opsional)',
-                    ach['type'],
-                    (v) {
-                      _achievements[index]['type'] = v;
-                      _markUnsaved();
-                    },
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () {
-                    setState(() => _achievements.removeAt(index));
-                    _markUnsaved();
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _buildCompactTextField('Keterangan', ach['description'], (v) {
-              _achievements[index]['description'] = v;
-              _markUnsaved();
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- TAB 4: INFO & KEPUTUSAN ---
-  Widget _buildInfoTab() {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        _buildSectionTitle('Ketidakhadiran'),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField('Sakit (Hari)', _sickCtrl, isNumber: true),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildTextField(
-                'Izin (Hari)',
-                _permitCtrl,
-                isNumber: true,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildTextField(
-                'Tanpa Ket. (Hari)',
-                _absentCtrl,
-                isNumber: true,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xxl),
-        const Divider(),
-        const SizedBox(height: AppSpacing.lg),
-        _buildSectionTitle('Catatan Wali Kelas'),
-        _buildTextField(
-          'Masukkan catatan, saran, atau motivasi untuk siswa...',
-          _notesCtrl,
-          maxLines: 4,
-        ),
-
-        const SizedBox(height: AppSpacing.xxl),
-        const Divider(),
-        const SizedBox(height: AppSpacing.lg),
-
-        _buildSectionTitle('Keputusan Akhir Tahun (Opsional)'),
-        _buildDropdown('Keputusan', _promotionDecision, _decisions, (v) {
-          setState(() => _promotionDecision = v!);
-          _markUnsaved();
-        }),
-      ],
-    );
-  }
-
   // --- WIDGET BUILDERS ---
   Widget _buildSectionTitle(String title) {
     return Padding(
@@ -1229,48 +918,6 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildCompactTextField(
-    String label,
-    String initialValue,
-    Function(String) onChanged, {
-    int maxLines = 1,
-    bool isNumber = false,
-  }) {
-    return TextFormField(
-      initialValue: initialValue,
-      maxLines: maxLines,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-        isDense: true,
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: ColorUtils.getRoleColor('guru')),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
-      ),
-      onChanged: onChanged,
     );
   }
 

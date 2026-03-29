@@ -276,26 +276,25 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                                   .trim(),
                                               jenjang: tempJenjang,
                                             );
-                                        if (mounted) {
-                                          AppNavigator.pop(context);
-                                          _loadSettings();
-                                          messenger.showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                AppLocalizations
-                                                    .settingsSavedSuccess
-                                                    .tr,
-                                              ),
-                                              backgroundColor:
-                                                  ColorUtils.success600,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
+                                        if (!context.mounted) return;
+                                        AppNavigator.pop(context);
+                                        _loadSettings();
+                                        messenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              AppLocalizations
+                                                  .settingsSavedSuccess
+                                                  .tr,
                                             ),
-                                          );
-                                        }
+                                            backgroundColor:
+                                                ColorUtils.success600,
+                                            behavior:
+                                                SnackBarBehavior.floating,
+                                          ),
+                                        );
                                       } catch (e) {
                                         AppLogger.error('settings', e);
-                                        if (mounted) {
+                                        if (context.mounted) {
                                           messenger.showSnackBar(
                                             SnackBar(
                                               content: Text(

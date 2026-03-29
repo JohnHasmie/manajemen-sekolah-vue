@@ -8,7 +8,6 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // In Laravel terms, this calls `GET /api/teachers/{id}` (TeacherController@show).
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
@@ -19,6 +18,8 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_info_row.dart';
+import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_section_header.dart';
 
 /// Teacher detail screen - displays full profile for a single teacher.
 ///
@@ -41,7 +42,6 @@ class TeacherDetailScreen extends ConsumerStatefulWidget {
 /// - [_isLoading] / [_errorMessage] - loading and error states
 class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
   final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
-  final ApiClassService apiClassService = getIt<ApiClassService>();
   final ApiSubjectService apiSubjectService = getIt<ApiSubjectService>();
 
   Map<String, dynamic>? _teacherDetail;
@@ -101,164 +101,6 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
         context,
         '${AppLocalizations.failedToLoadDetail.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
       );
-    }
-  }
-
-  Widget _buildInfoRow(
-    String label,
-    dynamic value, {
-    bool isMultiline = false,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: ColorUtils.slate100),
-      ),
-      child: Row(
-        crossAxisAlignment: isMultiline
-            ? CrossAxisAlignment.start
-            : CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
-              ),
-            ),
-            child: Icon(
-              _getIconForLabel(label),
-              size: 18,
-              color: ColorUtils.corporateBlue600,
-            ),
-          ),
-          SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: ColorUtils.slate500,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                SizedBox(height: 3),
-                if (value is List<String>)
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: value.map((item) {
-                      return Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: ColorUtils.corporateBlue600.withValues(
-                            alpha: 0.08,
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: ColorUtils.corporateBlue600.withValues(
-                              alpha: 0.2,
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          item,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorUtils.corporateBlue600,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  )
-                else
-                  Text(
-                    value.toString().isNotEmpty
-                        ? value.toString()
-                        : 'Tidak ada',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: ColorUtils.slate800,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: isMultiline ? 3 : 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(IconData icon, String title) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border(
-          left: BorderSide(color: ColorUtils.corporateBlue600, width: 3),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: ColorUtils.corporateBlue600),
-          SizedBox(width: AppSpacing.sm),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: ColorUtils.slate800,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  IconData _getIconForLabel(String label) {
-    switch (label) {
-      case 'Nama':
-        return Icons.person;
-      case 'NIP':
-        return Icons.badge;
-      case 'Email':
-        return Icons.email;
-      case 'Kelas':
-        return Icons.school;
-      case 'Mata Pelajaran':
-        return Icons.menu_book;
-      case 'Role':
-        return Icons.work;
-      case 'Status Wali Kelas':
-        return Icons.groups;
-      case 'ID':
-        return Icons.fingerprint;
-      case 'Tanggal Dibuat':
-        return Icons.calendar_today;
-      case 'Terakhir Diupdate':
-        return Icons.update;
-      default:
-        return Icons.info;
     }
   }
 
@@ -725,18 +567,18 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildSectionHeader(
-                                Icons.person_rounded,
-                                'Informasi Pribadi',
+                              TeacherSectionHeader(
+                                icon: Icons.person_rounded,
+                                title: 'Informasi Pribadi',
                               ),
-                              _buildInfoRow('Nama', teacher['name']),
-                              _buildInfoRow(
-                                'NIP',
-                                teacher['employee_number'] ?? 'Tidak ada',
+                              TeacherInfoRow(label: 'Nama', value: teacher['name']),
+                              TeacherInfoRow(
+                                label: 'NIP',
+                                value: teacher['employee_number'] ?? 'Tidak ada',
                               ),
-                              _buildInfoRow(
-                                'Email',
-                                teacher['user']?['email'] ?? teacher['email'],
+                              TeacherInfoRow(
+                                label: 'Email',
+                                value: teacher['user']?['email'] ?? teacher['email'],
                               ),
                             ],
                           ),
@@ -757,31 +599,31 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildSectionHeader(
-                                Icons.school_rounded,
-                                'Informasi Mengajar',
+                              TeacherSectionHeader(
+                                icon: Icons.school_rounded,
+                                title: 'Informasi Mengajar',
                               ),
-                              _buildInfoRow(
-                                'Kelas',
-                                teachingClassNames.isNotEmpty
+                              TeacherInfoRow(
+                                label: 'Kelas',
+                                value: teachingClassNames.isNotEmpty
                                     ? teachingClassNames
                                     : 'Belum dijadwalkan',
                                 isMultiline: true,
                               ),
-                              _buildInfoRow(
-                                'Mata Pelajaran',
-                                displaySubjectNames.isNotEmpty
+                              TeacherInfoRow(
+                                label: 'Mata Pelajaran',
+                                value: displaySubjectNames.isNotEmpty
                                     ? displaySubjectNames
                                     : 'Belum ditugaskan',
                                 isMultiline: true,
                               ),
-                              _buildInfoRow(
-                                'Role',
-                                teacher['role']?.toUpperCase() ?? 'GURU',
+                              TeacherInfoRow(
+                                label: 'Role',
+                                value: teacher['role']?.toUpperCase() ?? 'GURU',
                               ),
-                              _buildInfoRow(
-                                'Status Wali Kelas',
-                                homeroomStatus,
+                              TeacherInfoRow(
+                                label: 'Status Wali Kelas',
+                                value: homeroomStatus,
                               ),
                             ],
                           ),

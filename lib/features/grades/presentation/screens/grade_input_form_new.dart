@@ -9,7 +9,6 @@
 // Contains:
 // - [GradeInputFormNew] -- bulk grade input form for multiple students
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -22,6 +21,9 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_add_header.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_configuration_panel.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_input_table.dart';
 
 // New Grade Input Form for Multiple Students
 class GradeInputFormNew extends ConsumerStatefulWidget {
@@ -251,514 +253,21 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
   }
 
-  Widget _buildInputTable(LanguageProvider languageProvider) {
-    // Calculate width
-    double tableWidth = 150.0; // Name column
-    tableWidth += 100.0; // Nilai column
-    tableWidth += 200.0; // Deskripsi column
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width > 600
-              ? MediaQuery.of(context).size.width
-              : tableWidth,
-          child: Column(
-            children: [
-              // Header (Sticky-like appearance)
-              Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  color: ColorUtils.corporateBlue600.withValues(alpha: 0.05),
-                  border: Border(
-                    bottom: BorderSide(color: ColorUtils.slate200),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 150,
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Name',
-                          'id': 'Nama',
-                        }),
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Container(
-                      width: 100,
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      alignment: Alignment.center,
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Grade',
-                          'id': 'Nilai',
-                        }),
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Description',
-                            'id': 'Deskripsi',
-                          }),
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Rows - scrollable
-              ...widget.studentList.map((student) {
-                final gradeKey = "${student.id}_nilai";
-                final deskripsiKey = "${student.id}_deskripsi";
-
-                // Initialize controllers if not exists
-                if (!_tableControllers.containsKey(gradeKey)) {
-                  _tableControllers[gradeKey] = TextEditingController();
-                  _tableFocusNodes[gradeKey] = FocusNode();
-                }
-                if (!_tableControllers.containsKey(deskripsiKey)) {
-                  _tableControllers[deskripsiKey] = TextEditingController();
-                  _tableFocusNodes[deskripsiKey] = FocusNode();
-                }
-
-                return Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: ColorUtils.slate200),
-                    ),
-                    color: Colors.white,
-                  ),
-                  child: Row(
-                    children: [
-                      // Name
-                      Container(
-                        width: 150,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              student.name,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: ColorUtils.slate900,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              student.studentNumber,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: ColorUtils.slate500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Nilai Input
-                      Container(
-                        width: 100,
-                        padding: EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            left: BorderSide(color: ColorUtils.slate200),
-                            right: BorderSide(color: ColorUtils.slate200),
-                          ),
-                        ),
-                        child: TextFormField(
-                          controller: _tableControllers[gradeKey],
-                          focusNode: _tableFocusNodes[gradeKey],
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: ColorUtils.slate900),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          decoration: InputDecoration(
-                            isDense: true,
-                            border: InputBorder.none,
-                            hintText: '-',
-                            hintStyle: TextStyle(color: ColorUtils.slate400),
-                            errorStyle: TextStyle(fontSize: 10),
-                          ),
-                          validator: (value) {
-                            if (value != null && value.isNotEmpty) {
-                              if (int.tryParse(value) == null) {
-                                return languageProvider.getTranslatedText({
-                                  'en': 'Integer only',
-                                  'id': 'Hanya angka bulat',
-                                });
-                              }
-                              final numValue = int.parse(value);
-                              if (numValue < 0 || numValue > 100) {
-                                return languageProvider.getTranslatedText({
-                                  'en': '0-100',
-                                  'id': '0-100',
-                                });
-                              }
-                            }
-                            return null;
-                          },
-                          onChanged: (value) {
-                            setState(() {
-                              _gradeStudentMap[student.id]?['nilai'] = value;
-                            });
-                          },
-                        ),
-                      ),
-                      // Deskripsi Input
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: TextFormField(
-                            controller: _tableControllers[deskripsiKey],
-                            focusNode: _tableFocusNodes[deskripsiKey],
-                            style: TextStyle(color: ColorUtils.slate900),
-                            decoration: InputDecoration(
-                              isDense: true,
-                              border: InputBorder.none,
-                              hintText: languageProvider.getTranslatedText({
-                                'en': 'Add description...',
-                                'id': 'Tambah deskripsi...',
-                              }),
-                              hintStyle: TextStyle(
-                                color: ColorUtils.slate400,
-                                fontSize: 12,
-                              ),
-                            ),
-                            onChanged: (value) {
-                              _gradeStudentMap[student.id]?['deskripsi'] =
-                                  value;
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Build header for add mode after configured (similar to edit mode)
-  Widget _buildAddHeader(LanguageProvider languageProvider) {
-    return Container(
-      padding: EdgeInsets.all(AppSpacing.lg),
-      color: ColorUtils.warning600.withValues(alpha: 0.08),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Left side: Jenis Nilai with edit icon
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _isConfigurationSet = false;
-              });
-            },
-            child: Row(
-              children: [
-                Text(
-                  _getGradeTypeLabel(
-                    _confirmedGradeType ?? '',
-                    languageProvider,
-                  ),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: ColorUtils.warning600,
-                  ),
-                ),
-                SizedBox(width: AppSpacing.sm),
-                Icon(Icons.edit, size: 16, color: ColorUtils.warning600),
-              ],
-            ),
-          ),
-          // Right side: Date in Indonesian format
-          Text(
-            _formatDateIndonesian(_confirmedDate!),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: ColorUtils.slate700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Format date to Indonesian format (e.g., "05 Januari 2025")
-  String _formatDateIndonesian(DateTime date) {
-    final months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-
-    final day = date.day.toString().padLeft(2, '0');
-    final month = months[date.month - 1];
-    final year = date.year.toString();
-
-    return '$day $month $year';
-  }
-
-  // Build configuration panel (selection stage)
-  Widget _buildConfigurationPanel(LanguageProvider languageProvider) {
-    return SingleChildScrollView(
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            bottom: BorderSide(color: ColorUtils.slate200, width: 1),
-          ),
-        ),
-        child: Column(
-          children: [
-            // Subject Info
-            Container(
-              padding: EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: ColorUtils.slate200),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor().withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.menu_book_outlined,
-                      color: _getPrimaryColor(),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.subject['nama'] ??
-                              widget.subject['name'] ??
-                              '-',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            color: ColorUtils.slate900,
-                          ),
-                        ),
-                        if (widget.subject['code'] != null ||
-                            widget.subject['kode'] != null)
-                          Text(
-                            '${languageProvider.getTranslatedText({'en': 'Code', 'id': 'Kode'})}: ${widget.subject['code'] ?? widget.subject['kode']}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: ColorUtils.slate500,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            // Pilih Jenis Nilai - Pattern #9 style
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: ColorUtils.slate200),
-              ),
-              child: DropdownButtonFormField<String>(
-                initialValue: _selectedGradeType,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  prefixIcon: Icon(
-                    Icons.assignment_outlined,
-                    color: _getPrimaryColor(),
-                  ),
-                  hintText: languageProvider.getTranslatedText({
-                    'en': 'Select grade type',
-                    'id': 'Pilih jenis nilai',
-                  }),
-                  hintStyle: TextStyle(color: ColorUtils.slate400),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12),
-                ),
-                style: TextStyle(color: ColorUtils.slate900),
-                items: _gradeTypeList.map((String type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(_getGradeTypeLabel(type, languageProvider)),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedGradeType = newValue;
-                  });
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return languageProvider.getTranslatedText({
-                      'en': 'Please select grade type',
-                      'id': 'Pilih jenis nilai terlebih dahulu',
-                    });
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            // Pilih Tanggal - Pattern #9 style
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: ColorUtils.slate200),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today,
-                    color: _getPrimaryColor(),
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Text(
-                    languageProvider.getTranslatedText({
-                      'en': 'Date:',
-                      'id': 'Tanggal:',
-                    }),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: ColorUtils.slate600,
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => _selectDate(context),
-                    child: Text(
-                      '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: _getPrimaryColor(),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            // Title field - Pattern #9 style
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: ColorUtils.slate200),
-              ),
-              child: TextFormField(
-                controller: _titleController,
-                style: TextStyle(color: ColorUtils.slate900),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  prefixIcon: Icon(Icons.title, color: _getPrimaryColor()),
-                  hintText: languageProvider.getTranslatedText({
-                    'en': 'Assessment Title (Optional)',
-                    'id': 'Judul Penilaian (Opsional)',
-                  }),
-                  hintStyle: TextStyle(color: ColorUtils.slate400),
-                  helperText: languageProvider.getTranslatedText({
-                    'en': 'E.g., Quiz 1, Chapter 5 Test',
-                    'id': 'Contoh: Kuis 1, Ulangan Bab 5',
-                  }),
-                  helperStyle: TextStyle(
-                    color: ColorUtils.slate400,
-                    fontSize: 11,
-                  ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            // Set button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: (_selectedGradeType != null && !_isReadOnly)
-                    ? () {
-                        setState(() {
-                          _isConfigurationSet = true;
-                          _confirmedGradeType = _selectedGradeType;
-                          _confirmedDate = _selectedDate;
-                        });
-                      }
-                    : null,
-                icon: Icon(Icons.check),
-                label: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Set',
-                    'id': 'Tetapkan',
-                  }),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _getPrimaryColor(),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  disabledBackgroundColor: ColorUtils.slate200,
-                  disabledForegroundColor: ColorUtils.slate500,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  /// Ensures controllers and focus nodes exist for [student.id] before the
+  /// table widget reads them. Called just before building the table.
+  void _ensureTableControllers() {
+    for (final student in widget.studentList) {
+      final gradeKey = '${student.id}_nilai';
+      final deskripsiKey = '${student.id}_deskripsi';
+      if (!_tableControllers.containsKey(gradeKey)) {
+        _tableControllers[gradeKey] = TextEditingController();
+        _tableFocusNodes[gradeKey] = FocusNode();
+      }
+      if (!_tableControllers.containsKey(deskripsiKey)) {
+        _tableControllers[deskripsiKey] = TextEditingController();
+        _tableFocusNodes[deskripsiKey] = FocusNode();
+      }
+    }
   }
 
   @override
@@ -857,9 +366,37 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                 children: [
                   // Conditional header based on state
                   if (!_isConfigurationSet)
-                    _buildConfigurationPanel(languageProvider)
+                    GradeConfigurationPanel(
+                      subject: widget.subject,
+                      primaryColor: _getPrimaryColor(),
+                      gradeTypeList: _gradeTypeList,
+                      selectedGradeType: _selectedGradeType,
+                      selectedDate: _selectedDate,
+                      titleController: _titleController,
+                      isReadOnly: _isReadOnly,
+                      languageProvider: languageProvider,
+                      onGradeTypeChanged: (value) =>
+                          setState(() => _selectedGradeType = value),
+                      onSelectDate: () => _selectDate(context),
+                      onConfirm: () => setState(() {
+                        _isConfigurationSet = true;
+                        _confirmedGradeType = _selectedGradeType;
+                        _confirmedDate = _selectedDate;
+                      }),
+                      getGradeTypeLabel: (type) =>
+                          _getGradeTypeLabel(type, languageProvider),
+                    )
                   else
-                    _buildAddHeader(languageProvider),
+                    GradeAddHeader(
+                      gradeTypeLabel: _getGradeTypeLabel(
+                        _confirmedGradeType ?? '',
+                        languageProvider,
+                      ),
+                      confirmedDate: _confirmedDate!,
+                      languageProvider: languageProvider,
+                      onEditConfiguration: () =>
+                          setState(() => _isConfigurationSet = false),
+                    ),
 
                   // Student List Section - only show after configuration is set
                   if (_isConfigurationSet) ...[
@@ -931,7 +468,28 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    Expanded(child: _buildInputTable(languageProvider)),
+                    Expanded(
+                      child: Builder(
+                        builder: (_) {
+                          // Ensure controllers exist before handing them to the
+                          // stateless table widget (same logic that was inside
+                          // the old _buildInputTable method).
+                          _ensureTableControllers();
+                          return GradeInputTable(
+                            studentList: widget.studentList,
+                            tableControllers: _tableControllers,
+                            tableFocusNodes: _tableFocusNodes,
+                            languageProvider: languageProvider,
+                            onGradeChanged: (studentId, value) =>
+                                setState(() => _gradeStudentMap[studentId]
+                                    ?['nilai'] = value),
+                            onDescriptionChanged: (studentId, value) {
+                              _gradeStudentMap[studentId]?['deskripsi'] = value;
+                            },
+                          );
+                        },
+                      ),
+                    ),
                   ] else ...[
                     const Expanded(
                       child: EmptyState(

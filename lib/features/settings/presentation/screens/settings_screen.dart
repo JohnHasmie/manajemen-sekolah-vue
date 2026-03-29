@@ -1,7 +1,6 @@
 // User profile/settings screen - displays user profile info and app settings.
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, Consumer, ChangeNotifierProvider;
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/settings.vue` or `pages/profile.vue` - shared across all roles
 // (admin, guru, wali). Shows user profile data, language selection, and
@@ -284,24 +283,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               await LocalCacheService.invalidate(
                                 _profileCacheKey,
                               );
-                              if (mounted) {
-                                AppNavigator.pop(context);
-                                _loadProfile(useCache: false);
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      lang.getTranslatedText(
-                                        AppLocalizations.profileUpdatedSuccess,
-                                      ),
+                              if (!context.mounted) return;
+                              AppNavigator.pop(context);
+                              _loadProfile(useCache: false);
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    lang.getTranslatedText(
+                                      AppLocalizations.profileUpdatedSuccess,
                                     ),
-                                    backgroundColor: ColorUtils.success600,
-                                    behavior: SnackBarBehavior.floating,
                                   ),
-                                );
-                              }
+                                  backgroundColor: ColorUtils.success600,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
                             } catch (e) {
                               AppLogger.error('settings', e);
-                              if (mounted) {
+                              if (context.mounted) {
                                 messenger.showSnackBar(
                                   SnackBar(
                                     content: Text(

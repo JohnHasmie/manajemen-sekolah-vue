@@ -46,10 +46,12 @@ class ApiAnnouncementService {
       'page': page.toString(),
       'limit': limit.toString(),
     };
-    if (prioritas != null && prioritas.isNotEmpty)
+    if (prioritas != null && prioritas.isNotEmpty) {
       queryParams['priority'] = prioritas;
-    if (roleTarget != null && roleTarget.isNotEmpty)
+    }
+    if (roleTarget != null && roleTarget.isNotEmpty) {
       queryParams['role_target'] = roleTarget;
+    }
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
@@ -155,8 +157,9 @@ class ApiAnnouncementService {
 
   String _getMimeType(String path) {
     if (path.toLowerCase().endsWith('.jpg') ||
-        path.toLowerCase().endsWith('.jpeg'))
+        path.toLowerCase().endsWith('.jpeg')) {
       return 'image/jpeg';
+    }
     if (path.toLowerCase().endsWith('.png')) return 'image/png';
     if (path.toLowerCase().endsWith('.pdf')) return 'application/pdf';
     return 'application/octet-stream';

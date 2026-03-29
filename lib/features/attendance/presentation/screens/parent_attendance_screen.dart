@@ -8,7 +8,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
@@ -17,12 +16,10 @@ import 'package:manajemensekolah/features/attendance/domain/models/attendance.da
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, Consumer, ChangeNotifierProvider;
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -30,6 +27,9 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/parent_attendance_header.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/parent_attendance_list.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/parent_attendance_monthly_summary.dart';
 
 /// Parent's read-only view of a child's attendance with monthly summaries
 /// and read tracking.
@@ -849,436 +849,30 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
     );
   }
 
-  // Pattern #8 info tag chip
-  Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
-    final c = tagColor ?? ColorUtils.slate600;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: tagColor != null
-            ? tagColor.withValues(alpha: 0.08)
-            : ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: tagColor != null
-              ? tagColor.withValues(alpha: 0.3)
-              : ColorUtils.slate200,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: c),
-          SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 10,
-              color: c,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMonthlySummary() {
-    final languageProvider = ref.read(languageRiverpod);
-    final totalDays = _monthlySummary.values.reduce((a, b) => a + b);
-    final attendancePercentage = totalDays > 0
-        ? ((_monthlySummary['hadir']! + _monthlySummary['terlambat']!) /
-                  totalDays *
-                  100)
-              .round()
-        : 0;
-
-    return Container(
-      key: _monthlySummaryKey,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ColorUtils.slate200),
-        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-      ),
-      child: Column(
-        children: [
-          // Header with month
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _hasActiveFilter
-                    ? languageProvider.getTranslatedText({
-                        'en': 'Filtered Recap',
-                        'id': 'Rekap Terfilter',
-                      })
-                    : languageProvider.getTranslatedText({
-                        'en': 'Yearly Recap',
-                        'id': 'Rekap Tahunan',
-                      }),
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: ColorUtils.slate900,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Persentase kehadiran
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(
-              color: _getPrimaryColor().withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: _getPrimaryColor().withValues(alpha: 0.15),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '$attendancePercentage%',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: _getPrimaryColor(),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  AppLocalizations.attendanceRate.tr,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: _getPrimaryColor(),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Detail status
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem(
-                AppLocalizations.present.tr,
-                _monthlySummary['hadir']!,
-                _getStatusColor('hadir'),
-              ),
-              _buildStatItem(
-                AppLocalizations.late.tr,
-                _monthlySummary['terlambat']!,
-                _getStatusColor('terlambat'),
-              ),
-              _buildStatItem(
-                AppLocalizations.permission.tr,
-                _monthlySummary['izin']!,
-                _getStatusColor('izin'),
-              ),
-              _buildStatItem(
-                AppLocalizations.sick.tr,
-                _monthlySummary['sakit']!,
-                _getStatusColor('sakit'),
-              ),
-              _buildStatItem(
-                AppLocalizations.alpha.tr,
-                _monthlySummary['alpha']!,
-                _getStatusColor('alpha'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String label, int count, Color color) {
-    return Column(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-            border: Border.all(color: color.withValues(alpha: 0.3)),
-          ),
-          child: Center(
-            child: Text(
-              count.toString(),
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          label,
-          style: TextStyle(fontSize: 9, color: ColorUtils.slate500),
-          textAlign: TextAlign.center,
-        ),
-      ],
+    return ParentAttendanceMonthlySummary(
+      monthlySummary: _monthlySummary,
+      hasActiveFilter: _hasActiveFilter,
+      primaryColor: _getPrimaryColor(),
+      languageProvider: ref.read(languageRiverpod),
+      summaryKey: _monthlySummaryKey,
+      getStatusColor: _getStatusColor,
     );
   }
 
   Widget _buildAttendanceList() {
-    final filteredAttendance =
-        _attendanceData.where((record) {
-          final date = record.date;
-
-          // Month Filter
-          if (_selectedMonthFilter != null) {
-            if (date.month.toString() != _selectedMonthFilter) {
-              return false;
-            }
-          }
-
-          // Semester Filter (1: July-Dec, 2: Jan-June)
-          if (_selectedSemesterFilter != null) {
-            final month = date.month;
-            final semester = (month >= 7) ? '1' : '2';
-            if (semester != _selectedSemesterFilter) {
-              return false;
-            }
-          }
-
-          // Search Filter
-          if (_searchController.text.isNotEmpty) {
-            final query = _searchController.text.toLowerCase();
-            final subject = (record.subjectName ?? '')
-                .toLowerCase();
-            final status = record.status.toLowerCase();
-            if (!subject.contains(query) && !status.contains(query)) {
-              return false;
-            }
-          }
-
-          return true;
-        }).toList()..sort((a, b) {
-          final dateA = a.date.toIso8601String();
-          final dateB = b.date.toIso8601String();
-          return dateB.compareTo(dateA);
-        });
-
-    if (filteredAttendance.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: ColorUtils.slate100,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.calendar_today,
-                size: 36,
-                color: ColorUtils.slate400,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              AppLocalizations.noPresenceData.tr,
-              style: TextStyle(
-                color: ColorUtils.slate700,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if (_hasActiveFilter) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Try adjusting your filters',
-                style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-              ),
-            ] else ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'No attendance records found for this year',
-                style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-              ),
-            ],
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      itemCount: filteredAttendance.length,
-      itemBuilder: (context, index) {
-        final record = filteredAttendance[index];
-        return Builder(
-          builder: (context) {
-            _onItemVisible(record);
-            return _buildAttendanceItem(record);
-          },
-        );
-      },
-    );
-  }
-
-  // Pattern #8: Material > InkWell > Container with corporateShadow
-  Widget _buildAttendanceItem(Attendance record) {
-    final status = _normalizeStatus(record.status);
-    final date = record.date;
-    final subjectName =
-        record.subjectName ?? AppLocalizations.subject.tr;
-    final Color statusColor = _getStatusColor(status);
-    final String statusText = _getTranslatedStatus(status);
-    final String day = DateFormat(
-      'EEEE',
-      ref.watch(languageRiverpod).currentLanguage == 'id' ? 'id_ID' : 'en_US',
-    ).format(date);
-
-    final isRead = record.isRead;
-
-    // Get lesson hour name
-    final lessonHourName = record.lessonHourName ?? '';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: () {},
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left: date box
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: _getPrimaryColor().withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _getPrimaryColor().withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        DateFormat('dd').format(date),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: _getPrimaryColor(),
-                        ),
-                      ),
-                      Text(
-                        DateFormat(
-                          'MMM',
-                          ref.watch(languageRiverpod).currentLanguage == 'id'
-                              ? 'id_ID'
-                              : 'en_US',
-                        ).format(date),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: _getPrimaryColor(),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-
-                // Middle: subject + day + info tags
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        subjectName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        day,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate600,
-                        ),
-                      ),
-                      SizedBox(height: AppSpacing.sm),
-                      // Info tags row
-                      Wrap(
-                        spacing: 5,
-                        runSpacing: 4,
-                        children: [
-                          _buildInfoTag(
-                            Icons.calendar_today_outlined,
-                            DateFormat(
-                              'dd MMM yyyy',
-                              ref.watch(languageRiverpod).currentLanguage ==
-                                      'id'
-                                  ? 'id_ID'
-                                  : 'en_US',
-                            ).format(date),
-                          ),
-                          if (lessonHourName != null &&
-                              lessonHourName.isNotEmpty)
-                            _buildInfoTag(
-                              Icons.access_time_outlined,
-                              lessonHourName,
-                            ),
-                          _buildInfoTag(
-                            _getStatusIcon(status),
-                            statusText,
-                            tagColor: statusColor,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: AppSpacing.sm),
-
-                // Right: unread dot
-                if (!isRead)
-                  Container(
-                    width: 8,
-                    height: 8,
-                    margin: EdgeInsets.only(top: 4),
-                    decoration: BoxDecoration(
-                      color: ColorUtils.error600,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return ParentAttendanceList(
+      attendanceData: _attendanceData,
+      selectedMonthFilter: _selectedMonthFilter,
+      selectedSemesterFilter: _selectedSemesterFilter,
+      searchQuery: _searchController.text,
+      hasActiveFilter: _hasActiveFilter,
+      primaryColor: _getPrimaryColor(),
+      onItemVisible: _onItemVisible,
+      normalizeStatus: _normalizeStatus,
+      getStatusColor: _getStatusColor,
+      getStatusIcon: _getStatusIcon,
+      getTranslatedStatus: _getTranslatedStatus,
     );
   }
 
@@ -1353,12 +947,6 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
     return 'alpha'; // Default to alpha for unknown status (safer than hadir)
   }
 
-  // Helper function to parse date string as local date (not UTC)
-  DateTime _parseLocalDate(dynamic dateValue) {
-    // Use AppDateUtils for consistent and correct parsing
-    return AppDateUtils.parseApiDate(dateValue) ?? DateTime.now();
-  }
-
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor('wali');
   }
@@ -1375,242 +963,22 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   // Pattern #7: Gradient header
   Widget _buildHeader() {
     final languageProvider = ref.read(languageRiverpod);
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: _getCardGradient(),
-        boxShadow: [
-          BoxShadow(
-            color: _getPrimaryColor().withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => AppNavigator.pop(context),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                ),
-              ),
-              SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppLocalizations.childPresence.tr,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    if (_student != null) ...[
-                      SizedBox(height: 2),
-                      Text(
-                        _student!.name,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.white),
-                onSelected: (value) {
-                  if (value == 'refresh') _forceRefresh();
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'refresh',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.refresh,
-                          size: 20,
-                          color: ColorUtils.info600,
-                        ),
-                        SizedBox(width: AppSpacing.sm),
-                        Text(AppLocalizations.updateData.tr),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: AppSpacing.lg),
-
-          // Search and Filter Row
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      _checkActiveFilter();
-                      _calculateMonthlySummary();
-                      setState(() {});
-                    },
-                    style: TextStyle(color: ColorUtils.slate900),
-                    decoration: InputDecoration(
-                      hintText: languageProvider.getTranslatedText({
-                        'en': 'Search subject or status...',
-                        'id': 'Cari mapel atau status...',
-                      }),
-                      hintStyle: TextStyle(color: ColorUtils.slate400),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: ColorUtils.slate400,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: AppSpacing.md),
-              GestureDetector(
-                onTap: _showFilterSheet,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: _hasActiveFilter
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: Icon(
-                          Icons.tune_rounded,
-                          color: _hasActiveFilter
-                              ? _getPrimaryColor()
-                              : Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                      if (_hasActiveFilter)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: ColorUtils.error600,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Filter Chips
-          if (_hasActiveFilter) ...[
-            SizedBox(height: AppSpacing.md),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  ..._buildFilterChips(languageProvider).map((chip) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: InkWell(
-                        onTap: chip['onRemove'],
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.5),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                chip['label'],
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(width: 6),
-                              Icon(Icons.close, size: 14, color: Colors.white),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                  InkWell(
-                    onTap: _clearAllFilters,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Clear All',
-                          'id': 'Hapus Semua',
-                        }),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
+    return ParentAttendanceHeader(
+      gradient: _getCardGradient(),
+      primaryColor: _getPrimaryColor(),
+      studentName: _student?.name,
+      hasActiveFilter: _hasActiveFilter,
+      searchController: _searchController,
+      filterChips: _buildFilterChips(languageProvider),
+      languageProvider: languageProvider,
+      onSearchChanged: () {
+        _checkActiveFilter();
+        _calculateMonthlySummary();
+        setState(() {});
+      },
+      onFilterTap: _showFilterSheet,
+      onClearAllFilters: _clearAllFilters,
+      onRefresh: _forceRefresh,
     );
   }
 

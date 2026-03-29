@@ -6,15 +6,12 @@
 //
 // In Laravel terms, this consumes RppController (GET /api/rpp, PATCH /api/rpp/{id}/approve).
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
@@ -23,18 +20,17 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.dart';
-import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/update_status_dialog.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_detail_page.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_card.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/teacher_select_card.dart';
 
 /// Admin lesson plan (RPP) review screen with drill-down navigation.
 ///
@@ -785,43 +781,6 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
     }
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Approved':
-      case 'Disetujui':
-        return ColorUtils.success600;
-      case 'Pending':
-      case 'Menunggu':
-        return ColorUtils.warning600;
-      case 'Rejected':
-      case 'Ditolak':
-        return ColorUtils.error600;
-      case 'Draft':
-      case 'draft':
-        return ColorUtils.info600;
-      default:
-        return ColorUtils.slate400;
-    }
-  }
-
-  String _getStatusLabel(String? status) {
-    switch (status) {
-      case 'Approved':
-      case 'Disetujui':
-        return 'Disetujui';
-      case 'Pending':
-      case 'Menunggu':
-        return 'Menunggu';
-      case 'Draft':
-      case 'draft':
-        return 'Draft';
-      case 'Rejected':
-      case 'Ditolak':
-        return 'Ditolak';
-      default:
-        return status ?? '-';
-    }
-  }
 
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor('admin');
@@ -835,285 +794,6 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
     );
   }
 
-  Widget _buildInfoTag({
-    required IconData icon,
-    required String label,
-    Color? tagColor,
-  }) {
-    final color = tagColor ?? ColorUtils.slate500;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: color),
-          SizedBox(width: AppSpacing.xs),
-          Flexible(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCircleActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
-        ),
-        child: Icon(icon, size: 18, color: color),
-      ),
-    );
-  }
-
-  Widget _buildLessonPlanCard(Map<String, dynamic> lessonPlan, int index) {
-    final accentColor = ColorUtils.getColorForIndex(index);
-    final statusColor = _getStatusColor(lessonPlan['status'] ?? '');
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _viewLessonPlanDetail(lessonPlan),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: ColorUtils.slate200),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header: icon + title/subject + status badge
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.description_rounded,
-                        color: accentColor,
-                        size: 22,
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            lessonPlan['judul'] ??
-                                lessonPlan['title'] ??
-                                'No Title',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: ColorUtils.slate900,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: 3),
-                          Text(
-                            lessonPlan['mata_pelajaran_nama'] ??
-                                lessonPlan['subject_name'] ??
-                                'No Subject',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: ColorUtils.slate500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.sm),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: statusColor.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        _getStatusLabel(lessonPlan['status']),
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: AppSpacing.md),
-                Divider(color: ColorUtils.slate100, height: 1),
-                SizedBox(height: 10),
-                // Info tags: class + teacher
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    _buildInfoTag(
-                      icon: Icons.class_,
-                      label:
-                          lessonPlan['kelas_nama'] ??
-                          lessonPlan['class_name'] ??
-                          'No Class',
-                    ),
-                    _buildInfoTag(
-                      icon: Icons.person_outline,
-                      label:
-                          lessonPlan['teacher_name'] ??
-                          lessonPlan['guru_nama'] ??
-                          'No Teacher',
-                    ),
-                  ],
-                ),
-                SizedBox(height: AppSpacing.md),
-                // Action buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    _buildCircleActionButton(
-                      icon: Icons.visibility_outlined,
-                      color: _getPrimaryColor(),
-                      onPressed: () => _viewLessonPlanDetail(lessonPlan),
-                    ),
-                    SizedBox(width: AppSpacing.sm),
-                    _buildCircleActionButton(
-                      icon: Icons.edit_outlined,
-                      color: ColorUtils.warning600,
-                      onPressed: () =>
-                          _updateStatus(lessonPlan['id'], lessonPlan['status']),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTeacherCard(Map<String, dynamic> teacher, int index) {
-    final avatarColor = ColorUtils.getColorForIndex(index);
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _selectTeacher(teacher),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: ColorUtils.slate200),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: avatarColor.withValues(alpha: 0.15),
-                  child: Text(
-                    teacher['name'] != null &&
-                            (teacher['name'] as String).isNotEmpty
-                        ? (teacher['name'] as String)[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: avatarColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        teacher['name'] ?? 'Unknown',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: ColorUtils.slate900,
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        teacher['employee_number'] != null
-                            ? 'NIP: ${teacher['employee_number']}'
-                            : 'No NIP',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: ColorUtils.slate100,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: ColorUtils.slate400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1531,9 +1211,12 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                               child: Center(child: CircularProgressIndicator()),
                             );
                           }
-                          return _buildTeacherCard(
-                            filteredTeachers[index],
-                            index,
+                          return TeacherSelectCard(
+                            teacher: filteredTeachers[index]
+                                as Map<String, dynamic>,
+                            index: index,
+                            onTap: () =>
+                                _selectTeacher(filteredTeachers[index]),
                           );
                         },
                       ),
@@ -1578,7 +1261,18 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                               }
 
                               final lessonPlan = filteredLessonPlans[index];
-                              return _buildLessonPlanCard(lessonPlan, index);
+                              return LessonPlanAdminCard(
+                                lessonPlan:
+                                    lessonPlan as Map<String, dynamic>,
+                                index: index,
+                                primaryColor: _getPrimaryColor(),
+                                onTap: () =>
+                                    _viewLessonPlanDetail(lessonPlan),
+                                onUpdateStatus: () => _updateStatus(
+                                  lessonPlan['id'],
+                                  lessonPlan['status'],
+                                ),
+                              );
                             },
                           ),
                         )),

@@ -39,7 +39,6 @@ import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, Consumer, ChangeNotifierProvider;
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_router.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';

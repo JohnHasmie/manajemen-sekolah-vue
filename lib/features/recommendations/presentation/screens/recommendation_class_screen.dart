@@ -7,7 +7,6 @@
 // ClassScreen -> StudentScreen -> ResultScreen -> (optional) EditScreen.
 // In Laravel terms, this is like `RecommendationController@classIndex`.
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
@@ -28,6 +27,8 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/subject_picker_sheet.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/widgets/scope_option_tile.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_class_card.dart';
 
 /// Displays a list of classes with AI learning recommendation summaries.
 ///
@@ -515,7 +516,7 @@ class _LearningRecommendationClassScreenState
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             ),
             const SizedBox(height: AppSpacing.lg),
-            _buildScopeOption(
+            ScopeOptionTile(
               ctx: ctx,
               value: true,
               icon: Icons.groups_rounded,
@@ -524,7 +525,7 @@ class _LearningRecommendationClassScreenState
                   'Generate rekomendasi untuk semua siswa termasuk yang sudah baik',
               color: ColorUtils.corporateBlue500,
             ),
-            _buildScopeOption(
+            ScopeOptionTile(
               ctx: ctx,
               value: false,
               icon: Icons.person_search_rounded,
@@ -535,76 +536,6 @@ class _LearningRecommendationClassScreenState
             ),
             const SizedBox(height: AppSpacing.sm),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScopeOption({
-    required BuildContext ctx,
-    required bool value,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => AppNavigator.pop(ctx, value),
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              border: Border.all(color: ColorUtils.slate200),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: color.withValues(alpha: 0.2)),
-                  ),
-                  child: Icon(icon, size: 20, color: color),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: ColorUtils.slate800,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: ColorUtils.slate400,
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
@@ -750,32 +681,6 @@ class _LearningRecommendationClassScreenState
     return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
   }
 
-  String _formatDate(String dateStr) {
-    try {
-      final date = DateTime.parse(dateStr);
-      return DateFormat('d MMMM yyyy', 'id_ID').format(date);
-    } catch (_) {
-      return dateStr;
-    }
-  }
-
-  String _getRelativeDate(String dateStr) {
-    try {
-      final date = DateTime.parse(dateStr);
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final target = DateTime(date.year, date.month, date.day);
-      final diff = today.difference(target).inDays;
-
-      if (diff == 0) return 'Hari ini';
-      if (diff == 1) return 'Kemarin';
-      if (diff < 7) return '$diff hari lalu';
-      return _formatDate(dateStr);
-    } catch (_) {
-      return dateStr;
-    }
-  }
-
   // ==================== BUILD ====================
 
   @override
@@ -916,16 +821,40 @@ class _LearningRecommendationClassScreenState
                   return Padding(
                     key: index == 0 ? _classListKey : null,
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _buildClassCard(
+                    child: RecommendationClassCard(
                       className: className,
                       classId: classId,
-                      classData: cls,
+                      classData: Map<String, dynamic>.from(cls),
                       summary: summary,
+                      primaryColor: _getPrimaryColor(),
                       isLoading: isLoading,
                       isGenerating: isGenerating,
+                      schedulesLoaded: _schedulesLoaded,
                       history: history,
                       isLoadingHistory: isLoadingHistory,
                       isExpanded: isExpanded,
+                      onToggleExpand: () => setState(
+                        () => _expandedClass[classId] = !isExpanded,
+                      ),
+                      onGenerate: () => _generateForClass(classId, className),
+                      onHistoryItemTap: (entry) {
+                        final teacherWithProfileId =
+                            Map<String, String>.from(widget.teacher);
+                        if (_teacherProfileId != null) {
+                          teacherWithProfileId['teacher_id'] =
+                              _teacherProfileId!;
+                        }
+                        AppNavigator.push(
+                          context,
+                          LearningRecommendationStudentScreen(
+                            teacher: teacherWithProfileId,
+                            classData: Map<String, dynamic>.from(cls),
+                          ),
+                        ).then((_) {
+                          _loadClassSummary(classId);
+                          _loadClassHistory(classId);
+                        });
+                      },
                     ),
                   );
                 },
@@ -937,476 +866,4 @@ class _LearningRecommendationClassScreenState
     );
   }
 
-  Widget _buildClassCard({
-    required String className,
-    required String classId,
-    required Map<String, dynamic> classData,
-    Map<String, dynamic>? summary,
-    bool isLoading = false,
-    bool isGenerating = false,
-    List<Map<String, dynamic>> history = const [],
-    bool isLoadingHistory = false,
-    bool isExpanded = false,
-  }) {
-    final byStatus = _toCountMap(summary?['by_status']);
-    final totalRec = byStatus.values.fold<int>(0, (sum, v) => sum + v);
-    final primaryColor = _getPrimaryColor();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ColorUtils.slate200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-          BoxShadow(
-            color: ColorUtils.slate900.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header row - tap to expand
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  _expandedClass[classId] = !isExpanded;
-                });
-              },
-              borderRadius: BorderRadius.vertical(
-                top: const Radius.circular(16),
-                bottom: isExpanded ? Radius.zero : const Radius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: primaryColor.withValues(alpha: 0.15),
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.class_outlined,
-                        size: 24,
-                        color: primaryColor,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            className,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: ColorUtils.slate900,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          if (isLoading)
-                            Text(
-                              'Memuat...',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: ColorUtils.slate400,
-                              ),
-                            )
-                          else if (totalRec > 0)
-                            Text(
-                              '$totalRec rekomendasi  •  ${history.length} sesi',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: ColorUtils.slate500,
-                              ),
-                            )
-                          else
-                            Text(
-                              'Belum ada rekomendasi',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: ColorUtils.slate400,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    AnimatedRotation(
-                      turns: isExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: ColorUtils.slate400,
-                        size: 24,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Expanded content
-          if (isExpanded) ...[
-            Divider(height: 1, color: ColorUtils.slate200),
-
-            // History list
-            if (isLoadingHistory)
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: primaryColor,
-                    ),
-                  ),
-                ),
-              )
-            else if (history.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.lightbulb_outline_rounded,
-                      size: 32,
-                      color: ColorUtils.slate300,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'Belum ada riwayat rekomendasi',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: ColorUtils.slate500,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Tekan tombol Generate untuk membuat rekomendasi AI',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: ColorUtils.slate400,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                itemCount: history.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 6),
-                itemBuilder: (context, index) {
-                  final entry = history[index];
-                  return _buildHistoryItem(
-                    entry: entry,
-                    classData: classData,
-                    classId: classId,
-                  );
-                },
-              ),
-
-            // Generate button
-            if (_schedulesLoaded) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: isGenerating
-                        ? null
-                        : () => _generateForClass(classId, className),
-                    icon: isGenerating
-                        ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: primaryColor,
-                            ),
-                          )
-                        : Icon(
-                            Icons.auto_awesome,
-                            size: 16,
-                            color: primaryColor,
-                          ),
-                    label: Text(
-                      isGenerating ? 'Memproses...' : 'Generate Rekomendasi AI',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isGenerating
-                            ? ColorUtils.slate400
-                            : primaryColor,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: isGenerating
-                            ? ColorUtils.slate300
-                            : primaryColor.withValues(alpha: 0.4),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHistoryItem({
-    required Map<String, dynamic> entry,
-    required Map<String, dynamic> classData,
-    required String classId,
-  }) {
-    final date = entry['date'] as String;
-    final count = entry['count'] is int
-        ? entry['count'] as int
-        : int.tryParse(entry['count'].toString()) ?? 0;
-    final triggerSource = entry['trigger_source']?.toString() ?? 'on_demand';
-    final byStatus = _toCountMap(entry['by_status']);
-    final byPriority = _toCountMap(entry['by_priority']);
-    final highCount = byPriority['high'] ?? 0;
-    final pendingCount = byStatus['pending'] ?? 0;
-    final completedCount = byStatus['completed'] ?? 0;
-
-    final periodInfo = _getPeriodInfo(triggerSource);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          // Pass resolved teacher_id so student/result screens can query correctly
-          final teacherWithProfileId = Map<String, String>.from(widget.teacher);
-          if (_teacherProfileId != null) {
-            teacherWithProfileId['teacher_id'] = _teacherProfileId!;
-          }
-
-          AppNavigator.push(
-            context,
-            LearningRecommendationStudentScreen(
-              teacher: teacherWithProfileId,
-              classData: classData,
-            ),
-          ).then((_) {
-            _loadClassSummary(classId);
-            _loadClassHistory(classId);
-          });
-        },
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: ColorUtils.slate200),
-          ),
-          child: Row(
-            children: [
-              // Period icon with color
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: periodInfo.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: periodInfo.color.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Icon(periodInfo.icon, size: 18, color: periodInfo.color),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _getRelativeDate(date),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: ColorUtils.slate800,
-                            ),
-                          ),
-                        ),
-                        // Period badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: periodInfo.color.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: periodInfo.color.withValues(alpha: 0.2),
-                            ),
-                          ),
-                          child: Text(
-                            periodInfo.label,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              color: periodInfo.color,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        _buildMiniTag(
-                          '$count rekomendasi',
-                          ColorUtils.slate600,
-                        ),
-                        if (highCount > 0)
-                          _buildMiniTag(
-                            '$highCount prioritas tinggi',
-                            ColorUtils.red500,
-                          ),
-                        if (pendingCount > 0)
-                          _buildMiniTag(
-                            '$pendingCount pending',
-                            ColorUtils.amber500,
-                          ),
-                        if (completedCount > 0)
-                          _buildMiniTag(
-                            '$completedCount selesai',
-                            ColorUtils.emerald500,
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: ColorUtils.slate400,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Map trigger_source back to period display info
-  ({Color color, String label, IconData icon}) _getPeriodInfo(
-    String triggerSource,
-  ) {
-    switch (triggerSource) {
-      case 'weekly_review':
-        return (
-          color: ColorUtils.corporateBlue500,
-          label: 'Pekanan',
-          icon: Icons.date_range_rounded,
-        );
-      case 'post_exam':
-        return (
-          color: ColorUtils.violet500,
-          label: 'Bulanan/UTS',
-          icon: Icons.calendar_month_rounded,
-        );
-      case 'attendance_alert':
-        return (
-          color: ColorUtils.red500,
-          label: 'Kehadiran',
-          icon: Icons.warning_amber_rounded,
-        );
-      case 'on_demand':
-      default:
-        return (
-          color: ColorUtils.amber500,
-          label: 'Semester',
-          icon: Icons.emoji_events_rounded,
-        );
-    }
-  }
-
-  Map<String, int> _toCountMap(dynamic data) {
-    if (data is Map) {
-      return data.map(
-        (k, v) => MapEntry(
-          k.toString(),
-          v is int ? v : int.tryParse(v.toString()) ?? 0,
-        ),
-      );
-    }
-    if (data is List) {
-      final map = <String, int>{};
-      for (final item in data) {
-        if (item is Map) {
-          final key =
-              (item['status'] ?? item['priority'] ?? item['category'] ?? '')
-                  .toString();
-          final count = item['count'] is int
-              ? item['count']
-              : int.tryParse(item['count'].toString()) ?? 0;
-          if (key.isNotEmpty) map[key] = count;
-        }
-      }
-      return map;
-    }
-    return {};
-  }
-
-  Widget _buildMiniTag(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-      ),
-    );
-  }
 }
