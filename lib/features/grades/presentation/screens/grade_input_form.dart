@@ -497,8 +497,8 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                               'id': 'Masukkan angka bulat yang valid',
                             });
                           }
-                          final nilai = int.parse(value);
-                          if (nilai < 0 || nilai > 100) {
+                          final gradeValue = int.parse(value);
+                          if (gradeValue < 0 || gradeValue > 100) {
                             return languageProvider.getTranslatedText({
                               'en': 'Grade must be between 0-100',
                               'id': 'Nilai harus antara 0-100',

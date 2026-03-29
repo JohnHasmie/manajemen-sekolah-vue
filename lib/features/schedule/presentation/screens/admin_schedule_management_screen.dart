@@ -1928,10 +1928,10 @@ class TeachingScheduleManagementScreenState
       // Class filter
       bool matchesKelas = true;
       if (_selectedClassId != null) {
-        final kelasId =
+        final classId =
             schedule['class_id']?.toString() ??
             schedule['kelas_id']?.toString();
-        matchesKelas = kelasId == _selectedClassId;
+        matchesKelas = classId == _selectedClassId;
       }
 
       // Day filter

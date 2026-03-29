@@ -1201,9 +1201,9 @@ class AdminClassManagementScreenState
                                 onPressed: isSaving
                                     ? null
                                     : () async {
-                                        final nama = nameController.text.trim();
+                                        final name = nameController.text.trim();
 
-                                        if (nama.isEmpty ||
+                                        if (name.isEmpty ||
                                             selectedGradeLevel == null) {
                                           ScaffoldMessenger.of(
                                             context,
