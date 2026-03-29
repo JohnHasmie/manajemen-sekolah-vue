@@ -304,7 +304,7 @@ class TeachingScheduleScreenState
               resolvedTeacherId = teacherProvider.teacherId;
             } else {
               final teacherData = await getIt<ApiTeacherService>()
-                  .getGuruByUserId(userId, academicYearId: academicYearId);
+                  .getTeacherByUserId(userId, academicYearId: academicYearId);
               if (teacherData != null && teacherData['id'] != null) {
                 resolvedTeacherId = teacherData['id'].toString();
               }
@@ -2676,7 +2676,7 @@ class TeachingScheduleScreenState
   Map<String, dynamic>? _getScheduleForSessionAndDayAndClass(
     int session,
     String day,
-    String kelas,
+    String className,
     List<dynamic> schedules,
   ) {
     try {
@@ -2684,7 +2684,7 @@ class TeachingScheduleScreenState
         (s) =>
             (int.tryParse(s['jam_ke']?.toString() ?? '') ?? 0) == session &&
             s['hari_nama']?.toString() == day &&
-            s['kelas_nama']?.toString() == kelas,
+            s['kelas_nama']?.toString() == className,
         orElse: () => <String, dynamic>{},
       );
     } catch (e) {
@@ -2753,7 +2753,7 @@ class TeachingScheduleScreenState
           onTap: () {
             AppNavigator.push(
               context,
-              PresencePage(
+              AttendancePage(
                 teacher: {'id': _teacherId, 'nama': _teacherNama},
                 initialDate: DateTime.now(),
                 initialSubjectId:
@@ -2904,7 +2904,7 @@ class TeachingScheduleScreenState
                         onPressed: () {
                           AppNavigator.push(
                             context,
-                            MateriPage(
+                            TeacherMaterialScreen(
                               teacher: {'id': _teacherId, 'nama': _teacherNama},
                               initialSubjectId:
                                   (schedule['subject_id'] ??
@@ -2974,7 +2974,7 @@ class TeachingScheduleScreenState
                           );
                           AppNavigator.push(
                             context,
-                            ClassActifityScreen(
+                            ClassActivityScreen(
                               initialDate: scheduleDate,
                               initialSubjectId:
                                   (schedule['subject_id'] ??

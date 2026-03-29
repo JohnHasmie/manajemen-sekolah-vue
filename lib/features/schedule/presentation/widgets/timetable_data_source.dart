@@ -10,20 +10,20 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 // Data class for grid view
 class ScheduleGridData {
   final String id;
-  final String waktu;
-  final String hari;
+  final String timeSlot;
+  final String day;
   final String classroom;
-  final String mataPelajaran;
-  final String guru;
+  final String subject;
+  final String teacher;
   final Map<String, dynamic>? originalData;
 
   ScheduleGridData({
     required this.id,
-    required this.waktu,
-    required this.hari,
+    required this.timeSlot,
+    required this.day,
     required this.classroom,
-    required this.mataPelajaran,
-    required this.guru,
+    required this.subject,
+    required this.teacher,
     this.originalData,
   });
 }
@@ -89,7 +89,7 @@ class TimetableDataSource extends DataGridSource {
 
   Widget _buildDayScheduleCell(String timeSlot, String day) {
     final cellSchedules = gridData
-        .where((data) => data.waktu == timeSlot && data.hari == day)
+        .where((data) => data.timeSlot == timeSlot && data.day == day)
         .toList();
 
     if (cellSchedules.isEmpty) {
@@ -148,7 +148,7 @@ class TimetableDataSource extends DataGridSource {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          schedule.mataPelajaran,
+                          schedule.subject,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 8,
@@ -157,9 +157,9 @@ class TimetableDataSource extends DataGridSource {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (schedule.guru.isNotEmpty) ...[
+                        if (schedule.teacher.isNotEmpty) ...[
                           Text(
-                            schedule.guru,
+                            schedule.teacher,
                             style: TextStyle(
                               fontSize: 7,
                               color: Colors.grey[600],

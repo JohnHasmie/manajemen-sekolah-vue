@@ -338,7 +338,7 @@ class ApiSubjectService {
   }
 
   // Materi
-  Future<List<dynamic>> getMateri({
+  Future<List<dynamic>> getMaterials({
     String? teacherId,
     String? subjectId,
   }) async {
@@ -694,7 +694,7 @@ class ApiSubjectService {
 
   /// Fetches material progress (checked/generated state) for a teacher + subject combo.
   /// Like `MaterialProgress::where('teacher_id', ...)->where('subject_id', ...)->get()`.
-  Future<List<dynamic>> getMateriProgress({
+  Future<List<dynamic>> getMaterialProgress({
     required String teacherId,
     required String subjectId,
     String? classId,

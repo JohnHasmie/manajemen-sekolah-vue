@@ -1049,13 +1049,13 @@ class _DashboardState extends ConsumerState<Dashboard>
               ? (state.stats['attendance_summary']['total'] ?? 0)
               : 0,
           onTap: () {
-            AppNavigator.push(context, PresencePage(teacher: state.userData));
+            AppNavigator.push(context, AttendancePage(teacher: state.userData));
           },
         ),
         MaterialSliderCard(
           materials: state.materialOverview,
           onTap: () {
-            AppNavigator.push(context, MateriPage(teacher: state.userData));
+            AppNavigator.push(context, TeacherMaterialScreen(teacher: state.userData));
           },
         ),
         LessonPlanStatusCard(
@@ -1195,13 +1195,13 @@ class _DashboardState extends ConsumerState<Dashboard>
           icon: Icons.how_to_reg_outlined,
           color: ColorUtils.warning600,
           onTap: () =>
-              AppNavigator.push(context, PresencePage(teacher: state.userData)),
+              AppNavigator.push(context, AttendancePage(teacher: state.userData)),
         ),
         QuickActionButton(
           label: AppLocalizations.activity.tr,
           icon: Icons.local_activity_outlined,
           color: ColorUtils.info600,
-          onTap: () => AppNavigator.push(context, ClassActifityScreen()),
+          onTap: () => AppNavigator.push(context, ClassActivityScreen()),
         ),
         QuickActionButton(
           label: AppLocalizations.inputGrades.tr,
@@ -1385,7 +1385,7 @@ class _DashboardState extends ConsumerState<Dashboard>
       MenuItem(
         title: AppLocalizations.presenceReport.tr,
         icon: Icons.check_circle_outline,
-        onTap: () => AppNavigator.push(context, AdminPresenceReportScreen()),
+        onTap: () => AppNavigator.push(context, AdminAttendanceReportScreen()),
       ),
       MenuItem(
         title: AppLocalizations.manageRpp.tr,
@@ -1395,7 +1395,7 @@ class _DashboardState extends ConsumerState<Dashboard>
       MenuItem(
         title: AppLocalizations.studentReport.tr,
         icon: Icons.assignment_turned_in_outlined,
-        onTap: () => AppNavigator.push(context, const AdminRaportScreen()),
+        onTap: () => AppNavigator.push(context, const AdminReportCardScreen()),
       ),
     ];
   }
@@ -1430,7 +1430,7 @@ class _DashboardState extends ConsumerState<Dashboard>
       MenuItem(
         title: AppLocalizations.classActivities.tr,
         icon: Icons.local_activity_outlined,
-        onTap: () => AppNavigator.push(context, ClassActifityScreen()),
+        onTap: () => AppNavigator.push(context, ClassActivityScreen()),
       ),
       MenuItem(
         title: AppLocalizations.studentAttendance.tr,
@@ -1450,7 +1450,7 @@ class _DashboardState extends ConsumerState<Dashboard>
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, PresencePage(teacher: teacherData));
+          AppNavigator.push(context, AttendancePage(teacher: teacherData));
         },
       ),
       MenuItem(
@@ -1470,7 +1470,7 @@ class _DashboardState extends ConsumerState<Dashboard>
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, MateriPage(teacher: teacherData));
+          AppNavigator.push(context, TeacherMaterialScreen(teacher: teacherData));
         },
       ),
     ];
@@ -1539,7 +1539,7 @@ class _DashboardState extends ConsumerState<Dashboard>
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, RaportScreen(teacher: teacherData));
+          AppNavigator.push(context, ReportCardScreen(teacher: teacherData));
         },
       ),
       MenuItem(
@@ -1714,7 +1714,7 @@ class _DashboardState extends ConsumerState<Dashboard>
 
           await AppNavigator.push(
             context,
-            ParentRaportScreen(academicYearId: academicYearId),
+            ParentReportCardScreen(academicYearId: academicYearId),
           );
         },
       ),

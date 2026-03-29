@@ -5,14 +5,14 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 class FinanceFilterSheet extends StatelessWidget {
   final String? currentStatus;
-  final String? currentPeriode;
+  final String? currentPeriod;
   final LanguageProvider languageProvider;
   final Function(String?, String?) onApply;
 
   const FinanceFilterSheet({
     super.key,
     this.currentStatus,
-    this.currentPeriode,
+    this.currentPeriod,
     required this.languageProvider,
     required this.onApply,
   });
@@ -20,7 +20,7 @@ class FinanceFilterSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String? selectedStatus = currentStatus;
-    String? selectedPeriode = currentPeriode;
+    String? selectedPeriod = currentPeriod;
 
     return StatefulBuilder(
       builder: (context, setModalState) {
@@ -52,7 +52,7 @@ class FinanceFilterSheet extends StatelessWidget {
                     onPressed: () {
                       setModalState(() {
                         selectedStatus = null;
-                        selectedPeriode = null;
+                        selectedPeriod = null;
                       });
                     },
                     child: Text(
@@ -99,13 +99,13 @@ class FinanceFilterSheet extends StatelessWidget {
                 children: [
                   _FilterChip(
                     label: languageProvider.getTranslatedText({'en': 'Monthly', 'id': 'Bulanan'}),
-                    isSelected: selectedPeriode == 'bulanan',
-                    onSelected: (val) => setModalState(() => selectedPeriode = val ? 'bulanan' : null),
+                    isSelected: selectedPeriod == 'bulanan',
+                    onSelected: (val) => setModalState(() => selectedPeriod = val ? 'bulanan' : null),
                   ),
                   _FilterChip(
                     label: languageProvider.getTranslatedText({'en': 'Yearly', 'id': 'Tahunan'}),
-                    isSelected: selectedPeriode == 'tahunan',
-                    onSelected: (val) => setModalState(() => selectedPeriode = val ? 'tahunan' : null),
+                    isSelected: selectedPeriod == 'tahunan',
+                    onSelected: (val) => setModalState(() => selectedPeriod = val ? 'tahunan' : null),
                   ),
                 ],
               ),
@@ -115,7 +115,7 @@ class FinanceFilterSheet extends StatelessWidget {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () {
-                    onApply(selectedStatus, selectedPeriode);
+                    onApply(selectedStatus, selectedPeriod);
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(

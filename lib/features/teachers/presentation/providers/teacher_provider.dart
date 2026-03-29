@@ -137,7 +137,7 @@ class TeacherProvider extends ChangeNotifier {
         resolvedTeacherId = userData['teacher_id'].toString();
       } else {
         // Fetch from API
-        final teacherRecord = await getIt<ApiTeacherService>().getGuruByUserId(
+        final teacherRecord = await getIt<ApiTeacherService>().getTeacherByUserId(
           id,
           academicYearId: academicYearId,
         );

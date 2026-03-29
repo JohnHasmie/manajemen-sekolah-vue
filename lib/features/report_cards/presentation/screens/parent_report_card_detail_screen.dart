@@ -18,13 +18,13 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// StatelessWidget -- no local state needed. All data comes via props.
 /// Like a Vue presentational component that only renders data.
 /// Props: [reportCardData], [studentName], [studentData], [userRole].
-class ParentRaportDetailScreen extends StatelessWidget {
+class ParentReportCardDetailScreen extends StatelessWidget {
   final Map<String, dynamic> reportCardData;
   final String studentName;
   final Map<String, dynamic> studentData;
   final String userRole;
 
-  const ParentRaportDetailScreen({
+  const ParentReportCardDetailScreen({
     super.key,
     required this.reportCardData,
     required this.studentName,
@@ -175,7 +175,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
 
     try {
       if (userRole == 'wali') {
-        await ExcelRaportService.exportCertificateRaportPdf(
+        await ExcelReportCardService.exportCertificateRaportPdf(
           studentClassId: reportCardData['student_class_id'].toString(),
           academicYearId: reportCardData['academic_year_id'].toString(),
           semesterId: reportCardData['semester_id'].toString(),
@@ -183,7 +183,7 @@ class ParentRaportDetailScreen extends StatelessWidget {
           context: context,
         );
       } else {
-        await ExcelRaportService.exportSingleRaportPdf(
+        await ExcelReportCardService.exportSingleRaportPdf(
           studentClassId: reportCardData['student_class_id'].toString(),
           academicYearId: reportCardData['academic_year_id'].toString(),
           semesterId: reportCardData['semester_id'].toString(),

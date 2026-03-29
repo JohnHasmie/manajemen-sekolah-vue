@@ -218,7 +218,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     );
 
     try {
-      final students = await getIt<ApiClassActivityService>().getSiswaByKelas(
+      final students = await getIt<ApiClassActivityService>().getStudentsByClass(
         _selectedClassId!,
       );
 
@@ -390,14 +390,14 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     }
   }
 
-  String _getChapterName(dynamic bab) {
+  String _getChapterName(dynamic chapter) {
     // Try multiple possible field names (backend returns 'chapter_title')
-    return bab['chapter_title']?.toString() ??
-        bab['judul_bab']?.toString() ??
-        bab['nama']?.toString() ??
-        bab['judul']?.toString() ??
-        bab['title']?.toString() ??
-        bab['name']?.toString() ??
+    return chapter['chapter_title']?.toString() ??
+        chapter['judul_bab']?.toString() ??
+        chapter['nama']?.toString() ??
+        chapter['judul']?.toString() ??
+        chapter['title']?.toString() ??
+        chapter['name']?.toString() ??
         'Unknown';
   }
 
@@ -492,7 +492,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
           if (!uniqueClasses.containsKey(classId)) {
             uniqueClasses[classId] = {
               'id': classId,
-              'nama': schedule['kelas_nama'] ?? 'Unknown',
+              'name': schedule['kelas_nama'] ?? 'Unknown',
             };
           }
         }
@@ -504,7 +504,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
             if (!uniqueClasses.containsKey(classId)) {
               uniqueClasses[classId] = {
                 'id': classId,
-                'nama': schedule['kelas_nama'] ?? 'Unknown',
+                'name': schedule['kelas_nama'] ?? 'Unknown',
               };
               AppLogger.debug(
                 'class_activity',
@@ -546,7 +546,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
               if (!uniqueClasses.containsKey(classId)) {
                 uniqueClasses[classId] = {
                   'id': classId,
-                  'nama': schedule['kelas_nama'] ?? 'Unknown',
+                  'name': schedule['kelas_nama'] ?? 'Unknown',
                 };
               } else {
                 AppLogger.debug(
@@ -570,7 +570,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       return uniqueClasses.values.map((classItem) {
         return DropdownMenuItem<String>(
           value: classItem['id'].toString(),
-          child: Text(classItem['nama'] ?? 'Unknown'),
+          child: Text(classItem['name'] ?? 'Unknown'),
         );
       }).toList();
     } catch (e) {
@@ -687,13 +687,13 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       // Call appropriate API based on mode
       if (widget.isEditMode && widget.activityData != null) {
         // Update existing activity
-        await getIt<ApiClassActivityService>().updateKegiatan(
+        await getIt<ApiClassActivityService>().updateActivity(
           widget.activityData['id'].toString(),
           requestData,
         );
       } else {
         // Create new activity
-        await getIt<ApiClassActivityService>().tambahKegiatan(requestData);
+        await getIt<ApiClassActivityService>().createActivity(requestData);
       }
 
       // Automatically mark material as generated (checked)

@@ -33,12 +33,12 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// changes and warns before navigation (like Vue `beforeRouteLeave`).
 ///
 /// Props (like Vue props): [studentClassId], [studentName], [className].
-class RaportDetailScreen extends ConsumerStatefulWidget {
+class ReportCardDetailScreen extends ConsumerStatefulWidget {
   final String studentClassId;
   final String studentName;
   final String className;
 
-  const RaportDetailScreen({
+  const ReportCardDetailScreen({
     super.key,
     required this.studentClassId,
     required this.studentName,
@@ -46,10 +46,10 @@ class RaportDetailScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState createState() => _RaportDetailScreenState();
+  ConsumerState createState() => _ReportCardDetailScreenState();
 }
 
-/// State for [RaportDetailScreen].
+/// State for [ReportCardDetailScreen].
 ///
 /// Like a Vue component with `data() { return {...} }` containing form
 /// controllers, tab state, and save/submit flags. Uses
@@ -57,7 +57,7 @@ class RaportDetailScreen extends ConsumerStatefulWidget {
 ///
 /// Key state: form controllers for sikap (character), attendance counts,
 /// notes, lists of subjects/extras/achievements, and unsaved change tracking.
-class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
+class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
@@ -210,7 +210,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
             _errorMessage = '';
           });
           _checkAndShowTour();
-          AppLogger.debug('report_card', 'RaportDetailScreen: Data from cache');
+          AppLogger.debug('report_card', 'ReportCardDetailScreen: Data from cache');
           return;
         }
       }
@@ -228,13 +228,13 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
       // Use shared school_day_data cache for semester
       final semester = await _resolveSemester();
 
-      final existingDetail = await getIt<ApiRaportService>().getRaportDetail(
+      final existingDetail = await getIt<ApiReportCardService>().getRaportDetail(
         studentClassId: widget.studentClassId,
         academicYearId: academicYearId,
         semesterId: semester,
       );
 
-      final initialData = await getIt<ApiRaportService>().getInitialData(
+      final initialData = await getIt<ApiReportCardService>().getInitialData(
         studentClassId: widget.studentClassId,
         academicYearId: academicYearId,
         semesterId: semester,
@@ -408,7 +408,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
         'achievements': _achievements,
       };
 
-      final response = await getIt<ApiRaportService>().saveReportCard(payload);
+      final response = await getIt<ApiReportCardService>().saveReportCard(payload);
 
       if (response != null) {
         // Invalidate cache after save
@@ -582,7 +582,7 @@ class _RaportDetailScreenState extends ConsumerState<RaportDetailScreen>
                         if (_existingRaport != null) {
                           AppNavigator.push(
                             context,
-                            RaportPrintScreen(
+                            ReportCardPrintScreen(
                               reportCardData: _existingRaport!,
                               studentName: widget.studentName,
                               className: widget.className,

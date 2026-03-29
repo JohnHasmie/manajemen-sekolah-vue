@@ -76,15 +76,15 @@ class AttendanceSummary {
 ///
 /// This is a [StatefulWidget] - like a Vue page with extensive local state
 /// for filters, pagination, and two view modes (list vs table/grid).
-class AdminPresenceReportScreen extends ConsumerStatefulWidget {
-  const AdminPresenceReportScreen({super.key});
+class AdminAttendanceReportScreen extends ConsumerStatefulWidget {
+  const AdminAttendanceReportScreen({super.key});
 
   @override
-  ConsumerState<AdminPresenceReportScreen> createState() =>
-      _AdminPresenceReportScreenState();
+  ConsumerState<AdminAttendanceReportScreen> createState() =>
+      _AdminAttendanceReportScreenState();
 }
 
-/// Mutable state for [AdminPresenceReportScreen].
+/// Mutable state for [AdminAttendanceReportScreen].
 ///
 /// Key state (like Vue `data()`):
 /// - [_attendanceSummaryList] - attendance summary records from API
@@ -94,8 +94,8 @@ class AdminPresenceReportScreen extends ConsumerStatefulWidget {
 /// - [_studentList] / [_attendanceMap] - raw student attendance data for table view
 ///
 /// setState() is like Vue's reactivity - triggers a re-render when data changes.
-class _AdminPresenceReportScreenState
-    extends ConsumerState<AdminPresenceReportScreen> {
+class _AdminAttendanceReportScreenState
+    extends ConsumerState<AdminAttendanceReportScreen> {
   // Data for View Results mode
   List<AttendanceSummary> _attendanceSummaryList = [];
   bool _isLoadingSummary = false;
@@ -736,7 +736,7 @@ class _AdminPresenceReportScreenState
                         AppNavigator.pop(context);
                         AppNavigator.push(
                           context,
-                          PresencePage(teacher: teacher),
+                          AttendancePage(teacher: teacher),
                         ).then((_) => _loadData(useCache: false));
                       },
                     ),
@@ -1472,7 +1472,7 @@ class _AdminPresenceReportScreenState
         subjectMap[s['id'].toString()] = s['name'];
       }
 
-      final List<PresenceGridData> gridData = [];
+      final List<AttendanceGridData> gridData = [];
       for (var student in students) {
         // Handle student structure if it's nested or direct
         final sData = student is Map ? student : {};
@@ -1492,13 +1492,13 @@ class _AdminPresenceReportScreenState
         }
 
         gridData.add(
-          PresenceGridData(
+          AttendanceGridData(
             studentId: id,
             nis: nis.toString(),
             name: name.toString(),
             attendance:
                 attMap, // Pass the whole map, but simpler to pass subset?
-            // Actually PresenceGridData expects 'attendance' map.
+            // Actually AttendanceGridData expects 'attendance' map.
             // But wait, the key for grid data inside DataSource uses specific logic.
             // Let's pass the global attMap for now, assuming unique keys $sId-$date-$subjId
           ),
@@ -2503,7 +2503,7 @@ class _AdminPresenceReportScreenState
   void _navigateToAttendanceDetail(AttendanceSummary summary) {
     AppNavigator.push(
       context,
-      AdminAbsensiDetailPage(
+      AdminAttendanceDetailPage(
         subjectId: summary.subjectId,
         subjectName: summary.subjectName,
         date: summary.date,
@@ -3209,15 +3209,15 @@ class _AdminPresenceReportScreenState
   }
 }
 
-// AdminAbsensiDetailPage has been extracted to admin_attendance_detail.dart
+// AdminAttendanceDetailPage has been extracted to admin_attendance_detail.dart
 
-class PresenceGridData {
+class AttendanceGridData {
   final String studentId;
   final String nis;
   final String name;
   final Map<String, dynamic> attendance; // date -> {subjectId: status}
 
-  PresenceGridData({
+  AttendanceGridData({
     required this.studentId,
     required this.nis,
     required this.name,
@@ -3226,7 +3226,7 @@ class PresenceGridData {
 }
 
 class AttendanceDataSource extends DataGridSource {
-  final List<PresenceGridData> students;
+  final List<AttendanceGridData> students;
   final List<String> dates;
   final List<String> subjectIds;
   final Map<String, dynamic> subjectMap; // id -> name
@@ -3241,7 +3241,7 @@ class AttendanceDataSource extends DataGridSource {
   }) {
     dataGridRows = students.map<DataGridRow>((data) {
       final List<DataGridCell> cells = [
-        DataGridCell<PresenceGridData>(columnName: 'student_info', value: data),
+        DataGridCell<AttendanceGridData>(columnName: 'student_info', value: data),
       ];
 
       for (var date in dates) {
@@ -3265,7 +3265,7 @@ class AttendanceDataSource extends DataGridSource {
     return DataGridRowAdapter(
       cells: row.getCells().map<Widget>((dataGridCell) {
         if (dataGridCell.columnName == 'student_info') {
-          final data = dataGridCell.value as PresenceGridData;
+          final data = dataGridCell.value as AttendanceGridData;
           return Container(
             alignment: Alignment.centerLeft,
             padding: EdgeInsets.symmetric(horizontal: 16.0),

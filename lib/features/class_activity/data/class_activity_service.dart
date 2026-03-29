@@ -135,7 +135,7 @@ class ApiClassActivityService {
   /// Fetches activities created by a specific teacher.
   /// Like `ClassActivity::where('teacher_id', $teacherId)->get()` in Laravel.
   /// [teacherId] - The teacher's UUID.
-  Future<List<dynamic>> getActivityByGuru(String teacherId) async {
+  Future<List<dynamic>> getActivityByTeacher(String teacherId) async {
     try {
       final response = await dioClient.get(
         '/class-activity/teacher/$teacherId',
@@ -164,7 +164,7 @@ class ApiClassActivityService {
   /// Fetches activities for a specific class, optionally filtered by student and academic year.
   /// Used by students/parents to see what happened in their class.
   /// Like `ClassActivity::where('class_id', $classId)->get()` in Laravel.
-  Future<List<dynamic>> getKegiatanByKelas(
+  Future<List<dynamic>> getActivityByClass(
     String classId, {
     String? studentId,
     String? academicYearId,
@@ -208,7 +208,7 @@ class ApiClassActivityService {
   /// Creates a new class activity record.
   /// Like `ClassActivity::create($data)` in Laravel or a Vuex `store` action.
   /// [data] - Activity fields (teacher_id, class_id, subject_id, date, description, etc.).
-  Future<dynamic> tambahKegiatan(Map<String, dynamic> data) async {
+  Future<dynamic> createActivity(Map<String, dynamic> data) async {
     try {
       final response = await dioClient.post('/class-activity', data: data);
       return response.data;
@@ -220,7 +220,7 @@ class ApiClassActivityService {
 
   /// Updates an existing class activity by ID.
   /// Like `ClassActivity::find($id)->update($data)` in Laravel.
-  Future<dynamic> updateKegiatan(String id, Map<String, dynamic> data) async {
+  Future<dynamic> updateActivity(String id, Map<String, dynamic> data) async {
     try {
       final response = await dioClient.put('/class-activity/$id', data: data);
       return response.data;
@@ -232,7 +232,7 @@ class ApiClassActivityService {
 
   /// Deletes a class activity by ID.
   /// Like `ClassActivity::find($id)->delete()` in Laravel.
-  Future<dynamic> deleteKegiatan(String id) async {
+  Future<dynamic> deleteActivity(String id) async {
     try {
       final response = await dioClient.delete('/class-activity/$id');
       return response.data;
@@ -280,7 +280,7 @@ class ApiClassActivityService {
   /// Fetches students belonging to a specific class.
   /// Like `Student::where('class_id', $classId)->get()` in Laravel.
   /// Used to select which students an activity targets.
-  Future<List<dynamic>> getSiswaByKelas(String classId) async {
+  Future<List<dynamic>> getStudentsByClass(String classId) async {
     try {
       final response = await dioClient.get('/student/class/$classId');
 

@@ -43,7 +43,7 @@ Future<void> setupServiceLocator() async {
 
   // Feature services
   getIt.registerLazySingleton<ApiGradeRecapService>(ApiGradeRecapService.new);
-  getIt.registerLazySingleton<ApiRaportService>(ApiRaportService.new);
+  getIt.registerLazySingleton<ApiReportCardService>(ApiReportCardService.new);
   getIt.registerLazySingleton<ApiNotificationService>(
     ApiNotificationService.new,
   );

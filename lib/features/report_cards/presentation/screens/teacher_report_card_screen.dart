@@ -31,21 +31,21 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Report card list screen -- shows classes and their students for raport entry.
 ///
 /// Props (like Vue props): [teacher] -- current teacher info.
-/// Navigates to [RaportDetailScreen] when a student is tapped.
-class RaportScreen extends ConsumerStatefulWidget {
+/// Navigates to [ReportCardDetailScreen] when a student is tapped.
+class ReportCardScreen extends ConsumerStatefulWidget {
   final Map<String, String> teacher;
 
-  const RaportScreen({super.key, required this.teacher});
+  const ReportCardScreen({super.key, required this.teacher});
 
   @override
-  RaportScreenState createState() => RaportScreenState();
+  ReportCardScreenState createState() => ReportCardScreenState();
 }
 
-/// State for [RaportScreen].
+/// State for [ReportCardScreen].
 ///
 /// Like a Vue component with `data() { return { classes, students, selectedClass, ... } }`.
 /// Manages class selection, student list loading, and Excel export state.
-class RaportScreenState extends ConsumerState<RaportScreen> {
+class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
   final LanguageProvider _languageProvider = LanguageProvider();
 
   bool _isLoading = true;
@@ -121,7 +121,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
           }
           AppLogger.debug(
             'report_card',
-            'RaportScreen: Classes from TeacherProvider (${providerClasses.length})',
+            'ReportCardScreen: Classes from TeacherProvider (${providerClasses.length})',
           );
           return;
         }
@@ -144,7 +144,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
         }
         AppLogger.debug(
           'report_card',
-          'RaportScreen: Classes from cache (${cached.length})',
+          'ReportCardScreen: Classes from cache (${cached.length})',
         );
         return;
       }
@@ -225,7 +225,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
         }
         AppLogger.debug(
           'report_card',
-          'RaportScreen: Students from cache (${cached.length})',
+          'ReportCardScreen: Students from cache (${cached.length})',
         );
         return;
       }
@@ -264,7 +264,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
         }
         AppLogger.debug(
           'report_card',
-          'RaportScreen: Semester from school_day_data cache',
+          'ReportCardScreen: Semester from school_day_data cache',
         );
       } else {
         final dateBasedSemester = await getIt<ApiScheduleService>()
@@ -279,7 +279,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
         }
       }
 
-      final response = await getIt<ApiRaportService>().getRaports(
+      final response = await getIt<ApiReportCardService>().getRaports(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
         semesterId: semester,
@@ -346,7 +346,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
 
       final semesterId = await _resolveSemester();
 
-      await ExcelRaportService.exportReportCardToExcel(
+      await ExcelReportCardService.exportReportCardToExcel(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,
@@ -391,7 +391,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
 
       final semesterId = await _resolveSemester();
 
-      await ExcelRaportService.exportSingleRaportPdf(
+      await ExcelReportCardService.exportSingleRaportPdf(
         studentClassId: student['student_class_id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,
@@ -724,7 +724,7 @@ class RaportScreenState extends ConsumerState<RaportScreen> {
               onTap: () {
                 AppNavigator.push(
                   context,
-                  RaportDetailScreen(
+                  ReportCardDetailScreen(
                     studentClassId: student['student_class_id'].toString(),
                     studentName: student['student_name'] ?? 'Siswa',
                     className: _selectedClass?['name'] ?? '',

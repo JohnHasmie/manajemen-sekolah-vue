@@ -25,7 +25,7 @@ mixin _$ParentFinanceState {
   String get searchQuery => throw _privateConstructorUsedError;
   String? get statusFilter =>
       throw _privateConstructorUsedError; // 'unpaid', 'pending', 'verified'
-  String? get periodeFilter =>
+  String? get periodFilter =>
       throw _privateConstructorUsedError; // 'bulanan', 'tahunan'
   Set<String> get processedReadIds => throw _privateConstructorUsedError;
   Set<String> get pendingReadIds => throw _privateConstructorUsedError;
@@ -52,7 +52,7 @@ abstract class $ParentFinanceStateCopyWith<$Res> {
     String errorMessage,
     String searchQuery,
     String? statusFilter,
-    String? periodeFilter,
+    String? periodFilter,
     Set<String> processedReadIds,
     Set<String> pendingReadIds,
   });
@@ -82,7 +82,7 @@ class _$ParentFinanceStateCopyWithImpl<$Res, $Val extends ParentFinanceState>
     Object? errorMessage = null,
     Object? searchQuery = null,
     Object? statusFilter = freezed,
-    Object? periodeFilter = freezed,
+    Object? periodFilter = freezed,
     Object? processedReadIds = null,
     Object? pendingReadIds = null,
   }) {
@@ -116,9 +116,9 @@ class _$ParentFinanceStateCopyWithImpl<$Res, $Val extends ParentFinanceState>
                 ? _value.statusFilter
                 : statusFilter // ignore: cast_nullable_to_non_nullable
                       as String?,
-            periodeFilter: freezed == periodeFilter
-                ? _value.periodeFilter
-                : periodeFilter // ignore: cast_nullable_to_non_nullable
+            periodFilter: freezed == periodFilter
+                ? _value.periodFilter
+                : periodFilter // ignore: cast_nullable_to_non_nullable
                       as String?,
             processedReadIds: null == processedReadIds
                 ? _value.processedReadIds
@@ -165,7 +165,7 @@ abstract class _$$ParentFinanceStateImplCopyWith<$Res>
     String errorMessage,
     String searchQuery,
     String? statusFilter,
-    String? periodeFilter,
+    String? periodFilter,
     Set<String> processedReadIds,
     Set<String> pendingReadIds,
   });
@@ -195,7 +195,7 @@ class __$$ParentFinanceStateImplCopyWithImpl<$Res>
     Object? errorMessage = null,
     Object? searchQuery = null,
     Object? statusFilter = freezed,
-    Object? periodeFilter = freezed,
+    Object? periodFilter = freezed,
     Object? processedReadIds = null,
     Object? pendingReadIds = null,
   }) {
@@ -229,9 +229,9 @@ class __$$ParentFinanceStateImplCopyWithImpl<$Res>
             ? _value.statusFilter
             : statusFilter // ignore: cast_nullable_to_non_nullable
                   as String?,
-        periodeFilter: freezed == periodeFilter
-            ? _value.periodeFilter
-            : periodeFilter // ignore: cast_nullable_to_non_nullable
+        periodFilter: freezed == periodFilter
+            ? _value.periodFilter
+            : periodFilter // ignore: cast_nullable_to_non_nullable
                   as String?,
         processedReadIds: null == processedReadIds
             ? _value._processedReadIds
@@ -257,7 +257,7 @@ class _$ParentFinanceStateImpl implements _ParentFinanceState {
     this.errorMessage = '',
     this.searchQuery = '',
     this.statusFilter,
-    this.periodeFilter,
+    this.periodFilter,
     final Set<String> processedReadIds = const {},
     final Set<String> pendingReadIds = const {},
   }) : _students = students,
@@ -298,7 +298,7 @@ class _$ParentFinanceStateImpl implements _ParentFinanceState {
   final String? statusFilter;
   // 'unpaid', 'pending', 'verified'
   @override
-  final String? periodeFilter;
+  final String? periodFilter;
   // 'bulanan', 'tahunan'
   final Set<String> _processedReadIds;
   // 'bulanan', 'tahunan'
@@ -321,7 +321,7 @@ class _$ParentFinanceStateImpl implements _ParentFinanceState {
 
   @override
   String toString() {
-    return 'ParentFinanceState(students: $students, selectedStudent: $selectedStudent, billingItems: $billingItems, isLoading: $isLoading, errorMessage: $errorMessage, searchQuery: $searchQuery, statusFilter: $statusFilter, periodeFilter: $periodeFilter, processedReadIds: $processedReadIds, pendingReadIds: $pendingReadIds)';
+    return 'ParentFinanceState(students: $students, selectedStudent: $selectedStudent, billingItems: $billingItems, isLoading: $isLoading, errorMessage: $errorMessage, searchQuery: $searchQuery, statusFilter: $statusFilter, periodFilter: $periodFilter, processedReadIds: $processedReadIds, pendingReadIds: $pendingReadIds)';
   }
 
   @override
@@ -344,8 +344,8 @@ class _$ParentFinanceStateImpl implements _ParentFinanceState {
                 other.searchQuery == searchQuery) &&
             (identical(other.statusFilter, statusFilter) ||
                 other.statusFilter == statusFilter) &&
-            (identical(other.periodeFilter, periodeFilter) ||
-                other.periodeFilter == periodeFilter) &&
+            (identical(other.periodFilter, periodFilter) ||
+                other.periodFilter == periodFilter) &&
             const DeepCollectionEquality().equals(
               other._processedReadIds,
               _processedReadIds,
@@ -366,7 +366,7 @@ class _$ParentFinanceStateImpl implements _ParentFinanceState {
     errorMessage,
     searchQuery,
     statusFilter,
-    periodeFilter,
+    periodFilter,
     const DeepCollectionEquality().hash(_processedReadIds),
     const DeepCollectionEquality().hash(_pendingReadIds),
   );
@@ -392,7 +392,7 @@ abstract class _ParentFinanceState implements ParentFinanceState {
     final String errorMessage,
     final String searchQuery,
     final String? statusFilter,
-    final String? periodeFilter,
+    final String? periodFilter,
     final Set<String> processedReadIds,
     final Set<String> pendingReadIds,
   }) = _$ParentFinanceStateImpl;
@@ -412,7 +412,7 @@ abstract class _ParentFinanceState implements ParentFinanceState {
   @override
   String? get statusFilter; // 'unpaid', 'pending', 'verified'
   @override
-  String? get periodeFilter; // 'bulanan', 'tahunan'
+  String? get periodFilter; // 'bulanan', 'tahunan'
   @override
   Set<String> get processedReadIds;
   @override

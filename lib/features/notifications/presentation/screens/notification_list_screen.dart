@@ -146,7 +146,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
       }
     } else if (widget.role == 'guru' || widget.role == 'teacher') {
       if (type == 'class_activity') {
-        AppNavigator.push(context, ClassActifityScreen());
+        AppNavigator.push(context, ClassActivityScreen());
         return;
       }
     }

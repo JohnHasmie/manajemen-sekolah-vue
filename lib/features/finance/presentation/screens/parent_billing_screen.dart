@@ -165,10 +165,10 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => FinanceFilterSheet(
         currentStatus: state.statusFilter,
-        currentPeriode: state.periodeFilter,
+        currentPeriod: state.periodFilter,
         languageProvider: lp,
-        onApply: (status, periode) {
-          ref.read(parentFinanceProvider.notifier).updateFilters(status: status, periode: periode);
+        onApply: (status, period) {
+          ref.read(parentFinanceProvider.notifier).updateFilters(status: status, period: period);
         },
       ),
     );

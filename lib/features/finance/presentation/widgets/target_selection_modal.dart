@@ -117,7 +117,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
     );
   }
 
-  void _selectAllKelas() {
+  void _selectAllClasses() {
     setState(() {
       _selectedClasses = List.from(widget.classList);
       for (var classItem in widget.classList) {
@@ -179,10 +179,10 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
         final studentList = widget.studentsByClass[classId] ?? [];
 
         final filteredStudents = studentList.where((student) {
-          final nama = student['name']?.toString().toLowerCase() ?? '';
+          final name = student['name']?.toString().toLowerCase() ?? '';
           final nis = student['student_number']?.toString().toLowerCase() ?? '';
           return searchTerm.isEmpty ||
-              nama.contains(searchTerm) ||
+              name.contains(searchTerm) ||
               nis.contains(searchTerm);
         }).toList();
 
@@ -447,7 +447,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _selectAllKelas,
+                    onPressed: _selectAllClasses,
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

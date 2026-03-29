@@ -14,12 +14,12 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 ///
 /// StatelessWidget -- like a Vue presentational component with only props.
 /// Props (like Vue props): [reportCardData], [studentName], [className].
-class RaportPrintScreen extends StatelessWidget {
+class ReportCardPrintScreen extends StatelessWidget {
   final Map<String, dynamic> reportCardData;
   final String studentName;
   final String className;
 
-  const RaportPrintScreen({
+  const ReportCardPrintScreen({
     super.key,
     required this.reportCardData,
     required this.studentName,

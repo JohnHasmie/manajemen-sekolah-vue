@@ -295,7 +295,7 @@ class ParentClassActivityScreenState
 
       if (selectedStudent.isNotEmpty && classId != null) {
         final activities = await getIt<ApiClassActivityService>()
-            .getKegiatanByKelas(
+            .getActivityByClass(
               classId,
               studentId: _selectedStudentId,
               academicYearId: widget.academicYearId,

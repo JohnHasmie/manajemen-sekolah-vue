@@ -996,14 +996,14 @@ class TeachingScheduleManagementScreenState
         timetableData.add(
           ScheduleGridData(
             id: schedule['id']?.toString() ?? '',
-            waktu: formattedTimeSlot,
-            hari: translatedDayName,
+            timeSlot: formattedTimeSlot,
+            day: translatedDayName,
             classroom: className,
-            mataPelajaran:
+            subject:
                 schedule['subject_name'] ??
                 schedule['mata_pelajaran_nama'] ??
                 '-',
-            guru: schedule['teacher_name'] ?? schedule['guru_nama'] ?? '',
+            teacher: schedule['teacher_name'] ?? schedule['guru_nama'] ?? '',
             originalData: schedule,
           ),
         );
@@ -2115,7 +2115,7 @@ class TeachingScheduleManagementScreenState
                   int maxSchedules = 0;
                   for (var day in rowDays) {
                     final count = _gridData
-                        .where((d) => d.waktu == timeSlot && d.hari == day)
+                        .where((d) => d.timeSlot == timeSlot && d.day == day)
                         .length;
                     if (count > maxSchedules) maxSchedules = count;
                   }

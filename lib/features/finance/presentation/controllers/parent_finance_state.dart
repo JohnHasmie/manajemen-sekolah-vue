@@ -13,7 +13,7 @@ class ParentFinanceState with _$ParentFinanceState {
     @Default('') String errorMessage,
     @Default('') String searchQuery,
     String? statusFilter, // 'unpaid', 'pending', 'verified'
-    String? periodeFilter, // 'bulanan', 'tahunan'
+    String? periodFilter, // 'bulanan', 'tahunan'
     @Default({}) Set<String> processedReadIds,
     @Default({}) Set<String> pendingReadIds,
   }) = _ParentFinanceState;

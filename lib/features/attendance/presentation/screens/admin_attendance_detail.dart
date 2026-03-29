@@ -25,7 +25,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 // ========== ADMIN ABSENSI DETAIL PAGE ==========
-class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
+class AdminAttendanceDetailPage extends ConsumerStatefulWidget {
   final String subjectId;
   final String classId;
   final DateTime date;
@@ -35,7 +35,7 @@ class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
   final String? lessonHourName;
   final String? academicYearId;
 
-  const AdminAbsensiDetailPage({
+  const AdminAttendanceDetailPage({
     super.key,
     required this.subjectId,
     required this.classId,
@@ -48,12 +48,12 @@ class AdminAbsensiDetailPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<AdminAbsensiDetailPage> createState() =>
-      _AdminAbsensiDetailPageState();
+  ConsumerState<AdminAttendanceDetailPage> createState() =>
+      _AdminAttendanceDetailPageState();
 }
 
-class _AdminAbsensiDetailPageState
-    extends ConsumerState<AdminAbsensiDetailPage> {
+class _AdminAttendanceDetailPageState
+    extends ConsumerState<AdminAttendanceDetailPage> {
   List<Attendance> _attendanceData = [];
   List<Student> _studentList = [];
   bool _isLoading = true;

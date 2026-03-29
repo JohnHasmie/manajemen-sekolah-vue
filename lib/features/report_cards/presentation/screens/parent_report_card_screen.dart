@@ -27,20 +27,20 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 /// Parent's report card list -- shows children with semester selector.
 ///
 /// Props: optional [academicYearId].
-/// Navigates to [ParentRaportDetailScreen] on student tap.
-class ParentRaportScreen extends ConsumerStatefulWidget {
+/// Navigates to [ParentReportCardDetailScreen] on student tap.
+class ParentReportCardScreen extends ConsumerStatefulWidget {
   final String? academicYearId;
-  const ParentRaportScreen({super.key, this.academicYearId});
+  const ParentReportCardScreen({super.key, this.academicYearId});
 
   @override
-  ConsumerState createState() => _ParentRaportScreenState();
+  ConsumerState createState() => _ParentReportCardScreenState();
 }
 
-/// State for [ParentRaportScreen].
+/// State for [ParentReportCardScreen].
 ///
 /// Like a Vue component with `data() { return { isLoading, studentsData, selectedSemesterId } }`.
 /// Auto-resolves the current semester and loads student raport data.
-class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
+class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
   List<dynamic> _studentsData = [];
@@ -405,7 +405,7 @@ class _ParentRaportScreenState extends ConsumerState<ParentRaportScreen> {
                             onTap: () {
                               AppNavigator.push(
                                 context,
-                                ParentRaportDetailScreen(
+                                ParentReportCardDetailScreen(
                                   reportCardData: reportCard,
                                   studentName:
                                       student['student']['name'] ?? 'Siswa',

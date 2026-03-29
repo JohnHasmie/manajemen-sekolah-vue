@@ -31,21 +31,21 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 ///
 /// This is a [StatefulWidget] - like a Vue page with local state for class selection
 /// and student list display. Uses cache-first loading pattern.
-class AdminRaportScreen extends ConsumerStatefulWidget {
-  const AdminRaportScreen({super.key});
+class AdminReportCardScreen extends ConsumerStatefulWidget {
+  const AdminReportCardScreen({super.key});
 
   @override
-  ConsumerState createState() => _AdminRaportScreenState();
+  ConsumerState createState() => _AdminReportCardScreenState();
 }
 
-/// Mutable state for [AdminRaportScreen].
+/// Mutable state for [AdminReportCardScreen].
 ///
 /// Key state (like Vue `data()`):
 /// - [_classes] - list of classes to choose from
 /// - [_selectedClass] - currently selected class for viewing students
 /// - [_students] - students in the selected class with raport status
 /// - [_isExporting] / [_isPublishing] - loading states for bulk actions
-class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
+class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen> {
   late LanguageProvider _languageProvider;
 
   bool _isLoading = true;
@@ -222,7 +222,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
 
       if (academicYearId == null) throw Exception("Tahun ajaran tidak valid.");
 
-      final studentsData = await getIt<ApiRaportService>().getRaports(
+      final studentsData = await getIt<ApiReportCardService>().getRaports(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,
@@ -278,7 +278,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
 
       if (academicYearId == null) throw Exception("Tahun ajaran tidak valid.");
 
-      await ExcelRaportService.exportReportCardToExcel(
+      await ExcelReportCardService.exportReportCardToExcel(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,
@@ -387,7 +387,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
         semesterId = '2';
       }
 
-      Map<String, dynamic>? detail = await getIt<ApiRaportService>()
+      Map<String, dynamic>? detail = await getIt<ApiReportCardService>()
           .getRaportDetail(
             studentClassId: student['student_class_id'].toString(),
             academicYearId: academicYearId,
@@ -395,7 +395,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
           );
 
       if (detail == null) {
-        final initialData = await getIt<ApiRaportService>().getInitialData(
+        final initialData = await getIt<ApiReportCardService>().getInitialData(
           studentClassId: student['student_class_id'].toString(),
           academicYearId: academicYearId,
           semesterId: semesterId,
@@ -454,7 +454,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
       if (detail != null) {
         AppNavigator.push(
           context,
-          ParentRaportDetailScreen(
+          ParentReportCardDetailScreen(
             reportCardData: detail,
             studentName: student['student_name'] ?? 'Unknown',
             userRole: 'admin',
@@ -501,7 +501,7 @@ class _AdminRaportScreenState extends ConsumerState<AdminRaportScreen> {
         semesterId = '2';
       }
 
-      await ExcelRaportService.exportSingleRaportPdf(
+      await ExcelReportCardService.exportSingleRaportPdf(
         studentClassId: student['student_class_id'].toString(),
         academicYearId: academicYearId,
         semesterId: semesterId,

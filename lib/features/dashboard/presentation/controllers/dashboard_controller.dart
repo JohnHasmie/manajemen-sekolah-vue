@@ -140,7 +140,7 @@ class DashboardNotifier extends AutoDisposeAsyncNotifier<DashboardState> {
     // Resolve true teacher_id from backend if missing to prevent ModelNotFound 404s
     if (role == 'guru' && initialState.userData['teacher_id'] == null && initialState.userData['id'] != null) {
       try {
-        final teacherInfo = await ApiTeacherService().getGuruByUserId(initialState.userData['id'].toString());
+        final teacherInfo = await ApiTeacherService().getTeacherByUserId(initialState.userData['id'].toString());
         if (teacherInfo != null && teacherInfo['id'] != null) {
           final updatedUserData = Map<String, dynamic>.from(initialState.userData);
           updatedUserData['teacher_id'] = teacherInfo['id'].toString();
@@ -315,7 +315,7 @@ class DashboardNotifier extends AutoDisposeAsyncNotifier<DashboardState> {
 
     final userId = (userData['user_id'] ?? userData['id']).toString();
     try {
-      final teacherData = await getIt<ApiTeacherService>().getGuruByUserId(userId, academicYearId: yearId);
+      final teacherData = await getIt<ApiTeacherService>().getTeacherByUserId(userId, academicYearId: yearId);
       if (teacherData != null) {
         final teacherId = teacherData['id']?.toString() ?? '';
         final updatedUserData = {...userData, ...teacherData, 'id': userId, 'user_id': userId, 'teacher_id': teacherId};

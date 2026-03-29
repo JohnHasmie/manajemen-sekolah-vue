@@ -48,7 +48,7 @@ import 'package:manajemensekolah/features/class_activity/presentation/widgets/ad
 /// Supports deep linking via optional initial* parameters, allowing other
 /// screens to navigate here with pre-selected class/subject/chapter.
 /// In Vue Router terms, these are like route query params (`?classId=...`).
-class ClassActifityScreen extends ConsumerStatefulWidget {
+class ClassActivityScreen extends ConsumerStatefulWidget {
   final DateTime? initialDate;
   final String? initialSubjectId;
   final String? initialSubjectName;
@@ -60,7 +60,7 @@ class ClassActifityScreen extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>>? materialsToMarkAsGenerated;
   final bool autoShowActivityDialog;
 
-  const ClassActifityScreen({
+  const ClassActivityScreen({
     super.key,
     this.initialDate,
     this.initialSubjectId,
@@ -75,10 +75,10 @@ class ClassActifityScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ClassActifityScreenState createState() => ClassActifityScreenState();
+  ClassActivityScreenState createState() => ClassActivityScreenState();
 }
 
-/// The mutable State for [ClassActifityScreen].
+/// The mutable State for [ClassActivityScreen].
 ///
 /// This is like a Vue page component with its own local state
 /// (`data() { return {...} }`). Uses `TickerProviderStateMixin` because it
@@ -95,7 +95,7 @@ class ClassActifityScreen extends ConsumerStatefulWidget {
 /// The `TickerProviderStateMixin` is needed for TabController animations.
 /// In Vue, you would just use CSS transitions; in Flutter, animations
 /// need a "ticker" (frame callback provider).
-class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
+class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
     with TickerProviderStateMixin {
   static const String _prefKeyLastCacheKey = 'class_activity_last_cache_key';
 
@@ -737,7 +737,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
               } else {
                 // Last resort: direct API call
                 final teacherData = await getIt<ApiTeacherService>()
-                    .getGuruByUserId(userId, academicYearId: academicYearId);
+                    .getTeacherByUserId(userId, academicYearId: academicYearId);
                 if (teacherData != null && teacherData['id'] != null) {
                   resolvedTeacherId = teacherData['id'].toString();
                 }
@@ -1404,7 +1404,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
 
     if (confirmed == true) {
       try {
-        await getIt<ApiClassActivityService>().deleteKegiatan(
+        await getIt<ApiClassActivityService>().deleteActivity(
           activity['id'].toString(),
         );
 
@@ -2847,7 +2847,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   // Method helpers for API to avoid errors if they were deleted
   Future<void> _loadMaterials(String subjectId) async {
     try {
-      final materials = await getIt<ApiSubjectService>().getMateri();
+      final materials = await getIt<ApiSubjectService>().getMaterials();
       setState(() {
         _chapterList = materials;
         _subChapterList = [];

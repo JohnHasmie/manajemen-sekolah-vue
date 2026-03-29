@@ -115,7 +115,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   // Search and filter
   final TextEditingController _searchController = TextEditingController();
   String? _selectedStatusFilter; // 'aktif', 'non_aktif', or null for all
-  String? _selectedPeriodeFilter; // 'bulanan', 'tahunan', or null for all
+  String? _selectedPeriodFilter; // 'bulanan', 'tahunan', or null for all
   bool _hasActiveFilter = false;
 
   /// Like Vue's `mounted()` - sets up scroll listeners for both tabs'
@@ -328,14 +328,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   void _checkActiveFilter() {
     setState(() {
       _hasActiveFilter =
-          _selectedStatusFilter != null || _selectedPeriodeFilter != null;
+          _selectedStatusFilter != null || _selectedPeriodFilter != null;
     });
   }
 
   void _clearAllFilters() {
     setState(() {
       _selectedStatusFilter = null;
-      _selectedPeriodeFilter = null;
+      _selectedPeriodFilter = null;
       _hasActiveFilter = false;
     });
   }
@@ -365,8 +365,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       });
     }
 
-    if (_selectedPeriodeFilter != null) {
-      final periodeText = _selectedPeriodeFilter == 'bulanan'
+    if (_selectedPeriodFilter != null) {
+      final periodText = _selectedPeriodFilter == 'bulanan'
           ? languageProvider.getTranslatedText({
               'en': 'Monthly',
               'id': 'Bulanan',
@@ -377,10 +377,10 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
             });
       filterChips.add({
         'label':
-            '${languageProvider.getTranslatedText({'en': 'Period', 'id': 'Periode'})}: $periodeText',
+            '${languageProvider.getTranslatedText({'en': 'Period', 'id': 'Periode'})}: $periodText',
         'onRemove': () {
           setState(() {
-            _selectedPeriodeFilter = null;
+            _selectedPeriodFilter = null;
           });
           _checkActiveFilter();
           _loadData();
@@ -396,7 +396,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     // Temporary state for bottom sheet
     String? tempSelectedStatus = _selectedStatusFilter;
-    String? tempSelectedPeriode = _selectedPeriodeFilter;
+    String? tempSelectedPeriod = _selectedPeriodFilter;
 
     showModalBottomSheet(
       context: context,
@@ -452,7 +452,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       onPressed: () {
                         setModalState(() {
                           tempSelectedStatus = null;
-                          tempSelectedPeriode = null;
+                          tempSelectedPeriod = null;
                         });
                       },
                       child: Text(
@@ -609,13 +609,13 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                               },
                             ].map((item) {
                               final isSelected =
-                                  tempSelectedPeriode == item['value'];
+                                  tempSelectedPeriod == item['value'];
                               return FilterChip(
                                 label: Text(item['label']!),
                                 selected: isSelected,
                                 onSelected: (selected) {
                                   setModalState(() {
-                                    tempSelectedPeriode = selected
+                                    tempSelectedPeriod = selected
                                         ? item['value']
                                         : null;
                                   });
@@ -695,7 +695,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           AppNavigator.pop(context);
                           setState(() {
                             _selectedStatusFilter = tempSelectedStatus;
-                            _selectedPeriodeFilter = tempSelectedPeriode;
+                            _selectedPeriodFilter = tempSelectedPeriod;
                             _checkActiveFilter();
                           });
                         },
@@ -732,7 +732,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   String? _buildFinanceCacheKey() {
     // Don't cache when filters or search are active
     if (_selectedStatusFilter != null ||
-        _selectedPeriodeFilter != null ||
+        _selectedPeriodFilter != null ||
         _searchController.text.isNotEmpty) {
       return null;
     }
@@ -780,7 +780,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                   ) ??
                   {};
               _billsByStudent =
-                  (cached['tagihanBySiswa'] as Map<String, dynamic>?)?.map(
+                  (cached['billsByStudent'] as Map<String, dynamic>?)?.map(
                     (k, v) => MapEntry(k, List<dynamic>.from(v)),
                   ) ??
                   {};
@@ -835,7 +835,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           'kelas': _classList,
           'siswa': _studentList,
           'studentsByClass': _studentsByClass,
-          'tagihanBySiswa': _billsByStudent,
+          'billsByStudent': _billsByStudent,
         });
       }
     } catch (error) {
@@ -929,30 +929,30 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   Future<void> _loadBillsForStudents(List<dynamic> studentList) async {
     try {
       // Fetch all bills in a single API call instead of one per student
-      final tagihanResponse = await _apiService.get('/bills?limit=10000');
+      final billsResponse = await _apiService.get('/bills?limit=10000');
 
       List<dynamic> allBills = [];
-      if (tagihanResponse is Map<String, dynamic> &&
-          tagihanResponse.containsKey('data')) {
-        allBills = tagihanResponse['data'] is List
-            ? tagihanResponse['data']
+      if (billsResponse is Map<String, dynamic> &&
+          billsResponse.containsKey('data')) {
+        allBills = billsResponse['data'] is List
+            ? billsResponse['data']
             : [];
-      } else if (tagihanResponse is List) {
-        allBills = tagihanResponse;
+      } else if (billsResponse is List) {
+        allBills = billsResponse;
       }
 
       // Group bills by student_id client-side
-      final Map<String, List<dynamic>> tagihanBySiswa = {};
+      final Map<String, List<dynamic>> billsByStudent = {};
       for (var bill in allBills) {
         final studentId = bill['student_id']?.toString();
         if (studentId != null) {
-          tagihanBySiswa.putIfAbsent(studentId, () => []).add(bill);
+          billsByStudent.putIfAbsent(studentId, () => []).add(bill);
         }
       }
 
       if (mounted) {
         setState(() {
-          _billsByStudent = tagihanBySiswa;
+          _billsByStudent = billsByStudent;
         });
       }
     } catch (error) {
@@ -1229,14 +1229,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
               }
 
               // Map Periode (Normalize to lowercase / Indonesian)
-              final periode = newItem['periode']?.toString().toUpperCase();
-              if (periode == 'MONTHLY') {
+              final period = newItem['periode']?.toString().toUpperCase();
+              if (period == 'MONTHLY') {
                 newItem['periode'] = 'bulanan';
-              } else if (periode == 'YEARLY') {
+              } else if (period == 'YEARLY') {
                 newItem['periode'] = 'tahunan';
-              } else if (periode == 'SEMESTER') {
+              } else if (period == 'SEMESTER') {
                 newItem['periode'] = 'semester';
-              } else if (periode == 'ONCE') {
+              } else if (period == 'ONCE') {
                 newItem['periode'] = 'sekali bayar';
               } else if (newItem['periode'] != null) {
                 // Ensure lowercase for consistency if it was 'Bulanan' etc
@@ -2384,16 +2384,16 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  List<dynamic> _getFilteredJenisPembayaran() {
+  List<dynamic> _getFilteredPaymentTypes() {
     return _paymentTypeList.where((item) {
       final searchTerm = _searchController.text.toLowerCase();
-      final nama = item['name']?.toString().toLowerCase() ?? '';
-      final deskripsi = item['description']?.toString().toLowerCase() ?? '';
+      final name = item['name']?.toString().toLowerCase() ?? '';
+      final description = item['description']?.toString().toLowerCase() ?? '';
 
       final matchesSearch =
           searchTerm.isEmpty ||
-          nama.contains(searchTerm) ||
-          deskripsi.contains(searchTerm);
+          name.contains(searchTerm) ||
+          description.contains(searchTerm);
 
       // Status filter
       final matchesStatus =
@@ -2402,14 +2402,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           (_selectedStatusFilter == 'non_aktif' &&
               item['status'] == 'non-aktif');
 
-      // Periode filter
-      final matchesPeriode =
-          _selectedPeriodeFilter == null ||
-          (_selectedPeriodeFilter == 'bulanan' &&
+      // Period filter
+      final matchesPeriod =
+          _selectedPeriodFilter == null ||
+          (_selectedPeriodFilter == 'bulanan' &&
               item['periode'] == 'bulanan') ||
-          (_selectedPeriodeFilter == 'tahunan' && item['periode'] == 'tahunan');
+          (_selectedPeriodFilter == 'tahunan' && item['periode'] == 'tahunan');
 
-      return matchesSearch && matchesStatus && matchesPeriode;
+      return matchesSearch && matchesStatus && matchesPeriod;
     }).toList();
   }
 
@@ -2567,7 +2567,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ),
                           SizedBox(width: AppSpacing.xs),
                           Text(
-                            _getTranslatedPeriode(item['periode']),
+                            _getTranslatedPeriod(item['periode']),
                             style: TextStyle(
                               color: _getPrimaryColor(),
                               fontSize: 10,
@@ -3017,7 +3017,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       return ErrorScreen(errorMessage: _errorMessage, onRetry: _loadData);
     }
 
-    final filteredPaymentTypes = _getFilteredJenisPembayaran();
+    final filteredPaymentTypes = _getFilteredPaymentTypes();
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
@@ -4149,11 +4149,11 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  String _getTranslatedPeriode(String? periode) {
-    if (periode == null) return '-';
+  String _getTranslatedPeriod(String? period) {
+    if (period == null) return '-';
 
     final languageProvider = ref.read(languageRiverpod);
-    final lower = periode.toLowerCase();
+    final lower = period.toLowerCase();
 
     if (lower == 'once' || lower == 'sekali') {
       return languageProvider.getTranslatedText({
@@ -4177,7 +4177,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       });
     }
 
-    return periode;
+    return period;
   }
 
   String _getImageUrl(String? filename) {

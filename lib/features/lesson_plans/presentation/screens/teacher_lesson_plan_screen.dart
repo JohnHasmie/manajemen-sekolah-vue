@@ -501,7 +501,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
 
   /// Opens the RPP creation form dialog.
   /// Like clicking a "Add New" button that opens a Vue modal/dialog.
-  void _tambahRpp() {
+  void _addLessonPlan() {
     final languageProvider = ref.read(languageRiverpod);
     showModalBottomSheet(
       context: context,
@@ -1423,7 +1423,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         key: _addRppKey,
-        onPressed: _tambahRpp,
+        onPressed: _addLessonPlan,
         backgroundColor: _getPrimaryColor(),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Icon(Icons.add, color: Colors.white),
@@ -1632,7 +1632,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
   @override
   void initState() {
     super.initState();
-    _loadMataPelajaranByGuru();
+    _loadSubjectsByTeacher();
 
     // If in edit mode, fill fields with RPP data
     if (widget.lessonPlanData != null) {
@@ -1664,7 +1664,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
     }
   }
 
-  Future<void> _loadMataPelajaranByGuru() async {
+  Future<void> _loadSubjectsByTeacher() async {
     try {
       final apiService = ApiService();
       final result = await apiService.get(
@@ -1697,11 +1697,11 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
         'lesson_plan',
         'Error loading mata pelajaran by guru: $e',
       );
-      _loadAllMataPelajaran();
+      _loadAllSubjects();
     }
   }
 
-  Future<void> _loadAllMataPelajaran() async {
+  Future<void> _loadAllSubjects() async {
     try {
       final apiService = ApiService();
       final result = await apiService.get('/mata-pelajaran');
@@ -2547,11 +2547,11 @@ class _GenerateLessonPlanFormDialogState
   @override
   void initState() {
     super.initState();
-    _loadMataPelajaranByGuru();
+    _loadSubjectsByTeacher();
     _academicYearController.text = DateTime.now().year.toString();
   }
 
-  Future<void> _loadMataPelajaranByGuru() async {
+  Future<void> _loadSubjectsByTeacher() async {
     try {
       final apiService = ApiService();
       final result = await apiService.get(
@@ -2567,11 +2567,11 @@ class _GenerateLessonPlanFormDialogState
         }
       });
     } catch (e) {
-      _loadAllMataPelajaran();
+      _loadAllSubjects();
     }
   }
 
-  Future<void> _loadAllMataPelajaran() async {
+  Future<void> _loadAllSubjects() async {
     try {
       final apiService = ApiService();
       final result = await apiService.get('/mata-pelajaran');

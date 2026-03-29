@@ -70,7 +70,7 @@ class ApiTeacherService {
   /// Finds a teacher record by their user account ID.
   /// Like `Teacher::where('user_id', $userId)->first()` in Laravel.
   /// Returns null if no teacher is linked to this user.
-  Future<Map<String, dynamic>?> getGuruByUserId(
+  Future<Map<String, dynamic>?> getTeacherByUserId(
     String userId, {
     String? academicYearId,
   }) async {

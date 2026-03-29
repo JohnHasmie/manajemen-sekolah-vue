@@ -49,10 +49,10 @@ class PaymentTypeFormSheet extends ConsumerStatefulWidget {
 class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
   final ApiService _apiService = ApiService();
 
-  late final TextEditingController _namaController;
+  late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
-  late final TextEditingController _jumlahController;
-  late final TextEditingController _periodeController;
+  late final TextEditingController _amountController;
+  late final TextEditingController _periodController;
   Map<String, dynamic>? _goalData;
   late String _status;
 
@@ -60,9 +60,9 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
   void initState() {
     super.initState();
     final pt = widget.paymentType;
-    _namaController = TextEditingController(text: pt?['name']);
+    _nameController = TextEditingController(text: pt?['name']);
     _descriptionController = TextEditingController(text: pt?['description']);
-    _jumlahController = TextEditingController(
+    _amountController = TextEditingController(
       text: pt?['amount'] != null
           ? NumberFormat.currency(
               locale: 'id_ID',
@@ -71,21 +71,21 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
             ).format(double.tryParse(pt!['amount'].toString()) ?? 0)
           : '',
     );
-    _periodeController = TextEditingController(
+    _periodController = TextEditingController(
       text: pt?['periode'] ?? 'bulanan',
     );
     _goalData = pt != null ? _parseGoal(pt['goal']) : null;
     _status = (pt?['status'] == 'active')
-        ? 'aktif'
-        : (pt?['status'] == 'inactive' ? 'non-aktif' : 'aktif');
+        ? 'active'
+        : (pt?['status'] == 'inactive' ? 'inactive' : 'active');
   }
 
   @override
   void dispose() {
-    _namaController.dispose();
+    _nameController.dispose();
     _descriptionController.dispose();
-    _jumlahController.dispose();
-    _periodeController.dispose();
+    _amountController.dispose();
+    _periodController.dispose();
     super.dispose();
   }
 
@@ -110,12 +110,12 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
 
   Color get _primaryColor => widget.primaryColor;
 
-  Widget _buildPeriodeChip(String value, String label, IconData icon) {
-    final isSelected = _periodeController.text == value;
+  Widget _buildPeriodChip(String value, String label, IconData icon) {
+    final isSelected = _periodController.text == value;
     return GestureDetector(
       onTap: () {
         setState(() {
-          _periodeController.text = value;
+          _periodController.text = value;
         });
       },
       child: AnimatedContainer(
@@ -328,7 +328,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                   children: [
                     // Nama
                     _buildDialogTextField(
-                      controller: _namaController,
+                      controller: _nameController,
                       label: 'Nama Pembayaran',
                       icon: Icons.payment_rounded,
                     ),
@@ -343,7 +343,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                     SizedBox(height: AppSpacing.md),
                     // Jumlah
                     _buildDialogTextField(
-                      controller: _jumlahController,
+                      controller: _amountController,
                       label: 'Jumlah (Rp)',
                       icon: Icons.attach_money_rounded,
                       keyboardType: TextInputType.number,
@@ -374,7 +374,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                     Row(
                       children: [
                         Expanded(
-                          child: _buildPeriodeChip(
+                          child: _buildPeriodChip(
                             'sekali bayar',
                             'Sekali Bayar',
                             Icons.looks_one_rounded,
@@ -382,7 +382,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                         ),
                         SizedBox(width: 6),
                         Expanded(
-                          child: _buildPeriodeChip(
+                          child: _buildPeriodChip(
                             'bulanan',
                             'Bulanan',
                             Icons.calendar_view_month_rounded,
@@ -390,7 +390,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                         ),
                         SizedBox(width: 6),
                         Expanded(
-                          child: _buildPeriodeChip(
+                          child: _buildPeriodChip(
                             'semester',
                             'Semester',
                             Icons.date_range_rounded,
@@ -398,7 +398,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                         ),
                         SizedBox(width: 6),
                         Expanded(
-                          child: _buildPeriodeChip(
+                          child: _buildPeriodChip(
                             'tahunan',
                             'Tahunan',
                             Icons.calendar_today_rounded,
@@ -544,7 +544,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                       children: [
                         Expanded(
                           child: _buildStatusChip(
-                            'aktif',
+                            'active',
                             'Aktif',
                             ColorUtils.success600,
                             Icons.check_circle_rounded,
@@ -553,7 +553,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                         SizedBox(width: 10),
                         Expanded(
                           child: _buildStatusChip(
-                            'non-aktif',
+                            'inactive',
                             'Non-Aktif',
                             ColorUtils.error600,
                             Icons.cancel_rounded,
@@ -642,13 +642,13 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
   }
 
   Future<void> _onSubmit(BuildContext context) async {
-    if (_namaController.text.isEmpty || _jumlahController.text.isEmpty) {
+    if (_nameController.text.isEmpty || _amountController.text.isEmpty) {
       SnackBarUtils.showError(context, 'Nama dan jumlah harus diisi');
       return;
     }
 
     final parsedAmount = CurrencyInputFormatter.parseCurrency(
-      _jumlahController.text,
+      _amountController.text,
     );
 
     if (parsedAmount <= 0) {
@@ -663,11 +663,11 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
 
     try {
       final data = {
-        'name': _namaController.text,
+        'name': _nameController.text,
         'description': _descriptionController.text,
-        'amount': CurrencyInputFormatter.parseCurrency(_jumlahController.text),
-        'periode': _periodeController.text,
-        'status': _status == 'aktif' ? 'active' : 'inactive',
+        'amount': CurrencyInputFormatter.parseCurrency(_amountController.text),
+        'periode': _periodController.text,
+        'status': _status == 'active' ? 'active' : 'inactive',
         'goal': _goalData,
       };
 

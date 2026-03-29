@@ -74,7 +74,7 @@ class AttendanceSummaryItem {
 /// This is a StatefulWidget with complex local state. Props (like Vue props):
 /// - [teacher] -- current teacher info
 /// - [initialDate] / [initialSubjectId] / etc. -- optional deep-link params
-class PresencePage extends ConsumerStatefulWidget {
+class AttendancePage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final DateTime? initialDate;
   final String? initialSubjectId;
@@ -85,7 +85,7 @@ class PresencePage extends ConsumerStatefulWidget {
   final String? initialStartTime;
   final int initialTabIndex;
 
-  const PresencePage({
+  const AttendancePage({
     super.key,
     required this.teacher,
     this.initialDate,
@@ -99,10 +99,10 @@ class PresencePage extends ConsumerStatefulWidget {
   });
 
   @override
-  PresencePageState createState() => PresencePageState();
+  AttendancePageState createState() => AttendancePageState();
 }
 
-/// State for [PresencePage].
+/// State for [AttendancePage].
 ///
 /// Like a Vue page component with `data() { return {...} }`.
 /// Uses `TickerProviderStateMixin` for the tab animation controller.
@@ -114,7 +114,7 @@ class PresencePage extends ConsumerStatefulWidget {
 /// - Various filter states for both modes
 ///
 /// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
-class PresencePageState extends ConsumerState<PresencePage>
+class AttendancePageState extends ConsumerState<AttendancePage>
     with TickerProviderStateMixin {
   // Tab Controller for TabSwitcher
   late TabController _tabController;
@@ -419,7 +419,7 @@ class PresencePageState extends ConsumerState<PresencePage>
       // Load summary data for view mode
       _loadAttendanceSummary();
     } catch (e) {
-      AppLogger.error('attendance', 'PresencePage initial data error: $e');
+      AppLogger.error('attendance', 'AttendancePage initial data error: $e');
       if (!mounted) return;
 
       // Only show error if no cached data
@@ -2371,7 +2371,7 @@ class PresencePageState extends ConsumerState<PresencePage>
   void _navigateToAttendanceDetail(AttendanceSummaryItem summary) {
     AppNavigator.push(
       context,
-      TeacherAbsensiDetailPage(
+      TeacherAttendanceDetailPage(
         subjectId: summary.subjectId,
         subjectName: summary.subjectName,
         date: summary.date,
@@ -3428,8 +3428,8 @@ class PresencePageState extends ConsumerState<PresencePage>
     }
   }
 
-  Color _getAvatarColor(String nama) {
-    final index = nama.isNotEmpty ? nama.codeUnitAt(0) % 6 : 0;
+  Color _getAvatarColor(String name) {
+    final index = name.isNotEmpty ? name.codeUnitAt(0) % 6 : 0;
     return ColorUtils.getColorForIndex(index);
   }
 

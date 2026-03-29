@@ -18,8 +18,8 @@ import 'package:manajemensekolah/features/attendance/presentation/controllers/te
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_state.dart';
 
 // ========== TEACHER ABSENSI DETAIL PAGE ==========
-class TeacherAbsensiDetailPage extends ConsumerStatefulWidget {
-  const TeacherAbsensiDetailPage({
+class TeacherAttendanceDetailPage extends ConsumerStatefulWidget {
+  const TeacherAttendanceDetailPage({
     super.key,
     required this.subjectId,
     required this.subjectName,
@@ -41,12 +41,12 @@ class TeacherAbsensiDetailPage extends ConsumerStatefulWidget {
   final String? lessonHourName;
 
   @override
-  ConsumerState<TeacherAbsensiDetailPage> createState() =>
-      _TeacherAbsensiDetailPageState();
+  ConsumerState<TeacherAttendanceDetailPage> createState() =>
+      _TeacherAttendanceDetailPageState();
 }
 
-class _TeacherAbsensiDetailPageState
-    extends ConsumerState<TeacherAbsensiDetailPage> {
+class _TeacherAttendanceDetailPageState
+    extends ConsumerState<TeacherAttendanceDetailPage> {
   // Logic migrated to TeacherAttendanceController
 
   TeacherAttendanceParams get _controllerParams => TeacherAttendanceParams(

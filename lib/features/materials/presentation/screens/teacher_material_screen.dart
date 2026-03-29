@@ -9,7 +9,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // progress tracking (generated/used status per chapter).
 //
 // Contains two widget classes:
-// - [MateriPage] -- the main material browser with subject/chapter tree
+// - [TeacherMaterialScreen] -- the main material browser with subject/chapter tree
 // - [SubBabDetailPage] -- detail view for a sub-chapter's content
 //
 // In Laravel terms, combines MaterialController@index, @show, and
@@ -44,14 +44,14 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// it is like a page component with deeply nested reactive data.
 ///
 /// Props (like Vue props): [teacher], optional initial* for deep linking.
-class MateriPage extends ConsumerStatefulWidget {
+class TeacherMaterialScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final String? initialSubjectId;
   final String? initialSubjectName;
   final String? initialClassId;
   final String? initialClassName;
 
-  const MateriPage({
+  const TeacherMaterialScreen({
     super.key,
     required this.teacher,
     this.initialSubjectId,
@@ -61,10 +61,10 @@ class MateriPage extends ConsumerStatefulWidget {
   });
 
   @override
-  MateriPageState createState() => MateriPageState();
+  TeacherMaterialScreenState createState() => TeacherMaterialScreenState();
 }
 
-/// State for [MateriPage].
+/// State for [TeacherMaterialScreen].
 ///
 /// Like a Vue page component with `data() { return {...} }`. Manages:
 /// - Subject/class selection dropdowns
@@ -73,7 +73,7 @@ class MateriPage extends ConsumerStatefulWidget {
 /// - Progress tracking (generated, used status) per chapter
 ///
 /// `setState()` is like Vue's reactivity -- triggers UI rebuild.
-class MateriPageState extends ConsumerState<MateriPage> {
+class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
   String? _selectedSubject;
   String? _selectedClassId;
   String? _selectedClassName;
@@ -203,7 +203,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
 
     await AppNavigator.push(
       context,
-      ClassActifityScreen(
+      ClassActivityScreen(
         initialSubjectId: _selectedSubject,
         initialSubjectName: _getSelectedSubjectName(),
         initialClassId: _selectedClassId ?? widget.initialClassId,
@@ -599,7 +599,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
           teacherId,
           classId: selectedClassId,
         ),
-        getIt<ApiSubjectService>().getMateri(teacherId: teacherId),
+        getIt<ApiSubjectService>().getMaterials(teacherId: teacherId),
       ];
 
       final results = await Future.wait(futures);
@@ -640,7 +640,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
       }
       AppLogger.info('material', 'Saved materi data to cache');
     } catch (e) {
-      AppLogger.error('material', 'Error loading MateriPage data: $e');
+      AppLogger.error('material', 'Error loading TeacherMaterialScreen data: $e');
       if (!mounted) return;
 
       setState(() {
@@ -891,7 +891,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
       final String? teacherId = widget.teacher['id'];
       if (teacherId == null) return;
 
-      final progress = await getIt<ApiSubjectService>().getMateriProgress(
+      final progress = await getIt<ApiSubjectService>().getMaterialProgress(
         teacherId: teacherId,
         subjectId: subjectId,
         classId: _selectedClassId,
@@ -1462,7 +1462,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
           SizedBox(height: AppSpacing.md),
 
           // Dropdown Mata Pelajaran
-          _buildMataPelajaranDropdown(languageProvider),
+          _buildSubjectDropdown(languageProvider),
         ],
       ),
     );
@@ -1547,7 +1547,7 @@ class MateriPageState extends ConsumerState<MateriPage> {
     );
   }
 
-  Widget _buildMataPelajaranDropdown(LanguageProvider languageProvider) {
+  Widget _buildSubjectDropdown(LanguageProvider languageProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

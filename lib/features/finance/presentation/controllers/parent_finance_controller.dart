@@ -61,12 +61,12 @@ class ParentFinanceController extends AutoDisposeAsyncNotifier<ParentFinanceStat
     ));
   }
 
-  Future<void> updateFilters({String? status, String? periode}) async {
+  Future<void> updateFilters({String? status, String? period}) async {
     final currentState = state.value;
     if (currentState?.selectedStudent == null) return;
     state = AsyncData(currentState!.copyWith(
       statusFilter: status,
-      periodeFilter: periode,
+      periodFilter: period,
       isLoading: true,
     ));
     final billing = await _loadBilling(currentState.selectedStudent!.id, useCache: false);
@@ -201,14 +201,14 @@ class ParentFinanceController extends AutoDisposeAsyncNotifier<ParentFinanceStat
           'student_id': studentId,
           if (state.value?.searchQuery.isNotEmpty ?? false) 'search': state.value!.searchQuery,
           if (state.value?.statusFilter != null) 'status': state.value!.statusFilter,
-          if (state.value?.periodeFilter != null) 'periode': state.value!.periodeFilter,
+          if (state.value?.periodFilter != null) 'periode': state.value!.periodFilter,
         },
       );
       final list = response is List ? response : [];
       // Only cache unfiltered results to avoid stale filtered data
       final hasFilters = (state.value?.searchQuery.isNotEmpty ?? false) ||
           state.value?.statusFilter != null ||
-          state.value?.periodeFilter != null;
+          state.value?.periodFilter != null;
       if (!hasFilters) {
         LocalCacheService.save(cacheKey, list);
       }

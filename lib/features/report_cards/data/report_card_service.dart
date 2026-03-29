@@ -10,7 +10,7 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 /// Service for raport (report card) API calls.
 /// Like a Laravel Resource Controller with show, store, and custom initial-data actions.
 /// In Vue terms, this is a store module that handles all raport-related API state.
-class ApiRaportService {
+class ApiReportCardService {
   /// Fetches a list of raports filtered by class, academic year, and semester.
   /// Like `Raport::where(...)->get()` in Laravel.
   /// Returns the 'data' array, or empty list if unsuccessful.
