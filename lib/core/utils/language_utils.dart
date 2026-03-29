@@ -1712,6 +1712,39 @@ class AppLocalizations {
     'en': 'School',
     'id': 'Sekolah',
   };
+
+  // Auth Specific Errors
+  static Map<String, String> get authAccountNotRegisteredInAnySchool => {
+    'en': 'Your account is not registered in any school',
+    'id': 'Akun Anda belum terdaftar pada sekolah manapun',
+  };
+
+  static Map<String, String> get authRolesNotAvailable => {
+    'en': 'Role list is not available for your account',
+    'id': 'Daftar role tidak tersedia untuk akun Anda',
+  };
+
+  static Map<String, String> get authIncompleteLoginData => {
+    'en': 'Incomplete login data from server',
+    'id': 'Data login tidak lengkap dari server',
+  };
+
+  static Map<String, String> get authUserRoleNotFound => {
+    'en': 'User role not found',
+    'id': 'Role user tidak ditemukan',
+  };
+
+  static Map<String, String> get authInvalidCredentials => {
+    'en':
+        'Invalid email or password, or account not registered. Please check again.',
+    'id':
+        'Email atau password salah, atau akun belum terdaftar. Silakan periksa kembali.',
+  };
+
+  static Map<String, String> get googleSignInError => {
+    'en': 'Google Sign-In Error',
+    'id': 'Gagal Masuk dengan Google',
+  };
 }
 
 /// Convenience extension that provides pre-resolved translated strings as static getters.

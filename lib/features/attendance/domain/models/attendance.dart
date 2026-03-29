@@ -31,7 +31,9 @@ class Attendance with _$Attendance {
     // Map Indonesian keys to backend-expected snake_case English model properties
     mapped['student_id'] ??= mapped['id_siswa'];
     mapped['date'] ??= mapped['tanggal'];
-    mapped['is_read'] ??= mapped['isRead'] ?? mapped['is_read'];
+    // Normalize is_read: API may return int (0/1), String ("0"/"1"), or bool
+    final rawIsRead = mapped['is_read'] ?? mapped['isRead'];
+    mapped['is_read'] = rawIsRead == true || rawIsRead == 1 || rawIsRead == '1';
     mapped['subject_name'] ??= mapped['mata_pelajaran_nama'];
     mapped['subject_id'] ??= mapped['id_mata_pelajaran'] ?? mapped['mata_pelajaran_id'];
     mapped['lesson_hour_name'] ??= mapped['jam_pelajaran_nama'];

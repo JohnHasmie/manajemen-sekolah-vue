@@ -1,7 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:manajemensekolah/core/services/api_service.dart';
 
@@ -24,13 +22,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email'],
-    clientId: kIsWeb
-        ? '631663251271-q5fmm1j2r4hko6fkicn5mml5vt8r3cnb.apps.googleusercontent.com'
-        : null,
-  );
+  final TextEditingController otpController = TextEditingController();
 
   bool _obscurePassword = true;
 
@@ -50,6 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
+    otpController.dispose();
     super.dispose();
   }
 
@@ -65,32 +58,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _handleAuthResponse(AuthResponse response) {
+  void _handleGlobalAuthEvents(AuthResponse? previous, AuthResponse current) {
     if (!mounted) return;
 
-    switch (response.event) {
+    switch (current.event) {
       case AuthEvent.unregistered:
         _showUnregisteredDialog();
         break;
       case AuthEvent.error:
         SnackBarUtils.showError(
           context,
-          response.messageMap?.tr ??
-              response.message ??
+          current.messageMap?.tr ??
+              current.message ??
               AppLocalizations.loginFailed.tr,
         );
         break;
-      case AuthEvent.requiresOtp:
-        _showOtpDialog(ref.read(authProvider).currentEmail ?? '');
-        if (response.debugOtp != null) {
-          // You could automatically fill or show the debug OTP in dev builds
-        }
-        break;
       case AuthEvent.success:
-        AppNavigator.pushReplacementNamed(context, '/${response.message}');
+        AppNavigator.pushReplacementNamed(context, '/${current.message}');
+        break;
+      case AuthEvent.requiresOtp:
+        // Handled by inline UI step transition
         break;
       case AuthEvent.none:
-        // Transition state occurred (e.g. moved to school selection step)
         break;
     }
   }
@@ -105,18 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final email = emailController.text.trim();
     final password = passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
-      SnackBarUtils.showInfo(
-        context,
-        AppLocalizations.emailPasswordNotEmpty.tr,
-      );
-      return;
-    }
-
-    final response = await ref
-        .read(authProvider.notifier)
-        .login(email, password);
-    _handleAuthResponse(response);
+    await ref.read(authProvider.notifier).login(email, password);
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -126,29 +104,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    try {
-      final account = await _googleSignIn.signIn();
-      if (account == null) return;
+    await ref.read(authProvider.notifier).signInWithGoogle();
+  }
 
-      final auth = await account.authentication;
-      final response = await ref
-          .read(authProvider.notifier)
-          .googleLogin(
-            email: account.email,
-            displayName: account.displayName,
-            photoUrl: account.photoUrl,
-            idToken: auth.idToken,
-          );
-
-      _handleAuthResponse(response);
-    } catch (error) {
-      if (mounted) {
-        SnackBarUtils.showError(
-          context,
-          '${AppLocalizations.googleSignInError.tr}: $error',
-        );
-      }
+  Future<void> _handleOtpVerification() async {
+    final otp = otpController.text.trim();
+    if (otp.length != 6) {
+      SnackBarUtils.showInfo(context, AppLocalizations.enterOtp.tr);
+      return;
     }
+
+    await ref.read(authProvider.notifier).verifyOtp(otp);
   }
 
   void _showUnregisteredDialog() {
@@ -178,72 +144,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  void _showOtpDialog(String email) {
-    final otpController = TextEditingController();
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.otpVerification.tr),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppLocalizations.otpSentToEmail.tr,
-              style: TextStyle(fontSize: 12),
-            ),
-            Text(email, style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: AppSpacing.lg),
-            Text(AppLocalizations.enterOtpDigits.tr),
-            SizedBox(height: AppSpacing.sm),
-            TextField(
-              controller: otpController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.otpCode.tr,
-                border: OutlineInputBorder(),
-                counterText: '',
-                contentPadding: EdgeInsets.symmetric(horizontal: 10),
-              ),
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 24, letterSpacing: 8),
-              autofocus: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              AppNavigator.pop(context); // Close dialog
-              ref.read(authProvider.notifier).resetToLogin();
-            },
-            child: Text(AppLocalizations.cancel.tr),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final otp = otpController.text.trim();
-              if (otp.length != 6) {
-                SnackBarUtils.showInfo(context, AppLocalizations.enterOtp.tr);
-                return;
-              }
-              AppNavigator.pop(context); // Close dialog
-              final response = await ref
-                  .read(authProvider.notifier)
-                  .verifyOtp(otp);
-              _handleAuthResponse(response);
-            },
-            child: Text(AppLocalizations.verify.tr),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+
+    // Listen for global authentication events
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.lastResponse != null &&
+          next.lastResponse != previous?.lastResponse) {
+        _handleGlobalAuthEvents(previous?.lastResponse, next.lastResponse!);
+      }
+    });
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -252,7 +163,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [ColorUtils.darkBlue, Color(0xFF002171)],
+            colors: [ColorUtils.darkBlue, const Color(0xFF002171)],
           ),
         ),
         child: SafeArea(
@@ -290,9 +201,86 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return _buildSchoolSelection(authState);
       case AuthStep.roleSelection:
         return _buildRoleSelection(authState);
+      case AuthStep.otpVerification:
+        return _buildOtpForm(authState);
       case AuthStep.login:
         return _buildLoginForm(authState);
     }
+  }
+
+  Widget _buildOtpForm(AuthState authState) {
+    if (authState.otpCode != null &&
+        otpController.text.isEmpty &&
+        authState.otpCode!.isNotEmpty) {
+      otpController.text = authState.otpCode!;
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.security, size: 64, color: ColorUtils.darkBlue),
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          AppLocalizations.otpVerification.tr,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          AppLocalizations.otpSentToEmail.tr,
+          style: const TextStyle(fontSize: 12),
+        ),
+        Text(
+          authState.currentEmail ?? '',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        Text(AppLocalizations.enterOtpDigits.tr),
+        const SizedBox(height: AppSpacing.sm),
+        TextField(
+          controller: otpController,
+          decoration: InputDecoration(
+            labelText: AppLocalizations.otpCode.tr,
+            border: const OutlineInputBorder(),
+            counterText: '',
+            contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          ),
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 24, letterSpacing: 8),
+          autofocus: true,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: authState.isLoading ? null : _handleOtpVerification,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              backgroundColor: ColorUtils.darkBlue,
+            ),
+            child: authState.isLoading
+                ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : Text(
+                  AppLocalizations.verify.tr.toUpperCase(),
+                  style: const TextStyle(color: Colors.white),
+                ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextButton(
+          onPressed: () => ref.read(authProvider.notifier).resetToLogin(),
+          child: Text(AppLocalizations.backToLogin.tr),
+        ),
+      ],
+    );
   }
 
   Widget _buildSchoolSelection(AuthState authState) {
@@ -337,10 +325,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onTap: authState.isLoading
                     ? null
                     : () async {
-                        final response = await ref
+                        await ref
                             .read(authProvider.notifier)
                             .selectSchool(sekolah['school_id'].toString());
-                        _handleAuthResponse(response);
                       },
               ),
             );
@@ -405,10 +392,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onTap: authState.isLoading
                     ? null
                     : () async {
-                        final response = await ref
+                        await ref
                             .read(authProvider.notifier)
                             .selectRole(role.toString());
-                        _handleAuthResponse(response);
                       },
               ),
             );

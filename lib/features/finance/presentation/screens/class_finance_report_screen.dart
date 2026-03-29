@@ -841,7 +841,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              AppSpacing.v2,
                               Text(
                                 'Catat pembayaran manual siswa',
                                 style: TextStyle(
@@ -1302,7 +1302,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          AppSpacing.v2,
                           Text(
                             'Laporan Keuangan',
                             style: TextStyle(
@@ -1495,7 +1495,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                     ),
                     child: Icon(icon, size: 15, color: _getPrimaryColor()),
                   ),
-                  SizedBox(width: 10),
+                  AppSpacing.h10,
                   Text(
                     title,
                     style: TextStyle(
@@ -1950,7 +1950,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                           ),
                         ),
                         if (subtitle != null) ...[
-                          SizedBox(height: 2),
+                          AppSpacing.v2,
                           Text(
                             subtitle,
                             style: TextStyle(
@@ -2084,7 +2084,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         },
                       ),
                     ],
-                    SizedBox(height: 10),
+                    AppSpacing.v10,
                     buildOptionTile(
                       icon: Icons.info_outline_rounded,
                       title: 'Lihat Detail',

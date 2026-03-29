@@ -165,9 +165,18 @@ class FCMService {
         // Initialize local notifications
         await _initializeLocalNotifications();
 
-        // Get FCM token
-        _fcmToken = await _firebaseMessaging.getToken();
-        AppLogger.debug('fcm', 'FCM Token: $_fcmToken');
+        // Get FCM token (on iOS, APNS token must be available first)
+        try {
+          final apnsToken = await _firebaseMessaging.getAPNSToken();
+          if (apnsToken != null) {
+            _fcmToken = await _firebaseMessaging.getToken();
+            AppLogger.debug('fcm', 'FCM Token: $_fcmToken');
+          } else {
+            AppLogger.warning('fcm', 'APNS token not available (simulator?), skipping FCM token fetch');
+          }
+        } catch (e) {
+          AppLogger.warning('fcm', 'Could not get FCM token: $e');
+        }
 
         // Save token locally
         if (_fcmToken != null) {
@@ -508,7 +517,12 @@ class FCMService {
       // Delete the old token
       await _firebaseMessaging.deleteToken();
 
-      // Get new token
+      // Get new token (check APNS on iOS first)
+      final apnsToken = await _firebaseMessaging.getAPNSToken();
+      if (apnsToken == null) {
+        AppLogger.warning('fcm', 'APNS token not available, cannot refresh FCM token');
+        return null;
+      }
       _fcmToken = await _firebaseMessaging.getToken();
 
       AppLogger.debug('fcm', 'New FCM Token: $_fcmToken');

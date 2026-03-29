@@ -1,5 +1,7 @@
-import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'dart:convert';
 import 'package:manajemensekolah/core/services/analytics_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
@@ -10,7 +12,7 @@ import 'package:manajemensekolah/features/auth/data/auth_service.dart';
 import 'package:manajemensekolah/features/auth/domain/models/user.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
-enum AuthStep { login, schoolSelection, roleSelection }
+enum AuthStep { login, schoolSelection, roleSelection, otpVerification }
 
 enum AuthEvent { none, success, requiresOtp, unregistered, error }
 
@@ -24,6 +26,7 @@ class AuthState {
   final Map<String, dynamic>? userData;
   final String? currentEmail;
   final String? otpCode;
+  final AuthResponse? lastResponse;
 
   const AuthState({
     this.isLoading = false,
@@ -35,6 +38,7 @@ class AuthState {
     this.userData,
     this.currentEmail,
     this.otpCode,
+    this.lastResponse,
   });
 
   AuthState copyWith({
@@ -43,10 +47,11 @@ class AuthState {
     AuthStep? step,
     List<dynamic>? schoolList,
     List<dynamic>? roleList,
-    Map<String, dynamic>? selectedSchool,
-    Map<String, dynamic>? userData,
-    String? currentEmail,
-    String? otpCode,
+    Object? selectedSchool = _sentinel,
+    Object? userData = _sentinel,
+    Object? currentEmail = _sentinel,
+    Object? otpCode = _sentinel,
+    Object? lastResponse = _sentinel,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
@@ -54,12 +59,15 @@ class AuthState {
       step: step ?? this.step,
       schoolList: schoolList ?? this.schoolList,
       roleList: roleList ?? this.roleList,
-      selectedSchool: selectedSchool ?? this.selectedSchool,
-      userData: userData ?? this.userData,
-      currentEmail: currentEmail ?? this.currentEmail,
-      otpCode: otpCode ?? this.otpCode,
+      selectedSchool: selectedSchool == _sentinel ? this.selectedSchool : selectedSchool as Map<String, dynamic>?,
+      userData: userData == _sentinel ? this.userData : userData as Map<String, dynamic>?,
+      currentEmail: currentEmail == _sentinel ? this.currentEmail : currentEmail as String?,
+      otpCode: otpCode == _sentinel ? this.otpCode : otpCode as String?,
+      lastResponse: lastResponse == _sentinel ? this.lastResponse : lastResponse as AuthResponse?,
     );
   }
+
+  static const Object _sentinel = Object();
 }
 
 class AuthResponse {
@@ -67,11 +75,25 @@ class AuthResponse {
   final String? message;
   final Map<String, String>? messageMap;
   final String? debugOtp;
+  final String? unregisteredEmail;
 
-  AuthResponse(this.event, {this.message, this.messageMap, this.debugOtp});
+  AuthResponse(
+    this.event, {
+    this.message,
+    this.messageMap,
+    this.debugOtp,
+    this.unregisteredEmail,
+  });
 }
 
 class AuthNotifier extends AutoDisposeNotifier<AuthState> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email'],
+    clientId: kIsWeb
+        ? '631663251271-q5fmm1j2r4hko6fkicn5mml5vt8r3cnb.apps.googleusercontent.com'
+        : null,
+  );
+
   @override
   AuthState build() {
     return const AuthState();
@@ -82,7 +104,7 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
   }
 
   void resetToLogin() {
-    state = state.copyWith(step: AuthStep.login, isLoading: false);
+    state = state.copyWith(step: AuthStep.login, isLoading: false, lastResponse: null);
   }
 
   Future<void> clearAllData() async {
@@ -93,15 +115,55 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
   }
 
   Future<AuthResponse> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, currentEmail: email);
+    if (email.isEmpty || password.isEmpty) {
+      final response = AuthResponse(
+        AuthEvent.error,
+        messageMap: AppLocalizations.emailPasswordNotEmpty,
+      );
+      state = state.copyWith(lastResponse: response);
+      return response;
+    }
+
+    state = state.copyWith(isLoading: true, currentEmail: email, lastResponse: null);
     await clearAllData();
 
     try {
       final responseData = await AuthService.login(email, password);
-      return await _handleLoginResponse(responseData);
+      final response = await _handleLoginResponse(responseData);
+      state = state.copyWith(lastResponse: response);
+      return response;
     } catch (e) {
-      state = state.copyWith(isLoading: false);
-      return _handleError(e);
+      final response = _handleError(e, email);
+      state = state.copyWith(isLoading: false, lastResponse: response);
+      return response;
+    }
+  }
+
+  Future<AuthResponse> signInWithGoogle() async {
+    state = state.copyWith(isLoading: true, lastResponse: null);
+    try {
+      final account = await _googleSignIn.signIn();
+      if (account == null) {
+        state = state.copyWith(isLoading: false);
+        return AuthResponse(AuthEvent.none);
+      }
+
+      final auth = await account.authentication;
+      final response = await googleLogin(
+        email: account.email,
+        displayName: account.displayName,
+        photoUrl: account.photoUrl,
+        idToken: auth.idToken,
+        serverAuthCode: account.serverAuthCode,
+      );
+
+      state = state.copyWith(lastResponse: response);
+      return response;
+    } catch (error) {
+      final response = AuthResponse(AuthEvent.error, message: error.toString());
+      state = state.copyWith(isLoading: false, lastResponse: response);
+      AppLogger.error('google_auth', 'Google Sign-In failed: $error');
+      return response;
     }
   }
 
@@ -110,6 +172,7 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
     String? displayName,
     String? photoUrl,
     String? idToken,
+    String? serverAuthCode,
   }) async {
     state = state.copyWith(isLoading: true, currentEmail: email);
     try {
@@ -118,17 +181,18 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
         displayName: displayName,
         photoUrl: photoUrl,
         idToken: idToken,
+        serverAuthCode: serverAuthCode,
       );
       return await _handleLoginResponse(responseData);
     } catch (e) {
       state = state.copyWith(isLoading: false);
       await clearAllData();
-      return _handleError(e);
+      return _handleError(e, email);
     }
   }
 
   Future<AuthResponse> selectSchool(String schoolId) async {
-    state = state.copyWith(isLoading: true, selectedSchool: {'id': schoolId});
+    state = state.copyWith(isLoading: true, selectedSchool: {'id': schoolId}, lastResponse: null);
     try {
       Map<String, dynamic> responseData;
       if (state.otpCode != null && state.currentEmail != null) {
@@ -138,25 +202,20 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
           schoolId: schoolId,
         );
       } else {
-        // Assume Google Login generated a token earlier in this flow, or normal password fallback
-        final prefs = PreferencesService();
-        if (prefs.getString('token') != null) {
-          responseData = await AuthService.switchSchool(schoolId);
-        } else {
-          // Password fallback - should not reach here usually since password isn't stored in state,
-          // but if we are here we have no password. So switchSchool is standard.
-          responseData = await AuthService.switchSchool(schoolId);
-        }
+        responseData = await AuthService.switchSchool(schoolId);
       }
-      return await _handleLoginResponse(responseData);
+      final response = await _handleLoginResponse(responseData);
+      state = state.copyWith(lastResponse: response);
+      return response;
     } catch (e) {
-      state = state.copyWith(isLoading: false);
-      return AuthResponse(AuthEvent.error, message: e.toString());
+      final response = AuthResponse(AuthEvent.error, message: e.toString());
+      state = state.copyWith(isLoading: false, lastResponse: response);
+      return response;
     }
   }
 
   Future<AuthResponse> selectRole(String role) async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, lastResponse: null);
     try {
       final schoolId =
           state.selectedSchool?['id']?.toString() ??
@@ -176,39 +235,57 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
           role: role,
         );
       }
-      return await _handleLoginResponse(responseData);
+      final response = await _handleLoginResponse(responseData);
+      state = state.copyWith(lastResponse: response);
+      return response;
     } catch (e) {
-      state = state.copyWith(isLoading: false);
-      return AuthResponse(AuthEvent.error, message: e.toString());
+      final response = AuthResponse(AuthEvent.error, message: e.toString());
+      state = state.copyWith(isLoading: false, lastResponse: response);
+      return response;
     }
   }
 
   Future<AuthResponse> verifyOtp(String otp) async {
-    state = state.copyWith(isLoading: true, otpCode: otp);
+    if (state.currentEmail == null) {
+      return AuthResponse(AuthEvent.error, messageMap: {'en': 'Email not set', 'id': 'Email belum diatur'});
+    }
+    state = state.copyWith(isLoading: true, otpCode: otp, lastResponse: null);
     try {
       final response = await AuthService.verifyOtp(state.currentEmail!, otp);
-      return await _handleLoginResponse(response);
+      final result = await _handleLoginResponse(response);
+      if (result.event == AuthEvent.error) {
+        state = state.copyWith(step: AuthStep.otpVerification);
+      }
+      state = state.copyWith(lastResponse: result);
+      return result;
     } catch (e) {
-      state = state.copyWith(isLoading: false);
-      return AuthResponse(AuthEvent.error, message: e.toString());
+      final response = AuthResponse(AuthEvent.error, message: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        step: AuthStep.otpVerification,
+        lastResponse: response,
+      );
+      return response;
     }
   }
 
   Future<AuthResponse> _handleLoginResponse(
     Map<String, dynamic> responseData,
   ) async {
-    // 1. Check OTP requirement
     if (responseData['require_otp'] == true ||
         responseData['otp_debug'] != null ||
         responseData['message'] == 'OTP sent to email') {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(
+        isLoading: false,
+        step: AuthStep.otpVerification,
+        otpCode: responseData['otp_debug']?.toString(),
+      );
       return AuthResponse(
         AuthEvent.requiresOtp,
-        debugOtp: responseData['otp_debug'],
+        debugOtp: responseData['otp_debug']?.toString(),
       );
     }
 
-    // 2. School Selection
     if (responseData['needsSchoolSelection'] == true) {
       if (responseData['sekolah_list'] == null ||
           (responseData['sekolah_list'] as List).isEmpty) {
@@ -234,7 +311,6 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
       return AuthResponse(AuthEvent.none);
     }
 
-    // 3. Role Selection
     if (responseData['needsRoleSelection'] == true) {
       if (responseData['token'] != null) {
         await SecureStorageService().saveToken(responseData['token']);
@@ -264,7 +340,6 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
       return AuthResponse(AuthEvent.none);
     }
 
-    // 4. Successful login
     if (responseData['token'] == null || responseData['user'] == null) {
       state = state.copyWith(isLoading: false);
       return AuthResponse(
@@ -318,7 +393,6 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
       );
     }
 
-    // Background FCM refresh
     Future(() async {
       try {
         final fcmService = FCMService();
@@ -332,7 +406,7 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
     });
   }
 
-  AuthResponse _handleError(Object error) {
+  AuthResponse _handleError(Object error, String? email) {
     final errorStr = error.toString().toLowerCase();
     final isUnregistered =
         errorStr.contains('email tidak terdaftar') ||
@@ -345,12 +419,16 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
         errorStr.contains('tidak memiliki akun');
 
     if (isUnregistered) {
-      return AuthResponse(AuthEvent.unregistered);
+      return AuthResponse(AuthEvent.unregistered, unregisteredEmail: email);
     }
 
-    final messageMap = (errorStr.contains('401') || errorStr.contains('unauthorized'))
+    final messageMap = (errorStr.contains('401') ||
+            errorStr.contains('unauthorized'))
         ? AppLocalizations.authInvalidCredentials
-        : {'en': error.toString().replaceAll('Exception: ', ''), 'id': error.toString().replaceAll('Exception: ', '')};
+        : {
+          'en': error.toString().replaceAll('Exception: ', ''),
+          'id': error.toString().replaceAll('Exception: ', ''),
+        };
 
     return AuthResponse(AuthEvent.error, messageMap: messageMap);
   }

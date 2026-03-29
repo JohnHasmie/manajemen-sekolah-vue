@@ -209,15 +209,6 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
     _loadActivities();
   }
 
-  String? _buildClassesCacheKey() {
-    if (_teacherId.isEmpty) return null;
-    final academicYearId = ref
-        .read(academicYearRiverpod)
-        .selectedAcademicYear?['id']
-        ?.toString();
-    return 'class_activity_classes_${_teacherId}_$academicYearId';
-  }
-
   /// Clears all cached data and reloads from the API.
   /// Like a Vue method that clears Vuex store and re-fetches,
   /// or hitting a "refresh" button that bypasses browser cache.
@@ -677,10 +668,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
         });
 
         // Load classes and schedule using cached teacher ID
-        await Future.wait([
-          _loadClasses(teacherProvider.teacherId!, isAdmin: false),
-          _loadSchedule(teacherProvider.teacherId!),
-        ]);
+        await _loadClassesAndSchedule(teacherProvider.teacherId!, isAdmin: false);
 
         // If initial params provided, try to navigate deep
         await _handleInitialNavigation();
@@ -764,10 +752,7 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
                 _teacherId = resolvedTeacherId!;
               });
 
-              await Future.wait([
-                _loadClasses(resolvedTeacherId, isAdmin: false),
-                _loadSchedule(resolvedTeacherId),
-              ]);
+              await _loadClassesAndSchedule(resolvedTeacherId, isAdmin: false);
 
               await _handleInitialNavigation();
             } else {
@@ -819,155 +804,148 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   /// Like Vue Router's `beforeRouteEnter` guard that reads query params and
   /// auto-selects class/subject if they were passed via navigation.
   Future<void> _handleInitialNavigation() async {
-    if (widget.initialClassId != null) {
+    if (widget.initialClassId == null) return;
+    if (!mounted) return;
+
+    setState(() {
       _selectedClassId = widget.initialClassId;
       _selectedClassName = widget.initialClassName;
       _currentStep = 1;
+    });
 
-      await _loadSubjectsForClass();
+    await _loadSubjectsForClass();
 
-      if (widget.initialSubjectId != null) {
+    if (widget.initialSubjectId != null && mounted) {
+      setState(() {
         _selectedSubjectId = widget.initialSubjectId;
         _selectedSubjectName = widget.initialSubjectName;
         _currentStep = 2;
-        await _loadActivities();
-      }
+      });
+      await _loadActivities();
     }
   }
 
   /// Fetches the list of classes assigned to the teacher.
   /// Uses a cache-first strategy with LocalCacheService (like browser localStorage).
   /// In Laravel terms, this is like `ClassController@index` with cache middleware.
-  Future<void> _loadClasses(
+  /// Loads classes and schedule in parallel, then applies a single setState.
+  /// Prevents rapid-fire rebuilds of the large widget tree.
+  Future<void> _loadClassesAndSchedule(
     String teacherId, {
     bool isAdmin = false,
     bool useCache = true,
   }) async {
-    try {
-      final academicYearId = ref
-          .read(academicYearRiverpod)
-          .selectedAcademicYear?['id']
-          ?.toString();
+    final academicYearId = ref
+        .read(academicYearRiverpod)
+        .selectedAcademicYear?['id']
+        ?.toString();
+    final cacheKey = 'class_activity_classes_${teacherId}_$academicYearId';
 
-      final cacheKey = 'class_activity_classes_${teacherId}_$academicYearId';
-
-      // Step 1: Try loading from cache if list is still empty
-      if (useCache && _classList.isEmpty) {
-        try {
-          final cached = await LocalCacheService.load(
-            cacheKey,
-            ttl: const Duration(hours: 3),
+    // Step 1: Try cache first (single setState)
+    if (useCache && _classList.isEmpty) {
+      try {
+        final cached = await LocalCacheService.load(
+          cacheKey,
+          ttl: const Duration(hours: 3),
+        );
+        if (cached != null && mounted) {
+          final cachedData = Map<String, dynamic>.from(cached);
+          setState(() {
+            _classList = List<dynamic>.from(cachedData['classes'] ?? []);
+            _scheduleList = List<dynamic>.from(cachedData['schedules'] ?? []);
+            _isLoading = false;
+          });
+          AppLogger.info(
+            'class_activity',
+            'Loaded ${_classList.length} classes from cache',
           );
-          if (cached != null && mounted) {
-            final cachedData = Map<String, dynamic>.from(cached);
-            setState(() {
-              _classList = List<dynamic>.from(cachedData['classes'] ?? []);
-              _scheduleList = List<dynamic>.from(cachedData['schedules'] ?? []);
-              _isLoading = false;
-            });
-            AppLogger.info(
-              'class_activity',
-              'Loaded ${_classList.length} classes from cache',
-            );
-          }
-        } catch (e) {
-          AppLogger.error('class_activity', 'Cache load error: $e');
         }
+      } catch (e) {
+        AppLogger.error('class_activity', 'Cache load error: $e');
       }
+    }
 
-      // Step 2: Show skeleton only if still empty
-      if (_classList.isEmpty && mounted) {
-        setState(() => _isLoading = true);
-      }
+    // Step 2: Show skeleton only if still empty
+    if (_classList.isEmpty && mounted) {
+      setState(() => _isLoading = true);
+    }
 
-      // Step 3: Fetch fresh data from API
-      List<dynamic> classes = [];
+    // Step 3: Fetch both in parallel — NO setState inside these futures
+    try {
+      final results = await Future.wait([
+        _fetchClasses(teacherId, isAdmin: isAdmin, academicYearId: academicYearId),
+        _fetchSchedule(teacherId, academicYearId: academicYearId),
+      ]);
 
-      if (isAdmin) {
-        final response = await getIt<ApiClassService>().getClassPaginated(
-          limit: 100,
-          academicYearId: academicYearId,
-        );
-        classes = response['data'] ?? [];
-      } else {
-        classes = await getIt<ApiTeacherService>().getTeacherClasses(
-          teacherId,
-          academicYearId: academicYearId,
-        );
-      }
+      final classes = results[0];
+      final schedules = results[1];
 
       if (!mounted) return;
 
-      // Step 4: Update UI with fresh data
+      // Step 4: Single setState for both results
       setState(() {
         _classList = classes;
+        _scheduleList = schedules;
         _isLoading = false;
       });
 
-      // Step 5: Save to cache and persist cache key
+      AppLogger.info('class_activity', 'Loaded ${classes.length} classes and ${schedules.length} schedules');
+
+      // Step 5: Save to cache
       await LocalCacheService.save(cacheKey, {
         'classes': classes,
-        'schedules': _scheduleList,
+        'schedules': schedules,
       });
       final prefs = PreferencesService();
       await prefs.setString(_prefKeyLastCacheKey, cacheKey);
-
-      AppLogger.info(
-        'class_activity',
-        'Saved ${classes.length} classes to cache ($cacheKey)',
-      );
     } catch (e) {
-      AppLogger.error('class_activity', 'Error loading classes: $e');
-
+      AppLogger.error('class_activity', 'Error loading classes/schedule: $e');
       if (!mounted) return;
-
-      // Only show error if no cached data available
       if (_classList.isEmpty) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
         _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
     }
   }
 
-  Future<void> _loadSchedule(String teacherId) async {
-    try {
-      final academicYearId = ref
-          .read(academicYearRiverpod)
-          .selectedAcademicYear?['id']
-          ?.toString();
-
-      final scheduleData = await getIt<ApiScheduleService>()
-          .getScheduleByTeacher(
-            teacherId: teacherId,
-            academicYear: academicYearId,
-          );
-
-      // scheduleData is already guaranteed to be a List<dynamic> by the service
-      final List<dynamic> schedules = scheduleData;
-
-      if (mounted) {
-        setState(() {
-          _scheduleList = schedules;
-        });
-        AppLogger.info(
-          'class_activity',
-          'Loaded ${_scheduleList.length} schedules for teacher $teacherId',
-        );
-
-        // Update cache with schedules data
-        final cacheKey = _buildClassesCacheKey();
-        if (cacheKey != null && _classList.isNotEmpty) {
-          LocalCacheService.save(cacheKey, {
-            'classes': _classList,
-            'schedules': schedules,
-          });
-        }
-      }
-    } catch (e) {
-      AppLogger.error('class_activity', 'Error loading schedule: $e');
+  /// Pure data fetch — no setState. Returns classes list.
+  Future<List<dynamic>> _fetchClasses(
+    String teacherId, {
+    bool isAdmin = false,
+    String? academicYearId,
+  }) async {
+    if (isAdmin) {
+      final response = await getIt<ApiClassService>().getClassPaginated(
+        limit: 100,
+        academicYearId: academicYearId,
+      );
+      return response['data'] ?? [];
+    } else {
+      return await getIt<ApiTeacherService>().getTeacherClasses(
+        teacherId,
+        academicYearId: academicYearId,
+      );
     }
+  }
+
+  /// Pure data fetch — no setState. Returns schedule list.
+  Future<List<dynamic>> _fetchSchedule(
+    String teacherId, {
+    String? academicYearId,
+  }) async {
+    return await getIt<ApiScheduleService>().getScheduleByTeacher(
+      teacherId: teacherId,
+      academicYear: academicYearId,
+    );
+  }
+
+  /// Standalone _loadClasses for admin-only paths that don't need schedule.
+  Future<void> _loadClasses(
+    String teacherId, {
+    bool isAdmin = false,
+    bool useCache = true,
+  }) async {
+    await _loadClassesAndSchedule(teacherId, isAdmin: isAdmin, useCache: useCache);
   }
 
   Future<void> _loadSubjectsForClass({bool useCache = true}) async {
@@ -2649,12 +2627,18 @@ class ClassActifityScreenState extends ConsumerState<ClassActifityScreen>
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     final languageProvider = ref.read(languageRiverpod);
 
-    return WillPopScope(
-      onWillPop: _handleWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _handleWillPop();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
       child: Scaffold(
         backgroundColor: ColorUtils.slate50,
         body: Column(

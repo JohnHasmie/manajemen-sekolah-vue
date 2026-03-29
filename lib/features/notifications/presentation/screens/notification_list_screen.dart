@@ -12,11 +12,10 @@ import 'package:manajemensekolah/features/class_activity/presentation/screens/te
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/parent_billing_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
-import 'package:manajemensekolah/features/notifications/data/notification_service.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/features/notifications/presentation/controllers/notification_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
@@ -27,13 +26,13 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 ///
 /// Takes a [role] prop to determine color theming and which screens to navigate
 /// to when a notification is tapped (e.g., parent sees billing, teacher sees activities).
-class NotificationListScreen extends StatefulWidget {
+class NotificationListScreen extends ConsumerStatefulWidget {
   final String role; // 'guru', 'admin', 'wali'
 
   const NotificationListScreen({super.key, required this.role});
 
   @override
-  State<NotificationListScreen> createState() => _NotificationListScreenState();
+  ConsumerState<NotificationListScreen> createState() => _NotificationListScreenState();
 }
 
 /// The mutable state for [NotificationListScreen].
@@ -43,10 +42,7 @@ class NotificationListScreen extends StatefulWidget {
 /// - [_isLoading] - controls skeleton loading display
 ///
 /// setState() is like Vue's reactivity - triggers a re-render when data changes.
-class _NotificationListScreenState extends State<NotificationListScreen> {
-  final ApiNotificationService _apiService = getIt<ApiNotificationService>();
-  List<dynamic> _notifications = [];
-  bool _isLoading = true;
+class _NotificationListScreenState extends ConsumerState<NotificationListScreen> {
 
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor(widget.role);
@@ -56,62 +52,25 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationProvider.notifier).fetchNotifications(widget.role);
+    });
   }
 
-  /// Fetches notifications from the API. Like a Vue method `async loadData()`.
-  /// Also used as the `onRefresh` handler for pull-to-refresh (like a Vue `@pulldown` event).
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    try {
-      final notifs = await _apiService.getNotifications(role: widget.role);
-      if (mounted) {
-        setState(() {
-          _notifications = notifs;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      AppLogger.error('notification', e);
-      if (mounted) setState(() => _isLoading = false);
-    }
+    await ref.read(notificationProvider.notifier).fetchNotifications(widget.role);
   }
 
-  /// Marks a single notification as read and removes it from the list.
-  /// Like calling `axios.patch('/api/notifications/{id}/read')` in Vue.
   Future<void> _markAsRead(String id) async {
-    try {
-      await _apiService.markAsRead(id);
-      setState(() {
-        _notifications.removeWhere((n) => n['id'].toString() == id);
-      });
-    } catch (e) {
-      AppLogger.error('notification', e);
-    }
+    await ref.read(notificationProvider.notifier).markAsRead(id);
   }
 
   Future<void> _deleteNotification(String id) async {
-    try {
-      await _apiService.deleteNotification(id);
-      setState(
-        () => _notifications.removeWhere((n) => n['id'].toString() == id),
-      );
-    } catch (e) {
-      AppLogger.error('notification', e);
-    }
+    await ref.read(notificationProvider.notifier).deleteNotification(id);
   }
 
-  /// Marks all notifications as read and clears the list.
-  /// Like a Vue "Mark all as read" button handler calling `POST /api/notifications/mark-all-read`.
   Future<void> _markAllRead() async {
-    try {
-      await _apiService.markAllRead();
-      setState(() {
-        _notifications.clear();
-      });
-    } catch (e) {
-      AppLogger.error('notification', e);
-    }
+    await ref.read(notificationProvider.notifier).markAllRead();
   }
 
   bool _isUnread(dynamic n) {
@@ -121,9 +80,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     return true;
   }
 
-  int get _unreadCount => _notifications.where(_isUnread).length;
+  int _unreadCount(List<dynamic> notifications) =>
+      notifications.where(_isUnread).length;
 
-  bool get _hasUnread => _notifications.any(_isUnread);
+  bool _hasUnread(List<dynamic> notifications) =>
+      notifications.any(_isUnread);
 
   Color _getColor(String type) {
     switch (type) {
@@ -330,32 +291,58 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   /// Shows skeleton loading, empty state, or the notification list with pull-to-refresh.
   @override
   Widget build(BuildContext context) {
-    final unread = _unreadCount;
+    final notificationAsyncValue = ref.watch(notificationProvider);
     final primaryColor = _getPrimaryColor();
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          _buildHeader(context, languageProvider, primaryColor, unread),
+          notificationAsyncValue.when(
+            data: (notifications) => _buildHeader(
+              context,
+              languageProvider,
+              primaryColor,
+              _unreadCount(notifications),
+              _hasUnread(notifications),
+            ),
+            error: (_, __) => _buildHeader(
+              context,
+              languageProvider,
+              primaryColor,
+              0,
+              false,
+            ),
+            loading: () => _buildHeader(
+              context,
+              languageProvider,
+              primaryColor,
+              0,
+              false,
+            ),
+          ),
           Expanded(
-            child: _isLoading
-                ? SkeletonListLoading(itemCount: 8, infoTagCount: 1)
-                : RefreshIndicator(
-                    onRefresh: _loadData,
-                    color: primaryColor,
-                    child: _notifications.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.builder(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                            itemCount: _notifications.length,
-                            itemBuilder: (context, index) =>
-                                _buildNotificationCard(_notifications[index]),
-                          ),
-                  ),
+            child: notificationAsyncValue.when(
+              data: (notifications) => RefreshIndicator(
+                onRefresh: _loadData,
+                color: primaryColor,
+                child: notifications.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        itemCount: notifications.length,
+                        itemBuilder: (context, index) =>
+                            _buildNotificationCard(notifications[index]),
+                      ),
+              ),
+              loading: () => SkeletonListLoading(itemCount: 8, infoTagCount: 1),
+              error: (e, _) => Center(
+                child: Text('Error: $e'),
+              ),
+            ),
           ),
         ],
       ),
@@ -367,6 +354,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     LanguageProvider languageProvider,
     Color primaryColor,
     int unread,
+    bool hasUnread,
   ) {
     return Container(
       width: double.infinity,
@@ -439,7 +427,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 ),
               ),
               // Action: Mark all read
-              if (_hasUnread)
+              if (hasUnread)
                 IconButton(
                   onPressed: _markAllRead,
                   icon: Container(

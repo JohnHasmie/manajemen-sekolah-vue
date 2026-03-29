@@ -14,7 +14,7 @@ class User with _$User {
     @JsonKey(name: 'school_id') String? schoolId,
     @JsonKey(name: 'school_name') String? schoolName,
     @JsonKey(name: 'profile_picture_url') String? profilePictureUrl,
-  }) = _User;
+}) = _User;
 
   /// Custom fromJson to handle Indonesian key variations by standardizing them
   /// into the backend-expected English snake_case keys before generation.
@@ -24,15 +24,15 @@ class User with _$User {
   static Map<String, dynamic> _standardizeJson(Map<String, dynamic> json) {
     final Map<String, dynamic> mapped = Map<String, dynamic>.from(json);
     
-    // Fallback for Indonesian keys to standard English keys
-    mapped['name'] ??= mapped['nama'];
-    mapped['school_id'] ??= mapped['sekolah_id'] ?? mapped['school_id'];
-    mapped['school_name'] ??= mapped['nama_sekolah'] ?? mapped['school_name'];
-    mapped['profile_picture_url'] ??= mapped['foto_profil'] ?? mapped['profile_picture_url'];
+    // Force string types and provide fallbacks to prevent type cast crashes
+    mapped['id'] = (mapped['id'] ?? mapped['user_id'] ?? '').toString();
+    mapped['name'] = (mapped['name'] ?? mapped['nama'] ?? 'User').toString();
+    mapped['email'] = (mapped['email'] ?? '').toString();
+    mapped['role'] = (mapped['role'] ?? mapped['peran'] ?? '').toString();
     
-    // Force string types for IDs to avoid type cast errors
-    if (mapped['id'] != null) mapped['id'] = mapped['id'].toString();
-    if (mapped['school_id'] != null) mapped['school_id'] = mapped['school_id'].toString();
+    mapped['school_id'] = mapped['school_id']?.toString() ?? mapped['sekolah_id']?.toString();
+    mapped['school_name'] = (mapped['school_name'] ?? mapped['nama_sekolah'])?.toString();
+    mapped['profile_picture_url'] = (mapped['profile_picture_url'] ?? mapped['foto_profil'])?.toString();
     
     return mapped;
   }

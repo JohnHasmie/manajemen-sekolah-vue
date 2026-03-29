@@ -251,10 +251,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
   }
 
   Color _getPrimaryColor() {
-    // Use ColorUtils with dynamic role from user data
-    final color = ColorUtils.getRoleColor(_userRole);
-    AppLogger.debug('announcement', 'User role: $_userRole, Color: $color');
-    return color;
+    return ColorUtils.getRoleColor(_userRole);
   }
 
   LinearGradient _getCardGradient() {

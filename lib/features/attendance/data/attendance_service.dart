@@ -2,10 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/constants/api_endpoints.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
 
 class AttendanceService {
   /// Fetches attendance (absensi) records with multiple optional filters.
-  static Future<List<dynamic>> getAttendance({
+  static Future<List<Attendance>> getAttendance({
     String? teacherId,
     String? date,
     String? subjectId,
@@ -46,9 +47,9 @@ class AttendanceService {
     }
 
     if (result is Map && result['data'] is List) {
-      return result['data'];
+      return (result['data'] as List).map((json) => Attendance.fromJson(json)).toList();
     } else if (result is List) {
-      return result;
+      return result.map((json) => Attendance.fromJson(json)).toList();
     } else {
       AppLogger.warning('api', 'Unexpected response format for absensi');
       return [];

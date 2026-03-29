@@ -33,8 +33,8 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
 
 /// Data model for an attendance summary row.
 /// Like a Laravel Eloquent Model or a TypeScript interface -- a plain data class

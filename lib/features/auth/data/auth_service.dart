@@ -5,6 +5,7 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/features/auth/domain/models/user.dart';
 
 class AuthService {
   /// Authenticates a user with email/password, optionally with school and role selection.
@@ -31,26 +32,25 @@ class AuthService {
       );
       AppLogger.debug('auth_api', '📥 Login response data: $responseData');
 
-      if (responseData['pilih_sekolah'] == true) {
-        responseData['needsSchoolSelection'] = true;
-        return Map<String, dynamic>.from(responseData);
-      }
-      if (responseData['pilih_role'] == true) {
-        responseData['needsRoleSelection'] = true;
-        return Map<String, dynamic>.from(responseData);
-      }
-      if (responseData['require_otp'] == true ||
-          responseData['otp_debug'] != null ||
-          responseData['message'] == 'OTP sent to email') {
-        return Map<String, dynamic>.from(responseData);
+      final normalized = _normalizeFlags(responseData);
+
+      if (normalized['require_otp'] == true ||
+          normalized['otp_debug'] != null ||
+          normalized['message'] == 'OTP sent to email') {
+        return normalized;
       }
 
-      if (responseData['token'] == null)
+      if (normalized['needsSchoolSelection'] == true ||
+          normalized['needsRoleSelection'] == true) {
+        return normalized;
+      }
+
+      if (normalized['token'] == null)
         throw Exception('Server tidak mengembalikan token');
-      if (responseData['user'] == null)
+      if (normalized['user'] == null)
         throw Exception('Server tidak mengembalikan data user');
 
-      return Map<String, dynamic>.from(responseData);
+      return normalized;
     } on DioException catch (e) {
       final responseData = e.response?.data;
       if (responseData is Map) {
@@ -79,7 +79,7 @@ class AuthService {
       if (role != null) body['role'] = role;
 
       final response = await dioClient.post(ApiEndpoints.verifyOtp, data: body);
-      return Map<String, dynamic>.from(response.data);
+      return _normalizeFlags(response.data);
     } on DioException catch (e) {
       final responseData = e.response?.data;
       if (responseData is Map) {
@@ -99,6 +99,7 @@ class AuthService {
     String? displayName,
     String? photoUrl,
     String? idToken,
+    String? serverAuthCode,
   }) async {
     try {
       final Map<String, dynamic> body = {
@@ -106,13 +107,14 @@ class AuthService {
         'name': displayName,
         'avatar': photoUrl,
         'id_token': idToken,
+        'server_auth_code': serverAuthCode,
       };
 
       final response = await dioClient.post(
         ApiEndpoints.googleLogin,
         data: body,
       );
-      return Map<String, dynamic>.from(response.data);
+      return _normalizeFlags(response.data);
     } on DioException catch (e) {
       final responseData = e.response?.data;
       if (responseData is Map) {
@@ -147,8 +149,8 @@ class AuthService {
 
     if (userJson == null) throw Exception('User data not found');
 
-    final user = json.decode(userJson);
-    final schoolId = user['school_id'] ?? user['sekolah_id'];
+    final user = User.fromJson(json.decode(userJson));
+    final schoolId = user.schoolId;
 
     if (schoolId == null) throw Exception('School ID not found');
 
@@ -167,17 +169,44 @@ class AuthService {
     String schoolId, {
     String? role,
   }) async {
-    final Map<String, dynamic> body = {'school_id': schoolId};
-    if (role != null) body['role'] = role;
+    try {
+      final Map<String, dynamic> body = {'school_id': schoolId};
+      if (role != null) body['role'] = role;
 
-    final response = await dioClient.post(
-      ApiEndpoints.switchSchool,
-      data: body,
-      options: Options(
-        sendTimeout: const Duration(seconds: 60),
-        receiveTimeout: const Duration(seconds: 60),
-      ),
-    );
-    return Map<String, dynamic>.from(response.data);
+      final response = await dioClient.post(
+        ApiEndpoints.switchSchool,
+        data: body,
+        options: Options(
+          sendTimeout: const Duration(seconds: 60),
+          receiveTimeout: const Duration(seconds: 60),
+        ),
+      );
+      return _normalizeFlags(response.data);
+    } on DioException catch (e) {
+      final responseData = e.response?.data;
+      // If role was invalid, retry without role to let the backend decide
+      if (role != null && responseData is Map &&
+          (responseData['error']?.toString().contains('Role tidak valid') == true ||
+           responseData['message']?.toString().contains('Role tidak valid') == true)) {
+        AppLogger.info('auth_api', 'Role invalid for school, retrying without role');
+        return switchSchool(schoolId);
+      }
+      if (responseData is Map) {
+        throw Exception(responseData['error'] ?? responseData['message'] ?? 'Switch school failed');
+      }
+      rethrow;
+    }
+  }
+
+  /// Normalizes Indonesian backend flags to the keys used by _handleLoginResponse.
+  static Map<String, dynamic> _normalizeFlags(dynamic data) {
+    final responseData = Map<String, dynamic>.from(data);
+    if (responseData['pilih_sekolah'] == true) {
+      responseData['needsSchoolSelection'] = true;
+    }
+    if (responseData['pilih_role'] == true) {
+      responseData['needsRoleSelection'] = true;
+    }
+    return responseData;
   }
 }

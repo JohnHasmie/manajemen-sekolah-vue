@@ -1965,7 +1965,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         if (didPop) return;
 
         final canLeave = await _onWillPop();
-        if (canLeave && mounted) {
+        if (canLeave && context.mounted) {
           AppNavigator.pop(context, result);
         }
       },
@@ -2084,9 +2084,12 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
                     ),
                   PopupMenuButton<String>(
                     onSelected: (value) {
-                      if (value == 'refresh') _forceRefresh();
-                      if (value == 'export_excel' && !_isExporting)
+                      if (value == 'refresh') {
+                        _forceRefresh();
+                      }
+                      if (value == 'export_excel' && !_isExporting) {
                         _exportToExcel();
+                      }
                     },
                     icon: Container(
                       key: _currentStep == 2 ? _exportKey : null,
@@ -2490,12 +2493,13 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   }
 
   Widget _buildRecapTable(LanguageProvider languageProvider) {
-    if (_isLoading)
+    if (_isLoading) {
       return SkeletonListLoading(
         itemCount: 5,
         infoTagCount: 3,
         showActions: false,
       );
+    }
 
     final int numChapters = _chapters.isNotEmpty ? _chapters.length : 1;
 

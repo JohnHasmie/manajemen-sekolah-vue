@@ -5,6 +5,7 @@
 // returning conflicting schedule errors). Lets the user pick which
 // conflicting schedule to delete before retrying.
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
@@ -16,7 +17,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// - [onCancel] - callback when the user cancels
 ///
 /// Uses radio buttons for single selection, similar to a Vue `<v-radio-group>`.
-class ConflictResolutionDialog extends StatefulWidget {
+class ConflictResolutionDialog extends ConsumerStatefulWidget {
   final List<dynamic> conflictingSchedules;
   final Function(String) onDeleteConfirmed;
   final Function() onCancel;
@@ -29,17 +30,18 @@ class ConflictResolutionDialog extends StatefulWidget {
   });
 
   @override
-  ConflictResolutionDialogState createState() =>
+  ConsumerState<ConflictResolutionDialog> createState() =>
       ConflictResolutionDialogState();
 }
 
 /// State for [ConflictResolutionDialog]. Tracks which schedule the user selected.
 /// Like Vue's `data() { return { selectedId: null } }`.
-class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
+class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDialog> {
   String? _selectedScheduleToDelete;
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = ref.watch(languageRiverpod);
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
@@ -91,13 +93,21 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
             // List of conflicting schedules
             Container(
               constraints: BoxConstraints(maxHeight: 300),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: widget.conflictingSchedules.length,
-                itemBuilder: (context, index) {
-                  final schedule = widget.conflictingSchedules[index];
-                  return _buildScheduleItem(schedule, languageProvider);
+              child: RadioGroup<String>(
+                groupValue: _selectedScheduleToDelete,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedScheduleToDelete = value;
+                  });
                 },
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: widget.conflictingSchedules.length,
+                  itemBuilder: (context, index) {
+                    final schedule = widget.conflictingSchedules[index];
+                    return _buildScheduleItem(schedule, languageProvider);
+                  },
+                ),
               ),
             ),
 
@@ -162,7 +172,8 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
     dynamic schedule,
     LanguageProvider languageProvider,
   ) {
-    final isSelected = _selectedScheduleToDelete == schedule['id'];
+    final scheduleId = schedule['id']?.toString() ?? '';
+    final isSelected = _selectedScheduleToDelete == scheduleId;
 
     return Container(
       margin: EdgeInsets.only(bottom: 8),
@@ -199,13 +210,7 @@ class ConflictResolutionDialogState extends State<ConflictResolutionDialog> {
             ),
           ],
         ),
-        value: schedule['id'],
-        groupValue: _selectedScheduleToDelete,
-        onChanged: (value) {
-          setState(() {
-            _selectedScheduleToDelete = value;
-          });
-        },
+        value: scheduleId,
         activeColor: Colors.red.shade600,
         controlAffinity: ListTileControlAffinity.leading,
       ),

@@ -27,10 +27,10 @@ class Student with _$Student {
 
   static Map<String, dynamic> _standardizeJson(Map<String, dynamic> json) {
     final Map<String, dynamic> mapped = Map<String, dynamic>.from(json);
-    
+
     // 1. Resolve Name
     mapped['name'] ??= mapped['nama'];
-    
+
     // 2. Resolve Class Name (handles: class_name, kelas_nama, or nested class.name)
     mapped['class_name'] ??= mapped['kelas_nama'];
     if (mapped['class'] is Map && mapped['class']['name'] != null) {
@@ -43,13 +43,18 @@ class Student with _$Student {
     mapped['phone_number'] ??= mapped['nomor_hp'];
     mapped['class_id'] ??= mapped['id_kelas'];
     mapped['student_class_id'] ??= mapped['id_siswa_kelas'];
-    
-    // 4. Force String types for IDs and numbers to avoid type cast errors
-    if (mapped['id'] != null) mapped['id'] = mapped['id'].toString();
+
+    // 4. Force String types — provide defaults for required fields to prevent null cast errors
+    mapped['id'] = (mapped['id'] ?? '').toString();
+    mapped['name'] = (mapped['name'] ?? '').toString();
+    mapped['class_name'] = (mapped['class_name'] ?? '').toString();
+    mapped['student_number'] = (mapped['student_number'] ?? '').toString();
+    mapped['address'] = (mapped['address'] ?? mapped['alamat'] ?? '').toString();
+    mapped['guardian_name'] = (mapped['guardian_name'] ?? '').toString();
+    mapped['phone_number'] = (mapped['phone_number'] ?? '').toString();
     if (mapped['class_id'] != null) mapped['class_id'] = mapped['class_id'].toString();
     if (mapped['student_class_id'] != null) mapped['student_class_id'] = mapped['student_class_id'].toString();
-    if (mapped['student_number'] != null) mapped['student_number'] = mapped['student_number'].toString();
-    
+
     return mapped;
   }
 }
