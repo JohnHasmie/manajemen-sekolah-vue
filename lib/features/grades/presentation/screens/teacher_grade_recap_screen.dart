@@ -32,6 +32,8 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_selection_dialog.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/edit_deskripsi_dialog.dart';
 
 /// Grade recap wizard: class selection -> subject selection -> recap table.
 ///
@@ -1026,140 +1028,14 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     String type,
     int? chapterIndex,
   ) {
-    final studentGrades = _rawGrades.where((g) {
-      final gStudentClassId = (g['student_class_id'] ?? g['siswa_kelas_id'])
-          ?.toString();
-      return gStudentClassId == studentClassId;
-    }).toList();
-
-    List<dynamic> options = [];
-    if (type == 'bab') {
-      options = studentGrades.where((g) {
-        final typeStr =
-            (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
-        return [
-          'uh',
-          'tugas',
-          'praktek',
-          'formatif',
-          'sumatif',
-        ].contains(typeStr);
-      }).toList();
-    } else {
-      options = studentGrades.where((g) {
-        final typeStr =
-            (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
-        if (type.toLowerCase() == 'uts') {
-          return typeStr == 'uts' || typeStr == 'pts';
-        } else if (type.toLowerCase() == 'uas') {
-          return typeStr == 'uas' || typeStr == 'pas';
-        }
-        return typeStr == type.toLowerCase();
-      }).toList();
-    }
-
-    showDialog(
+    showGradeSelectionDialog(
       context: context,
-      builder: (context) {
-        final List<dynamic> selectedItems = [];
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                type == 'bab'
-                    ? 'Pilih Nilai Harian/UH'
-                    : 'Pilih Nilai ${type.toUpperCase()}',
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: options.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(AppLocalizations.noGradeDataFound.tr),
-                      )
-                    : Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Pilih satu atau lebih nilai untuk dirata-ratakan.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: ColorUtils.slate500,
-                              ),
-                            ),
-                          ),
-                          Flexible(
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: options.length,
-                              itemBuilder: (context, index) {
-                                final g = options[index];
-                                final score = (g['score'] ?? g['nilai'] ?? '0')
-                                    .toString();
-                                final title =
-                                    g['assessment']?['title'] ??
-                                    g['title'] ??
-                                    g['judul'] ??
-                                    'Nilai';
-                                final date =
-                                    g['assessment']?['date'] ??
-                                    g['date'] ??
-                                    g['tanggal'] ??
-                                    '';
-                                final isSelected = selectedItems.contains(g);
-
-                                return CheckboxListTile(
-                                  title: Text('$title ($score)'),
-                                  subtitle: Text(date),
-                                  value: isSelected,
-                                  activeColor: ColorUtils.primary,
-                                  onChanged: (val) {
-                                    setDialogState(() {
-                                      if (val == true) {
-                                        selectedItems.add(g);
-                                      } else {
-                                        selectedItems.remove(g);
-                                      }
-                                    });
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => AppNavigator.pop(context),
-                  child: Text(AppLocalizations.cancel.tr),
-                ),
-                ElevatedButton(
-                  onPressed: selectedItems.isEmpty
-                      ? null
-                      : () {
-                          double sum = 0;
-                          for (var item in selectedItems) {
-                            final s = (item['score'] ?? item['nilai'] ?? '0')
-                                .toString();
-                            sum += double.tryParse(s) ?? 0;
-                          }
-                          _updateTableValue(
-                            studentClassId,
-                            type,
-                            chapterIndex,
-                            sum / selectedItems.length,
-                          );
-                          AppNavigator.pop(context);
-                        },
-                  child: Text('Gunakan Rata-rata'),
-                ),
-              ],
-            );
-          },
-        );
+      rawGrades: _rawGrades,
+      studentClassId: studentClassId,
+      type: type,
+      chapterIndex: chapterIndex,
+      onAverageSelected: (average) {
+        _updateTableValue(studentClassId, type, chapterIndex, average);
       },
     );
   }
@@ -1485,74 +1361,42 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   }
 
   void _showEditDeskripsiDialog(String studentClassId, String studentName) {
-    final TextEditingController tempController = TextEditingController(
-      text: _deskripsiControllers[studentClassId]?.text ?? '',
-    );
     final languageProvider = ref.read(languageRiverpod);
 
-    showDialog(
+    showEditDeskripsiDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            languageProvider.getTranslatedText({
-              'en': 'Edit Description - $studentName',
-              'id': 'Edit Deskripsi - $studentName',
-            }),
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: TextField(
-              controller: tempController,
-              maxLines: 5,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: languageProvider.getTranslatedText({
-                  'en': 'Enter description...',
-                  'id': 'Masukkan deskripsi...',
-                }),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => AppNavigator.pop(context),
-              child: Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Cancel',
-                  'id': 'Batal',
-                }),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _getPrimaryColor(),
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                setState(() {
-                  _deskripsiControllers[studentClassId]?.text =
-                      tempController.text;
-                  final index = _tableData.indexWhere(
-                    (row) => row['student_class_id'] == studentClassId,
-                  );
-                  if (index != -1) {
-                    _tableData[index]['deskripsi'] = tempController.text;
-                    _hasUnsavedChanges = true;
-                  }
-                });
-                AppNavigator.pop(context);
-              },
-              child: Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Save',
-                  'id': 'Simpan',
-                }),
-              ),
-            ),
-          ],
-        );
+      currentDescription: _deskripsiControllers[studentClassId]?.text ?? '',
+      studentName: studentName,
+      primaryColor: _getPrimaryColor(),
+      translations: {
+        'editDescTitle': languageProvider.getTranslatedText({
+          'en': 'Edit Description - $studentName',
+          'id': 'Edit Deskripsi - $studentName',
+        }),
+        'hint': languageProvider.getTranslatedText({
+          'en': 'Enter description...',
+          'id': 'Masukkan deskripsi...',
+        }),
+        'cancel': languageProvider.getTranslatedText({
+          'en': 'Cancel',
+          'id': 'Batal',
+        }),
+        'save': languageProvider.getTranslatedText({
+          'en': 'Save',
+          'id': 'Simpan',
+        }),
+      },
+      onSave: (newDescription) {
+        setState(() {
+          _deskripsiControllers[studentClassId]?.text = newDescription;
+          final index = _tableData.indexWhere(
+            (row) => row['student_class_id'] == studentClassId,
+          );
+          if (index != -1) {
+            _tableData[index]['deskripsi'] = newDescription;
+            _hasUnsavedChanges = true;
+          }
+        });
       },
     );
   }
