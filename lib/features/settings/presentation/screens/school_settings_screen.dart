@@ -10,8 +10,8 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // Includes a guided tour feature (tutorial coach marks) for first-time users.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
-import 'package:manajemensekolah/features/settings/screens/school_level_settings_screen.dart';
-import 'package:manajemensekolah/features/settings/screens/time_settings_screen.dart';
+import 'package:manajemensekolah/features/settings/presentation/screens/school_level_settings_screen.dart';
+import 'package:manajemensekolah/features/settings/presentation/screens/time_settings_screen.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';

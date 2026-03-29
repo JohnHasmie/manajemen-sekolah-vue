@@ -17,7 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-import 'package:manajemensekolah/features/recommendations/screens/recommendation_result_screen.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_result_screen.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';

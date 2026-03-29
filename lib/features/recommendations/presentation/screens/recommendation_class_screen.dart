@@ -20,14 +20,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-import 'package:manajemensekolah/features/recommendations/screens/recommendation_student_screen.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_student_screen.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/features/recommendations/screens/subject_picker_sheet.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/screens/subject_picker_sheet.dart';
 
 /// Displays a list of classes with AI learning recommendation summaries.
 ///
