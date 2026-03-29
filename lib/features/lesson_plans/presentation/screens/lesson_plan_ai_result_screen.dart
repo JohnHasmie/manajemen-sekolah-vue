@@ -576,7 +576,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Gagal regenerate RPP: $e')));
+        ).showSnackBar(SnackBar(content: Text('${AppLocalizations.failedToRegenerateRpp.tr}: $e')));
       }
     } finally {
       if (mounted) {

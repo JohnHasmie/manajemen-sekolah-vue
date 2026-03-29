@@ -1075,7 +1075,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
                 child: options.isEmpty
                     ? Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Text('Tidak ada data nilai yang ditemukan.'),
+                        child: Text(AppLocalizations.noGradeDataFound.tr),
                       )
                     : Column(
                         mainAxisSize: MainAxisSize.min,

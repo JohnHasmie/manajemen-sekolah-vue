@@ -6,8 +6,8 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // sheet with multiple dependent dropdowns (teacher -> subject, day -> time slots).
 // Similar to a Laravel Livewire form with cascading selects where choosing
 // a teacher filters available subjects, and choosing a day filters time slots.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -108,7 +108,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('Error loading settings: $e');
+      AppLogger.error('schedule_form', 'Error loading settings: $e');
     }
   }
 
@@ -221,19 +221,9 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
         }
       });
 
-      if (kDebugMode) {
-        print('DEBUG: Occupied slots count: ${_occupiedSlots.length}');
-        if (_occupiedSlots.isNotEmpty) {
-          print(
-            'DEBUG: First occupied slot keys: ${_occupiedSlots.first.keys}',
-          );
-          print(
-            'DEBUG: First occupied slot LHD_ID: ${_occupiedSlots.first['lesson_hour_days_id']}',
-          );
-        }
-      }
+      AppLogger.debug('schedule_form', 'Occupied slots count: ${_occupiedSlots.length}');
     } catch (e) {
-      if (kDebugMode) print('Error fetching occupied slots: $e');
+      AppLogger.error('schedule_form', 'Error fetching occupied slots: $e');
     }
   }
 
@@ -266,19 +256,13 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             _selectedSubject = '';
           }
         }
-        if (kDebugMode) {
-          print(
-            'DEBUG: _availableLessonHourList from backend: $_availableLessonHourList',
-          );
-        }
+        AppLogger.debug('schedule_form', 'Available lesson hours: ${_availableLessonHourList.length}');
 
         // Removed redundant Client-Side Filter based on Settings here.
         // It is handled correctly in _filterAvailableJamPelajaran() which is called when needed.
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error filtering subjects: $e');
-      }
+      AppLogger.error('schedule_form', 'Error filtering subjects: $e');
       if (!mounted) return;
       setState(() {
         _filteredSubjectList = widget.subjectList;
@@ -335,7 +319,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
       // Trigger fetch occupied slots
       _fetchOccupiedSlots();
     } catch (e) {
-      if (kDebugMode) print('Error filtering jam pelajaran: $e');
+      AppLogger.error('schedule_form', 'Error filtering lesson hours: $e');
       setState(() {
         _availableLessonHourList = widget.lessonHourList;
         _isLoadingJamPelajaran = false;
@@ -1276,11 +1260,6 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                         // But we fixed backend to return it.
 
                         final match = occId == jamId;
-                        if (kDebugMode && match) {
-                          print(
-                            'DEBUG: Slot $jamId is occupied by ${occupied['id']} (LHD: ${occupied['lesson_hour_days_id']})',
-                          );
-                        }
                         return match;
                       });
 
@@ -1377,10 +1356,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
         'lesson_hour_days_id': _selectedJamPelajaran,
       };
 
-      if (kDebugMode) {
-        print('DEBUG: Saving schedule data: $scheduleData');
-      }
-
+      AppLogger.debug('schedule_form', 'Saving schedule data');
       AppNavigator.pop(context, scheduleData);
     }
   }

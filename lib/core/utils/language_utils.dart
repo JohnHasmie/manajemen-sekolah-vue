@@ -1848,6 +1848,8 @@ class AppLocalizations {
   };
   static Map<String, String> get failedToGenerateRpp => {'en': 'Failed to Generate RPP', 'id': 'Gagal Generate RPP'};
   static Map<String, String> get failedToGenerateMaterial => {'en': 'Failed to Generate Material', 'id': 'Gagal Generate Materi'};
+  static Map<String, String> get noGradeDataFound => {'en': 'No grade data found.', 'id': 'Tidak ada data nilai yang ditemukan.'};
+  static Map<String, String> get failedToRegenerateRpp => {'en': 'Failed to regenerate RPP', 'id': 'Gagal regenerate RPP'};
 }
 
 /// Convenience extension that provides pre-resolved translated strings as static getters.
