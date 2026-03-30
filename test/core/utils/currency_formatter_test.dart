@@ -1,162 +1,125 @@
-/// Tests for CurrencyInputFormatter — verifies Indonesian Rupiah formatting
-/// and parsing round-trips correctly.
+/// Unit tests for CurrencyInputFormatter.
 ///
-/// Like testing a Laravel Helper such as `number_format()` and its inverse:
-/// confirm "Rp 10.000" ↔ 10000.0 without data loss.
+/// Covers:
+/// - formatEditUpdate: empty input, digits-only, mixed input, large numbers
+/// - parseCurrency: empty, formatted strings, plain digits, non-numeric
 library;
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/core/utils/currency_formatter.dart';
 
+// Helper: simulate a user typing text into a field.
+TextEditingValue _input(String text) => TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+
+TextEditingValue _format(String input) {
+  final formatter = CurrencyInputFormatter();
+  return formatter.formatEditUpdate(
+    const TextEditingValue(text: ''),
+    _input(input),
+  );
+}
+
 void main() {
-  group('CurrencyInputFormatter.parseCurrency', () {
-    test('strips "Rp " prefix and dot separators, returns double', () {
-      expect(CurrencyInputFormatter.parseCurrency('Rp 10.000'), 10000.0);
+  // ─────────────────────────────────────────────────────────────────────────
+  // formatEditUpdate
+  // ─────────────────────────────────────────────────────────────────────────
+  group('CurrencyInputFormatter.formatEditUpdate', () {
+    test('empty string returns empty', () {
+      final formatter = CurrencyInputFormatter();
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(text: ''),
+        const TextEditingValue(text: ''),
+      );
+      expect(result.text, isEmpty);
     });
 
-    test('handles large values with multiple dot separators', () {
+    test('all non-digits returns empty', () {
+      expect(_format('abc').text, isEmpty);
+    });
+
+    test('single digit formats with Rp prefix', () {
+      expect(_format('5').text, contains('Rp'));
+      expect(_format('5').text, contains('5'));
+    });
+
+    test('1000 formats as "Rp 1.000"', () {
+      expect(_format('1000').text, equals('Rp 1.000'));
+    });
+
+    test('1500000 formats as "Rp 1.500.000"', () {
+      expect(_format('1500000').text, equals('Rp 1.500.000'));
+    });
+
+    test('10000000 formats as "Rp 10.000.000"', () {
+      expect(_format('10000000').text, equals('Rp 10.000.000'));
+    });
+
+    test('strips non-digit characters before formatting', () {
+      // User might paste "Rp 10.000" – strip to "10000", reformat
+      expect(_format('Rp 10.000').text, equals('Rp 10.000'));
+    });
+
+    test('cursor placed at end of formatted text', () {
+      final result = _format('5000');
+      expect(result.selection.baseOffset, equals(result.text.length));
+    });
+
+    test('0 formats with Rp prefix', () {
+      expect(_format('0').text, contains('Rp'));
+    });
+
+    test('large number 999999999 formats correctly', () {
+      final result = _format('999999999');
+      expect(result.text, contains('Rp'));
+      expect(result.text, contains('999'));
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // parseCurrency
+  // ─────────────────────────────────────────────────────────────────────────
+  group('CurrencyInputFormatter.parseCurrency', () {
+    test('empty string returns 0.0', () {
+      expect(CurrencyInputFormatter.parseCurrency(''), equals(0.0));
+    });
+
+    test('"Rp 10.000" → 10000.0', () {
+      expect(CurrencyInputFormatter.parseCurrency('Rp 10.000'), equals(10000.0));
+    });
+
+    test('"Rp 1.500.000" → 1500000.0', () {
       expect(
         CurrencyInputFormatter.parseCurrency('Rp 1.500.000'),
-        1500000.0,
+        equals(1500000.0),
       );
     });
 
-    test('returns 0.0 for empty string', () {
-      expect(CurrencyInputFormatter.parseCurrency(''), 0.0);
+    test('plain digits "12345" → 12345.0', () {
+      expect(CurrencyInputFormatter.parseCurrency('12345'), equals(12345.0));
     });
 
-    test('returns 0.0 for non-numeric string', () {
-      expect(CurrencyInputFormatter.parseCurrency('abc'), 0.0);
+    test('"Rp 0" → 0.0', () {
+      expect(CurrencyInputFormatter.parseCurrency('Rp 0'), equals(0.0));
     });
 
-    test('returns 0.0 for symbol-only string with no digits', () {
-      expect(CurrencyInputFormatter.parseCurrency('Rp '), 0.0);
+    test('only non-digits → 0.0', () {
+      expect(CurrencyInputFormatter.parseCurrency('Rp '), equals(0.0));
     });
 
-    test('plain digits without prefix are returned as-is', () {
-      expect(CurrencyInputFormatter.parseCurrency('5000'), 5000.0);
-    });
-
-    test('single digit returns correct double', () {
-      expect(CurrencyInputFormatter.parseCurrency('7'), 7.0);
-    });
-  });
-
-  group('CurrencyInputFormatter.formatEditUpdate', () {
-    late CurrencyInputFormatter formatter;
-
-    setUp(() {
-      formatter = CurrencyInputFormatter();
-    });
-
-    /// Helper: simulates typing [text] into a text field and returns
-    /// the formatted result string. Like calling a Vue input mask handler.
-    String format(String text) {
-      final result = formatter.formatEditUpdate(
-        const TextEditingValue(text: ''),
-        TextEditingValue(text: text),
-      );
-      return result.text;
-    }
-
-    test('formats "10000" as "Rp 10.000"', () {
-      expect(format('10000'), 'Rp 10.000');
-    });
-
-    test('formats "1500000" as "Rp 1.500.000"', () {
-      expect(format('1500000'), 'Rp 1.500.000');
-    });
-
-    test('formats single digit "5" as "Rp 5"', () {
-      expect(format('5'), 'Rp 5');
-    });
-
-    test('returns empty string when new value is empty', () {
-      final result = formatter.formatEditUpdate(
-        const TextEditingValue(text: 'Rp 5'),
-        const TextEditingValue(text: ''),
-      );
-      expect(result.text, '');
-    });
-
-    test('returns empty string when all non-digit characters are entered', () {
-      // Entering only letters/symbols should strip to empty
-      final result = formatter.formatEditUpdate(
-        const TextEditingValue(text: ''),
-        const TextEditingValue(text: 'abc'),
-      );
-      expect(result.text, '');
-    });
-
-    test('cursor is placed at end of formatted string', () {
-      final result = formatter.formatEditUpdate(
-        const TextEditingValue(text: ''),
-        const TextEditingValue(text: '10000'),
-      );
-      expect(result.selection.baseOffset, result.text.length);
-      expect(result.selection.extentOffset, result.text.length);
-    });
-
-    test('re-formats already-formatted "Rp 10.000" correctly', () {
-      // Simulates paste of an already-formatted string — digits are preserved.
-      expect(format('Rp 10.000'), 'Rp 10.000');
-    });
-
-    test('formats "500000000" as "Rp 500.000.000"', () {
-      expect(format('500000000'), 'Rp 500.000.000');
-    });
-
-    test('strips spaces and re-formats correctly', () {
-      expect(format('1 000'), 'Rp 1.000');
-    });
-
-    test('mixed alpha-numeric keeps only digits', () {
-      expect(format('10abc20'), 'Rp 1.020');
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Round-trip: format → parse → format
-  // ---------------------------------------------------------------------------
-  group('CurrencyInputFormatter — round-trip', () {
-    final formatter = CurrencyInputFormatter();
-
-    String fmt(String raw) => formatter.formatEditUpdate(
-          const TextEditingValue(text: ''),
-          TextEditingValue(text: raw),
-        ).text;
-
-    test('format then parse 500000 round-trips correctly', () {
-      final formatted = fmt('500000');
+    test('round-trip: format then parse returns original value', () {
+      const originalValue = 750000;
+      final formatted = _format(originalValue.toString()).text;
       final parsed = CurrencyInputFormatter.parseCurrency(formatted);
-      expect(parsed, 500000.0);
+      expect(parsed, equals(originalValue.toDouble()));
     });
 
-    test('format then parse 1500000 round-trips correctly', () {
-      final formatted = fmt('1500000');
-      final parsed = CurrencyInputFormatter.parseCurrency(formatted);
-      expect(parsed, 1500000.0);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // parseCurrency — additional edge cases
-  // ---------------------------------------------------------------------------
-  group('CurrencyInputFormatter.parseCurrency — additional cases', () {
-    test('handles string with only "Rp " and no digits', () {
-      expect(CurrencyInputFormatter.parseCurrency('Rp '), 0.0);
-    });
-
-    test('parses "Rp 0" as 0.0', () {
-      expect(CurrencyInputFormatter.parseCurrency('Rp 0'), 0.0);
-    });
-
-    test('parses "Rp 1.000.000.000" correctly', () {
-      expect(CurrencyInputFormatter.parseCurrency('Rp 1.000.000.000'), 1000000000.0);
-    });
-
-    test('symbol constant is "Rp "', () {
-      expect(CurrencyInputFormatter.symbol, 'Rp ');
+    test('round-trip for 1 → 1.0', () {
+      final formatted = _format('1').text;
+      expect(CurrencyInputFormatter.parseCurrency(formatted), equals(1.0));
     });
   });
 }

@@ -1,11 +1,15 @@
-/// Tests for ColorUtils — verifies pure-logic color mapping methods.
+/// Unit tests for ColorUtils.
 ///
-/// Only static methods that return plain Color values or `List<Color>` are tested
-/// here. BoxDecoration / LinearGradient builders are skipped because they
-/// require Flutter's rendering pipeline (which is unavailable in plain unit tests).
-///
-/// Like testing a Laravel helper file: we call each function with known inputs
-/// and assert the exact output without booting the whole framework.
+/// Covers every public static method:
+/// - getColorForIndex: rotating 6-color palette with modulo wrap
+/// - getDayColor: Indonesian/English days, semesters, unknown fallback
+/// - getStatusColor: green/red/amber/gray semantic mapping
+/// - getGradeColor: threshold-based academic color mapping
+/// - getRoleColor: role → color mapping (bilingual)
+/// - getSubjectColor: keyword-matched subject colors + fallback
+/// - getCardGradient: 5 semantic types + unknown + case-insensitive
+/// - getTextColorForBackground: BT.601 luminance black/white contrast
+/// - Palette getters: primaryColor, slate*, corporateBlue*, semantic variants, brand colors
 library;
 
 import 'package:flutter/material.dart';
@@ -13,443 +17,563 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 void main() {
-  // ─── getColorForIndex ────────────────────────────────────────────────────
-
-  group('ColorUtils.getColorForIndex', () {
-    test('index 0 returns indigo 0xFF6366F1', () {
-      expect(ColorUtils.getColorForIndex(0), Color(0xFF6366F1));
+  // ─────────────────────────────────────────────────────────────────────────
+  // getColorForIndex
+  // ─────────────────────────────────────────────────────────────────────────
+  group('getColorForIndex', () {
+    test('index 0 returns first palette color', () {
+      expect(ColorUtils.getColorForIndex(0), equals(const Color(0xFF6366F1)));
     });
 
-    test('index 1 returns emerald 0xFF10B981', () {
-      expect(ColorUtils.getColorForIndex(1), Color(0xFF10B981));
+    test('index 5 returns last palette color', () {
+      expect(ColorUtils.getColorForIndex(5), equals(const Color(0xFF06B6D4)));
     });
 
-    test('index 2 returns amber 0xFFF59E0B', () {
-      expect(ColorUtils.getColorForIndex(2), Color(0xFFF59E0B));
-    });
-
-    test('index 3 returns red 0xFFEF4444', () {
-      expect(ColorUtils.getColorForIndex(3), Color(0xFFEF4444));
-    });
-
-    test('index 4 returns violet 0xFF8B5CF6', () {
-      expect(ColorUtils.getColorForIndex(4), Color(0xFF8B5CF6));
-    });
-
-    test('index 5 returns cyan 0xFF06B6D4', () {
-      expect(ColorUtils.getColorForIndex(5), Color(0xFF06B6D4));
-    });
-
-    test('index 6 wraps around to the same color as index 0', () {
-      // The palette has 6 entries; 6 % 6 == 0, so it wraps back to index 0.
-      // Like PHP's `array_values($colors)[$index % count($colors)]` cycling pattern.
+    test('index 6 wraps to first color (modulo 6)', () {
       expect(
         ColorUtils.getColorForIndex(6),
-        ColorUtils.getColorForIndex(0),
+        equals(ColorUtils.getColorForIndex(0)),
       );
     });
-  });
 
-  // ─── getDayColor ─────────────────────────────────────────────────────────
-
-  group('ColorUtils.getDayColor — Indonesian days', () {
-    test('Senin → indigo 0xFF6366F1', () {
-      expect(ColorUtils.getDayColor('Senin'), Color(0xFF6366F1));
-    });
-
-    test('Selasa → emerald 0xFF10B981', () {
-      expect(ColorUtils.getDayColor('Selasa'), Color(0xFF10B981));
-    });
-
-    test('Rabu → amber 0xFFF59E0B', () {
-      expect(ColorUtils.getDayColor('Rabu'), Color(0xFFF59E0B));
-    });
-
-    test('Kamis → red 0xFFEF4444', () {
-      expect(ColorUtils.getDayColor('Kamis'), Color(0xFFEF4444));
-    });
-
-    test('Jumat → violet 0xFF8B5CF6', () {
-      expect(ColorUtils.getDayColor('Jumat'), Color(0xFF8B5CF6));
-    });
-
-    test('Sabtu → cyan 0xFF06B6D4', () {
-      expect(ColorUtils.getDayColor('Sabtu'), Color(0xFF06B6D4));
-    });
-  });
-
-  group('ColorUtils.getDayColor — English days', () {
-    test('Monday → same as Senin', () {
-      expect(ColorUtils.getDayColor('Monday'), Color(0xFF6366F1));
-    });
-
-    test('Tuesday → same as Selasa', () {
-      expect(ColorUtils.getDayColor('Tuesday'), Color(0xFF10B981));
-    });
-
-    test('Wednesday → same as Rabu', () {
-      expect(ColorUtils.getDayColor('Wednesday'), Color(0xFFF59E0B));
-    });
-
-    test('Thursday → same as Kamis', () {
-      expect(ColorUtils.getDayColor('Thursday'), Color(0xFFEF4444));
-    });
-
-    test('Friday → same as Jumat', () {
-      expect(ColorUtils.getDayColor('Friday'), Color(0xFF8B5CF6));
-    });
-
-    test('Saturday → same as Sabtu', () {
-      expect(ColorUtils.getDayColor('Saturday'), Color(0xFF06B6D4));
-    });
-  });
-
-  group('ColorUtils.getDayColor — semester names', () {
-    test('Ganjil (odd semester) → indigo 0xFF6366F1', () {
-      expect(ColorUtils.getDayColor('Ganjil'), Color(0xFF6366F1));
-    });
-
-    test('Genap (even semester) → emerald 0xFF10B981', () {
-      expect(ColorUtils.getDayColor('Genap'), Color(0xFF10B981));
-    });
-
-    test('Odd → same as Ganjil', () {
-      expect(ColorUtils.getDayColor('Odd'), Color(0xFF6366F1));
-    });
-
-    test('Even → same as Genap', () {
-      expect(ColorUtils.getDayColor('Even'), Color(0xFF10B981));
-    });
-  });
-
-  group('ColorUtils.getDayColor — unknown string', () {
-    test('unknown string returns a non-null Color (fallback hash color)', () {
-      // The hash-based fallback guarantees a deterministic but non-null color.
-      // Like a PHP helper that always returns a valid value rather than null.
-      final color = ColorUtils.getDayColor('UnknownDay');
-      expect(color, isNotNull);
-      expect(color, isA<Color>());
-    });
-  });
-
-  // ─── getStatusColor ──────────────────────────────────────────────────────
-
-  group('ColorUtils.getStatusColor', () {
-    test("'active' → green 0xFF10B981", () {
-      expect(ColorUtils.getStatusColor('active'), Color(0xFF10B981));
-    });
-
-    test("'inactive' → red 0xFFEF4444", () {
-      expect(ColorUtils.getStatusColor('inactive'), Color(0xFFEF4444));
-    });
-
-    test("'late' → amber 0xFFF59E0B", () {
-      expect(ColorUtils.getStatusColor('late'), Color(0xFFF59E0B));
-    });
-
-    test("'hadir' (present, Indonesian) → green 0xFF10B981", () {
-      expect(ColorUtils.getStatusColor('hadir'), Color(0xFF10B981));
-    });
-
-    test("'absen' (absent, Indonesian) → red 0xFFEF4444", () {
-      expect(ColorUtils.getStatusColor('absen'), Color(0xFFEF4444));
-    });
-
-    test('unknown status → gray 0xFF6B7280', () {
-      expect(ColorUtils.getStatusColor('somethingElse'), Color(0xFF6B7280));
-    });
-
-    test('status comparison is case-insensitive (ACTIVE → green)', () {
-      expect(ColorUtils.getStatusColor('ACTIVE'), Color(0xFF10B981));
-    });
-  });
-
-  // ─── getGradeColor ───────────────────────────────────────────────────────
-
-  group('ColorUtils.getGradeColor', () {
-    test('90 (≥85) → green 0xFF10B981 (excellent)', () {
-      expect(ColorUtils.getGradeColor(90), Color(0xFF10B981));
-    });
-
-    test('80 (≥75) → lime 0xFF84CC16 (good)', () {
-      expect(ColorUtils.getGradeColor(80), Color(0xFF84CC16));
-    });
-
-    test('70 (≥65) → amber 0xFFF59E0B (average)', () {
-      expect(ColorUtils.getGradeColor(70), Color(0xFFF59E0B));
-    });
-
-    test('60 (≥55) → orange 0xFFFB923C (below average)', () {
-      expect(ColorUtils.getGradeColor(60), Color(0xFFFB923C));
-    });
-
-    test('50 (<55) → red 0xFFEF4444 (poor)', () {
-      expect(ColorUtils.getGradeColor(50), Color(0xFFEF4444));
-    });
-
-    test('exact boundary 85 → green', () {
-      expect(ColorUtils.getGradeColor(85), Color(0xFF10B981));
-    });
-
-    test('exact boundary 75 → lime', () {
-      expect(ColorUtils.getGradeColor(75), Color(0xFF84CC16));
-    });
-  });
-
-  // ─── getRoleColor ────────────────────────────────────────────────────────
-
-  group('ColorUtils.getRoleColor', () {
-    test("'admin' → blue 0xFF2563EB", () {
-      expect(ColorUtils.getRoleColor('admin'), Color(0xFF2563EB));
-    });
-
-    test("'guru' → green 0xFF16A34A", () {
-      expect(ColorUtils.getRoleColor('guru'), Color(0xFF16A34A));
-    });
-
-    test("'teacher' → same green as 'guru'", () {
+    test('index 12 wraps to first color (modulo 6)', () {
       expect(
-        ColorUtils.getRoleColor('teacher'),
-        ColorUtils.getRoleColor('guru'),
+        ColorUtils.getColorForIndex(12),
+        equals(ColorUtils.getColorForIndex(0)),
       );
     });
 
-    test("'wali' → purple 0xFF9333EA", () {
-      expect(ColorUtils.getRoleColor('wali'), Color(0xFF9333EA));
+    test('index 7 wraps to index 1', () {
+      expect(
+        ColorUtils.getColorForIndex(7),
+        equals(ColorUtils.getColorForIndex(1)),
+      );
     });
 
-    test("'siswa' → blue 0xFF3B82F6", () {
-      expect(ColorUtils.getRoleColor('siswa'), Color(0xFF3B82F6));
+    test('all 6 palette colors are unique', () {
+      final colors = List.generate(6, ColorUtils.getColorForIndex);
+      final unique = colors.toSet();
+      expect(unique.length, 6);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // getDayColor
+  // ─────────────────────────────────────────────────────────────────────────
+  group('getDayColor', () {
+    test('Indonesian day Senin returns indigo', () {
+      expect(ColorUtils.getDayColor('Senin'), equals(const Color(0xFF6366F1)));
     });
 
-    test('unknown role → dark color (non-null)', () {
-      final color = ColorUtils.getRoleColor('unknownRole');
-      expect(color, isNotNull);
+    test('Indonesian day Selasa returns green', () {
+      expect(ColorUtils.getDayColor('Selasa'), equals(const Color(0xFF10B981)));
+    });
+
+    test('Indonesian day Rabu returns amber', () {
+      expect(ColorUtils.getDayColor('Rabu'), equals(const Color(0xFFF59E0B)));
+    });
+
+    test('Indonesian day Kamis returns red', () {
+      expect(ColorUtils.getDayColor('Kamis'), equals(const Color(0xFFEF4444)));
+    });
+
+    test('Indonesian day Jumat returns violet', () {
+      expect(ColorUtils.getDayColor('Jumat'), equals(const Color(0xFF8B5CF6)));
+    });
+
+    test('Indonesian day Sabtu returns cyan', () {
+      expect(ColorUtils.getDayColor('Sabtu'), equals(const Color(0xFF06B6D4)));
+    });
+
+    test('English day Monday matches Senin', () {
+      expect(
+        ColorUtils.getDayColor('Monday'),
+        equals(ColorUtils.getDayColor('Senin')),
+      );
+    });
+
+    test('English day Wednesday matches Rabu', () {
+      expect(
+        ColorUtils.getDayColor('Wednesday'),
+        equals(ColorUtils.getDayColor('Rabu')),
+      );
+    });
+
+    test('English day Friday matches Jumat', () {
+      expect(
+        ColorUtils.getDayColor('Friday'),
+        equals(ColorUtils.getDayColor('Jumat')),
+      );
+    });
+
+    test('Ganjil semester returns indigo', () {
+      expect(ColorUtils.getDayColor('Ganjil'), equals(const Color(0xFF6366F1)));
+    });
+
+    test('Genap semester returns green', () {
+      expect(ColorUtils.getDayColor('Genap'), equals(const Color(0xFF10B981)));
+    });
+
+    test('unknown string returns a deterministic color', () {
+      final color = ColorUtils.getDayColor('Minggu');
       expect(color, isA<Color>());
     });
 
-    test('role comparison is case-insensitive (ADMIN → blue)', () {
-      expect(ColorUtils.getRoleColor('ADMIN'), Color(0xFF2563EB));
-    });
-  });
-
-  // ─── getSubjectColor ─────────────────────────────────────────────────────
-
-  group('ColorUtils.getSubjectColor', () {
-    test("'Matematika' → indigo 0xFF6366F1", () {
-      expect(ColorUtils.getSubjectColor('Matematika'), Color(0xFF6366F1));
-    });
-
-    test("'Bahasa Indonesia' → red 0xFFEF4444 (matches 'bahasa' keyword)", () {
-      expect(ColorUtils.getSubjectColor('Bahasa Indonesia'), Color(0xFFEF4444));
-    });
-
-    test("'Fisika' → purple 0xFF8B5CF6", () {
-      expect(ColorUtils.getSubjectColor('Fisika'), Color(0xFF8B5CF6));
-    });
-
-    test('unknown subject returns a non-null Color (hash fallback)', () {
-      final color = ColorUtils.getSubjectColor('Filsafat');
-      expect(color, isNotNull);
-      expect(color, isA<Color>());
-    });
-
-    test('subject matching is case-insensitive (MATEMATIKA → indigo)', () {
-      expect(ColorUtils.getSubjectColor('MATEMATIKA'), Color(0xFF6366F1));
-    });
-  });
-
-  // ─── getCardGradient ─────────────────────────────────────────────────────
-
-  group('ColorUtils.getCardGradient', () {
-    test("'primary' returns a list of exactly 2 colors", () {
-      final gradient = ColorUtils.getCardGradient('primary');
-      expect(gradient.length, 2);
-    });
-
-    test("'primary' starts with 0xFF4F46E5", () {
-      expect(ColorUtils.getCardGradient('primary').first, Color(0xFF4F46E5));
-    });
-
-    test("'success' returns a list of exactly 2 colors", () {
-      expect(ColorUtils.getCardGradient('success').length, 2);
-    });
-
-    test("'warning' returns a list of exactly 2 colors", () {
-      expect(ColorUtils.getCardGradient('warning').length, 2);
-    });
-
-    test("'danger' returns a list of exactly 2 colors", () {
-      expect(ColorUtils.getCardGradient('danger').length, 2);
-    });
-
-    test("'info' returns a list of exactly 2 colors", () {
-      expect(ColorUtils.getCardGradient('info').length, 2);
-    });
-
-    test('unknown type falls back to a 2-color gray gradient', () {
-      final gradient = ColorUtils.getCardGradient('unknown');
-      expect(gradient.length, 2);
-      expect(gradient.first, Color(0xFF6B7280));
-    });
-
-    test('type comparison is case-insensitive (PRIMARY → same as primary)', () {
-      expect(
-        ColorUtils.getCardGradient('PRIMARY'),
-        ColorUtils.getCardGradient('primary'),
-      );
-    });
-  });
-
-  // ─── getTextColorForBackground ───────────────────────────────────────────
-
-  group('ColorUtils.getTextColorForBackground', () {
-    test('white background → black text (high luminance)', () {
-      // White has luminance ≈ 1.0 (> 0.5), so text must be black for readability.
-      // Like Tailwind's contrast utility choosing dark text on light backgrounds.
-      expect(
-        ColorUtils.getTextColorForBackground(Colors.white),
-        Colors.black,
-      );
-    });
-
-    test('black background → white text (low luminance)', () {
-      // Black has luminance = 0.0 (≤ 0.5), so text must be white.
-      expect(
-        ColorUtils.getTextColorForBackground(Colors.black),
-        Colors.white,
-      );
-    });
-
-    test('a mid-dark color (0xFF10B981 emerald) → white text', () {
-      // Emerald green is dark enough that white text is more readable.
-      final result = ColorUtils.getTextColorForBackground(Color(0xFF10B981));
-      expect(result, isA<Color>());
-    });
-  });
-
-  // ─── getStatusColor — full attendance status set ──────────────────────────
-
-  group('ColorUtils.getStatusColor — complete attendance status coverage', () {
-    const green = Color(0xFF10B981);
-    const red = Color(0xFFEF4444);
-    const amber = Color(0xFFF59E0B);
-
-    test('"terlambat" → amber (late arrival)', () {
-      expect(ColorUtils.getStatusColor('terlambat'), amber);
-    });
-
-    test('"sakit" is not mapped → gray fallback', () {
-      // "sakit" has no explicit case; confirm it returns the gray default.
-      expect(ColorUtils.getStatusColor('sakit'), const Color(0xFF6B7280));
-    });
-
-    test('"izin" is not mapped → gray fallback', () {
-      expect(ColorUtils.getStatusColor('izin'), const Color(0xFF6B7280));
-    });
-
-    test('"alpha" is not mapped → gray fallback', () {
-      expect(ColorUtils.getStatusColor('alpha'), const Color(0xFF6B7280));
-    });
-
-    test('"PRESENT" uppercase → green', () {
-      expect(ColorUtils.getStatusColor('PRESENT'), green);
-    });
-
-    test('"ABSENT" uppercase → red', () {
-      expect(ColorUtils.getStatusColor('ABSENT'), red);
-    });
-  });
-
-  // ─── getGradeColor — exact boundary values ────────────────────────────────
-
-  group('ColorUtils.getGradeColor — exact boundary tests', () {
-    test('84.999 rounds down — still lime (>= 75)', () {
-      expect(ColorUtils.getGradeColor(84.999), const Color(0xFF84CC16));
-    });
-
-    test('74.999 rounds down — still amber (>= 65)', () {
-      expect(ColorUtils.getGradeColor(74.999), const Color(0xFFF59E0B));
-    });
-
-    test('64.999 rounds down — still orange (>= 55)', () {
-      expect(ColorUtils.getGradeColor(64.999), const Color(0xFFFB923C));
-    });
-
-    test('54.999 rounds down — red (< 55)', () {
-      expect(ColorUtils.getGradeColor(54.999), const Color(0xFFEF4444));
-    });
-
-    test('0.0 → red', () {
-      expect(ColorUtils.getGradeColor(0.0), const Color(0xFFEF4444));
-    });
-  });
-
-  // ─── getRoleColor — all supported roles ──────────────────────────────────
-
-  group('ColorUtils.getRoleColor — complete role coverage', () {
-    test('"siswa" → student blue 0xFF3B82F6', () {
-      expect(ColorUtils.getRoleColor('siswa'), const Color(0xFF3B82F6));
-    });
-
-    test('"student" → same as siswa', () {
-      expect(ColorUtils.getRoleColor('student'), ColorUtils.getRoleColor('siswa'));
-    });
-
-    test('"staff" → orange 0xFFFF9F1C', () {
-      expect(ColorUtils.getRoleColor('staff'), const Color(0xFFFF9F1C));
-    });
-
-    test('"orang_tua" → same as wali purple', () {
-      expect(ColorUtils.getRoleColor('orang_tua'), ColorUtils.getRoleColor('wali'));
-    });
-
-    test('case-insensitive GURU → same as guru', () {
-      expect(ColorUtils.getRoleColor('GURU'), ColorUtils.getRoleColor('guru'));
-    });
-  });
-
-  // ─── getSubjectColor — additional subjects ────────────────────────────────
-
-  group('ColorUtils.getSubjectColor — additional subject keywords', () {
-    test('"Kimia Organik" matches "kimia" keyword', () {
-      expect(ColorUtils.getSubjectColor('Kimia Organik'), const Color(0xFFEC4899));
-    });
-
-    test('"Biologi Sel" matches "biologi" keyword', () {
-      expect(ColorUtils.getSubjectColor('Biologi Sel'), const Color(0xFF10B981));
-    });
-
-    test('"Sejarah Nasional" matches "sejarah" keyword', () {
-      expect(ColorUtils.getSubjectColor('Sejarah Nasional'), const Color(0xFFF59E0B));
-    });
-
-    test('"Olahraga dan Kesehatan" matches "olahraga" keyword', () {
-      expect(ColorUtils.getSubjectColor('Olahraga dan Kesehatan'), const Color(0xFF84CC16));
-    });
-
-    test('"Seni Budaya" matches "seni" keyword', () {
-      expect(ColorUtils.getSubjectColor('Seni Budaya'), const Color(0xFFEC4899));
-    });
-
-    test('same unknown subject always returns same color (deterministic)', () {
-      final c1 = ColorUtils.getSubjectColor('Kewirausahaan');
-      final c2 = ColorUtils.getSubjectColor('Kewirausahaan');
+    test('same unknown string always returns same color (determinism)', () {
+      final c1 = ColorUtils.getDayColor('Unknownday');
+      final c2 = ColorUtils.getDayColor('Unknownday');
       expect(c1, equals(c2));
     });
   });
 
-  // ─── getDayColor — fallback determinism ──────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // getStatusColor
+  // ─────────────────────────────────────────────────────────────────────────
+  group('getStatusColor', () {
+    const green = Color(0xFF10B981);
+    const red = Color(0xFFEF4444);
+    const amber = Color(0xFFF59E0B);
+    const gray = Color(0xFF6B7280);
 
-  group('ColorUtils.getDayColor — fallback determinism', () {
-    test('unknown "Minggu" always returns same color', () {
-      expect(ColorUtils.getDayColor('Minggu'), equals(ColorUtils.getDayColor('Minggu')));
+    for (final status in ['active', 'aktif', 'present', 'hadir', 'completed', 'selesai']) {
+      test('$status → green', () {
+        expect(ColorUtils.getStatusColor(status), equals(green));
+      });
+    }
+
+    test('case-insensitive: ACTIVE → green', () {
+      expect(ColorUtils.getStatusColor('ACTIVE'), equals(green));
     });
 
-    test('different unknown strings may return different colors', () {
-      // Not guaranteed to differ, but they must be non-null Color values
-      expect(ColorUtils.getDayColor('Minggu'), isA<Color>());
-      expect(ColorUtils.getDayColor('Libur'), isA<Color>());
+    test('case-insensitive: Aktif → green', () {
+      expect(ColorUtils.getStatusColor('Aktif'), equals(green));
+    });
+
+    for (final status in ['inactive', 'nonaktif', 'absent', 'absen', 'pending', 'menunggu']) {
+      test('$status → red', () {
+        expect(ColorUtils.getStatusColor(status), equals(red));
+      });
+    }
+
+    for (final status in ['warning', 'peringatan', 'late', 'terlambat']) {
+      test('$status → amber', () {
+        expect(ColorUtils.getStatusColor(status), equals(amber));
+      });
+    }
+
+    test('unknown status → gray', () {
+      expect(ColorUtils.getStatusColor('unknown_xyz'), equals(gray));
+    });
+
+    test('empty string → gray', () {
+      expect(ColorUtils.getStatusColor(''), equals(gray));
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // getGradeColor
+  // ─────────────────────────────────────────────────────────────────────────
+  group('getGradeColor', () {
+    test('100 → green (excellent)', () {
+      expect(ColorUtils.getGradeColor(100), equals(const Color(0xFF10B981)));
+    });
+
+    test('85 → green (at threshold)', () {
+      expect(ColorUtils.getGradeColor(85), equals(const Color(0xFF10B981)));
+    });
+
+    test('84 → lime (good)', () {
+      expect(ColorUtils.getGradeColor(84), equals(const Color(0xFF84CC16)));
+    });
+
+    test('75 → lime (at threshold)', () {
+      expect(ColorUtils.getGradeColor(75), equals(const Color(0xFF84CC16)));
+    });
+
+    test('74 → amber (average)', () {
+      expect(ColorUtils.getGradeColor(74), equals(const Color(0xFFF59E0B)));
+    });
+
+    test('65 → amber (at threshold)', () {
+      expect(ColorUtils.getGradeColor(65), equals(const Color(0xFFF59E0B)));
+    });
+
+    test('64 → orange (below average)', () {
+      expect(ColorUtils.getGradeColor(64), equals(const Color(0xFFFB923C)));
+    });
+
+    test('55 → orange (at threshold)', () {
+      expect(ColorUtils.getGradeColor(55), equals(const Color(0xFFFB923C)));
+    });
+
+    test('54 → red (poor)', () {
+      expect(ColorUtils.getGradeColor(54), equals(const Color(0xFFEF4444)));
+    });
+
+    test('0 → red (poor)', () {
+      expect(ColorUtils.getGradeColor(0), equals(const Color(0xFFEF4444)));
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // getRoleColor
+  // ─────────────────────────────────────────────────────────────────────────
+  group('getRoleColor', () {
+    test('admin → blue', () {
+      expect(ColorUtils.getRoleColor('admin'), equals(const Color(0xFF2563EB)));
+    });
+
+    test('guru → green', () {
+      expect(ColorUtils.getRoleColor('guru'), equals(const Color(0xFF16A34A)));
+    });
+
+    test('teacher → green (same as guru)', () {
+      expect(
+        ColorUtils.getRoleColor('teacher'),
+        equals(ColorUtils.getRoleColor('guru')),
+      );
+    });
+
+    test('staff → orange', () {
+      expect(ColorUtils.getRoleColor('staff'), equals(const Color(0xFFFF9F1C)));
+    });
+
+    test('wali → purple', () {
+      expect(ColorUtils.getRoleColor('wali'), equals(const Color(0xFF9333EA)));
+    });
+
+    test('parent → purple (same as wali)', () {
+      expect(
+        ColorUtils.getRoleColor('parent'),
+        equals(ColorUtils.getRoleColor('wali')),
+      );
+    });
+
+    test('orang_tua → purple (same as wali)', () {
+      expect(
+        ColorUtils.getRoleColor('orang_tua'),
+        equals(ColorUtils.getRoleColor('wali')),
+      );
+    });
+
+    test('siswa → blue', () {
+      expect(ColorUtils.getRoleColor('siswa'), equals(const Color(0xFF3B82F6)));
+    });
+
+    test('student → blue (same as siswa)', () {
+      expect(
+        ColorUtils.getRoleColor('student'),
+        equals(ColorUtils.getRoleColor('siswa')),
+      );
+    });
+
+    test('case-insensitive: ADMIN → blue', () {
+      expect(
+        ColorUtils.getRoleColor('ADMIN'),
+        equals(ColorUtils.getRoleColor('admin')),
+      );
+    });
+
+    test('unknown role → returns a Color', () {
+      expect(ColorUtils.getRoleColor('unknown_role'), isA<Color>());
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // getSubjectColor
+  // ─────────────────────────────────────────────────────────────────────────
+  group('getSubjectColor', () {
+    test('Matematika → indigo', () {
+      expect(
+        ColorUtils.getSubjectColor('Matematika'),
+        equals(const Color(0xFF6366F1)),
+      );
+    });
+
+    test('Bahasa Indonesia → red', () {
+      expect(
+        ColorUtils.getSubjectColor('Bahasa Indonesia'),
+        equals(const Color(0xFFEF4444)),
+      );
+    });
+
+    test('Inggris → blue', () {
+      expect(
+        ColorUtils.getSubjectColor('Inggris'),
+        equals(const Color(0xFF3B82F6)),
+      );
+    });
+
+    test('Fisika → violet', () {
+      expect(
+        ColorUtils.getSubjectColor('Fisika'),
+        equals(const Color(0xFF8B5CF6)),
+      );
+    });
+
+    test('Kimia → pink', () {
+      expect(
+        ColorUtils.getSubjectColor('Kimia'),
+        equals(const Color(0xFFEC4899)),
+      );
+    });
+
+    test('Biologi → green', () {
+      expect(
+        ColorUtils.getSubjectColor('Biologi'),
+        equals(const Color(0xFF10B981)),
+      );
+    });
+
+    test('Sejarah → amber', () {
+      expect(
+        ColorUtils.getSubjectColor('Sejarah'),
+        equals(const Color(0xFFF59E0B)),
+      );
+    });
+
+    test('Geografi → lime', () {
+      expect(
+        ColorUtils.getSubjectColor('Geografi'),
+        equals(const Color(0xFF84CC16)),
+      );
+    });
+
+    test('Ekonomi → cyan', () {
+      expect(
+        ColorUtils.getSubjectColor('Ekonomi'),
+        equals(const Color(0xFF06B6D4)),
+      );
+    });
+
+    test('Seni Budaya → pink (matches "seni")', () {
+      expect(
+        ColorUtils.getSubjectColor('Seni Budaya'),
+        equals(const Color(0xFFEC4899)),
+      );
+    });
+
+    test('Pendidikan Olahraga → lime (matches "olahraga")', () {
+      expect(
+        ColorUtils.getSubjectColor('Pendidikan Olahraga'),
+        equals(const Color(0xFF84CC16)),
+      );
+    });
+
+    test('Teknologi Komputer → indigo (matches "komputer")', () {
+      expect(
+        ColorUtils.getSubjectColor('Teknologi Komputer'),
+        equals(const Color(0xFF6366F1)),
+      );
+    });
+
+    test('unknown subject → returns a Color (fallback)', () {
+      expect(ColorUtils.getSubjectColor('Agama Islam'), isA<Color>());
+    });
+
+    test('same unknown subject returns same color (determinism)', () {
+      final c1 = ColorUtils.getSubjectColor('Kewarganegaraan');
+      final c2 = ColorUtils.getSubjectColor('Kewarganegaraan');
+      expect(c1, equals(c2));
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // getCardGradient
+  // ─────────────────────────────────────────────────────────────────────────
+  group('getCardGradient', () {
+    test('primary returns 2 colors', () {
+      expect(ColorUtils.getCardGradient('primary').length, 2);
+    });
+
+    test('primary gradient colors are distinct', () {
+      final g = ColorUtils.getCardGradient('primary');
+      expect(g[0], isNot(g[1]));
+    });
+
+    test('success returns 2 colors', () {
+      expect(ColorUtils.getCardGradient('success').length, 2);
+    });
+
+    test('warning returns 2 colors', () {
+      expect(ColorUtils.getCardGradient('warning').length, 2);
+    });
+
+    test('danger returns 2 colors', () {
+      expect(ColorUtils.getCardGradient('danger').length, 2);
+    });
+
+    test('info returns 2 colors', () {
+      expect(ColorUtils.getCardGradient('info').length, 2);
+    });
+
+    test('each type has a distinct start color', () {
+      final starts = ['primary', 'success', 'warning', 'danger', 'info']
+          .map((t) => ColorUtils.getCardGradient(t)[0])
+          .toList();
+      expect(starts.toSet().length, 5);
+    });
+
+    test('unknown type returns gray gradient', () {
+      expect(
+        ColorUtils.getCardGradient('unknown')[0],
+        equals(const Color(0xFF6B7280)),
+      );
+    });
+
+    test('case-insensitive: PRIMARY → same as primary', () {
+      expect(
+        ColorUtils.getCardGradient('PRIMARY'),
+        equals(ColorUtils.getCardGradient('primary')),
+      );
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // getTextColorForBackground
+  // ─────────────────────────────────────────────────────────────────────────
+  group('getTextColorForBackground', () {
+    test('white background → black text', () {
+      expect(
+        ColorUtils.getTextColorForBackground(Colors.white),
+        equals(Colors.black),
+      );
+    });
+
+    test('black background → white text', () {
+      expect(
+        ColorUtils.getTextColorForBackground(Colors.black),
+        equals(Colors.white),
+      );
+    });
+
+    test('light yellow background → black text', () {
+      expect(
+        ColorUtils.getTextColorForBackground(const Color(0xFFFFFACD)),
+        equals(Colors.black),
+      );
+    });
+
+    test('dark blue background → white text', () {
+      expect(
+        ColorUtils.getTextColorForBackground(const Color(0xFF0D47A1)),
+        equals(Colors.white),
+      );
+    });
+
+    test('medium gray background → returns black or white', () {
+      final result =
+          ColorUtils.getTextColorForBackground(const Color(0xFF808080));
+      expect(result == Colors.black || result == Colors.white, isTrue);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Palette constants
+  // ─────────────────────────────────────────────────────────────────────────
+  group('primaryColor', () {
+    test('is indigo', () {
+      expect(ColorUtils.primaryColor, equals(const Color(0xFF4F46E5)));
+    });
+
+    test('primary alias equals primaryColor', () {
+      expect(ColorUtils.primary, equals(ColorUtils.primaryColor));
+    });
+  });
+
+  group('slate palette', () {
+    test('slate50 is the lightest', () {
+      expect(ColorUtils.slate50, equals(const Color(0xFFF8FAFC)));
+    });
+
+    test('slate950 is the darkest', () {
+      expect(ColorUtils.slate950, equals(const Color(0xFF020617)));
+    });
+
+    test('slate shades darken monotonically from 50 to 950', () {
+      final shades = [
+        ColorUtils.slate50,
+        ColorUtils.slate100,
+        ColorUtils.slate200,
+        ColorUtils.slate300,
+        ColorUtils.slate400,
+        ColorUtils.slate500,
+        ColorUtils.slate600,
+        ColorUtils.slate700,
+        ColorUtils.slate800,
+        ColorUtils.slate900,
+        ColorUtils.slate950,
+      ];
+      for (int i = 1; i < shades.length; i++) {
+        final prev = shades[i - 1].computeLuminance();
+        final curr = shades[i].computeLuminance();
+        expect(curr, lessThanOrEqualTo(prev),
+            reason: 'slate shade $i should be darker than ${i - 1}');
+      }
+    });
+  });
+
+  group('corporateBlue palette', () {
+    test('corporateBlue50 is the lightest', () {
+      expect(ColorUtils.corporateBlue50, equals(const Color(0xFFEFF6FF)));
+    });
+
+    test('corporateBlue900 is the darkest', () {
+      expect(ColorUtils.corporateBlue900, equals(const Color(0xFF1E3A8A)));
+    });
+  });
+
+  group('semantic color variants', () {
+    test('successLight is lighter than successDark', () {
+      expect(
+        ColorUtils.successLight.computeLuminance(),
+        greaterThan(ColorUtils.successDark.computeLuminance()),
+      );
+    });
+
+    test('warningLight is lighter than warningDark', () {
+      expect(
+        ColorUtils.warningLight.computeLuminance(),
+        greaterThan(ColorUtils.warningDark.computeLuminance()),
+      );
+    });
+
+    test('errorLight is lighter than errorDark', () {
+      expect(
+        ColorUtils.errorLight.computeLuminance(),
+        greaterThan(ColorUtils.errorDark.computeLuminance()),
+      );
+    });
+
+    test('infoLight is lighter than infoDark', () {
+      expect(
+        ColorUtils.infoLight.computeLuminance(),
+        greaterThan(ColorUtils.infoDark.computeLuminance()),
+      );
+    });
+  });
+
+  group('brand colors', () {
+    test('kamilPrimary is deep blue', () {
+      expect(ColorUtils.kamilPrimary, equals(const Color(0xFF143068)));
+    });
+
+    test('kamilAccent is vibrant teal', () {
+      expect(ColorUtils.kamilAccent, equals(const Color(0xFF21AFE6)));
+    });
+
+    test('kamilPrimaryLight is lighter than kamilPrimary', () {
+      expect(
+        ColorUtils.kamilPrimaryLight.computeLuminance(),
+        greaterThan(ColorUtils.kamilPrimary.computeLuminance()),
+      );
+    });
+
+    test('kamilAccentLight is lighter than kamilAccent', () {
+      expect(
+        ColorUtils.kamilAccentLight.computeLuminance(),
+        greaterThan(ColorUtils.kamilAccent.computeLuminance()),
+      );
     });
   });
 }

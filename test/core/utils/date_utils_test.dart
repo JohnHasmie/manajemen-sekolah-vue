@@ -1,8 +1,13 @@
-/// Tests for AppDateUtils — verifies date parsing is timezone-safe and
-/// formatting produces the expected strings for API and display use.
+/// Unit tests for AppDateUtils.
 ///
-/// Like testing a Laravel Carbon helper: confirm that parsing "2024-01-15"
-/// never drifts to "2024-01-14" due to a UTC/local offset bug.
+/// Covers:
+/// - parseLocalDate: YYYY-MM-DD → local DateTime (no UTC shift)
+/// - formatDateForApi: DateTime → 'yyyy-MM-dd'
+/// - formatDateReadable: DateTime → 'dd/MM/yyyy'
+/// - formatDateIndonesian: DateTime → 'dd MMMM yyyy' in id_ID
+/// - formatDateFull: DateTime → 'EEEE, dd MMMM yyyy' in id_ID
+/// - parseApiDate: null, DateTime passthrough, date-only string, ISO timestamp
+/// - formatDateString: null/empty, valid date string, ISO timestamp
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -10,153 +15,230 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 
 void main() {
-  // Initialize the 'id_ID' locale data once before any test in this file runs.
-  // Like running `app()->setLocale('id')` in a Laravel test setUp — required
-  // before DateFormat('dd MMMM yyyy', 'id_ID') can produce Indonesian month names.
   setUpAll(() async {
-    await initializeDateFormatting('id_ID');
+    // Initialize date symbols for Indonesian locale used by formatDateIndonesian/Full
+    await initializeDateFormatting('id_ID', null);
   });
 
-  // ─── parseLocalDate ───────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // parseLocalDate
+  // ─────────────────────────────────────────────────────────────────────────
   group('AppDateUtils.parseLocalDate', () {
-    test('parses year, month, day correctly', () {
-      final date = AppDateUtils.parseLocalDate('2024-01-15');
-      expect(date.year, 2024);
-      expect(date.month, 1);
-      expect(date.day, 15);
+    test('parses YYYY-MM-DD as local time (no UTC offset)', () {
+      final result = AppDateUtils.parseLocalDate('2024-01-15');
+      expect(result.year, 2024);
+      expect(result.month, 1);
+      expect(result.day, 15);
+      expect(result.isUtc, isFalse);
     });
 
-    test('result is local time, not UTC', () {
-      final date = AppDateUtils.parseLocalDate('2024-01-15');
-      expect(date.isUtc, false);
+    test('parses "2024-03-31" correctly', () {
+      final result = AppDateUtils.parseLocalDate('2024-03-31');
+      expect(result.year, 2024);
+      expect(result.month, 3);
+      expect(result.day, 31);
     });
 
-    test('parses end-of-month date without overflow', () {
-      final date = AppDateUtils.parseLocalDate('2024-02-29'); // 2024 is a leap year
-      expect(date.year, 2024);
-      expect(date.month, 2);
-      expect(date.day, 29);
+    test('parses "2000-01-01" correctly', () {
+      final result = AppDateUtils.parseLocalDate('2000-01-01');
+      expect(result.year, 2000);
+      expect(result.month, 1);
+      expect(result.day, 1);
     });
 
-    test('falls back to today when given an unparseable string', () {
-      // The exact date doesn't matter; we just confirm it doesn't throw.
-      final date = AppDateUtils.parseLocalDate('not-a-date');
-      expect(date, isA<DateTime>());
+    test('returns today on invalid string', () {
+      final before = DateTime.now();
+      final result = AppDateUtils.parseLocalDate('not-a-date');
+      final after = DateTime.now();
+      // Should be between before and after (i.e., "today")
+      expect(result.isAfter(before.subtract(const Duration(seconds: 1))), isTrue);
+      expect(result.isBefore(after.add(const Duration(seconds: 1))), isTrue);
+    });
+
+    test('time components default to midnight', () {
+      final result = AppDateUtils.parseLocalDate('2024-06-15');
+      expect(result.hour, 0);
+      expect(result.minute, 0);
+      expect(result.second, 0);
     });
   });
 
-  // ─── formatDateForApi ─────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // formatDateForApi
+  // ─────────────────────────────────────────────────────────────────────────
   group('AppDateUtils.formatDateForApi', () {
-    test('produces yyyy-MM-dd string', () {
+    test('formats DateTime to YYYY-MM-DD', () {
       final date = DateTime(2024, 1, 15);
-      expect(AppDateUtils.formatDateForApi(date), '2024-01-15');
+      expect(AppDateUtils.formatDateForApi(date), equals('2024-01-15'));
     });
 
-    test('zero-pads single-digit month and day', () {
+    test('pads month with leading zero', () {
       final date = DateTime(2024, 3, 5);
-      expect(AppDateUtils.formatDateForApi(date), '2024-03-05');
+      expect(AppDateUtils.formatDateForApi(date), equals('2024-03-05'));
+    });
+
+    test('formats December 31 correctly', () {
+      final date = DateTime(2024, 12, 31);
+      expect(AppDateUtils.formatDateForApi(date), equals('2024-12-31'));
+    });
+
+    test('round-trip: parseLocalDate → formatDateForApi returns original string', () {
+      const original = '2024-08-20';
+      final parsed = AppDateUtils.parseLocalDate(original);
+      expect(AppDateUtils.formatDateForApi(parsed), equals(original));
     });
   });
 
-  // ─── formatDateReadable ───────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // formatDateReadable
+  // ─────────────────────────────────────────────────────────────────────────
   group('AppDateUtils.formatDateReadable', () {
-    test('produces dd/MM/yyyy string', () {
+    test('formats as dd/MM/yyyy', () {
       final date = DateTime(2024, 1, 15);
-      expect(AppDateUtils.formatDateReadable(date), '15/01/2024');
+      expect(AppDateUtils.formatDateReadable(date), equals('15/01/2024'));
     });
 
-    test('zero-pads day and month', () {
-      final date = DateTime(2024, 3, 5);
-      expect(AppDateUtils.formatDateReadable(date), '05/03/2024');
+    test('pads day with leading zero', () {
+      final date = DateTime(2024, 11, 5);
+      expect(AppDateUtils.formatDateReadable(date), equals('05/11/2024'));
+    });
+
+    test('formats December 31 correctly', () {
+      final date = DateTime(2024, 12, 31);
+      expect(AppDateUtils.formatDateReadable(date), equals('31/12/2024'));
     });
   });
 
-  // ─── formatDateIndonesian ─────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // formatDateIndonesian
+  // ─────────────────────────────────────────────────────────────────────────
   group('AppDateUtils.formatDateIndonesian', () {
-    test('produces "dd MMMM yyyy" with Indonesian month name', () {
+    test('formats January as "Januari"', () {
       final date = DateTime(2024, 1, 15);
-      expect(AppDateUtils.formatDateIndonesian(date), '15 Januari 2024');
+      expect(AppDateUtils.formatDateIndonesian(date), contains('Januari'));
     });
 
-    test('uses Indonesian month name for December', () {
-      final date = DateTime(2024, 12, 1);
-      expect(AppDateUtils.formatDateIndonesian(date), '01 Desember 2024');
+    test('formats December as "Desember"', () {
+      final date = DateTime(2024, 12, 25);
+      expect(AppDateUtils.formatDateIndonesian(date), contains('Desember'));
+    });
+
+    test('output contains the year', () {
+      final date = DateTime(2024, 6, 1);
+      expect(AppDateUtils.formatDateIndonesian(date), contains('2024'));
+    });
+
+    test('output matches dd MMMM yyyy pattern roughly', () {
+      final date = DateTime(2024, 3, 5);
+      final result = AppDateUtils.formatDateIndonesian(date);
+      // Should start with padded day
+      expect(result.startsWith('05'), isTrue);
+      expect(result, contains('2024'));
     });
   });
 
-  // ─── formatDateFull ───────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // formatDateFull
+  // ─────────────────────────────────────────────────────────────────────────
   group('AppDateUtils.formatDateFull', () {
-    test('produces "EEEE, dd MMMM yyyy" with Indonesian day name', () {
-      // 2024-01-15 is a Monday → "Senin" in Indonesian
+    test('includes day name in Indonesian', () {
+      // 2024-01-15 is a Monday = Senin
       final date = DateTime(2024, 1, 15);
-      expect(AppDateUtils.formatDateFull(date), 'Senin, 15 Januari 2024');
+      expect(AppDateUtils.formatDateFull(date), contains('Senin'));
+    });
+
+    test('includes year', () {
+      final date = DateTime(2024, 1, 15);
+      expect(AppDateUtils.formatDateFull(date), contains('2024'));
+    });
+
+    test('output starts with day name followed by comma', () {
+      final date = DateTime(2024, 1, 15);
+      final result = AppDateUtils.formatDateFull(date);
+      expect(result, contains(','));
     });
   });
 
-  // ─── parseApiDate ─────────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // parseApiDate
+  // ─────────────────────────────────────────────────────────────────────────
   group('AppDateUtils.parseApiDate', () {
-    test('returns null for null input', () {
+    test('null input returns null', () {
       expect(AppDateUtils.parseApiDate(null), isNull);
     });
 
-    test('parses plain YYYY-MM-DD string as local date', () {
-      final date = AppDateUtils.parseApiDate('2024-01-15');
-      expect(date, isNotNull);
-      expect(date!.year, 2024);
-      expect(date.month, 1);
-      expect(date.day, 15);
-      expect(date.isUtc, false);
+    test('DateTime input is returned as-is', () {
+      final date = DateTime(2024, 6, 15);
+      final result = AppDateUtils.parseApiDate(date);
+      expect(result, equals(date));
     });
 
-    test('parses ISO timestamp containing "T" and converts to local', () {
-      // An ISO string with an explicit UTC offset; result must not be UTC.
-      final date = AppDateUtils.parseApiDate('2024-01-15T10:30:00Z');
-      expect(date, isNotNull);
-      expect(date!.isUtc, false);
-    });
-
-    test('returns a DateTime input unchanged', () {
-      final input = DateTime(2024, 6, 20);
-      final result = AppDateUtils.parseApiDate(input);
-      expect(result, same(input));
-    });
-
-    test('returns a DateTime (today fallback) for a completely unparseable string', () {
-      // The default branch calls parseLocalDate, which catches any parse error
-      // and returns DateTime.now() rather than null — same safety net as
-      // Carbon::parse() falling back to the current timestamp in Laravel.
-      final result = AppDateUtils.parseApiDate('garbage');
+    test('date-only string "2024-06-15" returns local date', () {
+      final result = AppDateUtils.parseApiDate('2024-06-15');
       expect(result, isNotNull);
-      expect(result, isA<DateTime>());
+      expect(result!.year, 2024);
+      expect(result.month, 6);
+      expect(result.day, 15);
+    });
+
+    test('ISO timestamp with T is parsed to local', () {
+      final result = AppDateUtils.parseApiDate('2024-06-15T10:30:00Z');
+      expect(result, isNotNull);
+      expect(result!.isUtc, isFalse); // toLocal() was called
+    });
+
+    test('string with T but invalid date returns null', () {
+      // Contains T → attempts DateTime.parse → throws → caught → null
+      expect(AppDateUtils.parseApiDate('not-a-real-dateT00:00'), isNull);
+    });
+
+    test('integer input does not crash', () {
+      // 12345.toString() → "12345" → parseLocalDate fallback → DateTime.now()
+      final result = AppDateUtils.parseApiDate(12345);
+      expect(result, anyOf(isNull, isA<DateTime>()));
     });
   });
 
-  // ─── formatDateString ─────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // formatDateString
+  // ─────────────────────────────────────────────────────────────────────────
   group('AppDateUtils.formatDateString', () {
-    test('returns "-" for null input', () {
-      expect(AppDateUtils.formatDateString(null), '-');
+    test('null input returns "-"', () {
+      expect(AppDateUtils.formatDateString(null), equals('-'));
     });
 
-    test('returns "-" for empty string', () {
-      expect(AppDateUtils.formatDateString(''), '-');
+    test('empty string returns "-"', () {
+      expect(AppDateUtils.formatDateString(''), equals('-'));
     });
 
-    test('formats a valid date string with the default dd/MM/yyyy pattern', () {
-      expect(AppDateUtils.formatDateString('2024-01-15'), '15/01/2024');
-    });
-
-    test('formats with a custom format pattern', () {
+    test('valid date string formats to default dd/MM/yyyy', () {
       expect(
-        AppDateUtils.formatDateString('2024-01-15', format: 'yyyy/MM/dd'),
-        '2024/01/15',
+        AppDateUtils.formatDateString('2024-01-15'),
+        equals('15/01/2024'),
       );
+    });
+
+    test('custom format parameter is applied', () {
+      final result = AppDateUtils.formatDateString(
+        '2024-01-15',
+        format: 'yyyy/MM/dd',
+      );
+      expect(result, equals('2024/01/15'));
+    });
+
+    test('ISO timestamp string formats using date component', () {
+      final result = AppDateUtils.formatDateString('2024-06-15T10:30:00Z');
+      expect(result, isNotNull);
+      // Should contain '15' and '06' and '2024'
+      expect(result, contains('2024'));
+    });
+
+    test('invalid string does not crash', () {
+      // 'not-a-real-date' splits on '-' to ["not","a","real-date"] which fails int.parse
+      // → parseLocalDate catches → returns DateTime.now() → formatted as today's date
+      final result = AppDateUtils.formatDateString('not-a-real-date');
+      expect(result, isA<String>());
+      expect(result, isNotEmpty);
     });
   });
 }

@@ -1,7 +1,14 @@
-/// Tests for LocalCacheService — TTL-based caching via SharedPreferences.
+/// Unit tests for LocalCacheService.
 ///
-/// Like testing a Laravel Cache facade: we verify put/get, expiration, and
-/// tag-based clearing — but using SharedPreferences mock instead of Redis.
+/// Uses SharedPreferences.setMockInitialValues() from the shared_preferences
+/// package to inject a fake in-memory store without hitting the device.
+///
+/// Covers:
+/// - save: stores JSON with data + timestamp
+/// - load: cache hit within TTL, cache miss after TTL, key not found
+/// - invalidate: removes single entry
+/// - clearAll: removes all api_cache_* entries, leaves others intact
+/// - clearStartingWith: removes only keys matching subPrefix
 library;
 
 import 'dart:convert';
@@ -12,159 +19,180 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 
 void main() {
   setUp(() {
-    // Reset SharedPreferences to a clean state before every test.
-    // Equivalent to flushing the cache store in a Laravel test setUp.
+    // Reset SharedPreferences to a clean state before each test.
+    // Like Storage::fake() in Laravel tests.
     SharedPreferences.setMockInitialValues({});
   });
 
-  // ── Cache hit / miss ──────────────────────────────────────────────────────
-
-  group('save and load', () {
-    test('save then load returns the saved data (cache hit)', () async {
-      await LocalCacheService.save('students', {'page': 1, 'total': 30});
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // save + load (cache hit)
+  // ─────────────────────────────────────────────────────────────────────────
+  group('LocalCacheService.save and load', () {
+    test('save then load within default TTL returns same data', () async {
+      await LocalCacheService.save('students', [{'id': 1, 'name': 'Ali'}]);
       final result = await LocalCacheService.load('students');
-
       expect(result, isNotNull);
-      expect(result['page'], 1);
-      expect(result['total'], 30);
+      expect(result[0]['name'], equals('Ali'));
     });
 
-    test('load on missing key returns null', () async {
-      final result = await LocalCacheService.load('nonexistent_key');
-      expect(result, isNull);
+    test('save then load with explicit long TTL returns data', () async {
+      await LocalCacheService.save('teachers', {'total': 5});
+      final result = await LocalCacheService.load(
+        'teachers',
+        ttl: const Duration(hours: 1),
+      );
+      expect(result, isNotNull);
+      expect(result['total'], equals(5));
     });
-  });
 
-  // ── TTL expiration ────────────────────────────────────────────────────────
-
-  group('TTL expiration', () {
-    test('load after TTL expired returns null and removes the key', () async {
-      // Manually write a cache entry with a timestamp far in the past
-      // (2 hours ago) so it looks expired to the service.
-      // This is like manually back-dating a Laravel cache entry.
+    test('load with expired TTL returns null and removes entry', () async {
+      // Directly inject a cache entry with a timestamp far in the past
+      // (2 hours ago → older than 1 hour TTL used below)
       final prefs = await SharedPreferences.getInstance();
-      final twoHoursAgoMs =
-          DateTime.now().millisecondsSinceEpoch - const Duration(hours: 2).inMilliseconds;
-      final expired = json.encode({'data': 'stale_data', 'timestamp': twoHoursAgoMs});
-      await prefs.setString('api_cache_old_data', expired);
+      final oldEntry = json.encode({
+        'data': 'some_value',
+        'timestamp': DateTime.now()
+            .subtract(const Duration(hours: 2))
+            .millisecondsSinceEpoch,
+      });
+      await prefs.setString('api_cache_expired_key', oldEntry);
 
-      // Load with a 1-hour TTL — the entry is 2 hours old, so it should expire.
-      final result = await LocalCacheService.load('old_data', ttl: const Duration(hours: 1));
-
+      // Load with a 1 hour TTL — the 2 hour old entry should expire
+      final result = await LocalCacheService.load(
+        'expired_key',
+        ttl: const Duration(hours: 1),
+      );
       expect(result, isNull);
-      // The expired key must also be removed from storage (lazy eviction).
-      expect(prefs.containsKey('api_cache_old_data'), isFalse);
+
+      // The key should have been removed (lazy expiration)
+      expect(prefs.getString('api_cache_expired_key'), isNull);
     });
 
-    test('load within TTL returns data', () async {
-      await LocalCacheService.save('fresh_data', 'still valid');
-
-      // Default TTL is 24 h; loading immediately should succeed.
-      final result = await LocalCacheService.load('fresh_data');
-
-      expect(result, 'still valid');
-    });
-  });
-
-  // ── invalidate ────────────────────────────────────────────────────────────
-
-  group('invalidate', () {
-    test('invalidate removes a specific key so load returns null', () async {
-      await LocalCacheService.save('classes', [1, 2, 3]);
-
-      await LocalCacheService.invalidate('classes');
-
-      final result = await LocalCacheService.load('classes');
+    test('load for non-existent key returns null', () async {
+      final result = await LocalCacheService.load('missing_key');
       expect(result, isNull);
     });
 
-    test('invalidate does not affect other keys', () async {
-      await LocalCacheService.save('key_a', 'value_a');
-      await LocalCacheService.save('key_b', 'value_b');
+    test('saves complex nested object and retrieves it correctly', () async {
+      final data = {
+        'page': 1,
+        'items': [
+          {'id': 1, 'score': 90.5},
+          {'id': 2, 'score': 78.0},
+        ],
+      };
+      await LocalCacheService.save('grades', data);
+      final result = await LocalCacheService.load('grades');
+      expect(result['page'], equals(1));
+      expect(result['items'].length, equals(2));
+      expect(result['items'][0]['score'], equals(90.5));
+    });
 
-      await LocalCacheService.invalidate('key_a');
+    test('saves string value and retrieves it', () async {
+      await LocalCacheService.save('token_test', 'abc123');
+      final result = await LocalCacheService.load('token_test');
+      expect(result, equals('abc123'));
+    });
 
-      // key_b must survive
-      final result = await LocalCacheService.load('key_b');
-      expect(result, 'value_b');
+    test('saves integer value and retrieves it', () async {
+      await LocalCacheService.save('count', 42);
+      final result = await LocalCacheService.load('count');
+      expect(result, equals(42));
     });
   });
 
-  // ── clearAll ──────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // invalidate
+  // ─────────────────────────────────────────────────────────────────────────
+  group('LocalCacheService.invalidate', () {
+    test('invalidate removes the specific key', () async {
+      await LocalCacheService.save('students', 'data');
+      await LocalCacheService.invalidate('students');
+      final result = await LocalCacheService.load('students');
+      expect(result, isNull);
+    });
 
-  group('clearAll', () {
-    test('removes all api_cache_* keys but leaves other keys intact', () async {
-      final prefs = await SharedPreferences.getInstance();
+    test('invalidate only removes the targeted key', () async {
+      await LocalCacheService.save('students', 'students_data');
+      await LocalCacheService.save('teachers', 'teachers_data');
+      await LocalCacheService.invalidate('students');
 
-      // Seed two cache entries and one unrelated key.
-      await LocalCacheService.save('teachers', ['Alice', 'Bob']);
-      await LocalCacheService.save('subjects', ['Math', 'Science']);
-      await prefs.setString('app_language', 'id'); // non-cache key
+      expect(await LocalCacheService.load('students'), isNull);
+      expect(await LocalCacheService.load('teachers'), isNotNull);
+    });
+
+    test('invalidating a non-existent key does not throw', () async {
+      await expectLater(
+        LocalCacheService.invalidate('never_saved'),
+        completes,
+      );
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // clearAll
+  // ─────────────────────────────────────────────────────────────────────────
+  group('LocalCacheService.clearAll', () {
+    test('clearAll removes all api_cache_* entries', () async {
+      await LocalCacheService.save('key1', 'value1');
+      await LocalCacheService.save('key2', 'value2');
+      await LocalCacheService.save('key3', 'value3');
 
       await LocalCacheService.clearAll();
 
-      // Both cache entries must be gone.
-      expect(await LocalCacheService.load('teachers'), isNull);
-      expect(await LocalCacheService.load('subjects'), isNull);
+      expect(await LocalCacheService.load('key1'), isNull);
+      expect(await LocalCacheService.load('key2'), isNull);
+      expect(await LocalCacheService.load('key3'), isNull);
+    });
 
-      // The unrelated key must still be present.
-      expect(prefs.getString('app_language'), 'id');
+    test('clearAll leaves non-cache keys intact', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_setting', 'dark_mode');
+
+      await LocalCacheService.save('some_key', 'some_value');
+      await LocalCacheService.clearAll();
+
+      // Non-cache key is still there
+      expect(prefs.getString('user_setting'), equals('dark_mode'));
+    });
+
+    test('clearAll on empty cache completes without throwing', () async {
+      await expectLater(LocalCacheService.clearAll(), completes);
     });
   });
 
-  // ── clearStartingWith ─────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // clearStartingWith
+  // ─────────────────────────────────────────────────────────────────────────
+  group('LocalCacheService.clearStartingWith', () {
+    test('removes only keys matching the subPrefix', () async {
+      await LocalCacheService.save('student_list', 'students');
+      await LocalCacheService.save('student_detail_1', 'detail1');
+      await LocalCacheService.save('teacher_list', 'teachers');
 
-  group('clearStartingWith', () {
-    test("clearStartingWith('subject_') removes only api_cache_subject_* keys", () async {
-      await LocalCacheService.save('subject_math', {'lessons': 12});
-      await LocalCacheService.save('subject_science', {'lessons': 8});
-      await LocalCacheService.save('teacher_list', ['Alice']);
+      await LocalCacheService.clearStartingWith('student_');
 
-      await LocalCacheService.clearStartingWith('subject_');
-
-      // Subject entries must be cleared.
-      expect(await LocalCacheService.load('subject_math'), isNull);
-      expect(await LocalCacheService.load('subject_science'), isNull);
-
-      // Teacher entry must still be present.
+      expect(await LocalCacheService.load('student_list'), isNull);
+      expect(await LocalCacheService.load('student_detail_1'), isNull);
       expect(await LocalCacheService.load('teacher_list'), isNotNull);
     });
-  });
 
-  // ── Data type handling ────────────────────────────────────────────────────
-
-  group('data type handling', () {
-    test('save and load a Map', () async {
-      final map = {'id': 42, 'name': 'Budi', 'active': true};
-      await LocalCacheService.save('map_key', map);
-
-      final result = await LocalCacheService.load('map_key');
-
-      expect(result, isA<Map>());
-      expect(result['id'], 42);
-      expect(result['name'], 'Budi');
+    test('clearStartingWith with no matches completes without throwing', () async {
+      await LocalCacheService.save('teacher_list', 'data');
+      await expectLater(
+        LocalCacheService.clearStartingWith('student_'),
+        completes,
+      );
+      // Unrelated keys remain
+      expect(await LocalCacheService.load('teacher_list'), isNotNull);
     });
 
-    test('save and load a List', () async {
-      final list = [1, 'two', true, {'nested': 'ok'}];
-      await LocalCacheService.save('list_key', list);
-
-      final result = await LocalCacheService.load('list_key');
-
-      expect(result, isA<List>());
-      expect(result[0], 1);
-      expect(result[1], 'two');
-      expect(result[2], true);
-    });
-
-    test('save and load a String', () async {
-      await LocalCacheService.save('string_key', 'hello world');
-
-      final result = await LocalCacheService.load('string_key');
-
-      expect(result, isA<String>());
-      expect(result, 'hello world');
+    test('clearStartingWith empty subPrefix clears all cache entries', () async {
+      await LocalCacheService.save('a', 'value_a');
+      await LocalCacheService.save('b', 'value_b');
+      await LocalCacheService.clearStartingWith('');
+      expect(await LocalCacheService.load('a'), isNull);
+      expect(await LocalCacheService.load('b'), isNull);
     });
   });
 }
