@@ -327,4 +327,129 @@ void main() {
       expect(result, isA<Color>());
     });
   });
+
+  // ─── getStatusColor — full attendance status set ──────────────────────────
+
+  group('ColorUtils.getStatusColor — complete attendance status coverage', () {
+    const green = Color(0xFF10B981);
+    const red = Color(0xFFEF4444);
+    const amber = Color(0xFFF59E0B);
+
+    test('"terlambat" → amber (late arrival)', () {
+      expect(ColorUtils.getStatusColor('terlambat'), amber);
+    });
+
+    test('"sakit" is not mapped → gray fallback', () {
+      // "sakit" has no explicit case; confirm it returns the gray default.
+      expect(ColorUtils.getStatusColor('sakit'), const Color(0xFF6B7280));
+    });
+
+    test('"izin" is not mapped → gray fallback', () {
+      expect(ColorUtils.getStatusColor('izin'), const Color(0xFF6B7280));
+    });
+
+    test('"alpha" is not mapped → gray fallback', () {
+      expect(ColorUtils.getStatusColor('alpha'), const Color(0xFF6B7280));
+    });
+
+    test('"PRESENT" uppercase → green', () {
+      expect(ColorUtils.getStatusColor('PRESENT'), green);
+    });
+
+    test('"ABSENT" uppercase → red', () {
+      expect(ColorUtils.getStatusColor('ABSENT'), red);
+    });
+  });
+
+  // ─── getGradeColor — exact boundary values ────────────────────────────────
+
+  group('ColorUtils.getGradeColor — exact boundary tests', () {
+    test('84.999 rounds down — still lime (>= 75)', () {
+      expect(ColorUtils.getGradeColor(84.999), const Color(0xFF84CC16));
+    });
+
+    test('74.999 rounds down — still amber (>= 65)', () {
+      expect(ColorUtils.getGradeColor(74.999), const Color(0xFFF59E0B));
+    });
+
+    test('64.999 rounds down — still orange (>= 55)', () {
+      expect(ColorUtils.getGradeColor(64.999), const Color(0xFFFB923C));
+    });
+
+    test('54.999 rounds down — red (< 55)', () {
+      expect(ColorUtils.getGradeColor(54.999), const Color(0xFFEF4444));
+    });
+
+    test('0.0 → red', () {
+      expect(ColorUtils.getGradeColor(0.0), const Color(0xFFEF4444));
+    });
+  });
+
+  // ─── getRoleColor — all supported roles ──────────────────────────────────
+
+  group('ColorUtils.getRoleColor — complete role coverage', () {
+    test('"siswa" → student blue 0xFF3B82F6', () {
+      expect(ColorUtils.getRoleColor('siswa'), const Color(0xFF3B82F6));
+    });
+
+    test('"student" → same as siswa', () {
+      expect(ColorUtils.getRoleColor('student'), ColorUtils.getRoleColor('siswa'));
+    });
+
+    test('"staff" → orange 0xFFFF9F1C', () {
+      expect(ColorUtils.getRoleColor('staff'), const Color(0xFFFF9F1C));
+    });
+
+    test('"orang_tua" → same as wali purple', () {
+      expect(ColorUtils.getRoleColor('orang_tua'), ColorUtils.getRoleColor('wali'));
+    });
+
+    test('case-insensitive GURU → same as guru', () {
+      expect(ColorUtils.getRoleColor('GURU'), ColorUtils.getRoleColor('guru'));
+    });
+  });
+
+  // ─── getSubjectColor — additional subjects ────────────────────────────────
+
+  group('ColorUtils.getSubjectColor — additional subject keywords', () {
+    test('"Kimia Organik" matches "kimia" keyword', () {
+      expect(ColorUtils.getSubjectColor('Kimia Organik'), const Color(0xFFEC4899));
+    });
+
+    test('"Biologi Sel" matches "biologi" keyword', () {
+      expect(ColorUtils.getSubjectColor('Biologi Sel'), const Color(0xFF10B981));
+    });
+
+    test('"Sejarah Nasional" matches "sejarah" keyword', () {
+      expect(ColorUtils.getSubjectColor('Sejarah Nasional'), const Color(0xFFF59E0B));
+    });
+
+    test('"Olahraga dan Kesehatan" matches "olahraga" keyword', () {
+      expect(ColorUtils.getSubjectColor('Olahraga dan Kesehatan'), const Color(0xFF84CC16));
+    });
+
+    test('"Seni Budaya" matches "seni" keyword', () {
+      expect(ColorUtils.getSubjectColor('Seni Budaya'), const Color(0xFFEC4899));
+    });
+
+    test('same unknown subject always returns same color (deterministic)', () {
+      final c1 = ColorUtils.getSubjectColor('Kewirausahaan');
+      final c2 = ColorUtils.getSubjectColor('Kewirausahaan');
+      expect(c1, equals(c2));
+    });
+  });
+
+  // ─── getDayColor — fallback determinism ──────────────────────────────────
+
+  group('ColorUtils.getDayColor — fallback determinism', () {
+    test('unknown "Minggu" always returns same color', () {
+      expect(ColorUtils.getDayColor('Minggu'), equals(ColorUtils.getDayColor('Minggu')));
+    });
+
+    test('different unknown strings may return different colors', () {
+      // Not guaranteed to differ, but they must be non-null Color values
+      expect(ColorUtils.getDayColor('Minggu'), isA<Color>());
+      expect(ColorUtils.getDayColor('Libur'), isA<Color>());
+    });
+  });
 }

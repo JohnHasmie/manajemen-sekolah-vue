@@ -101,5 +101,62 @@ void main() {
       // Simulates paste of an already-formatted string — digits are preserved.
       expect(format('Rp 10.000'), 'Rp 10.000');
     });
+
+    test('formats "500000000" as "Rp 500.000.000"', () {
+      expect(format('500000000'), 'Rp 500.000.000');
+    });
+
+    test('strips spaces and re-formats correctly', () {
+      expect(format('1 000'), 'Rp 1.000');
+    });
+
+    test('mixed alpha-numeric keeps only digits', () {
+      expect(format('10abc20'), 'Rp 1.020');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Round-trip: format → parse → format
+  // ---------------------------------------------------------------------------
+  group('CurrencyInputFormatter — round-trip', () {
+    final formatter = CurrencyInputFormatter();
+
+    String fmt(String raw) => formatter.formatEditUpdate(
+          const TextEditingValue(text: ''),
+          TextEditingValue(text: raw),
+        ).text;
+
+    test('format then parse 500000 round-trips correctly', () {
+      final formatted = fmt('500000');
+      final parsed = CurrencyInputFormatter.parseCurrency(formatted);
+      expect(parsed, 500000.0);
+    });
+
+    test('format then parse 1500000 round-trips correctly', () {
+      final formatted = fmt('1500000');
+      final parsed = CurrencyInputFormatter.parseCurrency(formatted);
+      expect(parsed, 1500000.0);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // parseCurrency — additional edge cases
+  // ---------------------------------------------------------------------------
+  group('CurrencyInputFormatter.parseCurrency — additional cases', () {
+    test('handles string with only "Rp " and no digits', () {
+      expect(CurrencyInputFormatter.parseCurrency('Rp '), 0.0);
+    });
+
+    test('parses "Rp 0" as 0.0', () {
+      expect(CurrencyInputFormatter.parseCurrency('Rp 0'), 0.0);
+    });
+
+    test('parses "Rp 1.000.000.000" correctly', () {
+      expect(CurrencyInputFormatter.parseCurrency('Rp 1.000.000.000'), 1000000000.0);
+    });
+
+    test('symbol constant is "Rp "', () {
+      expect(CurrencyInputFormatter.symbol, 'Rp ');
+    });
   });
 }
