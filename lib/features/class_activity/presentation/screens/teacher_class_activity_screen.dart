@@ -20,26 +20,25 @@ import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_detail_dialog.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_list_view.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_tab_switcher.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_type_option_tile.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_dialog.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/class_activity_header.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/class_selector_list.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/subject_selection_list.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_type_bottom_sheet.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/filter_bottom_sheet.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/class_activity_tour.dart';
 
 /// Teacher's class activity (teaching journal) management screen.
 ///
@@ -788,135 +787,11 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
   }
 
   void _showActivityTypeDialog() {
-    final languageProvider = ref.read(languageRiverpod);
-    final primaryColor = _getPrimaryColor();
-
-    showModalBottomSheet(
+    ActivityTypeBottomSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
-                ),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.add_circle_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      SizedBox(width: AppSpacing.md),
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Select Activity Type',
-                          'id': 'Pilih Jenis Kegiatan',
-                        }),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
-              child: Column(
-                children: [
-                  _buildActivityTypeOption(
-                    icon: Icons.assignment_rounded,
-                    title: languageProvider.getTranslatedText({
-                      'en': 'Assignment',
-                      'id': 'Tugas',
-                    }),
-                    description: languageProvider.getTranslatedText({
-                      'en': 'Create an assignment for students',
-                      'id': 'Buat tugas untuk siswa',
-                    }),
-                    color: ColorUtils.warning600,
-                    onTap: () {
-                      AppNavigator.pop(context);
-                      _showAddActivityDialog('tugas');
-                    },
-                  ),
-                  SizedBox(height: AppSpacing.md),
-                  _buildActivityTypeOption(
-                    icon: Icons.menu_book_rounded,
-                    title: languageProvider.getTranslatedText({
-                      'en': 'Material',
-                      'id': 'Materi',
-                    }),
-                    description: languageProvider.getTranslatedText({
-                      'en': 'Share learning materials',
-                      'id': 'Bagikan materi pembelajaran',
-                    }),
-                    color: ColorUtils.corporateBlue600,
-                    onTap: () {
-                      AppNavigator.pop(context);
-                      _showAddActivityDialog('materi');
-                    },
-                  ),
-                  SizedBox(height: AppSpacing.xl),
-                ],
-              ),
-            ),
-            SafeArea(top: false, child: SizedBox(height: AppSpacing.sm)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Delegates to [ActivityTypeOptionTile].
-  Widget _buildActivityTypeOption({
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return ActivityTypeOptionTile(
-      icon: icon,
-      title: title,
-      description: description,
-      color: color,
-      onTap: onTap,
+      primaryColor: _getPrimaryColor(),
+      languageProvider: ref.read(languageRiverpod),
+      onActivityTypeSelected: _showAddActivityDialog,
     );
   }
 
@@ -1226,296 +1101,18 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
 
   // ========== FILTER SHEET MENGGUNAKAN KOMPONEN ==========
   void _showFilterSheet() {
-    final languageProvider = ref.read(languageRiverpod);
-    String? tempDateFilter = _selectedDateFilter;
-
-    showModalBottomSheet(
+    FilterBottomSheet.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          Widget buildSectionHeader(String title, IconData icon) {
-            return Padding(
-              padding: EdgeInsets.only(top: 20, bottom: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: _getPrimaryColor().withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(icon, size: 16, color: _getPrimaryColor()),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: ColorUtils.slate900,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          Widget buildChip(String label, String value, String? selectedValue) {
-            final isSelected = selectedValue == value;
-            return GestureDetector(
-              onTap: () => setModalState(
-                () => tempDateFilter = isSelected ? null : value,
-              ),
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? _getPrimaryColor().withValues(alpha: 0.1)
-                      : ColorUtils.slate50,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: isSelected
-                        ? _getPrimaryColor()
-                        : ColorUtils.slate200,
-                    width: isSelected ? 1.5 : 1,
-                  ),
-                ),
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isSelected
-                        ? _getPrimaryColor()
-                        : ColorUtils.slate600,
-                  ),
-                ),
-              ),
-            );
-          }
-
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.55,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        _getPrimaryColor(),
-                        _getPrimaryColor().withValues(alpha: 0.85),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 4,
-                        margin: EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.tune_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Filter Activities',
-                                'id': 'Filter Kegiatan',
-                              }),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () =>
-                                setModalState(() => tempDateFilter = null),
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              backgroundColor: Colors.white.withValues(
-                                alpha: 0.2,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Reset',
-                                'id': 'Reset',
-                              }),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        buildSectionHeader(
-                          languageProvider.getTranslatedText({
-                            'en': 'Date Range',
-                            'id': 'Rentang Tanggal',
-                          }),
-                          Icons.calendar_today_rounded,
-                        ),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            buildChip(
-                              languageProvider.getTranslatedText({
-                                'en': 'Today',
-                                'id': 'Hari Ini',
-                              }),
-                              'today',
-                              tempDateFilter,
-                            ),
-                            buildChip(
-                              languageProvider.getTranslatedText({
-                                'en': 'This Week',
-                                'id': 'Minggu Ini',
-                              }),
-                              'week',
-                              tempDateFilter,
-                            ),
-                            buildChip(
-                              languageProvider.getTranslatedText({
-                                'en': 'This Month',
-                                'id': 'Bulan Ini',
-                              }),
-                              'month',
-                              tempDateFilter,
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: AppSpacing.xl),
-                      ],
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ColorUtils.slate900.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => AppNavigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              side: BorderSide(color: ColorUtils.slate300),
-                              foregroundColor: ColorUtils.slate700,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Cancel',
-                                'id': 'Batal',
-                              }),
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              AppNavigator.pop(context);
-                              setState(() {
-                                _selectedDateFilter = tempDateFilter;
-                                _hasActiveFilter = _selectedDateFilter != null;
-                              });
-                              _resetAndLoadActivities();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              backgroundColor: _getPrimaryColor(),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Apply Filter',
-                                'id': 'Terapkan Filter',
-                              }),
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      primaryColor: _getPrimaryColor(),
+      languageProvider: ref.read(languageRiverpod),
+      initialDateFilter: _selectedDateFilter,
+      onApply: (dateFilter) {
+        setState(() {
+          _selectedDateFilter = dateFilter;
+          _hasActiveFilter = _selectedDateFilter != null;
+        });
+        _resetAndLoadActivities();
+      },
     );
   }
 
@@ -1785,160 +1382,15 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
   }
 
   void _showTour() {
-    final List<TargetFocus> targets = _createTourTargets();
-    if (targets.isEmpty) return;
-
-    TutorialCoachMark(
-      targets: targets,
-      colorShadow: Colors.black,
-      textSkip: "LEWATI",
-      paddingFocus: 10,
-      opacityShadow: 0.8,
-      onFinish: () {
-        getIt<ApiTourService>().completeTour(
-          name: 'class_activity_tour',
-          role: 'guru',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('class_activity_screen', 'guru'),
-          {'should_show': false},
-        );
-      },
-      onSkip: () {
-        getIt<ApiTourService>().completeTour(
-          name: 'class_activity_tour',
-          role: 'guru',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('class_activity_screen', 'guru'),
-          {'should_show': false},
-        );
-        return true;
-      },
-    ).show(context: context);
-  }
-
-  List<TargetFocus> _createTourTargets() {
-    final List<TargetFocus> targets = [];
-
-    targets.add(
-      TargetFocus(
-        identify: "TabSwitcher",
-        keyTarget: _tabSwitcherKey,
-        alignSkip: Alignment.bottomRight,
-        shape: ShapeLightFocus.RRect,
-        radius: 12,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Mode Tampilan",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20.0,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Text(
-                      "Pilih 'Semua Siswa' untuk melihat aktivitas umum kelas, atau 'Khusus Siswa' untuk melihat histori aktivitas per murid.",
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
+    showClassActivityTour(
+      context: context,
+      targets: buildClassActivityTourTargets(
+        tabSwitcherKey: _tabSwitcherKey,
+        searchFilterKey: _searchFilterKey,
+        fabKey: _fabKey,
+        selectedSubjectCanEdit: _selectedSubjectCanEdit,
       ),
     );
-
-    targets.add(
-      TargetFocus(
-        identify: "SearchFilter",
-        keyTarget: _searchFilterKey,
-        alignSkip: Alignment.bottomRight,
-        shape: ShapeLightFocus.RRect,
-        radius: 12,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Pencarian & Filter",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20.0,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Text(
-                      "Cari aktivitas berdasarkan judul atau gunakan filter untuk mencari rentang waktu tertentu.",
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
-    if (_selectedSubjectCanEdit) {
-      targets.add(
-        TargetFocus(
-          identify: "AddActivity",
-          keyTarget: _fabKey,
-          alignSkip: Alignment.topLeft,
-          shape: ShapeLightFocus.Circle,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      "Tambah Aktivitas",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 20.0,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
-                      child: Text(
-                        "Gunakan tombol ini untuk menambahkan aktivitas absensi/jurnal kelas maupun memberikan penugasan (PR / Ujian) kepada siswa.",
-                        style: TextStyle(color: Colors.white, fontSize: 14),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    return targets;
   }
 }
 

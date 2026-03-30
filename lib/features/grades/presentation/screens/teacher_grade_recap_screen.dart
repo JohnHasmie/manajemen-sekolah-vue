@@ -6,8 +6,6 @@
 // Supports adding/removing chapters (bab), bulk grade selection, auto-
 // description generation, save to API, and Excel export.
 // In Laravel terms: `GradeRecapController@index`, `@store`, `@export`.
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
@@ -15,10 +13,8 @@ import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart
 import 'package:manajemensekolah/features/grades/data/grade_recap_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/grades/exports/grade_recap_export_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -26,7 +22,6 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -39,6 +34,12 @@ import 'package:manajemensekolah/features/grades/presentation/widgets/grade_reca
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_search_bar.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_app_bar.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_table_view.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_tour_helper.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_unsaved_changes_dialog.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_delete_chapter_dialog.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_day_utils.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_cache_helpers.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_row_builder.dart';
 
 /// Grade recap wizard: class selection -> subject selection -> recap table.
 ///
@@ -188,11 +189,11 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         'Sunday',
       ];
       final currentDayISO = dayNamesISO[now.weekday - 1];
-      final currentDayIndo = _normalizeDayName(currentDayISO);
+      final currentDayIndo = normalizeDayName(currentDayISO);
 
       String? currentDayId;
       dayIdMap.forEach((key, value) {
-        if (_normalizeDayName(key) == currentDayIndo) {
+        if (normalizeDayName(key) == currentDayIndo) {
           currentDayId = value;
         }
       });
@@ -245,7 +246,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         setState(() {
           _dayIdMap = dayIdMap;
           _todaySchedules = allSchedules.where((s) {
-            final ids = _extractDayIds(s);
+            final ids = extractDayIds(s);
             if (currentDayId != null && ids.contains(currentDayId)) return true;
             return ids.any((id) {
               final entry = _dayIdMap.entries.firstWhere(
@@ -253,7 +254,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
                 orElse: () => const MapEntry('', ''),
               );
               return entry.key.isNotEmpty &&
-                  _normalizeDayName(entry.key) == currentDayIndo;
+                  normalizeDayName(entry.key) == currentDayIndo;
             });
           }).toList();
         });
@@ -263,41 +264,6 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     }
   }
 
-  String _normalizeDayName(String name) {
-    name = name.trim().toLowerCase();
-    if (name.contains('senin') || name.contains('monday')) return 'Senin';
-    if (name.contains('selasa') || name.contains('tuesday')) return 'Selasa';
-    if (name.contains('rabu') || name.contains('wednesday')) return 'Rabu';
-    if (name.contains('kamis') || name.contains('thursday')) return 'Kamis';
-    if (name.contains('jumat') || name.contains('friday')) return 'Jumat';
-    if (name.contains('sabtu') || name.contains('saturday')) return 'Sabtu';
-    if (name.contains('minggu') || name.contains('sunday')) return 'Minggu';
-    return name;
-  }
-
-  List<String> _extractDayIds(dynamic schedule) {
-    if (schedule == null) return [];
-    final rawIds = schedule['days_ids'] ?? schedule['day_id'];
-    if (rawIds == null) return [];
-
-    if (rawIds is List) {
-      return rawIds.map((e) => e.toString()).toList();
-    }
-    if (rawIds is String) {
-      if (rawIds.contains('[')) {
-        try {
-          final parsed = json.decode(rawIds);
-          if (parsed is List) return parsed.map((e) => e.toString()).toList();
-        } catch (_) {}
-      }
-      return rawIds
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-    }
-    return [rawIds.toString()];
-  }
 
   // ==================== HELPER METHODS ====================
 
@@ -531,60 +497,6 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     }
   }
 
-  /// Generic cache-first loader for individual data sources
-  Future<List<dynamic>> _loadWithCache({
-    required String cacheKey,
-    required Duration ttl,
-    required Future<List<dynamic>> Function() apiFetcher,
-    bool useCache = true,
-  }) async {
-    if (useCache) {
-      try {
-        final cached = await LocalCacheService.load(cacheKey, ttl: ttl);
-        if (cached != null) {
-          AppLogger.debug('grades', 'Cache hit: $cacheKey');
-          return List<dynamic>.from(cached);
-        }
-      } catch (_) {}
-    }
-    final data = await apiFetcher();
-    if (data.isNotEmpty) LocalCacheService.save(cacheKey, data);
-    return data;
-  }
-
-  /// Grades loader with special response parsing
-  Future<List<dynamic>> _loadGradesWithCache({
-    required String cacheKey,
-    required Duration ttl,
-    required String classId,
-    required String subjectId,
-    required String academicYearId,
-    bool useCache = true,
-  }) async {
-    if (useCache) {
-      try {
-        final cached = await LocalCacheService.load(cacheKey, ttl: ttl);
-        if (cached != null) {
-          AppLogger.debug('grades', 'Cache hit: $cacheKey');
-          return List<dynamic>.from(cached);
-        }
-      } catch (_) {}
-    }
-    final rawGradesResponse = await ApiService().get(
-      '/grades/teacher?class_id=$classId&subject_id=$subjectId&academic_year_id=$academicYearId&limit=1000',
-    );
-    List<dynamic> rawGrades = [];
-    if (rawGradesResponse != null) {
-      if (rawGradesResponse is Map && rawGradesResponse['data'] != null) {
-        rawGrades = rawGradesResponse['data'];
-      } else if (rawGradesResponse is List) {
-        rawGrades = rawGradesResponse;
-      }
-    }
-    if (rawGrades.isNotEmpty) LocalCacheService.save(cacheKey, rawGrades);
-    return rawGrades;
-  }
-
   /// Loads recap data (students, grades, chapters) for the selected class/subject.
   /// Like `axios.get('/api/grade-recaps')` in Vue. Processes raw data into
   /// an editable table structure.
@@ -683,14 +595,14 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
 
       // Load all 4 sources in parallel — each checks its own cache first
       final results = await Future.wait([
-        _loadWithCache(
+        loadWithCache(
           cacheKey: studentCacheKey,
           ttl: const Duration(hours: 6),
           apiFetcher: () =>
               getIt<ApiClassService>().getStudentsByClassId(classId),
           useCache: useCache,
         ),
-        _loadWithCache(
+        loadWithCache(
           cacheKey: chapterCacheKey,
           ttl: const Duration(hours: 12),
           apiFetcher: () => getIt<ApiSubjectService>().getChapterMaterials(
@@ -698,7 +610,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
           ),
           useCache: useCache,
         ),
-        _loadGradesWithCache(
+        loadGradesWithCache(
           cacheKey: gradesCacheKey,
           ttl: const Duration(hours: 3),
           classId: classId,
@@ -706,7 +618,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
           academicYearId: academicYearId,
           useCache: useCache,
         ),
-        _loadWithCache(
+        loadWithCache(
           cacheKey: recapsCacheKey,
           ttl: const Duration(hours: 3),
           apiFetcher: () => getIt<ApiGradeRecapService>().getGradeRecaps(
@@ -762,35 +674,8 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   }
 
   void _applyRecapChapterNames(List<dynamic> recaps) {
-    if (recaps.isNotEmpty) {
-      List<String> longestChapterNames = [];
-      for (var r in recaps) {
-        if (r['bab_names'] != null && r['bab_names'] is List) {
-          final names = List<String>.from(r['bab_names']);
-          if (names.length > longestChapterNames.length) {
-            longestChapterNames = names;
-          }
-        }
-      }
-
-      if (longestChapterNames.isNotEmpty) {
-        while (_chapters.length < longestChapterNames.length) {
-          _chapters.add({
-            'judul_bab': 'Bab ${_chapters.length + 1}',
-            'judul': 'Bab ${_chapters.length + 1}',
-            'title': 'Bab ${_chapters.length + 1}',
-          });
-        }
-
-        for (int i = 0; i < longestChapterNames.length; i++) {
-          if (i < _chapters.length) {
-            _chapters[i]['judul_bab'] = longestChapterNames[i];
-            _chapters[i]['judul'] = longestChapterNames[i];
-            _chapters[i]['title'] = longestChapterNames[i];
-          }
-        }
-      }
-    }
+    // Delegates to the extracted pure helper — see grade_recap_row_builder.dart
+    applyRecapChapterNames(chapters: _chapters, recaps: recaps);
   }
 
   /// Transforms raw API data into structured table rows with per-student,
@@ -1209,58 +1094,40 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
       return;
     }
 
-    showDialog(
+    showGradeRecapDeleteChapterDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.deleteMaterial.tr),
-        content: Text(AppLocalizations.deleteColumnConfirm.tr),
-        actions: [
-          TextButton(
-            onPressed: () => AppNavigator.pop(context),
-            child: Text(AppLocalizations.cancel.tr),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              AppNavigator.pop(context);
-              setState(() {
-                _chapters.removeAt(chapterIndex);
+      onConfirm: () {
+        setState(() {
+          _chapters.removeAt(chapterIndex);
 
-                for (var row in _tableData) {
-                  final studentClassId = row['student_class_id'];
+          for (var row in _tableData) {
+            final studentClassId = row['student_class_id'];
 
-                  if (row['bab_scores'] is List &&
-                      row['bab_scores'].length > chapterIndex) {
-                    row['bab_scores'].removeAt(chapterIndex);
-                  }
+            if (row['bab_scores'] is List &&
+                row['bab_scores'].length > chapterIndex) {
+              row['bab_scores'].removeAt(chapterIndex);
+            }
 
-                  // Clear old bab controllers
-                  _scoreControllers.removeWhere(
-                    (k, v) => k.startsWith('$studentClassId|bab|'),
-                  );
+            // Clear old bab controllers
+            _scoreControllers.removeWhere(
+              (k, v) => k.startsWith('$studentClassId|bab|'),
+            );
 
-                  // Recreate new ones with updated indices
-                  for (int i = 0; i < _chapters.length; i++) {
-                    final key = '$studentClassId|bab|$i';
-                    _scoreControllers[key] = TextEditingController(
-                      text: row['bab_scores'][i] != null
-                          ? row['bab_scores'][i].toStringAsFixed(1)
-                          : '',
-                    );
-                  }
+            // Recreate new ones with updated indices
+            for (int i = 0; i < _chapters.length; i++) {
+              final key = '$studentClassId|bab|$i';
+              _scoreControllers[key] = TextEditingController(
+                text: row['bab_scores'][i] != null
+                    ? row['bab_scores'][i].toStringAsFixed(1)
+                    : '',
+              );
+            }
 
-                  _recalculateRow(row);
-                }
-              });
-              _updateAllDescriptions();
-            },
-            child: Text(AppLocalizations.delete.tr),
-          ),
-        ],
-      ),
+            _recalculateRow(row);
+          }
+        });
+        _updateAllDescriptions();
+      },
     );
   }
 
@@ -1489,53 +1356,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
 
   Future<bool> _onWillPop() async {
     if (!_hasUnsavedChanges) return true;
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        final languageProvider = ref.read(languageRiverpod);
-        return AlertDialog(
-          title: Text(
-            languageProvider.getTranslatedText({
-              'en': 'Unsaved Changes',
-              'id': 'Perubahan Belum Disimpan',
-            }),
-          ),
-          content: Text(
-            languageProvider.getTranslatedText({
-              'en':
-                  'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.',
-              'id':
-                  'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? Perubahan akan hilang.',
-            }),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => AppNavigator.pop(context, false), // Cancel
-              child: Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Cancel',
-                  'id': 'Batal',
-                }),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => AppNavigator.pop(context, true), // Leave
-              child: Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Leave',
-                  'id': 'Keluar',
-                }),
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    return result ?? false;
+    return showGradeRecapUnsavedChangesDialog(context, ref);
   }
 
   void _handleBackButton() async {
@@ -1741,183 +1562,11 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     );
   }
 
-  Future<void> _checkAndShowTour() async {
-    try {
-      final tourCacheKey = CacheKeyBuilder.tourStatus(
-        'rekap_nilai_screen',
-        'guru',
-      );
-      final cached = await LocalCacheService.load(
-        tourCacheKey,
-        ttl: const Duration(hours: 24),
-      );
-      if (cached != null && cached is Map) {
-        if (cached['should_show'] == true) {
-          if (mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _showTour();
-            });
-          }
-        }
-      }
-    } catch (e) {
-      AppLogger.error('grades', e);
-    }
-  }
+  late final GradeRecapTourHelper _tourHelper = GradeRecapTourHelper(
+    addChapterKey: _addChapterKey,
+    saveKey: _saveKey,
+    exportKey: _exportKey,
+  );
 
-  void _showTour() {
-    final List<TargetFocus> targets = _createTourTargets();
-    if (targets.isEmpty) return;
-
-    TutorialCoachMark(
-      targets: targets,
-      colorShadow: Colors.black,
-      textSkip: "LEWATI",
-      paddingFocus: 10,
-      opacityShadow: 0.8,
-      onFinish: () {
-        getIt<ApiTourService>().completeTour(
-          name: 'rekap_nilai_tour',
-          role: 'guru',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('rekap_nilai_screen', 'guru'),
-          {'should_show': false},
-        );
-      },
-      onSkip: () {
-        getIt<ApiTourService>().completeTour(
-          name: 'rekap_nilai_tour',
-          role: 'guru',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('rekap_nilai_screen', 'guru'),
-          {'should_show': false},
-        );
-        return true;
-      },
-    ).show(context: context);
-  }
-
-  List<TargetFocus> _createTourTargets() {
-    final List<TargetFocus> targets = [];
-
-    targets.add(
-      TargetFocus(
-        identify: "AddBab",
-        keyTarget: _addChapterKey,
-        alignSkip: Alignment.bottomRight,
-        shape: ShapeLightFocus.RRect,
-        radius: 8,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Tambah Kolom Bab",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20.0,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Text(
-                      "Klik tombol ini untuk menambahkan kolom materi atau bab baru di kanan tabel Anda.",
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
-    targets.add(
-      TargetFocus(
-        identify: "SaveRekap",
-        keyTarget: _saveKey,
-        alignSkip: Alignment.bottomRight,
-        shape: ShapeLightFocus.RRect,
-        radius: 8,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Simpan Perubahan",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20.0,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Text(
-                      "Kapanpun Anda mengubah judul bab, mengedit nilai, atau mengisi deskripsi. Jangan lupa tekan Simpan agar nilai tersebut dikunci (snapshot) di server.",
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
-    targets.add(
-      TargetFocus(
-        identify: "ExportRekap",
-        keyTarget: _exportKey,
-        alignSkip: Alignment.bottomRight,
-        shape: ShapeLightFocus.RRect,
-        radius: 8,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Ekspor ke Excel",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20.0,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Text(
-                      "Tabel rekap nilai yang telah Anda buat bisa Anda unduh seketika dalam wujud file spreedsheat Excel yang rapi.",
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
-    return targets;
-  }
+  Future<void> _checkAndShowTour() => _tourHelper.checkAndShow(context);
 }

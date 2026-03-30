@@ -37,9 +37,8 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/material_screen_header.dart';
-import 'package:manajemensekolah/features/materials/presentation/widgets/material_class_dropdown.dart';
-import 'package:manajemensekolah/features/materials/presentation/widgets/material_subject_dropdown.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/material_sub_chapter_list.dart';
+import 'package:manajemensekolah/features/materials/presentation/widgets/material_filter_section.dart';
 
 /// Teaching material browser with subject, chapter, and sub-chapter navigation.
 ///
@@ -1336,144 +1335,47 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
   }
 
   Widget _buildFilterSection(LanguageProvider languageProvider) {
-    final totalChecked = _getCheckedCount();
-    final primaryColor = _getPrimaryColor();
-
-    return Container(
-      key: _filterKey,
-      padding: EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: ColorUtils.slate200, width: 1),
-        ),
-      ),
-      child: Column(
-        children: [
-          // Info Filter Aktif
-          Container(
-            padding: EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: primaryColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.filter_alt_rounded,
-                    size: 16,
-                    color: primaryColor,
-                  ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    _subjectList.isEmpty
-                        ? languageProvider.getTranslatedText({
-                            'en': 'No subjects available',
-                            'id': 'Tidak ada mata pelajaran',
-                          })
-                        : '${_chapterMaterialList.length} ${languageProvider.getTranslatedText({'en': 'materials', 'id': 'bab materi'})} • ${_getSelectedSubjectName()}',
-                    style: TextStyle(fontSize: 12, color: ColorUtils.slate700),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: primaryColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '$totalChecked ${languageProvider.getTranslatedText({'en': 'checked', 'id': 'dicentang'})}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: primaryColor,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: AppSpacing.md),
-
-          // Generate Activity button if any items are checked
-          if (totalChecked > 0 && _getCheckedNotGeneratedCount() > 0) ...[
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _navigateToGenerateRPP,
-                icon: Icon(Icons.auto_awesome_rounded, size: 18),
-                label: Text(
-                  'Generate Kegiatan Kelas (${_getCheckedNotGeneratedCount()})',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ColorUtils.success600,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
-            SizedBox(height: AppSpacing.md),
-          ],
-
-          // Dropdown Kelas
-          MaterialClassDropdown(
-            classList: _classList,
-            selectedClassId: _selectedClassId,
-            languageProvider: languageProvider,
-            onClassChanged: (newValue) {
-              setState(() {
-                _selectedClassId = newValue;
-                final selectedClass = _classList.firstWhere(
-                  (c) => c['id'] == newValue,
-                );
-                _selectedClassName =
-                    selectedClass['name'] ?? selectedClass['nama'];
-                _chapterMaterialList = [];
-                _subChapterMaterialList = [];
-                _subjectList = [];
-                _selectedSubject = null;
-                _isLoadingBab = false;
-                _isLoading = true;
-                _searchController.clear();
-              });
-              _loadSubjectsForClass(newValue);
-            },
-          ),
-          SizedBox(height: AppSpacing.md),
-
-          // Dropdown Mata Pelajaran
-          MaterialSubjectDropdown(
-            subjectList: _subjectList,
-            selectedSubjectId: _selectedSubject,
-            languageProvider: languageProvider,
-            onSubjectChanged: (newValue) {
-              setState(() {
-                _selectedSubject = newValue;
-                _chapterMaterialList = [];
-                _subChapterMaterialList = [];
-                _isLoadingBab = true;
-                _searchController.clear();
-              });
-              _loadChapterContent(newValue);
-            },
-          ),
-        ],
-      ),
+    return MaterialFilterSection(
+      containerKey: _filterKey,
+      classList: _classList,
+      selectedClassId: _selectedClassId,
+      subjectList: _subjectList,
+      selectedSubjectId: _selectedSubject,
+      languageProvider: languageProvider,
+      primaryColor: _getPrimaryColor(),
+      selectedSubjectName: _getSelectedSubjectName(),
+      totalChecked: _getCheckedCount(),
+      checkedNotGeneratedCount: _getCheckedNotGeneratedCount(),
+      chapterCount: _chapterMaterialList.length,
+      onGenerateTap: _navigateToGenerateRPP,
+      onClassChanged: (newValue) {
+        setState(() {
+          _selectedClassId = newValue;
+          final selectedClass = _classList.firstWhere(
+            (c) => c['id'] == newValue,
+          );
+          _selectedClassName =
+              selectedClass['name'] ?? selectedClass['nama'];
+          _chapterMaterialList = [];
+          _subChapterMaterialList = [];
+          _subjectList = [];
+          _selectedSubject = null;
+          _isLoadingBab = false;
+          _isLoading = true;
+          _searchController.clear();
+        });
+        _loadSubjectsForClass(newValue);
+      },
+      onSubjectChanged: (newValue) {
+        setState(() {
+          _selectedSubject = newValue;
+          _chapterMaterialList = [];
+          _subChapterMaterialList = [];
+          _isLoadingBab = true;
+          _searchController.clear();
+        });
+        _loadChapterContent(newValue);
+      },
     );
   }
 
