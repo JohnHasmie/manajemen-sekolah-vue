@@ -9,35 +9,30 @@
 // Extracted from teacher_grade_input_screen.dart.
 // Contains:
 // - [GradeBookPage] -- the grade table with inline editing
-import 'dart:io';
-
-import 'package:file_saver/file_saver.dart';
-import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
-import 'package:manajemensekolah/features/students/data/student_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/grades/presentation/controllers/grade_book_controller.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/grade_input_form.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/grade_input_form_new.dart';
-import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_assessment_detail_dialog.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_column_options_sheet.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_confirm_delete_dialog.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_edit_table_widget.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_filter_dialog.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_table_widget.dart';
 
 /// The grade book table page (Step 2) -- displays and edits student grades
@@ -134,18 +129,6 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _addGradeKey = GlobalKey();
 
-  String _buildGradeCacheKey() {
-    final academicYearId =
-        ref
-            .read(academicYearRiverpod)
-            .selectedAcademicYear?['id']
-            ?.toString() ??
-        'default';
-    final subjectId = widget.subject['id']?.toString() ?? 'unknown';
-    final classId = widget.classData['id']?.toString() ?? 'unknown';
-    return 'grade_book_${subjectId}_${classId}_$academicYearId';
-  }
-
   /// Like Vue's `mounted()` -- loads grade data and sets up search listener.
   @override
   void initState() {
@@ -172,413 +155,99 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   /// Filters student list by search query. Like a Vue `computed` that filters
   /// an array, or `watch` on a search input that filters `this.students`.
   void _filterStudents() {
-    final query = _searchController.text.toLowerCase();
     setState(() {
-      if (query.isEmpty) {
-        _filteredStudentList = List.from(_studentList);
-      } else {
-        _filteredStudentList = _studentList
-            .where(
-              (student) =>
-                  student.name.toLowerCase().contains(query) ||
-                  student.studentNumber.toLowerCase().contains(query),
-            )
-            .toList();
-      }
+      _filteredStudentList = ref
+          .read(gradeBookControllerProvider)
+          .filterStudents(_studentList, _searchController.text);
     });
   }
 
-  /// Process raw grade items and apply to state (used by both cache and fresh load)
-  /// Processes raw API data into structured grade records per student.
-  /// Like a Vue `computed` or `watch` that transforms API response into
-  /// a table-friendly format. Maps student data with their grades.
-  void _processAndApplyGradeData(
-    List<dynamic> studentData,
-    List<dynamic> rawGradeItems,
-  ) {
-    _studentList = studentData.map((s) => Student.fromJson(s)).toList();
-    _filteredStudentList = List.from(_studentList);
-
-    final currentStudentIds = _studentList.map((s) => s.id.toString()).toSet();
-    final currentStudentClassIds = _studentList
-        .map((s) => s.studentClassId?.toString())
-        .where((id) => id != null)
-        .cast<String>()
-        .toSet();
-
-    // Filter and map grades to internal legacy format
-    _gradeList = rawGradeItems
-        .where((item) {
-          final studentId =
-              (item['student_id'] ?? item['siswa_id'] ?? item['siswa']?['id'])
-                  ?.toString();
-          final studentClassId =
-              (item['student_class_id'] ?? item['siswa_kelas_id'])?.toString();
-
-          return currentStudentIds.contains(studentId) ||
-              (studentClassId != null &&
-                  currentStudentClassIds.contains(studentClassId));
-        })
-        .map<Map<String, dynamic>>((item) {
-          return {
-            'id': item['id'],
-            'siswa_id':
-                (item['student_id'] ?? item['siswa_id'] ?? item['siswa']?['id'])
-                    ?.toString(),
-            'student_class_id':
-                (item['student_class_id'] ?? item['siswa_kelas_id'])
-                    ?.toString(),
-            'nilai': item['score'] ?? item['nilai'],
-            'deskripsi': item['notes'] ?? item['deskripsi'],
-            'tanggal':
-                item['assessment']?['date'] ?? item['date'] ?? item['tanggal'],
-            'jenis':
-                (item['assessment']?['type'] ?? item['type'] ?? item['jenis'])
-                    ?.toString()
-                    .toLowerCase(),
-            'title': item['assessment']?['title'] ?? item['title'] ?? '',
-            'assessment_id': item['assessment_id'],
-          };
-        })
-        .toList();
-
-    // Process unique assessments for headers
-    _assessmentHeaders = {};
-
-    for (var gradeItem in _gradeList) {
-      final type = gradeItem['jenis']?.toString().toLowerCase();
-      if (type == null || !_allGradeTypeList.contains(type)) continue;
-
-      final String? rawDate = gradeItem['tanggal'];
-      if (rawDate != null) {
-        final datePart = rawDate.split('T')[0];
-        final assessmentId = gradeItem['assessment_id'];
-        final title = (gradeItem['title'] ?? '').toString().trim();
-
-        if (!_assessmentHeaders.containsKey(type)) {
-          _assessmentHeaders[type] = [];
-        }
-
-        // Check if header already exists
-        final existingIndex = _assessmentHeaders[type]!.indexWhere((h) {
-          final headerId = h['id']?.toString();
-          final currentAssessmentId = assessmentId?.toString();
-
-          if (currentAssessmentId != null && headerId != null) {
-            return headerId == currentAssessmentId;
-          }
-          if (currentAssessmentId != null || headerId != null) {
-            return false;
-          }
-          final hTitle = (h['title'] ?? '').toString().trim();
-          return h['date'] == datePart && hTitle == title;
-        });
-
-        if (existingIndex == -1) {
-          _assessmentHeaders[type]!.add({
-            'id': assessmentId,
-            'date': datePart,
-            'title': title,
-            'is_temp': false,
-          });
-        }
-      }
-    }
-
-    // Sort headers by date and title
-    for (var key in _assessmentHeaders.keys) {
-      _assessmentHeaders[key]!.sort((a, b) {
-        final dateCompare = a['date'].compareTo(b['date']);
-        if (dateCompare != 0) return dateCompare;
-        return (a['title'] ?? '').compareTo(b['title'] ?? '');
-      });
-    }
-
-    _isLoading = false;
+  /// Applies a [LoadDataResult] from the controller into local state fields.
+  /// Must be called inside setState.
+  void _applyLoadResult(LoadDataResult result) {
+    _studentList = result.studentList;
+    _filteredStudentList = result.filteredStudentList;
+    _gradeList = result.gradeList;
+    _assessmentHeaders = result.assessmentHeaders;
+    _isLoading = result.isLoading;
   }
 
   /// Loads student list and grade data from API with caching.
   /// Like `async mounted()` in Vue calling `axios.get('/api/grades')`.
   /// Uses cache-first strategy; falls back to API on cache miss.
+  /// Loads grade data via the controller (cache-first) and applies results
+  /// via setState. Shows a snackbar on error.
   Future<void> _loadData({
     bool showLoading = true,
     bool useCache = true,
   }) async {
-    try {
-      if (!mounted) return;
+    if (!mounted) return;
 
-      // ─── Step 1: Try loading from cache → return early ───
-      if (showLoading && useCache) {
-        try {
-          final cacheKey = _buildGradeCacheKey();
-          final cached = await LocalCacheService.load(
-            cacheKey,
-            ttl: const Duration(hours: 3),
-          );
-          if (cached != null && mounted) {
-            final cachedData = Map<String, dynamic>.from(cached);
-            final studentData = List<dynamic>.from(
-              cachedData['studentData'] ?? [],
-            );
-            final gradeItems = List<dynamic>.from(
-              cachedData['gradeItems'] ?? [],
-            );
-            if (studentData.isNotEmpty) {
-              setState(() {
-                _processAndApplyGradeData(studentData, gradeItems);
-              });
-              _filterStudents();
-              // Trigger tour
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _checkAndShowTour();
-              });
-              AppLogger.info(
-                'grades',
-                'Grade book loaded from cache — skipping API',
-              );
-              return; // ✅ Cache hit — no API needed
-            }
-          }
-        } catch (e) {
-          AppLogger.error('grades', e);
-        }
-      }
-
-      // Show skeleton only if no data yet
-      if (_studentList.isEmpty && mounted) {
-        if (showLoading) setState(() => _isLoading = true);
-      }
-
-      // ─── Step 2: No cache — fetch fresh from API ───
-      // 1. Load students by class
-      final studentData = await getIt<ApiStudentService>().getStudentByClass(
-        widget.classData['id'],
-      );
-
-      // 2. Load existing grades
-      final academicYearId = ref
-          .read(academicYearRiverpod)
-          .selectedAcademicYear?['id'];
-
-      final subjectId = widget.subject['id'];
-      final url =
-          '/grades/teacher?subject_id=$subjectId&limit=500${academicYearId != null ? "&academic_year_id=$academicYearId" : ""}';
-
-      AppLogger.debug('grades', 'DEBUG: Loading grades from $url');
-
-      final response = await ApiService().get(url);
-
-      // Handle paginated response (Map with 'data' key) or direct List
-      List<dynamic> rawGradeItems = [];
-      if (response is Map<String, dynamic> && response.containsKey('data')) {
-        rawGradeItems = response['data'] as List<dynamic>;
-      } else if (response is List) {
-        rawGradeItems = response;
-      }
-
-      AppLogger.debug(
-        'grades',
-        'DEBUG: Received ${rawGradeItems.length} grade items',
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        _processAndApplyGradeData(studentData, rawGradeItems);
-      });
-      _filterStudents();
-
-      // ─── Step 3: Save to cache ───
-      final cacheKey = _buildGradeCacheKey();
-      LocalCacheService.save(cacheKey, {
-        'studentData': studentData,
-        'gradeItems': rawGradeItems,
-      });
-
-      // Trigger tour
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _checkAndShowTour();
-        }
-      });
-    } catch (e) {
-      AppLogger.error('grades', e);
-      if (!mounted) return;
-      if (_studentList.isEmpty) {
-        setState(() => _isLoading = false);
-      }
-      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+    if (showLoading && _studentList.isEmpty) {
+      setState(() => _isLoading = true);
     }
+
+    final ctrl = ref.read(gradeBookControllerProvider);
+    final result = await ctrl.loadData(
+      teacher: widget.teacher,
+      subject: widget.subject,
+      classData: widget.classData,
+      allGradeTypeList: _allGradeTypeList,
+      showLoading: showLoading,
+      useCache: useCache,
+    );
+
+    if (!mounted) return;
+
+    if (result.error != null) {
+      if (_studentList.isEmpty) setState(() => _isLoading = false);
+      _showErrorSnackBar(result.error!);
+      return;
+    }
+
+    setState(() => _applyLoadResult(result));
+    _filterStudents();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _checkAndShowTour();
+    });
   }
 
   void _showErrorSnackBar(String message) {
     if (mounted) {
-      SnackBarUtils.showError(context, message);
+      ref.read(gradeBookControllerProvider).showErrorSnackBar(context, message);
     }
   }
 
   void _showSuccessSnackBar(String message) {
     if (mounted) {
-      SnackBarUtils.showSuccess(
-        context,
-        ref.read(languageRiverpod).getTranslatedText({
-          'en': message,
-          'id': message.replaceAll('successfully', 'berhasil'),
-        }),
-      );
+      ref.read(gradeBookControllerProvider).showSuccessSnackBar(context, message);
     }
   }
 
   void _updateFilteredGradeTypes() {
     setState(() {
-      _filteredGradeTypeList = _allGradeTypeList
-          .where((type) => _gradeTypeFilter[type] == true)
-          .toList();
+      _filteredGradeTypeList = ref
+          .read(gradeBookControllerProvider)
+          .computeFilteredGradeTypes(_allGradeTypeList, _gradeTypeFilter);
     });
   }
 
   void _showFilterDialog(LanguageProvider languageProvider) {
-    showModalBottomSheet(
+    showGradeFilterSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => Container(
-          height: MediaQuery.of(context).size.height * 0.6,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-          ),
-          child: Column(
-            children: [
-              // Gradient header
-              Container(
-                padding: EdgeInsets.all(AppSpacing.xl),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      _getPrimaryColor(),
-                      _getPrimaryColor().withValues(alpha: 0.8),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.filter_list_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                        SizedBox(width: AppSpacing.md),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Filter Grade Types',
-                            'id': 'Filter Jenis Nilai',
-                          }),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setSheetState(() {
-                          for (var key in _gradeTypeFilter.keys) {
-                            _gradeTypeFilter[key] = true;
-                          }
-                        });
-                        setState(_updateFilteredGradeTypes);
-                      },
-                      child: Text(
-                        'Reset',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Scrollable content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    children: _allGradeTypeList.map((type) {
-                      return CheckboxListTile(
-                        title: Text(
-                          _getGradeTypeLabel(type, languageProvider),
-                          style: TextStyle(
-                            color: ColorUtils.slate800,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        value: _gradeTypeFilter[type],
-                        activeColor: _getPrimaryColor(),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        onChanged: (bool? value) {
-                          setSheetState(() {
-                            _gradeTypeFilter[type] = value ?? false;
-                          });
-                          setState(_updateFilteredGradeTypes);
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-              // Footer
-              Container(
-                padding: EdgeInsets.all(AppSpacing.xl),
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: ColorUtils.slate200)),
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => AppNavigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _getPrimaryColor(),
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Apply',
-                        'id': 'Terapkan',
-                      }),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      allGradeTypes: _allGradeTypeList,
+      gradeTypeFilter: _gradeTypeFilter,
+      primaryColor: _getPrimaryColor(),
+      getLabel: (type) => _getGradeTypeLabel(type, languageProvider),
+      onFilterChanged: (updated) {
+        setState(() {
+          for (final entry in updated.entries) {
+            _gradeTypeFilter[entry.key] = entry.value;
+          }
+          _updateFilteredGradeTypes();
+        });
+      },
     );
   }
 
@@ -587,53 +256,9 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     String type,
     Map<String, dynamic> header,
   ) {
-    try {
-      final studentId = student.id.toString();
-      final studentClassId = student.studentClassId?.toString();
-
-      final result = _gradeList.firstWhere((gradeItem) {
-        final gradeStudentId = gradeItem['siswa_id']?.toString();
-        final gradeStudentClassId = gradeItem['student_class_id']?.toString();
-
-        // 1. Match Student: Try direct ID match or student_class_id match
-        bool studentMatch = (gradeStudentId == studentId);
-
-        if (!studentMatch &&
-            (studentClassId != null || gradeStudentClassId != null)) {
-          studentMatch =
-              (gradeStudentClassId == studentClassId) ||
-              (gradeStudentId == studentClassId);
-        }
-
-        if (!studentMatch) return false;
-
-        // 2. Match Header (Assessment)
-        final headerId = header['id']?.toString();
-        final currentAssessmentId = gradeItem['assessment_id']?.toString();
-
-        if (headerId != null && currentAssessmentId != null) {
-          if (headerId != currentAssessmentId) return false;
-        } else if (headerId != null || currentAssessmentId != null) {
-          // One has ID, other doesn't. If they have same date and title, maybe they ARE the same?
-          // For now, be strict if ID exists.
-          return false;
-        }
-
-        final gradeDate = gradeItem['tanggal']?.toString().split('T')[0];
-        final gradeType = gradeItem['jenis']?.toString().toLowerCase();
-
-        final nTitle = (gradeItem['title'] ?? '').toString().trim();
-        final hTitle = (header['title'] ?? '').toString().trim();
-
-        return (gradeType == type.toLowerCase() &&
-            gradeDate == header['date'] &&
-            nTitle == hTitle);
-      }, orElse: () => <String, dynamic>{});
-
-      return result.isEmpty ? null : result;
-    } catch (e) {
-      return null;
-    }
+    return ref
+        .read(gradeBookControllerProvider)
+        .getGradeForStudentAndHeader(student, type, header, _gradeList);
   }
 
   void _openInputForm(
@@ -671,234 +296,76 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     final String date = header['date'];
     final String? title = header['title'];
     final String displayTitle = title != null && title.isNotEmpty
-        ? "$title (${_formatDateDisplay(date)})"
+        ? '$title (${_formatDateDisplay(date)})'
         : _formatDateDisplay(date);
 
-    showModalBottomSheet(
+    showGradeColumnOptionsSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Gradient header bar
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        _getPrimaryColor(),
-                        _getPrimaryColor().withValues(alpha: 0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.assessment_outlined,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          "${_getGradeTypeLabel(type, languageProvider)} - $displayTitle",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: AppSpacing.sm),
-                ListTile(
-                  leading: Container(
-                    padding: EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.visibility,
-                      color: ColorUtils.corporateBlue600,
-                    ),
-                  ),
-                  title: Text(
-                    languageProvider.getTranslatedText({
-                      'en': 'View Details',
-                      'id': 'Lihat Detail',
-                    }),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: ColorUtils.slate800,
-                    ),
-                  ),
-                  onTap: () {
-                    AppNavigator.pop(context);
-                    _showAssessmentDetail(type, header, languageProvider);
-                  },
-                ),
-                if (_canEdit && !_isReadOnly) ...[
-                  ListTile(
-                    leading: Container(
-                      padding: EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: ColorUtils.warning600.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(Icons.edit, color: ColorUtils.warning600),
-                    ),
-                    title: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Edit Assessment',
-                        'id': 'Edit Penilaian',
-                      }),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: ColorUtils.slate800,
-                      ),
-                    ),
-                    onTap: () {
-                      AppNavigator.pop(context);
-                      _enterEditMode(type, header);
-                    },
-                  ),
-                  ListTile(
-                    leading: Container(
-                      padding: EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: ColorUtils.error600.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.delete_outline,
-                        color: ColorUtils.error600,
-                      ),
-                    ),
-                    title: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Delete Assessment',
-                        'id': 'Hapus Penilaian',
-                      }),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: ColorUtils.error600,
-                      ),
-                    ),
-                    subtitle: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Delete all grades for this assessment',
-                        'id': 'Hapus semua nilai penilaian ini',
-                      }),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: ColorUtils.error600.withValues(alpha: 0.7),
-                      ),
-                    ),
-                    onTap: () {
-                      AppNavigator.pop(context);
-                      _confirmDeleteAssessment(type, header, languageProvider);
-                    },
-                  ),
-                ],
-                SizedBox(height: AppSpacing.md),
-              ],
-            ),
-          ),
-        );
-      },
+      gradeTypeLabel: _getGradeTypeLabel(type, languageProvider),
+      displayTitle: displayTitle,
+      primaryColor: _getPrimaryColor(),
+      canEdit: _canEdit,
+      isReadOnly: _isReadOnly,
+      onViewDetails: () => _showAssessmentDetail(type, header, languageProvider),
+      onEditAssessment: () => _enterEditMode(type, header),
+      onDeleteAssessment: () =>
+          _confirmDeleteAssessment(type, header, languageProvider),
+      labelViewDetails: languageProvider.getTranslatedText({
+        'en': 'View Details',
+        'id': 'Lihat Detail',
+      }),
+      labelEditAssessment: languageProvider.getTranslatedText({
+        'en': 'Edit Assessment',
+        'id': 'Edit Penilaian',
+      }),
+      labelDeleteAssessment: languageProvider.getTranslatedText({
+        'en': 'Delete Assessment',
+        'id': 'Hapus Penilaian',
+      }),
+      labelDeleteSubtitle: languageProvider.getTranslatedText({
+        'en': 'Delete all grades for this assessment',
+        'id': 'Hapus semua nilai penilaian ini',
+      }),
     );
-  }
-
-  String _formatGradeValue(dynamic value) {
-    if (value == null) return '';
-    final double? numVal = double.tryParse(value.toString());
-    if (numVal == null) return '';
-
-    // Check if integer
-    if (numVal % 1 == 0) {
-      return numVal.toInt().toString();
-    }
-
-    return numVal.toString();
   }
 
   Map<String, dynamic>? _editHeader;
 
   /// Enters inline edit mode for a specific grade column.
-  /// Like clicking "Edit" on a table cell in a Vue data table component.
+  /// Delegates all setup to the controller; screen just applies the result via
+  /// setState. Like calling a Vue composable and spreading its return value
+  /// into the component's reactive state.
   void _enterEditMode(String type, Map<String, dynamic> header) {
+    // Dispose old nodes/controllers before replacing them.
+    for (var c in _editControllers.values) {
+      c.dispose();
+    }
+    for (var n in _editFocusNodes.values) {
+      n.dispose();
+    }
+    _editControllers.clear();
+    _editFocusNodes.clear();
+
+    final result = ref.read(gradeBookControllerProvider).enterEditMode(
+      type,
+      header,
+      _filteredStudentList,
+      _gradeList,
+      onFocusLost: _saveInlineGrade,
+    );
+
     setState(() {
-      _isEditMode = true;
-      _editGradeType = type;
-      _editHeader = header;
-      _editControllers.clear();
-      _editFocusNodes.clear();
-
-      // Initialize controllers for all students
-      for (var student in _filteredStudentList) {
-        final gradeData = _getGradeForStudentAndHeader(student, type, header);
-
-        final scoreKey = "${student.id}_score";
-        _editControllers[scoreKey] = TextEditingController(
-          text: _formatGradeValue(gradeData?['nilai']),
-        );
-        _editFocusNodes[scoreKey] = FocusNode();
-        _editFocusNodes[scoreKey]!.addListener(() {
-          if (!_editFocusNodes[scoreKey]!.hasFocus) {
-            _saveInlineGrade(
-              student,
-              type,
-              header,
-              'nilai',
-              _editControllers[scoreKey]!.text,
-            );
-          }
-        });
-
-        // Deskripsi Controller
-        final deskripsiKey = "${student.id}_deskripsi";
-        _editControllers[deskripsiKey] = TextEditingController(
-          text: gradeData?['deskripsi']?.toString() ?? '',
-        );
-        _editFocusNodes[deskripsiKey] = FocusNode();
-        _editFocusNodes[deskripsiKey]!.addListener(() {
-          if (!_editFocusNodes[deskripsiKey]!.hasFocus) {
-            _saveInlineGrade(
-              student,
-              type,
-              header,
-              'deskripsi',
-              _editControllers[deskripsiKey]!.text,
-            );
-          }
-        });
-      }
+      _isEditMode = result.isEditMode;
+      _editGradeType = result.editGradeType;
+      _editHeader = result.editHeader;
+      _editControllers.addAll(result.editControllers);
+      _editFocusNodes.addAll(result.editFocusNodes);
     });
   }
 
   /// Saves a single grade value to the API (inline edit).
-  /// Like calling `axios.post('/api/grades')` after editing a cell.
+  /// Delegates to the controller; reloads data on success unless [reload] is
+  /// false (used when finishing a batch-save so we only reload once at the end).
   Future<void> _saveInlineGrade(
     Student student,
     String type,
@@ -907,65 +374,25 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     String value, {
     bool reload = true,
   }) async {
-    // Check if value changed
-    final currentData = _getGradeForStudentAndHeader(student, type, header);
-    final currentValue = currentData?[field]?.toString() ?? '';
-
-    // If value is empty and was empty, do nothing
-    if (value.isEmpty && currentValue.isEmpty) return;
-
-    // If value hasn't changed, do nothing
-    if (value == currentValue) return;
-
-    try {
-      final data = {
-        'student_id': student.id,
-        'student_class_id': student.studentClassId,
-        'teacher_id': widget.teacher['id'],
-        'subject_id': widget.subject['id'],
-        'type': type,
-        'date': header['date'],
-        'title': header['title'],
-        'assessment_id': header['id'], // Include assessment ID if exists
-        'score': field == 'score'
-            ? (value.isEmpty ? 0 : double.tryParse(value) ?? 0)
-            : (currentData?['nilai'] ?? 0),
-        'notes': field == 'deskripsi'
-            ? value
-            : (currentData?['deskripsi'] ?? ''),
-      };
-
-      if (currentData != null && currentData['id'] != null) {
-        // Update
-        await ApiService().put('/grades/${currentData['id']}', data);
-      } else {
-        // Create new only if we have a value
-        if (value.isNotEmpty) {
-          await ApiService().post('/grades', data);
-        }
-      }
-
-      // Update local data in background
-      if (reload) {
-        _loadData(showLoading: false);
-      }
-    } catch (e) {
-      AppLogger.error('grades', e);
-      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+    final error = await ref.read(gradeBookControllerProvider).saveInlineGrade(
+          student,
+          type,
+          header,
+          field,
+          value,
+          _gradeList,
+          widget.teacher,
+          widget.subject,
+        );
+    if (error != null) {
+      _showErrorSnackBar(error);
+      return;
     }
+    if (reload) _loadData(showLoading: false);
   }
 
-  String _formatDateDisplay(String dateStr) {
-    try {
-      final parts = dateStr.split('-');
-      if (parts.length == 3) {
-        return "${parts[2]}/${parts[1]}/${parts[0]}";
-      }
-      return dateStr;
-    } catch (e) {
-      return dateStr;
-    }
-  }
+  String _formatDateDisplay(String dateStr) =>
+      ref.read(gradeBookControllerProvider).formatDateDisplay(dateStr);
 
   void _showAssessmentDetail(
     String type,
@@ -974,11 +401,11 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   ) {
     final String date = header['date'];
     final String? title = header['title'];
-    // Calculate stats
+
+    // Pre-compute stats — like a Vue computed property before opening a modal.
     final int totalSiswa = _studentList.length;
     int gradedCount = 0;
     double totalScore = 0;
-
     for (var student in _studentList) {
       final existingGrade = _getGradeForStudentAndHeader(student, type, header);
       if (existingGrade != null && existingGrade.isNotEmpty) {
@@ -986,160 +413,39 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         totalScore += double.tryParse(existingGrade['nilai'].toString()) ?? 0.0;
       }
     }
-
     final double average = gradedCount > 0 ? totalScore / gradedCount : 0;
 
-    showDialog(
+    showGradeAssessmentDetailDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Gradient header
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    _getPrimaryColor(),
-                    _getPrimaryColor().withValues(alpha: 0.8),
-                  ],
-                ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.assessment_outlined,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                  SizedBox(width: AppSpacing.md),
-                  Text(
-                    languageProvider.getTranslatedText({
-                      'en': 'Assessment Details',
-                      'id': 'Detail Penilaian',
-                    }),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Content
-            Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDetailRow(
-                    languageProvider.getTranslatedText({
-                      'en': 'Type',
-                      'id': 'Jenis',
-                    }),
-                    _getGradeTypeLabel(type, languageProvider),
-                  ),
-                  _buildDetailRow(
-                    languageProvider.getTranslatedText({
-                      'en': 'Date',
-                      'id': 'Tanggal',
-                    }),
-                    _formatDateDisplay(date),
-                  ),
-                  if (title != null && title.isNotEmpty)
-                    _buildDetailRow(
-                      languageProvider.getTranslatedText({
-                        'en': 'Title',
-                        'id': 'Judul',
-                      }),
-                      title,
-                    ),
-                  Divider(color: ColorUtils.slate200),
-                  _buildDetailRow(
-                    languageProvider.getTranslatedText({
-                      'en': 'Total Students',
-                      'id': 'Total Siswa',
-                    }),
-                    totalSiswa.toString(),
-                  ),
-                  _buildDetailRow(
-                    languageProvider.getTranslatedText({
-                      'en': 'Graded',
-                      'id': 'Sudah Dinilai',
-                    }),
-                    "$gradedCount / $totalSiswa",
-                  ),
-                  _buildDetailRow(
-                    languageProvider.getTranslatedText({
-                      'en': 'Average Score',
-                      'id': 'Rata-rata Nilai',
-                    }),
-                    average.toStringAsFixed(2),
-                  ),
-                ],
-              ),
-            ),
-            // OK button
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => AppNavigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _getPrimaryColor(),
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    'OK',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: ColorUtils.slate800,
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
+      primaryColor: _getPrimaryColor(),
+      labelTitle: languageProvider.getTranslatedText({
+        'en': 'Assessment Details',
+        'id': 'Detail Penilaian',
+      }),
+      labelType: languageProvider.getTranslatedText({'en': 'Type', 'id': 'Jenis'}),
+      labelDate: languageProvider.getTranslatedText({'en': 'Date', 'id': 'Tanggal'}),
+      labelAssessmentTitle: languageProvider.getTranslatedText({
+        'en': 'Title',
+        'id': 'Judul',
+      }),
+      labelTotalStudents: languageProvider.getTranslatedText({
+        'en': 'Total Students',
+        'id': 'Total Siswa',
+      }),
+      labelGraded: languageProvider.getTranslatedText({
+        'en': 'Graded',
+        'id': 'Sudah Dinilai',
+      }),
+      labelAverage: languageProvider.getTranslatedText({
+        'en': 'Average Score',
+        'id': 'Rata-rata Nilai',
+      }),
+      gradeTypeLabel: _getGradeTypeLabel(type, languageProvider),
+      formattedDate: _formatDateDisplay(date),
+      assessmentTitle: (title != null && title.isNotEmpty) ? title : null,
+      totalStudents: totalSiswa,
+      gradedCount: gradedCount,
+      averageScore: average.toStringAsFixed(2),
     );
   }
 
@@ -1150,121 +456,31 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   ) {
     final String date = header['date'];
     final String? title = header['title'];
+    final String typeLabel = _getGradeTypeLabel(type, languageProvider);
+    final String dateLabel = _formatDateDisplay(date);
+    final String titleSuffix = title != null ? ' ($title)' : '';
 
-    showDialog(
+    showGradeConfirmDeleteDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Red gradient header
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    ColorUtils.error600,
-                    ColorUtils.error600.withValues(alpha: 0.8),
-                  ],
-                ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.delete_outline, color: Colors.white, size: 24),
-                  SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Delete Assessment?',
-                        'id': 'Hapus Penilaian?',
-                      }),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Content
-            Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Text(
-                languageProvider.getTranslatedText({
-                  'en':
-                      'Are you sure you want to delete all grades for ${_getGradeTypeLabel(type, languageProvider)} on ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? This action cannot be undone.',
-                  'id':
-                      'Apakah Anda yakin ingin menghapus semua nilai ${_getGradeTypeLabel(type, languageProvider)} pada tanggal ${_formatDateDisplay(date)}${title != null ? " ($title)" : ""}? Tindakan ini tidak dapat dibatalkan.',
-                }),
-                style: TextStyle(color: ColorUtils.slate700, fontSize: 14),
-              ),
-            ),
-            // Buttons
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => AppNavigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(color: ColorUtils.slate300),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Cancel',
-                          'id': 'Batal',
-                        }),
-                        style: TextStyle(color: ColorUtils.slate600),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        AppNavigator.pop(context);
-                        _deleteAssessment(type, header);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorUtils.error600,
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Delete',
-                          'id': 'Hapus',
-                        }),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      labelHeader: languageProvider.getTranslatedText({
+        'en': 'Delete Assessment?',
+        'id': 'Hapus Penilaian?',
+      }),
+      confirmMessage: languageProvider.getTranslatedText({
+        'en':
+            'Are you sure you want to delete all grades for $typeLabel on $dateLabel$titleSuffix? This action cannot be undone.',
+        'id':
+            'Apakah Anda yakin ingin menghapus semua nilai $typeLabel pada tanggal $dateLabel$titleSuffix? Tindakan ini tidak dapat dibatalkan.',
+      }),
+      labelCancel: languageProvider.getTranslatedText({
+        'en': 'Cancel',
+        'id': 'Batal',
+      }),
+      labelDelete: languageProvider.getTranslatedText({
+        'en': 'Delete',
+        'id': 'Hapus',
+      }),
+      onConfirm: () => _deleteAssessment(type, header),
     );
   }
 
@@ -1273,44 +489,22 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     Map<String, dynamic> header,
   ) async {
     setState(() => _isLoading = true);
-    try {
-      final apiService = ApiService();
-
-      // If we have assessment_id, ideally we should delete by ID.
-      // But keeping legacy implementation for now, using batch delete.
-      // Providing title to query params if available.
-
-      final queryParams = {
-        'mata_pelajaran_id': widget.subject['id'],
-        'jenis': type,
-        'tanggal': header['date'],
-      };
-
-      if (header['title'] != null) {
-        queryParams['title'] = header['title'];
-      }
-
-      // If we have assessment_id, maybe backend supports it?
-      // Current backend only checks type and date in batch delete?
-      // User requested Title addition, so assuming backend handles Title in batch delete.
-      // If not, this might over-delete.
-      // Note: Backend CreateGradeAction uses firstOrCreate.
-      // If we delete, we should be specific.
-
-      final queryString = Uri(queryParameters: queryParams).query;
-
-      await apiService.delete('/grades/batch?$queryString');
-
-      _showSuccessSnackBar('Assessment deleted successfully');
-      _loadData(); // Reload to refresh the table
-    } catch (e) {
-      AppLogger.error('grades', e);
+    final error = await ref
+        .read(gradeBookControllerProvider)
+        .deleteAssessment(type, header, widget.subject);
+    if (error != null) {
       setState(() => _isLoading = false);
-      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+      _showErrorSnackBar(error);
+      return;
     }
+    _showSuccessSnackBar('Assessment deleted successfully');
+    _loadData();
   }
 
   Future<void> _addNewAssessment(String type) async {
+    // Screen owns the date-picker dialog (UI concern); controller owns the
+    // data manipulation. Like Vue: component handles the modal, composable
+    // updates the reactive list.
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -1318,86 +512,33 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       lastDate: DateTime(2101),
     );
 
-    if (picked != null) {
-      final dateStr =
-          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+    final updated = ref
+        .read(gradeBookControllerProvider)
+        .addNewAssessment(type, _assessmentHeaders, picked);
 
-      setState(() {
-        if (!_assessmentHeaders.containsKey(type)) {
-          _assessmentHeaders[type] = [];
-        }
-
-        // Add a temporary header. Title is initially null.
-        // It will be distinct from existing ones if they have titles.
-        // But if there is an existing one with null title and same date,
-        // we might just be pointing to that one.
-
-        // Check if we already have a header with this date and (null) title
-        final bool exists = _assessmentHeaders[type]!.any(
-          (h) => h['date'] == dateStr && h['title'] == null,
-        );
-
-        if (!exists) {
-          _assessmentHeaders[type]!.add({
-            'id': null,
-            'date': dateStr,
-            'title': null,
-            'is_temp': true,
-          });
-
-          // Sort
-          _assessmentHeaders[type]!.sort((a, b) {
-            final dateCompare = a['date'].compareTo(b['date']);
-            if (dateCompare != 0) return dateCompare;
-            return (a['title'] ?? '').compareTo(b['title'] ?? '');
-          });
-        }
-      });
+    if (updated != null) {
+      setState(() => _assessmentHeaders = updated);
     }
   }
 
   Future<void> _exportGrades(LanguageProvider languageProvider) async {
     setState(() => _isLoading = true);
-    try {
-      final academicYearId = ref
-          .read(academicYearRiverpod)
-          .selectedAcademicYear?['id'];
-      final endpoint =
-          '/grades/export?class_id=${widget.classData['id']}&subject_id=${widget.subject['id']}&teacher_id=${widget.teacher['id']}&academic_year_id=$academicYearId';
-
-      final bytes = await ApiService.downloadFile(endpoint);
-
-      if (kIsWeb) {
-        // Handle web download
-        await FileSaver.instance.saveFile(
-          name: 'grades_export_${DateTime.now().millisecond}',
-          bytes: bytes,
-          fileExtension: 'xlsx',
-          mimeType: MimeType.microsoftExcel,
+    final error = await ref.read(gradeBookControllerProvider).exportGrades(
+          widget.teacher,
+          widget.subject,
+          widget.classData,
         );
-      } else {
-        // Handle mobile download
-        final directory = await getApplicationDocumentsDirectory();
-        final file = File(
-          '${directory.path}/grades_export_${DateTime.now().millisecondsSinceEpoch}.xlsx',
-        );
-        await file.writeAsBytes(bytes);
-
-        await OpenFile.open(file.path);
-      }
-
-      _showSuccessSnackBar(
-        languageProvider.getTranslatedText({
-          'en': 'Export successful',
-          'id': 'Ekspor berhasil',
-        }),
-      );
-    } catch (e) {
-      AppLogger.error('grades', e);
-      _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
-    } finally {
-      setState(() => _isLoading = false);
+    setState(() => _isLoading = false);
+    if (error != null) {
+      _showErrorSnackBar(error);
+      return;
     }
+    _showSuccessSnackBar(
+      languageProvider.getTranslatedText({
+        'en': 'Export successful',
+        'id': 'Ekspor berhasil',
+      }),
+    );
   }
 
   void _openNewInputForm(LanguageProvider languageProvider) {
@@ -1639,7 +780,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                       } catch (e) {
                         AppLogger.error('grades', e);
                         setState(() => _isLoading = false);
-                        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
+                        _showErrorSnackBar(e.toString());
                       }
                     },
                   )
@@ -1985,29 +1126,15 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   // ---------------------------------------------------------------------------
-  // Color / label helpers
+  // Color / label helpers — thin delegates to the controller so call-sites in
+  // this file stay unchanged. Like Vue `methods` that forward to a composable.
   // ---------------------------------------------------------------------------
 
-  Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
-  }
+  Color _getPrimaryColor() =>
+      ref.read(gradeBookControllerProvider).getPrimaryColor(widget.teacher);
 
-  String _getGradeTypeLabel(String type, LanguageProvider languageProvider) {
-    switch (type) {
-      case 'uh':
-        return languageProvider.getTranslatedText({'en': 'Daily/Quiz', 'id': 'UH/Ulangan'});
-      case 'tugas':
-        return languageProvider.getTranslatedText({'en': 'Assignment', 'id': 'Tugas'});
-      case 'uts':
-        return languageProvider.getTranslatedText({'en': 'Midterm', 'id': 'UTS'});
-      case 'uas':
-        return languageProvider.getTranslatedText({'en': 'Final', 'id': 'UAS'});
-      case 'pts':
-        return languageProvider.getTranslatedText({'en': 'Midterm Exam', 'id': 'PTS'});
-      case 'pas':
-        return languageProvider.getTranslatedText({'en': 'Final Exam', 'id': 'PAS'});
-      default:
-        return type.toUpperCase();
-    }
-  }
+  String _getGradeTypeLabel(String type, LanguageProvider languageProvider) =>
+      ref
+          .read(gradeBookControllerProvider)
+          .getGradeTypeLabel(type, languageProvider);
 }

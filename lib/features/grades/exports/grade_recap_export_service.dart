@@ -72,6 +72,7 @@ class ExcelGradeRecapService {
       await OpenFile.open(filePath);
 
       SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Grade Rekap exported successfully',
@@ -80,6 +81,7 @@ class ExcelGradeRecapService {
       );
     } catch (e) {
       SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to export data: $e',

@@ -64,6 +64,7 @@ class ExcelReportCardService {
       await OpenFile.open(filePath);
 
       SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Raport exported successfully',
@@ -72,6 +73,7 @@ class ExcelReportCardService {
       );
     } catch (e) {
       SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to export data: $e',
@@ -120,6 +122,7 @@ class ExcelReportCardService {
       await OpenFile.open(filePath);
 
       SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'PDF downloaded successfully',
@@ -128,6 +131,7 @@ class ExcelReportCardService {
       );
     } catch (e) {
       SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to download PDF: $e',
@@ -175,6 +179,7 @@ class ExcelReportCardService {
       await OpenFile.open(filePath);
 
       SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Certificate PDF downloaded successfully',
@@ -183,6 +188,7 @@ class ExcelReportCardService {
       );
     } catch (e) {
       SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to download Certificate PDF: $e',

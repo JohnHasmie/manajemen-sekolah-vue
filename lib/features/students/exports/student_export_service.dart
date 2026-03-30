@@ -123,6 +123,7 @@ class ExcelService {
       await OpenFile.open(path);
 
       SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Student data exported successfully',
@@ -131,6 +132,7 @@ class ExcelService {
       );
     } catch (e) {
       SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to export data: $e',
@@ -205,6 +207,7 @@ class ExcelService {
       await OpenFile.open(path);
 
       SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Template downloaded successfully',
@@ -213,6 +216,7 @@ class ExcelService {
       );
     } catch (e) {
       SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to download template: $e',
@@ -241,6 +245,7 @@ class ExcelService {
       await OpenFile.open(path);
 
       SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'CSV Template downloaded successfully',
@@ -249,6 +254,7 @@ class ExcelService {
       );
     } catch (e) {
       SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to download CSV template: $e',

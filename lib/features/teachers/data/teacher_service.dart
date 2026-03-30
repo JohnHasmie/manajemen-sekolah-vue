@@ -21,7 +21,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for teacher (guru) management API calls with caching.
 /// Like a Laravel Resource Controller + pivot table management (teacher-subject).
-/// All methods are instance methods; access via getIt<ApiTeacherService>().
+/// All methods are instance methods; access via `getIt<ApiTeacherService>()`.
 class ApiTeacherService {
   /// Downloads the teacher Excel import template. Returns the local file path.
   Future<String> downloadTemplate() async {

@@ -13,7 +13,7 @@ import 'package:manajemensekolah/features/finance/presentation/controllers/paren
 
 final parentFinanceProvider =
     AutoDisposeAsyncNotifierProvider<ParentFinanceController, ParentFinanceState>(
-  () => ParentFinanceController(),
+  ParentFinanceController.new,
 );
 
 class ParentFinanceController extends AutoDisposeAsyncNotifier<ParentFinanceState> {

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -1433,7 +1432,9 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                             lastDate: DateTime.now().add(Duration(days: 365)),
                           );
                           if (date != null) {
+                            if (!mounted) return;
                             final time = await showTimePicker(
+                              // ignore: use_build_context_synchronously
                               context: context,
                               initialTime: TimeOfDay.now(),
                             );

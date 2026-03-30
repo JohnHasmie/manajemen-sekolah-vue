@@ -16,8 +16,9 @@ class LessonPlanService {
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
     if (status != null) queryParams['status'] = status;
     if (search != null) queryParams['search'] = search;
-    if (academicYearId != null)
+    if (academicYearId != null) {
       queryParams['academic_year_id'] = academicYearId;
+    }
 
     final response = await dioClient.get(
       ApiEndpoints.lessonPlans,
@@ -62,26 +63,34 @@ class LessonPlanService {
       'limit': limit.toString(),
     };
 
-    if (teacherId != null && teacherId.isNotEmpty)
+    if (teacherId != null && teacherId.isNotEmpty) {
       queryParams['teacher_id'] = teacherId;
+    }
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
-    if (subjectId != null && subjectId.isNotEmpty)
+    if (subjectId != null && subjectId.isNotEmpty) {
       queryParams['subject_id'] = subjectId;
-    if (filterSubjectId != null && filterSubjectId.isNotEmpty)
+    }
+    if (filterSubjectId != null && filterSubjectId.isNotEmpty) {
       queryParams['mataPelajaranId'] = filterSubjectId;
+    }
     if (classId != null && classId.isNotEmpty) queryParams['classId'] = classId;
     if (date != null && date.isNotEmpty) queryParams['tanggal'] = date;
-    if (dateStart != null && dateStart.isNotEmpty)
+    if (dateStart != null && dateStart.isNotEmpty) {
       queryParams['tanggalStart'] = dateStart;
-    if (dateEnd != null && dateEnd.isNotEmpty)
+    }
+    if (dateEnd != null && dateEnd.isNotEmpty) {
       queryParams['tanggalEnd'] = dateEnd;
-    if (academicYearId != null && academicYearId.isNotEmpty)
+    }
+    if (academicYearId != null && academicYearId.isNotEmpty) {
       queryParams['academic_year_id'] = academicYearId;
-    if (semester != null && semester.isNotEmpty)
+    }
+    if (semester != null && semester.isNotEmpty) {
       queryParams['semester'] = semester;
-    if (academicYear != null && academicYear.isNotEmpty)
+    }
+    if (academicYear != null && academicYear.isNotEmpty) {
       queryParams['tahun_ajaran'] = academicYear;
+    }
 
     final response = await dioClient.get(
       ApiEndpoints.lessonPlans,

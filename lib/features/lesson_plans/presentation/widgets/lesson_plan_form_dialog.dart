@@ -280,7 +280,9 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
 
       final String message = e.toString().replaceFirst('Exception: ', '');
 
-      SnackBarUtils.showError(context, message);
+      if (context.mounted) {
+        SnackBarUtils.showError(context, message);
+      }
     }
   }
 

@@ -278,6 +278,7 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen> {
       }
 
       if (academicYearId == null) throw Exception("Tahun ajaran tidak valid.");
+      if (!mounted) return;
 
       await ExcelReportCardService.exportReportCardToExcel(
         classId: _selectedClass!['id'].toString(),
@@ -502,6 +503,7 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen> {
         semesterId = '2';
       }
 
+      if (!mounted) return;
       await ExcelReportCardService.exportSingleRaportPdf(
         studentClassId: student['student_class_id'].toString(),
         academicYearId: academicYearId,

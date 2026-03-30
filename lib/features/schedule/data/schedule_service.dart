@@ -343,7 +343,7 @@ class ApiScheduleService {
   /// Returns a list of conflicting schedules (empty if no conflicts).
   /// [excludeScheduleId] - Exclude the current schedule when editing.
   Future<List<dynamic>> getConflictingSchedules({
-    required List<String> days_ids,
+    required List<String> daysIds,
     required String classId,
     required String teacherId, // Added parameter
     required String semesterId,
@@ -353,7 +353,7 @@ class ApiScheduleService {
   }) async {
     try {
       String url = '/teaching-schedule/conflicts?';
-      url += 'days_ids=${days_ids.join(',')}&';
+      url += 'days_ids=${daysIds.join(',')}&';
       url += 'class_id=$classId&';
       url += 'teacher_id=$teacherId&'; // Added to URL
       url += 'semester_id=$semesterId&';

@@ -22,10 +22,10 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_dialog.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/timetable_data_source.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_card_widgets.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_table_view.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_detail_dialog.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_card.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_filter_sheet.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
@@ -176,8 +176,9 @@ class TeachingScheduleManagementScreenState
       _lastCachedAcademicYear = prefs.getString('schedule_last_year_id');
       _lastCachedSemester = prefs.getString('schedule_last_semester_id');
 
-      if (_lastCachedAcademicYear == null || _lastCachedSemester == null)
+      if (_lastCachedAcademicYear == null || _lastCachedSemester == null) {
         return;
+      }
 
       final cacheKey =
           'schedule_list_${_lastCachedAcademicYear}_$_lastCachedSemester';
@@ -1140,7 +1141,7 @@ class TeachingScheduleManagementScreenState
     try {
       final conflicts = await getIt<ApiScheduleService>()
           .getConflictingSchedules(
-            days_ids:
+            daysIds:
                 (newScheduleData['days_ids'] as List<dynamic>?)
                     ?.map((e) => e.toString())
                     .toList() ??
@@ -1346,456 +1347,36 @@ class TeachingScheduleManagementScreenState
   }
 
   void _showFilterSheet() {
-    final languageProvider = ref.read(languageRiverpod);
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        String? tempSelectedHariId = _selectedDayId;
-        String? tempSelectedClassId = _selectedClassId;
-        // Use default values if filter is not set
-        String? tempSelectedSemester =
-            _selectedFilterSemester ?? _selectedSemester;
-        String? tempSelectedJamPelajaran = _selectedJamPelajaran;
-
-        return StatefulBuilder(
-          builder: (context, setModalState) => Container(
-            height: MediaQuery.of(context).size.height * 0.75,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  // Gradient Header
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          ColorUtils.corporateBlue600,
-                          ColorUtils.corporateBlue600.withValues(alpha: 0.8),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.filter_list,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Filter Schedules',
-                              'id': 'Filter Jadwal',
-                            }),
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setModalState(() {
-                              tempSelectedHariId = null;
-                              tempSelectedClassId = null;
-                              tempSelectedJamPelajaran = null;
-                              tempSelectedSemester = _selectedSemester;
-                            });
-                          },
-                          child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Reset',
-                              'id': 'Reset',
-                            }),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Filter Content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Day Filter
-                          ScheduleFilterSectionHeader(
-                            title: languageProvider.getTranslatedText({
-                              'en': 'Day',
-                              'id': 'Hari',
-                            }),
-                            icon: Icons.calendar_today_outlined,
-                          ),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _availableDays.map<Widget>((day) {
-                              final dayId = day['id'].toString();
-                              final dayNameRaw =
-                                  day['name'] ?? day['nama'] ?? '';
-                              final isSelected = tempSelectedHariId == dayId;
-                              final dayMap = {
-                                'senin': {'en': 'Monday', 'id': 'Senin'},
-                                'selasa': {'en': 'Tuesday', 'id': 'Selasa'},
-                                'rabu': {'en': 'Wednesday', 'id': 'Rabu'},
-                                'kamis': {'en': 'Thursday', 'id': 'Kamis'},
-                                'jumat': {'en': 'Friday', 'id': 'Jumat'},
-                                'jum\'at': {'en': 'Friday', 'id': 'Jumat'},
-                                'sabtu': {'en': 'Saturday', 'id': 'Sabtu'},
-                                'minggu': {'en': 'Sunday', 'id': 'Minggu'},
-                                'monday': {'en': 'Monday', 'id': 'Senin'},
-                                'tuesday': {'en': 'Tuesday', 'id': 'Selasa'},
-                                'wednesday': {'en': 'Wednesday', 'id': 'Rabu'},
-                                'thursday': {'en': 'Thursday', 'id': 'Kamis'},
-                                'friday': {'en': 'Friday', 'id': 'Jumat'},
-                                'saturday': {'en': 'Saturday', 'id': 'Sabtu'},
-                                'sunday': {'en': 'Sunday', 'id': 'Minggu'},
-                              };
-                              final normalizedKey = dayNameRaw
-                                  .toString()
-                                  .toLowerCase();
-                              final dayName = dayMap[normalizedKey] != null
-                                  ? languageProvider.getTranslatedText(
-                                      dayMap[normalizedKey]!,
-                                    )
-                                  : dayNameRaw;
-                              return FilterChip(
-                                label: Text(dayName),
-                                selected: isSelected,
-                                onSelected: (selected) => setModalState(
-                                  () => tempSelectedHariId = selected
-                                      ? dayId
-                                      : null,
-                                ),
-                                backgroundColor: Colors.white,
-                                selectedColor: ColorUtils.corporateBlue600
-                                    .withValues(alpha: 0.12),
-                                checkmarkColor: ColorUtils.corporateBlue600,
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate300,
-                                  width: 1,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  fontSize: 13,
-                                ),
-                              );
-                            }).toList(),
-                          ),
-
-                          // Class Filter
-                          ScheduleFilterSectionHeader(
-                            title: languageProvider.getTranslatedText({
-                              'en': 'Class',
-                              'id': 'Kelas',
-                            }),
-                            icon: Icons.class_outlined,
-                          ),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _availableClasses.map<Widget>((cls) {
-                              final classId = cls['id'].toString();
-                              final className =
-                                  cls['name'] ?? cls['nama'] ?? '';
-                              final isSelected = tempSelectedClassId == classId;
-                              return FilterChip(
-                                label: Text(className),
-                                selected: isSelected,
-                                onSelected: (selected) => setModalState(
-                                  () => tempSelectedClassId = selected
-                                      ? classId
-                                      : null,
-                                ),
-                                backgroundColor: Colors.white,
-                                selectedColor: ColorUtils.corporateBlue600
-                                    .withValues(alpha: 0.12),
-                                checkmarkColor: ColorUtils.corporateBlue600,
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate300,
-                                  width: 1,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  fontSize: 13,
-                                ),
-                              );
-                            }).toList(),
-                          ),
-
-                          // Semester Filter
-                          ScheduleFilterSectionHeader(
-                            title: languageProvider.getTranslatedText({
-                              'en': 'Semester',
-                              'id': 'Semester',
-                            }),
-                            icon: Icons.school_outlined,
-                          ),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _semesterList.map<Widget>((semester) {
-                              final semesterId = semester['id'].toString();
-                              String semesterName =
-                                  semester['name'] ??
-                                  semester['nama'] ??
-                                  'Semester $semesterId';
-                              if (semester['academic_year'] != null &&
-                                  semester['academic_year']['year'] != null) {
-                                semesterName +=
-                                    ' (${semester['academic_year']['year']})';
-                              }
-                              final isSelected =
-                                  tempSelectedSemester == semesterId;
-                              return FilterChip(
-                                label: Text(semesterName),
-                                selected: isSelected,
-                                onSelected: (selected) => setModalState(
-                                  () => tempSelectedSemester = selected
-                                      ? semesterId
-                                      : null,
-                                ),
-                                backgroundColor: Colors.white,
-                                selectedColor: ColorUtils.corporateBlue600
-                                    .withValues(alpha: 0.12),
-                                checkmarkColor: ColorUtils.corporateBlue600,
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate300,
-                                  width: 1,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  fontSize: 13,
-                                ),
-                              );
-                            }).toList(),
-                          ),
-
-                          // Jam Pelajaran Filter
-                          ScheduleFilterSectionHeader(
-                            title: languageProvider.getTranslatedText({
-                              'en': 'Lesson Hour',
-                              'id': 'Jam Pelajaran',
-                            }),
-                            icon: Icons.access_time_outlined,
-                          ),
-                          Builder(
-                            builder: (context) {
-                              final Set<String> uniqueHours = {};
-                              for (var jp in _lessonHourList) {
-                                final h = (jp['hour_number'] ?? jp['jam_ke'])
-                                    ?.toString();
-                                if (h != null) uniqueHours.add(h);
-                              }
-                              final sortedHours = uniqueHours.toList()
-                                ..sort(
-                                  (a, b) => (int.tryParse(a) ?? 0).compareTo(
-                                    int.tryParse(b) ?? 0,
-                                  ),
-                                );
-                              return Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: sortedHours.map<Widget>((hourNum) {
-                                  final isSelected =
-                                      tempSelectedJamPelajaran == hourNum;
-                                  return FilterChip(
-                                    label: Text('Jam $hourNum'),
-                                    selected: isSelected,
-                                    onSelected: (selected) => setModalState(
-                                      () => tempSelectedJamPelajaran = selected
-                                          ? hourNum
-                                          : null,
-                                    ),
-                                    backgroundColor: Colors.white,
-                                    selectedColor: ColorUtils.corporateBlue600
-                                        .withValues(alpha: 0.12),
-                                    checkmarkColor: ColorUtils.corporateBlue600,
-                                    side: BorderSide(
-                                      color: isSelected
-                                          ? ColorUtils.corporateBlue600
-                                          : ColorUtils.slate300,
-                                      width: 1,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    labelStyle: TextStyle(
-                                      color: isSelected
-                                          ? ColorUtils.corporateBlue600
-                                          : ColorUtils.slate700,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                      fontSize: 13,
-                                    ),
-                                  );
-                                }).toList(),
-                              );
-                            },
-                          ),
-                          SizedBox(height: AppSpacing.lg),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Footer buttons
-                  Container(
-                    padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        top: BorderSide(color: ColorUtils.slate100),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: ColorUtils.slate900.withValues(alpha: 0.06),
-                          blurRadius: 8,
-                          offset: Offset(0, -2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => AppNavigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              side: BorderSide(color: ColorUtils.slate300),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Cancel',
-                                'id': 'Batal',
-                              }),
-                              style: TextStyle(
-                                color: ColorUtils.slate600,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _selectedDayId = tempSelectedHariId;
-                                _selectedClassId = tempSelectedClassId;
-                                _selectedFilterSemester = tempSelectedSemester;
-                                _selectedJamPelajaran =
-                                    tempSelectedJamPelajaran;
-                                _checkActiveFilter();
-                              });
-                              AppNavigator.pop(context);
-                              _loadData();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorUtils.corporateBlue600,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Apply Filter',
-                                'id': 'Terapkan Filter',
-                              }),
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+      builder: (_) => ScheduleFilterSheet(
+        availableDays: _availableDays,
+        availableClasses: _availableClasses,
+        semesterList: _semesterList,
+        lessonHourList: _lessonHourList,
+        currentSemester: _selectedSemester,
+        selectedDayId: _selectedDayId,
+        selectedClassId: _selectedClassId,
+        selectedFilterSemester: _selectedFilterSemester,
+        selectedJamPelajaran: _selectedJamPelajaran,
+        onApply: ({
+          required String? dayId,
+          required String? classId,
+          required String? semester,
+          required String? jamPelajaran,
+        }) {
+          setState(() {
+            _selectedDayId = dayId;
+            _selectedClassId = classId;
+            _selectedFilterSemester = semester;
+            _selectedJamPelajaran = jamPelajaran;
+            _checkActiveFilter();
+          });
+          _loadData();
+        },
+      ),
     );
   }
 

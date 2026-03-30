@@ -347,6 +347,7 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
 
       final semesterId = await _resolveSemester();
 
+      if (!mounted) return;
       await ExcelReportCardService.exportReportCardToExcel(
         classId: _selectedClass!['id'].toString(),
         academicYearId: academicYearId,
@@ -392,6 +393,7 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
 
       final semesterId = await _resolveSemester();
 
+      if (!mounted) return;
       await ExcelReportCardService.exportSingleRaportPdf(
         studentClassId: student['student_class_id'].toString(),
         academicYearId: academicYearId,
@@ -490,8 +492,9 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
                 PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'refresh') _forceRefresh();
-                    if (value == 'export_excel' && !_isExporting)
+                    if (value == 'export_excel' && !_isExporting) {
                       _exportToExcel();
+                    }
                   },
                   icon: Container(
                     key: _exportKey,

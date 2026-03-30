@@ -5,28 +5,20 @@
 // Supports infinite scroll pagination, search, filtering, Excel import/export.
 //
 // In Laravel terms, this consumes ClassController (GET/POST/PUT/DELETE /api/classes).
-import 'dart:async';
-import 'dart:io';
-
-import 'package:file_picker/file_picker.dart';
+// Business logic lives in [AdminClassroomController] — this file is the View layer.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
-import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/screens/class_promotion_wizard.dart';
 import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
-import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
-import 'package:manajemensekolah/features/classrooms/exports/classroom_export_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, Consumer, ChangeNotifierProvider;
@@ -36,9 +28,11 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/controllers/admin_classroom_controller.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/widgets/class_detail_dialog.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/classroom_add_edit_sheet.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/widgets/classroom_card.dart';
-import 'package:manajemensekolah/features/classrooms/presentation/widgets/classroom_form_fields.dart';
+import 'package:manajemensekolah/features/classrooms/presentation/widgets/classroom_filter_sheet.dart';
 
 /// Admin class management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -100,7 +94,6 @@ class AdminClassManagementScreenState
 
   // Filter Options (from backend)
   final List<String> _availableGradeLevels = [];
-  String? _schoolJenjang; // SD, SMP, or SMA
 
   // Search debounce removed
 
@@ -173,760 +166,253 @@ class AdminClassManagementScreenState
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Data helpers — all delegate to [AdminClassroomController].
+  // Like calling `this.classService.method()` in a Vue component.
+  // ---------------------------------------------------------------------------
+
+  /// Loads school settings and populates [_availableGradeLevels] via setState.
+  /// Jenjang is owned by the controller; the screen only needs the grade list.
   Future<void> _loadSchoolSettings() async {
-    try {
-      // ─── Cache-first: return early on hit ───
-      const cacheKey = 'school_settings';
-      try {
-        final cached = await LocalCacheService.load(
-          cacheKey,
-          ttl: const Duration(hours: 24),
-        );
-        if (cached != null && mounted) {
-          setState(() {
-            _schoolJenjang = cached['jenjang'];
-            _generateGradeLevels();
-          });
-          AppLogger.info('classroom', 'School settings loaded from cache');
-          return;
-        }
-      } catch (e) {
-        AppLogger.error('classroom', 'School settings cache load failed: $e');
-      }
-
-      final settings = await getIt<ApiSettingsService>().getSchoolSettings();
-      if (!mounted) return;
-
-      setState(() {
-        _schoolJenjang = settings['jenjang'];
-        _generateGradeLevels();
-      });
-      // Non-blocking cache save
-      LocalCacheService.save(cacheKey, settings);
-    } catch (e) {
-      AppLogger.error('classroom', 'Error loading school settings: $e');
-      // Fallback if failed
-      setState(_generateGradeLevels);
-    }
+    final result =
+        await ref.read(adminClassroomControllerProvider).loadSchoolSettings();
+    if (!mounted) return;
+    setState(() {
+      _availableGradeLevels
+        ..clear()
+        ..addAll(result.gradeLevels);
+    });
   }
 
-  void _generateGradeLevels() {
-    _availableGradeLevels.clear();
-    int start = 1;
-    int end = 12;
-
-    if (_schoolJenjang != null) {
-      final jenjang = _schoolJenjang!.toUpperCase();
-      if (jenjang == 'SD') {
-        start = 1;
-        end = 6;
-      } else if (jenjang == 'SMP') {
-        start = 7;
-        end = 9;
-      } else if (jenjang == 'SMA' || jenjang == 'SMK') {
-        start = 10;
-        end = 12;
-      }
-    }
-
-    for (int i = start; i <= end; i++) {
-      _availableGradeLevels.add(i.toString());
-    }
-  }
-
+  /// Loads all teachers and updates [_teachers] via setState.
   Future<void> _fetchTeachers() async {
-    try {
-      // ─── Cache-first: return early on hit ───
-      const cacheKey = 'teachers_all_list';
-      try {
-        final cached = await LocalCacheService.load(
-          cacheKey,
-          ttl: const Duration(hours: 6),
-        );
-        if (cached != null && mounted) {
-          setState(() {
-            _teachers = List<dynamic>.from(cached);
-          });
-          AppLogger.info(
-            'classroom',
-            'Teachers list loaded from cache (${_teachers.length})',
-          );
-          return;
-        }
-      } catch (e) {
-        AppLogger.error('classroom', 'Teachers list cache load failed: $e');
-      }
-
-      // Fetch all teachers (limit 1000) to ensure we have the homeroom teacher in the list
-      final response = await getIt<ApiTeacherService>().getTeachersPaginated(
-        limit: 1000,
-      );
-      if (!mounted) return;
-
-      setState(() {
-        _teachers = response['data'] ?? [];
-      });
-      // Non-blocking cache save
-      LocalCacheService.save(cacheKey, response['data'] ?? []);
-      AppLogger.info(
-        'classroom',
-        'Loaded ${_teachers.length} teachers for wali kelas selection',
-      );
-    } catch (e) {
-      AppLogger.error('classroom', 'Error loading teachers: $e');
-      // Continue with empty list - not critical error
-    }
+    final teachers =
+        await ref.read(adminClassroomControllerProvider).fetchTeachers();
+    if (!mounted) return;
+    setState(() => _teachers = teachers);
   }
 
+  /// Recomputes [_hasActiveFilter] after any filter change.
   void _checkActiveFilter() {
     setState(() {
-      _hasActiveFilter =
-          _selectedGradeFilter != null || _selectedHomeroomFilter != null;
+      _hasActiveFilter = ref
+          .read(adminClassroomControllerProvider)
+          .checkActiveFilter(
+            selectedGradeFilter: _selectedGradeFilter,
+            selectedHomeroomFilter: _selectedHomeroomFilter,
+          );
     });
   }
 
+  /// Resets all filters + search, then reloads data.
   void _clearAllFilters() {
+    final reset = ref
+        .read(adminClassroomControllerProvider)
+        .clearAllFilters();
     setState(() {
-      _selectedGradeFilter = null;
-      _selectedHomeroomFilter = null;
+      _selectedGradeFilter = reset.gradeFilter;
+      _selectedHomeroomFilter = reset.homeroomFilter;
+      _hasActiveFilter = reset.hasActiveFilter;
       _searchController.clear();
       _currentPage = 1;
-      _hasActiveFilter = false;
     });
-    _loadData(); // Reload data setelah clear filters
+    _loadData();
   }
 
+  /// Builds chip data for active filter badges in the header.
+  ///
+  /// The [onRemove] callbacks live here (not in the controller) because they
+  /// call [setState] — pure UI side-effect wiring, like a Vue event handler.
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    final List<Map<String, dynamic>> filterChips = [];
-
-    if (_selectedGradeFilter != null) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Kelas'})}: $_selectedGradeFilter',
-        'onRemove': () {
-          setState(() {
-            _selectedGradeFilter = null;
-          });
-          _checkActiveFilter();
-          _loadData(); // Reload data setelah remove filter
-        },
-      });
-    }
-
-    if (_selectedHomeroomFilter != null) {
-      String label;
-      if (_selectedHomeroomFilter == 'true') {
-        label = languageProvider.getTranslatedText({
-          'en': 'Has Homeroom Teacher',
-          'id': 'Sudah Ada Wali Kelas',
-        });
-      } else {
-        label = languageProvider.getTranslatedText({
-          'en': 'No Homeroom Teacher',
-          'id': 'Belum Ada Wali Kelas',
-        });
-      }
-
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Status', 'id': 'Status'})}: $label',
-        'onRemove': () {
-          setState(() {
-            _selectedHomeroomFilter = null;
-          });
-          _checkActiveFilter();
-          _loadData();
-        },
-      });
-    }
-
-    return filterChips;
+    return ref.read(adminClassroomControllerProvider).buildFilterChips(
+      selectedGradeFilter: _selectedGradeFilter,
+      selectedHomeroomFilter: _selectedHomeroomFilter,
+      languageProvider: languageProvider,
+      onRemoveGrade: () {
+        setState(() => _selectedGradeFilter = null);
+        _checkActiveFilter();
+        _loadData();
+      },
+      onRemoveHomeroom: () {
+        setState(() => _selectedHomeroomFilter = null);
+        _checkActiveFilter();
+        _loadData();
+      },
+    );
   }
 
+  /// Opens the filter bottom-sheet; applies selections and reloads on confirm.
   void _showFilterSheet() {
-    final languageProvider = ref.read(languageRiverpod);
-
-    // Temporary state for bottom sheet
-    String? tempSelectedClass = _selectedGradeFilter;
-    String? tempSelectedHomeroom = _selectedHomeroomFilter;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.75,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-          ),
-          child: Column(
-            children: [
-              // Gradient header
-              Container(
-                padding: EdgeInsets.all(AppSpacing.xl),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      ColorUtils.corporateBlue600,
-                      ColorUtils.corporateBlue600.withValues(alpha: 0.8),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.filter_list_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                        SizedBox(width: AppSpacing.md),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Filter Classes',
-                            'id': 'Filter Kelas',
-                          }),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setModalState(() {
-                          tempSelectedClass = null;
-                          tempSelectedHomeroom = null;
-                        });
-                      },
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Reset',
-                          'id': 'Reset',
-                        }),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Filter content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Grade filter section
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.layers_outlined,
-                            size: 16,
-                            color: ColorUtils.slate600,
-                          ),
-                          SizedBox(width: AppSpacing.sm),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Grade Level',
-                              'id': 'Tingkat Kelas',
-                            }),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: ColorUtils.slate800,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _availableGradeLevels.map((gradeLevel) {
-                          final isSelected = tempSelectedClass == gradeLevel;
-                          return FilterChip(
-                            label: Text(gradeLevel),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setModalState(() {
-                                tempSelectedClass = selected
-                                    ? gradeLevel
-                                    : null;
-                              });
-                            },
-                            backgroundColor: Colors.white,
-                            selectedColor: ColorUtils.corporateBlue600
-                                .withValues(alpha: 0.15),
-                            checkmarkColor: ColorUtils.corporateBlue600,
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? ColorUtils.corporateBlue600
-                                  : ColorUtils.slate700,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            side: BorderSide(
-                              color: isSelected
-                                  ? ColorUtils.corporateBlue600
-                                  : ColorUtils.slate300,
-                              width: 1,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-
-                      SizedBox(height: AppSpacing.xxl),
-
-                      // Homeroom teacher status section
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.person_outline,
-                            size: 16,
-                            color: ColorUtils.slate600,
-                          ),
-                          SizedBox(width: AppSpacing.sm),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Homeroom Teacher',
-                              'id': 'Status Wali Kelas',
-                            }),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: ColorUtils.slate800,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children:
-                            [
-                              {
-                                'value': null,
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'All',
-                                  'id': 'Semua',
-                                }),
-                              },
-                              {
-                                'value': 'true',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'Assigned',
-                                  'id': 'Sudah Ada',
-                                }),
-                              },
-                              {
-                                'value': 'false',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'Unassigned',
-                                  'id': 'Belum Ada',
-                                }),
-                              },
-                            ].map((item) {
-                              final isSelected =
-                                  tempSelectedHomeroom == item['value'];
-                              return FilterChip(
-                                label: Text(item['label']!),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    tempSelectedHomeroom = item['value'];
-                                  });
-                                },
-                                backgroundColor: Colors.white,
-                                selectedColor: ColorUtils.corporateBlue600
-                                    .withValues(alpha: 0.15),
-                                checkmarkColor: ColorUtils.corporateBlue600,
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate700,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate300,
-                                  width: 1,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                              );
-                            }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Footer buttons
-              Container(
-                padding: EdgeInsets.all(AppSpacing.xl),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: ColorUtils.slate200)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ColorUtils.slate900.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => AppNavigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          side: BorderSide(color: ColorUtils.slate300),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Cancel',
-                            'id': 'Batal',
-                          }),
-                          style: TextStyle(
-                            color: ColorUtils.slate700,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _selectedGradeFilter = tempSelectedClass;
-                            _selectedHomeroomFilter = tempSelectedHomeroom;
-                          });
-                          _checkActiveFilter();
-                          AppNavigator.pop(context);
-                          _loadData();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: ColorUtils.corporateBlue600,
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Apply Filter',
-                            'id': 'Terapkan Filter',
-                          }),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (_) => ClassroomFilterSheet(
+        initialGradeFilter: _selectedGradeFilter,
+        initialHomeroomFilter: _selectedHomeroomFilter,
+        availableGradeLevels: _availableGradeLevels,
+        languageProvider: ref.read(languageRiverpod),
+        onApply: (grade, homeroom) {
+          setState(() {
+            _selectedGradeFilter = grade;
+            _selectedHomeroomFilter = homeroom;
+          });
+          _checkActiveFilter();
+          _loadData();
+        },
       ),
     );
   }
 
-  String? _buildClassCacheKey() {
-    // Only cache default first-page view (no filters/search) for fast reload
-    if (_currentPage != 1) return null;
-    if (_selectedGradeFilter != null ||
-        _selectedHomeroomFilter != null ||
-        _searchController.text.trim().isNotEmpty) {
-      return null;
-    }
-
-    final academicYearProvider = ref.read(academicYearRiverpod);
-    final yearId =
-        academicYearProvider.selectedAcademicYear?['id']?.toString() ??
-        'default';
-    return 'class_list_$yearId';
-  }
-
+  /// Loads (or reloads) the paginated class list via the controller and
+  /// updates local state with the returned [ClassLoadResult].
   Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
-    try {
-      if (resetPage) {
+    // Show skeleton only when starting fresh with no existing data.
+    if (resetPage && _classes.isEmpty && mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
         _currentPage = 1;
         _hasMoreData = true;
-
-        // ─── Step 1: Try loading from cache for instant display ───
-        if (useCache) {
-          final cacheKey = _buildClassCacheKey();
-          if (cacheKey != null) {
-            try {
-              final cached = await LocalCacheService.load(
-                cacheKey,
-                ttl: const Duration(hours: 3),
-              );
-              if (cached != null && mounted) {
-                final cachedData = Map<String, dynamic>.from(cached);
-                setState(() {
-                  _classes = List<dynamic>.from(cachedData['classes'] ?? []);
-                  _hasMoreData =
-                      cachedData['pagination']?['has_next_page'] ?? false;
-                  _isLoading = false;
-                  _errorMessage = null;
-                });
-                AppLogger.info('classroom', 'Classes loaded from cache');
-                // Cache hit → return early, no background API refresh
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) _checkAndShowTour();
-                });
-                return;
-              }
-            } catch (e) {
-              AppLogger.error('classroom', 'Class cache load failed: $e');
-            }
-          }
-        }
-
-        // Show loading skeleton only if we have no data yet (no cache hit)
-        if (_classes.isEmpty && mounted) {
-          setState(() {
-            _isLoading = true;
-            _errorMessage = null;
-          });
-        }
-      }
-
-      // ─── Step 2: Fetch fresh data from API ───
-      final academicYearProvider = ref.read(academicYearRiverpod);
-      final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
-          ?.toString();
-
-      final response = await getIt<ApiClassService>().getClassPaginated(
-        page: _currentPage,
-        limit: _perPage,
-        gradeLevel: _selectedGradeFilter,
-        hasHomeroomTeacher: _selectedHomeroomFilter,
-        academicYearId: selectedYearId,
-        search: _searchController.text.trim().isEmpty
-            ? null
-            : _searchController.text.trim(),
-        useCache: useCache,
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        _classes = response['data'] ?? [];
-        _hasMoreData = response['pagination']?['has_next_page'] ?? false;
-        _isLoading = false;
       });
+    } else if (resetPage) {
+      _currentPage = 1;
+      _hasMoreData = true;
+    }
 
-      // ─── Step 3: Save to cache (only for default view) ───
-      final cacheKey = _buildClassCacheKey();
-      if (cacheKey != null) {
-        LocalCacheService.save(cacheKey, {
-          'classes': response['data'] ?? [],
-          'pagination': response['pagination'],
-        });
+    final result = await ref.read(adminClassroomControllerProvider).loadData(
+      currentPage: _currentPage,
+      perPage: _perPage,
+      existingClasses: _classes,
+      selectedGradeFilter: _selectedGradeFilter,
+      selectedHomeroomFilter: _selectedHomeroomFilter,
+      searchText: _searchController.text,
+      resetPage: resetPage,
+      useCache: useCache,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _classes = result.classes;
+      _hasMoreData = result.hasMoreData;
+      _isLoading = false;
+      if (result.errorMessage != null) {
+        _errorMessage = result.errorMessage;
       }
-    } catch (e) {
-      AppLogger.error('classroom', 'Load classes error: $e');
-      if (!mounted) return;
+    });
 
-      // Only show error if we don't have cached data displayed
-      if (_classes.isEmpty) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = ErrorUtils.getFriendlyMessage(e);
-        });
-      } else {
-        setState(() => _isLoading = false);
-      }
-
+    if (result.errorMessage != null && _classes.isNotEmpty) {
+      // Non-empty list: show snackbar instead of full error screen.
       SnackBarUtils.showError(
         context,
-        '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal memuat data kelas', 'id': 'Gagal memuat data kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}',
+        '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal memuat data kelas', 'id': 'Gagal memuat data kelas'})}: ${result.errorMessage}',
       );
-    } finally {
-      // Trigger tour
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _checkAndShowTour();
-        }
-      });
     }
+
+    // Trigger tour after data loads.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _checkAndShowTour();
+    });
   }
 
-  /// Force refresh: clear cache and reload from API
+  /// Clears cache and forces a full reload from the API.
   Future<void> _forceRefresh() async {
-    final cacheKey = _buildClassCacheKey();
-    if (cacheKey != null) {
-      await LocalCacheService.invalidate(cacheKey);
-    }
-    await LocalCacheService.clearStartingWith('tour_class_management_');
-    await LocalCacheService.invalidate('school_settings');
-    await LocalCacheService.invalidate('teachers_all_list');
-    await _loadData(resetPage: true, useCache: false);
+    final result =
+        await ref.read(adminClassroomControllerProvider).forceRefresh(
+          perPage: _perPage,
+          selectedGradeFilter: _selectedGradeFilter,
+          selectedHomeroomFilter: _selectedHomeroomFilter,
+          searchText: _searchController.text,
+        );
+    if (!mounted) return;
+    setState(() {
+      _classes = result.classes;
+      _hasMoreData = result.hasMoreData;
+      _isLoading = false;
+      _currentPage = 1;
+      _errorMessage = result.errorMessage;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _checkAndShowTour();
+    });
   }
 
+  /// Pull-to-refresh handler — bypasses cache.
   Future<void> _onRefresh() async {
     await _loadData(resetPage: true, useCache: false);
   }
 
+  /// Appends the next page of classes to the existing list.
   Future<void> _loadMoreData() async {
     if (_isLoadingMore || !_hasMoreData) return;
+    setState(() => _isLoadingMore = true);
 
-    setState(() {
-      _isLoadingMore = true;
-    });
-
-    try {
-      _currentPage++;
-
-      final academicYearProvider = ref.read(academicYearRiverpod);
-      final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
-          ?.toString();
-
-      final response = await getIt<ApiClassService>().getClassPaginated(
-        page: _currentPage,
-        limit: _perPage,
-        gradeLevel: _selectedGradeFilter,
-        hasHomeroomTeacher: _selectedHomeroomFilter,
-        academicYearId: selectedYearId,
-        search: _searchController.text.trim().isEmpty
-            ? null
-            : _searchController.text.trim(),
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        // Append new data to existing list
-        _classes.addAll(response['data'] ?? []);
-        _hasMoreData = response['pagination']?['has_next_page'] ?? false;
-        _isLoadingMore = false;
-      });
-
-      AppLogger.info(
-        'classroom',
-        'Loaded more data: Page $_currentPage, Total items: ${_classes.length}',
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _isLoadingMore = false;
-        _currentPage--; // Revert page increment on error
-      });
-
-      AppLogger.error('classroom', 'Error loading more data: $e');
-    }
-  }
-
-  // Export classes to Excel
-  Future<void> _exportToExcel() async {
-    await ExcelClassService.exportClassesToExcel(
-      classes: _classes,
-      context: context,
-    );
-  }
-
-  // Import classes from Excel
-  Future<void> _importFromExcel() async {
-    final languageProvider = ref.read(languageRiverpod);
-
-    try {
-      final FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx', 'xls'],
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.single.path != null) {
-        await getIt<ApiClassService>().importClassesFromExcel(
-          File(result.files.single.path!),
+    final result =
+        await ref.read(adminClassroomControllerProvider).loadMoreData(
+          nextPage: _currentPage + 1,
+          perPage: _perPage,
+          existingClasses: _classes,
+          selectedGradeFilter: _selectedGradeFilter,
+          selectedHomeroomFilter: _selectedHomeroomFilter,
+          searchText: _searchController.text,
         );
 
-        // Refresh data setelah import
-        await _loadData();
-      }
-    } catch (e) {
-      if (!mounted) return;
-      SnackBarUtils.showError(
-        context,
-        '${languageProvider.getTranslatedText({'en': 'Gagal mengimpor file', 'id': 'Gagal mengimpor file'})}: ${ErrorUtils.getFriendlyMessage(e)}',
-      );
+    if (!mounted) return;
+    setState(() {
+      _classes = result.classes;
+      _hasMoreData = result.hasMoreData;
+      _isLoadingMore = false;
+      if (result.errorMessage == null) _currentPage++;
+    });
+
+    if (result.errorMessage != null) {
+      AppLogger.error('classroom', 'Load more error: ${result.errorMessage}');
     }
   }
 
-  // Download template
+  /// Exports the current class list to Excel via the controller.
+  Future<void> _exportToExcel() async {
+    await ref
+        .read(adminClassroomControllerProvider)
+        .exportToExcel(classes: _classes, context: context);
+  }
+
+  /// Opens a file picker, imports an Excel file, then reloads on success.
+  Future<void> _importFromExcel() async {
+    final success = await ref
+        .read(adminClassroomControllerProvider)
+        .importFromExcel(context);
+    if (success) await _loadData();
+  }
+
+  /// Downloads the Excel import template via the controller.
   Future<void> _downloadTemplate() async {
-    await ExcelClassService.downloadTemplate(context);
+    await ref
+        .read(adminClassroomControllerProvider)
+        .downloadTemplate(context);
   }
 
   Future<void> _showAddEditDialog({Map<String, dynamic>? classData}) async {
-    // Refresh teacher list to avoid stale data (e.g. deleted teachers)
+    // Refresh teacher list and fetch fresh class data before opening the sheet,
+    // ensuring the dropdown always reflects current DB state.
     await _fetchTeachers();
 
-    // Fetch fresh data if editing to ensure we have all fields (especially IDs)
     if (classData != null) {
       try {
-        // Show loading indicator if needed, or just await (fast usually)
         final freshData = await getIt<ApiClassService>().getClassById(
           classData['id'].toString(),
         );
         if (freshData != null && freshData is Map<String, dynamic>) {
           classData = freshData;
 
-          // Ensure the current homeroom teacher is in the _teachers list
-          // This handles cases where the teacher might be missing from the paginated list
-          // or soft-deleted but still assigned
+          // Ensure the assigned homeroom teacher appears in the list even if
+          // they are soft-deleted or outside the paginated teacher fetch.
           String? homeroomId = classData['homeroom_teacher_id']?.toString();
           String? homeroomName = classData['homeroom_teacher_name']?.toString();
 
-          // Handle Pivot/List structure
           if (homeroomId == null &&
               classData['homeroom_teacher'] is List &&
               (classData['homeroom_teacher'] as List).isNotEmpty) {
@@ -945,7 +431,6 @@ class AdminClassManagementScreenState
             if (!exists) {
               setState(() {
                 _teachers.add({'id': homeroomId, 'name': homeroomName});
-                // Sort teachers by name for better UX
                 _teachers.sort(
                   (a, b) =>
                       (a['name'] ?? '').toString().compareTo(b['name'] ?? ''),
@@ -956,466 +441,31 @@ class AdminClassManagementScreenState
         }
       } catch (e) {
         AppLogger.error('classroom', 'Error fetching fresh class data: $e');
-        // Fallback to existing classData
       }
     }
 
     if (!mounted) return;
 
-    final nameController = TextEditingController(
-      text: classData?['name'] ?? classData?['nama'] ?? '',
-    );
-
-    final isEdit = classData != null;
-
-    // Initialize state variables outside builder to preserve state across rebuilds
-    String? selectedGradeLevel = classData != null
-        ? classData['grade_level']?.toString()
-        : null;
-    String? selectedHomeroomTeacherId;
-    if (classData != null) {
-      // Try flat keys
-      selectedHomeroomTeacherId =
-          classData['homeroom_teacher_id']?.toString() ??
-          classData['wali_kelas_id']?.toString();
-
-      // Try nested objects if flat key failed
-      if (selectedHomeroomTeacherId == null) {
-        if (classData['homeroom_teacher'] is List &&
-            (classData['homeroom_teacher'] as List).isNotEmpty) {
-          selectedHomeroomTeacherId = classData['homeroom_teacher'][0]['id']
-              ?.toString();
-        } else if (classData['homeroom_teacher'] is Map) {
-          selectedHomeroomTeacherId = classData['homeroom_teacher']['id']
-              ?.toString();
-        } else if (classData['wali_kelas'] is Map) {
-          selectedHomeroomTeacherId = classData['wali_kelas']['id']?.toString();
-        }
-      }
-    }
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        final languageProvider = ref.watch(languageRiverpod);
-        bool isSaving = false;
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.92,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: SafeArea(
-                  child: Column(
-                    children: [
-                      // Header gradient (Pattern #9)
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              ColorUtils.corporateBlue600,
-                              ColorUtils.corporateBlue600.withValues(
-                                alpha: 0.8,
-                              ),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(24),
-                            topRight: Radius.circular(24),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Icon(
-                                isEdit ? Icons.edit_rounded : Icons.add_rounded,
-                                color: Colors.white,
-                                size: 22,
-                              ),
-                            ),
-                            SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    isEdit
-                                        ? languageProvider.getTranslatedText({
-                                            'en': 'Edit Class',
-                                            'id': 'Edit Kelas',
-                                          })
-                                        : languageProvider.getTranslatedText({
-                                            'en': 'Add Class',
-                                            'id': 'Tambah Kelas',
-                                          }),
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    isEdit
-                                        ? languageProvider.getTranslatedText({
-                                            'en': 'Update class information',
-                                            'id': 'Perbarui informasi kelas',
-                                          })
-                                        : languageProvider.getTranslatedText({
-                                            'en': 'Fill in class information',
-                                            'id': 'Isi informasi kelas',
-                                          }),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => AppNavigator.pop(context),
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.close_rounded,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(AppSpacing.xl),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ClassroomDialogTextField(
-                                controller: nameController,
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Class Name',
-                                  'id': 'Nama Kelas',
-                                }),
-                                icon: Icons.school,
-                              ),
-                              SizedBox(height: AppSpacing.md),
-                              ClassroomGradeLevelDropdown(
-                                value: selectedGradeLevel,
-                                onChanged: (value) {
-                                  setDialogState(() {
-                                    selectedGradeLevel = value;
-                                  });
-                                },
-                                availableGradeLevels: _availableGradeLevels,
-                                languageProvider: languageProvider,
-                              ),
-                              SizedBox(height: AppSpacing.md),
-                              ClassroomHomeroomTeacherDropdown(
-                                value: selectedHomeroomTeacherId,
-                                onChanged: (value) {
-                                  setDialogState(() {
-                                    selectedHomeroomTeacherId = value;
-                                  });
-                                },
-                                teachers: _teachers,
-                                languageProvider: languageProvider,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Enhanced Footer
-                      Container(
-                        padding: EdgeInsets.all(AppSpacing.xl),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border(
-                            top: BorderSide(color: ColorUtils.slate200),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ColorUtils.slate900.withValues(
-                                alpha: 0.05,
-                              ),
-                              blurRadius: 8,
-                              offset: Offset(0, -2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => AppNavigator.pop(context),
-                                style: OutlinedButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(vertical: 14),
-                                  side: BorderSide(color: ColorUtils.slate300),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  AppLocalizations.cancel.tr,
-                                  style: TextStyle(
-                                    color: ColorUtils.slate700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: isSaving
-                                    ? null
-                                    : () async {
-                                        final name = nameController.text.trim();
-
-                                        if (name.isEmpty ||
-                                            selectedGradeLevel == null) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                languageProvider.getTranslatedText({
-                                                  'en':
-                                                      'Class name and grade level must be filled',
-                                                  'id':
-                                                      'Nama kelas dan grade level harus diisi',
-                                                }),
-                                              ),
-                                              backgroundColor: Colors.orange,
-                                            ),
-                                          );
-                                          return;
-                                        }
-
-                                        setDialogState(() => isSaving = true);
-
-                                        try {
-                                          final academicYearProvider = ref.read(
-                                            academicYearRiverpod,
-                                          );
-                                          final selectedYearId =
-                                              academicYearProvider
-                                                  .selectedAcademicYear?['id']
-                                                  ?.toString();
-
-                                          if (isEdit) {
-                                            await getIt<ApiClassService>()
-                                                .updateClass(
-                                                  classData!['id'].toString(),
-                                                  {
-                                                    'name': nameController.text,
-                                                    'grade_level':
-                                                        selectedGradeLevel,
-                                                    'homeroom_teacher_id':
-                                                        selectedHomeroomTeacherId,
-                                                    'academic_year_id':
-                                                        selectedYearId,
-                                                  },
-                                                );
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    languageProvider.getTranslatedText({
-                                                      'en':
-                                                          'Class successfully updated',
-                                                      'id':
-                                                          'Kelas berhasil diperbarui',
-                                                    }),
-                                                  ),
-                                                  backgroundColor: Colors.green,
-                                                ),
-                                              );
-                                              AppNavigator.pop(context);
-                                            }
-                                          } else {
-                                            await getIt<ApiClassService>()
-                                                .addClass({
-                                                  'name': nameController.text,
-                                                  'grade_level':
-                                                      selectedGradeLevel,
-                                                  'homeroom_teacher_id':
-                                                      selectedHomeroomTeacherId,
-                                                  'academic_year_id':
-                                                      selectedYearId,
-                                                });
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    languageProvider.getTranslatedText({
-                                                      'en':
-                                                          'Class successfully added',
-                                                      'id':
-                                                          'Kelas berhasil ditambahkan',
-                                                    }),
-                                                  ),
-                                                  backgroundColor: Colors.green,
-                                                ),
-                                              );
-                                              AppNavigator.pop(context);
-                                            }
-                                          }
-                                          _loadData();
-                                        } catch (e) {
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
-                                                ),
-                                                backgroundColor: Colors.red,
-                                              ),
-                                            );
-                                          }
-                                        } finally {
-                                          if (context.mounted) {
-                                            setDialogState(
-                                              () => isSaving = false,
-                                            );
-                                          }
-                                        }
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: ColorUtils.corporateBlue600,
-                                  disabledBackgroundColor: ColorUtils
-                                      .corporateBlue600
-                                      .withValues(alpha: 0.6),
-                                  padding: EdgeInsets.symmetric(vertical: 14),
-                                  elevation: 2,
-                                  shadowColor: ColorUtils.corporateBlue600
-                                      .withValues(alpha: 0.4),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: isSaving
-                                    ? SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : Text(
-                                        isEdit
-                                            ? languageProvider
-                                                  .getTranslatedText({
-                                                    'en': 'Update',
-                                                    'id': 'Perbarui',
-                                                  })
-                                            : AppLocalizations.save.tr,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+      builder: (_) => ClassroomAddEditSheet(
+        classData: classData,
+        teachers: _teachers,
+        availableGradeLevels: _availableGradeLevels,
+        onSaved: _loadData,
+      ),
     );
   }
 
+  /// Deletes a class by delegating to [AdminClassroomController.deleteClass]
+  /// (confirmation dialog + API call + snackbar), then reloads on success.
   Future<void> _deleteClass(Map<String, dynamic> classData) async {
-    final confirmed = await showDialog(
-      context: context,
-      builder: (context) => ConfirmationDialog(
-        title: ref.read(languageRiverpod).getTranslatedText({
-          'en': 'Delete Class',
-          'id': 'Hapus Kelas',
-        }),
-        content: ref.read(languageRiverpod).getTranslatedText({
-          'en': 'Are you sure you want to delete this class?',
-          'id': 'Yakin ingin menghapus kelas ini?',
-        }),
-        confirmText: ref.read(languageRiverpod).getTranslatedText({
-          'en': 'Delete',
-          'id': 'Hapus',
-        }),
-        confirmColor: Colors.red,
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await getIt<ApiClassService>().deleteClass(classData['id'].toString());
-        _loadData();
-        if (mounted) {
-          SnackBarUtils.showSuccess(
-            context,
-            ref.read(languageRiverpod).getTranslatedText({
-              'en': 'Class successfully deleted',
-              'id': 'Kelas berhasil dihapus',
-            }),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          SnackBarUtils.showError(
-            context,
-            '${ref.read(languageRiverpod).getTranslatedText({'en': 'Gagal menghapus kelas', 'id': 'Gagal menghapus kelas'})}: ${ErrorUtils.getFriendlyMessage(e)}',
-          );
-        }
-      }
-    }
+    final deleted = await ref
+        .read(adminClassroomControllerProvider)
+        .deleteClass(classData, context);
+    if (deleted) _loadData();
   }
 
   void _showClassDetail(Map<String, dynamic> classData) {
@@ -1433,26 +483,19 @@ class AdminClassManagementScreenState
     );
   }
 
+  /// Delegates to [AdminClassroomController.getGradeLevelText].
   String _getGradeLevelText(
     dynamic gradeLevel,
     LanguageProvider languageProvider,
   ) {
-    if (gradeLevel == null) return '-';
-
-    final level = int.tryParse(gradeLevel.toString());
-    if (level == null) return '-';
-
-    if (level <= 6) {
-      return '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Kelas'})} $level SD';
-    } else if (level <= 9) {
-      return '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Kelas'})} $level SMP';
-    } else {
-      return '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Kelas'})} $level SMA';
-    }
+    return ref
+        .read(adminClassroomControllerProvider)
+        .getGradeLevelText(gradeLevel, languageProvider);
   }
 
+  /// Delegates to [AdminClassroomController.getPrimaryColor].
   Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor('admin');
+    return ref.read(adminClassroomControllerProvider).getPrimaryColor();
   }
 
   @override

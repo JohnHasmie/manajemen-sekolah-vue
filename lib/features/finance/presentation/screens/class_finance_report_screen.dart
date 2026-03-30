@@ -771,9 +771,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       if (mounted) AppNavigator.pop(context); // Close loading
       _loadData(); // Refresh table
 
+      // ignore: use_build_context_synchronously
       SnackBarUtils.showSuccess(context, AppLocalizations.paymentRecordedSuccessfully.tr);
     } catch (e) {
       if (mounted) AppNavigator.pop(context);
+      // ignore: use_build_context_synchronously
       SnackBarUtils.showError(context, '${AppLocalizations.error.tr}: $e');
     }
   }
@@ -1752,13 +1754,17 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       if (mounted) AppNavigator.pop(context); // Close loading
       _loadData(); // Refresh table
 
-      SnackBarUtils.showInfo(
-        context,
-        markAsPaid ? AppLocalizations.paymentRecordedSuccessfully.tr : AppLocalizations.paymentCancelled.tr,
-      );
+      if (mounted) {
+        SnackBarUtils.showInfo(
+          context,
+          markAsPaid ? AppLocalizations.paymentRecordedSuccessfully.tr : AppLocalizations.paymentCancelled.tr,
+        );
+      }
     } catch (e) {
-      if (mounted) AppNavigator.pop(context);
-      SnackBarUtils.showError(context, '${AppLocalizations.error.tr}: $e');
+      if (mounted) {
+        AppNavigator.pop(context);
+        SnackBarUtils.showError(context, '${AppLocalizations.error.tr}: $e');
+      }
     }
   }
 

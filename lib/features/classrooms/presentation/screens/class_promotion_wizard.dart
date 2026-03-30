@@ -1792,11 +1792,14 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                                   'academic_year_id': _selectedTargetYearId,
                                 };
                                 await getIt<ApiClassService>().addClass(data);
+                                if (!mounted) return;
+                                // ignore: use_build_context_synchronously
                                 AppNavigator.pop(context);
                                 if (_selectedTargetYearId != null) {
                                   _loadTargetClasses(_selectedTargetYearId!);
                                 }
                                 SnackBarUtils.showSuccess(
+                                  // ignore: use_build_context_synchronously
                                   context,
                                   'Class Created',
                                 );
@@ -1804,6 +1807,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                                 AppLogger.error('classroom', e);
                                 if (mounted) {
                                   SnackBarUtils.showError(
+                                    // ignore: use_build_context_synchronously
                                     context,
                                     '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
                                   );

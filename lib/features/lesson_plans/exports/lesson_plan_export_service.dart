@@ -53,21 +53,25 @@ class ExcelLessonPlanService {
       // Open file
       await OpenFile.open(filePath);
 
-      SnackBarUtils.showSuccess(
-        context,
-        languageProvider.getTranslatedText({
-          'en': 'RPP data exported successfully',
-          'id': 'Data RPP berhasil diexport',
-        }),
-      );
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(
+          context,
+          languageProvider.getTranslatedText({
+            'en': 'RPP data exported successfully',
+            'id': 'Data RPP berhasil diexport',
+          }),
+        );
+      }
     } catch (e) {
-      SnackBarUtils.showError(
-        context,
-        languageProvider.getTranslatedText({
-          'en': 'Failed to export RPP data: $e',
-          'id': 'Gagal mengexport data RPP: $e',
-        }),
-      );
+      if (context.mounted) {
+        SnackBarUtils.showError(
+          context,
+          languageProvider.getTranslatedText({
+            'en': 'Failed to export RPP data: $e',
+            'id': 'Gagal mengexport data RPP: $e',
+          }),
+        );
+      }
     }
   }
 

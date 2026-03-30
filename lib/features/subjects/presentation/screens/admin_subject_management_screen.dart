@@ -1487,7 +1487,7 @@ class SubjectManagementScreenState
                                               });
                                         }
 
-                                        if (mounted) {
+                                        if (context.mounted) {
                                           setDialogState(() {
                                             isSaving = false;
                                           });

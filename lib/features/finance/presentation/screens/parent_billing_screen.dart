@@ -65,7 +65,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
       textSkip: languageProvider.getTranslatedText({'en': 'SKIP', 'id': 'LEWATI'}),
       paddingFocus: 10,
       opacityShadow: 0.8,
-      onFinish: () => _completeTour(),
+      onFinish: _completeTour,
       onSkip: () {
         _completeTour();
         return true;

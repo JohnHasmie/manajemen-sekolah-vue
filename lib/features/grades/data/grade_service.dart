@@ -18,8 +18,9 @@ class GradeService {
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
     if (subjectId != null) queryParams['subject_id'] = subjectId;
     if (gradeType != null) queryParams['grade_type'] = gradeType;
-    if (academicYearId != null)
+    if (academicYearId != null) {
       queryParams['academic_year_id'] = academicYearId;
+    }
 
     final response = await dioClient.get(
       ApiEndpoints.grades,

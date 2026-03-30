@@ -38,7 +38,7 @@ class TargetSelectionModal extends StatefulWidget {
 
 class _TargetSelectionModalState extends State<TargetSelectionModal> {
   List<dynamic> _selectedClasses = [];
-  Map<String, List<dynamic>> _selectedStudentsByClass = {};
+  final Map<String, List<dynamic>> _selectedStudentsByClass = {};
   final TextEditingController _searchStudentController =
       TextEditingController();
 

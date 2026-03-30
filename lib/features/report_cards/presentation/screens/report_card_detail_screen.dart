@@ -499,7 +499,7 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
         if (didPop) return;
 
         final canLeave = await _onWillPop();
-        if (canLeave && mounted) {
+        if (canLeave && context.mounted) {
           AppNavigator.pop(context, result);
         }
       },

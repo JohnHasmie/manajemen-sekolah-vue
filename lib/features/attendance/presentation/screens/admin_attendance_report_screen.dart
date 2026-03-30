@@ -9,27 +9,21 @@
 // similar to `Attendance::with(['student','subject'])->filter(...)->paginate()`.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/features/attendance/exports/attendance_export_service.dart';
+import 'package:manajemensekolah/features/attendance/presentation/controllers/admin_attendance_report_controller.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_detail.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
-import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/core/services/cache_service.dart';
-import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
-import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
-import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
-import 'package:manajemensekolah/features/attendance/exports/attendance_export_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -39,6 +33,8 @@ import 'package:manajemensekolah/features/attendance/presentation/widgets/attend
 import 'package:manajemensekolah/features/attendance/presentation/widgets/admin_attendance_summary_card.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_class_list_view.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_table_view.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/teacher_selection_sheet.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_export_dialog.dart';
 
 /// Data model for a single attendance summary record.
 /// Like a Laravel Eloquent model or a TypeScript interface in Vue.
@@ -98,6 +94,10 @@ class AdminAttendanceReportScreen extends ConsumerStatefulWidget {
 /// setState() is like Vue's reactivity - triggers a re-render when data changes.
 class _AdminAttendanceReportScreenState
     extends ConsumerState<AdminAttendanceReportScreen> {
+  // Controller: owns all API calls and pure helpers.
+  // Like injecting a Laravel Controller into a View — instantiated once.
+  late final AdminAttendanceReportController _controller;
+
   // Data for View Results mode
   List<AttendanceSummary> _attendanceSummaryList = [];
   bool _isLoadingSummary = false;
@@ -148,6 +148,7 @@ class _AdminAttendanceReportScreenState
   @override
   void initState() {
     super.initState();
+    _controller = AdminAttendanceReportController(ref);
     _scrollController.addListener(_onScroll);
     _loadFilterData();
   }
@@ -161,42 +162,16 @@ class _AdminAttendanceReportScreenState
     }
   }
 
-  String? _buildFilterDataCacheKey() {
-    final yearId =
-        ref
-            .read(academicYearRiverpod)
-            .selectedAcademicYear?['id']
-            ?.toString() ??
-        'default';
-    return 'presence_filter_data_$yearId';
-  }
-
-  String? _buildSummaryCacheKey() {
-    if (_currentPage != 1) return null;
-    if (_selectedDateFilter != null ||
-        _selectedSubjectIds.isNotEmpty ||
-        _selectedClassIds.isNotEmpty ||
-        _selectedDayIds.isNotEmpty ||
-        _selectedLessonHourIds.isNotEmpty ||
-        _searchController.text.trim().isNotEmpty ||
-        _showTableView) {
-      return null;
-    }
-    final yearId =
-        ref
-            .read(academicYearRiverpod)
-            .selectedAcademicYear?['id']
-            ?.toString() ??
-        'default';
-    return 'presence_summary_$yearId';
-  }
-
   Future<void> _forceRefresh() async {
-    final filterKey = _buildFilterDataCacheKey();
-    if (filterKey != null) await LocalCacheService.invalidate(filterKey);
-    final summaryKey = _buildSummaryCacheKey();
-    if (summaryKey != null) await LocalCacheService.invalidate(summaryKey);
-    await LocalCacheService.clearStartingWith('tour_presence_report_');
+    await _controller.invalidateCaches(
+      selectedDateFilter: _selectedDateFilter,
+      selectedSubjectIds: _selectedSubjectIds,
+      selectedClassIds: _selectedClassIds,
+      selectedDayIds: _selectedDayIds,
+      selectedLessonHourIds: _selectedLessonHourIds,
+      searchText: _searchController.text,
+      showTableView: _showTableView,
+    );
     if (_selectedClassData == null) {
       _loadFilterData(useCache: false);
     } else {
@@ -207,31 +182,20 @@ class _AdminAttendanceReportScreenState
   Future<void> _loadFilterData({bool useCache = true}) async {
     // Step 1: Try cache for instant display
     if (useCache) {
-      final cacheKey = _buildFilterDataCacheKey();
-      if (cacheKey != null) {
-        final cached = await LocalCacheService.load(cacheKey);
-        if (cached != null && mounted) {
-          final cachedSubjects = cached['subjects'] as List<dynamic>? ?? [];
-          final cachedClasses = cached['classes'] as List<dynamic>? ?? [];
-          final cachedTeachers = cached['teachers'] as List<dynamic>? ?? [];
-          final cachedLessonHours =
-              cached['lessonHours'] as List<dynamic>? ?? [];
-          if (cachedSubjects.isNotEmpty || cachedClasses.isNotEmpty) {
-            setState(() {
-              _subjectList = cachedSubjects;
-              _classList = cachedClasses;
-              _fullTeacherList = cachedTeachers;
-              _lessonHours = cachedLessonHours;
-              _isLoadingClasses = false;
-            });
-            AppLogger.info('attendance', 'Filter data loaded from cache');
-            // Trigger tour from cache path
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _checkAndShowTour();
-            });
-            return;
-          }
-        }
+      final cached = await _controller.loadFilterDataFromCache();
+      if (cached != null && mounted) {
+        setState(() {
+          _subjectList = cached.subjects;
+          _classList = cached.classes;
+          _fullTeacherList = cached.teachers;
+          _lessonHours = cached.lessonHours;
+          _isLoadingClasses = false;
+        });
+        AppLogger.info('attendance', 'Filter data loaded from cache');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _checkAndShowTour();
+        });
+        return;
       }
     }
 
@@ -240,69 +204,15 @@ class _AdminAttendanceReportScreenState
       setState(() => _isLoadingClasses = true);
     }
 
-    // Step 2: Fetch fresh from API
-    List<dynamic> subjects = [];
-    List<dynamic> classes = [];
-
+    // Step 2: Fetch fresh from API via controller
     try {
-      final results = await Future.wait([
-        getIt<ApiSubjectService>()
-            .getSubject()
-            .then((value) {
-              AppLogger.info('attendance', 'Subjects loaded: ${value.length}');
-              return value;
-            })
-            .catchError((e) {
-              AppLogger.error('attendance', 'Error loading subjects: $e');
-              return [];
-            }),
-        getIt<ApiClassService>()
-            .getClass(
-              academicYearId: ref
-                  .read(academicYearRiverpod)
-                  .selectedAcademicYear?['id']
-                  ?.toString(),
-            )
-            .then((value) {
-              AppLogger.info('attendance', 'Classes loaded: ${value.length}');
-              return value;
-            })
-            .catchError((e) {
-              AppLogger.error('attendance', 'Error loading classes: $e');
-              return [];
-            }),
-        getIt<ApiTeacherService>().getTeacher().catchError((e) {
-          AppLogger.error('attendance', 'Error loading teachers: $e');
-          return [];
-        }),
-        getIt<ApiScheduleService>().getJamPelajaran().catchError((e) {
-          AppLogger.error('attendance', 'Error loading lesson hours: $e');
-          return [];
-        }),
-      ]);
-
-      subjects = results[0];
-      classes = results[1];
-      final teachers = results[2];
-      final lessonHours = results[3];
-
+      final result = await _controller.loadFilterDataFromApi();
       if (mounted) {
         setState(() {
-          _subjectList = subjects;
-          _classList = classes;
-          _fullTeacherList = teachers;
-          _lessonHours = lessonHours;
-        });
-      }
-
-      // Step 3: Save to cache (non-blocking)
-      final cacheKey = _buildFilterDataCacheKey();
-      if (cacheKey != null) {
-        LocalCacheService.save(cacheKey, {
-          'subjects': subjects,
-          'classes': classes,
-          'teachers': teachers,
-          'lessonHours': lessonHours,
+          _subjectList = result.subjects;
+          _classList = result.classes;
+          _fullTeacherList = result.teachers;
+          _lessonHours = result.lessonHours;
         });
       }
     } catch (e) {
@@ -316,11 +226,8 @@ class _AdminAttendanceReportScreenState
     } finally {
       if (mounted) {
         setState(() => _isLoadingClasses = false);
-        // Trigger tour
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _checkAndShowTour();
-          }
+          if (mounted) _checkAndShowTour();
         });
       }
     }
@@ -328,12 +235,13 @@ class _AdminAttendanceReportScreenState
 
   void _checkActiveFilter() {
     setState(() {
-      _hasActiveFilter =
-          _selectedDateFilter != null ||
-          _selectedSubjectIds.isNotEmpty ||
-          _selectedClassIds.isNotEmpty ||
-          _selectedDayIds.isNotEmpty ||
-          _selectedLessonHourIds.isNotEmpty;
+      _hasActiveFilter = _controller.checkActiveFilter(
+        selectedDateFilter: _selectedDateFilter,
+        selectedSubjectIds: _selectedSubjectIds,
+        selectedClassIds: _selectedClassIds,
+        selectedDayIds: _selectedDayIds,
+        selectedLessonHourIds: _selectedLessonHourIds,
+      );
     });
   }
 
@@ -351,107 +259,22 @@ class _AdminAttendanceReportScreenState
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    final List<Map<String, dynamic>> filterChips = [];
-
-    if (_selectedDateFilter != null) {
-      final label = _selectedDateFilter == 'today'
-          ? languageProvider.getTranslatedText({
-              'en': 'Today',
-              'id': 'Hari Ini',
-            })
-          : _selectedDateFilter == 'week'
-          ? languageProvider.getTranslatedText({
-              'en': 'This Week',
-              'id': 'Minggu Ini',
-            })
-          : languageProvider.getTranslatedText({
-              'en': 'This Month',
-              'id': 'Bulan Ini',
-            });
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Date', 'id': 'Tanggal'})}: $label',
-        'onRemove': () {
-          setState(() {
-            _selectedDateFilter = null;
-          });
-          _checkActiveFilter();
-          _loadData();
-        },
-      });
-    }
-
-    // Show individual chips for each selected subject
-    if (_selectedSubjectIds.isNotEmpty) {
-      for (var subjectId in _selectedSubjectIds) {
-        final subject = _subjectList.firstWhere(
-          (s) => s['id'].toString() == subjectId,
-          orElse: () => {'nama': 'Subject #$subjectId'},
-        );
-        filterChips.add({
-          'label':
-              '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mapel'})}: ${subject['name']}',
-          'onRemove': () {
-            setState(() {
-              _selectedSubjectIds.remove(subjectId);
-            });
-            _checkActiveFilter();
-            _loadData();
-          },
-        });
-      }
-    }
-
-    // Show individual chips for each selected class
-    if (_selectedClassIds.isNotEmpty) {
-      for (var classId in _selectedClassIds) {
-        final classItem = _classList.firstWhere(
-          (k) => k['id'].toString() == classId,
-          orElse: () => {'name': 'Class #$classId'},
-        );
-        filterChips.add({
-          'label':
-              '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: ${classItem['name'] ?? classItem['nama']}',
-          'onRemove': () {
-            setState(() {
-              _selectedClassIds.remove(classId);
-            });
-            _checkActiveFilter();
-            _loadData();
-          },
-        });
-      }
-    }
-
-    if (_selectedDayIds.isNotEmpty) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'})}: ${_selectedDayIds.length}',
-        'onRemove': () {
-          setState(() {
-            _selectedDayIds.clear();
-            _checkActiveFilter();
-            _loadData();
-          });
-        },
-      });
-    }
-
-    if (_selectedLessonHourIds.isNotEmpty) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Hour', 'id': 'Jam'})}: ${_selectedLessonHourIds.length}',
-        'onRemove': () {
-          setState(() {
-            _selectedLessonHourIds.clear();
-            _checkActiveFilter();
-            _loadData();
-          });
-        },
-      });
-    }
-
-    return filterChips;
+    return _controller.buildFilterChips(
+      languageProvider: languageProvider,
+      selectedDateFilter: _selectedDateFilter,
+      selectedSubjectIds: _selectedSubjectIds,
+      selectedClassIds: _selectedClassIds,
+      selectedDayIds: _selectedDayIds,
+      selectedLessonHourIds: _selectedLessonHourIds,
+      subjectList: _subjectList,
+      classList: _classList,
+      // Each chip's onRemove mutates screen state then reloads data
+      onRemoveSideEffect: (mutation) {
+        setState(mutation);
+        _checkActiveFilter();
+        _loadData();
+      },
+    );
   }
 
   @override
@@ -469,178 +292,79 @@ class _AdminAttendanceReportScreenState
 
     // Step 1: Try cache for instant display
     if (useCache) {
-      final cacheKey = _buildSummaryCacheKey();
-      if (cacheKey != null) {
-        final cached = await LocalCacheService.load(cacheKey);
-        if (cached != null && cached['data'] != null && mounted) {
-          final cachedList = cached['data'] as List<dynamic>;
-          if (cachedList.isNotEmpty) {
-            final cachedItems = cachedList.map((item) {
-              return AttendanceSummary(
-                subjectId: item['subjectId']?.toString() ?? '',
-                subjectName: item['subjectName'] ?? 'Unknown',
-                date: DateTime.tryParse(item['date'] ?? '') ?? DateTime.now(),
-                totalStudents: item['totalStudents'] ?? 0,
-                present: item['present'] ?? 0,
-                absent: item['absent'] ?? 0,
-                classId: item['classId']?.toString() ?? '',
-                className: item['className'] ?? 'Unknown',
-                lessonHourId: item['lessonHourId'],
-                lessonHourName: item['lessonHourName'],
-                academicYearId: item['academicYearId'],
-              );
-            }).toList();
-            setState(() {
-              _attendanceSummaryList = cachedItems;
-              _hasMoreData = cached['hasMoreData'] ?? false;
-              _isLoadingSummary = false;
-            });
-            AppLogger.info('attendance', 'Summary data loaded from cache');
-            return;
-          }
-        }
+      final cached = await _controller.loadSummaryFromCache(
+        selectedDateFilter: _selectedDateFilter,
+        selectedSubjectIds: _selectedSubjectIds,
+        selectedClassIds: _selectedClassIds,
+        selectedDayIds: _selectedDayIds,
+        selectedLessonHourIds: _selectedLessonHourIds,
+        searchText: _searchController.text,
+        showTableView: _showTableView,
+      );
+      if (cached != null && mounted) {
+        setState(() {
+          _attendanceSummaryList = cached.items;
+          _hasMoreData = cached.hasMoreData;
+          _isLoadingSummary = false;
+        });
+        AppLogger.info('attendance', 'Summary data loaded from cache');
+        return;
       }
     }
 
     // Show skeleton only if list is empty
     if (_attendanceSummaryList.isEmpty && mounted) {
-      setState(() {
-        _isLoadingSummary = true;
-      });
+      setState(() => _isLoadingSummary = true);
     }
 
     // Step 2: Fetch fresh from API
     await _fetchData();
 
-    // Step 3: Save to cache (only default view, page 1, non-blocking)
+    // Step 3: Save to cache (non-blocking, only for default unfiltered page 1)
     if (mounted) {
-      final cacheKey = _buildSummaryCacheKey();
-      if (cacheKey != null && _attendanceSummaryList.isNotEmpty) {
-        final serialized = _attendanceSummaryList
-            .map(
-              (item) => {
-                'subjectId': item.subjectId,
-                'subjectName': item.subjectName,
-                'date': item.date.toIso8601String(),
-                'totalStudents': item.totalStudents,
-                'present': item.present,
-                'absent': item.absent,
-                'classId': item.classId,
-                'className': item.className,
-                'lessonHourId': item.lessonHourId,
-                'lessonHourName': item.lessonHourName,
-                'academicYearId': item.academicYearId,
-              },
-            )
-            .toList();
-        LocalCacheService.save(cacheKey, {
-          'data': serialized,
-          'hasMoreData': _hasMoreData,
-        });
-      }
+      _controller.saveSummaryToCache(
+        items: _attendanceSummaryList,
+        hasMoreData: _hasMoreData,
+        selectedDateFilter: _selectedDateFilter,
+        selectedSubjectIds: _selectedSubjectIds,
+        selectedClassIds: _selectedClassIds,
+        selectedDayIds: _selectedDayIds,
+        selectedLessonHourIds: _selectedLessonHourIds,
+        searchText: _searchController.text,
+        showTableView: _showTableView,
+      );
     }
   }
 
   Future<void> _loadMoreData() async {
     if (!mounted || _isLoadingMore || !_hasMoreData) return;
-
-    setState(() {
-      _isLoadingMore = true;
-    });
-
+    setState(() => _isLoadingMore = true);
     await _fetchData();
   }
 
   Future<void> _fetchData() async {
     try {
-      // Prepare filter parameters
-      String? filterDate;
-      String? filterDateStart;
-      String? filterDateEnd;
-
-      if (_selectedDateFilter == 'today') {
-        filterDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      } else if (_selectedDateFilter == 'week') {
-        final now = DateTime.now();
-        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-        final endOfWeek = startOfWeek.add(Duration(days: 6));
-        filterDateStart = DateFormat('yyyy-MM-dd').format(startOfWeek);
-        filterDateEnd = DateFormat('yyyy-MM-dd').format(endOfWeek);
-      } else if (_selectedDateFilter == 'month') {
-        final now = DateTime.now();
-        final startOfMonth = DateTime(now.year, now.month, 1);
-        final endOfMonth = DateTime(now.year, now.month + 1, 0);
-        filterDateStart = DateFormat('yyyy-MM-dd').format(startOfMonth);
-        filterDateEnd = DateFormat('yyyy-MM-dd').format(endOfMonth);
-      }
-
-      final academicYearId = ref
-          .read(academicYearRiverpod)
-          .selectedAcademicYear?['id']
-          ?.toString();
-
-      // Call paginated API
-      final result = await AttendanceService.getAttendanceSummaryPaginated(
-        page: _currentPage,
-        limit: _perPage,
-        subjectId: _selectedSubjectIds.isNotEmpty
-            ? _selectedSubjectIds.first
-            : null,
-        classId: _selectedClassIds.isNotEmpty ? _selectedClassIds.first : null,
-        date: filterDate,
-        dateStart: filterDateStart,
-        dateEnd: filterDateEnd,
-        academicYearId: academicYearId,
-        dayIds: _selectedDayIds,
-        lessonHourIds: _selectedLessonHourIds,
+      final result = await _controller.fetchData(
+        currentPage: _currentPage,
+        perPage: _perPage,
+        selectedDateFilter: _selectedDateFilter,
+        selectedSubjectIds: _selectedSubjectIds,
+        selectedClassIds: _selectedClassIds,
+        selectedDayIds: _selectedDayIds,
+        selectedLessonHourIds: _selectedLessonHourIds,
+        lessonHours: _lessonHours,
       );
 
       if (!mounted) return;
 
-      final List<dynamic> data = result['data'] ?? [];
-      final Map<String, dynamic> pagination = result['pagination'] ?? {};
-
-      final List<AttendanceSummary> newItems = data.map((item) {
-        final lessonHourId = item['lesson_hour_id']?.toString();
-        String? lessonHourName;
-        if (lessonHourId != null && lessonHourId.isNotEmpty) {
-          final lh = _lessonHours.firstWhere(
-            (h) => h['id']?.toString() == lessonHourId,
-            orElse: () => null,
-          );
-          if (lh != null) {
-            lessonHourName = lh['name'];
-          }
-        }
-
-        return AttendanceSummary(
-          subjectId: item['subject_id']?.toString() ?? '',
-          subjectName: item['subject_name'] ?? 'Unknown',
-          date: AppDateUtils.parseApiDate(item['date']) ?? DateTime.now(),
-          totalStudents:
-              int.tryParse(item['total_students']?.toString() ?? '0') ?? 0,
-          present: int.tryParse(item['present']?.toString() ?? '0') ?? 0,
-          absent: int.tryParse(item['absent']?.toString() ?? '0') ?? 0,
-          classId: item['class_id']?.toString() ?? '',
-          className: item['class_name'] ?? 'Unknown',
-          lessonHourId: lessonHourId,
-          lessonHourName: lessonHourName,
-          academicYearId: academicYearId,
-        );
-      }).toList();
-
       setState(() {
         if (_currentPage == 1) {
-          _attendanceSummaryList = newItems;
+          _attendanceSummaryList = result.items;
         } else {
-          _attendanceSummaryList.addAll(newItems);
+          _attendanceSummaryList.addAll(result.items);
         }
-
-        _hasMoreData = pagination['has_next_page'] ?? false;
-        if (_hasMoreData) {
-          _currentPage++;
-        }
-
+        _hasMoreData = result.hasMoreData;
+        _currentPage = result.nextPage;
         _isLoadingSummary = false;
         _isLoadingMore = false;
       });
@@ -659,98 +383,9 @@ class _AdminAttendanceReportScreenState
     }
   }
 
-  Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor('admin');
-  }
+  Color _getPrimaryColor() => _controller.getPrimaryColor();
 
-  LinearGradient _getCardGradient() {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
-    );
-  }
-
-  void _showTeacherSelectionDialog() {
-    final languageProvider = ref.read(languageRiverpod);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    languageProvider.getTranslatedText({
-                      'en': 'Select Teacher',
-                      'id': 'Pilih Guru',
-                    }),
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close),
-                    onPressed: () => AppNavigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                itemCount: _fullTeacherList.length,
-                itemBuilder: (context, index) {
-                  final teacher = _fullTeacherList[index];
-                  return Card(
-                    margin: EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: _getPrimaryColor().withValues(
-                          alpha: 0.1,
-                        ),
-                        child: Text(
-                          (teacher['name'] ?? 'G')[0].toUpperCase(),
-                          style: TextStyle(color: _getPrimaryColor()),
-                        ),
-                      ),
-                      title: Text(
-                        teacher['name'] ?? 'Unknown',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(teacher['nuptk'] ?? 'N/A'),
-                      onTap: () {
-                        AppNavigator.pop(context);
-                        AppNavigator.push(
-                          context,
-                          AttendancePage(teacher: teacher),
-                        ).then((_) => _loadData(useCache: false));
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  LinearGradient _getCardGradient() => _controller.getCardGradient();
 
   void _showFilterSheet() {
     showAttendanceReportFilterSheet(
@@ -810,143 +445,28 @@ class _AdminAttendanceReportScreenState
     });
 
     try {
-      final classId = _selectedClassIds.first;
-      final academicYearId = ref
-          .read(academicYearRiverpod)
-          .selectedAcademicYear?['id']
-          ?.toString();
-
-      // Determine Date Range
-      String? startDate;
-      String? endDate;
-      final now = DateTime.now();
-
-      if (_selectedDateFilter == 'today') {
-        startDate = DateFormat('yyyy-MM-dd').format(now);
-        endDate = startDate;
-      } else if (_selectedDateFilter == 'week') {
-        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-        final endOfWeek = startOfWeek.add(Duration(days: 6));
-        startDate = DateFormat('yyyy-MM-dd').format(startOfWeek);
-        endDate = DateFormat('yyyy-MM-dd').format(endOfWeek);
-      } else if (_selectedDateFilter == 'month' ||
-          _selectedDateFilter == null) {
-        // Default to current month if no filter or monthly filter
-        final startOfMonth = DateTime(now.year, now.month, 1);
-        final endOfMonth = DateTime(now.year, now.month + 1, 0);
-        startDate = DateFormat('yyyy-MM-dd').format(startOfMonth);
-        endDate = DateFormat('yyyy-MM-dd').format(endOfMonth);
-      }
-
-      // 1. Fetch Students
-      final students = await getIt<ApiClassService>().getStudentsByClassId(
-        classId,
+      final result = await _controller.loadTableData(
+        classId: _selectedClassIds.first,
+        selectedDateFilter: _selectedDateFilter,
+        subjectList: _subjectList,
       );
-
-      // 2. Fetch Attendance
-      // We use a large limit to get all records for the range.
-      final attendanceParams = <String, dynamic>{
-        'classId': classId,
-        'limit': '1000', // Adjust as needed
-        'tanggalStart': startDate,
-        'tanggalEnd': endDate,
-      };
-
-      if (academicYearId != null) {
-        attendanceParams['academicYearId'] = academicYearId;
-      }
-
-      final attendanceResult = await AttendanceService.getAttendancePaginated(
-        page: 1,
-        limit: 1000,
-        classId: classId,
-        dateStart: startDate,
-        dateEnd: endDate,
-        academicYearId: academicYearId,
-      );
-
-      final List<dynamic> attendanceData = attendanceResult['data'] ?? [];
 
       if (!mounted) return;
 
-      // Process Data
-      final Set<String> dateSet = {};
-      final Set<String> subjectIdSet = {};
-      final Map<String, dynamic> attMap = {};
-
-      for (var record in attendanceData) {
-        final String? date = record['date'];
-        final String? sId = record['student_id']?.toString();
-        final String? subjId = record['subject_id']?.toString();
-        final String? status = record['status'];
-
-        if (date != null && sId != null && subjId != null) {
-          dateSet.add(date);
-          subjectIdSet.add(subjId);
-          attMap['$sId-$date-$subjId'] = status;
-        }
-      }
-
-      // Create Subject Map for labels
-      final Map<String, dynamic> subjectMap = {};
-      for (var s in _subjectList) {
-        subjectMap[s['id'].toString()] = s['name'];
-      }
-
-      final List<AttendanceGridData> gridData = [];
-      for (var student in students) {
-        // Handle student structure if it's nested or direct
-        final sData = student is Map ? student : {};
-        var id =
-            sData['id']?.toString() ?? sData['student_id']?.toString() ?? '';
-        var nis = sData['nis'] ?? sData['student_number'] ?? '-';
-        var name = sData['name'] ?? sData['nama'] ?? 'Unknown';
-
-        // Sometimes student data is nested in 'student' key if fetched via enrollment
-        if (sData.containsKey('student')) {
-          final inner = sData['student'];
-          if (id.isEmpty) {
-            id = inner['id']?.toString() ?? '';
-          }
-          nis = inner['nis'] ?? inner['student_number'] ?? nis;
-          name = inner['name'] ?? inner['nama'] ?? name;
-        }
-
-        gridData.add(
-          AttendanceGridData(
-            studentId: id,
-            nis: nis.toString(),
-            name: name.toString(),
-            attendance:
-                attMap, // Pass the whole map, but simpler to pass subset?
-            // Actually AttendanceGridData expects 'attendance' map.
-            // But wait, the key for grid data inside DataSource uses specific logic.
-            // Let's pass the global attMap for now, assuming unique keys $sId-$date-$subjId
-          ),
-        );
-      }
-
       setState(() {
-        _studentList.clear();
-        _studentList.addAll(students);
-        _uniqueDates.clear();
-        _uniqueDates.addAll(dateSet.toList()..sort());
-        _uniqueSubjectIds.clear();
-        _uniqueSubjectIds.addAll(subjectIdSet.toList());
-
-        // Build Date Labels (Day of month)
-        _dateLabels.clear();
-        for (var d in _uniqueDates) {
-          final DateTime? dt = AppDateUtils.parseApiDate(d);
-          _dateLabels[d] = dt != null ? dt.day.toString() : d;
-        }
-
-        _attendanceDataSource = AttendanceDataSource(
-          students: gridData,
-          dates: _uniqueDates,
-          subjectIds: _uniqueSubjectIds,
-          subjectMap: subjectMap,
-        );
+        _studentList
+          ..clear()
+          ..addAll(result.studentList);
+        _uniqueDates
+          ..clear()
+          ..addAll(result.uniqueDates);
+        _uniqueSubjectIds
+          ..clear()
+          ..addAll(result.uniqueSubjectIds);
+        _dateLabels
+          ..clear()
+          ..addAll(result.dateLabels);
+        _attendanceDataSource = result.dataSource;
         _isTableLoading = false;
       });
     } catch (e) {
@@ -958,143 +478,38 @@ class _AdminAttendanceReportScreenState
     }
   }
 
-  void _showExportDialog() {
-    final languageProvider = ref.read(languageRiverpod);
-    final academicYearProvider = ref.read(academicYearRiverpod);
-    final activeYearName =
-        academicYearProvider.selectedAcademicYear?['name'] ??
-        '${DateTime.now().year}/${DateTime.now().year + 1}';
-    final activeYearString =
-        academicYearProvider.selectedAcademicYear?['year']?.toString() ??
-        '${DateTime.now().year}/${DateTime.now().year + 1}';
-
-    // Parse years
-    int startYear = DateTime.now().year;
-    try {
-      final parts = activeYearString.split('/');
-      if (parts.isNotEmpty) startYear = int.parse(parts[0]);
-    } catch (_) {}
-
-    // Generate 12 months starting from July of startYear
-    final List<DateTime> months = [];
-    for (int i = 0; i < 12; i++) {
-      months.add(DateTime(startYear, 7 + i, 1));
-    }
-
-    // Default Selection
-    final List<DateTime> selectedMonths = [];
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Export Attendance',
-                  'id': 'Export Absensi',
-                }),
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 300,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tahun Ajaran $activeYearName',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: AppSpacing.sm),
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Select month(s) to export:',
-                        'id': 'Pilih bulan yang akan diexport:',
-                      }),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: ColorUtils.slate400,
-                      ),
-                    ),
-                    SizedBox(height: AppSpacing.sm),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: months.length,
-                        itemBuilder: (context, index) {
-                          final date = months[index];
-                          final label = DateFormat(
-                            'MMMM yyyy',
-                            languageProvider.currentLanguage,
-                          ).format(date);
-                          final isSelected = selectedMonths.contains(date);
-                          return CheckboxListTile(
-                            title: Text(label),
-                            value: isSelected,
-                            onChanged: (val) {
-                              setStateDialog(() {
-                                if (val == true) {
-                                  selectedMonths.add(date);
-                                } else {
-                                  selectedMonths.remove(date);
-                                }
-                              });
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => AppNavigator.pop(context),
-                  child: Text(
-                    languageProvider.getTranslatedText({
-                      'en': 'Cancel',
-                      'id': 'Batal',
-                    }),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: selectedMonths.isEmpty
-                      ? null
-                      : () {
-                          AppNavigator.pop(context);
-                          _processExport(selectedMonths);
-                        },
-                  child: Text('Export'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   Future<void> _processExport(List<DateTime> months) async {
     final languageProvider = ref.read(languageRiverpod);
-
-    // Sort months
     months.sort();
-
     int successCount = 0;
 
-    // Show loading
+    // Show loading spinner
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Center(child: CircularProgressIndicator()),
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
       for (var month in months) {
-        await _exportMonth(month);
-        successCount++;
-        // Optional delay to prevent rate limits
-        await Future.delayed(Duration(seconds: 1));
+        // Build rows without touching context (no async gap issue)
+        final exportRows = await _controller.buildExportRows(
+          month: month,
+          selectedClassData: _selectedClassData!,
+          subjectList: _subjectList,
+        );
+
+        if (exportRows.isNotEmpty && mounted) {
+          // Pass context only after confirming mounted — safe sync-adjacent call
+          await ExcelPresenceService.exportPresenceToExcel(
+            presenceData: exportRows,
+            context: context,
+            filters: {},
+          );
+          successCount++;
+        }
+
+        await Future.delayed(const Duration(seconds: 1));
       }
 
       if (mounted) {
@@ -1109,169 +524,24 @@ class _AdminAttendanceReportScreenState
       }
     } catch (e) {
       if (mounted) {
-        AppNavigator.pop(context); // Close loading
+        AppNavigator.pop(context);
         SnackBarUtils.showError(context, 'Export failed: $e');
       }
     }
   }
 
-  Future<void> _exportMonth(DateTime month) async {
-    final startOfMonth = DateTime(month.year, month.month, 1);
-    final endOfMonth = DateTime(month.year, month.month + 1, 0);
-    final startDate = DateFormat('yyyy-MM-dd').format(startOfMonth);
-    final endDate = DateFormat('yyyy-MM-dd').format(endOfMonth);
-
-    final classId = _selectedClassData!['id'];
-    final className = _selectedClassData!['name'];
-
-    final academicYearProvider = ref.read(academicYearRiverpod);
-    final academicYearId = academicYearProvider.selectedAcademicYear?['id']
-        ?.toString();
-    final academicYearName =
-        academicYearProvider.selectedAcademicYear?['year']?.toString() ?? '-';
-
-    // 1. Fetch Data
-    final students = await getIt<ApiClassService>().getStudentsByClassId(
-      classId,
-    );
-
-    final attendanceResult = await AttendanceService.getAttendancePaginated(
-      page: 1,
-      limit: 2000, // Ensure enough limit
-      classId: classId,
-      dateStart: startDate,
-      dateEnd: endDate,
-      academicYearId: academicYearId,
-    );
-
-    final List<dynamic> attendanceData = attendanceResult['data'] ?? [];
-
-    if (attendanceData.isEmpty) {
-      return; // Skip empty months? Or export empty file?
-    }
-
-    // 2. Map Data
-    // Subject Map
-    final Map<String, String> subjectMap = {};
-    for (var s in _subjectList) {
-      subjectMap[s['id'].toString()] = s['name'];
-    }
-
-    final List<Map<String, dynamic>> exportList = [];
-
-    for (var record in attendanceData) {
-      final sId = record['student_id'].toString();
-      // Find student
-      var studentMap = students.firstWhere((s) {
-        final id = s['id']?.toString();
-        // Nested check
-        if (id != null && id == sId) return true;
-        if (s['student'] != null && s['student']['id']?.toString() == sId) {
-          return true;
-        }
-        return false;
-      }, orElse: () => null);
-
-      if (studentMap == null) continue;
-
-      // Normalize student data
-      if (studentMap['student'] != null) studentMap = studentMap['student'];
-
-      final nis = studentMap['nis'] ?? studentMap['student_number'] ?? '';
-      final name = studentMap['name'] ?? studentMap['nama'] ?? 'Unknown';
-
-      final subjId = record['subject_id'].toString();
-      final subjectName =
-          subjectMap[subjId] ?? record['subject_name'] ?? 'Unknown';
-
-      exportList.add({
-        'nis': nis,
-        'student_name': name,
-        'class_name': className,
-        'academic_year': academicYearName,
-        'date': record['date'],
-        'subject_name': subjectName,
-        'status': record['status'],
-      });
-    }
-
-    if (exportList.isEmpty) return;
-
-    // 3. Call Service
-    // Guard against widget being unmounted before the async work completes.
-    if (!mounted) return;
-    // We pass context for Localization
-    await ExcelPresenceService.exportPresenceToExcel(
-      presenceData: exportList,
-      context: context,
-      filters: {},
-    );
-  }
-
+  /// Delegates filtering to the controller — keeps the screen free of
+  /// duplicate business logic (like Vue calling a Vuex getter).
   List<AttendanceSummary> _getFilteredSummaries() {
-    final searchTerm = _searchController.text.toLowerCase();
-    final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final endOfWeek = startOfWeek.add(Duration(days: 6));
-    final startOfMonth = DateTime(now.year, now.month, 1);
-    final endOfMonth = DateTime(now.year, now.month + 1, 0);
-
-    return _attendanceSummaryList.where((summary) {
-      // Search filter
-      final matchesSearch =
-          searchTerm.isEmpty ||
-          summary.subjectName.toLowerCase().contains(searchTerm) ||
-          summary.className.toLowerCase().contains(searchTerm);
-
-      // Date filter
-      bool matchesDateFilter = true;
-      if (_selectedDateFilter != null) {
-        if (_selectedDateFilter == 'today') {
-          matchesDateFilter = _isSameDay(summary.date, now);
-        } else if (_selectedDateFilter == 'week') {
-          matchesDateFilter =
-              summary.date.isAfter(startOfWeek.subtract(Duration(days: 1))) &&
-              summary.date.isBefore(endOfWeek.add(Duration(days: 1)));
-        } else if (_selectedDateFilter == 'month') {
-          matchesDateFilter =
-              summary.date.isAfter(startOfMonth.subtract(Duration(days: 1))) &&
-              summary.date.isBefore(endOfMonth.add(Duration(days: 1)));
-        }
-      }
-
-      // Subject filter
-      final matchesSubject =
-          _selectedSubjectIds.isEmpty ||
-          _selectedSubjectIds.contains(summary.subjectId);
-
-      // Class filter
-      final matchesClass =
-          _selectedClassIds.isEmpty ||
-          _selectedClassIds.contains(summary.classId);
-
-      // Day filter
-      final matchesDay =
-          _selectedDayIds.isEmpty ||
-          _selectedDayIds.contains(summary.date.weekday.toString());
-
-      // Lesson Hour filter
-      final matchesLessonHour =
-          _selectedLessonHourIds.isEmpty ||
-          _selectedLessonHourIds.contains(summary.lessonHourId);
-
-      return matchesSearch &&
-          matchesDateFilter &&
-          matchesSubject &&
-          matchesClass &&
-          matchesDay &&
-          matchesLessonHour;
-    }).toList();
-  }
-
-  bool _isSameDay(DateTime date1, DateTime date2) {
-    return date1.year == date2.year &&
-        date1.month == date2.month &&
-        date1.day == date2.day;
+    return _controller.getFilteredSummaries(
+      summaryList: _attendanceSummaryList,
+      searchText: _searchController.text,
+      selectedDateFilter: _selectedDateFilter,
+      selectedSubjectIds: _selectedSubjectIds,
+      selectedClassIds: _selectedClassIds,
+      selectedDayIds: _selectedDayIds,
+      selectedLessonHourIds: _selectedLessonHourIds,
+    );
   }
 
   Future<void> _deleteAttendance(
@@ -1401,12 +671,7 @@ class _AdminAttendanceReportScreenState
           _isLoadingSummary = true;
         });
 
-        await AttendanceService.deleteAttendance(
-          subjectId: summary.subjectId,
-          classId: summary.classId,
-          date: DateFormat('yyyy-MM-dd').format(summary.date),
-          lessonHourId: summary.lessonHourId,
-        );
+        await _controller.deleteAttendance(summary);
 
         if (!mounted) return;
         SnackBarUtils.showSuccess(
@@ -1455,7 +720,17 @@ class _AdminAttendanceReportScreenState
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       floatingActionButton: FloatingActionButton(
-        onPressed: _showTeacherSelectionDialog,
+        onPressed: () => TeacherSelectionSheet.show(
+          context: context,
+          teacherList: _fullTeacherList,
+          primaryColor: _getPrimaryColor(),
+          onSelected: (teacher) {
+            AppNavigator.push(
+              context,
+              AttendancePage(teacher: teacher),
+            ).then((_) => _loadData(useCache: false));
+          },
+        ),
         backgroundColor: _getPrimaryColor(),
         tooltip: languageProvider.getTranslatedText({
           'en': 'Add Attendance',
@@ -1582,7 +857,11 @@ class _AdminAttendanceReportScreenState
                             break;
                           case 'export':
                             if (_selectedClassData != null) {
-                              _showExportDialog();
+                              AttendanceExportDialog.show(
+                                context: context,
+                                ref: ref,
+                                onExport: _processExport,
+                              );
                             } else {
                               SnackBarUtils.showInfo(
                                 context,

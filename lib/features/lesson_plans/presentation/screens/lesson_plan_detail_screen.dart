@@ -1077,19 +1077,23 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         'status': fallback(['status']),
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
-              'en': 'Lesson plan saved successfully',
-              'id': 'RPP berhasil disimpan',
-            }),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              languageProvider.getTranslatedText({
+                'en': 'Lesson plan saved successfully',
+                'id': 'RPP berhasil disimpan',
+              }),
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
       AppLogger.error('lesson_plan', e);
-      SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+      if (mounted) {
+        SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+      }
     } finally {
       setState(() {
         _isSaving = false;
@@ -1621,6 +1625,8 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
   Future<void> _copyToClipboard() async {
     await Clipboard.setData(ClipboardData(text: _editedContent));
-    SnackBarUtils.showInfo(context, AppLocalizations.rppCopiedToClipboard.tr);
+    if (mounted) {
+      SnackBarUtils.showInfo(context, AppLocalizations.rppCopiedToClipboard.tr);
+    }
   }
 }

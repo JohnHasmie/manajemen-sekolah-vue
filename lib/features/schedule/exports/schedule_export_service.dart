@@ -60,6 +60,7 @@ class ExcelScheduleService {
       await OpenFile.open(filePath);
 
       SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Schedule data exported successfully',
@@ -68,6 +69,7 @@ class ExcelScheduleService {
       );
     } catch (e) {
       SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to export data: $e',
@@ -99,6 +101,7 @@ class ExcelScheduleService {
       await OpenFile.open(filePath);
 
       SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Template downloaded successfully',
@@ -107,6 +110,7 @@ class ExcelScheduleService {
       );
     } catch (e) {
       SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to download template: $e',

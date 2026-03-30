@@ -762,10 +762,14 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
 
     try {
       final fullLessonPlan = await LessonPlanService.getLessonPlanById(id);
-      AppNavigator.push(context, RPPDetailPage(lessonPlanData: fullLessonPlan));
+      if (mounted) {
+        AppNavigator.push(context, RPPDetailPage(lessonPlanData: fullLessonPlan));
+      }
     } catch (e) {
       AppLogger.error('lesson_plan', 'Fetch RPP detail error: $e');
-      SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+      if (mounted) {
+        SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+      }
     }
   }
 

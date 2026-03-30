@@ -210,11 +210,11 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
         },
       );
 
-      if (context.mounted) {
-        // Close this dialog first, then reload the parent list.
-        AppNavigator.pop(context);
-        widget.onSuccess();
-
+      if (!mounted) return;
+      // Close this dialog first, then reload the parent list.
+      AppNavigator.pop(context);
+      widget.onSuccess();
+      if (mounted) {
         SnackBarUtils.showSuccess(
           context,
           _status == 'verified'
@@ -224,7 +224,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
       }
     } catch (error) {
       AppLogger.error('finance', error);
-      if (context.mounted) {
+      if (mounted) {
         SnackBarUtils.showError(
           context,
           '${AppLocalizations.failedToVerify.tr}: ${ErrorUtils.getFriendlyMessage(error)}',

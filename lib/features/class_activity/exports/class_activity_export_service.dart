@@ -69,6 +69,7 @@ class ExcelClassActivityService {
         await OpenFile.open(filePath);
 
         SnackBarUtils.showSuccess(
+          // ignore: use_build_context_synchronously
           context,
           languageProvider.getTranslatedText({
             'en': 'Class activities data exported successfully',
@@ -84,6 +85,7 @@ class ExcelClassActivityService {
       }
     } catch (e) {
       SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
         context,
         languageProvider.getTranslatedText({
           'en': 'Failed to export data: $e',
