@@ -5,7 +5,7 @@ part 'user.g.dart';
 
 /// User model representing a profile with specific roles and school assignments.
 @freezed
-class User with _$User {
+abstract class User with _$User {
   const factory User({
     required String id,
     required String name,

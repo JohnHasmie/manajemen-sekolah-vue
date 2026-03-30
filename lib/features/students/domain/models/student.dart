@@ -5,7 +5,7 @@ part 'student.g.dart';
 
 /// Represents a student record with personal info and class assignment.
 @freezed
-class Student with _$Student {
+abstract class Student with _$Student {
   const Student._();
 
   const factory Student({

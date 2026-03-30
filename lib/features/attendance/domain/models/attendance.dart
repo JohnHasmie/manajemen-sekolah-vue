@@ -5,7 +5,7 @@ part 'attendance.g.dart';
 
 /// Represents a single attendance record for a student on a specific date.
 @freezed
-class Attendance with _$Attendance {
+abstract class Attendance with _$Attendance {
   const factory Attendance({
     required String id,
     @JsonKey(name: 'student_id') required String studentId,
