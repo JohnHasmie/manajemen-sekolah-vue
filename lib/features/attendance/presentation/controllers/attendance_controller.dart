@@ -9,7 +9,7 @@ final attendanceServiceProvider = Provider<AttendanceService>((ref) {
 });
 
 /// A lightweight AsyncNotifier to manage global Attendance invalidations.
-class AttendanceController extends AutoDisposeAsyncNotifier<void> {
+class AttendanceController extends AsyncNotifier<void> {
   @override
   FutureOr<void> build() {
     // Initial state does nothing, acts as a command controller
@@ -24,6 +24,7 @@ class AttendanceController extends AutoDisposeAsyncNotifier<void> {
 }
 
 final attendanceControllerProvider =
-    AsyncNotifierProvider.autoDispose<AttendanceController, void>(() {
-      return AttendanceController();
-    });
+    AsyncNotifierProvider<AttendanceController, void>(
+      AttendanceController.new,
+      isAutoDispose: true,
+    );

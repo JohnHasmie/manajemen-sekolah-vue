@@ -14,7 +14,7 @@ final lessonPlanServiceProvider = Provider<LessonPlanService>((ref) {
 /// Note: Complex pagination and form states are currently retained in their respective
 /// ConsumerStatefulWidgets (Admin & Teacher RPP Screens) to avoid prop drilling
 /// massive multipart file upload states.
-class LessonPlanController extends AutoDisposeAsyncNotifier<void> {
+class LessonPlanController extends AsyncNotifier<void> {
   @override
   FutureOr<void> build() {
     // Initial state does nothing, acts as a command controller
@@ -38,6 +38,7 @@ class LessonPlanController extends AutoDisposeAsyncNotifier<void> {
 }
 
 final lessonPlanControllerProvider =
-    AsyncNotifierProvider.autoDispose<LessonPlanController, void>(() {
-      return LessonPlanController();
-    });
+    AsyncNotifierProvider<LessonPlanController, void>(
+      LessonPlanController.new,
+      isAutoDispose: true,
+    );

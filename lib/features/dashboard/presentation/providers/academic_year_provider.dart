@@ -5,7 +5,7 @@
 library;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
+import 'package:flutter_riverpod/legacy.dart' as riverpod_legacy;
 
 import 'package:manajemensekolah/features/settings/data/academic_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -164,6 +164,6 @@ class AcademicYearProvider with ChangeNotifier {
 ///
 /// Usage: `ref.watch(academicYearRiverpod)` or `ref.read(academicYearRiverpod)`
 final academicYearRiverpod =
-    riverpod.ChangeNotifierProvider<AcademicYearProvider>((ref) {
+    riverpod_legacy.ChangeNotifierProvider<AcademicYearProvider>((ref) {
       return AcademicYearProvider();
     });

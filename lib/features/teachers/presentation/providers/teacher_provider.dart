@@ -8,7 +8,7 @@ library;
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
+import 'package:flutter_riverpod/legacy.dart' as riverpod_legacy;
 
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
@@ -206,6 +206,6 @@ class TeacherProvider extends ChangeNotifier {
 
 /// Riverpod provider for [TeacherProvider].
 /// Usage: `ref.watch(teacherRiverpod)` or `ref.read(teacherRiverpod)`
-final teacherRiverpod = riverpod.ChangeNotifierProvider<TeacherProvider>((ref) {
+final teacherRiverpod = riverpod_legacy.ChangeNotifierProvider<TeacherProvider>((ref) {
   return TeacherProvider();
 });

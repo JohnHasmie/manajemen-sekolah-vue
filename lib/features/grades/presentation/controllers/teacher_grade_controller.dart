@@ -12,17 +12,25 @@ import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/features/grades/presentation/controllers/teacher_grade_state.dart';
 
-final teacherGradeProvider =
-    AutoDisposeAsyncNotifierProviderFamily<TeacherGradeController, TeacherGradeState, TeacherGradeParams>(
+final teacherGradeProvider = AsyncNotifierProvider.family<
+    TeacherGradeController,
+    TeacherGradeState,
+    TeacherGradeParams>(
   TeacherGradeController.new,
+  isAutoDispose: true,
 );
 
-class TeacherGradeController
-    extends AutoDisposeFamilyAsyncNotifier<TeacherGradeState, TeacherGradeParams> {
+class TeacherGradeController extends AsyncNotifier<TeacherGradeState> {
+  /// The params passed at construction time (replaces the old `arg` property
+  /// from AutoDisposeFamilyAsyncNotifier, which no longer exists in Riverpod 3.x).
+  final TeacherGradeParams arg;
+
+  TeacherGradeController(this.arg);
+
   List<dynamic> _todaySchedulesCache = [];
 
   @override
-  FutureOr<TeacherGradeState> build(TeacherGradeParams arg) async {
+  FutureOr<TeacherGradeState> build() async {
     await _preloadTodaySchedules();
     return _loadClasses(useCache: true);
   }

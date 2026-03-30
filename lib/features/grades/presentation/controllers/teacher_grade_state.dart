@@ -3,7 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'teacher_grade_state.freezed.dart';
 
 @freezed
-abstract class TeacherGradeState with _$TeacherGradeState {
+class TeacherGradeState with _$TeacherGradeState {
   const factory TeacherGradeState({
     @Default(0) int currentStep, // 0: Class List, 1: Subject List
     @Default([]) List<dynamic> classList,

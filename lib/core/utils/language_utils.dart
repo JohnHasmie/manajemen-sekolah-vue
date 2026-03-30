@@ -13,7 +13,7 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
+import 'package:flutter_riverpod/legacy.dart' as riverpod_legacy;
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 
 /// Manages the app's current language and notifies listeners on change.
@@ -90,7 +90,7 @@ extension LocalizedString on Map<String, String> {
 /// the `.tr` extension and old Provider-based widgets.
 ///
 /// Usage: `ref.watch(languageRiverpod)` for reactive language changes
-final languageRiverpod = riverpod.ChangeNotifierProvider<LanguageProvider>((
+final languageRiverpod = riverpod_legacy.ChangeNotifierProvider<LanguageProvider>((
   ref,
 ) {
   return languageProvider; // Global singleton from language_utils.dart

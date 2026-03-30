@@ -1,5 +1,5 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,330 +9,440 @@ part of 'teacher_grade_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// dart format off
 T _$identity<T>(T value) => value;
+
+final _privateConstructorUsedError = UnsupportedError(
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
+
 /// @nodoc
 mixin _$TeacherGradeState {
+  int get currentStep =>
+      throw _privateConstructorUsedError; // 0: Class List, 1: Subject List
+  List<dynamic> get classList => throw _privateConstructorUsedError;
+  List<dynamic> get subjectList => throw _privateConstructorUsedError;
+  List<dynamic> get todaySchedules => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get selectedClass => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get selectedSubject =>
+      throw _privateConstructorUsedError;
+  bool get isLoading => throw _privateConstructorUsedError;
+  bool get isLoadingMore => throw _privateConstructorUsedError;
+  bool get hasMoreData => throw _privateConstructorUsedError;
+  int get currentPage => throw _privateConstructorUsedError;
+  String get searchQuery => throw _privateConstructorUsedError;
 
- int get currentStep;// 0: Class List, 1: Subject List
- List<dynamic> get classList; List<dynamic> get subjectList; List<dynamic> get todaySchedules; Map<String, dynamic>? get selectedClass; Map<String, dynamic>? get selectedSubject; bool get isLoading; bool get isLoadingMore; bool get hasMoreData; int get currentPage; String get searchQuery;
-/// Create a copy of TeacherGradeState
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$TeacherGradeStateCopyWith<TeacherGradeState> get copyWith => _$TeacherGradeStateCopyWithImpl<TeacherGradeState>(this as TeacherGradeState, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TeacherGradeState&&(identical(other.currentStep, currentStep) || other.currentStep == currentStep)&&const DeepCollectionEquality().equals(other.classList, classList)&&const DeepCollectionEquality().equals(other.subjectList, subjectList)&&const DeepCollectionEquality().equals(other.todaySchedules, todaySchedules)&&const DeepCollectionEquality().equals(other.selectedClass, selectedClass)&&const DeepCollectionEquality().equals(other.selectedSubject, selectedSubject)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMoreData, hasMoreData) || other.hasMoreData == hasMoreData)&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,currentStep,const DeepCollectionEquality().hash(classList),const DeepCollectionEquality().hash(subjectList),const DeepCollectionEquality().hash(todaySchedules),const DeepCollectionEquality().hash(selectedClass),const DeepCollectionEquality().hash(selectedSubject),isLoading,isLoadingMore,hasMoreData,currentPage,searchQuery);
-
-@override
-String toString() {
-  return 'TeacherGradeState(currentStep: $currentStep, classList: $classList, subjectList: $subjectList, todaySchedules: $todaySchedules, selectedClass: $selectedClass, selectedSubject: $selectedSubject, isLoading: $isLoading, isLoadingMore: $isLoadingMore, hasMoreData: $hasMoreData, currentPage: $currentPage, searchQuery: $searchQuery)';
-}
-
-
+  /// Create a copy of TeacherGradeState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $TeacherGradeStateCopyWith<TeacherGradeState> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract mixin class $TeacherGradeStateCopyWith<$Res>  {
-  factory $TeacherGradeStateCopyWith(TeacherGradeState value, $Res Function(TeacherGradeState) _then) = _$TeacherGradeStateCopyWithImpl;
-@useResult
-$Res call({
- int currentStep, List<dynamic> classList, List<dynamic> subjectList, List<dynamic> todaySchedules, Map<String, dynamic>? selectedClass, Map<String, dynamic>? selectedSubject, bool isLoading, bool isLoadingMore, bool hasMoreData, int currentPage, String searchQuery
-});
-
-
-
-
+abstract class $TeacherGradeStateCopyWith<$Res> {
+  factory $TeacherGradeStateCopyWith(
+    TeacherGradeState value,
+    $Res Function(TeacherGradeState) then,
+  ) = _$TeacherGradeStateCopyWithImpl<$Res, TeacherGradeState>;
+  @useResult
+  $Res call({
+    int currentStep,
+    List<dynamic> classList,
+    List<dynamic> subjectList,
+    List<dynamic> todaySchedules,
+    Map<String, dynamic>? selectedClass,
+    Map<String, dynamic>? selectedSubject,
+    bool isLoading,
+    bool isLoadingMore,
+    bool hasMoreData,
+    int currentPage,
+    String searchQuery,
+  });
 }
+
 /// @nodoc
-class _$TeacherGradeStateCopyWithImpl<$Res>
+class _$TeacherGradeStateCopyWithImpl<$Res, $Val extends TeacherGradeState>
     implements $TeacherGradeStateCopyWith<$Res> {
-  _$TeacherGradeStateCopyWithImpl(this._self, this._then);
+  _$TeacherGradeStateCopyWithImpl(this._value, this._then);
 
-  final TeacherGradeState _self;
-  final $Res Function(TeacherGradeState) _then;
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
 
-/// Create a copy of TeacherGradeState
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? currentStep = null,Object? classList = null,Object? subjectList = null,Object? todaySchedules = null,Object? selectedClass = freezed,Object? selectedSubject = freezed,Object? isLoading = null,Object? isLoadingMore = null,Object? hasMoreData = null,Object? currentPage = null,Object? searchQuery = null,}) {
-  return _then(_self.copyWith(
-currentStep: null == currentStep ? _self.currentStep : currentStep // ignore: cast_nullable_to_non_nullable
-as int,classList: null == classList ? _self.classList : classList // ignore: cast_nullable_to_non_nullable
-as List<dynamic>,subjectList: null == subjectList ? _self.subjectList : subjectList // ignore: cast_nullable_to_non_nullable
-as List<dynamic>,todaySchedules: null == todaySchedules ? _self.todaySchedules : todaySchedules // ignore: cast_nullable_to_non_nullable
-as List<dynamic>,selectedClass: freezed == selectedClass ? _self.selectedClass : selectedClass // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,selectedSubject: freezed == selectedSubject ? _self.selectedSubject : selectedSubject // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
-as bool,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
-as bool,hasMoreData: null == hasMoreData ? _self.hasMoreData : hasMoreData // ignore: cast_nullable_to_non_nullable
-as bool,currentPage: null == currentPage ? _self.currentPage : currentPage // ignore: cast_nullable_to_non_nullable
-as int,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
+  /// Create a copy of TeacherGradeState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? currentStep = null,
+    Object? classList = null,
+    Object? subjectList = null,
+    Object? todaySchedules = null,
+    Object? selectedClass = freezed,
+    Object? selectedSubject = freezed,
+    Object? isLoading = null,
+    Object? isLoadingMore = null,
+    Object? hasMoreData = null,
+    Object? currentPage = null,
+    Object? searchQuery = null,
+  }) {
+    return _then(
+      _value.copyWith(
+            currentStep: null == currentStep
+                ? _value.currentStep
+                : currentStep // ignore: cast_nullable_to_non_nullable
+                      as int,
+            classList: null == classList
+                ? _value.classList
+                : classList // ignore: cast_nullable_to_non_nullable
+                      as List<dynamic>,
+            subjectList: null == subjectList
+                ? _value.subjectList
+                : subjectList // ignore: cast_nullable_to_non_nullable
+                      as List<dynamic>,
+            todaySchedules: null == todaySchedules
+                ? _value.todaySchedules
+                : todaySchedules // ignore: cast_nullable_to_non_nullable
+                      as List<dynamic>,
+            selectedClass: freezed == selectedClass
+                ? _value.selectedClass
+                : selectedClass // ignore: cast_nullable_to_non_nullable
+                      as Map<String, dynamic>?,
+            selectedSubject: freezed == selectedSubject
+                ? _value.selectedSubject
+                : selectedSubject // ignore: cast_nullable_to_non_nullable
+                      as Map<String, dynamic>?,
+            isLoading: null == isLoading
+                ? _value.isLoading
+                : isLoading // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isLoadingMore: null == isLoadingMore
+                ? _value.isLoadingMore
+                : isLoadingMore // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            hasMoreData: null == hasMoreData
+                ? _value.hasMoreData
+                : hasMoreData // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            currentPage: null == currentPage
+                ? _value.currentPage
+                : currentPage // ignore: cast_nullable_to_non_nullable
+                      as int,
+            searchQuery: null == searchQuery
+                ? _value.searchQuery
+                : searchQuery // ignore: cast_nullable_to_non_nullable
+                      as String,
+          )
+          as $Val,
+    );
+  }
 }
 
+/// @nodoc
+abstract class _$$TeacherGradeStateImplCopyWith<$Res>
+    implements $TeacherGradeStateCopyWith<$Res> {
+  factory _$$TeacherGradeStateImplCopyWith(
+    _$TeacherGradeStateImpl value,
+    $Res Function(_$TeacherGradeStateImpl) then,
+  ) = __$$TeacherGradeStateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    int currentStep,
+    List<dynamic> classList,
+    List<dynamic> subjectList,
+    List<dynamic> todaySchedules,
+    Map<String, dynamic>? selectedClass,
+    Map<String, dynamic>? selectedSubject,
+    bool isLoading,
+    bool isLoadingMore,
+    bool hasMoreData,
+    int currentPage,
+    String searchQuery,
+  });
 }
 
+/// @nodoc
+class __$$TeacherGradeStateImplCopyWithImpl<$Res>
+    extends _$TeacherGradeStateCopyWithImpl<$Res, _$TeacherGradeStateImpl>
+    implements _$$TeacherGradeStateImplCopyWith<$Res> {
+  __$$TeacherGradeStateImplCopyWithImpl(
+    _$TeacherGradeStateImpl _value,
+    $Res Function(_$TeacherGradeStateImpl) _then,
+  ) : super(_value, _then);
 
-/// Adds pattern-matching-related methods to [TeacherGradeState].
-extension TeacherGradeStatePatterns on TeacherGradeState {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _TeacherGradeState value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _TeacherGradeState() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _TeacherGradeState value)  $default,){
-final _that = this;
-switch (_that) {
-case _TeacherGradeState():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _TeacherGradeState value)?  $default,){
-final _that = this;
-switch (_that) {
-case _TeacherGradeState() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int currentStep,  List<dynamic> classList,  List<dynamic> subjectList,  List<dynamic> todaySchedules,  Map<String, dynamic>? selectedClass,  Map<String, dynamic>? selectedSubject,  bool isLoading,  bool isLoadingMore,  bool hasMoreData,  int currentPage,  String searchQuery)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _TeacherGradeState() when $default != null:
-return $default(_that.currentStep,_that.classList,_that.subjectList,_that.todaySchedules,_that.selectedClass,_that.selectedSubject,_that.isLoading,_that.isLoadingMore,_that.hasMoreData,_that.currentPage,_that.searchQuery);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int currentStep,  List<dynamic> classList,  List<dynamic> subjectList,  List<dynamic> todaySchedules,  Map<String, dynamic>? selectedClass,  Map<String, dynamic>? selectedSubject,  bool isLoading,  bool isLoadingMore,  bool hasMoreData,  int currentPage,  String searchQuery)  $default,) {final _that = this;
-switch (_that) {
-case _TeacherGradeState():
-return $default(_that.currentStep,_that.classList,_that.subjectList,_that.todaySchedules,_that.selectedClass,_that.selectedSubject,_that.isLoading,_that.isLoadingMore,_that.hasMoreData,_that.currentPage,_that.searchQuery);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int currentStep,  List<dynamic> classList,  List<dynamic> subjectList,  List<dynamic> todaySchedules,  Map<String, dynamic>? selectedClass,  Map<String, dynamic>? selectedSubject,  bool isLoading,  bool isLoadingMore,  bool hasMoreData,  int currentPage,  String searchQuery)?  $default,) {final _that = this;
-switch (_that) {
-case _TeacherGradeState() when $default != null:
-return $default(_that.currentStep,_that.classList,_that.subjectList,_that.todaySchedules,_that.selectedClass,_that.selectedSubject,_that.isLoading,_that.isLoadingMore,_that.hasMoreData,_that.currentPage,_that.searchQuery);case _:
-  return null;
-
-}
-}
-
+  /// Create a copy of TeacherGradeState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? currentStep = null,
+    Object? classList = null,
+    Object? subjectList = null,
+    Object? todaySchedules = null,
+    Object? selectedClass = freezed,
+    Object? selectedSubject = freezed,
+    Object? isLoading = null,
+    Object? isLoadingMore = null,
+    Object? hasMoreData = null,
+    Object? currentPage = null,
+    Object? searchQuery = null,
+  }) {
+    return _then(
+      _$TeacherGradeStateImpl(
+        currentStep: null == currentStep
+            ? _value.currentStep
+            : currentStep // ignore: cast_nullable_to_non_nullable
+                  as int,
+        classList: null == classList
+            ? _value._classList
+            : classList // ignore: cast_nullable_to_non_nullable
+                  as List<dynamic>,
+        subjectList: null == subjectList
+            ? _value._subjectList
+            : subjectList // ignore: cast_nullable_to_non_nullable
+                  as List<dynamic>,
+        todaySchedules: null == todaySchedules
+            ? _value._todaySchedules
+            : todaySchedules // ignore: cast_nullable_to_non_nullable
+                  as List<dynamic>,
+        selectedClass: freezed == selectedClass
+            ? _value._selectedClass
+            : selectedClass // ignore: cast_nullable_to_non_nullable
+                  as Map<String, dynamic>?,
+        selectedSubject: freezed == selectedSubject
+            ? _value._selectedSubject
+            : selectedSubject // ignore: cast_nullable_to_non_nullable
+                  as Map<String, dynamic>?,
+        isLoading: null == isLoading
+            ? _value.isLoading
+            : isLoading // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isLoadingMore: null == isLoadingMore
+            ? _value.isLoadingMore
+            : isLoadingMore // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        hasMoreData: null == hasMoreData
+            ? _value.hasMoreData
+            : hasMoreData // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        currentPage: null == currentPage
+            ? _value.currentPage
+            : currentPage // ignore: cast_nullable_to_non_nullable
+                  as int,
+        searchQuery: null == searchQuery
+            ? _value.searchQuery
+            : searchQuery // ignore: cast_nullable_to_non_nullable
+                  as String,
+      ),
+    );
+  }
 }
 
 /// @nodoc
 
+class _$TeacherGradeStateImpl implements _TeacherGradeState {
+  const _$TeacherGradeStateImpl({
+    this.currentStep = 0,
+    final List<dynamic> classList = const [],
+    final List<dynamic> subjectList = const [],
+    final List<dynamic> todaySchedules = const [],
+    final Map<String, dynamic>? selectedClass,
+    final Map<String, dynamic>? selectedSubject,
+    this.isLoading = true,
+    this.isLoadingMore = false,
+    this.hasMoreData = true,
+    this.currentPage = 1,
+    this.searchQuery = '',
+  }) : _classList = classList,
+       _subjectList = subjectList,
+       _todaySchedules = todaySchedules,
+       _selectedClass = selectedClass,
+       _selectedSubject = selectedSubject;
 
-class _TeacherGradeState implements TeacherGradeState {
-  const _TeacherGradeState({this.currentStep = 0, final  List<dynamic> classList = const [], final  List<dynamic> subjectList = const [], final  List<dynamic> todaySchedules = const [], final  Map<String, dynamic>? selectedClass, final  Map<String, dynamic>? selectedSubject, this.isLoading = true, this.isLoadingMore = false, this.hasMoreData = true, this.currentPage = 1, this.searchQuery = ''}): _classList = classList,_subjectList = subjectList,_todaySchedules = todaySchedules,_selectedClass = selectedClass,_selectedSubject = selectedSubject;
-  
+  @override
+  @JsonKey()
+  final int currentStep;
+  // 0: Class List, 1: Subject List
+  final List<dynamic> _classList;
+  // 0: Class List, 1: Subject List
+  @override
+  @JsonKey()
+  List<dynamic> get classList {
+    if (_classList is EqualUnmodifiableListView) return _classList;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_classList);
+  }
 
-@override@JsonKey() final  int currentStep;
-// 0: Class List, 1: Subject List
- final  List<dynamic> _classList;
-// 0: Class List, 1: Subject List
-@override@JsonKey() List<dynamic> get classList {
-  if (_classList is EqualUnmodifiableListView) return _classList;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_classList);
+  final List<dynamic> _subjectList;
+  @override
+  @JsonKey()
+  List<dynamic> get subjectList {
+    if (_subjectList is EqualUnmodifiableListView) return _subjectList;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_subjectList);
+  }
+
+  final List<dynamic> _todaySchedules;
+  @override
+  @JsonKey()
+  List<dynamic> get todaySchedules {
+    if (_todaySchedules is EqualUnmodifiableListView) return _todaySchedules;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_todaySchedules);
+  }
+
+  final Map<String, dynamic>? _selectedClass;
+  @override
+  Map<String, dynamic>? get selectedClass {
+    final value = _selectedClass;
+    if (value == null) return null;
+    if (_selectedClass is EqualUnmodifiableMapView) return _selectedClass;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  final Map<String, dynamic>? _selectedSubject;
+  @override
+  Map<String, dynamic>? get selectedSubject {
+    final value = _selectedSubject;
+    if (value == null) return null;
+    if (_selectedSubject is EqualUnmodifiableMapView) return _selectedSubject;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  @override
+  @JsonKey()
+  final bool isLoading;
+  @override
+  @JsonKey()
+  final bool isLoadingMore;
+  @override
+  @JsonKey()
+  final bool hasMoreData;
+  @override
+  @JsonKey()
+  final int currentPage;
+  @override
+  @JsonKey()
+  final String searchQuery;
+
+  @override
+  String toString() {
+    return 'TeacherGradeState(currentStep: $currentStep, classList: $classList, subjectList: $subjectList, todaySchedules: $todaySchedules, selectedClass: $selectedClass, selectedSubject: $selectedSubject, isLoading: $isLoading, isLoadingMore: $isLoadingMore, hasMoreData: $hasMoreData, currentPage: $currentPage, searchQuery: $searchQuery)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$TeacherGradeStateImpl &&
+            (identical(other.currentStep, currentStep) ||
+                other.currentStep == currentStep) &&
+            const DeepCollectionEquality().equals(
+              other._classList,
+              _classList,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._subjectList,
+              _subjectList,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._todaySchedules,
+              _todaySchedules,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._selectedClass,
+              _selectedClass,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._selectedSubject,
+              _selectedSubject,
+            ) &&
+            (identical(other.isLoading, isLoading) ||
+                other.isLoading == isLoading) &&
+            (identical(other.isLoadingMore, isLoadingMore) ||
+                other.isLoadingMore == isLoadingMore) &&
+            (identical(other.hasMoreData, hasMoreData) ||
+                other.hasMoreData == hasMoreData) &&
+            (identical(other.currentPage, currentPage) ||
+                other.currentPage == currentPage) &&
+            (identical(other.searchQuery, searchQuery) ||
+                other.searchQuery == searchQuery));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    currentStep,
+    const DeepCollectionEquality().hash(_classList),
+    const DeepCollectionEquality().hash(_subjectList),
+    const DeepCollectionEquality().hash(_todaySchedules),
+    const DeepCollectionEquality().hash(_selectedClass),
+    const DeepCollectionEquality().hash(_selectedSubject),
+    isLoading,
+    isLoadingMore,
+    hasMoreData,
+    currentPage,
+    searchQuery,
+  );
+
+  /// Create a copy of TeacherGradeState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$TeacherGradeStateImplCopyWith<_$TeacherGradeStateImpl> get copyWith =>
+      __$$TeacherGradeStateImplCopyWithImpl<_$TeacherGradeStateImpl>(
+        this,
+        _$identity,
+      );
 }
 
- final  List<dynamic> _subjectList;
-@override@JsonKey() List<dynamic> get subjectList {
-  if (_subjectList is EqualUnmodifiableListView) return _subjectList;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_subjectList);
+abstract class _TeacherGradeState implements TeacherGradeState {
+  const factory _TeacherGradeState({
+    final int currentStep,
+    final List<dynamic> classList,
+    final List<dynamic> subjectList,
+    final List<dynamic> todaySchedules,
+    final Map<String, dynamic>? selectedClass,
+    final Map<String, dynamic>? selectedSubject,
+    final bool isLoading,
+    final bool isLoadingMore,
+    final bool hasMoreData,
+    final int currentPage,
+    final String searchQuery,
+  }) = _$TeacherGradeStateImpl;
+
+  @override
+  int get currentStep; // 0: Class List, 1: Subject List
+  @override
+  List<dynamic> get classList;
+  @override
+  List<dynamic> get subjectList;
+  @override
+  List<dynamic> get todaySchedules;
+  @override
+  Map<String, dynamic>? get selectedClass;
+  @override
+  Map<String, dynamic>? get selectedSubject;
+  @override
+  bool get isLoading;
+  @override
+  bool get isLoadingMore;
+  @override
+  bool get hasMoreData;
+  @override
+  int get currentPage;
+  @override
+  String get searchQuery;
+
+  /// Create a copy of TeacherGradeState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$TeacherGradeStateImplCopyWith<_$TeacherGradeStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
-
- final  List<dynamic> _todaySchedules;
-@override@JsonKey() List<dynamic> get todaySchedules {
-  if (_todaySchedules is EqualUnmodifiableListView) return _todaySchedules;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_todaySchedules);
-}
-
- final  Map<String, dynamic>? _selectedClass;
-@override Map<String, dynamic>? get selectedClass {
-  final value = _selectedClass;
-  if (value == null) return null;
-  if (_selectedClass is EqualUnmodifiableMapView) return _selectedClass;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(value);
-}
-
- final  Map<String, dynamic>? _selectedSubject;
-@override Map<String, dynamic>? get selectedSubject {
-  final value = _selectedSubject;
-  if (value == null) return null;
-  if (_selectedSubject is EqualUnmodifiableMapView) return _selectedSubject;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(value);
-}
-
-@override@JsonKey() final  bool isLoading;
-@override@JsonKey() final  bool isLoadingMore;
-@override@JsonKey() final  bool hasMoreData;
-@override@JsonKey() final  int currentPage;
-@override@JsonKey() final  String searchQuery;
-
-/// Create a copy of TeacherGradeState
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$TeacherGradeStateCopyWith<_TeacherGradeState> get copyWith => __$TeacherGradeStateCopyWithImpl<_TeacherGradeState>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TeacherGradeState&&(identical(other.currentStep, currentStep) || other.currentStep == currentStep)&&const DeepCollectionEquality().equals(other._classList, _classList)&&const DeepCollectionEquality().equals(other._subjectList, _subjectList)&&const DeepCollectionEquality().equals(other._todaySchedules, _todaySchedules)&&const DeepCollectionEquality().equals(other._selectedClass, _selectedClass)&&const DeepCollectionEquality().equals(other._selectedSubject, _selectedSubject)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMoreData, hasMoreData) || other.hasMoreData == hasMoreData)&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,currentStep,const DeepCollectionEquality().hash(_classList),const DeepCollectionEquality().hash(_subjectList),const DeepCollectionEquality().hash(_todaySchedules),const DeepCollectionEquality().hash(_selectedClass),const DeepCollectionEquality().hash(_selectedSubject),isLoading,isLoadingMore,hasMoreData,currentPage,searchQuery);
-
-@override
-String toString() {
-  return 'TeacherGradeState(currentStep: $currentStep, classList: $classList, subjectList: $subjectList, todaySchedules: $todaySchedules, selectedClass: $selectedClass, selectedSubject: $selectedSubject, isLoading: $isLoading, isLoadingMore: $isLoadingMore, hasMoreData: $hasMoreData, currentPage: $currentPage, searchQuery: $searchQuery)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$TeacherGradeStateCopyWith<$Res> implements $TeacherGradeStateCopyWith<$Res> {
-  factory _$TeacherGradeStateCopyWith(_TeacherGradeState value, $Res Function(_TeacherGradeState) _then) = __$TeacherGradeStateCopyWithImpl;
-@override @useResult
-$Res call({
- int currentStep, List<dynamic> classList, List<dynamic> subjectList, List<dynamic> todaySchedules, Map<String, dynamic>? selectedClass, Map<String, dynamic>? selectedSubject, bool isLoading, bool isLoadingMore, bool hasMoreData, int currentPage, String searchQuery
-});
-
-
-
-
-}
-/// @nodoc
-class __$TeacherGradeStateCopyWithImpl<$Res>
-    implements _$TeacherGradeStateCopyWith<$Res> {
-  __$TeacherGradeStateCopyWithImpl(this._self, this._then);
-
-  final _TeacherGradeState _self;
-  final $Res Function(_TeacherGradeState) _then;
-
-/// Create a copy of TeacherGradeState
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? currentStep = null,Object? classList = null,Object? subjectList = null,Object? todaySchedules = null,Object? selectedClass = freezed,Object? selectedSubject = freezed,Object? isLoading = null,Object? isLoadingMore = null,Object? hasMoreData = null,Object? currentPage = null,Object? searchQuery = null,}) {
-  return _then(_TeacherGradeState(
-currentStep: null == currentStep ? _self.currentStep : currentStep // ignore: cast_nullable_to_non_nullable
-as int,classList: null == classList ? _self._classList : classList // ignore: cast_nullable_to_non_nullable
-as List<dynamic>,subjectList: null == subjectList ? _self._subjectList : subjectList // ignore: cast_nullable_to_non_nullable
-as List<dynamic>,todaySchedules: null == todaySchedules ? _self._todaySchedules : todaySchedules // ignore: cast_nullable_to_non_nullable
-as List<dynamic>,selectedClass: freezed == selectedClass ? _self._selectedClass : selectedClass // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,selectedSubject: freezed == selectedSubject ? _self._selectedSubject : selectedSubject // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
-as bool,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
-as bool,hasMoreData: null == hasMoreData ? _self.hasMoreData : hasMoreData // ignore: cast_nullable_to_non_nullable
-as bool,currentPage: null == currentPage ? _self.currentPage : currentPage // ignore: cast_nullable_to_non_nullable
-as int,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-
-}
-
-// dart format on

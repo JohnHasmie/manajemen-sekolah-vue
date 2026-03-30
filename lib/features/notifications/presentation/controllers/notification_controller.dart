@@ -3,7 +3,7 @@ import 'package:manajemensekolah/features/notifications/data/notification_servic
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
-class NotificationNotifier extends AutoDisposeAsyncNotifier<List<dynamic>> {
+class NotificationNotifier extends AsyncNotifier<List<dynamic>> {
   late final ApiNotificationService _apiService;
 
   @override
@@ -58,6 +58,7 @@ class NotificationNotifier extends AutoDisposeAsyncNotifier<List<dynamic>> {
 }
 
 final notificationProvider =
-    AutoDisposeAsyncNotifierProvider<NotificationNotifier, List<dynamic>>(
+    AsyncNotifierProvider<NotificationNotifier, List<dynamic>>(
       NotificationNotifier.new,
+      isAutoDispose: true,
     );

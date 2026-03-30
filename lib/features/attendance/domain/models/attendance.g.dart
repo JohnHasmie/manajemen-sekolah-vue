@@ -6,21 +6,22 @@ part of 'attendance.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_Attendance _$AttendanceFromJson(Map<String, dynamic> json) => _Attendance(
-  id: json['id'] as String,
-  studentId: json['student_id'] as String,
-  date: DateTime.parse(json['date'] as String),
-  status: json['status'] as String,
-  isRead: json['is_read'] as bool? ?? false,
-  subjectName: json['subject_name'] as String?,
-  subjectId: json['subject_id'] as String?,
-  lessonHourName: json['lesson_hour_name'] as String?,
-  lessonHourId: json['lesson_hour_id'] as String?,
-  classId: json['class_id'] as String?,
-  teacherId: json['teacher_id'] as String?,
-);
+_$AttendanceImpl _$$AttendanceImplFromJson(Map<String, dynamic> json) =>
+    _$AttendanceImpl(
+      id: json['id'] as String,
+      studentId: json['student_id'] as String,
+      date: DateTime.parse(json['date'] as String),
+      status: json['status'] as String,
+      isRead: json['is_read'] as bool? ?? false,
+      subjectName: json['subject_name'] as String?,
+      subjectId: json['subject_id'] as String?,
+      lessonHourName: json['lesson_hour_name'] as String?,
+      lessonHourId: json['lesson_hour_id'] as String?,
+      classId: json['class_id'] as String?,
+      teacherId: json['teacher_id'] as String?,
+    );
 
-Map<String, dynamic> _$AttendanceToJson(_Attendance instance) =>
+Map<String, dynamic> _$$AttendanceImplToJson(_$AttendanceImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'student_id': instance.studentId,

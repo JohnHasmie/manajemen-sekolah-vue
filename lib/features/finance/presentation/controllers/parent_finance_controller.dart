@@ -12,11 +12,12 @@ import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/parent_finance_state.dart';
 
 final parentFinanceProvider =
-    AutoDisposeAsyncNotifierProvider<ParentFinanceController, ParentFinanceState>(
+    AsyncNotifierProvider<ParentFinanceController, ParentFinanceState>(
   ParentFinanceController.new,
+  isAutoDispose: true,
 );
 
-class ParentFinanceController extends AutoDisposeAsyncNotifier<ParentFinanceState> {
+class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
   Timer? _markReadTimer;
 
   @override

@@ -86,7 +86,7 @@ class AuthResponse {
   });
 }
 
-class AuthNotifier extends AutoDisposeNotifier<AuthState> {
+class AuthNotifier extends Notifier<AuthState> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email'],
     clientId: kIsWeb
@@ -434,6 +434,7 @@ class AuthNotifier extends AutoDisposeNotifier<AuthState> {
   }
 }
 
-final authProvider = AutoDisposeNotifierProvider<AuthNotifier, AuthState>(
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,
+  isAutoDispose: true,
 );

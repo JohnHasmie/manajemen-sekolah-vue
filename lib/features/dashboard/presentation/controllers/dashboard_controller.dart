@@ -91,7 +91,7 @@ class DashboardState {
   }
 }
 
-class DashboardNotifier extends AutoDisposeAsyncNotifier<DashboardState> {
+class DashboardNotifier extends AsyncNotifier<DashboardState> {
   bool _isInitializing = false;
 
   @override
@@ -514,6 +514,7 @@ class DashboardNotifier extends AutoDisposeAsyncNotifier<DashboardState> {
   }
 }
 
-final dashboardProvider = AutoDisposeAsyncNotifierProvider<DashboardNotifier, DashboardState>(
+final dashboardProvider = AsyncNotifierProvider<DashboardNotifier, DashboardState>(
   DashboardNotifier.new,
+  isAutoDispose: true,
 );

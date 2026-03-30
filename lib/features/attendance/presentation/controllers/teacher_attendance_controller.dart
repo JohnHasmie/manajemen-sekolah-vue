@@ -48,9 +48,15 @@ class TeacherAttendanceParams {
 /// Controller for Teacher Attendance Detail.
 /// Manages student lists and individual attendance records reactively.
 class TeacherAttendanceController
-    extends AutoDisposeFamilyAsyncNotifier<TeacherAttendanceState, TeacherAttendanceParams> {
+    extends AsyncNotifier<TeacherAttendanceState> {
+  /// The params passed at construction time (replaces the old `arg` property
+  /// from AutoDisposeFamilyAsyncNotifier, which no longer exists in Riverpod 3.x).
+  final TeacherAttendanceParams arg;
+
+  TeacherAttendanceController(this.arg);
+
   @override
-  FutureOr<TeacherAttendanceState> build(TeacherAttendanceParams arg) async {
+  FutureOr<TeacherAttendanceState> build() async {
     return await _initialize();
   }
 
@@ -201,7 +207,10 @@ class TeacherAttendanceController
 }
 
 /// Provider for TeacherAttendanceController.
-final teacherAttendanceProvider = AutoDisposeAsyncNotifierProviderFamily<
+final teacherAttendanceProvider = AsyncNotifierProvider.family<
     TeacherAttendanceController,
     TeacherAttendanceState,
-    TeacherAttendanceParams>(TeacherAttendanceController.new);
+    TeacherAttendanceParams>(
+  TeacherAttendanceController.new,
+  isAutoDispose: true,
+);

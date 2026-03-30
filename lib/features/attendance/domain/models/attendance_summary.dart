@@ -5,7 +5,7 @@ part 'attendance_summary.g.dart';
 
 /// Represents a summary of attendance data for a specific date or period.
 @freezed
-abstract class AttendanceSummary with _$AttendanceSummary {
+class AttendanceSummary with _$AttendanceSummary {
   const factory AttendanceSummary({
     @JsonKey(name: 'id') String? id,
     @JsonKey(name: 'date') required DateTime date,

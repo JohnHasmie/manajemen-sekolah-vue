@@ -865,7 +865,7 @@ class AdminAttendanceReportController {
 /// Uses `.autoDispose` so it is cleaned up when the screen is removed from
 /// the widget tree — like a Vue component being destroyed.
 final adminAttendanceReportControllerProvider =
-    Provider.autoDispose<AdminAttendanceReportController>((ref) {
+    Provider<AdminAttendanceReportController>((ref) {
   // The controller holds a WidgetRef — valid because we use autoDispose and
   // the provider lifetime matches the screen's ConsumerStatefulWidget lifetime.
   // Note: ref here is a ProviderRef, not WidgetRef. The controller receives
