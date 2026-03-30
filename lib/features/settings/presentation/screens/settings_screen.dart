@@ -1,6 +1,6 @@
 // User profile/settings screen - displays user profile info and app settings.
 import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer, ChangeNotifierProvider;
+    hide Provider, Consumer;
 //
 // Like `pages/settings.vue` or `pages/profile.vue` - shared across all roles
 // (admin, guru, wali). Shows user profile data, language selection, and

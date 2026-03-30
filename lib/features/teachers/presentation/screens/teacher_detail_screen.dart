@@ -1,6 +1,6 @@
 // Teacher detail view screen - shows full profile info for a single teacher.
 import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer, ChangeNotifierProvider;
+    hide Provider, Consumer;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/teachers/{id}.vue` - a detail/show page that displays

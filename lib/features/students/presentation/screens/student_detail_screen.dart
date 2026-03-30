@@ -1,6 +1,6 @@
 // Student detail view screen - shows full profile info for a single student.
 import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer, ChangeNotifierProvider;
+    hide Provider, Consumer;
 //
 // Like `pages/admin/students/{id}.vue` - a detail/show page that displays
 // all student information (personal data, class, guardian, etc.).

@@ -1,6 +1,6 @@
 // Report card (raport) main screen for teachers.
 import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer, ChangeNotifierProvider;
+    hide Provider, Consumer;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // Like `pages/teacher/Raport/Index.vue` in a Vue app.
 //

@@ -1,6 +1,6 @@
 // School settings hub - navigation to school info and time settings sub-screens.
 import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer, ChangeNotifierProvider;
+    hide Provider, Consumer;
 //
 // Like `pages/admin/settings/school.vue` - a menu page linking to:
 // 1. General settings (school name, address, level)
