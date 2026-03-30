@@ -10,6 +10,11 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/class_activity/data/class_activity_service.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_action_bar.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_header.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_material_selector.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_student_selector.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_target_info_box.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 
 class AddActivityDialog extends ConsumerStatefulWidget {
@@ -876,92 +881,11 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
       child: Column(
         children: [
           // Gradient Header
-          Container(
-            padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
-              ),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        isAssignment
-                            ? Icons.assignment_rounded
-                            : Icons.menu_book_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(
-                        widget.isEditMode
-                            ? (isAssignment
-                                  ? languageProvider.getTranslatedText({
-                                      'en': 'Edit Assignment',
-                                      'id': 'Edit Tugas',
-                                    })
-                                  : languageProvider.getTranslatedText({
-                                      'en': 'Edit Material',
-                                      'id': 'Edit Materi',
-                                    }))
-                            : (isAssignment
-                                  ? languageProvider.getTranslatedText({
-                                      'en': 'Add Assignment',
-                                      'id': 'Tambah Tugas',
-                                    })
-                                  : languageProvider.getTranslatedText({
-                                      'en': 'Add Material',
-                                      'id': 'Tambah Materi',
-                                    })),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Container(
-                        padding: EdgeInsets.all(AppSpacing.xs),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.close_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      onPressed: () => AppNavigator.pop(context),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          AddActivityHeader(
+            activityType: widget.activityType,
+            isEditMode: widget.isEditMode,
+            primaryColor: primaryColor,
+            languageProvider: languageProvider,
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -973,50 +897,10 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Info Box
-                    Container(
-                      padding: EdgeInsets.all(AppSpacing.md),
-                      margin: EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: primaryColor.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            widget.initialTarget == 'khusus'
-                                ? Icons.people
-                                : Icons.schedule,
-                            color: primaryColor,
-                            size: 20,
-                          ),
-                          SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Text(
-                              widget.initialTarget == 'khusus'
-                                  ? languageProvider.getTranslatedText({
-                                      'en':
-                                          'SPECIFIC: You can select any class anytime.',
-                                      'id':
-                                          'KHUSUS: Anda dapat memilih kelas kapan saja.',
-                                    })
-                                  : languageProvider.getTranslatedText({
-                                      'en':
-                                          'GENERAL: Only classes from start time to +23 hours are available.',
-                                      'id':
-                                          'UMUM: Hanya kelas dari jam mulai sampai +23 jam yang tersedia.',
-                                    }),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: primaryColor,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    AddActivityTargetInfoBox(
+                      initialTarget: widget.initialTarget,
+                      primaryColor: primaryColor,
+                      languageProvider: languageProvider,
                     ),
 
                     // Mata Pelajaran
@@ -1182,153 +1066,41 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       ),
                     SizedBox(height: AppSpacing.md),
 
-                    // Toggle: Select from Material or Write Manually
-                    Row(
-                      children: [
-                        Icon(Icons.title, size: 20, color: ColorUtils.slate600),
-                        SizedBox(width: AppSpacing.sm),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Choose from material',
-                            'id': 'Pilih dari materi',
-                          }),
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        Spacer(),
-                        Switch(
-                          value: _useMaterialTitle,
-                          onChanged: _selectedSubjectId == null
-                              ? null
-                              : (value) {
-                                  setState(() {
-                                    _useMaterialTitle = value;
-                                    if (!value) {
-                                      // Reset when switching to manual
-                                      _selectedChapterId = null;
-                                      _selectedSubChapterId = null;
-                                    }
-                                  });
-                                },
-                          activeThumbColor: primaryColor,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: AppSpacing.sm),
-
-                    // Dropdown Chapter Materials (if useMaterialTitle = true)
-                    if (_useMaterialTitle) ...[
-                      Builder(
-                        builder: (context) {
-                          final Map<String, DropdownMenuItem<String>>
-                          uniqueChapterItems = {};
-                          for (var chapter in _chapterMaterialList) {
-                            final id = chapter['id']?.toString();
-                            if (id != null &&
-                                !uniqueChapterItems.containsKey(id)) {
-                              uniqueChapterItems[id] = DropdownMenuItem<String>(
-                                value: id,
-                                child: Text(_getChapterName(chapter)),
-                              );
-                            }
+                    // Toggle + Chapter + Sub-chapter selector
+                    AddActivityMaterialSelector(
+                      useMaterialTitle: _useMaterialTitle,
+                      isLoadingChapters: _isLoadingChapters,
+                      selectedSubjectId: _selectedSubjectId,
+                      selectedChapterId: _selectedChapterId,
+                      selectedSubChapterIds: _selectedSubChapterIds,
+                      chapterMaterialList: _chapterMaterialList,
+                      subChapterMaterialList: _subChapterMaterialList,
+                      primaryColor: primaryColor,
+                      languageProvider: languageProvider,
+                      onToggleMaterialTitle: (value) {
+                        setState(() {
+                          _useMaterialTitle = value;
+                          if (!value) {
+                            _selectedChapterId = null;
+                            _selectedSubChapterId = null;
                           }
-                          final List<DropdownMenuItem<String>> chapterItems =
-                              uniqueChapterItems.values.toList();
-
-                          return DropdownButtonFormField<String>(
-                            key: ValueKey(
-                              'bab_${_selectedChapterId}_${chapterItems.length}',
-                            ),
-                            decoration: InputDecoration(
-                              labelText: languageProvider.getTranslatedText({
-                                'en': 'Chapter',
-                                'id': 'Bab Materi',
-                              }),
-                              prefixIcon: Icon(Icons.menu_book),
-                              border: OutlineInputBorder(),
-                            ),
-                            initialValue:
-                                (chapterItems.any(
-                                  (item) => item.value == _selectedChapterId,
-                                ))
-                                ? _selectedChapterId
-                                : null,
-                            isExpanded: true,
-                            items: chapterItems.isEmpty ? null : chapterItems,
-                            onChanged: chapterItems.isEmpty
-                                ? null
-                                : (value) {
-                                    setState(() {
-                                      _selectedChapterId = value;
-                                      _selectedSubChapterId = null;
-                                    });
-                                    if (value != null) {
-                                      _loadSubChapterContent(value);
-                                      _updateTitleFromMaterial();
-                                    }
-                                  },
-                            hint: Text(
-                              languageProvider.getTranslatedText({
-                                'en': _isLoadingChapters
-                                    ? 'Loading chapters...'
-                                    : (chapterItems.isEmpty
-                                          ? AppLocalizations.noChapters['en']!
-                                          : 'Select Chapter'),
-                                'id': _isLoadingChapters
-                                    ? 'Memuat bab...'
-                                    : (chapterItems.isEmpty
-                                          ? AppLocalizations.noChapters['id']!
-                                          : 'Pilih Bab'),
-                              }),
-                            ),
-                          );
-                        },
-                      ),
-                      SizedBox(height: AppSpacing.md),
-                    ],
-
-                    // Multi-Select Sub Bab (if bab is selected) - Custom UI
-                    if (_useMaterialTitle && _selectedChapterId != null) ...[
-                      InkWell(
-                        onTap: () =>
-                            _openMultiSelectSubBabDialog(languageProvider),
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: languageProvider.getTranslatedText({
-                              'en': 'Sub Chapters',
-                              'id': 'Sub Bab Materi',
-                            }),
-                            prefixIcon: Icon(Icons.article),
-                            border: OutlineInputBorder(),
-                            suffixIcon: Icon(Icons.arrow_drop_down),
-                          ),
-                          child: Text(
-                            _selectedSubChapterIds.isEmpty
-                                ? languageProvider.getTranslatedText({
-                                    'en': 'Select Sub Chapters (optional)',
-                                    'id': 'Pilih Sub Bab (opsional)',
-                                  })
-                                : _selectedSubChapterIds.length == 1
-                                ? _getSubChapterName(
-                                    _subChapterMaterialList.firstWhere(
-                                      (s) =>
-                                          s['id'].toString() ==
-                                          _selectedSubChapterIds.first,
-                                      orElse: () => {},
-                                    ),
-                                  )
-                                : '${_selectedSubChapterIds.length} ${languageProvider.getTranslatedText({'en': 'selected', 'id': 'dipilih'})}',
-                            style: TextStyle(
-                              color: _selectedSubChapterIds.isEmpty
-                                  ? ColorUtils.slate600
-                                  : ColorUtils.slate900,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: AppSpacing.md),
-                    ],
+                        });
+                      },
+                      onChapterChanged: (value) {
+                        setState(() {
+                          _selectedChapterId = value;
+                          _selectedSubChapterId = null;
+                        });
+                        if (value != null) {
+                          _loadSubChapterContent(value);
+                          _updateTitleFromMaterial();
+                        }
+                      },
+                      onSubChapterTap: () =>
+                          _openMultiSelectSubBabDialog(languageProvider),
+                      getChapterName: _getChapterName,
+                      getSubChapterName: _getSubChapterName,
+                    ),
 
                     // Judul Field
                     TextFormField(
@@ -1456,194 +1228,35 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
                     // Select Students (only for specific target)
                     if (widget.initialTarget == 'khusus' &&
-                        _selectedClassId != null) ...[
-                      SizedBox(height: AppSpacing.md),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Select Students',
-                                    'id': 'Pilih Siswa',
-                                  }),
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                if (kDebugMode)
-                                  Text(
-                                    'Debug: Target=${widget.initialTarget}, Count=${_studentList.length}, Loading=$_isLoadingStudents',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: ColorUtils.slate400,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.refresh, size: 20),
-                            onPressed: _loadStudents,
-                            tooltip: 'Refresh Students',
-                          ),
-                        ],
+                        _selectedClassId != null)
+                      AddActivityStudentSelector(
+                        studentList: _studentList,
+                        selectedStudents: _selectedStudents,
+                        isLoading: _isLoadingStudents,
+                        initialTarget: widget.initialTarget,
+                        onRefresh: _loadStudents,
+                        onToggleStudent: (studentId, selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedStudents.add(studentId);
+                            } else {
+                              _selectedStudents.remove(studentId);
+                            }
+                          });
+                        },
+                        languageProvider: languageProvider,
                       ),
-                      SizedBox(height: AppSpacing.sm),
-                      Container(
-                        height: 200, // Increased height for better visibility
-                        decoration: BoxDecoration(
-                          border: Border.all(color: ColorUtils.slate400),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: _isLoadingStudents
-                            ? Center(child: CircularProgressIndicator())
-                            : _studentList.isEmpty
-                            ? Center(child: Text(AppLocalizations.noStudentsInClass.tr))
-                            : SingleChildScrollView(
-                                child: Column(
-                                  children: _studentList.map((student) {
-                                    final studentId = student['id'].toString();
-                                    final isSelected = _selectedStudents
-                                        .contains(studentId);
-                                    return ListTile(
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 0,
-                                      ),
-                                      dense: true,
-                                      title: Text(
-                                        student['name']?.toString() ??
-                                            student['nama']?.toString() ??
-                                            'Unknown',
-                                        style: TextStyle(fontSize: 13),
-                                      ),
-                                      subtitle: Text(
-                                        student['student_number']?.toString() ??
-                                            student['nis']?.toString() ??
-                                            '',
-                                        style: TextStyle(fontSize: 11),
-                                      ),
-                                      trailing: Checkbox(
-                                        value: isSelected,
-                                        onChanged: (bool? checked) {
-                                          setState(() {
-                                            if (checked == true) {
-                                              _selectedStudents.add(studentId);
-                                            } else {
-                                              _selectedStudents.remove(
-                                                studentId,
-                                              );
-                                            }
-                                          });
-                                        },
-                                      ),
-                                      onTap: () {
-                                        setState(() {
-                                          if (isSelected) {
-                                            _selectedStudents.remove(studentId);
-                                          } else {
-                                            _selectedStudents.add(studentId);
-                                          }
-                                        });
-                                      },
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                      ),
-                    ],
                   ],
                 ),
               ),
             ),
           ),
-          Container(
-            padding: EdgeInsets.all(AppSpacing.xl),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: ColorUtils.slate200)),
-              boxShadow: [
-                BoxShadow(
-                  color: ColorUtils.slate900.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              top: false,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isSubmitting
-                          ? null
-                          : () => AppNavigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: BorderSide(color: ColorUtils.slate300),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Cancel',
-                          'id': 'Batal',
-                        }),
-                        style: TextStyle(
-                          color: ColorUtils.slate700,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submitForm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 1,
-                      ),
-                      child: _isSubmitting
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : Text(
-                              widget.isEditMode
-                                  ? languageProvider.getTranslatedText({
-                                      'en': 'Update',
-                                      'id': 'Simpan Perubahan',
-                                    })
-                                  : languageProvider.getTranslatedText({
-                                      'en': 'Add',
-                                      'id': 'Tambah',
-                                    }),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          AddActivityActionBar(
+            isSubmitting: _isSubmitting,
+            isEditMode: widget.isEditMode,
+            primaryColor: primaryColor,
+            languageProvider: languageProvider,
+            onSubmit: _submitForm,
           ),
         ],
       ),

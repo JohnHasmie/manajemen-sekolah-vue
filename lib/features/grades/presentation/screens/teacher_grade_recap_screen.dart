@@ -679,208 +679,53 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   }
 
   /// Transforms raw API data into structured table rows with per-student,
-  /// per-chapter grade cells. Like a Vue computed that pivots data for display.
+  /// per-chapter grade cells. Delegates pure computation to
+  /// [buildGradeRecapRows] (see grade_recap_row_builder.dart) and wires the
+  /// results back into TextEditingControllers + setState.
+  ///
+  /// Like a Vue computed that pivots data for display.
   void _processTableData(
     List<dynamic> students,
     List<dynamic> chapters,
     List<dynamic> rawGrades,
     List<dynamic> recaps,
   ) {
-    final List<Map<String, dynamic>> tableData = [];
+    // Dispose old controllers before clearing
+    for (var c in _predikatControllers.values) {
+      c.dispose();
+    }
+    for (var c in _descriptionControllers.values) {
+      c.dispose();
+    }
+    for (var c in _scoreControllers.values) {
+      c.dispose();
+    }
     _predikatControllers.clear();
     _descriptionControllers.clear();
     _scoreControllers.clear();
 
-    final String autoDeskripsi =
-        "Telah memahami materi ${chapters.map((c) => c['judul_bab'] ?? c['judul'] ?? c['title'] ?? 'Bab').join(', ')} dengan cukup baik.";
+    // Pure data computation — no BuildContext or controller dependencies
+    final result = buildGradeRecapRows(
+      students: students,
+      chapters: chapters,
+      rawGrades: rawGrades,
+      recaps: recaps,
+    );
 
-    for (var studentRow in students) {
-      final student = studentRow['student'] ?? studentRow;
-      final studentClassId =
-          (studentRow['student_class_id'] ?? studentRow['id']).toString();
-
-      // Filter grades for this student
-      final studentGrades = rawGrades.where((g) {
-        final gStudentClassId = (g['student_class_id'] ?? g['siswa_kelas_id'])
-            ?.toString();
-        return gStudentClassId == studentClassId;
-      }).toList();
-
-      // Group Harian
-      final List<dynamic> dailyGrades = studentGrades.where((g) {
-        final typeStr =
-            (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
-        return [
-          'uh',
-          'tugas',
-          'praktek',
-          'formatif',
-          'sumatif',
-        ].contains(typeStr);
-      }).toList();
-
-      // Sort by date (assuming they have date/tanggal)
-      dailyGrades.sort(
-        (a, b) => (a['tanggal'] ?? '').compareTo(b['tanggal'] ?? ''),
-      );
-
-      List<double?> chapterScores = [];
-      final int numChapters = chapters.isNotEmpty ? chapters.length : 1;
-
-      // Distribute harian grades into chapters evenly
-      if (dailyGrades.isNotEmpty && numChapters > 0) {
-        final int itemsPerChapter = (dailyGrades.length / numChapters).ceil();
-        for (int i = 0; i < numChapters; i++) {
-          final int start = i * itemsPerChapter;
-          final int end = (start + itemsPerChapter > dailyGrades.length)
-              ? dailyGrades.length
-              : start + itemsPerChapter;
-
-          if (start < dailyGrades.length) {
-            final chunk = dailyGrades.sublist(start, end);
-            double sum = 0;
-            for (var c in chunk) {
-              final double val =
-                  double.tryParse(
-                    (c['score'] ?? c['nilai'] ?? '0').toString(),
-                  ) ??
-                  0;
-              sum += val;
-            }
-            chapterScores.add(sum / chunk.length);
-          } else {
-            chapterScores.add(null);
-          }
-        }
-      } else {
-        chapterScores = List.filled(numChapters, null);
-      }
-
-      // UTS/PTS & UAS/PAS
-      final utsGrade = studentGrades.firstWhere((g) {
-        final type = (g['type'] ?? g['jenis'])?.toString().toLowerCase();
-        return type == 'uts' || type == 'pts';
-      }, orElse: () => null);
-      final uasGrade = studentGrades.firstWhere((g) {
-        final type = (g['type'] ?? g['jenis'])?.toString().toLowerCase();
-        return type == 'uas' || type == 'pas';
-      }, orElse: () => null);
-
-      // Check existing Recap
-      final existingRecap = recaps.firstWhere(
-        (r) => r['student_class_id']?.toString() == studentClassId,
-        orElse: () => null,
-      );
-
-      double? utsScore;
-      double? uasScore;
-      List<double?> finalChapterScores = [];
-
-      if (existingRecap != null && existingRecap['bab_scores'] != null) {
-        // LOAD FROM SAVED RECAP
-        final savedChapterScores = List<dynamic>.from(
-          existingRecap['bab_scores'],
-        );
-        finalChapterScores = savedChapterScores
-            .map((s) => s != null ? double.tryParse(s.toString()) : null)
-            .toList();
-        utsScore = existingRecap['uts_score'] != null
-            ? double.tryParse(existingRecap['uts_score'].toString())
-            : null;
-        uasScore = existingRecap['uas_score'] != null
-            ? double.tryParse(existingRecap['uas_score'].toString())
-            : null;
-      } else {
-        // CALCULATE FROM RAW GRADES
-        utsScore = utsGrade != null
-            ? double.tryParse(
-                (utsGrade['score'] ?? utsGrade['nilai'] ?? '0').toString(),
-              )
-            : null;
-        uasScore = uasGrade != null
-            ? double.tryParse(
-                (uasGrade['score'] ?? uasGrade['nilai'] ?? '0').toString(),
-              )
-            : null;
-        finalChapterScores = chapterScores;
-      }
-
-      // Calculate Final Score
-      double finalScoreValue = 0;
-      int componentCount = 0;
-
-      for (var score in finalChapterScores) {
-        if (score != null) {
-          finalScoreValue += score;
-          componentCount++;
-        }
-      }
-      if (utsScore != null) {
-        finalScoreValue += utsScore;
-        componentCount++;
-      }
-      if (uasScore != null) {
-        finalScoreValue += uasScore;
-        componentCount++;
-      }
-
-      final double finalAverage = componentCount > 0
-          ? (finalScoreValue / componentCount)
-          : 0;
-
-      final double currentSkillScore =
-          (existingRecap != null && existingRecap['skill_score'] != null)
-          ? (double.tryParse(existingRecap['skill_score'].toString()) ??
-                finalAverage)
-          : finalAverage;
-
-      final String currentPredikat = existingRecap != null
-          ? (existingRecap['predikat'] ?? '')
-          : '';
-      final String currentDescription = existingRecap != null
-          ? (existingRecap['deskripsi'] ?? '')
-          : (chapters.isNotEmpty ? autoDeskripsi : '');
-
-      _predikatControllers[studentClassId] = TextEditingController(
-        text: currentPredikat,
-      );
-      _descriptionControllers[studentClassId] = TextEditingController(
-        text: currentDescription,
-      );
-
-      // Initialize Score Controllers
-      for (int i = 0; i < numChapters; i++) {
-        final key = '$studentClassId|bab|$i';
-        _scoreControllers[key] = TextEditingController(
-          text: finalChapterScores[i]?.toStringAsFixed(1) ?? '',
-        );
-      }
-      _scoreControllers['$studentClassId|uts|null'] = TextEditingController(
-        text: utsScore?.toStringAsFixed(1) ?? '',
-      );
-      _scoreControllers['$studentClassId|uas|null'] = TextEditingController(
-        text: uasScore?.toStringAsFixed(1) ?? '',
-      );
-      _scoreControllers['$studentClassId|skill_score|null'] =
-          TextEditingController(text: currentSkillScore.toStringAsFixed(1));
-
-      tableData.add({
-        'student_class_id': studentClassId,
-        'nis': (student['student_number'] ?? student['nis'] ?? '-').toString(),
-        'nama': (student['name'] ?? student['nama'] ?? '-').toString(),
-        'bab_scores': finalChapterScores,
-        'uts': utsScore,
-        'uas': uasScore,
-        'final_score': finalAverage,
-        'skill_score': currentSkillScore,
-        'predikat': currentPredikat,
-        'deskripsi': currentDescription,
-      });
-    }
+    // Wire results into TextEditingControllers
+    result.predikatTexts.forEach((id, text) {
+      _predikatControllers[id] = TextEditingController(text: text);
+    });
+    result.descriptionTexts.forEach((id, text) {
+      _descriptionControllers[id] = TextEditingController(text: text);
+    });
+    result.scoreTexts.forEach((key, text) {
+      _scoreControllers[key] = TextEditingController(text: text);
+    });
 
     setState(() {
       _chapters = chapters;
-      _tableData = tableData;
+      _tableData = result.rows;
       _isLoading = false;
     });
   }
@@ -1210,37 +1055,15 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     if (type == 'bab') _updateAllDescriptions();
   }
 
+  /// Recalculates [row]'s final score and optionally syncs skill_score.
+  /// Delegates pure computation to [recalculateRow] (grade_recap_row_builder.dart).
   void _recalculateRow(Map<String, dynamic> row) {
-    double sum = 0;
-    int count = 0;
-    final double oldFinalScore = row['final_score'] ?? 0.0;
-
-    for (var s in row['bab_scores']) {
-      if (s != null) {
-        sum += s;
-        count++;
-      }
-    }
-    if (row['uts'] != null) {
-      sum += row['uts'];
-      count++;
-    }
-    if (row['uas'] != null) {
-      sum += row['uas'];
-      count++;
-    }
-
-    final double newFinalScore = count > 0 ? sum / count : 0.0;
-    row['final_score'] = newFinalScore;
-
-    // Auto-update skill_score if it was matching previous final_score or is 0
-    final double currentSkill = row['skill_score'] ?? 0.0;
-    if (currentSkill == oldFinalScore || currentSkill == 0.0) {
-      row['skill_score'] = newFinalScore;
+    final newSkillText = recalculateRow(row, getController: null);
+    if (newSkillText != null) {
       final studentClassId = row['student_class_id'];
       final key = '$studentClassId|skill_score|null';
       if (_scoreControllers.containsKey(key)) {
-        _scoreControllers[key]!.text = newFinalScore.toStringAsFixed(1);
+        _scoreControllers[key]!.text = newSkillText;
       }
     }
   }

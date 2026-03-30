@@ -25,20 +25,19 @@ import 'package:manajemensekolah/features/class_activity/presentation/screens/te
 import 'package:manajemensekolah/features/materials/presentation/screens/sub_chapter_detail_screen.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/materials/presentation/widgets/material_content_list.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/material_screen_header.dart';
-import 'package:manajemensekolah/features/materials/presentation/widgets/material_sub_chapter_list.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/material_filter_section.dart';
+import 'package:manajemensekolah/features/materials/presentation/widgets/material_tour_helper.dart';
 
 /// Teaching material browser with subject, chapter, and sub-chapter navigation.
 ///
@@ -1219,56 +1218,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
           _buildFilterSection(languageProvider),
 
           // Search Bar
-          Builder(
-            builder: (context) {
-              final translatedFilterOptions = [
-                languageProvider.getTranslatedText({
-                  'en': 'All',
-                  'id': 'Semua',
-                }),
-                languageProvider.getTranslatedText({
-                  'en': 'Today',
-                  'id': 'Hari Ini',
-                }),
-                languageProvider.getTranslatedText({
-                  'en': 'This Week',
-                  'id': 'Minggu Ini',
-                }),
-              ];
-
-              return Container(
-                key: _searchKey,
-                child: EnhancedSearchBar(
-                  controller: _searchController,
-                  hintText: languageProvider.getTranslatedText({
-                    'en': 'Search materials...',
-                    'id': 'Cari materi...',
-                  }),
-                  onChanged: (value) {
-                    setState(() {});
-                  },
-                  filterOptions: translatedFilterOptions,
-                  selectedFilter:
-                      translatedFilterOptions[_selectedFilter == 'All'
-                          ? 0
-                          : _selectedFilter == 'Today'
-                          ? 1
-                          : 2],
-                  onFilterChanged: (filter) {
-                    final index = translatedFilterOptions.indexOf(filter);
-                    setState(() {
-                      _selectedFilter = index == 0
-                          ? 'All'
-                          : index == 1
-                          ? 'Today'
-                          : 'This Week';
-                    });
-                  },
-                  showFilter: true,
-                ),
-              );
-            },
-          ),
+          _buildSearchBar(languageProvider),
 
           // Search Results Info
           if (_searchController.text.isNotEmpty)
@@ -1330,6 +1280,49 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
                 : _buildContentList(),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Builds the search + filter chip bar below the filter section.
+  /// Extracted from `build()` to keep the main build method readable.
+  /// Like a Vue sub-component that owns the filter-option translation logic.
+  Widget _buildSearchBar(LanguageProvider languageProvider) {
+    final translatedFilterOptions = [
+      languageProvider.getTranslatedText({'en': 'All', 'id': 'Semua'}),
+      languageProvider.getTranslatedText({'en': 'Today', 'id': 'Hari Ini'}),
+      languageProvider.getTranslatedText({
+        'en': 'This Week',
+        'id': 'Minggu Ini',
+      }),
+    ];
+
+    return Container(
+      key: _searchKey,
+      child: EnhancedSearchBar(
+        controller: _searchController,
+        hintText: languageProvider.getTranslatedText({
+          'en': 'Search materials...',
+          'id': 'Cari materi...',
+        }),
+        onChanged: (_) => setState(() {}),
+        filterOptions: translatedFilterOptions,
+        selectedFilter: translatedFilterOptions[_selectedFilter == 'All'
+            ? 0
+            : _selectedFilter == 'Today'
+            ? 1
+            : 2],
+        onFilterChanged: (filter) {
+          final index = translatedFilterOptions.indexOf(filter);
+          setState(() {
+            _selectedFilter = index == 0
+                ? 'All'
+                : index == 1
+                ? 'Today'
+                : 'This Week';
+          });
+        },
+        showFilter: true,
       ),
     );
   }
@@ -1402,135 +1395,22 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     }
   }
 
+  /// Delegates to [MaterialContentList] — purely presentational.
+  /// Expand/collapse and checkbox mutations flow back via callbacks.
   Widget _buildContentList() {
-    final filteredChapterMaterials = _getFilteredChapterContent();
-
-    return ListView.builder(
-      padding: EdgeInsets.all(AppSpacing.lg),
-      itemCount: filteredChapterMaterials.length,
-      itemBuilder: (context, index) {
-        final chapter = filteredChapterMaterials[index];
-        final cardColor = ColorUtils.getColorForIndex(index);
-        final chapterIdStr = chapter['id'].toString();
-        final isExpanded = _expandedChapter[chapterIdStr] ?? false;
-
-        return Container(
-          margin: EdgeInsets.only(bottom: 10),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: () {
-                setState(() {
-                  _expandedChapter[chapterIdStr] = !isExpanded;
-                });
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: ColorUtils.slate200),
-                  boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(AppSpacing.lg),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: cardColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: cardColor.withValues(alpha: 0.25),
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${chapter['urutan']}',
-                                style: TextStyle(
-                                  color: cardColor,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  chapter['judul_bab'] ?? 'Judul Bab',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                    color: ColorUtils.slate900,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'Bab ${chapter['urutan']}',
-                                  style: TextStyle(
-                                    color: ColorUtils.slate500,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Checkbox(
-                            value: _checkedChapter[chapterIdStr] ?? false,
-                            onChanged: (value) {
-                              _handleChapterCheck(chapterIdStr, value);
-                            },
-                            activeColor: _getCheckboxColor(chapterIdStr),
-                          ),
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: ColorUtils.slate100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              isExpanded
-                                  ? Icons.expand_less_rounded
-                                  : Icons.expand_more_rounded,
-                              color: ColorUtils.slate500,
-                              size: 20,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Sub Bab List (Expandable)
-                    if (isExpanded) ...[
-                      Divider(height: 1, color: ColorUtils.slate200),
-                      MaterialSubChapterList(
-                        chapter: chapter,
-                        subChapterMaterialList: _subChapterMaterialList,
-                        checkedSubChapter: _checkedSubChapter,
-                        getCheckboxColor: _getCheckboxColor,
-                        onSubChapterTap: _navigateToSubChapterDetail,
-                        onSubChapterCheck: _handleSubChapterCheck,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
+    return MaterialContentList(
+      filteredChapterMaterials: _getFilteredChapterContent(),
+      subChapterMaterialList: _subChapterMaterialList,
+      expandedChapter: _expandedChapter,
+      checkedChapter: _checkedChapter,
+      checkedSubChapter: _checkedSubChapter,
+      getCheckboxColor: _getCheckboxColor,
+      onChapterExpanded: (chapterId, newExpanded) {
+        setState(() => _expandedChapter[chapterId] = newExpanded);
       },
+      onChapterCheck: _handleChapterCheck,
+      onSubChapterTap: _navigateToSubChapterDetail,
+      onSubChapterCheck: _handleSubChapterCheck,
     );
   }
 
@@ -1558,142 +1438,10 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
         _getCheckedNotGeneratedSubChapters().length;
   }
 
-  Future<void> _checkAndShowTour() async {
-    try {
-      final tourCacheKey = CacheKeyBuilder.tourStatus('materi_screen', 'guru');
-      final cached = await LocalCacheService.load(
-        tourCacheKey,
-        ttl: const Duration(hours: 24),
-      );
-      if (cached != null && cached is Map) {
-        if (cached['should_show'] == true) {
-          if (mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _showTour();
-            });
-          }
-        }
-      }
-    } catch (e) {
-      AppLogger.error('material', 'Error checking tour status: $e');
-    }
-  }
+  late final MaterialTourHelper _tourHelper = MaterialTourHelper(
+    filterKey: _filterKey,
+    searchKey: _searchKey,
+  );
 
-  void _showTour() {
-    final List<TargetFocus> targets = _createTourTargets();
-    if (targets.isEmpty) return;
-
-    TutorialCoachMark(
-      targets: targets,
-      colorShadow: Colors.black,
-      textSkip: "LEWATI",
-      paddingFocus: 10,
-      opacityShadow: 0.8,
-      onFinish: () {
-        getIt<ApiTourService>().completeTour(
-          name: 'materi_screen_tour',
-          role: 'guru',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('materi_screen', 'guru'),
-          {'should_show': false},
-        );
-      },
-      onSkip: () {
-        getIt<ApiTourService>().completeTour(
-          name: 'materi_screen_tour',
-          role: 'guru',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('materi_screen', 'guru'),
-          {'should_show': false},
-        );
-        return true;
-      },
-    ).show(context: context);
-  }
-
-  List<TargetFocus> _createTourTargets() {
-    final List<TargetFocus> targets = [];
-
-    targets.add(
-      TargetFocus(
-        identify: "FilterSection",
-        keyTarget: _filterKey,
-        alignSkip: Alignment.bottomRight,
-        shape: ShapeLightFocus.RRect,
-        radius: 12,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Pilih Kelas & Mata Pelajaran",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20.0,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Text(
-                      "Pilih kelas dan mata pelajaran yang Anda ampu di sini untuk melihat daftar Bab dan Sub-bab materi yang telah ditentukan oleh kurikulum.",
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
-    targets.add(
-      TargetFocus(
-        identify: "SearchBar",
-        keyTarget: _searchKey,
-        alignSkip: Alignment.bottomRight,
-        shape: ShapeLightFocus.RRect,
-        radius: 12,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Pencarian Materi",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20.0,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Text(
-                      "Gunakan kolom ini untuk mencari nama bab atau sub-bab dengan cepat.",
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
-    return targets;
-  }
+  Future<void> _checkAndShowTour() => _tourHelper.checkAndShow(context);
 }

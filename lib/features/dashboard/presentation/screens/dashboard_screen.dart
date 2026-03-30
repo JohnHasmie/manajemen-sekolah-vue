@@ -9,65 +9,47 @@
 // In Laravel terms, this consumes data from DashboardController which aggregates
 // stats from multiple models (Students, Classes, Teachers, Schedules, etc.).
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/router/app_router.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_overview_card.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/lesson_plan_status_card.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/material_slider_card.dart';
-import 'package:manajemensekolah/core/services/token_service.dart';
-import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/screens/admin_class_activity_screen.dart';
-import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
-import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_report_screen.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
-import 'package:manajemensekolah/features/finance/presentation/screens/admin_finance_screen.dart';
-import 'package:manajemensekolah/features/settings/presentation/screens/school_settings_screen.dart';
-import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
-import 'package:manajemensekolah/features/schedule/presentation/screens/admin_schedule_management_screen.dart';
-import 'package:manajemensekolah/features/notifications/presentation/screens/notification_list_screen.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
-import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
-import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
-import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
-import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_screen.dart';
-import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_recap_screen.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teacher_lesson_plan_screen.dart';
-import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
-import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
-import 'package:manajemensekolah/features/finance/presentation/screens/parent_billing_screen.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
-import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/screens/parent_report_card_screen.dart';
-import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
-import 'package:manajemensekolah/features/students/data/student_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
-import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_bar_chart_card.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/category_section.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/finance_bar_chart_card.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/finance_popup_dialog.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_overview_card.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_popup_dialog.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_account_sheet.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_categorized_menu.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_hero_section.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_quick_actions_section.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_school_selection_dialog.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_todays_overview.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/finance_bar_chart_card.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/finance_popup_dialog.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/language_option_tile.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/lesson_plan_status_card.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/material_slider_card.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/overview_card.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/quick_action_button.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/schedule_slider_card.dart';
-
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/language_option_tile.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_hero_section.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_quick_actions_section.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_todays_overview.dart';
+import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
+import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/admin_finance_screen.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/parent_billing_screen.dart';
+import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teacher_lesson_plan_screen.dart';
+import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
+import 'package:manajemensekolah/features/notifications/presentation/screens/notification_list_screen.dart';
+import 'package:manajemensekolah/features/schedule/presentation/screens/admin_schedule_management_screen.dart';
+import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
+import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
 
 /// The main dashboard widget. Like a Vue page component (`pages/dashboard.vue`).
 ///
@@ -642,477 +624,34 @@ class _DashboardState extends ConsumerState<Dashboard>
   // ==================== END NEW UI COMPONENTS ====================
 
   /// Builds the main navigation menu grid with role-specific items.
-  /// Like a Vue component rendering a grid of `<MenuItemCard>` with `v-for`,
-  /// where each card navigates to a different admin/teacher/parent feature screen.
+  /// Delegates to [DashboardCategorizedMenu] which owns all menu-item logic.
   Widget _buildSliverGridMenu(BuildContext context, DashboardState state) {
-    // All roles now use professional MenuItemCard design
     return SliverPadding(
       key: _menuGridKey,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList(
-        delegate: SliverChildListDelegate(_buildCategorizedMenu(context, state)),
+      sliver: SliverToBoxAdapter(
+        child: DashboardCategorizedMenu(
+          effectiveRole: _effectiveRole,
+          state: state,
+          primaryColor: _getPrimaryColor(),
+          onShowNoStudentsDialog: () => _showNoStudentsDialog(context),
+          onShowStudentSelectionDialog: (parent, studentsData, {academicYearId}) =>
+              _showStudentSelectionDialog(
+                context,
+                parent,
+                studentsData,
+                academicYearId: academicYearId,
+              ),
+        ),
       ),
     );
   }
 
-  List<Widget> _buildCategorizedMenu(BuildContext context, DashboardState state) {
-    final primaryColor = _getPrimaryColor();
+  // DELETED: _buildCategorizedMenu, _getAdminDataManagementItems,
+  // _getAdminAcademicItems, _getAdminFinanceItems, _getTeacherTeachingItems,
+  // _getTeacherAssessmentItems, _getParentMenuItems — all moved to
+  // DashboardCategorizedMenu in widgets/dashboard_categorized_menu.dart
 
-    if (_effectiveRole == 'admin') {
-      return [
-        CategorySection(
-          title: '📊 ${AppLocalizations.categoryDataManagement.tr}',
-          icon: Icons.folder_shared,
-          accentColor: ColorUtils.slate700,
-          primaryColor: primaryColor,
-          items: _getAdminDataManagementItems(context, state),
-        ),
-        CategorySection(
-          title: '📢 ${AppLocalizations.categoryAcademicCommunication.tr}',
-          icon: Icons.school,
-          accentColor: ColorUtils.slate700,
-          primaryColor: primaryColor,
-          items: _getAdminAcademicItems(context, state),
-        ),
-        CategorySection(
-          title: '💰 ${AppLocalizations.categoryFinanceSettings.tr}',
-          icon: Icons.settings,
-          accentColor: ColorUtils.slate700,
-          primaryColor: primaryColor,
-          items: _getAdminFinanceItems(context, state),
-        ),
-      ];
-    } else if (_effectiveRole == 'guru') {
-      return [
-        CategorySection(
-          title: '📚 ${AppLocalizations.categoryTeaching.tr}',
-          icon: Icons.school,
-          accentColor: ColorUtils.slate700,
-          primaryColor: primaryColor,
-          items: _getTeacherTeachingItems(context, state),
-        ),
-        CategorySection(
-          title: '✏️ ${AppLocalizations.categoryAssessmentPlanning.tr}',
-          icon: Icons.edit_note,
-          accentColor: ColorUtils.slate700,
-          primaryColor: primaryColor,
-          items: _getTeacherAssessmentItems(context, state),
-        ),
-      ];
-    } else if (_effectiveRole == 'wali') {
-      // Parent role: Simple list without categories (only 5 items)
-      final items = _getParentMenuItems(context, state);
-      return items
-          .map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: MenuItemCard(
-                title: item.title,
-                icon: item.icon,
-                onTap: item.onTap,
-                badgeCount: item.badgeCount,
-                primaryColor: primaryColor,
-              ),
-            ),
-          )
-          .toList();
-    }
-
-    return [];
-  }
-
-  // Admin - Data Management Category
-  List<MenuItem> _getAdminDataManagementItems(BuildContext context, DashboardState state) {
-    return [
-      MenuItem(
-        title: AppLocalizations.manageData.tr,
-        icon: Icons.folder_shared_outlined,
-        onTap: () => AppNavigator.push(context, AdminDataManagementScreen()),
-      ),
-      MenuItem(
-        title: AppLocalizations.manageTeachingSchedule.tr,
-        icon: Icons.schedule_outlined,
-        onTap: () =>
-            AppNavigator.push(context, TeachingScheduleManagementScreen()),
-      ),
-      MenuItem(
-        title: AppLocalizations.inputGrades.tr,
-        icon: Icons.edit_note_outlined,
-        onTap: () async {
-          final adminData = {
-            'id': (state.userData['teacher_id'] ?? state.userData['id'])?.toString() ?? '',
-            'nama': state.userData['nama'] ?? 'Admin',
-            'email': state.userData['email'] ?? '',
-            'role': _effectiveRole,
-          };
-          if (adminData['id']!.isEmpty) {
-            if (context.mounted) {
-              SnackBarUtils.showInfo(context, AppLocalizations.errorAdminIdNotFound.tr);
-            }
-            return;
-          }
-          if (!context.mounted) return;
-          AppNavigator.push(context, GradePage(teacher: adminData));
-        },
-      ),
-    ];
-  }
-
-  // Admin - Academic & Communication Category
-  List<MenuItem> _getAdminAcademicItems(BuildContext context, DashboardState state) {
-    return [
-      MenuItem(
-        title: AppLocalizations.announcements.tr,
-        icon: Icons.announcement_outlined,
-        badgeCount: state.stats['unread_announcements'],
-        onTap: () async {
-          await AppNavigator.push(context, AdminAnnouncementScreen());
-          ref.read(dashboardProvider.notifier).refreshStats();
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.classActivities.tr,
-        icon: Icons.local_activity_outlined,
-        onTap: () => AppNavigator.push(context, AdminClassActivityScreen()),
-      ),
-      MenuItem(
-        title: AppLocalizations.presenceReport.tr,
-        icon: Icons.check_circle_outline,
-        onTap: () => AppNavigator.push(context, AdminAttendanceReportScreen()),
-      ),
-      MenuItem(
-        title: AppLocalizations.manageLessonPlans.tr,
-        icon: Icons.description_outlined,
-        onTap: () => AppNavigator.push(context, AdminLessonPlanScreen()),
-      ),
-      MenuItem(
-        title: AppLocalizations.studentReport.tr,
-        icon: Icons.assignment_turned_in_outlined,
-        onTap: () => AppNavigator.push(context, const AdminReportCardScreen()),
-      ),
-    ];
-  }
-
-  // Admin - Finance & Settings Category
-  List<MenuItem> _getAdminFinanceItems(BuildContext context, DashboardState state) {
-    return [
-      MenuItem(
-        title: AppLocalizations.finance.tr,
-        icon: Icons.account_balance_wallet_outlined,
-        badgeCount: state.unverifiedPaymentCount > 0
-            ? state.unverifiedPaymentCount
-            : null,
-        onTap: () => AppNavigator.push(context, FinanceScreen()),
-      ),
-      MenuItem(
-        title: AppLocalizations.schoolSettings.tr,
-        icon: Icons.settings_applications,
-        onTap: () => AppNavigator.push(context, SchoolSettingsScreen()),
-      ),
-    ];
-  }
-
-  // Teacher - Teaching Category
-  List<MenuItem> _getTeacherTeachingItems(BuildContext context, DashboardState state) {
-    return [
-      MenuItem(
-        title: AppLocalizations.teachingSchedule.tr,
-        icon: Icons.schedule_outlined,
-        onTap: () => AppNavigator.push(context, TeachingScheduleScreen()),
-      ),
-      MenuItem(
-        title: AppLocalizations.classActivities.tr,
-        icon: Icons.local_activity_outlined,
-        onTap: () => AppNavigator.push(context, ClassActivityScreen()),
-      ),
-      MenuItem(
-        title: AppLocalizations.studentAttendance.tr,
-        icon: Icons.check_circle_outline,
-        onTap: () async {
-          final Map<String, String> teacherData = {
-            'id':
-                (state.userData['teacher_id'] ?? state.userData['id'])?.toString() ?? '',
-            'nama': state.userData['nama'] ?? state.userData['name'] ?? 'Teacher',
-            'email': state.userData['email']?.toString() ?? '',
-            'role': _effectiveRole,
-          };
-          if (teacherData['id']!.isEmpty) {
-            if (context.mounted) {
-              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
-            }
-            return;
-          }
-          if (!context.mounted) return;
-          AppNavigator.push(context, AttendancePage(teacher: teacherData));
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.learningMaterials.tr,
-        icon: Icons.book_outlined,
-        onTap: () async {
-          final Map<String, String> teacherData = {
-            'id':
-                (state.userData['teacher_id'] ?? state.userData['id'])?.toString() ?? '',
-            'name': state.userData['name'] ?? state.userData['nama'] ?? 'Teacher',
-            'role': _effectiveRole,
-          };
-          if (teacherData['id']!.isEmpty) {
-            if (context.mounted) {
-              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
-            }
-            return;
-          }
-          if (!context.mounted) return;
-          AppNavigator.push(context, TeacherMaterialScreen(teacher: teacherData));
-        },
-      ),
-    ];
-  }
-
-  // Teacher - Assessment & Planning Category
-  List<MenuItem> _getTeacherAssessmentItems(BuildContext context, DashboardState state) {
-    return [
-      MenuItem(
-        title: AppLocalizations.inputGrades.tr,
-        icon: Icons.edit_note_outlined,
-        onTap: () async {
-          final Map<String, String> teacherData = {
-            'id':
-                (state.userData['teacher_id'] ?? state.userData['id'])?.toString() ?? '',
-            'nama': state.userData['nama'] ?? state.userData['name'] ?? 'Teacher',
-            'email': state.userData['email']?.toString() ?? '',
-            'role': _effectiveRole,
-          };
-          if (teacherData['id']!.isEmpty) {
-            if (context.mounted) {
-              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
-            }
-            return;
-          }
-          if (!context.mounted) return;
-          AppNavigator.push(context, GradePage(teacher: teacherData));
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.gradeRecap.tr,
-        icon: Icons.assessment_outlined,
-        onTap: () async {
-          final Map<String, String> teacherData = {
-            'id':
-                (state.userData['teacher_id'] ?? state.userData['id'])?.toString() ?? '',
-            'nama': state.userData['nama'] ?? state.userData['name'] ?? 'Teacher',
-            'email': state.userData['email']?.toString() ?? '',
-            'role': _effectiveRole,
-          };
-          if (teacherData['id']!.isEmpty) {
-            if (context.mounted) {
-              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
-            }
-            return;
-          }
-          if (!context.mounted) return;
-          AppNavigator.push(context, GradeRecapPage(teacher: teacherData));
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.reportCard.tr,
-        icon: Icons.contact_page_outlined,
-        onTap: () async {
-          final Map<String, String> teacherData = {
-            'id':
-                (state.userData['teacher_id'] ?? state.userData['id'])?.toString() ?? '',
-            'nama': state.userData['nama'] ?? state.userData['name'] ?? 'Teacher',
-            'email': state.userData['email']?.toString() ?? '',
-            'role': _effectiveRole,
-          };
-          if (teacherData['id']!.isEmpty) {
-            if (context.mounted) {
-              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
-            }
-            return;
-          }
-          if (!context.mounted) return;
-          AppNavigator.push(context, ReportCardScreen(teacher: teacherData));
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.myLessonPlans.tr,
-        icon: Icons.description_outlined,
-        onTap: () async {
-          final Map<String, String> teacherData = {
-            'id':
-                (state.userData['teacher_id'] ?? state.userData['id'])?.toString() ?? '',
-            'nama': state.userData['nama']?.toString() ?? 'Teacher',
-            'email': state.userData['email']?.toString() ?? '',
-            'role': _effectiveRole,
-          };
-          if (teacherData['id']!.isEmpty) {
-            if (context.mounted) {
-              SnackBarUtils.showInfo(context, AppLocalizations.errorTeacherIdNotFound.tr);
-            }
-            return;
-          }
-          if (!context.mounted) return;
-          AppNavigator.push(
-            context,
-            LessonPlanScreen(
-              teacherId: teacherData['id']!,
-              teacherName: teacherData['nama']!,
-            ),
-          );
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.announcements.tr,
-        icon: Icons.announcement_outlined,
-        badgeCount: state.stats['unread_announcements'],
-        onTap: () async {
-          await AppNavigator.push(context, AnnouncementScreen());
-          ref.read(dashboardProvider.notifier).refreshStats();
-        },
-      ),
-      if (state.homeroomClasses.isNotEmpty)
-        MenuItem(
-          title: AppLocalizations.learningRecommendation.tr,
-          icon: Icons.auto_awesome_outlined,
-          onTap: () async {
-            final Map<String, String> teacherData = {
-              'id':
-                  (state.userData['teacher_id'] ?? state.userData['id'])?.toString() ??
-                  '',
-              'nama': state.userData['nama'] ?? state.userData['name'] ?? 'Teacher',
-              'email': state.userData['email']?.toString() ?? '',
-              'role': _effectiveRole,
-            };
-            if (!context.mounted) return;
-
-            AppNavigator.push(
-              context,
-              LearningRecommendationClassScreen(
-                teacher: teacherData,
-                classes: state.homeroomClasses,
-              ),
-            );
-          },
-        ),
-    ];
-  }
-
-  // Parent - Menu Items (Simple list, no categories)
-  List<MenuItem> _getParentMenuItems(BuildContext context, DashboardState state) {
-    return [
-      MenuItem(
-        title: AppLocalizations.announcements.tr,
-        icon: Icons.announcement_outlined,
-        badgeCount: state.stats['unread_announcements'],
-        onTap: () async {
-          await AppNavigator.push(context, AnnouncementScreen());
-          ref.read(dashboardProvider.notifier).refreshStats();
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.classActivities.tr,
-        icon: Icons.local_activity_outlined,
-        badgeCount: state.stats['unread_class_activities'],
-        onTap: () async {
-          final academicYearId = ref
-              .read(academicYearRiverpod)
-              .selectedAcademicYear?['id']
-              ?.toString();
-          await AppNavigator.push(
-            context,
-            ParentClassActivityScreen(academicYearId: academicYearId),
-          );
-          ref.read(dashboardProvider.notifier).refreshStats();
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.grades.tr,
-        icon: Icons.grade_outlined,
-        badgeCount: state.stats['unread_grades'],
-        onTap: () async {
-          final academicYearId = ref
-              .read(academicYearRiverpod)
-              .selectedAcademicYear?['id']
-              ?.toString();
-          await AppNavigator.push(
-            context,
-            ParentGradeScreen(academicYearId: academicYearId),
-          );
-          ref.read(dashboardProvider.notifier).refreshStats();
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.presence.tr,
-        icon: Icons.check_circle_outline,
-        badgeCount: state.stats['unread_presence'],
-        onTap: () async {
-          final academicYearId = ref
-              .read(academicYearRiverpod)
-              .selectedAcademicYear?['id']
-              ?.toString();
-
-          // Load students by parent email instead of user_id
-          final studentsData = await _getStudentDataForParent(
-            state.userData['email'] ?? '',
-          );
-
-          if (studentsData.isEmpty) {
-            if (context.mounted) {
-              _showNoStudentsDialog(context);
-            }
-            return;
-          }
-
-          if (!context.mounted) return;
-
-          if (studentsData.length == 1) {
-            await AppNavigator.push(
-              context,
-              PresenceParentPage(
-                parent: state.userData,
-                studentId: studentsData[0]['id'],
-                academicYearId: academicYearId,
-              ),
-            );
-            ref.read(dashboardProvider.notifier).refreshStats();
-          } else {
-            await _showStudentSelectionDialog(
-              context,
-              state.userData,
-              studentsData,
-              academicYearId: academicYearId,
-            );
-            ref.read(dashboardProvider.notifier).refreshStats();
-          }
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.billing.tr,
-        icon: Icons.account_balance_wallet_outlined,
-        badgeCount: state.stats['unread_billings'],
-        onTap: () async {
-          await AppNavigator.push(context, ParentBillingScreen());
-          ref.read(dashboardProvider.notifier).refreshStats();
-        },
-      ),
-      MenuItem(
-        title: AppLocalizations.eReportCard.tr,
-        icon: Icons.assignment_turned_in_outlined,
-        onTap: () async {
-          final academicYearId = ref
-              .read(academicYearRiverpod)
-              .selectedAcademicYear?['id']
-              ?.toString();
-
-          await AppNavigator.push(
-            context,
-            ParentReportCardScreen(academicYearId: academicYearId),
-          );
-        },
-      ),
-    ];
-  }
 
   void _showLanguageDialog(
     BuildContext context,
@@ -1152,675 +691,47 @@ class _DashboardState extends ConsumerState<Dashboard>
     );
   }
 
-  /// Shows the account bottom sheet with profile info, school/role switching, and logout.
-  /// Like a Vue modal/drawer component for user account management.
+  /// Shows the account bottom sheet. Widget tree lives in [DashboardAccountSheet].
   void _showAccountBottomSheet(BuildContext context, DashboardState state) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) {
-        // Loading states for async actions inside the bottom sheet
-        bool isLoggingOut = false;
-        String? switchingRole; // tracks which role is being switched to
-
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Container(
-              margin: EdgeInsets.all(AppSpacing.xl),
-              child: Wrap(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(25),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 20,
-                          offset: Offset(0, -5),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 60,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade300,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: AppSpacing.xl),
-
-                          // User Info
-                          Row(
-                            children: [
-                              Container(
-                                width: 60,
-                                height: 60,
-                                decoration: BoxDecoration(
-                                  gradient: _getCardGradient(),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.account_circle,
-                                  color: Colors.white,
-                                  size: 32,
-                                ),
-                              ),
-                              SizedBox(width: AppSpacing.lg),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      state.userData['nama'] ?? _effectiveRole.toUpperCase(),
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey.shade800,
-                                      ),
-                                    ),
-                                    SizedBox(height: AppSpacing.xs),
-                                    Text(
-                                      state.userData['email'] ?? '',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      state.userData['nama_sekolah'] ?? '',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: AppSpacing.xxl),
-
-                          if (state.availableRoles.length > 1) ...[
-                            const SizedBox(height: AppSpacing.lg),
-                            Text(
-                              AppLocalizations.switchRole.tr,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            ...state.availableRoles.map((role) {
-                              final isCurrent = role == state.userData['role'];
-                              final isSwitching = switchingRole == role;
-                              return Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: (isCurrent || switchingRole != null)
-                                      ? null
-                                      : () async {
-                                          setSheetState(
-                                            () => switchingRole = role,
-                                          );
-                                          try {
-                                            await ref.read(dashboardProvider.notifier).switchRole(role);
-                                            if (context.mounted) {
-                                              AppNavigator.pop(context);
-                                              final effectiveRolePath = (role == 'teacher') ? 'guru' : (role == 'parent') ? 'wali' : role;
-                                              context.go('/$effectiveRolePath');
-                                            }
-                                          } finally {
-                                            if (context.mounted) {
-                                              setSheetState(
-                                                () => switchingRole = null,
-                                              );
-                                            }
-                                          }
-                                        },
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: EdgeInsets.all(AppSpacing.md),
-                                    margin: EdgeInsets.only(bottom: 8),
-                                    decoration: BoxDecoration(
-                                      color: isCurrent
-                                          ? _getPrimaryColor().withValues(
-                                              alpha: 0.1,
-                                            )
-                                          : Colors.grey.shade50,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: isCurrent
-                                            ? _getPrimaryColor().withValues(
-                                                alpha: 0.3,
-                                              )
-                                            : Colors.transparent,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        if (isSwitching)
-                                          SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: _getPrimaryColor(),
-                                            ),
-                                          )
-                                        else
-                                          _buildRoleIcon(role),
-                                        SizedBox(width: AppSpacing.md),
-                                        Expanded(
-                                          child: Text(
-                                            isSwitching
-                                                ? '${_getRoleDisplayName(role)}...'
-                                                : _getRoleDisplayName(role),
-                                            style: TextStyle(
-                                              fontWeight: isCurrent
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                              color: Colors.grey.shade800,
-                                            ),
-                                          ),
-                                        ),
-                                        if (isCurrent)
-                                          Icon(
-                                            Icons.check_circle,
-                                            color: _getPrimaryColor(),
-                                            size: 20,
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }),
-                            SizedBox(height: AppSpacing.lg),
-                            Divider(),
-                            SizedBox(height: AppSpacing.lg),
-                          ],
-
-                          // Switch School Button
-                          if (state.accessibleSchools.length > 1) ...[
-                            Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  AppNavigator.pop(context);
-                                  _showSchoolSelectionDialog(context, state);
-                                },
-                                borderRadius: BorderRadius.circular(15),
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.all(AppSpacing.lg),
-                                  decoration: BoxDecoration(
-                                    color: _getPrimaryColor().withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(15),
-                                    border: Border.all(
-                                      color: _getPrimaryColor().withValues(
-                                        alpha: 0.3,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.school_rounded,
-                                        color: _getPrimaryColor(),
-                                        size: 20,
-                                      ),
-                                      SizedBox(width: AppSpacing.sm),
-                                      Text(
-                                        AppLocalizations.switchSchool.tr,
-                                        style: TextStyle(
-                                          color: _getPrimaryColor(),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: AppSpacing.lg),
-                            Divider(),
-                            SizedBox(height: AppSpacing.lg),
-                          ],
-
-                          // Settings Button — shown for all roles
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                AppNavigator.pop(context);
-                                AppNavigator.push(
-                                  context,
-                                  const SettingsScreen(),
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(15),
-                              child: Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(AppSpacing.lg),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.settings,
-                                      color: ColorUtils.getRoleColor(
-                                        _effectiveRole,
-                                      ),
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: AppSpacing.sm),
-                                    Text(
-                                      AppLocalizations.settings.tr,
-                                      style: TextStyle(
-                                        color: ColorUtils.getRoleColor(
-                                          _effectiveRole,
-                                        ),
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: AppSpacing.lg),
-
-                          // Logout Button
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: (isLoggingOut || switchingRole != null)
-                                  ? null
-                                  : () async {
-                                      setSheetState(() => isLoggingOut = true);
-                                      try {
-                                        // Call TokenService.logout to ensure backend token and FCM tokens are completely revoked
-                                        await TokenService().logout();
-                                        if (context.mounted) {
-                                          appRouter.go('/login');
-                                        }
-                                      } finally {
-                                        if (context.mounted) {
-                                          setSheetState(
-                                            () => isLoggingOut = false,
-                                          );
-                                        }
-                                      }
-                                    },
-                              borderRadius: BorderRadius.circular(15),
-                              child: Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(AppSpacing.lg),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(15),
-                                  border: Border.all(
-                                    color: Colors.red.shade100,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    if (isLoggingOut)
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.redAccent,
-                                        ),
-                                      )
-                                    else
-                                      Icon(
-                                        Icons.logout_rounded,
-                                        color: Colors.redAccent,
-                                        size: 20,
-                                      ),
-                                    SizedBox(width: AppSpacing.sm),
-                                    Text(
-                                      isLoggingOut
-                                          ? 'Logging out...'
-                                          : AppLocalizations.logout.tr,
-                                      style: TextStyle(
-                                        color: Colors.redAccent,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildRoleIcon(String role) {
-    switch (role) {
-      case 'admin':
-        return Icon(
-          Icons.admin_panel_settings,
-          color: _getPrimaryColor(),
-          size: 20,
-        );
-      case 'guru':
-        return Icon(Icons.school, color: _getPrimaryColor(), size: 20);
-      case 'wali':
-        return Icon(Icons.family_restroom, color: _getPrimaryColor(), size: 20);
-      case 'staff':
-        return Icon(Icons.work, color: _getPrimaryColor(), size: 20);
-      default:
-        return Icon(Icons.person, color: _getPrimaryColor(), size: 20);
-    }
-  }
-
-  String _getRoleDisplayName(String role) {
-    switch (role.toLowerCase()) {
-      case 'admin':
-      case 'administrator':
-        return AppLocalizations.adminRole.tr;
-      case 'guru':
-      case 'teacher':
-        return AppLocalizations.teacherRole.tr;
-      case 'wali':
-      case 'parent':
-      case 'walimurid':
-      case 'wali murid':
-        return AppLocalizations.parentRole.tr;
-      case 'staff':
-        return AppLocalizations.staffRole.tr;
-      default:
-        if (role.isNotEmpty) {
-          return role[0].toUpperCase() + role.substring(1);
-        }
-        return role;
-    }
-  }
-
-  void _showSchoolSelectionDialog(BuildContext outerContext, DashboardState state) {
-    final dashboardContext = context; // Stable widget context — captured before any async gap
-    showDialog(
-      context: dashboardContext,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.school_rounded, color: _getPrimaryColor()),
-            SizedBox(width: AppSpacing.sm),
-            Text(
-              AppLocalizations.selectSchool.tr,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-          ],
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-                ...state.accessibleSchools.map((school) {
-                  final isCurrent =
-                      school['school_id'] == state.userData['school_id'];
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: isCurrent
-                          ? null
-                          : () async {
-                              AppNavigator.pop(dialogContext);
-                              // Capture router before any async gap so it's safe to use after await
-                              final router = GoRouter.of(dashboardContext);
-
-                              try {
-                                final schoolId = school['school_id'].toString();
-                                final result = await ref.read(dashboardProvider.notifier).switchSchool(schoolId);
-
-                                if (!mounted) return;
-
-                                if (result['needsRoleSelection'] == true) {
-                                  final roleList = List<String>.from(result['role_list'] ?? []);
-                                  if (roleList.isEmpty) return;
-                                  // ignore: use_build_context_synchronously
-                                  _showRolePickerDialog(dashboardContext, schoolId, roleList);
-                                  return;
-                                }
-
-                                final newRole = result['user']?['role']?.toString() ?? widget.role;
-                                await LocalCacheService.clearAll();
-                                // Reset so the next dashboard page triggers a fresh initialize
-                                ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
-                                if (mounted) {
-                                  if (newRole == widget.role) {
-                                    // Same role — force rebuild by invalidating the provider
-                                    ref.invalidate(dashboardProvider);
-                                  } else {
-                                    router.go('/$newRole');
-                                  }
-                                }
-                              } catch (e) {
-                                AppLogger.error('dashboard', 'Switch school error: $e');
-                                if (mounted) {
-                                  // ignore: use_build_context_synchronously
-                                  SnackBarUtils.showError(dashboardContext, e.toString().replaceAll('Exception: ', ''));
-                                }
-                              }
-                            },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: EdgeInsets.all(AppSpacing.md),
-                        margin: EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          color: isCurrent
-                              ? _getPrimaryColor().withValues(alpha: 0.1)
-                              : Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isCurrent
-                                ? _getPrimaryColor().withValues(alpha: 0.3)
-                                : Colors.transparent,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.school,
-                              color: isCurrent
-                                  ? _getPrimaryColor()
-                                  : Colors.grey,
-                            ),
-                            SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    school['school_name'],
-                                    style: TextStyle(
-                                      fontWeight: isCurrent
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                      color: Colors.grey.shade800,
-                                    ),
-                                  ),
-                                  SizedBox(height: AppSpacing.xs),
-                                  Text(
-                                    school['address'] ?? '',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 12,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (isCurrent)
-                              Icon(
-                                Icons.check_circle,
-                                color: _getPrimaryColor(),
-                                size: 20,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => AppNavigator.pop(dialogContext),
-            child: Text(
-              AppLocalizations.cancel.tr,
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
-          ),
-        ],
+      builder: (_) => DashboardAccountSheet(
+        state: state,
+        primaryColor: _getPrimaryColor(),
+        effectiveRole: _effectiveRole,
+        onShowSchoolSelection: () => _showSchoolSelectionDialog(context, state),
       ),
     );
   }
 
-  void _showRolePickerDialog(BuildContext context, String schoolId, List<String> roleList) {
-    final lp = ref.read(languageRiverpod);
+  /// Shows the school-selection dialog. Logic lives in [showDashboardSchoolSelectionDialog].
+  void _showSchoolSelectionDialog(BuildContext ctx, DashboardState state) {
+    showDashboardSchoolSelectionDialog(
+      context: ctx,
+      ref: ref,
+      state: state,
+      currentRole: widget.role,
+      primaryColor: _getPrimaryColor(),
+      onNeedsRoleSelection: _showRolePickerDialog,
+    );
+  }
 
-    IconData roleIcon(String role) {
-      switch (role) {
-        case 'admin': return Icons.admin_panel_settings;
-        case 'guru': return Icons.school;
-        case 'wali': return Icons.family_restroom;
-        case 'staff': return Icons.work;
-        default: return Icons.person;
-      }
-    }
-
-    String roleName(String role) {
-      switch (role) {
-        case 'admin': return 'Administrator';
-        case 'guru': return lp.getTranslatedText({'en': 'Teacher', 'id': 'Guru'});
-        case 'wali': return lp.getTranslatedText({'en': 'Parent', 'id': 'Wali Murid'});
-        case 'staff': return 'Staff';
-        default: return role;
-      }
-    }
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.swap_horiz_rounded, color: _getPrimaryColor()),
-            SizedBox(width: AppSpacing.sm),
-            Text(
-              lp.getTranslatedText({'en': 'Select Role', 'id': 'Pilih Role'}),
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade800),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: roleList.map((role) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () async {
-                    AppNavigator.pop(dialogContext);
-                    // Capture router before any async gap
-                    final router = GoRouter.of(context);
-                    try {
-                      final result = await ref.read(dashboardProvider.notifier).switchSchool(schoolId, role: role);
-                      if (!mounted) return;
-                      final newRole = result['user']?['role']?.toString() ?? role;
-                      await LocalCacheService.clearAll();
-                      ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
-                      if (mounted) {
-                        if (newRole == widget.role) {
-                          ref.invalidate(dashboardProvider);
-                        } else {
-                          router.go('/$newRole');
-                        }
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        // ignore: use_build_context_synchronously
-                        SnackBarUtils.showError(context, e.toString().replaceAll('Exception: ', ''));
-                      }
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(roleIcon(role), color: _getPrimaryColor()),
-                        SizedBox(width: AppSpacing.md),
-                        Text(roleName(role), style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
-                        const Spacer(),
-                        Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => AppNavigator.pop(dialogContext),
-            child: Text(AppLocalizations.cancel.tr, style: TextStyle(color: Colors.grey.shade600)),
-          ),
-        ],
-      ),
+  /// Shows the role-picker dialog after a school switch that exposes multiple roles.
+  /// Delegated to [showDashboardSchoolSelectionDialog]'s onNeedsRoleSelection callback.
+  void _showRolePickerDialog(
+    BuildContext ctx,
+    String schoolId,
+    List<String> roleList,
+  ) {
+    showDashboardRolePickerDialog(
+      context: ctx,
+      ref: ref,
+      schoolId: schoolId,
+      roleList: roleList,
+      currentRole: widget.role,
+      primaryColor: _getPrimaryColor(),
     );
   }
 
@@ -1838,14 +749,6 @@ class _DashboardState extends ConsumerState<Dashboard>
       default:
         return Color.fromARGB(255, 17, 19, 29);
     }
-  }
-
-  LinearGradient _getCardGradient() {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.7)],
-    );
   }
 
   Future<void> _showStudentSelectionDialog(
@@ -1927,14 +830,5 @@ class _DashboardState extends ConsumerState<Dashboard>
     );
   }
 
-  Future<List<dynamic>> _getStudentDataForParent(String guardianEmail) async {
-    try {
-      if (guardianEmail.isEmpty) return [];
-      return await ApiStudentService().getStudent(guardianEmail: guardianEmail);
-    } catch (e) {
-      AppLogger.error('dashboard', 'Error loading students: $e');
-      return [];
-    }
-  }
 }
 
