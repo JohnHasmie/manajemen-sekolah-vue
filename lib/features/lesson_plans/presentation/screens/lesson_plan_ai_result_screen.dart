@@ -548,13 +548,13 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       });
 
       if (mounted) {
-        SnackBarUtils.showSuccess(context, AppLocalizations.rppRegeneratedSuccessfully.tr);
+        SnackBarUtils.showSuccess(context, AppLocalizations.lessonPlanRegeneratedSuccessfully.tr);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('${AppLocalizations.failedToRegenerateRpp.tr}: $e')));
+        ).showSnackBar(SnackBar(content: Text('${AppLocalizations.failedToRegenerateLessonPlan.tr}: $e')));
       }
     } finally {
       if (mounted) {
@@ -765,7 +765,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       await getIt<ApiSubjectService>().saveRPP(payloadData);
 
       if (mounted) {
-        SnackBarUtils.showSuccess(context, AppLocalizations.rppSavedSuccessfully.tr);
+        SnackBarUtils.showSuccess(context, AppLocalizations.lessonPlanSavedSuccessfully.tr);
         AppNavigator.pop(
           context,
         ); // Return to RPP list (PopScope triggers onSaved)
@@ -863,7 +863,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                           SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
-                              AppLocalizations.rppAiGeneratedDescription.tr,
+                              AppLocalizations.lessonPlanAiGeneratedDescription.tr,
                               style: TextStyle(
                                 color: Colors.blue.shade800,
                                 fontSize: 13,

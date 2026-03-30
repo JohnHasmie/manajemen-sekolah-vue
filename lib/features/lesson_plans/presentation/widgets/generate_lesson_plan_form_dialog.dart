@@ -845,7 +845,7 @@ class _GenerateLessonPlanFormDialogState
                         Expanded(
                           child: _buildDialogDropdown(
                             value: _selectedSemester,
-                            label: '${AppLocalizations.semester.tr} *',
+                            label: '${AppLocalizations.academicTerm.tr} *',
                             icon: Icons.calendar_view_month_rounded,
                             items: ['Ganjil', 'Genap'].map((semester) {
                               return DropdownMenuItem(

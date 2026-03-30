@@ -44,7 +44,7 @@ class LessonPlanPollingErrorBody extends StatelessWidget {
             ),
             SizedBox(height: AppSpacing.xl),
             Text(
-              AppLocalizations.failedToGenerateRpp.tr,
+              AppLocalizations.failedToGenerateLessonPlan.tr,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,

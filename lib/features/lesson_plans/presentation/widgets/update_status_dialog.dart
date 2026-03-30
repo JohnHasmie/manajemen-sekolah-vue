@@ -106,7 +106,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
       if (mounted) {
         AppNavigator.pop(context);
         widget.onStatusUpdated();
-        SnackBarUtils.showSuccess(context, AppLocalizations.rppStatusUpdated.tr);
+        SnackBarUtils.showSuccess(context, AppLocalizations.lessonPlanStatusUpdated.tr);
       }
     } catch (e) {
       if (mounted) {

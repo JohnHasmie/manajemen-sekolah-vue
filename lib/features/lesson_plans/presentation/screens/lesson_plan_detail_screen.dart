@@ -140,7 +140,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         onSaved: () {
           // If you want to refresh the page after saving, add logic here.
           if (mounted) {
-            SnackBarUtils.showInfo(context, AppLocalizations.rppSavedSuccessfully.tr);
+            SnackBarUtils.showInfo(context, AppLocalizations.lessonPlanSavedSuccessfully.tr);
           }
         },
       ),
@@ -1204,7 +1204,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       await OpenFile.open(file.path);
 
       if (mounted) {
-        SnackBarUtils.showInfo(context, AppLocalizations.rppExportedToText.tr);
+        SnackBarUtils.showInfo(context, AppLocalizations.lessonPlanExportedToText.tr);
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);
@@ -1628,7 +1628,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   Future<void> _copyToClipboard() async {
     await Clipboard.setData(ClipboardData(text: _editedContent));
     if (mounted) {
-      SnackBarUtils.showInfo(context, AppLocalizations.rppCopiedToClipboard.tr);
+      SnackBarUtils.showInfo(context, AppLocalizations.lessonPlanCopiedToClipboard.tr);
     }
   }
 }

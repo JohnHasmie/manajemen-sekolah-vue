@@ -121,6 +121,18 @@ class DashboardNotifier extends AutoDisposeAsyncNotifier<DashboardState> {
     _isInitializing = false;
   }
 
+  /// Re-fetches all dashboard data for the currently selected academic year.
+  /// Call this after the user changes the academic year selector.
+  Future<void> reloadForYearChange() async {
+    _isInitializing = false;
+    state = const AsyncValue.loading();
+    try {
+      await _fetchFreshData(_effectiveRole);
+    } finally {
+      _isInitializing = false;
+    }
+  }
+
   Future<void> initialize(String role) async {
     // Prevent duplicate initialization from multiple callers
     if (_isInitializing) return;

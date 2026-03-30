@@ -354,18 +354,18 @@ class AppLocalizations {
     'id': 'Kegiatan Kelas',
   };
 
-  static Map<String, String> get rppLearningMaterials => {
+  static Map<String, String> get lessonPlanLearningMaterials => {
     'en': 'Learning Materials',
     'id': 'Materi Pembelajaran',
   };
 
   // TAMBAHKAN MENU RPP
-  static Map<String, String> get myRpp => {
+  static Map<String, String> get myLessonPlans => {
     'en': 'My Lesson Plans',
     'id': 'RPP Saya',
   };
 
-  static Map<String, String> get manageRpp => {
+  static Map<String, String> get manageLessonPlans => {
     'en': 'Manage Lesson Plans',
     'id': 'Kelola RPP',
   };
@@ -500,22 +500,22 @@ class AppLocalizations {
   // ========== TAMBAHAN UNTUK FITUR RPP ==========
 
   // RPP Screen Titles
-  static Map<String, String> get rpp => {
+  static Map<String, String> get lessonPlan => {
     'en': 'Lesson Plan',
     'id': 'Rencana Pelaksanaan Pembelajaran',
   };
 
-  static Map<String, String> get rppList => {
+  static Map<String, String> get lessonPlanList => {
     'en': 'Lesson Plan List',
     'id': 'Daftar RPP',
   };
 
-  static Map<String, String> get createRpp => {
+  static Map<String, String> get createLessonPlan => {
     'en': 'Create Lesson Plan',
     'id': 'Buat RPP',
   };
 
-  static Map<String, String> get editRpp => {
+  static Map<String, String> get editLessonPlan => {
     'en': 'Edit Lesson Plan',
     'id': 'Edit RPP',
   };
@@ -538,7 +538,7 @@ class AppLocalizations {
   // RPP Form Fields
   static Map<String, String> get title => {'en': 'Title', 'id': 'Judul'};
 
-  static Map<String, String> get semester => {
+  static Map<String, String> get academicTerm => {
     'en': 'Semester',
     'id': 'Semester',
   };
@@ -604,17 +604,17 @@ class AppLocalizations {
   };
 
   // RPP Actions
-  static Map<String, String> get createNewRpp => {
+  static Map<String, String> get createNewLessonPlan => {
     'en': 'Create New Lesson Plan',
     'id': 'Buat RPP Baru',
   };
 
-  static Map<String, String> get viewRpp => {
+  static Map<String, String> get viewLessonPlan => {
     'en': 'View Lesson Plan',
     'id': 'Lihat RPP',
   };
 
-  static Map<String, String> get downloadRpp => {
+  static Map<String, String> get downloadLessonPlan => {
     'en': 'Download Lesson Plan',
     'id': 'Unduh RPP',
   };
@@ -635,27 +635,27 @@ class AppLocalizations {
   };
 
   // RPP Messages
-  static Map<String, String> get noRppAvailable => {
+  static Map<String, String> get noLessonPlanAvailable => {
     'en': 'No lesson plans available',
     'id': 'Belum ada RPP',
   };
 
-  static Map<String, String> get rppCreatedSuccess => {
+  static Map<String, String> get lessonPlanCreatedSuccess => {
     'en': 'Lesson plan created successfully',
     'id': 'RPP berhasil dibuat',
   };
 
-  static Map<String, String> get rppUpdatedSuccess => {
+  static Map<String, String> get lessonPlanUpdatedSuccess => {
     'en': 'Lesson plan updated successfully',
     'id': 'RPP berhasil diperbarui',
   };
 
-  static Map<String, String> get rppDeletedSuccess => {
+  static Map<String, String> get lessonPlanDeletedSuccess => {
     'en': 'Lesson plan deleted successfully',
     'id': 'RPP berhasil dihapus',
   };
 
-  static Map<String, String> get rppStatusUpdated => {
+  static Map<String, String> get lessonPlanStatusUpdated => {
     'en': 'Lesson plan status updated',
     'id': 'Status RPP berhasil diupdate',
   };
@@ -682,7 +682,7 @@ class AppLocalizations {
   };
 
   // Admin RPP Management
-  static Map<String, String> get allRpp => {
+  static Map<String, String> get allLessonPlans => {
     'en': 'All Lesson Plans',
     'id': 'Semua RPP',
   };
@@ -727,18 +727,18 @@ class AppLocalizations {
     'id': 'Catatan (Opsional)',
   };
 
-  static Map<String, String> get approveRpp => {
+  static Map<String, String> get approveLessonPlan => {
     'en': 'Approve Lesson Plan',
     'id': 'Setujui RPP',
   };
 
-  static Map<String, String> get rejectRpp => {
+  static Map<String, String> get rejectLessonPlan => {
     'en': 'Reject Lesson Plan',
     'id': 'Tolak RPP',
   };
 
   // RPP Details
-  static Map<String, String> get rppDetails => {
+  static Map<String, String> get lessonPlanDetails => {
     'en': 'Lesson Plan Details',
     'id': 'Detail RPP',
   };
@@ -759,7 +759,7 @@ class AppLocalizations {
   };
 
   // Empty States
-  static Map<String, String> get noRppCreated => {
+  static Map<String, String> get noLessonPlanCreated => {
     'en': 'No lesson plans created yet',
     'id': 'Belum ada RPP yang dibuat',
   };
@@ -769,12 +769,12 @@ class AppLocalizations {
     'id': 'Tekan tombol + untuk membuat RPP',
   };
 
-  static Map<String, String> get viewAndManageRpp => {
+  static Map<String, String> get viewAndManageLessonPlans => {
     'en': 'View and manage your lesson plans',
     'id': 'Lihat dan kelola RPP Anda',
   };
 
-  static Map<String, String> get noRppForFilter => {
+  static Map<String, String> get noLessonPlanForFilter => {
     'en': 'No lesson plans found for the selected filter',
     'id': 'Tidak ada RPP untuk filter yang dipilih',
   };
@@ -790,7 +790,7 @@ class AppLocalizations {
     'id': 'Mata pelajaran harus dipilih',
   };
 
-  static Map<String, String> get semesterRequired => {
+  static Map<String, String> get academicTermRequired => {
     'en': 'Semester is required',
     'id': 'Semester harus dipilih',
   };
@@ -829,7 +829,7 @@ class AppLocalizations {
 
   static Map<String, String> get billing => {'en': 'Billing', 'id': 'Tagihan'};
 
-  static Map<String, String> get materi => {'en': 'Materials', 'id': 'Materi'};
+  static Map<String, String> get materialsLabel => {'en': 'Materials', 'id': 'Materi'};
 
   // Dashboard Statistics
   static Map<String, String> get chooseLanguage => {
@@ -1473,7 +1473,7 @@ class AppLocalizations {
     'id': 'Rekomendasi Belajar',
   };
 
-  static Map<String, String> get eRaport => {
+  static Map<String, String> get eReportCard => {
     'en': 'E-Report Card',
     'id': 'E-Raport',
   };
@@ -1836,20 +1836,20 @@ class AppLocalizations {
   static Map<String, String> get gradeRecapSaved => {'en': 'Grade recap saved successfully', 'id': 'Rekap Nilai berhasil disimpan'};
 
   // Lesson Plans (RPP)
-  static Map<String, String> get rppRegeneratedSuccessfully => {'en': 'RPP regenerated successfully!', 'id': 'RPP berhasil di-generate ulang!'};
-  static Map<String, String> get rppSavedSuccessfully => {'en': 'RPP AI saved successfully!', 'id': 'RPP AI berhasil disimpan!'};
-  static Map<String, String> get rppExportedToText => {'en': 'RPP exported to text file successfully', 'id': 'RPP berhasil diexport ke file text'};
-  static Map<String, String> get rppCopiedToClipboard => {'en': 'RPP copied to clipboard', 'id': 'RPP berhasil disalin ke clipboard'};
+  static Map<String, String> get lessonPlanRegeneratedSuccessfully => {'en': 'RPP regenerated successfully!', 'id': 'RPP berhasil di-generate ulang!'};
+  static Map<String, String> get lessonPlanSavedSuccessfully => {'en': 'RPP AI saved successfully!', 'id': 'RPP AI berhasil disimpan!'};
+  static Map<String, String> get lessonPlanExportedToText => {'en': 'RPP exported to text file successfully', 'id': 'RPP berhasil diexport ke file text'};
+  static Map<String, String> get lessonPlanCopiedToClipboard => {'en': 'RPP copied to clipboard', 'id': 'RPP berhasil disalin ke clipboard'};
   static Map<String, String> get fieldRegeneratedSuccessfully => {'en': 'regenerated successfully', 'id': 'berhasil di-regenerasi'};
   static Map<String, String> get failedExceededLimit => {'en': 'failed/exceeded limit', 'id': 'gagal/melewati batas'};
-  static Map<String, String> get rppAiGeneratedDescription => {
+  static Map<String, String> get lessonPlanAiGeneratedDescription => {
     'en': 'RPP AI has been generated using the 10-Component AI format and mapped to the 3-Component K-13. You can adjust the text below before saving.',
     'id': 'RPP berhasil di-generate menggunakan format 10 Komponen AI dan telah dipetakan ke 3 Komponen K-13. Anda bisa menyesuaikan teks di bawah ini sebelum menyimpan.',
   };
-  static Map<String, String> get failedToGenerateRpp => {'en': 'Failed to Generate RPP', 'id': 'Gagal Generate RPP'};
+  static Map<String, String> get failedToGenerateLessonPlan => {'en': 'Failed to Generate RPP', 'id': 'Gagal Generate RPP'};
   static Map<String, String> get failedToGenerateMaterial => {'en': 'Failed to Generate Material', 'id': 'Gagal Generate Materi'};
   static Map<String, String> get noGradeDataFound => {'en': 'No grade data found.', 'id': 'Tidak ada data nilai yang ditemukan.'};
-  static Map<String, String> get failedToRegenerateRpp => {'en': 'Failed to regenerate RPP', 'id': 'Gagal regenerate RPP'};
+  static Map<String, String> get failedToRegenerateLessonPlan => {'en': 'Failed to regenerate RPP', 'id': 'Gagal regenerate RPP'};
 }
 
 /// Convenience extension that provides pre-resolved translated strings as static getters.

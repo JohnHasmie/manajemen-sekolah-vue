@@ -322,6 +322,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           return SimpleDialogOption(
             onPressed: () {
               provider.setSelectedYear(year['id'].toString());
+              ref.read(dashboardProvider.notifier).reloadForYearChange();
               AppNavigator.pop(context);
             },
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
@@ -780,7 +781,7 @@ class _DashboardState extends ConsumerState<Dashboard>
         onTap: () => AppNavigator.push(context, AdminAttendanceReportScreen()),
       ),
       MenuItem(
-        title: AppLocalizations.manageRpp.tr,
+        title: AppLocalizations.manageLessonPlans.tr,
         icon: Icons.description_outlined,
         onTap: () => AppNavigator.push(context, AdminLessonPlanScreen()),
       ),
@@ -935,7 +936,7 @@ class _DashboardState extends ConsumerState<Dashboard>
         },
       ),
       MenuItem(
-        title: AppLocalizations.myRpp.tr,
+        title: AppLocalizations.myLessonPlans.tr,
         icon: Icons.description_outlined,
         onTap: () async {
           final Map<String, String> teacherData = {
@@ -1096,7 +1097,7 @@ class _DashboardState extends ConsumerState<Dashboard>
         },
       ),
       MenuItem(
-        title: AppLocalizations.eRaport.tr,
+        title: AppLocalizations.eReportCard.tr,
         icon: Icons.assignment_turned_in_outlined,
         onTap: () async {
           final academicYearId = ref
