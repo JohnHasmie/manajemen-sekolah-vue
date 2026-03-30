@@ -47,7 +47,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
   Map<String, dynamic> _parentData = {};
 
   // We can select semester (1 for Ganjil, 2 for Genap)
-  String _selectedSemesterId = '1';
+  String _selectedTermId = '1';
 
   /// Like Vue's `mounted()` -- loads report card data on screen init.
   @override
@@ -64,7 +64,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
             .selectedAcademicYear?['id']
             ?.toString() ??
         'unknown';
-    return 'parent_raport_${yearId}_$_selectedSemesterId';
+    return 'parent_raport_${yearId}_$_selectedTermId';
   }
 
   Future<void> _forceRefresh() async {
@@ -73,7 +73,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
     _loadData(useCache: false);
   }
 
-  Future<void> _resolveSemester() async {
+  Future<void> _resolveAcademicTerm() async {
     // Use shared school_day_data cache (24h TTL) instead of direct API call
     final cached = await LocalCacheService.load(
       'school_day_data',
@@ -92,7 +92,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
 
     if (dateBasedSemester.containsKey('semester') &&
         dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-      _selectedSemesterId = '2';
+      _selectedTermId = '2';
     }
   }
 
@@ -106,7 +106,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
     }
 
     // Resolve semester
-    await _resolveSemester();
+    await _resolveAcademicTerm();
 
     // Step 1: Try cache — return early on hit
     if (useCache) {
@@ -142,7 +142,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
         );
       }
 
-      await _fetchParentRaports();
+      await _fetchParentReportCards();
     } catch (e) {
       if (!mounted) return;
       // Only show error if no cached data
@@ -154,7 +154,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
     }
   }
 
-  Future<void> _fetchParentRaports() async {
+  Future<void> _fetchParentReportCards() async {
     final yearId =
         widget.academicYearId ??
         ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
@@ -165,7 +165,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
       '/parent/raports',
       queryParameters: {
         'academic_year_id': yearId,
-        'semester_id': _selectedSemesterId,
+        'semester_id': _selectedTermId,
       },
     );
 
@@ -309,7 +309,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
                 const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: DropdownButton<String>(
-                    value: _selectedSemesterId,
+                    value: _selectedTermId,
                     isExpanded: true,
                     items: const [
                       DropdownMenuItem(value: '1', child: Text('Ganjil')),
@@ -317,7 +317,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
                     ],
                     onChanged: (val) {
                       if (val != null) {
-                        setState(() => _selectedSemesterId = val);
+                        setState(() => _selectedTermId = val);
                         _loadData();
                       }
                     },
@@ -386,7 +386,8 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
                       itemCount: _studentsData.length,
                       itemBuilder: (context, index) {
                         final student = _studentsData[index];
-                        final reportCard = student['raport'];
+                        // NOTE: 'reportCard' key mirrors the API response key from /parent/raports
+                        final reportCard = student['reportCard'];
 
                         // Parent only sees published raports
                         if (reportCard == null ||

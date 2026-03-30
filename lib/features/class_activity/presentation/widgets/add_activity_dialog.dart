@@ -160,20 +160,20 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
 
         widget.onSubjectSelected(_selectedSubjectId!);
         // Load bab materi for the initial subject
-        _loadChapterMaterials(_selectedSubjectId!).then((_) {
+        _loadChapterContent(_selectedSubjectId!).then((_) {
           // After bab list loaded, load sub bab if initial bab is provided
           if (_selectedChapterId != null) {
             AppLogger.debug(
               'class_activity',
               'Loading sub bab for bab: $_selectedChapterId',
             );
-            _loadSubChapterMaterials(_selectedChapterId!).then((_) {
+            _loadSubChapterContent(_selectedChapterId!).then((_) {
               // After sub bab loaded, update title
-              _updateTitleFromMateri();
+              _updateTitleFromMaterial();
             });
           } else {
             // Only bab selected, update title
-            _updateTitleFromMateri();
+            _updateTitleFromMaterial();
           }
         });
 
@@ -247,7 +247,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     }
   }
 
-  Future<void> _loadChapterMaterials(String subjectId) async {
+  Future<void> _loadChapterContent(String subjectId) async {
     try {
       AppLogger.debug('class_activity', '===== LOADING BAB MATERI =====');
       AppLogger.debug('class_activity', 'Subject ID: $subjectId');
@@ -334,7 +334,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     }
   }
 
-  Future<void> _loadSubChapterMaterials(String chapterId) async {
+  Future<void> _loadSubChapterContent(String chapterId) async {
     try {
       AppLogger.debug('class_activity', '===== LOADING SUB BAB MATERI =====');
       AppLogger.debug('class_activity', 'Bab ID: $chapterId');
@@ -411,7 +411,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
         'Unknown';
   }
 
-  void _updateTitleFromMateri() {
+  void _updateTitleFromMaterial() {
     String chapterName = '';
     String subChapterName = '';
 
@@ -835,7 +835,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                         });
                         // Trigger main widget rebuild to update UI text
                         setState(() {});
-                        _updateTitleFromMateri();
+                        _updateTitleFromMaterial();
                       },
                     );
                   }).toList(),
@@ -1066,7 +1066,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                                   });
                                   if (value != null) {
                                     widget.onSubjectSelected(value);
-                                    _loadChapterMaterials(value);
+                                    _loadChapterContent(value);
                                   }
                                 },
                           validator: (value) => value == null
@@ -1262,8 +1262,8 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                                       _selectedSubChapterId = null;
                                     });
                                     if (value != null) {
-                                      _loadSubChapterMaterials(value);
-                                      _updateTitleFromMateri();
+                                      _loadSubChapterContent(value);
+                                      _updateTitleFromMaterial();
                                     }
                                   },
                             hint: Text(

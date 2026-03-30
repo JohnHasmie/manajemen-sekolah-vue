@@ -26,7 +26,7 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_grade_tab.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_tambahan_tab.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_extras_tab.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_info_tab.dart';
 
 /// Report card detail form for a single student.
@@ -152,7 +152,7 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
   }
 
   /// Resolve semester using shared school_day_data cache, falling back to API
-  Future<String> _resolveSemester() async {
+  Future<String> _resolveAcademicTerm() async {
     final cachedDayData = await LocalCacheService.load(
       'school_day_data',
       ttl: const Duration(hours: 24),
@@ -229,7 +229,7 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
 
     try {
       // Use shared school_day_data cache for semester
-      final semester = await _resolveSemester();
+      final semester = await _resolveAcademicTerm();
 
       final existingDetail = await getIt<ApiReportCardService>().getRaportDetail(
         studentClassId: widget.studentClassId,
@@ -390,7 +390,7 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
     try {
       final academicYearId = _getAcademicYearId() ?? '';
 
-      final semesterId = await _resolveSemester();
+      final semesterId = await _resolveAcademicTerm();
 
       final payload = {
         'student_class_id': widget.studentClassId,
@@ -695,7 +695,7 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
                           },
                           onMarkUnsaved: _markUnsaved,
                         ),
-                        ReportCardTambahanTab(
+                        ReportCardExtrasTab(
                           extras: _extras,
                           achievements: _achievements,
                           onAddExtra: () => setState(

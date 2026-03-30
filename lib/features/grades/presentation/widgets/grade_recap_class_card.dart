@@ -45,7 +45,7 @@ class GradeRecapClassCard extends StatelessWidget {
 
   /// Resolves the homeroom-teacher display name from the messy polymorphic
   /// API response (can be a Map, a List<Map>, or a plain string key).
-  String _resolveWaliKelas() {
+  String _resolveHomeroomTeacher() {
     final ht = item['homeroom_teacher'];
     final wk = item['wali_kelas'];
 
@@ -64,7 +64,7 @@ class GradeRecapClassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final waliKelas = _resolveWaliKelas();
+    final homeroomTeacher = _resolveHomeroomTeacher();
 
     return GestureDetector(
       onTap: onTap,
@@ -146,7 +146,7 @@ class GradeRecapClassCard extends StatelessWidget {
                         ),
                         GradeRecapInfoTag(
                           icon: Icons.person_outline,
-                          text: waliKelas,
+                          text: homeroomTeacher,
                         ),
                       ],
                     ),

@@ -23,10 +23,10 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_polling_skeleton_body.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_polling_error_body.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_meta_row.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_plain_text_field.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_rich_text_field.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_dialog_field.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_meta_row.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_plain_text_field.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_rich_text_field.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_dialog_field.dart';
 
 /// AI-generated lesson plan viewer/editor with rich text editing.
 ///
@@ -446,12 +446,12 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                   style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
                 ),
                 SizedBox(height: AppSpacing.lg),
-                RppDialogField(
+                LessonPlanDialogField(
                   label: 'Mata Pelajaran',
                   value: _subjectNameController.text,
                 ),
                 SizedBox(height: AppSpacing.md),
-                RppDialogField(label: 'Bab', value: _chapterController.text),
+                LessonPlanDialogField(label: 'Bab', value: _chapterController.text),
                 SizedBox(height: AppSpacing.lg),
                 Text(
                   'Instruksi / Prompt Tambahan (Opsional)',
@@ -876,29 +876,29 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                     ),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('Judul RPP'),
-                    RppPlainTextField(controller: _titleController, maxLines: 1),
+                    LessonPlanPlainTextField(controller: _titleController, maxLines: 1),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('Informasi Umum'),
                     _buildMetaInfoPanel(),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('A. Kompetensi Inti (KI)'),
-                    RppRichTextField(controller:_coreCompetencyController),
+                    LessonPlanRichTextField(controller:_coreCompetencyController),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader(
                       'B. Kompetensi Dasar (KD) dan Indikator (IPK)',
                     ),
-                    RppRichTextField(controller:_basicCompetencyController),
+                    LessonPlanRichTextField(controller:_basicCompetencyController),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('C. Tujuan Pembelajaran'),
-                    RppRichTextField(controller:_objectivesController),
+                    LessonPlanRichTextField(controller:_objectivesController),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader(
                       'D. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup)',
                     ),
-                    RppRichTextField(controller:_coreActivityController),
+                    LessonPlanRichTextField(controller:_coreActivityController),
                     SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('E. Penilaian (Asesmen)'),
-                    RppRichTextField(controller:_assessmentController),
+                    LessonPlanRichTextField(controller:_assessmentController),
                     SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
@@ -960,13 +960,13 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       ),
       child: Column(
         children: [
-          RppMetaRow(label: 'Satuan Pendidikan', controller: _educationUnitController),
-          RppMetaRow(label: 'Mata Pelajaran', controller: _subjectNameController),
-          RppMetaRow(label: 'Bab', controller: _chapterController),
-          RppMetaRow(label: 'Sub Bab', controller: _subChapterController),
-          RppMetaRow(label: 'Kelas/Semester', controller: _classSemesterController),
-          RppMetaRow(label: 'Pembelajaran Ke', controller: _lessonNumberController),
-          RppMetaRow(label: 'Alokasi Waktu', controller: _timeAllocationController),
+          LessonPlanMetaRow(label: 'Satuan Pendidikan', controller: _educationUnitController),
+          LessonPlanMetaRow(label: 'Mata Pelajaran', controller: _subjectNameController),
+          LessonPlanMetaRow(label: 'Bab', controller: _chapterController),
+          LessonPlanMetaRow(label: 'Sub Bab', controller: _subChapterController),
+          LessonPlanMetaRow(label: 'Kelas/Semester', controller: _classSemesterController),
+          LessonPlanMetaRow(label: 'Pembelajaran Ke', controller: _lessonNumberController),
+          LessonPlanMetaRow(label: 'Alokasi Waktu', controller: _timeAllocationController),
         ],
       ),
     );

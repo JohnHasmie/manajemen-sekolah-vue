@@ -54,8 +54,8 @@ class GradeRecapTableView extends StatelessWidget {
   /// Map of studentClassId → predikat TextField controller.
   final Map<String, TextEditingController> predikatControllers;
 
-  /// Map of studentClassId → deskripsi TextField controller.
-  final Map<String, TextEditingController> deskripsiControllers;
+  /// Map of studentClassId → description TextField controller.
+  final Map<String, TextEditingController> descriptionControllers;
 
   // ── Cell builder ──────────────────────────────────────────────────────────
 
@@ -95,7 +95,7 @@ class GradeRecapTableView extends StatelessWidget {
     required this.addChapterKey,
     required this.labels,
     required this.predikatControllers,
-    required this.deskripsiControllers,
+    required this.descriptionControllers,
     required this.cellBuilder,
     required this.onWidthChanged,
     required this.onBulkSelect,
@@ -587,7 +587,7 @@ class GradeRecapTableView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               alignment: Alignment.centerLeft,
               child: TextField(
-                controller: deskripsiControllers[studentClassId],
+                controller: descriptionControllers[studentClassId],
                 maxLines: 2,
                 style: const TextStyle(fontSize: 12),
                 readOnly: true,

@@ -55,7 +55,7 @@ class ScheduleFilterSheet extends ConsumerStatefulWidget {
     required String? dayId,
     required String? classId,
     required String? semester,
-    required String? jamPelajaran,
+    required String? lessonHour,
   }) onApply;
 
   @override
@@ -72,7 +72,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
   late String? _tempSelectedHariId;
   late String? _tempSelectedClassId;
   late String? _tempSelectedSemester;
-  late String? _tempSelectedJamPelajaran;
+  late String? _tempSelectedLessonHour;
 
   @override
   void initState() {
@@ -83,7 +83,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
     // Default to the screen-level semester when no filter semester is active.
     _tempSelectedSemester =
         widget.selectedFilterSemester ?? widget.currentSemester;
-    _tempSelectedJamPelajaran = widget.selectedJamPelajaran;
+    _tempSelectedLessonHour = widget.selectedJamPelajaran;
   }
 
   /// Resets all temporary selections back to defaults (no filter except default
@@ -93,7 +93,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
     setState(() {
       _tempSelectedHariId = null;
       _tempSelectedClassId = null;
-      _tempSelectedJamPelajaran = null;
+      _tempSelectedLessonHour = null;
       _tempSelectedSemester = widget.currentSemester;
     });
   }
@@ -221,7 +221,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
             }),
             icon: Icons.school_outlined,
           ),
-          _buildSemesterChips(),
+          _buildTermChips(),
 
           // ── Lesson Hour filter ───────────────────────────────────────────
           ScheduleFilterSectionHeader(
@@ -345,7 +345,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
 
   /// FilterChip row for semesters.  Appends the academic year in parentheses
   /// when the semester data includes a nested academic_year object.
-  Widget _buildSemesterChips() {
+  Widget _buildTermChips() {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -404,13 +404,13 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
       spacing: 8,
       runSpacing: 8,
       children: sortedHours.map<Widget>((hourNum) {
-        final isSelected = _tempSelectedJamPelajaran == hourNum;
+        final isSelected = _tempSelectedLessonHour == hourNum;
 
         return FilterChip(
           label: Text('Jam $hourNum'),
           selected: isSelected,
           onSelected: (selected) => setState(
-            () => _tempSelectedJamPelajaran = selected ? hourNum : null,
+            () => _tempSelectedLessonHour = selected ? hourNum : null,
           ),
           backgroundColor: Colors.white,
           selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
@@ -486,7 +486,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
                   dayId: _tempSelectedHariId,
                   classId: _tempSelectedClassId,
                   semester: _tempSelectedSemester,
-                  jamPelajaran: _tempSelectedJamPelajaran,
+                  lessonHour: _tempSelectedLessonHour,
                 );
               },
               style: ElevatedButton.styleFrom(

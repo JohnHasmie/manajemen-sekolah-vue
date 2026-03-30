@@ -933,7 +933,7 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
         chapterList: _chapterList,
         subChapterList: _subChapterList,
         onSubjectSelected: _loadMaterials,
-        onChapterSelected: _loadSubChapterMaterials,
+        onChapterSelected: _loadSubChapterContent,
         onActivityAdded: _loadActivities,
         initialTarget: _currentTarget,
         activityType: activityType,
@@ -961,7 +961,7 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
         chapterList: _chapterList,
         subChapterList: _subChapterList,
         onSubjectSelected: _loadMaterials,
-        onChapterSelected: _loadSubChapterMaterials,
+        onChapterSelected: _loadSubChapterContent,
         onActivityAdded: _loadActivities,
         initialTarget: activity['target_role'] ?? 'umum',
         activityType: activity['jenis'] ?? 'tugas',
@@ -1670,7 +1670,7 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
     }
   }
 
-  Future<void> _loadSubChapterMaterials(String chapterId) async {
+  Future<void> _loadSubChapterContent(String chapterId) async {
     try {
       final subMaterials = await getIt<ApiSubjectService>()
           .getSubChapterMaterials(chapterId: chapterId);

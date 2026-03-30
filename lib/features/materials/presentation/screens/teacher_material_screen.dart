@@ -222,7 +222,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
 
     // Refresh data after returning
     if (mounted && _selectedSubject != null) {
-      _loadChapterMaterials(_selectedSubject!);
+      _loadChapterContent(_selectedSubject!);
     }
   }
 
@@ -253,7 +253,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     super.dispose();
   }
 
-  String? _buildMaterialCacheKey() {
+  String? _buildContentCacheKey() {
     final teacherId = widget.teacher['id']?.toString() ?? '';
     if (teacherId.isEmpty) return null;
     return 'materi_data_$teacherId';
@@ -348,7 +348,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     });
 
     if (_selectedSubject != null) {
-      _loadChapterMaterials(_selectedSubject!);
+      _loadChapterContent(_selectedSubject!);
     }
   }
 
@@ -371,7 +371,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
         return;
       }
 
-      final cacheKey = _buildMaterialCacheKey();
+      final cacheKey = _buildContentCacheKey();
 
       // ─── Step 1: Try TeacherProvider (populated by Dashboard) ───
       final teacherProvider = ref.read(teacherRiverpod);
@@ -660,7 +660,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
   /// Loads chapters (bab) and sub-chapters (sub-bab) for a subject.
   /// Like `axios.get('/api/subjects/{id}/chapters')` in Vue.
   /// Also loads progress data to mark generated/used chapters.
-  Future<void> _loadChapterMaterials(
+  Future<void> _loadChapterContent(
     String subjectId, {
     bool useCache = true,
   }) async {
@@ -718,7 +718,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
               }
             });
             // Load progress from DB non-blocking (always fresh — this is user-specific state)
-            _loadMaterialProgress(subjectId);
+            _loadContentProgress(subjectId);
             // Trigger tour check
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _checkAndShowTour();
@@ -793,7 +793,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
       });
 
       // Load progress from database (non-blocking — UI already shows chapter structure)
-      _loadMaterialProgress(subjectId);
+      _loadContentProgress(subjectId);
 
       // Trigger tour
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -892,7 +892,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
   }
 
   // Load materi progress from database
-  Future<void> _loadMaterialProgress(String subjectId) async {
+  Future<void> _loadContentProgress(String subjectId) async {
     try {
       final String? teacherId = widget.teacher['id'];
       if (teacherId == null) return;
@@ -1078,7 +1078,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     );
   }
 
-  List<dynamic> _getFilteredChapterMaterials() {
+  List<dynamic> _getFilteredChapterContent() {
     final searchTerm = _searchController.text.toLowerCase();
 
     if (searchTerm.isEmpty) {
@@ -1198,7 +1198,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
               child: Row(
                 children: [
                   Text(
-                    '${_getFilteredChapterMaterials().length} ${languageProvider.getTranslatedText({'en': 'materials found', 'id': 'materi ditemukan'})}',
+                    '${_getFilteredChapterContent().length} ${languageProvider.getTranslatedText({'en': 'materials found', 'id': 'materi ditemukan'})}',
                     style: TextStyle(color: ColorUtils.slate500, fontSize: 14),
                   ),
                 ],
@@ -1234,7 +1234,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
                     }),
                     languageProvider,
                   )
-                : _getFilteredChapterMaterials().isEmpty
+                : _getFilteredChapterContent().isEmpty
                 ? EmptyState(
                     title: languageProvider.getTranslatedText({
                       'en': 'No Materials Found',
@@ -1248,7 +1248,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
                     }),
                     icon: Icons.search,
                   )
-                : _buildMaterialList(),
+                : _buildContentList(),
           ),
         ],
       ),
@@ -1389,7 +1389,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
                 _isLoadingBab = true;
                 _searchController.clear();
               });
-              _loadChapterMaterials(newValue);
+              _loadChapterContent(newValue);
             },
           ),
         ],
@@ -1420,8 +1420,8 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     }
   }
 
-  Widget _buildMaterialList() {
-    final filteredChapterMaterials = _getFilteredChapterMaterials();
+  Widget _buildContentList() {
+    final filteredChapterMaterials = _getFilteredChapterContent();
 
     return ListView.builder(
       padding: EdgeInsets.all(AppSpacing.lg),

@@ -206,7 +206,7 @@ class AdminScheduleController {
         classData: List<dynamic>.from(cachedData['classes'] ?? []),
         days: List<dynamic>.from(cachedData['hari'] ?? []),
         semester: List<dynamic>.from(cachedData['semester'] ?? []),
-        lessonHours: List<dynamic>.from(cachedData['jamPelajaran'] ?? []),
+        lessonHours: List<dynamic>.from(cachedData['lessonHour'] ?? []),
         availableDays: [],
       );
       AppLogger.info('schedule', 'Schedules loaded from persisted cache (early)');
@@ -368,7 +368,7 @@ class AdminScheduleController {
       'classes': classData,
       'hari': days,
       'semester': semester,
-      'jamPelajaran': lessonHours,
+      'lessonHour': lessonHours,
     });
   }
 

@@ -9,11 +9,11 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 ///
 /// [controller] is the TextEditingController owned by the parent screen.
 /// [maxLines] defaults to 4; pass 1 for a single-line title field.
-class RppPlainTextField extends StatelessWidget {
+class LessonPlanPlainTextField extends StatelessWidget {
   final TextEditingController controller;
   final int maxLines;
 
-  const RppPlainTextField({
+  const LessonPlanPlainTextField({
     super.key,
     required this.controller,
     this.maxLines = 4,

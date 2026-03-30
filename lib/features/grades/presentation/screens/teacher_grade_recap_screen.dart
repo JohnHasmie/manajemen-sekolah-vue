@@ -89,7 +89,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
 
   // Controllers for editable fields
   final Map<String, TextEditingController> _predikatControllers = {};
-  final Map<String, TextEditingController> _deskripsiControllers = {};
+  final Map<String, TextEditingController> _descriptionControllers = {};
   final Map<String, TextEditingController> _scoreControllers = {};
 
   // Loading & Pagination
@@ -128,7 +128,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     for (var c in _predikatControllers.values) {
       c.dispose();
     }
-    for (var c in _deskripsiControllers.values) {
+    for (var c in _descriptionControllers.values) {
       c.dispose();
     }
     for (var c in _scoreControllers.values) {
@@ -222,7 +222,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         );
         if (cached != null) {
           final cachedData = Map<String, dynamic>.from(cached);
-          allSchedules = List<dynamic>.from(cachedData['jadwal'] ?? []);
+          allSchedules = List<dynamic>.from(cachedData['schedules'] ?? []);
           AppLogger.debug(
             'grades',
             'Rekap: schedules from teaching_schedule cache (${allSchedules.length})',
@@ -803,7 +803,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   ) {
     final List<Map<String, dynamic>> tableData = [];
     _predikatControllers.clear();
-    _deskripsiControllers.clear();
+    _descriptionControllers.clear();
     _scoreControllers.clear();
 
     final String autoDeskripsi =
@@ -822,7 +822,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
       }).toList();
 
       // Group Harian
-      final List<dynamic> harianGrades = studentGrades.where((g) {
+      final List<dynamic> dailyGrades = studentGrades.where((g) {
         final typeStr =
             (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
         return [
@@ -835,7 +835,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
       }).toList();
 
       // Sort by date (assuming they have date/tanggal)
-      harianGrades.sort(
+      dailyGrades.sort(
         (a, b) => (a['tanggal'] ?? '').compareTo(b['tanggal'] ?? ''),
       );
 
@@ -843,16 +843,16 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
       final int numChapters = chapters.isNotEmpty ? chapters.length : 1;
 
       // Distribute harian grades into chapters evenly
-      if (harianGrades.isNotEmpty && numChapters > 0) {
-        final int itemsPerChapter = (harianGrades.length / numChapters).ceil();
+      if (dailyGrades.isNotEmpty && numChapters > 0) {
+        final int itemsPerChapter = (dailyGrades.length / numChapters).ceil();
         for (int i = 0; i < numChapters; i++) {
           final int start = i * itemsPerChapter;
-          final int end = (start + itemsPerChapter > harianGrades.length)
-              ? harianGrades.length
+          final int end = (start + itemsPerChapter > dailyGrades.length)
+              ? dailyGrades.length
               : start + itemsPerChapter;
 
-          if (start < harianGrades.length) {
-            final chunk = harianGrades.sublist(start, end);
+          if (start < dailyGrades.length) {
+            final chunk = dailyGrades.sublist(start, end);
             double sum = 0;
             for (var c in chunk) {
               final double val =
@@ -952,15 +952,15 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
       final String currentPredikat = existingRecap != null
           ? (existingRecap['predikat'] ?? '')
           : '';
-      final String currentDeskripsi = existingRecap != null
+      final String currentDescription = existingRecap != null
           ? (existingRecap['deskripsi'] ?? '')
           : (chapters.isNotEmpty ? autoDeskripsi : '');
 
       _predikatControllers[studentClassId] = TextEditingController(
         text: currentPredikat,
       );
-      _deskripsiControllers[studentClassId] = TextEditingController(
-        text: currentDeskripsi,
+      _descriptionControllers[studentClassId] = TextEditingController(
+        text: currentDescription,
       );
 
       // Initialize Score Controllers
@@ -989,7 +989,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         'final_score': finalAverage,
         'skill_score': currentSkillScore,
         'predikat': currentPredikat,
-        'deskripsi': currentDeskripsi,
+        'deskripsi': currentDescription,
       });
     }
 
@@ -1122,7 +1122,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
 
     showEditDeskripsiDialog(
       context: context,
-      currentDescription: _deskripsiControllers[studentClassId]?.text ?? '',
+      currentDescription: _descriptionControllers[studentClassId]?.text ?? '',
       studentName: studentName,
       primaryColor: _getPrimaryColor(),
       translations: {
@@ -1145,7 +1145,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
       },
       onSave: (newDescription) {
         setState(() {
-          _deskripsiControllers[studentClassId]?.text = newDescription;
+          _descriptionControllers[studentClassId]?.text = newDescription;
           final index = _tableData.indexWhere(
             (row) => row['student_class_id'] == studentClassId,
           );
@@ -1379,7 +1379,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
   }
 
   void _updateAllDescriptions() {
-    final String autoDeskripsiTemplate =
+    final String autoDescriptionTemplate =
         "Telah memahami materi ${_chapters.map((c) => c['judul_bab'] ?? c['judul'] ?? c['title'] ?? 'Bab').join(', ')} dengan cukup baik.";
 
     setState(() {
@@ -1390,9 +1390,9 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         // but here we just update if it's currently empty or previously auto-generated.
         // Or simply provide a button to "Reset Descriptions".
         // Let's just update the controllers.
-        if (_deskripsiControllers[studentClassId]?.text.isEmpty ?? true) {
-          _deskripsiControllers[studentClassId]?.text = autoDeskripsiTemplate;
-          row['deskripsi'] = autoDeskripsiTemplate;
+        if (_descriptionControllers[studentClassId]?.text.isEmpty ?? true) {
+          _descriptionControllers[studentClassId]?.text = autoDescriptionTemplate;
+          row['deskripsi'] = autoDescriptionTemplate;
         }
       }
     });
@@ -1426,7 +1426,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
           'subject_id': _selectedSubject!['id'].toString(),
           'academic_year_id': academicYearId,
           'predikat': _predikatControllers[studentClassId]?.text,
-          'deskripsi': _deskripsiControllers[studentClassId]?.text,
+          'deskripsi': _descriptionControllers[studentClassId]?.text,
           'bab_scores': row['bab_scores'],
           'bab_names': _chapters
               .map((c) => c['judul_bab'] ?? c['judul'] ?? c['title'] ?? 'Bab')
@@ -1673,7 +1673,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         }),
       },
       predikatControllers: _predikatControllers,
-      deskripsiControllers: _deskripsiControllers,
+      descriptionControllers: _descriptionControllers,
       cellBuilder: _buildEditableGradeCell,
       onWidthChanged: (newWidth) {
         setState(() {

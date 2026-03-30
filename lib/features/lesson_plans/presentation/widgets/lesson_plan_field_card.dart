@@ -17,7 +17,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 /// - [primaryColor]     — brand colour for header, icons, and borders
 /// - [onRegenTap]       — callback fired when the regen icon is tapped
 /// - [stripHtml]        — function that strips HTML from the value string (from parent)
-class RppFieldCard extends StatelessWidget {
+class LessonPlanFieldCard extends StatelessWidget {
   final String fieldKey;
   final String fieldLabel;
   final String value;
@@ -28,7 +28,7 @@ class RppFieldCard extends StatelessWidget {
   final VoidCallback onRegenTap;
   final String Function(String) stripHtml;
 
-  const RppFieldCard({
+  const LessonPlanFieldCard({
     super.key,
     required this.fieldKey,
     required this.fieldLabel,

@@ -131,7 +131,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
         if (!_isLoadingMore && _hasMoreData && !_isLoading) {
-          _loadMoreTagihan();
+          _loadMoreBills();
         }
       }
     });
@@ -143,7 +143,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       if (_pendingScrollController.position.pixels >=
           _pendingScrollController.position.maxScrollExtent - 200) {
         if (!_isLoadingMorePending && _hasMorePending && !_isLoading) {
-          _loadMorePembayaranPending();
+          _loadMorePendingPayments();
         }
       }
     });
@@ -453,8 +453,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
               _dashboardData = Map<String, dynamic>.from(
                 cached['dashboard'] ?? {},
               );
-              _classList = (cached['kelas'] as List<dynamic>?) ?? [];
-              _studentList = (cached['siswa'] as List<dynamic>?) ?? [];
+              _classList = (cached['classes'] as List<dynamic>?) ?? [];
+              _studentList = (cached['students'] as List<dynamic>?) ?? [];
               _studentsByClass =
                   (cached['studentsByClass'] as Map<String, dynamic>?)?.map(
                     (k, v) => MapEntry(k, List<dynamic>.from(v)),
@@ -536,8 +536,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
           'pendingPayments': _pendingPaymentList,
           'totalPending': _totalPendingPayments,
           'dashboard': _dashboardData,
-          'kelas': _classList,
-          'siswa': _studentList,
+          'classes': _classList,
+          'students': _studentList,
           'studentsByClass': _studentsByClass,
           'billsByStudent': _billsByStudent,
         });
@@ -583,7 +583,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
   // _loadPaymentTypes has been moved to AdminFinanceController.loadPaymentTypes().
   // The screen applies results via _loadData().
 
-  Future<void> _loadTagihan({bool resetPage = true}) async {
+  Future<void> _loadBills({bool resetPage = true}) async {
     if (resetPage) {
       _currentPage = 1;
       _billList = [];
@@ -618,13 +618,13 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
   }
 
-  Future<void> _loadMoreTagihan() async {
+  Future<void> _loadMoreBills() async {
     if (!_hasMoreData) return;
     _currentPage += 1;
-    await _loadTagihan(resetPage: false);
+    await _loadBills(resetPage: false);
   }
 
-  Future<void> _loadMorePembayaranPending() async {
+  Future<void> _loadMorePendingPayments() async {
     if (!_hasMorePending) return;
     setState(() => _isLoadingMorePending = true);
     _pendingPage++;

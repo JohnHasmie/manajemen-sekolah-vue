@@ -48,7 +48,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
 
   String? _selectedSubjectId;
   String? _selectedClassId;
-  String? _selectedSemester = 'Ganjil';
+  String? _selectedTerm = 'Ganjil';
   String? _selectedFileName;
   File? _selectedFile;
   bool _isUploading = false;
@@ -79,7 +79,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
           (widget.lessonPlanData!['class_id'] ??
                   widget.lessonPlanData!['kelas_id'])
               ?.toString();
-      _selectedSemester = widget.lessonPlanData!['semester'] ?? 'Ganjil';
+      _selectedTerm = widget.lessonPlanData!['semester'] ?? 'Ganjil';
       _selectedFileName = widget.lessonPlanData!['file_path'];
 
       if (_selectedSubjectId != null) {
@@ -342,7 +342,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
         'subject_id': _selectedSubjectId,
         'class_id': _selectedClassId,
         'title': _titleController.text,
-        'semester': _selectedSemester,
+        'semester': _selectedTerm,
         'academic_year': _academicYearController.text,
         'file_path': filePath ?? _selectedFileName,
       };
@@ -675,7 +675,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                     ),
                     SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
-                      value: _selectedSemester,
+                      value: _selectedTerm,
                       label:
                           '${languageProvider.getTranslatedText({'en': 'Semester', 'id': 'Semester'})} *',
                       icon: Icons.calendar_view_month_rounded,
@@ -687,7 +687,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedSemester = value;
+                          _selectedTerm = value;
                         });
                       },
                     ),

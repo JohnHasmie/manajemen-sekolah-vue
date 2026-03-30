@@ -472,8 +472,8 @@ class AttendancePageState extends ConsumerState<AttendancePage>
     }
   }
 
-  // Get current semester
-  String _getCurrentSemester() {
+  // Get current term (semester)
+  String _getCurrentTerm() {
     final now = DateTime.now();
     final currentMonth = now.month;
     if (currentMonth >= 7) {
@@ -574,7 +574,7 @@ class AttendancePageState extends ConsumerState<AttendancePage>
       // Search for any matching teaching_schedule cache
       final possibleCacheKeys = <String>[];
       // Teaching schedule caches with pattern: schedule_teacher_{id}_{semester}_{year}
-      final semester = _getCurrentSemester();
+      final semester = _getCurrentTerm();
       final academicYear = _getCurrentAcademicYear();
       possibleCacheKeys.add(
         'schedule_teacher_${teacherId}_${semester}_$academicYear',
@@ -588,7 +588,7 @@ class AttendancePageState extends ConsumerState<AttendancePage>
           );
           if (cached != null) {
             final cachedData = Map<String, dynamic>.from(cached);
-            final allSchedules = List<dynamic>.from(cachedData['jadwal'] ?? []);
+            final allSchedules = List<dynamic>.from(cachedData['schedules'] ?? []);
 
             if (allSchedules.isNotEmpty) {
               // Filter locally by today's day ID

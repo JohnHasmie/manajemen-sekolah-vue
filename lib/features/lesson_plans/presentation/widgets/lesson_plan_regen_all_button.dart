@@ -11,12 +11,12 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 /// - [isRegenerating]  — when true, swaps the icon for a spinner and disables tap
 /// - [primaryColor]    — brand colour used for gradients and the icon
 /// - [onTap]           — callback fired when the user taps (should open a confirm dialog)
-class RppRegenAllButton extends StatelessWidget {
+class LessonPlanRegenAllButton extends StatelessWidget {
   final bool isRegenerating;
   final Color primaryColor;
   final VoidCallback onTap;
 
-  const RppRegenAllButton({
+  const LessonPlanRegenAllButton({
     super.key,
     required this.isRegenerating,
     required this.primaryColor,

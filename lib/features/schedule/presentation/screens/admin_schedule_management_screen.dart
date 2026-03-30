@@ -79,11 +79,11 @@ class TeachingScheduleManagementScreenState
   List<dynamic> _subjectList = [];
   List<dynamic> _classList = [];
   List<dynamic> _dayList = [];
-  List<dynamic> _semesterList = [];
+  List<dynamic> _termList = [];
   List<dynamic> _lessonHourList = [];
 
   bool _isLoading = true;
-  String _selectedSemester = '1'; // Will be set by _setDefaultAcademicPeriod()
+  String _selectedTerm = '1'; // Will be set by _setDefaultAcademicPeriod()
   String _selectedAcademicYear =
       '2024/2025'; // Will be set by _setDefaultAcademicPeriod()
   final TextEditingController _searchController = TextEditingController();
@@ -101,8 +101,8 @@ class TeachingScheduleManagementScreenState
   String? _selectedTeacherId; // Filter by teacher
   String? _selectedClassId; // Filter by class
   String? _selectedDayId; // Filter by day
-  String? _selectedFilterSemester;
-  String? _selectedJamPelajaran; // Filter by Lesson Hour
+  String? _selectedFilterTerm;
+  String? _selectedLessonHour; // Filter by Lesson Hour
   bool _hasActiveFilter = false;
 
   // Filter Options (from backend)
@@ -131,7 +131,7 @@ class TeachingScheduleManagementScreenState
 
   // Persisted cache key values
   String? _lastCachedAcademicYear;
-  String? _lastCachedSemester;
+  String? _lastCachedTerm;
 
   /// Like Vue's `mounted()` - sets up scroll listener, academic year provider,
   /// FCM sync listener, and loads all reference data + schedule list.
@@ -177,12 +177,12 @@ class TeachingScheduleManagementScreenState
       _subjectList = result.subjectList;
       _classList = result.classList;
       _dayList = result.dayList;
-      _semesterList = result.semesterList;
+      _termList = result.semesterList;
       _lessonHourList = result.lessonHourList;
       _hasMoreData = result.hasMoreData;
       _isLoading = result.isLoading;
       _lastCachedAcademicYear = _selectedAcademicYear;
-      _lastCachedSemester = _selectedSemester;
+      _lastCachedTerm = _selectedTerm;
     });
     _updateGridData();
   }
@@ -207,13 +207,13 @@ class TeachingScheduleManagementScreenState
 
   /// Update semester selection after semester list is loaded.
   /// Delegates to the controller; applies result with setState here.
-  Future<void> _updateCurrentSemester() async {
+  Future<void> _updateCurrentTerm() async {
     final newSemesterId = await _controller.updateCurrentSemester(
-      semesterList: _semesterList,
-      currentSemesterId: _selectedSemester,
+      semesterList: _termList,
+      currentSemesterId: _selectedTerm,
     );
     if (newSemesterId != null && mounted) {
-      setState(() => _selectedSemester = newSemesterId);
+      setState(() => _selectedTerm = newSemesterId);
       _loadData(resetPage: true);
     }
   }
@@ -275,26 +275,26 @@ class TeachingScheduleManagementScreenState
   }
 
   /// Builds the cache key for the current state, delegates to controller, and
-  /// also syncs [_lastCachedAcademicYear] / [_lastCachedSemester] so that
+  /// also syncs [_lastCachedAcademicYear] / [_lastCachedTerm] so that
   /// subsequent early-cache loads resolve the right key.
   String? _buildScheduleCacheKey() {
     final key = _controller.buildScheduleCacheKey(
       currentPage: _currentPage,
       showTableView: _showTableView,
       selectedAcademicYear: _selectedAcademicYear,
-      selectedSemester: _selectedSemester,
+      selectedSemester: _selectedTerm,
       selectedTeacherId: _selectedTeacherId,
       selectedClassId: _selectedClassId,
       selectedDayId: _selectedDayId,
-      selectedJamPelajaran: _selectedJamPelajaran,
-      selectedFilterSemester: _selectedFilterSemester,
+      selectedJamPelajaran: _selectedLessonHour,
+      selectedFilterSemester: _selectedFilterTerm,
       searchText: _searchController.text,
       lastCachedAcademicYear: _lastCachedAcademicYear,
-      lastCachedSemester: _lastCachedSemester,
+      lastCachedSemester: _lastCachedTerm,
     );
     if (key != null) {
       _lastCachedAcademicYear = _selectedAcademicYear;
-      _lastCachedSemester = _selectedSemester;
+      _lastCachedTerm = _selectedTerm;
     }
     return key;
   }
@@ -308,7 +308,7 @@ class TeachingScheduleManagementScreenState
     _dayList = result.dayList.isEmpty && _availableDays.isNotEmpty
         ? _availableDays
         : result.dayList;
-    _semesterList = result.semesterList;
+    _termList = result.semesterList;
     _lessonHourList = result.lessonHourList;
     _hasMoreData = result.hasMoreData;
     _isLoading = result.isLoading;
@@ -326,18 +326,18 @@ class TeachingScheduleManagementScreenState
     try {
       final result = await _controller.loadData(
         showTableView: _showTableView,
-        selectedSemester: _selectedSemester,
-        selectedFilterSemester: _selectedFilterSemester,
+        selectedSemester: _selectedTerm,
+        selectedFilterSemester: _selectedFilterTerm,
         selectedAcademicYear: _selectedAcademicYear,
         selectedTeacherId: _selectedTeacherId,
         selectedClassId: _selectedClassId,
         selectedDayId: _selectedDayId,
-        selectedJamPelajaran: _selectedJamPelajaran,
+        selectedJamPelajaran: _selectedLessonHour,
         searchText: _searchController.text,
         perPage: _perPage,
         availableDays: _availableDays,
         lastCachedAcademicYear: _lastCachedAcademicYear,
-        lastCachedSemester: _lastCachedSemester,
+        lastCachedSemester: _lastCachedTerm,
         useCache: useCache,
       );
 
@@ -372,8 +372,8 @@ class TeachingScheduleManagementScreenState
         lessonHours: result.lessonHourList,
       );
 
-      if (_semesterList.isNotEmpty) {
-        _updateCurrentSemester();
+      if (_termList.isNotEmpty) {
+        _updateCurrentTerm();
       }
     } catch (e) {
       AppLogger.error('schedule', e);
@@ -407,13 +407,13 @@ class TeachingScheduleManagementScreenState
     final result = await _controller.loadMoreData(
       nextPage: _currentPage,
       perPage: _perPage,
-      selectedSemester: _selectedSemester,
-      selectedFilterSemester: _selectedFilterSemester,
+      selectedSemester: _selectedTerm,
+      selectedFilterSemester: _selectedFilterTerm,
       selectedAcademicYear: _selectedAcademicYear,
       selectedTeacherId: _selectedTeacherId,
       selectedClassId: _selectedClassId,
       selectedDayId: _selectedDayId,
-      selectedJamPelajaran: _selectedJamPelajaran,
+      selectedJamPelajaran: _selectedLessonHour,
       searchText: _searchController.text,
     );
 
@@ -507,7 +507,7 @@ class TeachingScheduleManagementScreenState
       availableDays: _availableDays,
       selectedDayId: _selectedDayId,
       selectedClassId: _selectedClassId,
-      selectedJamPelajaran: _selectedJamPelajaran,
+      selectedJamPelajaran: _selectedLessonHour,
       onScheduleTap: _showScheduleDetail,
     );
     _gridData = result.gridData;
@@ -544,7 +544,7 @@ class TeachingScheduleManagementScreenState
         dayList: _availableDays,
         semesterList: _availableSemesters,
         lessonHourList: _lessonHourList,
-        semester: _selectedSemester,
+        semester: _selectedTerm,
         academicYear: _selectedAcademicYear,
         academicYearList: _availableAcademicYears,
         apiService: _controller.apiService,
@@ -569,7 +569,7 @@ class TeachingScheduleManagementScreenState
         dayList: _availableDays,
         semesterList: _availableSemesters,
         lessonHourList: _lessonHourList,
-        semester: _selectedSemester,
+        semester: _selectedTerm,
         academicYear: _selectedAcademicYear,
         academicYearList: _availableAcademicYears,
         schedule: schedule,
@@ -654,8 +654,8 @@ class TeachingScheduleManagementScreenState
       _selectedTeacherId = null;
       _selectedClassId = null;
       _selectedDayId = null;
-      _selectedFilterSemester = null;
-      _selectedJamPelajaran = null;
+      _selectedFilterTerm = null;
+      _selectedLessonHour = null;
       _searchController.clear();
       _hasActiveFilter = false;
     });
@@ -710,9 +710,9 @@ class TeachingScheduleManagementScreenState
             _hasActiveFilter = _controller.checkActiveFilter(
               selectedDayId: null,
               selectedClassId: _selectedClassId,
-              selectedJamPelajaran: _selectedJamPelajaran,
-              selectedFilterSemester: _selectedFilterSemester,
-              selectedSemester: _selectedSemester,
+              selectedJamPelajaran: _selectedLessonHour,
+              selectedFilterSemester: _selectedFilterTerm,
+              selectedSemester: _selectedTerm,
             );
           });
           _loadData();
@@ -736,9 +736,9 @@ class TeachingScheduleManagementScreenState
             _hasActiveFilter = _controller.checkActiveFilter(
               selectedDayId: _selectedDayId,
               selectedClassId: null,
-              selectedJamPelajaran: _selectedJamPelajaran,
-              selectedFilterSemester: _selectedFilterSemester,
-              selectedSemester: _selectedSemester,
+              selectedJamPelajaran: _selectedLessonHour,
+              selectedFilterSemester: _selectedFilterTerm,
+              selectedSemester: _selectedTerm,
             );
           });
           _loadData();
@@ -747,17 +747,17 @@ class TeachingScheduleManagementScreenState
     }
 
     // Add Semester Filter Chip
-    if (_selectedFilterSemester != null &&
-        _selectedFilterSemester != _selectedSemester) {
-      final semester = _semesterList.firstWhere(
-        (s) => s['id'].toString() == _selectedFilterSemester,
+    if (_selectedFilterTerm != null &&
+        _selectedFilterTerm != _selectedTerm) {
+      final semester = _termList.firstWhere(
+        (s) => s['id'].toString() == _selectedFilterTerm,
         orElse: () => {},
       );
       String semesterNameRaw = semester.isNotEmpty
           ? (semester['name'] ??
                 semester['nama'] ??
-                'Semester $_selectedFilterSemester')
-          : 'Semester $_selectedFilterSemester';
+                'Semester $_selectedFilterTerm')
+          : 'Semester $_selectedFilterTerm';
 
       if (semester.isNotEmpty &&
           semester['academic_year'] != null &&
@@ -771,13 +771,13 @@ class TeachingScheduleManagementScreenState
             '${languageProvider.getTranslatedText({'en': 'Semester', 'id': 'Semester'})}: $label',
         'onRemove': () {
           setState(() {
-            _selectedFilterSemester = null;
+            _selectedFilterTerm = null;
             _hasActiveFilter = _controller.checkActiveFilter(
               selectedDayId: _selectedDayId,
               selectedClassId: _selectedClassId,
-              selectedJamPelajaran: _selectedJamPelajaran,
+              selectedJamPelajaran: _selectedLessonHour,
               selectedFilterSemester: null,
-              selectedSemester: _selectedSemester,
+              selectedSemester: _selectedTerm,
             );
           });
           _loadData();
@@ -796,30 +796,30 @@ class TeachingScheduleManagementScreenState
       builder: (_) => ScheduleFilterSheet(
         availableDays: _availableDays,
         availableClasses: _availableClasses,
-        semesterList: _semesterList,
+        semesterList: _termList,
         lessonHourList: _lessonHourList,
-        currentSemester: _selectedSemester,
+        currentSemester: _selectedTerm,
         selectedDayId: _selectedDayId,
         selectedClassId: _selectedClassId,
-        selectedFilterSemester: _selectedFilterSemester,
-        selectedJamPelajaran: _selectedJamPelajaran,
+        selectedFilterSemester: _selectedFilterTerm,
+        selectedJamPelajaran: _selectedLessonHour,
         onApply: ({
           required String? dayId,
           required String? classId,
           required String? semester,
-          required String? jamPelajaran,
+          required String? lessonHour,
         }) {
           setState(() {
             _selectedDayId = dayId;
             _selectedClassId = classId;
-            _selectedFilterSemester = semester;
-            _selectedJamPelajaran = jamPelajaran;
+            _selectedFilterTerm = semester;
+            _selectedLessonHour = lessonHour;
             _hasActiveFilter = _controller.checkActiveFilter(
               selectedDayId: dayId,
               selectedClassId: classId,
-              selectedJamPelajaran: jamPelajaran,
+              selectedJamPelajaran: lessonHour,
               selectedFilterSemester: semester,
-              selectedSemester: _selectedSemester,
+              selectedSemester: _selectedTerm,
             );
           });
           _loadData();
@@ -837,7 +837,7 @@ class TeachingScheduleManagementScreenState
       selectedTeacherId: _selectedTeacherId,
       selectedClassId: _selectedClassId,
       selectedDayId: _selectedDayId,
-      selectedJamPelajaran: _selectedJamPelajaran,
+      selectedJamPelajaran: _selectedLessonHour,
     );
   }
 

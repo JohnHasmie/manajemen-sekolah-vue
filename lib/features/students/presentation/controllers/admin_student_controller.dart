@@ -420,11 +420,13 @@ class AdminStudentController {
   FilterOptionsResult _parseFilterOptions(Map<String, dynamic> data) {
     AppLogger.info(
       'student',
-      'Filter options loaded: ${(data['grade_levels'] as List?)?.length ?? 0} grades, ${(data['kelas'] as List?)?.length ?? 0} kelas',
+      // NOTE: 'classes' key mirrors the API response key from getStudentFilterOptions
+      'Filter options loaded: ${(data['grade_levels'] as List?)?.length ?? 0} grades, ${(data['classes'] as List?)?.length ?? 0} classes',
     );
     return FilterOptionsResult(
       gradeLevels: List<String>.from(data['grade_levels'] ?? []),
-      availableClass: data['kelas'] ?? [],
+      // NOTE: 'classes' key mirrors the API response key from getStudentFilterOptions
+      availableClass: data['classes'] ?? [],
     );
   }
 

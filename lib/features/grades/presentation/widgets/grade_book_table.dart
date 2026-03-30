@@ -302,7 +302,7 @@ class GradeBookTable extends StatelessWidget {
                         header,
                       );
                       final scoreText = gradeRecord?.isNotEmpty == true
-                          ? formatGradeValue(gradeRecord!['nilai'])
+                          ? formatGradeValue(gradeRecord!['score'])
                           : '-';
                       final hasValue = gradeRecord?.isNotEmpty == true;
 

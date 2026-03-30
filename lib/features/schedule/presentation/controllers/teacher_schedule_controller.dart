@@ -49,7 +49,7 @@ class LoadDayDataResult {
   });
 }
 
-/// Result of [TeacherScheduleController.loadSemesterData].
+/// Result of [TeacherScheduleController.loadTermData].
 ///
 /// [selectedSemester] is the resolved semester ID to use as the default.
 /// [error] is non-null when the load failed — the screen can decide whether
@@ -238,21 +238,21 @@ class TeacherScheduleController {
   /// Cache-first (12h for list, 6h for current-date-based selection).
   ///
   /// Like `Semester::current()` in Laravel.
-  Future<LoadSemesterDataResult> loadSemesterData() async {
+  Future<LoadSemesterDataResult> loadTermData() async {
     try {
-      List<dynamic> semesterData;
+      List<dynamic> termData;
       final cachedSemester = await LocalCacheService.load(
         'school_semester_data',
         ttl: const Duration(hours: 12),
       );
 
       if (cachedSemester != null) {
-        semesterData = List<dynamic>.from(cachedSemester);
+        termData = List<dynamic>.from(cachedSemester);
         AppLogger.info('schedule', 'Semester list loaded from cache');
       } else {
-        semesterData = await getIt<ApiScheduleService>().getSemester();
-        if (semesterData.isNotEmpty) {
-          LocalCacheService.save('school_semester_data', semesterData);
+        termData = await getIt<ApiScheduleService>().getSemester();
+        if (termData.isNotEmpty) {
+          LocalCacheService.save('school_semester_data', termData);
         }
       }
 
@@ -279,7 +279,7 @@ class TeacherScheduleController {
         if (result.isNotEmpty && result.containsKey('semester')) {
           final targetSemesterName = result['semester'].toString();
 
-          final dateBasedSemester = semesterData.firstWhere((s) {
+          final dateBasedSemester = termData.firstWhere((s) {
             final name = (s['name'] ?? s['nama'] ?? '').toString();
             return name.contains(targetSemesterName);
           }, orElse: () => null);
@@ -294,7 +294,7 @@ class TeacherScheduleController {
 
       // Fallback to backend 'current' flag
       if (semesterId == null) {
-        final currentSem = semesterData.firstWhere(
+        final currentSem = termData.firstWhere(
           (s) =>
               s['current'] == true ||
               s['current'] == 1 ||
@@ -307,12 +307,12 @@ class TeacherScheduleController {
       }
 
       // Last fallback
-      if (semesterId == null && semesterData.isNotEmpty) {
-        semesterId = semesterData.first['id'].toString();
+      if (semesterId == null && termData.isNotEmpty) {
+        semesterId = termData.first['id'].toString();
       }
 
       return LoadSemesterDataResult(
-        semesterList: semesterData,
+        semesterList: termData,
         selectedSemester: semesterId,
       );
     } catch (e) {
@@ -402,7 +402,7 @@ class TeacherScheduleController {
         final cachedData = Map<String, dynamic>.from(cached);
         return CachedScheduleResult(
           found: true,
-          schedules: List<dynamic>.from(cachedData['jadwal'] ?? []),
+          schedules: List<dynamic>.from(cachedData['schedules'] ?? []),
           availableClasses:
               (cachedData['availableClasses'] as List<dynamic>?)
                   ?.map((e) => Map<String, String>.from(e))
@@ -511,7 +511,7 @@ class TeacherScheduleController {
     required String prefKeyLastCacheKey,
   }) {
     LocalCacheService.save(cacheKey, {
-      'jadwal': schedules,
+      'schedules': schedules,
       'availableClasses': availableClasses,
     });
     PreferencesService().setString(prefKeyLastCacheKey, cacheKey);

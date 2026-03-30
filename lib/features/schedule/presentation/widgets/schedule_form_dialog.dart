@@ -78,15 +78,15 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
   late String _selectedSubject;
   late String _selectedClass;
   List<String> _selectedDayIds = [];
-  late String _selectedSemester;
+  late String _selectedTerm;
   late String _selectedAcademicYear; // New: Local state for AC
-  late String _selectedJamPelajaran;
+  late String _selectedLessonHour;
 
   List<dynamic> _filteredSubjectList = [];
   List<dynamic> _availableLessonHourList = [];
   List<dynamic> _occupiedSlots = [];
   bool _isLoadingSubjects = false;
-  bool _isLoadingJamPelajaran = false;
+  bool _isLoadingLessonHour = false;
 
   /// Initializes form state and loads lesson hour settings from the API.
   /// Like Vue's `mounted()` hook calling `this.initForm()` and `this.loadSettings()`.
@@ -120,9 +120,9 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
     _selectedSubject = '';
     _selectedClass = '';
     _selectedDayIds = [];
-    _selectedSemester = widget.semester;
+    _selectedTerm = widget.semester;
     _selectedAcademicYear = widget.academicYear;
-    _selectedJamPelajaran = '';
+    _selectedLessonHour = '';
 
     _filteredSubjectList = widget.subjectList;
     _availableLessonHourList = [];
@@ -165,7 +165,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
       } else if (widget.schedule['hari_id'] != null) {
         _selectedDayIds = [widget.schedule['hari_id'].toString()];
       }
-      _selectedSemester =
+      _selectedTerm =
           widget.schedule['semester_id']?.toString() ??
           widget.schedule['semester']?.toString() ??
           widget.semester;
@@ -173,7 +173,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
           widget.schedule['academic_year_id']?.toString() ??
           widget.schedule['academic_year']?.toString() ??
           widget.academicYear;
-      _selectedJamPelajaran =
+      _selectedLessonHour =
           widget.schedule['lesson_hour_days_id']?.toString() ??
           widget.schedule['lesson_hour_id']?.toString() ??
           widget.schedule['jam_pelajaran_id']?.toString() ??
@@ -195,7 +195,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
   Future<void> _fetchOccupiedSlots() async {
     if (_selectedClass.isEmpty ||
         _selectedDayIds.isEmpty ||
-        _selectedSemester.isEmpty) {
+        _selectedTerm.isEmpty) {
       return;
     }
 
@@ -203,7 +203,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
       final response = await getIt<ApiScheduleService>().getSchedulesPaginated(
         classId: _selectedClass,
         dayId: _selectedDayIds.first,
-        semesterId: _selectedSemester,
+        semesterId: _selectedTerm,
         academicYearId: _selectedAcademicYear,
         limit: 100, // Ensure we get all slots
       );
@@ -274,13 +274,13 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
   /// Filters available teaching hours (jam pelajaran) based on the selected day.
   /// Like a Livewire `updatedDayId()` that re-queries available time slots.
   void _filterAvailableJamPelajaran() {
-    setState(() => _isLoadingJamPelajaran = true);
+    setState(() => _isLoadingLessonHour = true);
 
     try {
       if (_selectedDayIds.isEmpty) {
         setState(() {
           _availableLessonHourList = widget.lessonHourList;
-          _isLoadingJamPelajaran = false;
+          _isLoadingLessonHour = false;
         });
         return;
       }
@@ -303,15 +303,15 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
 
       setState(() {
         _availableLessonHourList = filtered;
-        _isLoadingJamPelajaran = false;
+        _isLoadingLessonHour = false;
 
         // Reset selected jam if it's no longer valid
-        if (_selectedJamPelajaran.isNotEmpty) {
+        if (_selectedLessonHour.isNotEmpty) {
           final exists = filtered.any(
-            (jam) => jam['id'].toString() == _selectedJamPelajaran,
+            (jam) => jam['id'].toString() == _selectedLessonHour,
           );
           if (!exists) {
-            _selectedJamPelajaran = '';
+            _selectedLessonHour = '';
           }
         }
       });
@@ -321,7 +321,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
       AppLogger.error('schedule_form', 'Error filtering lesson hours: $e');
       setState(() {
         _availableLessonHourList = widget.lessonHourList;
-        _isLoadingJamPelajaran = false;
+        _isLoadingLessonHour = false;
       });
     }
   }
@@ -391,7 +391,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
     final uniqueClassList = _removeDuplicates(widget.classList, 'id');
     final uniqueDayList = _removeDuplicates(widget.dayList, 'id');
     final uniqueSemesterList = _removeDuplicates(widget.semesterList, 'id');
-    final uniqueJamPelajaranList = _removeDuplicates(
+    final uniqueLessonHourList = _removeDuplicates(
       _availableLessonHourList,
       'id',
     );
@@ -544,13 +544,13 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                           languageProvider,
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        _buildSemesterDropdown(
+                        _buildTermDropdown(
                           uniqueSemesterList,
                           languageProvider,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         _buildTeachingHourDropdown(
-                          uniqueJamPelajaranList,
+                          uniqueLessonHourList,
                           languageProvider,
                         ),
                       ],
@@ -1096,7 +1096,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
     );
   }
 
-  Widget _buildSemesterDropdown(
+  Widget _buildTermDropdown(
     List<dynamic> semesters,
     LanguageProvider languageProvider,
   ) {
@@ -1123,7 +1123,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
           ),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
-            initialValue: _getSafeValue(_selectedSemester, semesters),
+            initialValue: _getSafeValue(_selectedTerm, semesters),
             items: [
               DropdownMenuItem(
                 value: '',
@@ -1152,7 +1152,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             ],
             onChanged: (value) {
               setState(() {
-                _selectedSemester = value ?? '';
+                _selectedTerm = value ?? '';
               });
               if (_selectedDayIds.isNotEmpty) {
                 _fetchOccupiedSlots();
@@ -1213,7 +1213,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
           child: DropdownButtonFormField<String>(
             isExpanded: true,
             initialValue: _getSafeValue(
-              _selectedJamPelajaran,
+              _selectedLessonHour,
               teachingHours.toList(),
             ),
             items: [
@@ -1266,7 +1266,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                         isAvailable = false;
                       }
 
-                      final jamKe = jam['hour_number'] ?? jam['jam_ke'] ?? '';
+                      final periodNumber = jam['hour_number'] ?? jam['jam_ke'] ?? '';
                       final jamMulai = _formatTimeForDropdown(
                         jam['start_time']?.toString() ??
                             jam['jam_mulai']?.toString(),
@@ -1283,8 +1283,8 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                           opacity: isAvailable ? 1.0 : 0.5,
                           child: Text(
                             isAvailable
-                                ? '$jamKe ($jamMulai - $jamSelesai)'
-                                : '$jamKe ($jamMulai - $jamSelesai) - Terisi',
+                                ? '$periodNumber ($jamMulai - $jamSelesai)'
+                                : '$periodNumber ($jamMulai - $jamSelesai) - Terisi',
                             style: TextStyle(
                               fontSize: 14,
                               color: isAvailable ? Colors.black : Colors.grey,
@@ -1297,11 +1297,11 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                     });
               }(),
             ],
-            onChanged: _isLoadingJamPelajaran
+            onChanged: _isLoadingLessonHour
                 ? null
                 : (value) {
                     setState(() {
-                      _selectedJamPelajaran = value ?? '';
+                      _selectedLessonHour = value ?? '';
                     });
                   },
             decoration: InputDecoration(
@@ -1315,7 +1315,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                 horizontal: 12,
                 vertical: 14,
               ),
-              suffixIcon: _isLoadingJamPelajaran
+              suffixIcon: _isLoadingLessonHour
                   ? Padding(
                       padding: EdgeInsets.all(AppSpacing.md),
                       child: SizedBox(
@@ -1350,9 +1350,9 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
         'subject_id': _selectedSubject,
         'class_id': _selectedClass,
         'days_ids': _selectedDayIds,
-        'semester_id': _selectedSemester,
+        'semester_id': _selectedTerm,
         'academic_year_id': _selectedAcademicYear,
-        'lesson_hour_days_id': _selectedJamPelajaran,
+        'lesson_hour_days_id': _selectedLessonHour,
       };
 
       AppLogger.debug('schedule_form', 'Saving schedule data');

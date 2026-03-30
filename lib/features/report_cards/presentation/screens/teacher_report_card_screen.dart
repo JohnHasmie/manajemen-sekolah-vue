@@ -308,7 +308,7 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
   }
 
   /// Resolve semester using shared cache, falling back to API
-  Future<String> _resolveSemester() async {
+  Future<String> _resolveAcademicTerm() async {
     final cachedDayData = await LocalCacheService.load(
       'school_day_data',
       ttl: const Duration(hours: 24),
@@ -345,7 +345,7 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
         throw Exception("Tahun ajaran tidak valid.");
       }
 
-      final semesterId = await _resolveSemester();
+      final semesterId = await _resolveAcademicTerm();
 
       if (!mounted) return;
       await ExcelReportCardService.exportReportCardToExcel(
@@ -391,7 +391,7 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
       final academicYearId =
           academicYearProvider.selectedAcademicYear?['id']?.toString() ?? '';
 
-      final semesterId = await _resolveSemester();
+      final semesterId = await _resolveAcademicTerm();
 
       if (!mounted) return;
       await ExcelReportCardService.exportSingleRaportPdf(

@@ -175,7 +175,7 @@ class GradeBookController {
                     ?.toString(),
             'student_class_id':
                 (item['student_class_id'] ?? item['siswa_kelas_id'])?.toString(),
-            'nilai': item['score'] ?? item['nilai'],
+            'score': item['score'] ?? item['nilai'],
             'deskripsi': item['notes'] ?? item['deskripsi'],
             'tanggal':
                 item['assessment']?['date'] ?? item['date'] ?? item['tanggal'],
@@ -440,13 +440,13 @@ class GradeBookController {
       // Score controller + focus node
       final scoreKey = '${student.id}_score';
       editControllers[scoreKey] = TextEditingController(
-        text: formatGradeValue(gradeData?['nilai']),
+        text: formatGradeValue(gradeData?['score']),
       );
       editFocusNodes[scoreKey] = FocusNode();
       editFocusNodes[scoreKey]!.addListener(() {
         if (!editFocusNodes[scoreKey]!.hasFocus) {
           onFocusLost(
-              student, type, header, 'nilai', editControllers[scoreKey]!.text);
+              student, type, header, 'score', editControllers[scoreKey]!.text);
         }
       });
 
@@ -509,7 +509,7 @@ class GradeBookController {
         'assessment_id': header['id'],
         'score': field == 'score'
             ? (value.isEmpty ? 0 : double.tryParse(value) ?? 0)
-            : (currentData?['nilai'] ?? 0),
+            : (currentData?['score'] ?? 0),
         'notes': field == 'deskripsi'
             ? value
             : (currentData?['deskripsi'] ?? ''),

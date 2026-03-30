@@ -221,7 +221,7 @@ class DashboardNotifier extends AutoDisposeAsyncNotifier<DashboardState> {
         AuthService.getUserSchools(),
         AuthService.getUserRoles(),
         _fetchTeacherSpecificData(normalizedRole, academicYearId),
-        _fetchSemesterLabel(),
+        _fetchTermLabel(),
         _prefetchTours(normalizedRole),
         _fetchFinanceStats(normalizedRole),
       ]);
@@ -345,7 +345,7 @@ class DashboardNotifier extends AutoDisposeAsyncNotifier<DashboardState> {
   }
 
   /// Returns semester label or null. Does NOT mutate state directly.
-  Future<String?> _fetchSemesterLabel() async {
+  Future<String?> _fetchTermLabel() async {
     try {
       final result = await getIt<ApiScheduleService>().getDateBasedSemester();
       if (result.containsKey('label')) {

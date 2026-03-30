@@ -10,11 +10,11 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 /// Constructor params:
 /// - [isAiGenerated] — when true, appends an italic "AI-generated" notice below the lines
 /// - [primaryColor]  — brand colour for the card's drop shadow tint
-class RppSignatureCard extends StatelessWidget {
+class LessonPlanSignatureCard extends StatelessWidget {
   final bool isAiGenerated;
   final Color primaryColor;
 
-  const RppSignatureCard({
+  const LessonPlanSignatureCard({
     super.key,
     required this.isAiGenerated,
     required this.primaryColor,

@@ -73,7 +73,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: EdgeInsets.all(AppSpacing.md),
-                  child: _buildMaterialContent(material),
+                  child: _buildSliderContent(material),
                 ),
               );
             },
@@ -127,7 +127,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
     );
   }
 
-  Widget _buildMaterialContent(dynamic material) {
+  Widget _buildSliderContent(dynamic material) {
     final className = material['class_name'] ?? '-';
     final subjectName = material['subject_name'] ?? '-';
     final totalChapters = material['total_chapters'] ?? 0;

@@ -61,6 +61,8 @@ class ReportCardStudentList extends StatelessWidget {
       itemCount: students.length,
       itemBuilder: (context, index) {
         final student = students[index];
+        // NOTE: 'has_raport' is a JSON key from the API (ApiReportCardService.getRaports);
+        // the local variable is kept as hasReportCard.
         final bool hasReportCard = student['has_raport'] ?? false;
         final String status = student['raport_status'] ?? 'Belum ada';
 

@@ -10,10 +10,10 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 ///
 /// [controller] is the QuillController owned by the parent screen —
 /// like passing a `v-model` reference down to a Vue child component.
-class RppRichTextField extends StatelessWidget {
+class LessonPlanRichTextField extends StatelessWidget {
   final quill.QuillController controller;
 
-  const RppRichTextField({
+  const LessonPlanRichTextField({
     super.key,
     required this.controller,
   });

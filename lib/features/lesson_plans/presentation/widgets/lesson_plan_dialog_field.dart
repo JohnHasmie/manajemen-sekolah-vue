@@ -9,11 +9,11 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 ///
 /// [label] is the field name (e.g. "Mata Pelajaran").
 /// [value] is the current value to display; shows "-" when empty.
-class RppDialogField extends StatelessWidget {
+class LessonPlanDialogField extends StatelessWidget {
   final String label;
   final String value;
 
-  const RppDialogField({
+  const LessonPlanDialogField({
     super.key,
     required this.label,
     required this.value,

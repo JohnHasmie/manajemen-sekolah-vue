@@ -10,11 +10,11 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 /// Constructor params:
 /// - [content]      — the full RPP text (newline-delimited, may contain pipe-table rows)
 /// - [primaryColor] — brand colour for section headings and the title line
-class RppFormattedContent extends StatelessWidget {
+class LessonPlanFormattedContent extends StatelessWidget {
   final String content;
   final Color primaryColor;
 
-  const RppFormattedContent({
+  const LessonPlanFormattedContent({
     super.key,
     required this.content,
     required this.primaryColor,

@@ -86,11 +86,11 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
       }
     } else if (goal['type'] == 'custom') {
       _selectedClasses = widget.classList.where((classItem) {
-        return goal['kelas']?.contains(classItem['id'].toString()) == true;
+        return goal['classes']?.contains(classItem['id'].toString()) == true;
       }).toList();
 
-      for (var classId in goal['kelas'] ?? []) {
-        _selectedStudentsByClass[classId] = (goal['siswa']?[classId] ?? [])
+      for (var classId in goal['classes'] ?? []) {
+        _selectedStudentsByClass[classId] = (goal['students']?[classId] ?? [])
             .map(_findStudentById)
             .where((student) => student != null)
             .cast<Map<String, dynamic>>()
@@ -159,8 +159,8 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
 
     return {
       'type': 'custom',
-      'kelas': classIds,
-      'siswa': studentMap,
+      'classes': classIds,
+      'students': studentMap,
       'description': '$selectedStudentCount siswa di $totalClasses kelas',
     };
   }

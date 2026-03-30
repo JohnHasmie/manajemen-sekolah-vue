@@ -24,13 +24,13 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_editor_view.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_field_card.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_file_card.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_formatted_content.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_header_info_card.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_regen_all_button.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/rpp_signature_card.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_editor_view.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_field_card.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_file_card.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_formatted_content.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_header_info_card.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_regen_all_button.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_signature_card.dart';
 
 /// RPP detail viewer with inline editing and AI regeneration.
 ///
@@ -192,12 +192,14 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
   String _getFieldValue(String key, String altKey) {
     final val = _lessonPlanData[key];
-    if (val != null && val.toString().trim().isNotEmpty)
+    if (val != null && val.toString().trim().isNotEmpty) {
       return val.toString().trim();
+    }
     if (altKey.isNotEmpty) {
       final altVal = _lessonPlanData[altKey];
-      if (altVal != null && altVal.toString().trim().isNotEmpty)
+      if (altVal != null && altVal.toString().trim().isNotEmpty) {
         return altVal.toString().trim();
+      }
     }
     return '';
   }
@@ -1488,7 +1490,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Widget _buildEditor() {
-    return RppEditorView(
+    return LessonPlanEditorView(
       content: _editedContent,
       primaryColor: _primaryColor,
       onChanged: _updateContent,
@@ -1544,7 +1546,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Widget _buildRegenAllButton() {
-    return RppRegenAllButton(
+    return LessonPlanRegenAllButton(
       isRegenerating: _regeneratingField == 'all',
       primaryColor: _primaryColor,
       onTap: _showRegenAllDialog,
@@ -1567,7 +1569,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       if (value.isEmpty) return SizedBox.shrink();
       return Padding(
         padding: EdgeInsets.only(bottom: 12),
-        child: RppFieldCard(
+        child: LessonPlanFieldCard(
           fieldKey: fieldKey,
           fieldLabel: fieldLabel,
           value: value,
@@ -1591,7 +1593,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Widget _buildHeaderInfoCard() {
-    return RppHeaderInfoCard(
+    return LessonPlanHeaderInfoCard(
       lessonPlanData: _lessonPlanData,
       primaryColor: _primaryColor,
     );
@@ -1599,7 +1601,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
 
 
   Widget _buildSignatureCard() {
-    return RppSignatureCard(
+    return LessonPlanSignatureCard(
       isAiGenerated:
           _lessonPlanData['ai_generated'] == true ||
           _lessonPlanData['is_ai_generated'] == true,
@@ -1608,7 +1610,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Widget _buildFileCard() {
-    return RppFileCard(
+    return LessonPlanFileCard(
       filePath: _filePath!,
       isDownloading: _isDownloading,
       primaryColor: _primaryColor,
@@ -1617,7 +1619,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
   }
 
   Widget _buildFormattedContent() {
-    return RppFormattedContent(
+    return LessonPlanFormattedContent(
       content: _editedContent,
       primaryColor: _primaryColor,
     );

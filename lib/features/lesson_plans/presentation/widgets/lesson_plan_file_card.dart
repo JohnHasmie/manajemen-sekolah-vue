@@ -12,13 +12,13 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 /// - [isDownloading] — when true, shows a spinner instead of the download button
 /// - [primaryColor]  — brand colour for the download icon and shadow tint
 /// - [onTap]         — callback fired when the user taps (should trigger download + open)
-class RppFileCard extends StatelessWidget {
+class LessonPlanFileCard extends StatelessWidget {
   final String filePath;
   final bool isDownloading;
   final Color primaryColor;
   final VoidCallback onTap;
 
-  const RppFileCard({
+  const LessonPlanFileCard({
     super.key,
     required this.filePath,
     required this.isDownloading,

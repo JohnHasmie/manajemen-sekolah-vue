@@ -80,7 +80,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     super.initState();
     // Initialize map with default values for each student
     for (var student in widget.studentList) {
-      _gradeStudentMap[student.id] = {'nilai': '', 'deskripsi': ''};
+      _gradeStudentMap[student.id] = {'score': '', 'description': ''};
     }
   }
 
@@ -129,7 +129,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
       bool hasData = false;
       for (var student in widget.studentList) {
         final gradeData = _gradeStudentMap[student.id];
-        if (gradeData?['nilai']?.isNotEmpty == true) {
+        if (gradeData?['score']?.isNotEmpty == true) {
           hasData = true;
           break;
         }
@@ -153,7 +153,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
 
         for (var student in widget.studentList) {
           final gradeData = _gradeStudentMap[student.id];
-          final gradeValue = gradeData?['nilai']?.toString().trim();
+          final gradeValue = gradeData?['score']?.toString().trim();
 
           // Skip if no grade value was entered
           if (gradeValue == null || gradeValue.isEmpty) {
@@ -171,8 +171,8 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
             'teacher_id': widget.teacher['id'],
             'subject_id': widget.subject['id'],
             'type': _selectedGradeType,
-            'score': int.parse(gradeData!['nilai']),
-            'notes': gradeData['deskripsi'] ?? '',
+            'score': int.parse(gradeData!['score']),
+            'notes': gradeData['description'] ?? '',
             'date':
                 '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
             'title': _titleController.text.isNotEmpty
@@ -275,7 +275,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
     final languageProvider = ref.watch(languageRiverpod);
     final studentsWithGradeCount = widget.studentList.where((student) {
       final gradeData = _gradeStudentMap[student.id];
-      return gradeData?['nilai']?.isNotEmpty == true;
+      return gradeData?['score']?.isNotEmpty == true;
     }).length;
 
     return Scaffold(
@@ -482,9 +482,9 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                             languageProvider: languageProvider,
                             onGradeChanged: (studentId, value) =>
                                 setState(() => _gradeStudentMap[studentId]
-                                    ?['nilai'] = value),
+                                    ?['score'] = value),
                             onDescriptionChanged: (studentId, value) {
-                              _gradeStudentMap[studentId]?['deskripsi'] = value;
+                              _gradeStudentMap[studentId]?['description'] = value;
                             },
                           );
                         },

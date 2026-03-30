@@ -12,7 +12,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 /// events instead of touching parent state directly. The parent (screen) owns
 /// the actual list state and calls setState; this widget is purely presentational
 /// with callbacks for every mutation.
-class ReportCardTambahanTab extends StatelessWidget {
+class ReportCardExtrasTab extends StatelessWidget {
   /// Current list of extracurricular entries. Each map has keys: `name`,
   /// `score`, `description`.
   final List<Map<String, dynamic>> extras;
@@ -45,7 +45,7 @@ class ReportCardTambahanTab extends StatelessWidget {
   /// Called whenever any mutation occurs so the parent can flag unsaved changes.
   final VoidCallback onMarkUnsaved;
 
-  const ReportCardTambahanTab({
+  const ReportCardExtrasTab({
     super.key,
     required this.extras,
     required this.achievements,

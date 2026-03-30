@@ -11,12 +11,12 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 /// - [content]    — the current RPP text being edited
 /// - [primaryColor] — brand colour for focus borders / shadows
 /// - [onChanged]  — callback fired whenever the text changes (replaces setState in parent)
-class RppEditorView extends StatelessWidget {
+class LessonPlanEditorView extends StatelessWidget {
   final String content;
   final Color primaryColor;
   final ValueChanged<String> onChanged;
 
-  const RppEditorView({
+  const LessonPlanEditorView({
     super.key,
     required this.content,
     required this.primaryColor,

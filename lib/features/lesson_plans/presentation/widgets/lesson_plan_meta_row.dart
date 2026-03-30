@@ -8,11 +8,11 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 ///
 /// [label] is the left-side column text (e.g. "Satuan Pendidikan").
 /// [controller] is the TextEditingController owned by the parent screen.
-class RppMetaRow extends StatelessWidget {
+class LessonPlanMetaRow extends StatelessWidget {
   final String label;
   final TextEditingController controller;
 
-  const RppMetaRow({
+  const LessonPlanMetaRow({
     super.key,
     required this.label,
     required this.controller,

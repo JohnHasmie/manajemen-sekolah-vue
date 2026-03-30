@@ -10,11 +10,11 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 /// Constructor params:
 /// - [lessonPlanData] — the raw RPP map; this widget reads display fields only
 /// - [primaryColor]   — brand colour for the title text and card shadow
-class RppHeaderInfoCard extends StatelessWidget {
+class LessonPlanHeaderInfoCard extends StatelessWidget {
   final Map<String, dynamic> lessonPlanData;
   final Color primaryColor;
 
-  const RppHeaderInfoCard({
+  const LessonPlanHeaderInfoCard({
     super.key,
     required this.lessonPlanData,
     required this.primaryColor,

@@ -66,14 +66,14 @@ class TeachingScheduleScreenState
   static List<Map<String, String>>? _memCachedClasses;
 
   List<dynamic> _scheduleList = [];
-  List<dynamic> _semesterList = [];
+  List<dynamic> _termList = [];
   bool _isLoading = true;
   String _teacherId = '';
   String _teacherNama = '';
   // Stored for future year-picker UI; populated by _loadAcademicYearData.
   // ignore: unused_field
   List<dynamic> _academicYearList = [];
-  String _selectedSemester = '1'; // Will be set by _setDefaultAcademicPeriod()
+  String _selectedTerm = '1'; // Will be set by _setDefaultAcademicPeriod()
   String _selectedAcademicYear =
       '2024/2025'; // Will be set by _setDefaultAcademicPeriod()
   final TextEditingController _searchController = TextEditingController();
@@ -169,7 +169,7 @@ class TeachingScheduleScreenState
     final ctrl = ref.read(teacherScheduleControllerProvider);
     setState(() {
       _selectedAcademicYear = ctrl.getCurrentAcademicYear();
-      // Semester will be set by _loadSemesterData called from _loadUserData
+      // Semester will be set by _loadTermData called from _loadUserData
     });
   }
 
@@ -203,7 +203,7 @@ class TeachingScheduleScreenState
           if (cached != null && mounted) {
             final cachedData = Map<String, dynamic>.from(cached);
             setState(() {
-              _scheduleList = List<dynamic>.from(cachedData['jadwal'] ?? []);
+              _scheduleList = List<dynamic>.from(cachedData['schedules'] ?? []);
               _availableClasses =
                   (cachedData['availableClasses'] as List<dynamic>?)
                       ?.map((e) => Map<String, String>.from(e))
@@ -244,7 +244,7 @@ class TeachingScheduleScreenState
         // Load reference data in parallel, then fetch schedule
         await Future.wait([
           _loadDayData(),
-          _loadSemesterData(),
+          _loadTermData(),
           _loadAcademicYearData(),
         ]);
         _loadSchedule();
@@ -369,7 +369,7 @@ class TeachingScheduleScreenState
         // Load reference data in parallel, then fetch schedule
         await Future.wait([
           _loadDayData(),
-          _loadSemesterData(),
+          _loadTermData(),
           _loadAcademicYearData(),
         ]);
         _loadSchedule();
@@ -393,16 +393,16 @@ class TeachingScheduleScreenState
     }
   }
 
-  Future<void> _loadSemesterData() async {
+  Future<void> _loadTermData() async {
     final ctrl = ref.read(teacherScheduleControllerProvider);
-    final result = await ctrl.loadSemesterData();
+    final result = await ctrl.loadTermData();
     if (!mounted) return;
     setState(() {
-      _semesterList = result.semesterList;
+      _termList = result.semesterList;
     });
     if (result.selectedSemester != null) {
       setState(() {
-        _selectedSemester = result.selectedSemester!;
+        _selectedTerm = result.selectedSemester!;
       });
     }
   }
@@ -427,7 +427,7 @@ class TeachingScheduleScreenState
       selectedClassId: _selectedClassId,
       searchText: _searchController.text,
       selectedFilterSemester: _selectedFilterSemester,
-      selectedSemester: _selectedSemester,
+      selectedSemester: _selectedTerm,
       selectedAcademicYear: _selectedAcademicYear,
       isHomeroomView: _isHomeroomView,
       selectedHomeroomClass: _selectedHomeroomClass,
@@ -476,7 +476,7 @@ class TeachingScheduleScreenState
     }
 
     // Step 3: Fetch fresh data from API
-    final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
+    final semesterToUse = _selectedFilterSemester ?? _selectedTerm;
     final result = await ctrl.fetchScheduleFromApi(
       teacherId: _teacherId,
       semesterToUse: semesterToUse,
@@ -545,7 +545,7 @@ class TeachingScheduleScreenState
           _selectedDayIds.isNotEmpty ||
           _selectedClassId != null ||
           (_selectedFilterSemester != null &&
-              _selectedFilterSemester != _selectedSemester);
+              _selectedFilterSemester != _selectedTerm);
     });
   }
 
@@ -557,7 +557,7 @@ class TeachingScheduleScreenState
       _checkActiveFilter();
     });
     // Reload data to ensure semester and other contexts are correct
-    _loadSemesterData().then((_) => _loadSchedule());
+    _loadTermData().then((_) => _loadSchedule());
   }
 
   List<Map<String, dynamic>> _buildFilterChips(
@@ -619,8 +619,8 @@ class TeachingScheduleScreenState
 
     // Semester chip
     if (_selectedFilterSemester != null &&
-        _selectedFilterSemester != _selectedSemester) {
-      final semester = _semesterList.firstWhere(
+        _selectedFilterSemester != _selectedTerm) {
+      final semester = _termList.firstWhere(
         (s) => s['id'].toString() == _selectedFilterSemester,
         orElse: () => {'nama': 'Semester $_selectedFilterSemester'},
       );
@@ -651,8 +651,8 @@ class TeachingScheduleScreenState
         dayOptions: _dayOptions,
         dayIdMap: _dayIdMap,
         availableClasses: _availableClasses,
-        semesterList: _semesterList,
-        currentSemester: _selectedSemester,
+        semesterList: _termList,
+        currentSemester: _selectedTerm,
         selectedDayIds: _selectedDayIds,
         selectedClassId: _selectedClassId,
         selectedFilterSemester: _selectedFilterSemester,
@@ -667,7 +667,7 @@ class TeachingScheduleScreenState
             _selectedDayIds = dayIds;
             _selectedClassId = classId;
             _selectedFilterSemester = semester;
-            if (semester != null) _selectedSemester = semester;
+            if (semester != null) _selectedTerm = semester;
             _checkActiveFilter();
           });
           if (needsReload) _loadSchedule();

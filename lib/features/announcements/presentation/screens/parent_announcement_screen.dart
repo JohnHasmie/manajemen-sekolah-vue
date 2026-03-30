@@ -65,7 +65,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   final TextEditingController _searchController = TextEditingController();
-  String _userRole = 'wali'; // Default role
+  String _userRole = 'wali'; // API role identifier — value sourced from user['role'] returned by the API
 
   // Visibility Tracking
   final Set<String> _processedIds = {}; // IDs we've already handled/queued
@@ -166,7 +166,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
       final user = json.decode(userData);
       if (mounted) {
         setState(() {
-          _userRole = user['role'] ?? 'wali';
+          _userRole = user['role'] ?? 'wali'; // API role identifier
         });
       }
     }
