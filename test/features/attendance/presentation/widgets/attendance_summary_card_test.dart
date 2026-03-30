@@ -113,5 +113,91 @@ void main() {
       );
       expect(bookIcon, findsOneWidget);
     });
+
+    // --- Additional edge case scenarios ---
+
+    testWidgets('shows zero present count', (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(
+        summary: makeSummary(present: 0, absent: 30),
+      ));
+      expect(find.text('0 Hadir'), findsOneWidget);
+    });
+
+    testWidgets('shows zero absent count', (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(
+        summary: makeSummary(present: 30, absent: 0),
+      ));
+      expect(find.text('0 Absen'), findsOneWidget);
+    });
+
+    testWidgets('shows zero total students', (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(
+        summary: makeSummary(totalStudent: 0, present: 0, absent: 0),
+      ));
+      expect(find.text('0 Siswa'), findsOneWidget);
+    });
+
+    testWidgets('shows custom subject name', (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(
+        summary: makeSummary(subjectName: 'Bahasa Indonesia'),
+      ));
+      expect(find.text('Bahasa Indonesia'), findsOneWidget);
+    });
+
+    testWidgets('shows className in card when provided', (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(
+        summary: makeSummary(className: 'IX-C'),
+      ));
+      expect(find.text('IX-C'), findsOneWidget);
+    });
+
+    testWidgets('renders correctly without className (null)', (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(
+        summary: makeSummary(className: null),
+      ));
+      expect(find.byType(AttendanceSummaryCard), findsOneWidget);
+    });
+
+    testWidgets('renders correctly without lessonHourName (null)',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(
+        summary: makeSummary(lessonHourName: null),
+      ));
+      expect(find.byType(AttendanceSummaryCard), findsOneWidget);
+    });
+
+    testWidgets('shows lessonHourName when provided', (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(
+        summary: makeSummary(lessonHourName: 'Jam 3'),
+      ));
+      expect(find.text('Jam 3'), findsOneWidget);
+    });
+
+    testWidgets('renders with a different primaryColor', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: AttendanceSummaryCard(
+                summary: makeSummary(),
+                primaryColor: Colors.green,
+                languageProvider: langProvider,
+                onTap: () {},
+                onDelete: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(AttendanceSummaryCard), findsOneWidget);
+    });
+
+    testWidgets('large student count renders without overflow', (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(
+        summary: makeSummary(totalStudent: 999, present: 997, absent: 2),
+      ));
+      expect(find.text('999 Siswa'), findsOneWidget);
+      expect(find.text('997 Hadir'), findsOneWidget);
+    });
   });
 }
