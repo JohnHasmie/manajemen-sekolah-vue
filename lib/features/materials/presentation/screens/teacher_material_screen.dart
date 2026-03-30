@@ -228,6 +228,9 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
 
   bool _isLoading = false;
   bool _isLoadingBab = false;
+  // True while waiting for progress data — keeps skeleton visible so checkboxes
+  // never flash from unchecked → checked on first render.
+  bool _isLoadingProgress = false;
 
   // Tour properties
   final GlobalKey _filterKey = GlobalKey();
@@ -257,6 +260,48 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     final teacherId = widget.teacher['id']?.toString() ?? '';
     if (teacherId.isEmpty) return null;
     return 'materi_data_$teacherId';
+  }
+
+  /// Cache key for progress data (checked/generated/used) per teacher+subject+class.
+  String _buildProgressCacheKey(String subjectId) {
+    final teacherId = widget.teacher['id']?.toString() ?? '';
+    final classId = _selectedClassId ?? 'no_class';
+    return CacheKeyBuilder.custom('materi_progress', teacherId, '${subjectId}_$classId');
+  }
+
+  /// Applies a list of progress API items into the in-memory checkbox maps.
+  /// Call this inside a setState block. Like a Vue computed setter that
+  /// pushes server state into reactive data.
+  void _applyProgressToMaps(List<dynamic> progress) {
+    for (var item in progress) {
+      final chapterId = item['bab_id'];
+      final subChapterId = item['sub_bab_id'];
+      final isChecked = item['is_checked'] == 1 || item['is_checked'] == true;
+      final isGenerated = item['is_generated'] == 1 || item['is_generated'] == true;
+      final isUsed = item['is_used'] == 1 || item['is_used'] == true;
+
+      if (subChapterId != null) {
+        _checkedSubChapter[subChapterId.toString()] = isChecked;
+        _generatedSubChapter[subChapterId.toString()] = isGenerated;
+        _usedSubChapter[subChapterId.toString()] = isUsed;
+      } else if (chapterId != null) {
+        _checkedChapter[chapterId.toString()] = isChecked;
+        _generatedChapter[chapterId.toString()] = isGenerated;
+        _usedChapter[chapterId.toString()] = isUsed;
+      }
+    }
+
+    // Recalculate chapter checked state from sub-chapters
+    for (var chapter in _chapterMaterialList) {
+      final chapterId = chapter['id'].toString();
+      final subs = _subChapterMaterialList
+          .where((sb) => sb['bab_id'].toString() == chapterId)
+          .toList();
+      if (subs.isNotEmpty) {
+        _checkedChapter[chapterId] =
+            subs.every((sb) => _checkedSubChapter[sb['id'].toString()] == true);
+      }
+    }
   }
 
   Future<void> _forceRefresh() async {
@@ -696,6 +741,19 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
           );
 
           if (cachedChapters.isNotEmpty) {
+            // Try to load cached progress so checkboxes render correctly on first frame
+            List<dynamic> cachedProgress = [];
+            try {
+              final progressCacheKey = _buildProgressCacheKey(subjectId);
+              final cachedProgressData = await LocalCacheService.load(
+                progressCacheKey,
+                ttl: const Duration(minutes: 30),
+              );
+              if (cachedProgressData != null) {
+                cachedProgress = List<dynamic>.from(cachedProgressData);
+              }
+            } catch (_) {}
+
             setState(() {
               _chapterMaterialList = cachedChapters;
               _subChapterMaterialList = cachedSubChapters;
@@ -716,8 +774,16 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
               for (var sc in cachedSubChapters) {
                 _checkedSubChapter[sc['id'].toString()] = false;
               }
+              // Apply cached progress in same frame — no checkbox flicker
+              if (cachedProgress.isNotEmpty) {
+                _applyProgressToMaps(cachedProgress);
+                _isLoadingProgress = false;
+              } else {
+                // No cached progress yet — keep skeleton until API responds
+                _isLoadingProgress = true;
+              }
             });
-            // Load progress from DB non-blocking (always fresh — this is user-specific state)
+            // Refresh progress from API in background (short TTL — user-specific state)
             _loadContentProgress(subjectId);
             // Trigger tour check
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -765,6 +831,8 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
         _chapterMaterialList = chapterMaterials;
         _subChapterMaterialList = List.from(allSubChapters);
         _isLoadingBab = false;
+        // Keep skeleton until _loadContentProgress finishes
+        _isLoadingProgress = true;
 
         _expandedChapter.clear();
         _checkedChapter.clear();
@@ -792,7 +860,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
         'subChapterMaterials': allSubChapters,
       });
 
-      // Load progress from database (non-blocking — UI already shows chapter structure)
+      // Load fresh progress from API and cache the result
       _loadContentProgress(subjectId);
 
       // Trigger tour
@@ -891,7 +959,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     _saveChapterAndSubChaptersProgress(chapterId, value ?? false);
   }
 
-  // Load materi progress from database
+  // Load materi progress from database, cache the result for instant re-render
   Future<void> _loadContentProgress(String subjectId) async {
     try {
       final String? teacherId = widget.teacher['id'];
@@ -914,51 +982,57 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
         }
       }
 
+      // Cache fresh progress so next load shows correct state instantly
+      LocalCacheService.save(_buildProgressCacheKey(subjectId), progress);
+
       setState(() {
-        // Apply checked and generated state from database
-        for (var item in progress) {
-          final chapterId = item['bab_id'];
-          final subChapterId = item['sub_bab_id'];
-          final isChecked =
-              item['is_checked'] == 1 || item['is_checked'] == true;
-          final isGenerated =
-              item['is_generated'] == 1 || item['is_generated'] == true;
-          final isUsed = item['is_used'] == 1 || item['is_used'] == true;
-
-          if (subChapterId != null) {
-            // Sub-chapter checked and generated status
-            _checkedSubChapter[subChapterId.toString()] = isChecked;
-            _generatedSubChapter[subChapterId.toString()] = isGenerated;
-            _usedSubChapter[subChapterId.toString()] = isUsed;
-          } else if (chapterId != null) {
-            // Chapter checked and generated status (no specific sub-chapter)
-            _checkedChapter[chapterId.toString()] = isChecked;
-            _generatedChapter[chapterId.toString()] = isGenerated;
-            _usedChapter[chapterId.toString()] = isUsed;
-          }
-        }
-
-        // Final pass: Recalculate chapter status based on sub-chapters
-        // This ensures visual correctness even if chapter record is absent in DB
-        for (var chapter in _chapterMaterialList) {
-          final chapterId = chapter['id'].toString();
-          final subChaptersForThisChapter = _subChapterMaterialList
-              .where((sb) => sb['bab_id'].toString() == chapterId)
-              .toList();
-
-          if (subChaptersForThisChapter.isNotEmpty) {
-            final allSubChaptersChecked =
-                subChaptersForThisChapter.isNotEmpty &&
-                subChaptersForThisChapter.every(
-                  (sb) => _checkedSubChapter[sb['id'].toString()] == true,
-                );
-            _checkedChapter[chapterId] = allSubChaptersChecked;
-          }
-        }
+        _applyProgressToMaps(progress);
+        _isLoadingProgress = false;
       });
     } catch (e) {
       AppLogger.error('material', 'Error loading progress: $e');
+      if (mounted) setState(() => _isLoadingProgress = false);
     }
+  }
+
+  /// Serialises the current in-memory checkbox/generated/used maps back into
+  /// the same list-of-items format the API returns, then saves to cache.
+  /// Called after every successful save so switching subjects is always instant
+  /// with correct state — no API round-trip needed.
+  void _writeProgressToCache(String subjectId) {
+    final List<Map<String, dynamic>> snapshot = [];
+
+    for (var chapter in _chapterMaterialList) {
+      final chapterId = chapter['id'].toString();
+      final subs = _subChapterMaterialList
+          .where((sb) => sb['bab_id'].toString() == chapterId)
+          .toList();
+
+      if (subs.isEmpty) {
+        // Leaf chapter — store its own state
+        snapshot.add({
+          'bab_id': chapterId,
+          'sub_bab_id': null,
+          'is_checked': _checkedChapter[chapterId] == true ? 1 : 0,
+          'is_generated': _generatedChapter[chapterId] == true ? 1 : 0,
+          'is_used': _usedChapter[chapterId] == true ? 1 : 0,
+        });
+      } else {
+        // Chapter with sub-chapters — store each sub-chapter's state
+        for (var sc in subs) {
+          final scId = sc['id'].toString();
+          snapshot.add({
+            'bab_id': chapterId,
+            'sub_bab_id': scId,
+            'is_checked': _checkedSubChapter[scId] == true ? 1 : 0,
+            'is_generated': _generatedSubChapter[scId] == true ? 1 : 0,
+            'is_used': _usedSubChapter[scId] == true ? 1 : 0,
+          });
+        }
+      }
+    }
+
+    LocalCacheService.save(_buildProgressCacheKey(subjectId), snapshot);
   }
 
   // Save single progress to database
@@ -979,6 +1053,9 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
         'sub_chapter_id': subChapterId,
         'is_checked': isChecked ? 1 : 0,
       });
+
+      // Write current in-memory state to cache — next subject switch is instant
+      _writeProgressToCache(_selectedSubject!);
 
       AppLogger.info(
         'material',
@@ -1044,6 +1121,9 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
         'class_id': _selectedClassId,
         'progress_items': progressItems,
       });
+
+      // Write current in-memory state to cache — next subject switch is instant
+      _writeProgressToCache(_selectedSubject!);
 
       AppLogger.info(
         'material',
@@ -1221,7 +1301,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
                     }),
                     languageProvider,
                   )
-                : _isLoadingBab
+                : _isLoadingBab || _isLoadingProgress
                 ? SkeletonListLoading(
                     padding: EdgeInsets.only(top: 8, bottom: 80),
                     showActions: false,
