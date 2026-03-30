@@ -27,7 +27,7 @@ class SecureStorageService {
   SecureStorageService._internal();
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(migrateOnAlgorithmChange: true),
   );
 
   /// Saves the auth token securely.
