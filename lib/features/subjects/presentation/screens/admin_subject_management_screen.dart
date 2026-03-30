@@ -1,43 +1,36 @@
 // Admin subject (mata pelajaran) management screen - full CRUD for subjects.
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/subjects.vue` - manages school subjects with create, edit,
 // delete, search, multi-filter (status, grade level, class), infinite scroll
 // pagination, and Excel import/export.
 //
-// In Laravel terms, this consumes SubjectController endpoints.
-// Also loads "master subjects" (a predefined list of subject templates).
+// In Laravel terms, this is the Blade View; business logic lives in
+// AdminSubjectController (admin_subject_controller.dart).
 import 'dart:async';
-import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/services/fcm_service.dart';
+import 'package:manajemensekolah/core/services/tour_service.dart';
+import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
-import 'package:manajemensekolah/core/services/cache_service.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
-import 'package:manajemensekolah/features/subjects/exports/subject_export_service.dart';
-import 'package:manajemensekolah/core/services/fcm_service.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/error_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
-import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/subjects/presentation/controllers/admin_subject_controller.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_add_edit_sheet.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_card.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_class_management_page.dart';
-import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_dialog_text_field.dart';
-import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_filter_section_header.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_filter_sheet.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 /// Admin subject management screen with full CRUD, search, filters, and Excel import/export.
 ///
@@ -80,7 +73,6 @@ class SubjectManagementScreenState
 
   // Filter States (Backend filtering)
   String? _selectedStatusFilter; // 'active', 'inactive', or null for all
-
   String? _selectedClassesStatusFilter; // 'ada', 'tidak_ada', or null for all
   String? _selectedGradeLevelFilter; // '1' through '12', or null for all
   String?
@@ -101,8 +93,6 @@ class SubjectManagementScreenState
 
   // Search debounce
   Timer? _searchDebounce;
-
-  // Animations
 
   /// Like Vue's `mounted()` - sets up scroll listener for infinite scroll,
   /// loads filter options, master subjects, and the subject list.
@@ -132,22 +122,12 @@ class SubjectManagementScreenState
   }
 
   Future<void> _loadMasterSubjects() async {
-    try {
-      final data = await getIt<ApiSubjectService>().getAllMasterSubjects();
-      if (kDebugMode) {
-        AppLogger.info(
-          'subject',
-          'Master Subjects Loaded: ${data.length} items',
-        );
-        if (data.isNotEmpty) {
-          AppLogger.debug('subject', 'First item: ${data[0]}');
-        }
-      }
+    final ctrl = ref.read(adminSubjectControllerProvider);
+    final data = await ctrl.loadMasterSubjects();
+    if (mounted) {
       setState(() {
         _availableMasterSubjects = data;
       });
-    } catch (e) {
-      AppLogger.error('subject', 'Error loading master subjects: $e');
     }
   }
 
@@ -173,28 +153,19 @@ class SubjectManagementScreenState
   }
 
   Future<void> _loadFilterOptions() async {
-    try {
-      final response = await getIt<ApiSubjectService>()
-          .getSubjectFilterOptions();
-
-      if (!mounted) return;
-
-      if (response['success'] == true && response['data'] != null) {
-        AppLogger.info('subject', 'Filter options loaded');
-      }
-    } catch (e) {
-      AppLogger.error('subject', 'Error loading filter options: $e');
-      // Continue with empty options - not critical error
-    }
+    final ctrl = ref.read(adminSubjectControllerProvider);
+    await ctrl.loadFilterOptions();
   }
 
   void _checkActiveFilter() {
+    final ctrl = ref.read(adminSubjectControllerProvider);
     setState(() {
-      _hasActiveFilter =
-          _selectedStatusFilter != null ||
-          _selectedClassesStatusFilter != null ||
-          _selectedGradeLevelFilter != null ||
-          _selectedClassNameFilter != null;
+      _hasActiveFilter = ctrl.checkActiveFilter(
+        selectedStatusFilter: _selectedStatusFilter,
+        selectedClassesStatusFilter: _selectedClassesStatusFilter,
+        selectedGradeLevelFilter: _selectedGradeLevelFilter,
+        selectedClassNameFilter: _selectedClassNameFilter,
+      );
     });
   }
 
@@ -208,713 +179,144 @@ class SubjectManagementScreenState
       _currentPage = 1;
       _hasActiveFilter = false;
     });
-    _loadSubjects(); // Reload data setelah clear filters
+    _loadSubjects(); // Reload data after clearing filters
   }
 
   List<Map<String, dynamic>> _buildFilterChips(
     LanguageProvider languageProvider,
   ) {
-    final List<Map<String, dynamic>> filterChips = [];
-
-    if (_selectedStatusFilter != null) {
-      final statusText = _selectedStatusFilter == 'active'
-          ? languageProvider.getTranslatedText({'en': 'Active', 'id': 'Aktif'})
-          : _selectedStatusFilter == 'inactive'
-          ? languageProvider.getTranslatedText({
-              'en': 'Inactive',
-              'id': 'Tidak Aktif',
-            })
-          : languageProvider.getTranslatedText({'en': 'All', 'id': 'Semua'});
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Status', 'id': 'Status'})}: $statusText',
-        'onRemove': () {
-          setState(() {
-            _selectedStatusFilter = null;
-          });
-          _checkActiveFilter();
-          _loadSubjects();
-        },
-      });
-    }
-
-    if (_selectedClassesStatusFilter != null) {
-      final statusText = _selectedClassesStatusFilter == 'ada'
-          ? languageProvider.getTranslatedText({
-              'en': 'Has Classes',
-              'id': 'Ada Kelas',
-            })
-          : languageProvider.getTranslatedText({
-              'en': 'No Classes',
-              'id': 'Tidak Ada Kelas',
-            });
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Classes', 'id': 'Kelas'})}: $statusText',
-        'onRemove': () {
-          setState(() {
-            _selectedClassesStatusFilter = null;
-          });
-          _checkActiveFilter();
-          _loadSubjects();
-        },
-      });
-    }
-
-    if (_selectedGradeLevelFilter != null) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat Kelas'})}: $_selectedGradeLevelFilter',
-        'onRemove': () {
-          setState(() {
-            _selectedGradeLevelFilter = null;
-          });
-          _checkActiveFilter();
-          _loadSubjects();
-        },
-      });
-    }
-
-    if (_selectedClassNameFilter != null) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Nama Kelas'})}: $_selectedClassNameFilter',
-        'onRemove': () {
-          setState(() {
-            _selectedClassNameFilter = null;
-          });
-          _checkActiveFilter();
-          _loadSubjects();
-        },
-      });
-    }
-
-    return filterChips;
+    final ctrl = ref.read(adminSubjectControllerProvider);
+    return ctrl.buildFilterChips(
+      selectedStatusFilter: _selectedStatusFilter,
+      selectedClassesStatusFilter: _selectedClassesStatusFilter,
+      selectedGradeLevelFilter: _selectedGradeLevelFilter,
+      selectedClassNameFilter: _selectedClassNameFilter,
+      languageProvider: languageProvider,
+      onStatusRemoved: () {
+        setState(() {
+          _selectedStatusFilter = null;
+        });
+        _checkActiveFilter();
+        _loadSubjects();
+      },
+      onClassesStatusRemoved: () {
+        setState(() {
+          _selectedClassesStatusFilter = null;
+        });
+        _checkActiveFilter();
+        _loadSubjects();
+      },
+      onGradeLevelRemoved: () {
+        setState(() {
+          _selectedGradeLevelFilter = null;
+        });
+        _checkActiveFilter();
+        _loadSubjects();
+      },
+      onClassNameRemoved: () {
+        setState(() {
+          _selectedClassNameFilter = null;
+        });
+        _checkActiveFilter();
+        _loadSubjects();
+      },
+    );
   }
 
   void _showFilterSheet() {
-    final languageProvider = ref.read(languageRiverpod);
-
-    // Temporary state for bottom sheet
-    String? tempSelectedStatus = _selectedStatusFilter;
-    String? tempSelectedClassStatus = _selectedClassesStatusFilter;
-    String? tempSelectedGradeLevel = _selectedGradeLevelFilter;
-    String? tempSelectedClassName = _selectedClassNameFilter;
-
+    // Delegate to SubjectFilterSheet widget – like mounting a Vue modal component.
+    // Data flows in via constructor params; results come back via onApply callback.
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.75,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Gradient Header
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        ColorUtils.corporateBlue600,
-                        ColorUtils.corporateBlue600.withValues(alpha: 0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.filter_list,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Filter Subjects',
-                            'id': 'Filter Mata Pelajaran',
-                          }),
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setModalState(() {
-                            tempSelectedStatus = null;
-                            tempSelectedClassStatus = null;
-                            tempSelectedGradeLevel = null;
-                            tempSelectedClassName = null;
-                          });
-                        },
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Reset',
-                            'id': 'Reset',
-                          }),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Filter Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Status Filter
-                        SubjectFilterSectionHeader(
-          title: languageProvider.getTranslatedText({
-                            'en': 'Status',
-                            'id': 'Status',
-                          }),
-          icon: Icons.circle_outlined,
-        ),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children:
-                              [
-                                {
-                                  'value': 'active',
-                                  'label': languageProvider.getTranslatedText({
-                                    'en': 'Active',
-                                    'id': 'Aktif',
-                                  }),
-                                },
-                                {
-                                  'value': 'inactive',
-                                  'label': languageProvider.getTranslatedText({
-                                    'en': 'Inactive',
-                                    'id': 'Tidak Aktif',
-                                  }),
-                                },
-                                {
-                                  'value': 'all',
-                                  'label': languageProvider.getTranslatedText({
-                                    'en': 'All',
-                                    'id': 'Semua',
-                                  }),
-                                },
-                              ].map((item) {
-                                final isSelected =
-                                    tempSelectedStatus == item['value'];
-                                return FilterChip(
-                                  label: Text(item['label']!),
-                                  selected: isSelected,
-                                  onSelected: (selected) {
-                                    setModalState(() {
-                                      tempSelectedStatus = selected
-                                          ? item['value']
-                                          : null;
-                                    });
-                                  },
-                                  backgroundColor: Colors.white,
-                                  selectedColor: ColorUtils.corporateBlue600
-                                      .withValues(alpha: 0.12),
-                                  checkmarkColor: ColorUtils.corporateBlue600,
-                                  side: BorderSide(
-                                    color: isSelected
-                                        ? ColorUtils.corporateBlue600
-                                        : ColorUtils.slate300,
-                                    width: 1,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  labelStyle: TextStyle(
-                                    color: isSelected
-                                        ? ColorUtils.corporateBlue600
-                                        : ColorUtils.slate700,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
-                                    fontSize: 13,
-                                  ),
-                                );
-                              }).toList(),
-                        ),
-
-                        // Status Kelas Filter
-                        SubjectFilterSectionHeader(
-          title: languageProvider.getTranslatedText({
-                            'en': 'Classes Status',
-                            'id': 'Status Kelas',
-                          }),
-          icon: Icons.class_outlined,
-        ),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children:
-                              [
-                                {
-                                  'value': 'ada',
-                                  'label': languageProvider.getTranslatedText({
-                                    'en': 'Has Classes',
-                                    'id': 'Ada Kelas',
-                                  }),
-                                },
-                                {
-                                  'value': 'tidak_ada',
-                                  'label': languageProvider.getTranslatedText({
-                                    'en': 'No Classes',
-                                    'id': 'Tidak Ada Kelas',
-                                  }),
-                                },
-                              ].map((item) {
-                                final isSelected =
-                                    tempSelectedClassStatus == item['value'];
-                                return FilterChip(
-                                  label: Text(item['label']!),
-                                  selected: isSelected,
-                                  onSelected: (selected) {
-                                    setModalState(() {
-                                      tempSelectedClassStatus = selected
-                                          ? item['value']
-                                          : null;
-                                    });
-                                  },
-                                  backgroundColor: Colors.white,
-                                  selectedColor: ColorUtils.corporateBlue600
-                                      .withValues(alpha: 0.12),
-                                  checkmarkColor: ColorUtils.corporateBlue600,
-                                  side: BorderSide(
-                                    color: isSelected
-                                        ? ColorUtils.corporateBlue600
-                                        : ColorUtils.slate300,
-                                    width: 1,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  labelStyle: TextStyle(
-                                    color: isSelected
-                                        ? ColorUtils.corporateBlue600
-                                        : ColorUtils.slate700,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
-                                    fontSize: 13,
-                                  ),
-                                );
-                              }).toList(),
-                        ),
-
-                        // Tingkat Kelas Filter
-                        SubjectFilterSectionHeader(
-          title: languageProvider.getTranslatedText({
-                            'en': 'Grade Level',
-                            'id': 'Tingkat Kelas',
-                          }),
-          icon: Icons.layers_outlined,
-        ),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children:
-                              (_availableGradeLevels.isEmpty
-                                      ? List.generate(
-                                          12,
-                                          (i) => (i + 1).toString(),
-                                        )
-                                      : _availableGradeLevels)
-                                  .map((gradeLevel) {
-                                    final isSelected =
-                                        tempSelectedGradeLevel == gradeLevel;
-                                    return FilterChip(
-                                      label: Text('Kelas $gradeLevel'),
-                                      selected: isSelected,
-                                      onSelected: (selected) {
-                                        setModalState(() {
-                                          tempSelectedGradeLevel = selected
-                                              ? gradeLevel
-                                              : null;
-                                        });
-                                      },
-                                      backgroundColor: Colors.white,
-                                      selectedColor: ColorUtils.corporateBlue600
-                                          .withValues(alpha: 0.12),
-                                      checkmarkColor:
-                                          ColorUtils.corporateBlue600,
-                                      side: BorderSide(
-                                        color: isSelected
-                                            ? ColorUtils.corporateBlue600
-                                            : ColorUtils.slate300,
-                                        width: 1,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-                                      labelStyle: TextStyle(
-                                        color: isSelected
-                                            ? ColorUtils.corporateBlue600
-                                            : ColorUtils.slate700,
-                                        fontWeight: isSelected
-                                            ? FontWeight.w600
-                                            : FontWeight.normal,
-                                        fontSize: 13,
-                                      ),
-                                    );
-                                  })
-                                  .toList(),
-                        ),
-
-                        // Class Name Filter (Dynamic)
-                        if (_availableClassNames.isNotEmpty) ...[
-                          SubjectFilterSectionHeader(
-          title: languageProvider.getTranslatedText({
-                              'en': 'Class Name',
-                              'id': 'Nama Kelas',
-                            }),
-          icon: Icons.school_outlined,
-        ),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _availableClassNames.map((className) {
-                              final isSelected =
-                                  tempSelectedClassName == className;
-                              return FilterChip(
-                                label: Text(className),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    tempSelectedClassName = selected
-                                        ? className
-                                        : null;
-                                  });
-                                },
-                                backgroundColor: Colors.white,
-                                selectedColor: ColorUtils.corporateBlue600
-                                    .withValues(alpha: 0.12),
-                                checkmarkColor: ColorUtils.corporateBlue600,
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate300,
-                                  width: 1,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  fontSize: 13,
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                          SizedBox(height: AppSpacing.md),
-                        ],
-                        SizedBox(height: AppSpacing.lg),
-                      ],
-                    ),
-                  ),
-                ),
-                // Footer buttons
-                Container(
-                  padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border(top: BorderSide(color: ColorUtils.slate100)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ColorUtils.slate900.withValues(alpha: 0.06),
-                        blurRadius: 8,
-                        offset: Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => AppNavigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(color: ColorUtils.slate300),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Cancel',
-                              'id': 'Batal',
-                            }),
-                            style: TextStyle(
-                              color: ColorUtils.slate600,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedStatusFilter = tempSelectedStatus;
-                              _selectedClassesStatusFilter =
-                                  tempSelectedClassStatus;
-                              _selectedGradeLevelFilter =
-                                  tempSelectedGradeLevel;
-                              _selectedClassNameFilter = tempSelectedClassName;
-                            });
-                            _checkActiveFilter();
-                            AppNavigator.pop(context);
-                            _loadSubjects();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: ColorUtils.corporateBlue600,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 2,
-                          ),
-                          child: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Apply Filter',
-                              'id': 'Terapkan Filter',
-                            }),
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      builder: (_) => SubjectFilterSheet(
+        initialStatus: _selectedStatusFilter,
+        initialClassStatus: _selectedClassesStatusFilter,
+        initialGradeLevel: _selectedGradeLevelFilter,
+        initialClassName: _selectedClassNameFilter,
+        availableGradeLevels: _availableGradeLevels,
+        availableClassNames: _availableClassNames,
+        onApply: (status, classStatus, gradeLevel, className) {
+          setState(() {
+            _selectedStatusFilter = status;
+            _selectedClassesStatusFilter = classStatus;
+            _selectedGradeLevelFilter = gradeLevel;
+            _selectedClassNameFilter = className;
+          });
+          _checkActiveFilter();
+          _loadSubjects();
+        },
       ),
     );
-  }
-
-  String? _buildSubjectCacheKey() {
-    // Only cache default first-page view (no filters/search) for fast reload
-    if (_currentPage != 1) return null;
-    if (_selectedStatusFilter != null ||
-        _selectedGradeLevelFilter != null ||
-        _selectedClassesStatusFilter != null ||
-        _selectedClassNameFilter != null ||
-        _searchController.text.trim().isNotEmpty) {
-      return null;
-    }
-
-    final academicYearProvider = ref.read(academicYearRiverpod);
-    final yearId =
-        academicYearProvider.selectedAcademicYear?['id']?.toString() ??
-        'default';
-    return CacheKeyBuilder.custom('subject_list', yearId);
-  }
-
-  void _applySubjectExtractedData(List<dynamic> data) {
-    // Extract unique class names and grade levels from subjects
-    final Set<String> classNamesSet = {};
-    final Set<String> gradeLevelsSet = {};
-
-    for (var subject in data) {
-      // Support both naming conventions
-      final classNames =
-          (subject['class_names'] ?? subject['kelas_names'])?.toString() ?? '';
-      if (classNames.isNotEmpty) {
-        final names = classNames
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty);
-        classNamesSet.addAll(names);
-      }
-
-      // Extract grade levels
-      final gradeLevels =
-          (subject['class_grade_levels'] ?? subject['kelas_grade_levels'])
-              ?.toString() ??
-          '';
-      if (gradeLevels.isNotEmpty) {
-        final levels = gradeLevels
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty);
-        gradeLevelsSet.addAll(levels);
-      }
-    }
-
-    _availableClassNames = classNamesSet.toList()..sort();
-    _availableGradeLevels = gradeLevelsSet.toList()
-      ..sort((a, b) {
-        final aInt = int.tryParse(a) ?? 0;
-        final bInt = int.tryParse(b) ?? 0;
-        return aInt.compareTo(bInt);
-      });
   }
 
   Future<void> _loadSubjects({
     bool resetPage = true,
     bool useCache = true,
   }) async {
-    try {
-      if (resetPage) {
-        _currentPage = 1;
-        _hasMoreData = true;
+    final ctrl = ref.read(adminSubjectControllerProvider);
 
-        // ─── Step 1: Try loading from cache for instant display ───
-        if (useCache) {
-          final cacheKey = _buildSubjectCacheKey();
-          if (cacheKey != null) {
-            try {
-              final cached = await LocalCacheService.load(
-                cacheKey,
-                ttl: const Duration(hours: 3),
-              );
-              if (cached != null && mounted) {
-                final cachedData = Map<String, dynamic>.from(cached);
-                final subjects = List<dynamic>.from(
-                  cachedData['subjects'] ?? [],
-                );
-                _applySubjectExtractedData(subjects);
-                setState(() {
-                  _subjectList = subjects;
-                  _hasMoreData =
-                      cachedData['pagination']?['has_next_page'] ?? false;
-                  _isLoading = false;
-                  _errorMessage = '';
-                });
-                AppLogger.info('subject', 'Subjects loaded from cache');
-              }
-            } catch (e) {
-              AppLogger.error('subject', 'Subject cache load failed: $e');
-            }
-          }
-        }
+    if (resetPage) {
+      _currentPage = 1;
+      _hasMoreData = true;
 
-        // Show loading skeleton only if we have no data yet (no cache hit)
-        if (_subjectList.isEmpty && mounted) {
-          setState(() {
-            _isLoading = true;
-            _errorMessage = '';
-          });
-        }
+      // Show loading skeleton only if we have no data yet
+      if (_subjectList.isEmpty && mounted) {
+        setState(() {
+          _isLoading = true;
+          _errorMessage = '';
+        });
       }
+    }
 
-      // ─── Step 2: Fetch fresh data from API ───
-      final response = await getIt<ApiSubjectService>().getSubjectsPaginated(
-        page: _currentPage,
-        limit: _perPage,
-        status: _selectedStatusFilter,
-        gradeLevel: _selectedGradeLevelFilter,
-        search: _searchController.text.trim().isEmpty
-            ? null
-            : _searchController.text.trim(),
-      );
+    final result = await ctrl.loadSubjects(
+      selectedStatusFilter: _selectedStatusFilter,
+      selectedGradeLevelFilter: _selectedGradeLevelFilter,
+      selectedClassesStatusFilter: _selectedClassesStatusFilter,
+      selectedClassNameFilter: _selectedClassNameFilter,
+      searchText: _searchController.text,
+      perPage: _perPage,
+      useCache: useCache,
+    );
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      final data = response['data'] ?? [];
-
-      AppLogger.info('subject', 'Subjects received: ${data.length} items');
-
-      _applySubjectExtractedData(data);
-
+    if (result.errorMessage != null && result.subjects.isEmpty) {
+      // Hard failure — show error screen
       setState(() {
-        _subjectList = data;
-        _hasMoreData = response['pagination']?['has_next_page'] ?? false;
+        _isLoading = false;
+        _errorMessage = result.errorMessage!;
+      });
+    } else {
+      setState(() {
+        _subjectList = result.subjects;
+        _hasMoreData = result.hasMoreData;
         _isLoading = false;
         _errorMessage = '';
-      });
-
-      // ─── Step 3: Save to cache (only for default view) ───
-      final cacheKey = _buildSubjectCacheKey();
-      if (cacheKey != null) {
-        LocalCacheService.save(cacheKey, {
-          'subjects': data,
-          'pagination': response['pagination'],
-        });
-      }
-    } catch (error) {
-      AppLogger.error('subject', 'Load subjects error: $error');
-      if (!mounted) return;
-
-      // Only show error if we don't have cached data displayed
-      if (_subjectList.isEmpty) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = ErrorUtils.getFriendlyMessage(error);
-        });
-      } else {
-        setState(() => _isLoading = false);
-      }
-    } finally {
-      // Trigger tour
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _checkAndShowTour();
-        }
+        _availableClassNames = result.availableClassNames;
+        _availableGradeLevels = result.availableGradeLevels;
       });
     }
+
+    // Trigger tour after load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _checkAndShowTour();
+      }
+    });
   }
 
   /// Force refresh: clear cache and reload from API
   Future<void> _forceRefresh() async {
-    final cacheKey = _buildSubjectCacheKey();
-    if (cacheKey != null) {
-      await LocalCacheService.invalidate(cacheKey);
-    }
+    final ctrl = ref.read(adminSubjectControllerProvider);
+    await ctrl.invalidateSubjectCache(
+      selectedStatusFilter: _selectedStatusFilter,
+      selectedGradeLevelFilter: _selectedGradeLevelFilter,
+      selectedClassesStatusFilter: _selectedClassesStatusFilter,
+      selectedClassNameFilter: _selectedClassNameFilter,
+      searchText: _searchController.text,
+    );
     await _loadSubjects(resetPage: true, useCache: false);
   }
 
@@ -925,59 +327,34 @@ class SubjectManagementScreenState
       _isLoadingMore = true;
     });
 
-    try {
-      _currentPage++;
+    final ctrl = ref.read(adminSubjectControllerProvider);
+    final nextPage = _currentPage + 1;
 
-      final response = await getIt<ApiSubjectService>().getSubjectsPaginated(
-        page: _currentPage,
-        limit: _perPage,
-        status: _selectedStatusFilter,
-        gradeLevel: _selectedGradeLevelFilter,
-        search: _searchController.text.trim().isEmpty
-            ? null
-            : _searchController.text.trim(),
-      );
+    final result = await ctrl.loadMoreSubjects(
+      nextPage: nextPage,
+      perPage: _perPage,
+      selectedStatusFilter: _selectedStatusFilter,
+      selectedGradeLevelFilter: _selectedGradeLevelFilter,
+      searchText: _searchController.text,
+      existingClassNames: _availableClassNames,
+      existingGradeLevels: _availableGradeLevels,
+    );
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      final data = response['data'] ?? [];
-
-      // Extract class names and grade levels
-      final Set<String> classNamesSet = Set.from(_availableClassNames);
-      final Set<String> gradeLevelsSet = Set.from(_availableGradeLevels);
-
-      for (var subject in data) {
-        final classNames = subject['class_names']?.toString() ?? '';
-        if (classNames.isNotEmpty) {
-          final names = classNames
-              .split(',')
-              .map((e) => e.trim())
-              .where((e) => e.isNotEmpty);
-          classNamesSet.addAll(names);
-        }
-
-        final classGradeLevels =
-            subject['kelas_grade_levels']?.toString() ?? '';
-        if (classGradeLevels.isNotEmpty) {
-          final levels = classGradeLevels
-              .split(',')
-              .map((e) => e.trim())
-              .where((e) => e.isNotEmpty);
-          gradeLevelsSet.addAll(levels);
-        }
-      }
-
+    if (result.errorMessage != null) {
+      AppLogger.error('subject', 'Error loading more data: ${result.errorMessage}');
       setState(() {
-        // Append new data to existing list
-        _subjectList.addAll(data);
-        _availableClassNames = classNamesSet.toList()..sort();
-        _availableGradeLevels = gradeLevelsSet.toList()
-          ..sort((a, b) {
-            final aInt = int.tryParse(a) ?? 0;
-            final bInt = int.tryParse(b) ?? 0;
-            return aInt.compareTo(bInt);
-          });
-        _hasMoreData = response['pagination']?['has_next_page'] ?? false;
+        _isLoadingMore = false;
+        // currentPage not incremented — stays where it was
+      });
+    } else {
+      setState(() {
+        _currentPage = nextPage;
+        _subjectList.addAll(result.additionalSubjects);
+        _availableClassNames = result.availableClassNames;
+        _availableGradeLevels = result.availableGradeLevels;
+        _hasMoreData = result.hasMoreData;
         _isLoadingMore = false;
       });
 
@@ -985,616 +362,83 @@ class SubjectManagementScreenState
         'subject',
         'Loaded more subjects: Page $_currentPage, Total: ${_subjectList.length}',
       );
-    } catch (e) {
-      AppLogger.error('subject', 'Error loading more data: $e');
-      if (!mounted) return;
-
-      setState(() {
-        _isLoadingMore = false;
-        _currentPage--; // Revert page increment on error
-      });
     }
   }
 
   Future<void> _exportToExcel() async {
-    await ExcelSubjectService.exportSubjectsToExcel(
-      subjects: _subjectList,
-      context: context,
-    );
+    final ctrl = ref.read(adminSubjectControllerProvider);
+    await ctrl.exportToExcel(subjects: _subjectList, context: context);
   }
 
   Future<void> _importFromExcel() async {
+    final ctrl = ref.read(adminSubjectControllerProvider);
     final languageProvider = ref.read(languageRiverpod);
 
-    try {
-      final FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx', 'xls'],
-        allowMultiple: false,
-      );
+    final errorMsg = await ctrl.importFromExcel();
 
-      if (result != null && result.files.single.path != null) {
-        await getIt<ApiSubjectService>().importSubjectFromExcel(
-          File(result.files.single.path!),
+    if (!mounted) return;
+
+    if (errorMsg == null) {
+      // Success — refresh the list
+      await _loadSubjects();
+      if (mounted) {
+        ctrl.showSuccessSnackBar(
+          context,
+          languageProvider.getTranslatedText({
+            'en': 'Subjects imported successfully',
+            'id': 'Mata pelajaran berhasil diimpor',
+          }),
         );
-
-        // Refresh data setelah import
-        await _loadSubjects();
-
-        if (mounted) {
-          SnackBarUtils.showSuccess(
-            context,
-            languageProvider.getTranslatedText({
-              'en': 'Subjects imported successfully',
-              'id': 'Mata pelajaran berhasil diimpor',
-            }),
-          );
-        }
       }
-    } catch (e) {
-      AppLogger.error('subject', 'Import subjects error: $e');
-      if (!mounted) return;
-      SnackBarUtils.showError(
+    } else {
+      ctrl.showErrorSnackBar(
         context,
         languageProvider.getTranslatedText({
-          'en': 'Failed to import file: ${ErrorUtils.getFriendlyMessage(e)}',
-          'id': '${AppLocalizations.failedToImport.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+          'en': 'Failed to import file: $errorMsg',
+          'id': '${AppLocalizations.failedToImport.tr}: $errorMsg',
         }),
       );
     }
   }
 
   Future<void> _downloadTemplate() async {
-    await ExcelSubjectService.downloadTemplate(context);
+    final ctrl = ref.read(adminSubjectControllerProvider);
+    await ctrl.downloadTemplate(context);
   }
 
   void _showAddEditDialog({Map<String, dynamic>? subject}) {
-    final codeController = TextEditingController(
-      text: subject?['code'] ?? subject?['kode'],
-    );
-    final nameController = TextEditingController(text: subject?['name']);
-    final descriptionController = TextEditingController(
-      text: subject?['description'] ?? subject?['deskripsi'],
-    );
-    int? selectedMasterSubjectId;
-    if (subject != null && subject['subject_id'] != null) {
-      selectedMasterSubjectId = int.tryParse(subject['subject_id'].toString());
-    }
-
-    // Initialize is_active state
-    // Default to true for new subjects, or use existing value
-    bool isActive = subject?['is_active'] ?? true;
-    bool isSaving = false;
-
+    // Delegate to SubjectAddEditSheet widget – all form state lives there.
+    // onSaved triggers a data reload here, like receiving a Vue $emit('saved').
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          final languageProvider = ref.watch(languageRiverpod);
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.92,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    // Header
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.fromLTRB(20, 20, 16, 20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            ColorUtils.corporateBlue600,
-                            ColorUtils.corporateBlue600.withValues(alpha: 0.85),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(24),
-                          topRight: Radius.circular(24),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Icon(
-                              subject == null
-                                  ? Icons.add_rounded
-                                  : Icons.edit_rounded,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  subject == null
-                                      ? languageProvider.getTranslatedText({
-                                          'en': 'Add Subject',
-                                          'id': 'Tambah Mata Pelajaran',
-                                        })
-                                      : languageProvider.getTranslatedText({
-                                          'en': 'Edit Subject',
-                                          'id': 'Edit Mata Pelajaran',
-                                        }),
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  subject == null
-                                      ? languageProvider.getTranslatedText({
-                                          'en': 'Fill in subject details',
-                                          'id': 'Isi detail mata pelajaran',
-                                        })
-                                      : languageProvider.getTranslatedText({
-                                          'en': 'Update subject information',
-                                          'id':
-                                              'Perbarui informasi mata pelajaran',
-                                        }),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () => AppNavigator.pop(context),
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(AppSpacing.xl),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SubjectDialogTextField(
-                              controller: codeController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Code',
-                                'id': 'Kode',
-                              }),
-                              icon: Icons.code,
-                            ),
-                            SizedBox(height: AppSpacing.md),
-                            // Select Master Subject (Autocomplete)
-                            Autocomplete<Map<String, dynamic>>(
-                              initialValue: TextEditingValue(
-                                text: () {
-                                  if (selectedMasterSubjectId != null) {
-                                    final master = _availableMasterSubjects
-                                        .firstWhere(
-                                          (m) =>
-                                              m['id'] ==
-                                              selectedMasterSubjectId,
-                                          orElse: () => {},
-                                        );
-                                    if (master.isNotEmpty) {
-                                      return master['name'];
-                                    }
-                                  }
-                                  return nameController.text;
-                                }(),
-                              ),
-                              optionsBuilder:
-                                  (TextEditingValue textEditingValue) {
-                                    if (textEditingValue.text == '') {
-                                      return const Iterable<
-                                        Map<String, dynamic>
-                                      >.empty();
-                                    }
-                                    return _availableMasterSubjects
-                                        .cast<Map<String, dynamic>>()
-                                        .where((Map<String, dynamic> option) {
-                                          return option['name']
-                                              .toString()
-                                              .toLowerCase()
-                                              .contains(
-                                                textEditingValue.text
-                                                    .toLowerCase(),
-                                              );
-                                        });
-                                  },
-                              displayStringForOption:
-                                  (Map<String, dynamic> option) =>
-                                      option['name'],
-                              onSelected: (Map<String, dynamic> selection) {
-                                // Use setDialogState if updating visual state inside dialog,
-                                // but here we just update controllers which is fine.
-                                // Actually we need to update selectedMasterSubjectId which is local.
-                                setDialogState(() {
-                                  // Auto-format name: "SubjectName Grade"
-                                  nameController.text =
-                                      '${selection['name']} ${selection['grade']}';
-                                  selectedMasterSubjectId = selection['id'];
-                                });
-                              },
-                              fieldViewBuilder:
-                                  (
-                                    context,
-                                    fieldController,
-                                    fieldFocusNode,
-                                    onFieldSubmitted,
-                                  ) {
-                                    return ValueListenableBuilder<
-                                      TextEditingValue
-                                    >(
-                                      valueListenable: fieldController,
-                                      builder: (context, value, _) {
-                                        return SubjectDialogTextField(
-                                          controller: fieldController,
-                                          focusNode: fieldFocusNode,
-                                          label: languageProvider
-                                              .getTranslatedText({
-                                                'en': 'Select Subject',
-                                                'id': 'Pilih Mata Pelajaran',
-                                              }),
-                                          icon: Icons.search,
-                                          suffixIcon: value.text.isNotEmpty
-                                              ? IconButton(
-                                                  icon: Icon(
-                                                    Icons.clear,
-                                                    size: 18,
-                                                  ),
-                                                  onPressed: () {
-                                                    setDialogState(() {
-                                                      fieldController.clear();
-                                                      selectedMasterSubjectId =
-                                                          null;
-                                                    });
-                                                  },
-                                                )
-                                              : null,
-                                        );
-                                      },
-                                    );
-                                  },
-                              optionsViewBuilder: (context, onSelected, options) {
-                                return Align(
-                                  alignment: Alignment.topLeft,
-                                  child: Material(
-                                    elevation: 4.0,
-                                    child: SizedBox(
-                                      height: 200.0,
-                                      width: 300.0,
-                                      child: ListView.builder(
-                                        padding: const EdgeInsets.all(8.0),
-                                        itemCount: options.length,
-                                        itemBuilder:
-                                            (BuildContext context, int index) {
-                                              final Map<String, dynamic>
-                                              option = options.elementAt(index);
-                                              return GestureDetector(
-                                                onTap: () {
-                                                  onSelected(option);
-                                                },
-                                                child: ListTile(
-                                                  title: Text(option['name']),
-                                                  subtitle: Text(
-                                                    'Kelas ${option['grade']}',
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                            SizedBox(height: AppSpacing.md),
-
-                            // Subject Name (Standard TextField)
-                            SubjectDialogTextField(
-                              controller: nameController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Subject Name',
-                                'id': 'Nama Mata Pelajaran',
-                              }),
-                              icon: Icons.menu_book,
-                            ),
-                            SizedBox(height: AppSpacing.md),
-                            SubjectDialogTextField(
-                              controller: descriptionController,
-                              label: languageProvider.getTranslatedText({
-                                'en': 'Description',
-                                'id': 'Deskripsi',
-                              }),
-                              icon: Icons.description,
-                              maxLines: 3,
-                            ),
-                            SizedBox(height: AppSpacing.md),
-                            // Active Status Switch
-                            Container(
-                              decoration: BoxDecoration(
-                                color: ColorUtils.slate50,
-                                border: Border.all(color: ColorUtils.slate200),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: SwitchListTile(
-                                title: Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Active Status',
-                                    'id': 'Status Aktif',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: ColorUtils.slate700,
-                                  ),
-                                ),
-                                value: isActive,
-                                activeThumbColor: ColorUtils.corporateBlue600,
-                                activeTrackColor: ColorUtils.corporateBlue600
-                                    .withValues(alpha: 0.3),
-                                onChanged: (bool value) {
-                                  setDialogState(() {
-                                    isActive = value;
-                                  });
-                                },
-                                secondary: Icon(
-                                  Icons.check_circle_outline,
-                                  color: isActive
-                                      ? ColorUtils.corporateBlue600
-                                      : ColorUtils.slate400,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Enhanced Footer (Matches _showFilterSheet)
-                    Container(
-                      padding: EdgeInsets.all(AppSpacing.xl),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          top: BorderSide(color: ColorUtils.slate200),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: ColorUtils.slate900.withValues(alpha: 0.05),
-                            blurRadius: 8,
-                            offset: Offset(0, -2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => AppNavigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                side: BorderSide(color: ColorUtils.slate300),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text(
-                                AppLocalizations.cancel.tr,
-                                style: TextStyle(
-                                  color: ColorUtils.slate700,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: isSaving
-                                  ? null
-                                  : () async {
-                                      if (codeController.text.isEmpty ||
-                                          nameController.text.isEmpty) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              languageProvider.getTranslatedText({
-                                                'en':
-                                                    'Code and name must be filled',
-                                                'id':
-                                                    'Kode dan nama harus diisi',
-                                              }),
-                                            ),
-                                            backgroundColor:
-                                                Colors.red.shade400,
-                                            behavior: SnackBarBehavior.floating,
-                                          ),
-                                        );
-                                        return;
-                                      }
-
-                                      setDialogState(() {
-                                        isSaving = true;
-                                      });
-
-                                      try {
-                                        if (subject == null) {
-                                          await getIt<ApiSubjectService>()
-                                              .addSubject({
-                                                'name': nameController.text,
-                                                'code': codeController.text,
-                                                'description':
-                                                    descriptionController.text,
-                                                'subject_id':
-                                                    selectedMasterSubjectId,
-                                                'is_active': isActive,
-                                              });
-                                        } else {
-                                          await getIt<ApiSubjectService>()
-                                              .updateSubject(subject['id'], {
-                                                'name': nameController.text,
-                                                'code': codeController.text,
-                                                'description':
-                                                    descriptionController.text,
-                                                'subject_id':
-                                                    selectedMasterSubjectId,
-                                                'is_active': isActive,
-                                              });
-                                        }
-
-                                        if (context.mounted) {
-                                          setDialogState(() {
-                                            isSaving = false;
-                                          });
-                                          AppNavigator.pop(context);
-                                          _loadSubjects(); // Reload data
-                                        }
-
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                languageProvider.getTranslatedText({
-                                                  'en':
-                                                      AppLocalizations.dataSavedSuccessfully.tr,
-                                                  'id':
-                                                      AppLocalizations.dataSavedSuccessfully.tr,
-                                                }),
-                                              ),
-                                              backgroundColor:
-                                                  Colors.green.shade400,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                            ),
-                                          );
-                                        }
-                                      } catch (error) {
-                                        AppLogger.error(
-                                          'subject',
-                                          'Save/Update subject error: $error',
-                                        );
-                                        setDialogState(() {
-                                          isSaving = false;
-                                        });
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
-                                              ),
-                                              backgroundColor:
-                                                  Colors.red.shade400,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: ColorUtils.corporateBlue600,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                elevation: 2,
-                              ),
-                              child: isSaving
-                                  ? SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : Text(
-                                      AppLocalizations.save.tr,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+      builder: (_) => SubjectAddEditSheet(
+        subject: subject,
+        availableMasterSubjects: _availableMasterSubjects,
+        onSaved: _loadSubjects,
       ),
     );
   }
 
   Future<void> _deleteSubject(Map<String, dynamic> subject) async {
+    final languageProvider = ref.read(languageRiverpod);
+    final ctrl = ref.read(adminSubjectControllerProvider);
+
     final confirmed = await showDialog(
       context: context,
       builder: (context) {
-        final languageProvider = ref.watch(languageRiverpod);
+        final lp = ref.watch(languageRiverpod);
         return ConfirmationDialog(
-          title: languageProvider.getTranslatedText({
+          title: lp.getTranslatedText({
             'en': 'Delete Subject',
             'id': 'Hapus Mata Pelajaran',
           }),
-          content: languageProvider.getTranslatedText({
-            'en':
-                'Are you sure you want to delete subject "${subject['name']}"?',
+          content: lp.getTranslatedText({
+            'en': 'Are you sure you want to delete subject "${subject['name']}"?',
             'id': 'Yakin ingin menghapus mata pelajaran "${subject['name']}"?',
           }),
-          confirmText: languageProvider.getTranslatedText({
+          confirmText: lp.getTranslatedText({
             'en': 'Delete',
             'id': 'Hapus',
           }),
@@ -1604,26 +448,24 @@ class SubjectManagementScreenState
     );
 
     if (confirmed == true) {
-      try {
-        await getIt<ApiSubjectService>().deleteSubject(subject['id']);
-        if (mounted) {
-          SnackBarUtils.showSuccess(
-            context,
-            ref.read(languageRiverpod).getTranslatedText({
-              'en': 'Subject successfully deleted',
-              'id': 'Mata pelajaran berhasil dihapus',
-            }),
-          );
-        }
+      final errorMsg = await ctrl.deleteSubject(subject['id']);
+
+      if (!mounted) return;
+
+      if (errorMsg == null) {
+        ctrl.showSuccessSnackBar(
+          context,
+          languageProvider.getTranslatedText({
+            'en': 'Subject successfully deleted',
+            'id': 'Mata pelajaran berhasil dihapus',
+          }),
+        );
         _loadSubjects();
-      } catch (error) {
-        AppLogger.error('subject', 'Delete subject error: $error');
-        if (mounted) {
-          SnackBarUtils.showError(
-            context,
-            '${ref.read(languageRiverpod).getTranslatedText({'en': 'Failed to delete: ', 'id': 'Gagal menghapus: '})}${ErrorUtils.getFriendlyMessage(error)}',
-          );
-        }
+      } else {
+        ctrl.showErrorSnackBar(
+          context,
+          '${languageProvider.getTranslatedText({'en': 'Failed to delete: ', 'id': 'Gagal menghapus: '})}$errorMsg',
+        );
       }
     }
   }
@@ -1634,41 +476,17 @@ class SubjectManagementScreenState
   }
 
   List<dynamic> _getFilteredSubjects() {
-    return _subjectList.where((subject) {
-      final searchTerm = _searchController.text.toLowerCase();
-      final subjectName = subject['name']?.toString().toLowerCase() ?? '';
-      final subjectCode =
-          (subject['code'] ?? subject['kode'])?.toString().toLowerCase() ?? '';
-
-      final matchesSearch =
-          searchTerm.isEmpty ||
-          subjectName.contains(searchTerm) ||
-          subjectCode.contains(searchTerm);
-
-      // Kelas status filter
-      final hasClasses = (subject['jumlah_kelas'] ?? 0) > 0;
-      final matchesClassStatusFilter =
-          _selectedClassesStatusFilter == null ||
-          (_selectedClassesStatusFilter == 'ada' && hasClasses) ||
-          (_selectedClassesStatusFilter == 'tidak_ada' && !hasClasses);
-
-      // Class Name filter
-      final classNames = subject['kelas_names']?.toString() ?? '';
-      final matchesClassNameFilter =
-          _selectedClassNameFilter == null ||
-          (classNames.isNotEmpty &&
-              classNames
-                  .split(',')
-                  .map((e) => e.trim())
-                  .contains(_selectedClassNameFilter));
-
-      return matchesSearch &&
-          matchesClassStatusFilter &&
-          matchesClassNameFilter;
-    }).toList();
+    final ctrl = ref.read(adminSubjectControllerProvider);
+    return ctrl.getFilteredSubjects(
+      subjectList: _subjectList,
+      searchText: _searchController.text,
+      selectedClassesStatusFilter: _selectedClassesStatusFilter,
+      selectedClassNameFilter: _selectedClassNameFilter,
+    );
   }
 
   Widget _buildHeader(BuildContext context, LanguageProvider languageProvider) {
+    final ctrl = ref.read(adminSubjectControllerProvider);
     return GradientPageHeader(
       title: languageProvider.getTranslatedText({
         'en': 'Subject Management',
@@ -1678,7 +496,7 @@ class SubjectManagementScreenState
         'en': 'Manage and monitor subjects',
         'id': 'Kelola dan pantau mata pelajaran',
       }),
-      primaryColor: _getPrimaryColor(),
+      primaryColor: ctrl.getPrimaryColor(),
       onBackPressed: () => AppNavigator.pop(context),
       actionMenu: PopupMenuButton<String>(
         key: _menuKey,
@@ -1771,98 +589,101 @@ class SubjectManagementScreenState
         ],
       ),
       searchBar: Row(
-        children: [
-          Expanded(
-            child: Container(
-              key: _searchKey,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(color: Colors.black87),
-                      decoration: InputDecoration(
-                        hintText: languageProvider.getTranslatedText({
-                          'en': 'Search subjects...',
-                          'id': 'Cari mata pelajaran...',
-                        }),
-                        hintStyle: TextStyle(color: Colors.grey),
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+          children: [
+            Expanded(
+              child: Container(
+                key: _searchKey,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        style: TextStyle(color: Colors.black87),
+                        decoration: InputDecoration(
+                          hintText: languageProvider.getTranslatedText({
+                            'en': 'Search subjects...',
+                            'id': 'Cari mata pelajaran...',
+                          }),
+                          hintStyle: TextStyle(color: Colors.grey),
+                          prefixIcon: Icon(Icons.search, color: Colors.grey),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                         ),
+                        onSubmitted: (value) {
+                          setState(() {
+                            _currentPage = 1;
+                          });
+                          _loadSubjects();
+                        },
                       ),
-                      onSubmitted: (value) {
-                        setState(() {
-                          _currentPage = 1;
-                        });
-                        _loadSubjects();
-                      },
                     ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.only(right: 4),
-                    child: IconButton(
-                      icon: Icon(Icons.search, color: _getPrimaryColor()),
-                      onPressed: () {
-                        setState(() {
-                          _currentPage = 1;
-                        });
-                        _loadSubjects();
-                      },
+                    Container(
+                      margin: EdgeInsets.only(right: 4),
+                      child: IconButton(
+                        icon: Icon(Icons.search, color: ctrl.getPrimaryColor()),
+                        onPressed: () {
+                          setState(() {
+                            _currentPage = 1;
+                          });
+                          _loadSubjects();
+                        },
+                      ),
                     ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: AppSpacing.sm),
+            Container(
+              key: _filterKey,
+              decoration: BoxDecoration(
+                color: _hasActiveFilter
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+              ),
+              child: Stack(
+                children: [
+                  IconButton(
+                    onPressed: _showFilterSheet,
+                    icon: Icon(
+                      Icons.tune,
+                      color: _hasActiveFilter
+                          ? ctrl.getPrimaryColor()
+                          : Colors.white,
+                    ),
+                    tooltip: languageProvider.getTranslatedText({
+                      'en': 'Filter',
+                      'id': 'Filter',
+                    }),
                   ),
+                  if (_hasActiveFilter)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: EdgeInsets.all(AppSpacing.xs),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints:
+                            BoxConstraints(minWidth: 8, minHeight: 8),
+                      ),
+                    ),
                 ],
               ),
             ),
-          ),
-          SizedBox(width: AppSpacing.sm),
-          Container(
-            key: _filterKey,
-            decoration: BoxDecoration(
-              color: _hasActiveFilter
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-            ),
-            child: Stack(
-              children: [
-                IconButton(
-                  onPressed: _showFilterSheet,
-                  icon: Icon(
-                    Icons.tune,
-                    color: _hasActiveFilter ? _getPrimaryColor() : Colors.white,
-                  ),
-                  tooltip: languageProvider.getTranslatedText({
-                    'en': 'Filter',
-                    'id': 'Filter',
-                  }),
-                ),
-                if (_hasActiveFilter)
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      padding: EdgeInsets.all(AppSpacing.xs),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: BoxConstraints(minWidth: 8, minHeight: 8),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
       filterChips: _hasActiveFilter
           ? SizedBox(
               height: 42,
@@ -1893,7 +714,7 @@ class SubjectManagementScreenState
                                 filter['label'],
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: _getPrimaryColor(),
+                                  color: ctrl.getPrimaryColor(),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -1948,13 +769,11 @@ class SubjectManagementScreenState
     );
   }
 
-  Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor('admin');
-  }
-
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
+    final ctrl = ref.read(adminSubjectControllerProvider);
+
     if (_isLoading) {
       return Scaffold(
         backgroundColor: ColorUtils.lightGray,
@@ -2018,7 +837,7 @@ class SubjectManagementScreenState
                         return SubjectCard(
                           subject: filteredSubjects[index],
                           index: index,
-                          primaryColor: _getPrimaryColor(),
+                          primaryColor: ctrl.getPrimaryColor(),
                           onTap: () => _navigateToClassManagement(
                             filteredSubjects[index],
                           ),
@@ -2038,7 +857,7 @@ class SubjectManagementScreenState
       floatingActionButton: FloatingActionButton(
         key: _fabKey,
         onPressed: _showAddEditDialog,
-        backgroundColor: _getPrimaryColor(),
+        backgroundColor: ctrl.getPrimaryColor(),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Icon(Icons.add, color: Colors.white, size: 20),
       ),
@@ -2294,4 +1113,3 @@ class SubjectManagementScreenState
     return targets;
   }
 }
-

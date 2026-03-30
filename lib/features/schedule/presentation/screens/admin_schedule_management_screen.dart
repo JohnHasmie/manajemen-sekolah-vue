@@ -1,6 +1,4 @@
 // Admin teaching schedule management screen - full CRUD for class schedules.
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
 // Like `pages/admin/schedules.vue` - manages the school timetable with create,
 // edit, delete, search, multi-filter (teacher, class, day, semester, lesson hour),
@@ -9,44 +7,40 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // In Laravel terms, this consumes ScheduleController endpoints.
 // Also handles conflict detection (double-booked teachers/rooms).
 // Supports two view modes: card list and Syncfusion data grid (timetable).
+//
+// All data/logic methods live in AdminScheduleController — this file only owns
+// state variables, setState calls, lifecycle hooks, dialog/navigation, and
+// widget build methods.
 import 'dart:async';
-import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
-import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/conflict_resolution_dialog.dart';
-import 'package:manajemensekolah/core/widgets/empty_state.dart';
-import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_dialog.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/timetable_data_source.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_table_view.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_detail_dialog.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_card.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_filter_sheet.dart';
-import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
-import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
-import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
-import 'package:manajemensekolah/features/schedule/exports/schedule_export_service.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
-import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
-import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
+import 'package:manajemensekolah/core/widgets/empty_state.dart';
+import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
+import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/features/schedule/presentation/controllers/admin_schedule_controller.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_card.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_detail_dialog.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_filter_sheet.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_dialog.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_table_view.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/timetable_data_source.dart';
+import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 /// Admin teaching schedule management with full CRUD, timetable grid, and conflict detection.
 ///
@@ -75,9 +69,11 @@ class TeachingScheduleManagementScreen extends ConsumerStatefulWidget {
 /// setState() triggers re-render like Vue's reactivity system.
 class TeachingScheduleManagementScreenState
     extends ConsumerState<TeachingScheduleManagementScreen> {
-  final ApiService _apiService = ApiService();
-  final ApiSubjectService _apiSubjectService = getIt<ApiSubjectService>();
-  final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
+  // Controller holds all data/logic methods. Accessed via Riverpod provider so
+  // it shares the same instance as any other widget reading the same provider.
+  // Like injecting a Laravel controller into a view — the screen doesn't own the
+  // logic, it just calls the controller and rebuilds via setState.
+  late AdminScheduleController _controller;
 
   List<dynamic> _scheduleList = [];
   List<dynamic> _subjectList = [];
@@ -143,10 +139,12 @@ class TeachingScheduleManagementScreenState
   void initState() {
     super.initState();
 
+    // Resolve the controller via Riverpod. Must be done in initState (not the
+    // constructor) because `ref` is only available after the widget is wired in.
+    _controller = ref.read(adminScheduleControllerProvider);
+
     // Listen to scroll for infinite scroll
     _scrollController.addListener(_onScroll);
-
-    // Listen to academic year changes
 
     // Set default academic year from provider
     _academicYearProvider = ref.read(academicYearRiverpod);
@@ -169,51 +167,24 @@ class TeachingScheduleManagementScreenState
     FCMService().syncTrigger.addListener(_onSyncTriggered);
   }
 
-  /// Load cached schedule data for instant display before any API calls
+  /// Load cached schedule data for instant display before any API calls.
+  /// Delegates to the controller; applies result with setState here.
   Future<void> _loadCachedScheduleData() async {
-    try {
-      final prefs = PreferencesService();
-      _lastCachedAcademicYear = prefs.getString('schedule_last_year_id');
-      _lastCachedSemester = prefs.getString('schedule_last_semester_id');
-
-      if (_lastCachedAcademicYear == null || _lastCachedSemester == null) {
-        return;
-      }
-
-      final cacheKey =
-          'schedule_list_${_lastCachedAcademicYear}_$_lastCachedSemester';
-      final cached = await LocalCacheService.load(
-        cacheKey,
-        ttl: const Duration(hours: 3),
-      );
-
-      if (cached == null || !mounted) return;
-
-      final cachedData = Map<String, dynamic>.from(cached);
-      setState(() {
-        _applyScheduleData(
-          scheduleResponse: {
-            'data': List<dynamic>.from(cachedData['schedules'] ?? []),
-            'pagination': cachedData['pagination'] != null
-                ? Map<String, dynamic>.from(cachedData['pagination'])
-                : null,
-          },
-          teacher: List<dynamic>.from(cachedData['teachers'] ?? []),
-          subject: List<dynamic>.from(cachedData['subjects'] ?? []),
-          classData: List<dynamic>.from(cachedData['classes'] ?? []),
-          days: List<dynamic>.from(cachedData['hari'] ?? []),
-          semester: List<dynamic>.from(cachedData['semester'] ?? []),
-          lessonHours: List<dynamic>.from(cachedData['jamPelajaran'] ?? []),
-        );
-      });
-      _updateGridData();
-      AppLogger.info(
-        'schedule',
-        'Schedules loaded from persisted cache (early)',
-      );
-    } catch (e) {
-      AppLogger.error('schedule', e);
-    }
+    final result = await _controller.loadCachedScheduleData();
+    if (result == null || !mounted) return;
+    setState(() {
+      _scheduleList = result.scheduleList;
+      _subjectList = result.subjectList;
+      _classList = result.classList;
+      _dayList = result.dayList;
+      _semesterList = result.semesterList;
+      _lessonHourList = result.lessonHourList;
+      _hasMoreData = result.hasMoreData;
+      _isLoading = result.isLoading;
+      _lastCachedAcademicYear = _selectedAcademicYear;
+      _lastCachedSemester = _selectedSemester;
+    });
+    _updateGridData();
   }
 
   void _onSyncTriggered() {
@@ -226,99 +197,23 @@ class TeachingScheduleManagementScreenState
     }
   }
 
-  /// Set default academic period based on current date
+  /// Set default academic period based on current date.
+  /// Delegates pure calculation to the controller.
   void _setDefaultAcademicPeriod() {
-    if (_availableAcademicYears.isEmpty) {
-      _selectedAcademicYear = '1'; // Fallback
-      return;
-    }
-
-    // 1. Try to find "current" flag from API
-    final currentFromApi = _availableAcademicYears.firstWhere(
-      (y) => y['current'] == true || y['current'] == 1,
-      orElse: () => <String, dynamic>{},
+    _selectedAcademicYear = _controller.setDefaultAcademicPeriod(
+      availableAcademicYears: _availableAcademicYears,
     );
-
-    if (currentFromApi.isNotEmpty) {
-      _selectedAcademicYear = currentFromApi['id'].toString();
-    } else {
-      // 2. Fallback to date-based calculation
-      final now = DateTime.now();
-      final currentYear = now.year;
-      final currentMonth = now.month;
-
-      String targetYearString;
-      // If July or later, we are in the start of new academic year (e.g. 2025/2026)
-      // If before July, we are in the second half of academic year (e.g. 2025/2026) starting in 2025
-
-      if (currentMonth >= 7) {
-        targetYearString = '$currentYear/${currentYear + 1}';
-      } else {
-        targetYearString = '${currentYear - 1}/$currentYear';
-      }
-
-      final dateBasedYear = _availableAcademicYears.firstWhere(
-        (y) => (y['year'] ?? '').toString() == targetYearString,
-        orElse: () => <String, dynamic>{},
-      );
-
-      if (dateBasedYear.isNotEmpty) {
-        _selectedAcademicYear = dateBasedYear['id'].toString();
-      } else {
-        // 3. Fallback to first available
-        _selectedAcademicYear = _availableAcademicYears.first['id'].toString();
-      }
-    }
   }
 
-  /// Update semester selection after semester list is loaded
+  /// Update semester selection after semester list is loaded.
+  /// Delegates to the controller; applies result with setState here.
   Future<void> _updateCurrentSemester() async {
-    if (_semesterList.isEmpty) return;
-
-    String? semesterId;
-
-    // 1. Try "current" flag
-    final currentFromApi = _semesterList.firstWhere(
-      (s) => s['current'] == true || s['current'] == 1,
-      orElse: () => <String, dynamic>{},
+    final newSemesterId = await _controller.updateCurrentSemester(
+      semesterList: _semesterList,
+      currentSemesterId: _selectedSemester,
     );
-
-    if (currentFromApi.isNotEmpty) {
-      semesterId = currentFromApi['id'].toString();
-    } else {
-      // 2. Fetch from Backend API (Sync with Dashboard)
-      try {
-        final result = await getIt<ApiScheduleService>().getDateBasedSemester();
-        if (result.isNotEmpty && result.containsKey('semester')) {
-          final targetSemesterName = result['semester']
-              .toString(); // 'Ganjil' or 'Genap'
-
-          final dateBasedSemester = _semesterList.firstWhere((s) {
-            final name = (s['name'] ?? s['nama'] ?? '').toString();
-            return name.contains(targetSemesterName);
-          }, orElse: () => <String, dynamic>{});
-
-          if (dateBasedSemester.isNotEmpty) {
-            semesterId = dateBasedSemester['id'].toString();
-          }
-        }
-      } catch (e) {
-        AppLogger.error('schedule', e);
-      }
-
-      // Fallback
-      semesterId ??= _semesterList.first['id'].toString();
-    }
-
-    if (semesterId != _selectedSemester) {
-      AppLogger.debug(
-        'schedule',
-        'DEBUG: Auto-switching to semester: $semesterId',
-      );
-      setState(() {
-        _selectedSemester = semesterId!;
-      });
-      // Perform reload with new semester
+    if (newSemesterId != null && mounted) {
+      setState(() => _selectedSemester = newSemesterId);
       _loadData(resetPage: true);
     }
   }
@@ -359,67 +254,19 @@ class TeachingScheduleManagementScreenState
     }
   }
 
+  /// Fetches filter options and applies them with setState.
   Future<void> _loadFilterOptions() async {
-    try {
-      // ─── Cache-first: return early on hit ───
-      final cacheKey = 'schedule_filter_options_$_selectedAcademicYear';
-      try {
-        final cached = await LocalCacheService.load(
-          cacheKey,
-          ttl: const Duration(hours: 6),
-        );
-        if (cached != null && mounted) {
-          final cachedData = Map<String, dynamic>.from(cached);
-          setState(() {
-            _availableTeachers = List<dynamic>.from(
-              cachedData['teachers'] ?? [],
-            );
-            _availableClasses = List<dynamic>.from(cachedData['classes'] ?? []);
-            _availableDays = List<dynamic>.from(cachedData['days'] ?? []);
-            _availableSemesters = List<dynamic>.from(
-              cachedData['semesters'] ?? [],
-            );
-            _availableAcademicYears = List<dynamic>.from(
-              cachedData['academic_years'] ?? [],
-            );
-          });
-          AppLogger.info(
-            'schedule',
-            'Schedule filter options loaded from cache',
-          );
-          return;
-        }
-      } catch (e) {
-        AppLogger.error('schedule', e);
-      }
-
-      final response = await getIt<ApiScheduleService>()
-          .getScheduleFilterOptions(academicYearId: _selectedAcademicYear);
-
-      if (!mounted) return;
-
-      if (response['success'] == true && response['data'] != null) {
-        setState(() {
-          _availableTeachers = response['data']['teachers'] ?? [];
-          _availableClasses = response['data']['classes'] ?? [];
-          _availableDays = response['data']['days'] ?? [];
-          _availableSemesters = response['data']['semesters'] ?? [];
-          _availableAcademicYears = response['data']['academic_years'] ?? [];
-        });
-        // Non-blocking cache save
-        LocalCacheService.save(cacheKey, {
-          'teachers': response['data']['teachers'] ?? [],
-          'classes': response['data']['classes'] ?? [],
-          'days': response['data']['days'] ?? [],
-          'semesters': response['data']['semesters'] ?? [],
-          'academic_years': response['data']['academic_years'] ?? [],
-        });
-        AppLogger.info('schedule', 'Schedule filter options loaded');
-      }
-    } catch (e) {
-      AppLogger.error('schedule', e);
-      // Continue with empty options - not critical error
-    }
+    final result = await _controller.loadFilterOptions(
+      selectedAcademicYear: _selectedAcademicYear,
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _availableTeachers = result.teachers;
+      _availableClasses = result.classes;
+      _availableDays = result.days;
+      _availableSemesters = result.semesters;
+      _availableAcademicYears = result.academicYears;
+    });
   }
 
   void _showInfoSnackBar(String message) {
@@ -427,390 +274,207 @@ class TeachingScheduleManagementScreenState
     SnackBarUtils.showInfo(context, message);
   }
 
+  /// Builds the cache key for the current state, delegates to controller, and
+  /// also syncs [_lastCachedAcademicYear] / [_lastCachedSemester] so that
+  /// subsequent early-cache loads resolve the right key.
   String? _buildScheduleCacheKey() {
-    // Only cache default first-page view (no filters/search) for fast reload
-    if (_currentPage != 1) return null;
-    if (_showTableView) return null;
-    if (_selectedTeacherId != null ||
-        _selectedClassId != null ||
-        _selectedDayId != null ||
-        _selectedJamPelajaran != null ||
-        _selectedFilterSemester != null ||
-        _searchController.text.trim().isNotEmpty) {
-      return null;
-    }
-
-    final key = 'schedule_list_${_selectedAcademicYear}_$_selectedSemester';
-
-    // Persist current values so early cache load works on next launch
-    if (_selectedAcademicYear != _lastCachedAcademicYear ||
-        _selectedSemester != _lastCachedSemester) {
+    final key = _controller.buildScheduleCacheKey(
+      currentPage: _currentPage,
+      showTableView: _showTableView,
+      selectedAcademicYear: _selectedAcademicYear,
+      selectedSemester: _selectedSemester,
+      selectedTeacherId: _selectedTeacherId,
+      selectedClassId: _selectedClassId,
+      selectedDayId: _selectedDayId,
+      selectedJamPelajaran: _selectedJamPelajaran,
+      selectedFilterSemester: _selectedFilterSemester,
+      searchText: _searchController.text,
+      lastCachedAcademicYear: _lastCachedAcademicYear,
+      lastCachedSemester: _lastCachedSemester,
+    );
+    if (key != null) {
       _lastCachedAcademicYear = _selectedAcademicYear;
       _lastCachedSemester = _selectedSemester;
-      final prefs = PreferencesService();
-      prefs.setString('schedule_last_year_id', _selectedAcademicYear);
-      prefs.setString('schedule_last_semester_id', _selectedSemester);
     }
-
     return key;
   }
 
-  void _applyScheduleData({
-    required Map<String, dynamic> scheduleResponse,
-    required List<dynamic> teacher,
-    required List<dynamic> subject,
-    required List<dynamic> classData,
-    required List<dynamic> days,
-    required List<dynamic> semester,
-    required List<dynamic> lessonHours,
-  }) {
-    _scheduleList = scheduleResponse['data'] ?? [];
-    _subjectList = subject;
-    _classList = classData;
-    _dayList = days;
-    if (days.isEmpty && _availableDays.isNotEmpty) {
-      _dayList = _availableDays;
-    }
-    _semesterList = semester;
-    _lessonHourList = lessonHours;
-    _hasMoreData = scheduleResponse['pagination']?['has_next_page'] ?? false;
-    _isLoading = false;
+  /// Unpacks a [ScheduleLoadResult] into local state fields.
+  /// Must be called inside setState — no setState call here.
+  void _applyLoadResult(ScheduleLoadResult result) {
+    _scheduleList = result.scheduleList;
+    _subjectList = result.subjectList;
+    _classList = result.classList;
+    _dayList = result.dayList.isEmpty && _availableDays.isNotEmpty
+        ? _availableDays
+        : result.dayList;
+    _semesterList = result.semesterList;
+    _lessonHourList = result.lessonHourList;
+    _hasMoreData = result.hasMoreData;
+    _isLoading = result.isLoading;
   }
 
+  /// Loads all schedule + reference data, with cache-first strategy.
+  /// Delegates API/cache work to the controller; this method only owns state
+  /// updates (setState) and UI side-effects (tour, snackbar).
   Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
+    if (resetPage) {
+      _currentPage = 1;
+      _hasMoreData = true;
+    }
+
     try {
-      if (resetPage) {
-        _currentPage = 1;
-        _hasMoreData = true;
-
-        // ─── Step 1: Try loading from cache for instant display ───
-        if (useCache) {
-          final cacheKey = _buildScheduleCacheKey();
-          if (cacheKey != null) {
-            try {
-              final cached = await LocalCacheService.load(
-                cacheKey,
-                ttl: const Duration(hours: 3),
-              );
-              if (cached != null && mounted) {
-                final cachedData = Map<String, dynamic>.from(cached);
-                setState(() {
-                  _applyScheduleData(
-                    scheduleResponse: {
-                      'data': List<dynamic>.from(cachedData['schedules'] ?? []),
-                      'pagination': cachedData['pagination'] != null
-                          ? Map<String, dynamic>.from(cachedData['pagination'])
-                          : null,
-                    },
-                    teacher: List<dynamic>.from(cachedData['teachers'] ?? []),
-                    subject: List<dynamic>.from(cachedData['subjects'] ?? []),
-                    classData: List<dynamic>.from(cachedData['classes'] ?? []),
-                    days: List<dynamic>.from(cachedData['days'] ?? []),
-                    semester: List<dynamic>.from(cachedData['semesters'] ?? []),
-                    lessonHours: List<dynamic>.from(
-                      cachedData['lessonHours'] ?? [],
-                    ),
-                  );
-                });
-                _updateGridData();
-                AppLogger.info('schedule', 'Schedules loaded from cache');
-                // Cache hit → return early, no background API refresh
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) _checkAndShowTour();
-                });
-                // Update semester selection from cached semester list
-                if (_semesterList.isNotEmpty) {
-                  _updateCurrentSemester();
-                }
-                return;
-              }
-            } catch (e) {
-              AppLogger.error('schedule', e);
-            }
-          }
-        }
-
-        // Show loading skeleton only if we have no data yet (no cache hit)
-        if (_scheduleList.isEmpty && mounted) {
-          setState(() {
-            _isLoading = true;
-          });
-        }
-      }
-
-      // ─── Step 2: Fetch fresh data from API ───
-      // Use the already-set semester and academic year values
-      final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
-      final academicYearToUse = _selectedAcademicYear;
-
-      // Load with pagination and backend filtering
-      final results = await Future.wait([
-        _showTableView
-            ? getIt<ApiScheduleService>()
-                  .getAllSchedules(
-                    semesterId: semesterToUse,
-                    academicYearId: academicYearToUse,
-                  )
-                  .catchError((e) {
-                    AppLogger.error('schedule', e);
-                    throw e;
-                  })
-            : getIt<ApiScheduleService>()
-                  .getSchedulesPaginated(
-                    page: _currentPage,
-                    limit: _perPage,
-                    teacherId: _selectedTeacherId,
-                    classId: _selectedClassId,
-                    dayId: _selectedDayId,
-                    semesterId: semesterToUse,
-                    academicYearId: academicYearToUse,
-                    search: _searchController.text.trim().isEmpty
-                        ? null
-                        : _searchController.text.trim(),
-                    lessonHourId: null, // No longer used for cross-day filter
-                    hourNumber: _selectedJamPelajaran,
-                    skipCache: !useCache,
-                  )
-                  .catchError((e) {
-                    AppLogger.error('schedule', e);
-                    throw e;
-                  }),
-        apiTeacherService.getTeacher().catchError((e) {
-          AppLogger.error('schedule', e);
-          throw e;
-        }),
-        _apiSubjectService.getSubject().catchError((e) {
-          AppLogger.error('schedule', e);
-          throw e;
-        }),
-        getIt<ApiClassService>().getClass().catchError((e) {
-          AppLogger.error('schedule', e);
-          throw e;
-        }),
-        getIt<ApiScheduleService>().getDays().catchError((e) {
-          AppLogger.error('schedule', e);
-          throw e;
-        }),
-        getIt<ApiScheduleService>().getSemester().catchError((e) {
-          AppLogger.error('schedule', e);
-          throw e;
-        }),
-        getIt<ApiScheduleService>().getJamPelajaran().catchError((e) {
-          AppLogger.error('schedule', e);
-          throw e;
-        }),
-      ]);
+      final result = await _controller.loadData(
+        showTableView: _showTableView,
+        selectedSemester: _selectedSemester,
+        selectedFilterSemester: _selectedFilterSemester,
+        selectedAcademicYear: _selectedAcademicYear,
+        selectedTeacherId: _selectedTeacherId,
+        selectedClassId: _selectedClassId,
+        selectedDayId: _selectedDayId,
+        selectedJamPelajaran: _selectedJamPelajaran,
+        searchText: _searchController.text,
+        perPage: _perPage,
+        availableDays: _availableDays,
+        lastCachedAcademicYear: _lastCachedAcademicYear,
+        lastCachedSemester: _lastCachedSemester,
+        useCache: useCache,
+      );
 
       if (!mounted) return;
 
-      final scheduleResponse = results[0] as Map<String, dynamic>;
-      final teacher = results[1] as List<dynamic>;
-      final subject = results[2] as List<dynamic>;
-      final classData = results[3] as List<dynamic>;
-      final days = results[4] as List<dynamic>;
-      final semester = results[5] as List<dynamic>;
-      final lessonHours = results[6] as List<dynamic>;
-
-      setState(() {
-        _applyScheduleData(
-          scheduleResponse: scheduleResponse,
-          teacher: teacher,
-          subject: subject,
-          classData: classData,
-          days: days,
-          semester: semester,
-          lessonHours: lessonHours,
-        );
-      });
-
-      // Update grid data
-      _updateGridData();
-
-      // ─── Step 3: Save to cache (only for default view) ───
-      final cacheKey = _buildScheduleCacheKey();
-      if (cacheKey != null) {
-        LocalCacheService.save(cacheKey, {
-          'schedules': scheduleResponse['data'] ?? [],
-          'pagination': scheduleResponse['pagination'],
-          'teachers': teacher,
-          'subjects': subject,
-          'classes': classData,
-          'hari': days,
-          'semester': semester,
-          'jamPelajaran': lessonHours,
-        });
+      if (result == null) {
+        // Error path — show snackbar only when there's nothing cached to show
+        if (_scheduleList.isEmpty) {
+          _showErrorSnackBar(
+            ref.read(languageRiverpod).getTranslatedText({
+              'en': 'Failed to load schedules',
+              'id': 'Gagal memuat jadwal',
+            }),
+          );
+        }
+        setState(() => _isLoading = false);
+        return;
       }
 
-      // Update semester selection based on loaded semester list
-      // This may trigger reload if semester is different
+      setState(() => _applyLoadResult(result));
+      _updateGridData();
+
+      // Cache the result for next cold start
+      _controller.saveScheduleToCache(
+        cacheKey: _buildScheduleCacheKey(),
+        scheduleResponse: {'data': result.scheduleList},
+        teacher: result.teacherList,
+        subject: result.subjectList,
+        classData: result.classList,
+        days: result.dayList,
+        semester: result.semesterList,
+        lessonHours: result.lessonHourList,
+      );
+
       if (_semesterList.isNotEmpty) {
         _updateCurrentSemester();
       }
     } catch (e) {
       AppLogger.error('schedule', e);
-
       if (!mounted) return;
-
-      // Only show error if we don't have cached data displayed
       if (_scheduleList.isEmpty) {
         _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
       }
       setState(() => _isLoading = false);
     } finally {
-      // Trigger tour
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _checkAndShowTour();
-        }
+        if (mounted) _checkAndShowTour();
       });
     }
   }
 
-  /// Force refresh: clear cache and reload from API
+  /// Force refresh: clears caches then reloads from the API.
   Future<void> _forceRefresh() async {
-    final cacheKey = _buildScheduleCacheKey();
-    if (cacheKey != null) {
-      await LocalCacheService.invalidate(cacheKey);
-    }
-    await LocalCacheService.clearStartingWith('tour_schedule_management_');
-    await LocalCacheService.invalidate(
-      CacheKeyBuilder.custom('schedule_filter_options', _selectedAcademicYear),
+    await _controller.forceRefresh(
+      cacheKey: _buildScheduleCacheKey(),
+      selectedAcademicYear: _selectedAcademicYear,
     );
     await _loadData(resetPage: true, useCache: false);
   }
 
+  /// Loads the next page of schedules for infinite scroll.
   Future<void> _loadMoreData() async {
     if (_isLoadingMore || !_hasMoreData) return;
+    setState(() => _isLoadingMore = true);
+
+    _currentPage++;
+    final result = await _controller.loadMoreData(
+      nextPage: _currentPage,
+      perPage: _perPage,
+      selectedSemester: _selectedSemester,
+      selectedFilterSemester: _selectedFilterSemester,
+      selectedAcademicYear: _selectedAcademicYear,
+      selectedTeacherId: _selectedTeacherId,
+      selectedClassId: _selectedClassId,
+      selectedDayId: _selectedDayId,
+      selectedJamPelajaran: _selectedJamPelajaran,
+      searchText: _searchController.text,
+    );
+
+    if (!mounted) return;
+
+    if (result == null) {
+      setState(() {
+        _isLoadingMore = false;
+        _currentPage--;
+      });
+      return;
+    }
 
     setState(() {
-      _isLoadingMore = true;
+      _scheduleList.addAll(result.newItems);
+      _hasMoreData = result.hasMoreData;
+      _isLoadingMore = false;
     });
-
-    try {
-      _currentPage++;
-
-      // Use the already-set semester and academic year values
-      final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
-      final academicYearToUse = _selectedAcademicYear;
-
-      // Load next page
-      final response = await getIt<ApiScheduleService>().getSchedulesPaginated(
-        page: _currentPage,
-        limit: _perPage,
-        teacherId: _selectedTeacherId,
-        classId: _selectedClassId,
-        dayId: _selectedDayId,
-        semesterId: semesterToUse,
-        academicYearId: academicYearToUse,
-        search: _searchController.text.trim().isEmpty
-            ? null
-            : _searchController.text.trim(),
-        lessonHourId: null,
-        hourNumber: _selectedJamPelajaran,
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        // Append new data to existing list
-        _scheduleList.addAll(response['data'] ?? []);
-        _hasMoreData = response['pagination']?['has_next_page'] ?? false;
-        _isLoadingMore = false;
-      });
-
-      // Update grid data
-      _updateGridData();
-
-      AppLogger.info(
-        'schedule',
-        'Loaded more schedules: Page $_currentPage, Total items: ${_scheduleList.length}',
-      );
-    } catch (e) {
-      AppLogger.error('schedule', e);
-
-      if (!mounted) return;
-
-      setState(() {
-        _isLoadingMore = false;
-        _currentPage--; // Revert page increment on error
-      });
-    }
+    _updateGridData();
+    AppLogger.info(
+      'schedule',
+      'Loaded more schedules: Page $_currentPage, Total: ${_scheduleList.length}',
+    );
   }
 
+  /// Opens file picker and imports schedules from Excel.
   Future<void> _importFromExcel() async {
     final languageProvider = ref.read(languageRiverpod);
-
     try {
-      final FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx', 'xls'],
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.single.path != null) {
-        setState(() => _isLoading = true);
-
-        await getIt<ApiScheduleService>().importSchedulesFromExcel(
-          File(result.files.single.path!),
-        );
-
-        // Force invalidation of cache to ensure fresh data
-        getIt<ApiScheduleService>().invalidateCache();
-
-        // Reload data fresh from API
+      setState(() => _isLoading = true);
+      final imported = await _controller.importFromExcel();
+      if (!mounted) return;
+      if (imported) {
         _loadData(resetPage: true, useCache: false);
-
-        if (!mounted) return;
         _showInfoSnackBar(
           languageProvider.getTranslatedText({
             'en': 'Import successful',
             'id': 'Import berhasil',
           }),
         );
+      } else {
+        setState(() => _isLoading = false);
       }
     } catch (e) {
       AppLogger.error('schedule', e);
       if (!mounted) return;
+      setState(() => _isLoading = false);
       _showErrorSnackBar(
         '${languageProvider.getTranslatedText({'en': 'Failed to import file: ', 'id': 'Gagal mengimpor file: '})}${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }
 
-  // Export jadwal ke Excel
+  /// Exports current schedule list to Excel.
   Future<void> _exportToExcel() async {
     try {
-      // Enrich schedule data with day name from _dayList
-      final enrichedSchedules = _scheduleList.map((schedule) {
-        final dayId = schedule['day_id']?.toString() ?? '';
-        final dayData = _dayList.firstWhere(
-          (d) => d['id'].toString() == dayId,
-          orElse: () => <String, dynamic>{},
-        );
-
-        final Map<String, dynamic> newSchedule = Map.from(schedule);
-        if (dayData.isNotEmpty) {
-          newSchedule['day_name'] = dayData['name'] ?? dayData['nama'];
-        }
-
-        // Enrich academic year
-        final academicYearId = schedule['academic_year_id']?.toString() ?? '';
-        if (academicYearId.isNotEmpty) {
-          final academicYearData = _availableAcademicYears.firstWhere(
-            (ay) => ay['id'].toString() == academicYearId,
-            orElse: () => <String, dynamic>{},
-          );
-          if (academicYearData.isNotEmpty) {
-            newSchedule['academic_year'] =
-                academicYearData['year'] ?? academicYearData['name'] ?? '';
-          }
-        }
-        return newSchedule;
-      }).toList();
-
-      await ExcelScheduleService.exportSchedulesToExcel(
-        schedules: enrichedSchedules,
+      await _controller.exportToExcel(
         context: context,
+        scheduleList: _scheduleList,
+        dayList: _dayList,
+        availableAcademicYears: _availableAcademicYears,
       );
     } catch (e) {
       AppLogger.error('schedule', e);
@@ -820,10 +484,10 @@ class TeachingScheduleManagementScreenState
     }
   }
 
-  // Download template
+  /// Downloads the Excel import template.
   Future<void> _downloadTemplate() async {
     try {
-      await ExcelScheduleService.downloadTemplate(context);
+      await _controller.downloadTemplate(context);
     } catch (e) {
       AppLogger.error('schedule', e);
       _showErrorSnackBar(
@@ -832,200 +496,22 @@ class TeachingScheduleManagementScreenState
     }
   }
 
+  /// Rebuilds the timetable data source from current state.
+  /// Delegates all logic to the controller; assigns results to local fields.
   void _updateGridData() {
-    _gridData = _generateTimetableData();
-
-    final languageProvider = ref.read(languageRiverpod);
-    // Filter days based on selection
-    var filteredDayList = _dayList;
-    if (_selectedDayId != null) {
-      filteredDayList = _dayList
-          .where((d) => d['id'].toString() == _selectedDayId)
-          .toList();
-    }
-
-    final days = filteredDayList
-        .map(
-          (d) => _translateDay(
-            d['name'] ?? d['nama'] ?? '',
-            languageProvider.currentLanguage,
-          ),
-        )
-        .where((d) => d.isNotEmpty)
-        .toSet()
-        .toList();
-
-    // Filter classes based on selection
-    var filteredClassList = _classList;
-    if (_selectedClassId != null) {
-      filteredClassList = _classList
-          .where((c) => c['id'].toString() == _selectedClassId)
-          .toList();
-    }
-
-    // Ensure we have time slots. If empty, generate them.
-    List<String> timeSlots = _generateTimeSlots();
-    if (_selectedJamPelajaran != null) {
-      timeSlots = _lessonHourList
-          .where((jp) {
-            final h = (jp['hour_number'] ?? jp['jam_ke'])?.toString();
-            return h == _selectedJamPelajaran;
-          })
-          .map((jam) {
-            String start = (jam['start_time'] ?? jam['jam_mulai'] ?? '')
-                .toString();
-            String end = (jam['end_time'] ?? jam['jam_selesai'] ?? '')
-                .toString();
-            if (start.length > 5) start = start.substring(0, 5);
-            if (end.length > 5) end = end.substring(0, 5);
-            return '$start-$end';
-          })
-          .toSet()
-          .toList();
-    }
-
-    if (timeSlots.isEmpty) {
-      timeSlots = [];
-    }
-
-    _timetableDataSource = TimetableDataSource(
-      timeSlots: timeSlots,
-      days: days,
-      classList: filteredClassList,
-      gridData: _gridData,
-      primaryColor: _getPrimaryColor(),
+    final result = _controller.updateGridData(
+      scheduleList: _getFilteredSchedules(),
+      dayList: _dayList,
+      classList: _classList,
+      lessonHourList: _lessonHourList,
+      availableDays: _availableDays,
+      selectedDayId: _selectedDayId,
+      selectedClassId: _selectedClassId,
+      selectedJamPelajaran: _selectedJamPelajaran,
       onScheduleTap: _showScheduleDetail,
     );
-  }
-
-  List<String> _generateTimeSlots() {
-    final slots = _lessonHourList
-        .map((jam) {
-          String start = (jam['start_time'] ?? jam['jam_mulai'] ?? '')
-              .toString();
-          String end = (jam['end_time'] ?? jam['jam_selesai'] ?? '').toString();
-
-          // Format to HH:mm if it contains seconds
-          if (start.length > 5) start = start.substring(0, 5);
-          if (end.length > 5) end = end.substring(0, 5);
-
-          return '$start-$end';
-        })
-        .toSet()
-        .toList(); // Deduplicate time slots
-
-    // Sort chronologically by start time
-    slots.sort((a, b) {
-      final startA = a.split('-').first;
-      final startB = b.split('-').first;
-      return startA.compareTo(startB);
-    });
-
-    return slots;
-  }
-
-  // Method to generate timetable data in the desired format
-  List<ScheduleGridData> _generateTimetableData() {
-    final List<ScheduleGridData> timetableData = [];
-
-    // Create lookup maps for IDs
-    final Map<String, String> dayIdToName = {};
-    for (var day in _dayList) {
-      final id = day['id']?.toString() ?? '';
-      final name = day['name'] ?? day['nama'] ?? '';
-      if (id.isNotEmpty) dayIdToName[id] = name;
-    }
-
-    final Map<String, String> classIdToName = {};
-    for (var cls in _classList) {
-      final id = cls['id']?.toString() ?? '';
-      final name = cls['name'] ?? cls['nama'] ?? '';
-      if (id.isNotEmpty) classIdToName[id] = name;
-    }
-
-    // Convert to grid data format
-    final languageProvider = ref.read(languageRiverpod);
-
-    // Instead of exhaustive looping with placeholders, only add found schedules
-    for (var schedule in _getFilteredSchedules()) {
-      final daysIds = [];
-      if (schedule['days_ids'] != null) {
-        if (schedule['days_ids'] is List) {
-          daysIds.addAll(schedule['days_ids']);
-        } else if (schedule['days_ids'] is String) {
-          try {
-            final parsed = (schedule['days_ids'] as String)
-                .replaceAll('[', '')
-                .replaceAll(']', '')
-                .split(',');
-            daysIds.addAll(parsed);
-          } catch (e) {} // ignore: empty_catches
-        }
-      }
-      if (daysIds.isEmpty) {
-        if (schedule['day_id'] != null) {
-          daysIds.add(schedule['day_id']);
-        } else if (schedule['hari_id'] != null) {
-          daysIds.add(schedule['hari_id']);
-        }
-      }
-
-      for (var rawDayId in daysIds) {
-        final dayId = rawDayId.toString();
-        final classId =
-            schedule['kelas_id']?.toString() ??
-            schedule['class_id']?.toString() ??
-            '';
-
-        final dayName = dayIdToName[dayId] ?? '';
-        final translatedDayName = _translateDay(
-          dayName,
-          languageProvider.currentLanguage,
-        );
-        final className =
-            classIdToName[classId] ?? schedule['kelas_nama'] ?? '';
-
-        final timeSlot =
-            '${schedule['jam_mulai'] ?? schedule['start_time'] ?? ''}-${schedule['jam_selesai'] ?? schedule['end_time'] ?? ''}';
-
-        // Format to HH:mm for lookup consistency
-        final List<String> parts = timeSlot.split('-');
-        String start = parts[0];
-        String end = parts.length > 1 ? parts[1] : '';
-        if (start.length > 5) start = start.substring(0, 5);
-        if (end.length > 5) end = end.substring(0, 5);
-        final formattedTimeSlot = '$start-$end';
-
-        timetableData.add(
-          ScheduleGridData(
-            id: schedule['id']?.toString() ?? '',
-            timeSlot: formattedTimeSlot,
-            day: translatedDayName,
-            classroom: className,
-            subject:
-                schedule['subject_name'] ??
-                schedule['mata_pelajaran_nama'] ??
-                '-',
-            teacher: schedule['teacher_name'] ?? schedule['guru_nama'] ?? '',
-            originalData: schedule,
-          ),
-        );
-      }
-    }
-
-    return timetableData;
-  }
-
-  String _getGradeLevel(String classId) {
-    try {
-      final classItem = _classList.firstWhere(
-        (k) => k['id'] == classId,
-        orElse: () => {},
-      );
-      return classItem['grade_level']?.toString() ?? '-';
-    } catch (e) {
-      return '-';
-    }
+    _gridData = result.gridData;
+    _timetableDataSource = result.timetableDataSource;
   }
 
   void _showErrorSnackBar(String message) {
@@ -1061,8 +547,8 @@ class TeachingScheduleManagementScreenState
         semester: _selectedSemester,
         academicYear: _selectedAcademicYear,
         academicYearList: _availableAcademicYears,
-        apiService: _apiService,
-        apiTeacherService: apiTeacherService,
+        apiService: _controller.apiService,
+        apiTeacherService: _controller.apiTeacherService,
       ),
     );
 
@@ -1087,8 +573,8 @@ class TeachingScheduleManagementScreenState
         academicYear: _selectedAcademicYear,
         academicYearList: _availableAcademicYears,
         schedule: schedule,
-        apiService: _apiService,
-        apiTeacherService: apiTeacherService,
+        apiService: _controller.apiService,
+        apiTeacherService: _controller.apiTeacherService,
       ),
     );
 
@@ -1124,83 +610,35 @@ class TeachingScheduleManagementScreenState
     );
 
     if (confirmed == true) {
-      try {
-        await getIt<ApiScheduleService>().deleteSchedule(id);
+      final ok = await _controller.deleteSchedule(id);
+      if (ok) {
         _showSuccessSnackBar('Schedule successfully deleted');
         _loadData(resetPage: true, useCache: false);
-      } catch (e) {
-        _showErrorSnackBar('Failed to delete schedule: $e');
+      } else {
+        _showErrorSnackBar(
+          ref.read(languageRiverpod).getTranslatedText({
+            'en': 'Failed to delete schedule',
+            'id': 'Gagal menghapus jadwal',
+          }),
+        );
       }
     }
   }
 
+  /// Shows the conflict-resolution dialog if needed, then saves the schedule
+  /// and reloads data. Dialog/navigation stays here; API work in controller.
   Future<void> _checkAndResolveConflicts(
     Map<String, dynamic> newScheduleData, {
     String? editingScheduleId,
   }) async {
     try {
-      final conflicts = await getIt<ApiScheduleService>()
-          .getConflictingSchedules(
-            daysIds:
-                (newScheduleData['days_ids'] as List<dynamic>?)
-                    ?.map((e) => e.toString())
-                    .toList() ??
-                [],
-            classId: newScheduleData['class_id'],
-            teacherId: newScheduleData['teacher_id'],
-            semesterId: newScheduleData['semester_id'],
-            academicYearId: newScheduleData['academic_year_id'],
-            lessonHourId: newScheduleData['lesson_hour_days_id'],
-            excludeScheduleId: editingScheduleId,
-          );
-
-      if (conflicts.isNotEmpty) {
-        if (!mounted) return;
-        final result = await showDialog<String>(
-          context: context,
-          builder: (context) => ConflictResolutionDialog(
-            conflictingSchedules: conflicts,
-            onDeleteConfirmed: (scheduleId) =>
-                AppNavigator.pop(context, scheduleId),
-            onCancel: () => AppNavigator.pop(context),
-          ),
-        );
-
-        if (result != null) {
-          // Delete conflicting schedule directly via API (skip UI confirmation dialog)
-          await getIt<ApiScheduleService>().deleteSchedule(result);
-
-          try {
-            if (editingScheduleId != null) {
-              await getIt<ApiScheduleService>().updateSchedule(
-                editingScheduleId,
-                newScheduleData,
-              );
-            } else {
-              await getIt<ApiScheduleService>().addSchedule(newScheduleData);
-            }
-            _showSuccessSnackBar('Schedule successfully saved');
-          } catch (e) {
-            AppLogger.error('schedule', e);
-            _showSuccessSnackBar('Schedule successfully saved');
-          }
-          _loadData(resetPage: true, useCache: false);
-        }
-      } else {
-        try {
-          if (editingScheduleId != null) {
-            await getIt<ApiScheduleService>().updateSchedule(
-              editingScheduleId,
-              newScheduleData,
-            );
-          } else {
-            await getIt<ApiScheduleService>().addSchedule(newScheduleData);
-          }
-          _showSuccessSnackBar('Schedule successfully saved');
-        } catch (e) {
-          AppLogger.error('schedule', e);
-          _showSuccessSnackBar('Schedule successfully saved');
-        }
+      final saved = await _controller.checkAndResolveConflicts(
+        context,
+        newScheduleData,
+        editingScheduleId: editingScheduleId,
+      );
+      if (saved) {
+        _showSuccessSnackBar('Schedule successfully saved');
         _loadData(resetPage: true, useCache: false);
       }
     } catch (e) {
@@ -1209,18 +647,17 @@ class TeachingScheduleManagementScreenState
     }
   }
 
-  Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor('admin');
-  }
+  Color _getPrimaryColor() => _controller.getPrimaryColor();
 
   void _checkActiveFilter() {
     setState(() {
-      _hasActiveFilter =
-          _selectedDayId != null ||
-          _selectedClassId != null ||
-          _selectedJamPelajaran != null ||
-          (_selectedFilterSemester != null &&
-              _selectedFilterSemester != _selectedSemester);
+      _hasActiveFilter = _controller.checkActiveFilter(
+        selectedDayId: _selectedDayId,
+        selectedClassId: _selectedClassId,
+        selectedJamPelajaran: _selectedJamPelajaran,
+        selectedFilterSemester: _selectedFilterSemester,
+        selectedSemester: _selectedSemester,
+      );
     });
   }
 
@@ -1380,108 +817,24 @@ class TeachingScheduleManagementScreenState
     );
   }
 
+  /// Delegates client-side filtering to the controller.
   List<dynamic> _getFilteredSchedules() {
-    final searchTerm = _searchController.text.toLowerCase();
-    return _scheduleList.where((schedule) {
-      final subjectName =
-          schedule['subject_name']?.toString().toLowerCase() ??
-          schedule['mata_pelajaran_nama']?.toString().toLowerCase() ??
-          '';
-      final teacherName =
-          schedule['teacher_name']?.toString().toLowerCase() ??
-          schedule['guru_nama']?.toString().toLowerCase() ??
-          '';
-      final className =
-          schedule['class_name']?.toString().toLowerCase() ??
-          schedule['kelas_nama']?.toString().toLowerCase() ??
-          '';
-      final dayNames = (() {
-        // Construct day names string for search
-        final daysIds = [];
-        if (schedule['days_ids'] is List) {
-          daysIds.addAll(schedule['days_ids']);
-        } else if (schedule['day_id'] != null) {
-          daysIds.add(schedule['day_id']);
-        }
-
-        return daysIds
-            .map((id) {
-              final d = _dayList.firstWhere(
-                (element) => element['id'].toString() == id.toString(),
-                orElse: () => {},
-              );
-              return (d['name'] ?? d['nama'] ?? '').toString().toLowerCase();
-            })
-            .join(' ');
-      })();
-
-      final matchesSearch =
-          searchTerm.isEmpty ||
-          subjectName.contains(searchTerm) ||
-          teacherName.contains(searchTerm) ||
-          className.contains(searchTerm) ||
-          dayNames.contains(searchTerm);
-
-      // Teacher filter
-      bool matchesGuru = true;
-      if (_selectedTeacherId != null) {
-        final teacherId =
-            schedule['teacher_id']?.toString() ??
-            schedule['guru_id']?.toString();
-        matchesGuru = teacherId == _selectedTeacherId;
-      }
-
-      // Class filter
-      bool matchesKelas = true;
-      if (_selectedClassId != null) {
-        final classId =
-            schedule['class_id']?.toString() ??
-            schedule['kelas_id']?.toString();
-        matchesKelas = classId == _selectedClassId;
-      }
-
-      // Day filter
-      bool matchesHari = true;
-      if (_selectedDayId != null) {
-        final daysIds = [];
-        if (schedule['days_ids'] is List) {
-          daysIds.addAll(schedule['days_ids']);
-        } else if (schedule['day_id'] != null) {
-          daysIds.add(schedule['day_id']);
-        }
-
-        matchesHari = daysIds.any(
-          (id) => id.toString() == _selectedDayId.toString(),
-        );
-      }
-
-      bool matchesJamPelajaran = true;
-      if (_selectedJamPelajaran != null) {
-        final lessonHour = schedule['lesson_hour'] as Map<String, dynamic>?;
-        final hourNumber =
-            lessonHour?['hour_number']?.toString() ??
-            lessonHour?['jam_ke']?.toString();
-        matchesJamPelajaran = hourNumber == _selectedJamPelajaran;
-      }
-
-      // Note: Semester and academic year filters are handled by reloading data from server
-      // For ListView, backend handles filtering. For TableView/local data, we filter here.
-      return matchesSearch &&
-          matchesGuru &&
-          matchesKelas &&
-          matchesHari &&
-          matchesJamPelajaran;
-    }).toList();
+    return _controller.getFilteredSchedules(
+      scheduleList: _scheduleList,
+      dayList: _dayList,
+      searchText: _searchController.text,
+      selectedTeacherId: _selectedTeacherId,
+      selectedClassId: _selectedClassId,
+      selectedDayId: _selectedDayId,
+      selectedJamPelajaran: _selectedJamPelajaran,
+    );
   }
 
   Widget _buildTableView() {
-    // Guard: data source must be ready before rendering the grid.
     if (_timetableDataSource == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // Delegate all rendering to the extracted ScheduleTableView widget.
-    // This screen retains ownership of state; the widget is purely presentational.
     return ScheduleTableView(
       timetableDataSource: _timetableDataSource!,
       dayList: _dayList,
@@ -1491,7 +844,7 @@ class TeachingScheduleManagementScreenState
       primaryColor: _getPrimaryColor(),
       languageProvider: ref.read(languageRiverpod),
       onExport: _exportToExcel,
-      translateDay: _translateDay,
+      translateDay: _controller.translateDay,
     );
   }
 
@@ -1901,166 +1254,21 @@ class TeachingScheduleManagementScreenState
   }
 
   Widget _buildScheduleCard(Map<String, dynamic> schedule, int index) {
-    // Delegate rendering to the extracted AdminScheduleCard widget.
-    // All data is resolved here so the widget stays StatelessWidget.
+    final language = ref.read(languageRiverpod).currentLanguage;
     return AdminScheduleCard(
       schedule: schedule,
       index: index,
       isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
       primaryColor: _getPrimaryColor(),
-      dayLabel: _formatScheduleDays(schedule),
-      timeLabel: _formatTime(schedule),
+      dayLabel: _controller.formatScheduleDays(schedule, _dayList, language),
+      timeLabel: _controller.formatTime(schedule),
       onTap: () => _showScheduleDetail(schedule),
       onEdit: () => _editSchedule(schedule),
       onDelete: () => _deleteSchedule(schedule['id']),
     );
   }
 
-  String _formatTime(Map<String, dynamic> schedule) {
-    // if (kDebugMode) {
-    //   print('DEBUG: _formatTime keys: ${schedule.keys.toList()}');
-    //   print(
-    //     'DEBUG: _formatTime values: ${schedule['jam_mulai']} - ${schedule['jam_selesai']}',
-    //   );
-    // }
-    final startTime = schedule['jam_mulai'] ?? schedule['start_time'] ?? '';
-    final endTime = schedule['jam_selesai'] ?? schedule['end_time'] ?? '';
-
-    if (startTime.toString().isEmpty || endTime.toString().isEmpty) {
-      return '-';
-    }
-    return '$startTime - $endTime';
-  }
-
-  String _translateDay(String dayName, String languageCode) {
-    if (dayName.isEmpty) return '';
-
-    final Map<String, String> enToId = {
-      'Monday': 'Senin',
-      'Tuesday': 'Selasa',
-      'Wednesday': 'Rabu',
-      'Thursday': 'Kamis',
-      'Friday': 'Jumat',
-      'Saturday': 'Sabtu',
-      'Sunday': 'Minggu',
-    };
-
-    final Map<String, String> idToEn = {
-      'Senin': 'Monday',
-      'Selasa': 'Tuesday',
-      'Rabu': 'Wednesday',
-      'Kamis': 'Thursday',
-      'Jumat': 'Friday',
-      'Sabtu': 'Saturday',
-      'Minggu': 'Sunday',
-    };
-
-    // Normalize input
-    String normalizedDay = dayName.trim();
-    // Capitalize first letter
-    if (normalizedDay.isNotEmpty) {
-      normalizedDay =
-          normalizedDay[0].toUpperCase() + normalizedDay.substring(1);
-    }
-
-    if (languageCode == 'id') {
-      // If target is ID, try to translate from EN to ID
-      // If input is already ID (exists in idToEn keys), return as is
-      if (idToEn.containsKey(normalizedDay)) return normalizedDay;
-      return enToId[normalizedDay] ?? normalizedDay;
-    } else {
-      // If target is EN, try to translate from ID to EN
-      // If input is already EN (exists in enToId keys), return as is
-      if (enToId.containsKey(normalizedDay)) return normalizedDay;
-      return idToEn[normalizedDay] ?? normalizedDay;
-    }
-  }
-
-  // Robust helper for parsing days
-  String _formatScheduleDays(
-    Map<String, dynamic> schedule, [
-    LanguageProvider? provider,
-  ]) {
-    final LanguageProvider languageProvider =
-        provider ?? ref.read(languageRiverpod);
-    final daysIds = [];
-    if (schedule['days_ids'] != null) {
-      if (schedule['days_ids'] is List) {
-        daysIds.addAll(schedule['days_ids']);
-      } else if (schedule['days_ids'] is String) {
-        try {
-          final raw = schedule['days_ids'] as String;
-          // Handle both [1,2] and ["1","2"] formats
-          final clean = raw
-              .replaceAll('[', '')
-              .replaceAll(']', '')
-              .replaceAll('"', '')
-              .replaceAll("'", "");
-          if (clean.trim().isNotEmpty) {
-            final parsed = clean.split(',');
-            daysIds.addAll(parsed.map((e) => e.trim()));
-          }
-        } catch (e) {
-          AppLogger.error('schedule', e);
-        }
-      }
-    }
-
-    // Fallback to legacy
-    if (daysIds.isEmpty) {
-      if (schedule['hari_id'] != null) {
-        daysIds.add(schedule['hari_id']);
-      } else if (schedule['day_id'] != null) {
-        daysIds.add(schedule['day_id']);
-      }
-    }
-
-    // if (kDebugMode) {
-    //   print('DEBUG: _formatScheduleDays daysIds extracted: $daysIds');
-    //   print('DEBUG: _formatScheduleDays schedule keys: ${schedule.keys}');
-    // }
-
-    if (daysIds.isNotEmpty) {
-      final dayNames = daysIds
-          .map((id) {
-            final idStr = id.toString();
-            if (kDebugMode) {
-              // print('Searching for day id: $idStr in _dayList IDs: ${_dayList.map((e) => e['id']).toList()}');
-            }
-            final day = _dayList.firstWhere(
-              (d) => d['id'].toString().toLowerCase() == idStr.toLowerCase(),
-              orElse: () => {},
-            );
-            if (day.isNotEmpty) {
-              return _translateDay(
-                day['name'] ?? day['nama'] ?? '',
-                languageProvider.currentLanguage,
-              );
-            }
-            return '';
-          })
-          .where((s) => s.isNotEmpty)
-          .toSet()
-          .toList(); // Dedup
-
-      if (dayNames.isNotEmpty) return dayNames.join(', ');
-    }
-
-    // Legacy name fallback
-    if (schedule['hari_nama'] != null &&
-        schedule['hari_nama'].toString().isNotEmpty) {
-      return _translateDay(
-        schedule['hari_nama'],
-        languageProvider.currentLanguage,
-      );
-    }
-
-    return 'No Day';
-  }
-
   void _showScheduleDetail(Map<String, dynamic> schedule) {
-    // Delegate rendering to the extracted ScheduleDetailDialog widget.
-    // All callbacks stay in this state class so no business logic moves.
     showDialog(
       context: context,
       builder: (context) => ScheduleDetailDialog(
@@ -2068,9 +1276,13 @@ class TeachingScheduleManagementScreenState
         primaryColor: _getPrimaryColor(),
         languageProvider: ref.read(languageRiverpod),
         isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
-        formatTime: _formatTime,
-        formatScheduleDays: _formatScheduleDays,
-        getGradeLevel: _getGradeLevel,
+        formatTime: _controller.formatTime,
+        formatScheduleDays: (s, [p]) => _controller.formatScheduleDays(
+          s,
+          _dayList,
+          p?.currentLanguage ?? ref.read(languageRiverpod).currentLanguage,
+        ),
+        getGradeLevel: (id) => _controller.getGradeLevel(id, _classList),
         onEdit: _editSchedule,
       ),
     );

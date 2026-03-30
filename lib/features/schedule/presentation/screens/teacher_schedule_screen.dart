@@ -1,6 +1,4 @@
 // Teaching schedule screen -- the teacher's timetable/calendar view.
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // Like `pages/teacher/Schedule.vue` in a Vue app.
 //
 // Displays the teacher's weekly schedule with two view modes: card view
@@ -8,13 +6,18 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 // real-time sync via FCM push notifications, and quick navigation to
 // related screens (attendance, class activity, materials).
 // In Laravel terms: `ScheduleController@index` with multiple view formats.
+//
+// All data-fetching, caching and pure helpers have been extracted into
+// [TeacherScheduleController]. This file only owns `setState` calls,
+// lifecycle hooks, dialogs, and the widget tree.
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -29,7 +32,9 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/schedule/presentation/controllers/teacher_schedule_controller.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_schedule_card_view.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_schedule_filter_sheet.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_schedule_table_view.dart';
 
 /// Teacher's weekly schedule screen with card and table view modes.
@@ -65,6 +70,8 @@ class TeachingScheduleScreenState
   bool _isLoading = true;
   String _teacherId = '';
   String _teacherNama = '';
+  // Stored for future year-picker UI; populated by _loadAcademicYearData.
+  // ignore: unused_field
   List<dynamic> _academicYearList = [];
   String _selectedSemester = '1'; // Will be set by _setDefaultAcademicPeriod()
   String _selectedAcademicYear =
@@ -156,26 +163,12 @@ class TeachingScheduleScreenState
     }
   }
 
-  /// Calculate current academic year based on current date
-  String _getCurrentAcademicYear() {
-    final now = DateTime.now();
-    final currentYear = now.year;
-    final currentMonth = now.month;
-
-    // Academic year runs from July to June
-    // If current month is July or later, academic year is currentYear/nextYear
-    // Otherwise, academic year is previousYear/currentYear
-    if (currentMonth >= 7) {
-      return '$currentYear/${currentYear + 1}';
-    } else {
-      return '${currentYear - 1}/$currentYear';
-    }
-  }
-
-  /// Set default academic year and semester based on current date
+  /// Set default academic year based on current date.
+  /// Delegates the date calculation to the controller (pure logic).
   void _setDefaultAcademicPeriod() {
+    final ctrl = ref.read(teacherScheduleControllerProvider);
     setState(() {
-      _selectedAcademicYear = _getCurrentAcademicYear();
+      _selectedAcademicYear = ctrl.getCurrentAcademicYear();
       // Semester will be set by _loadSemesterData called from _loadUserData
     });
   }
@@ -390,212 +383,55 @@ class TeachingScheduleScreenState
   }
 
   Future<void> _loadDayData() async {
-    try {
-      // Try cache first (day data is static, cache for 24h)
-      final cached = await LocalCacheService.load(
-        'school_day_data',
-        ttl: const Duration(hours: 24),
-      );
-
-      List<dynamic> dayData;
-      if (cached != null) {
-        dayData = List<dynamic>.from(cached);
-        AppLogger.info('schedule', 'Day data loaded from cache');
-      } else {
-        dayData = await getIt<ApiScheduleService>().getDays();
-        if (dayData.isNotEmpty) {
-          LocalCacheService.save('school_day_data', dayData);
-        }
-      }
-
-      if (dayData.isNotEmpty) {
-        final Map<String, String> newDayIdMap = {};
-        final List<String> newDayOptions = ['Semua Hari'];
-
-        for (var day in dayData) {
-          final name =
-              day['name_id']?.toString() ?? day['name']?.toString() ?? '';
-          final id = day['id']?.toString() ?? '';
-          if (name.isNotEmpty && id.isNotEmpty) {
-            newDayIdMap[name] = id;
-            newDayOptions.add(name);
-          }
-        }
-
-        if (newDayIdMap.isNotEmpty) {
-          setState(() {
-            _dayIdMap = newDayIdMap;
-            _dayOptions = newDayOptions;
-          });
-        }
-      }
-    } catch (e) {
-      AppLogger.error('schedule', 'Error loading day data: $e');
+    final ctrl = ref.read(teacherScheduleControllerProvider);
+    final result = await ctrl.loadDayData();
+    if (result != null && mounted) {
+      setState(() {
+        _dayIdMap = result.dayIdMap;
+        _dayOptions = result.dayOptions;
+      });
     }
   }
 
   Future<void> _loadSemesterData() async {
-    try {
-      // ─── Try cache first (semester list rarely changes, cache 12h) ───
-      List<dynamic> semesterData;
-      final cachedSemester = await LocalCacheService.load(
-        'school_semester_data',
-        ttl: const Duration(hours: 12),
-      );
-
-      if (cachedSemester != null) {
-        semesterData = List<dynamic>.from(cachedSemester);
-        AppLogger.info('schedule', 'Semester list loaded from cache');
-      } else {
-        semesterData = await getIt<ApiScheduleService>().getSemester();
-        if (semesterData.isNotEmpty) {
-          LocalCacheService.save('school_semester_data', semesterData);
-        }
-      }
-
+    final ctrl = ref.read(teacherScheduleControllerProvider);
+    final result = await ctrl.loadSemesterData();
+    if (!mounted) return;
+    setState(() {
+      _semesterList = result.semesterList;
+    });
+    if (result.selectedSemester != null) {
       setState(() {
-        _semesterList = semesterData;
+        _selectedSemester = result.selectedSemester!;
       });
-
-      String? semesterId;
-
-      // ─── Try cached current-date-based semester (cache 6h) ───
-      try {
-        Map<String, dynamic> result;
-        final cachedDateBased = await LocalCacheService.load(
-          'school_current_semester',
-          ttl: const Duration(hours: 6),
-        );
-
-        if (cachedDateBased != null) {
-          result = Map<String, dynamic>.from(cachedDateBased);
-          AppLogger.info('schedule', 'Current semester loaded from cache');
-        } else {
-          result = await getIt<ApiScheduleService>().getDateBasedSemester();
-          if (result.isNotEmpty) {
-            LocalCacheService.save('school_current_semester', result);
-          }
-        }
-
-        if (result.isNotEmpty && result.containsKey('semester')) {
-          final targetSemesterName = result['semester'].toString();
-
-          final dateBasedSemester = semesterData.firstWhere((s) {
-            final name = (s['name'] ?? s['nama'] ?? '').toString();
-            return name.contains(targetSemesterName);
-          }, orElse: () => null);
-
-          if (dateBasedSemester != null) {
-            semesterId = dateBasedSemester['id'].toString();
-          }
-        }
-      } catch (e) {
-        AppLogger.error('schedule', 'Error fetching date based semester: $e');
-      }
-
-      // 2. Fallback to backend 'current' flag
-      if (semesterId == null) {
-        final currentSem = semesterData.firstWhere(
-          (s) =>
-              s['current'] == true ||
-              s['current'] == 1 ||
-              s['current'].toString() == '1',
-          orElse: () => null,
-        );
-
-        if (currentSem != null) {
-          semesterId = currentSem['id'].toString();
-        }
-      }
-
-      // 3. Last fallback
-      if (semesterId == null && semesterData.isNotEmpty) {
-        semesterId = semesterData.first['id'].toString();
-      }
-
-      if (semesterId != null && mounted) {
-        setState(() {
-          _selectedSemester = semesterId!;
-        });
-      }
-    } catch (e) {
-      AppLogger.error('schedule', 'Error loading semester data: $e');
     }
   }
 
   Future<void> _loadAcademicYearData() async {
-    try {
-      // ─── Read from AcademicYearProvider (already fetched by Dashboard) ───
-      final academicYearProvider = ref.read(academicYearRiverpod);
-
-      List<dynamic> academicYears = academicYearProvider.academicYears;
-
-      // Fallback: if provider is empty (e.g. deep link), fetch from API
-      if (academicYears.isEmpty) {
-        AppLogger.debug(
-          'schedule',
-          'AcademicYearProvider empty, fetching from API',
-        );
-        await academicYearProvider.fetchAcademicYears();
-        academicYears = academicYearProvider.academicYears;
-      } else {
-        AppLogger.info(
-          'schedule',
-          'Academic years loaded from provider (${academicYears.length} items)',
-        );
+    final ctrl = ref.read(teacherScheduleControllerProvider);
+    final result = await ctrl.loadAcademicYearData();
+    if (!mounted) return;
+    setState(() {
+      _academicYearList = result.academicYearList;
+      if (result.selectedAcademicYear != null) {
+        _selectedAcademicYear = result.selectedAcademicYear!;
       }
-
-      final globalSelectedYear = academicYearProvider.selectedAcademicYear;
-
-      setState(() {
-        _academicYearList = academicYears
-            .where(
-              (ay) => (ay['year'] ?? '').toString() != 'Status Kepegawaian',
-            )
-            .toList();
-
-        // 1. Prioritize Global Provider Selection
-        if (globalSelectedYear != null) {
-          _selectedAcademicYear = globalSelectedYear['year'].toString();
-        } else {
-          // 2. Fallback to existing logic if provider is empty
-          final currentAY = _academicYearList.firstWhere(
-            (ay) =>
-                ay['current'] == true ||
-                ay['current'] == 1 ||
-                ay['current'].toString() == '1',
-            orElse: () => null,
-          );
-
-          if (currentAY != null) {
-            _selectedAcademicYear = currentAY['year'].toString();
-          } else if (academicYears.isNotEmpty) {
-            _selectedAcademicYear = academicYears.last['year'].toString();
-          }
-        }
-      });
-    } catch (e) {
-      AppLogger.error('schedule', 'Error loading academic year data: $e');
-    }
+    });
   }
 
   String? _buildScheduleCacheKey() {
-    // Don't cache when filters or search are active
-    if (_selectedDayIds.isNotEmpty ||
-        _selectedClassId != null ||
-        _searchController.text.isNotEmpty ||
-        (_selectedFilterSemester != null &&
-            _selectedFilterSemester != _selectedSemester)) {
-      return null;
-    }
-    if (_teacherId.isEmpty) return null;
-
-    final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
-    if (_isHomeroomView && _selectedHomeroomClass != null) {
-      final classId = _selectedHomeroomClass!['id'].toString();
-      return 'schedule_homeroom_${classId}_${semesterToUse}_$_selectedAcademicYear';
-    }
-    return 'schedule_teacher_${_teacherId}_${semesterToUse}_$_selectedAcademicYear';
+    final ctrl = ref.read(teacherScheduleControllerProvider);
+    return ctrl.buildScheduleCacheKey(
+      teacherId: _teacherId,
+      selectedDayIds: _selectedDayIds,
+      selectedClassId: _selectedClassId,
+      searchText: _searchController.text,
+      selectedFilterSemester: _selectedFilterSemester,
+      selectedSemester: _selectedSemester,
+      selectedAcademicYear: _selectedAcademicYear,
+      isHomeroomView: _isHomeroomView,
+      selectedHomeroomClass: _selectedHomeroomClass,
+    );
   }
 
   Future<void> _forceRefresh() async {
@@ -603,46 +439,33 @@ class TeachingScheduleScreenState
     _memCachedSchedules = null;
     _memCachedClasses = null;
 
-    final cacheKey = _buildScheduleCacheKey();
-    if (cacheKey != null) {
-      await LocalCacheService.invalidate(cacheKey);
-    }
-    await LocalCacheService.clearStartingWith('schedule_');
+    final ctrl = ref.read(teacherScheduleControllerProvider);
+    await ctrl.invalidateScheduleCache(_buildScheduleCacheKey());
     _loadSchedule(useCache: false);
   }
 
-  /// Fetches the teacher's schedule from API with cache-first strategy.
-  /// Like `axios.get('/api/schedules')` in Vue with localStorage caching.
+  /// Fetches the teacher's schedule — cache-first, then fresh from API.
+  /// Delegates the actual network/cache work to [TeacherScheduleController];
+  /// this method only owns setState calls (screen layer concern).
   Future<void> _loadSchedule({bool useCache = true}) async {
     if (_teacherId.isEmpty) {
       setState(() => _isLoading = false);
       return;
     }
 
+    final ctrl = ref.read(teacherScheduleControllerProvider);
     final cacheKey = _buildScheduleCacheKey();
 
     // Step 1: Try loading from cache for instant display
     if (useCache && cacheKey != null) {
-      try {
-        final cached = await LocalCacheService.load(
-          cacheKey,
-          ttl: const Duration(hours: 3),
-        );
-        if (cached != null && mounted) {
-          final cachedData = Map<String, dynamic>.from(cached);
-          setState(() {
-            _scheduleList = List<dynamic>.from(cachedData['jadwal'] ?? []);
-            _availableClasses =
-                (cachedData['availableClasses'] as List<dynamic>?)
-                    ?.map((e) => Map<String, String>.from(e))
-                    .toList() ??
-                [];
-            _isLoading = false;
-          });
-          AppLogger.info('schedule', 'Schedule loaded from cache');
-        }
-      } catch (e) {
-        AppLogger.error('schedule', 'Schedule cache load failed: $e');
+      final cached = await ctrl.loadCachedSchedule(cacheKey);
+      if (cached.found && mounted) {
+        setState(() {
+          _scheduleList = cached.schedules;
+          _availableClasses = cached.availableClasses;
+          _isLoading = false;
+        });
+        AppLogger.info('schedule', 'Schedule loaded from cache');
       }
     }
 
@@ -653,62 +476,20 @@ class TeachingScheduleScreenState
     }
 
     // Step 3: Fetch fresh data from API
-    try {
-      // Use filter semester/year if set, otherwise use selected
-      final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
-      final academicYearToUse = _selectedAcademicYear;
+    final semesterToUse = _selectedFilterSemester ?? _selectedSemester;
+    final result = await ctrl.fetchScheduleFromApi(
+      teacherId: _teacherId,
+      semesterToUse: semesterToUse,
+      academicYearToUse: _selectedAcademicYear,
+      isHomeroomView: _isHomeroomView,
+      selectedHomeroomClass: _selectedHomeroomClass,
+    );
 
-      AppLogger.debug('schedule', 'FETCHING SCHEDULE WITH:');
-      AppLogger.debug('schedule', '- Teacher ID: $_teacherId');
-      AppLogger.debug('schedule', '- Semester: $semesterToUse');
-      AppLogger.debug('schedule', '- Academic Year: $academicYearToUse');
+    if (!mounted) return;
 
-      dynamic scheduleData;
-
-      if (_isHomeroomView && _selectedHomeroomClass != null) {
-        // Fetch schedule for the homeroom class
-        final classId = _selectedHomeroomClass!['id'].toString();
-        final result = await getIt<ApiScheduleService>().getSchedulesPaginated(
-          classId: classId,
-          semesterId: semesterToUse,
-          academicYearId: academicYearToUse,
-          limit: 100, // Fetch all for now
-        );
-        scheduleData = result['data'] ?? [];
-      } else {
-        // Fetch teaching schedule for the teacher
-        scheduleData = await getIt<ApiScheduleService>().getFilteredSchedule(
-          teacherId: _teacherId,
-          semester: semesterToUse,
-          academicYear: academicYearToUse,
-        );
-      }
-
-      final schedules = scheduleData is List ? scheduleData : [];
-
-      AppLogger.info(
-        'schedule',
-        'Total schedule items loaded: ${schedules.length}',
-      );
-
-      // Extract unique classes for filter
-      final uniqueClasses = <String, String>{};
-      for (var item in schedules) {
-        final id =
-            item['class_id']?.toString() ?? item['kelas_id']?.toString() ?? '';
-        final name =
-            item['class_name']?.toString() ??
-            item['kelas_nama']?.toString() ??
-            '';
-        if (id.isNotEmpty && name.isNotEmpty) {
-          uniqueClasses[id] = name;
-        }
-      }
-      final classes =
-          uniqueClasses.entries
-              .map((e) => {'id': e.key, 'name': e.value})
-              .toList()
-            ..sort((a, b) => a['name']!.compareTo(b['name']!));
+    if (result.isSuccess) {
+      final schedules = result.schedules!;
+      final classes = result.availableClasses!;
 
       setState(() {
         _scheduleList = schedules;
@@ -720,32 +501,25 @@ class TeachingScheduleScreenState
       _memCachedSchedules = schedules;
       _memCachedClasses = classes;
 
-      // Save to cache and persist the cache key for early loading next time
+      // Save to local cache + persist key for early loading next launch
       if (cacheKey != null) {
-        LocalCacheService.save(cacheKey, {
-          'jadwal': schedules,
-          'availableClasses': classes,
-        });
-        PreferencesService().setString(_prefKeyLastCacheKey, cacheKey);
+        ctrl.saveScheduleToCache(
+          cacheKey: cacheKey,
+          schedules: schedules,
+          availableClasses: classes,
+          prefKeyLastCacheKey: _prefKeyLastCacheKey,
+        );
       }
 
-      // Show tour
+      // Show tour after first successful load
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _checkAndShowTour();
-        }
+        if (mounted) _checkAndShowTour();
       });
-    } catch (e) {
-      AppLogger.error('schedule', 'Error load jadwal: $e');
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        // Only show error if no cached data displayed
-        if (!hasData) {
-          _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
-        }
+    } else {
+      setState(() => _isLoading = false);
+      // Only show error if no cached data was already displayed
+      if (!hasData) {
+        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(result.error!));
       }
     }
   }
@@ -865,364 +639,38 @@ class TeachingScheduleScreenState
     return filterChips;
   }
 
+  /// Opens the filter bottom sheet.
+  /// Delegates to [TeacherScheduleFilterSheet]; applies the result via callback.
   void _showFilterSheet() {
-    final languageProvider = ref.read(languageRiverpod);
-    final primary = _getPrimaryColor();
-
-    String getLocalizedDay(String dayRaw) {
-      final dayMap = {
-        'senin': {'en': 'Monday', 'id': 'Senin'},
-        'selasa': {'en': 'Tuesday', 'id': 'Selasa'},
-        'rabu': {'en': 'Wednesday', 'id': 'Rabu'},
-        'kamis': {'en': 'Thursday', 'id': 'Kamis'},
-        'jumat': {'en': 'Friday', 'id': 'Jumat'},
-        'jum\'at': {'en': 'Friday', 'id': 'Jumat'},
-        'sabtu': {'en': 'Saturday', 'id': 'Sabtu'},
-        'minggu': {'en': 'Sunday', 'id': 'Minggu'},
-      };
-      final key = dayRaw.toLowerCase();
-      return dayMap[key] != null
-          ? languageProvider.getTranslatedText(dayMap[key]!)
-          : dayRaw;
-    }
-
-    final List<String> tempDayIds = List.from(_selectedDayIds);
-    String? tempClassId = _selectedClassId;
-    String? tempSemester = _selectedFilterSemester ?? _selectedSemester;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          Widget buildSectionHeader(String title, IconData icon) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(icon, size: 15, color: primary),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: ColorUtils.slate900,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          Widget buildChip(String label, bool selected, VoidCallback onTap) {
-            return GestureDetector(
-              onTap: onTap,
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? primary.withValues(alpha: 0.12)
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: selected ? primary : ColorUtils.slate300,
-                    width: selected ? 1.5 : 1,
-                  ),
-                ),
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: selected ? primary : ColorUtils.slate600,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-              ),
-            );
-          }
-
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.55,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [primary, primary.withValues(alpha: 0.85)],
-                    ),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      // Handle bar
-                      Container(
-                        width: 40,
-                        height: 4,
-                        margin: EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.tune_rounded,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Filter Schedule',
-                                'id': 'Filter Jadwal',
-                              }),
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              setSheetState(() {
-                                tempDayIds.clear();
-                                tempClassId = null;
-                                tempSemester = _selectedSemester;
-                              });
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: Colors.white.withValues(
-                                alpha: 0.2,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                            ),
-                            child: Text(
-                              'Reset',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.all(AppSpacing.xl),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        buildSectionHeader(
-                          languageProvider.getTranslatedText({
-                            'en': 'Day',
-                            'id': 'Hari',
-                          }),
-                          Icons.calendar_today_rounded,
-                        ),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _dayOptions
-                              .where((d) => d != 'Semua Hari')
-                              .map((day) {
-                                final dayId = _dayIdMap[day] ?? '';
-                                final selected = tempDayIds.contains(dayId);
-                                return buildChip(
-                                  getLocalizedDay(day),
-                                  selected,
-                                  () => setSheetState(() {
-                                    if (selected) {
-                                      tempDayIds.remove(dayId);
-                                    } else {
-                                      tempDayIds.add(dayId);
-                                    }
-                                  }),
-                                );
-                              })
-                              .toList(),
-                        ),
-                        if (_availableClasses.isNotEmpty) ...[
-                          SizedBox(height: AppSpacing.xl),
-                          buildSectionHeader(
-                            languageProvider.getTranslatedText({
-                              'en': 'Class',
-                              'id': 'Kelas',
-                            }),
-                            Icons.class_rounded,
-                          ),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _availableClasses.map((cls) {
-                              final selected = tempClassId == cls['id'];
-                              return buildChip(
-                                cls['name'] ?? '',
-                                selected,
-                                () => setSheetState(() {
-                                  tempClassId = selected ? null : cls['id'];
-                                }),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                        if (_semesterList.isNotEmpty) ...[
-                          SizedBox(height: AppSpacing.xl),
-                          buildSectionHeader(
-                            languageProvider.getTranslatedText({
-                              'en': 'Semester',
-                              'id': 'Semester',
-                            }),
-                            Icons.school_rounded,
-                          ),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _semesterList.map((sem) {
-                              final semId = sem['id'].toString();
-                              final label =
-                                  sem['name'] ?? sem['nama'] ?? 'Semester';
-                              final selected = tempSemester == semId;
-                              return buildChip(
-                                label,
-                                selected,
-                                () => setSheetState(() {
-                                  tempSemester = selected ? null : semId;
-                                }),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                        SizedBox(height: AppSpacing.sm),
-                      ],
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border(top: BorderSide(color: ColorUtils.slate200)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ColorUtils.slate900.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => AppNavigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 13),
-                              side: BorderSide(color: ColorUtils.slate300),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              AppLocalizations.cancel.tr,
-                              style: TextStyle(
-                                color: ColorUtils.slate600,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              AppNavigator.pop(context);
-                              final needsReload =
-                                  tempSemester != _selectedSemester;
-                              setState(() {
-                                _selectedDayIds = List<String>.from(tempDayIds);
-                                _selectedClassId = tempClassId;
-                                _selectedFilterSemester = tempSemester;
-                                if (tempSemester != null) {
-                                  _selectedSemester = tempSemester!;
-                                }
-                                _checkActiveFilter();
-                              });
-                              if (needsReload) _loadSchedule();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primary,
-                              padding: EdgeInsets.symmetric(vertical: 13),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Apply',
-                                'id': 'Terapkan',
-                              }),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
+      builder: (_) => TeacherScheduleFilterSheet(
+        primaryColor: _getPrimaryColor(),
+        dayOptions: _dayOptions,
+        dayIdMap: _dayIdMap,
+        availableClasses: _availableClasses,
+        semesterList: _semesterList,
+        currentSemester: _selectedSemester,
+        selectedDayIds: _selectedDayIds,
+        selectedClassId: _selectedClassId,
+        selectedFilterSemester: _selectedFilterSemester,
+        languageProvider: ref.read(languageRiverpod),
+        onApply: ({
+          required List<String> dayIds,
+          required String? classId,
+          required String? semester,
+          required bool needsReload,
+        }) {
+          setState(() {
+            _selectedDayIds = dayIds;
+            _selectedClassId = classId;
+            _selectedFilterSemester = semester;
+            if (semester != null) _selectedSemester = semester;
+            _checkActiveFilter();
+          });
+          if (needsReload) _loadSchedule();
         },
       ),
     );
@@ -1238,238 +686,22 @@ class TeachingScheduleScreenState
   }
 
   Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor('guru');
+    return ref.read(teacherScheduleControllerProvider).getPrimaryColor();
   }
 
   LinearGradient _getCardGradient() {
-    final primaryColor = _getPrimaryColor();
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
-    );
-  }
-
-  String _normalizeDayName(String name) {
-    name = name.trim().toLowerCase();
-    if (name.contains('senin') || name.contains('monday')) return 'Senin';
-    if (name.contains('selasa') || name.contains('tuesday')) return 'Selasa';
-    if (name.contains('rabu') || name.contains('wednesday')) return 'Rabu';
-    if (name.contains('kamis') || name.contains('thursday')) return 'Kamis';
-    if (name.contains('jumat') || name.contains('friday')) return 'Jumat';
-    if (name.contains('sabtu') || name.contains('saturday')) return 'Sabtu';
-    if (name.contains('minggu') || name.contains('sunday')) return 'Minggu';
-    return name;
-  }
-
-  List<String> _extractDayIds(dynamic schedule) {
-    final List<String> ids = [];
-    final rawDaysIds = schedule['days_ids'];
-
-    if (rawDaysIds != null) {
-      if (rawDaysIds is List) {
-        ids.addAll(rawDaysIds.map((id) => id.toString()));
-      } else if (rawDaysIds is String) {
-        try {
-          final clean = rawDaysIds
-              .replaceAll('[', '')
-              .replaceAll(']', '')
-              .trim();
-          if (clean.isNotEmpty) {
-            ids.addAll(
-              clean
-                  .split(',')
-                  .map((id) => id.trim())
-                  .where((id) => id.isNotEmpty),
-            );
-          }
-        } catch (e) {} // ignore: empty_catches
-      }
-    }
-
-    // Fallback
-    if (ids.isEmpty) {
-      final fallbackId = schedule['day_id'] ?? schedule['hari_id'];
-      if (fallbackId != null) {
-        ids.add(fallbackId.toString());
-      }
-    }
-    return ids;
+    return ref.read(teacherScheduleControllerProvider).getCardGradient();
   }
 
   List<dynamic> _getFilteredSchedules() {
-    final searchTerm = _searchController.text.toLowerCase();
-    final now = DateTime.now();
-
-    // Standard mappings for maximum stability
-    final dayNamesISO = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ];
-    final dayOrder = [
-      'Senin',
-      'Selasa',
-      'Rabu',
-      'Kamis',
-      'Jumat',
-      'Sabtu',
-      'Minggu',
-    ];
-    final weekdayToIndo = {
-      1: 'Senin',
-      2: 'Selasa',
-      3: 'Rabu',
-      4: 'Kamis',
-      5: 'Jumat',
-      6: 'Sabtu',
-      7: 'Minggu',
-    };
-
-    final currentDayISO =
-        dayNamesISO[now.weekday - 1]; // 1-based (Mon=1, ..., Sun=7)
-    final currentDayIndo = _normalizeDayName(currentDayISO);
-
-    // Find the current day ID from the dynamic map with robust normalized matching
-    String? currentDayId;
-    _dayIdMap.forEach((key, value) {
-      if (_normalizeDayName(key) == currentDayIndo) {
-        currentDayId = value.toString();
-      }
-    });
-
-    final filtered = _scheduleList.where((schedule) {
-      final subjectName =
-          schedule['mata_pelajaran_nama']?.toString().toLowerCase() ?? '';
-      final className = schedule['kelas_nama']?.toString().toLowerCase() ?? '';
-
-      final daysIds = _extractDayIds(schedule);
-
-      final dayNamesStr = daysIds
-          .map((id) {
-            final entry = _dayIdMap.entries.firstWhere(
-              (e) => e.value.toString() == id,
-              orElse: () => MapEntry('', ''),
-            );
-            return entry.key.isNotEmpty
-                ? entry.key
-                : (weekdayToIndo[int.tryParse(id) ?? 0] ?? '');
-          })
-          .where((k) => k.isNotEmpty)
-          .join(' ')
-          .toLowerCase();
-
-      final matchesSearch =
-          searchTerm.isEmpty ||
-          subjectName.contains(searchTerm) ||
-          className.contains(searchTerm) ||
-          dayNamesStr.contains(searchTerm);
-
-      // Filter by hari
-      final matchesDay =
-          _selectedDayIds.isEmpty ||
-          _selectedDayIds.any((selectedId) {
-            return daysIds.any(
-              (dId) => dId.toString() == selectedId.toString(),
-            );
-          });
-
-      // Filter by class
-      final matchesClass =
-          _selectedClassId == null ||
-          _selectedClassId!.isEmpty ||
-          (schedule['class_id']?.toString() == _selectedClassId ||
-              schedule['kelas_id']?.toString() == _selectedClassId);
-
-      return matchesSearch && matchesDay && matchesClass;
-    }).toList();
-
-    // Sort with multiple fallback layers for "Today" prioritization
-    filtered.sort((a, b) {
-      final dayIdA = _extractDayIds(a);
-      final dayIdB = _extractDayIds(b);
-
-      // Robust "Today" detection
-      bool belongsToToday(Map<String, dynamic> item, List<String> ids) {
-        // Tier 1: Direct name field check (hari_nama)
-        final dayName = (item['hari_nama'] ?? item['day_name'] ?? '')
-            .toString();
-        if (dayName.isNotEmpty &&
-            _normalizeDayName(dayName) == currentDayIndo) {
-          return true;
-        }
-
-        // Tier 2: ID match using dynamically loaded map
-        if (currentDayId != null && ids.any((id) => id == currentDayId)) {
-          return true;
-        }
-
-        // Tier 3: Direct ISO weekday number match (the ultimate fallback)
-        if (ids.any((id) => id == now.weekday.toString())) {
-          return true;
-        }
-
-        // Tier 4: Map key normalized match
-        return ids.any((id) {
-          final entry = _dayIdMap.entries.firstWhere(
-            (e) => e.value.toString() == id,
-            orElse: () => MapEntry('', ''),
-          );
-          return entry.key.isNotEmpty &&
-              _normalizeDayName(entry.key) == currentDayIndo;
-        });
-      }
-
-      final isTodayA = belongsToToday(a, dayIdA);
-      final isTodayB = belongsToToday(b, dayIdB);
-
-      // 1. Priority: Today First
-      if (isTodayA && !isTodayB) return -1;
-      if (!isTodayA && isTodayB) return 1;
-
-      // 2. Secondary: Sequential Day-of-Week (Mon -> Sun)
-      int getMinDayRank(List<String> ids) {
-        if (ids.isEmpty) return 99;
-        int minIdx = 99;
-        for (var id in ids) {
-          String name = '';
-          final entry = _dayIdMap.entries.firstWhere(
-            (e) => e.value.toString() == id,
-            orElse: () => MapEntry('', ''),
-          );
-          if (entry.key.isNotEmpty) {
-            name = _normalizeDayName(entry.key);
-          } else {
-            // Mapping failed, try standard ISO assumption
-            name = weekdayToIndo[int.tryParse(id) ?? 0] ?? '';
-          }
-
-          final int idx = dayOrder.indexOf(name);
-          if (idx != -1 && idx < minIdx) minIdx = idx;
-        }
-        return minIdx;
-      }
-
-      final rankA = getMinDayRank(dayIdA);
-      final rankB = getMinDayRank(dayIdB);
-      if (rankA != rankB) return rankA.compareTo(rankB);
-
-      // 3. Tertiary: Item Density (Fewer days first)
-      if (dayIdA.length != dayIdB.length) {
-        return dayIdA.length.compareTo(dayIdB.length);
-      }
-
-      // 4. Quaternary: Chronological (Start Time)
-      final timeA = (a['jam_mulai'] ?? a['start_time'] ?? '00:00').toString();
-      final timeB = (b['jam_mulai'] ?? b['start_time'] ?? '00:00').toString();
-      return timeA.compareTo(timeB);
-    });
-
-    return filtered;
+    final ctrl = ref.read(teacherScheduleControllerProvider);
+    return ctrl.getFilteredSchedules(
+      scheduleList: _scheduleList,
+      searchText: _searchController.text,
+      selectedDayIds: _selectedDayIds,
+      selectedClassId: _selectedClassId,
+      dayIdMap: _dayIdMap,
+    );
   }
 
   Future<void> _checkAndShowTour() async {

@@ -1066,6 +1066,102 @@ class AdminScheduleController {
     return 'No Day';
   }
 
+  /// Filters [scheduleList] client-side by search text and the active filter
+  /// fields (teacher, class, day, lesson hour). Semester and academic year are
+  /// handled server-side so they are not re-checked here.
+  ///
+  /// Like a Laravel Collection filter() call — pure data transformation.
+  List<dynamic> getFilteredSchedules({
+    required List<dynamic> scheduleList,
+    required List<dynamic> dayList,
+    required String searchText,
+    required String? selectedTeacherId,
+    required String? selectedClassId,
+    required String? selectedDayId,
+    required String? selectedJamPelajaran,
+  }) {
+    final searchTerm = searchText.toLowerCase();
+    return scheduleList.where((schedule) {
+      final subjectName = schedule['subject_name']?.toString().toLowerCase() ??
+          schedule['mata_pelajaran_nama']?.toString().toLowerCase() ??
+          '';
+      final teacherName = schedule['teacher_name']?.toString().toLowerCase() ??
+          schedule['guru_nama']?.toString().toLowerCase() ??
+          '';
+      final className = schedule['class_name']?.toString().toLowerCase() ??
+          schedule['kelas_nama']?.toString().toLowerCase() ??
+          '';
+
+      // Build a searchable day-names string from IDs.
+      final daysIds = [];
+      if (schedule['days_ids'] is List) {
+        daysIds.addAll(schedule['days_ids']);
+      } else if (schedule['day_id'] != null) {
+        daysIds.add(schedule['day_id']);
+      }
+      final dayNamesString = daysIds.map((id) {
+        final d = dayList.firstWhere(
+          (element) => element['id'].toString() == id.toString(),
+          orElse: () => <String, dynamic>{},
+        );
+        return ((d as Map).isNotEmpty
+            ? (d['name'] ?? d['nama'] ?? '')
+            : ''
+        ).toString().toLowerCase();
+      }).join(' ');
+
+      final matchesSearch = searchTerm.isEmpty ||
+          subjectName.contains(searchTerm) ||
+          teacherName.contains(searchTerm) ||
+          className.contains(searchTerm) ||
+          dayNamesString.contains(searchTerm);
+
+      // Teacher filter
+      bool matchesGuru = true;
+      if (selectedTeacherId != null) {
+        final teacherId = schedule['teacher_id']?.toString() ??
+            schedule['guru_id']?.toString();
+        matchesGuru = teacherId == selectedTeacherId;
+      }
+
+      // Class filter
+      bool matchesKelas = true;
+      if (selectedClassId != null) {
+        final classId = schedule['class_id']?.toString() ??
+            schedule['kelas_id']?.toString();
+        matchesKelas = classId == selectedClassId;
+      }
+
+      // Day filter
+      bool matchesHari = true;
+      if (selectedDayId != null) {
+        final ids = [];
+        if (schedule['days_ids'] is List) {
+          ids.addAll(schedule['days_ids']);
+        } else if (schedule['day_id'] != null) {
+          ids.add(schedule['day_id']);
+        }
+        matchesHari =
+            ids.any((id) => id.toString() == selectedDayId.toString());
+      }
+
+      // Lesson-hour filter
+      bool matchesJamPelajaran = true;
+      if (selectedJamPelajaran != null) {
+        final lessonHour = schedule['lesson_hour'] as Map<String, dynamic>?;
+        final hourNumber = lessonHour?['hour_number']?.toString() ??
+            lessonHour?['jam_ke']?.toString();
+        matchesJamPelajaran = hourNumber == selectedJamPelajaran;
+      }
+
+      return matchesSearch &&
+          matchesGuru &&
+          matchesKelas &&
+          matchesHari &&
+          matchesJamPelajaran;
+    }).toList();
+  }
+
   /// Returns true if any non-default filter is active.
   bool checkActiveFilter({
     required String? selectedDayId,

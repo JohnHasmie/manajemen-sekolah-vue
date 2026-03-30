@@ -83,7 +83,7 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
                 'en':
                     'The following schedules conflict with each other. Please select one to delete:',
                 'id':
-                    'Jadwal berikut bentrok satu sama lain. Pilih salah satu untuk dihapus:',
+                    'Jadwal berikut konflik satu sama lain. Pilih salah satu untuk dihapus:',
               }),
               style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
             ),

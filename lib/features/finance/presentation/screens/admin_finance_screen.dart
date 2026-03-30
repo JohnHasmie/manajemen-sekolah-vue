@@ -11,19 +11,17 @@
 // In Laravel terms, this consumes PaymentTypeController, BillController,
 // and PaymentController endpoints.
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
+import 'package:manajemensekolah/features/finance/presentation/controllers/admin_finance_controller.dart';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
-import 'package:manajemensekolah/features/finance/data/finance_service.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -44,7 +42,8 @@ import 'package:manajemensekolah/features/finance/presentation/widgets/pending_p
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_navigation_bar.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_pending_section.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/generate_bills_dialog.dart';
-import 'package:manajemensekolah/features/finance/presentation/widgets/finance_info_row.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/finance_filter_sheet.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/payment_proof_dialog.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/verification_dialog.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_dashboard_stats.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_generated_payment_types_section.dart';
@@ -71,27 +70,18 @@ class FinanceScreen extends ConsumerStatefulWidget {
 ///
 /// setState() triggers re-render like Vue's reactivity system.
 class FinanceScreenState extends ConsumerState<FinanceScreen> {
-  final ApiService _apiService = ApiService();
+  // Convenience getter — delegates to the extracted controller, mirroring
+  // the pattern used in grade_book_screen.dart.
+  // Like a Vue computed: `get ctrl() { return this.$store.finance }`.
+  AdminFinanceController get _ctrl =>
+      ref.read(adminFinanceControllerProvider);
 
   // Convenience getter so any method in this State can call languageProvider
   // without needing ref.read() boilerplate everywhere.
   // Like a computed property in Vue: `get lang() { return this.$i18n }`.
   LanguageProvider get languageProvider => ref.read(languageRiverpod);
 
-  String _formatCurrency(dynamic amount) {
-    if (amount == null) return 'Rp 0';
-    try {
-      final double value = double.parse(amount.toString());
-      final formatter = NumberFormat.currency(
-        locale: 'id_ID',
-        symbol: 'Rp ',
-        decimalDigits: 0,
-      );
-      return formatter.format(value);
-    } catch (e) {
-      return 'Rp 0';
-    }
-  }
+  String _formatCurrency(dynamic amount) => _ctrl.formatCurrency(amount);
 
   List<dynamic> _paymentTypeList = [];
   List<dynamic> _billList = [];
@@ -403,356 +393,35 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     return filterChips;
   }
 
+  // Delegates to the extracted [FinanceFilterSheet] widget.
+  // Temporary selection state is owned by the widget; it calls [onApply]
+  // with the new (status, period) pair when the admin taps "Apply".
   void _showFilterSheet() {
-    final languageProvider = ref.read(languageRiverpod);
-
-    // Temporary state for bottom sheet
-    String? tempSelectedStatus = _selectedStatusFilter;
-    String? tempSelectedPeriod = _selectedPeriodFilter;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.6,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // Header - Gradient (Pattern #11)
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      _getPrimaryColor(),
-                      _getPrimaryColor().withValues(alpha: 0.85),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.tune_rounded, color: Colors.white, size: 22),
-                        SizedBox(width: 10),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Filter',
-                            'id': 'Filter',
-                          }),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setModalState(() {
-                          tempSelectedStatus = null;
-                          tempSelectedPeriod = null;
-                        });
-                      },
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Reset',
-                          'id': 'Reset',
-                        }),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Filter Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Status Filter
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.toggle_on_rounded,
-                            size: 18,
-                            color: ColorUtils.slate700,
-                          ),
-                          SizedBox(width: AppSpacing.sm),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Status',
-                              'id': 'Status',
-                            }),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: ColorUtils.slate900,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: AppSpacing.md),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children:
-                            [
-                              {
-                                'value': 'aktif',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'Active',
-                                  'id': 'Aktif',
-                                }),
-                              },
-                              {
-                                'value': 'non_aktif',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'Inactive',
-                                  'id': 'Non-Aktif',
-                                }),
-                              },
-                            ].map((item) {
-                              final isSelected =
-                                  tempSelectedStatus == item['value'];
-                              return FilterChip(
-                                label: Text(item['label']!),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    tempSelectedStatus = selected
-                                        ? item['value']
-                                        : null;
-                                  });
-                                },
-                                backgroundColor: Colors.white,
-                                selectedColor: _getPrimaryColor().withValues(
-                                  alpha: 0.15,
-                                ),
-                                checkmarkColor: _getPrimaryColor(),
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : ColorUtils.slate300,
-                                  width: 1,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : ColorUtils.slate700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                ),
-                              );
-                            }).toList(),
-                      ),
-
-                      SizedBox(height: AppSpacing.xl),
-                      Divider(color: ColorUtils.slate100),
-                      SizedBox(height: AppSpacing.sm),
-
-                      // Periode Filter
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_month_rounded,
-                            size: 18,
-                            color: ColorUtils.slate700,
-                          ),
-                          SizedBox(width: AppSpacing.sm),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Payment Period',
-                              'id': 'Periode Pembayaran',
-                            }),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: ColorUtils.slate900,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: AppSpacing.md),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children:
-                            [
-                              {
-                                'value': 'bulanan',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'Monthly',
-                                  'id': 'Bulanan',
-                                }),
-                              },
-                              {
-                                'value': 'tahunan',
-                                'label': languageProvider.getTranslatedText({
-                                  'en': 'Yearly',
-                                  'id': 'Tahunan',
-                                }),
-                              },
-                            ].map((item) {
-                              final isSelected =
-                                  tempSelectedPeriod == item['value'];
-                              return FilterChip(
-                                label: Text(item['label']!),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    tempSelectedPeriod = selected
-                                        ? item['value']
-                                        : null;
-                                  });
-                                },
-                                backgroundColor: Colors.white,
-                                selectedColor: _getPrimaryColor().withValues(
-                                  alpha: 0.15,
-                                ),
-                                checkmarkColor: _getPrimaryColor(),
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : ColorUtils.slate300,
-                                  width: 1,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? _getPrimaryColor()
-                                      : ColorUtils.slate700,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                ),
-                              );
-                            }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Footer
-              Container(
-                padding: EdgeInsets.all(AppSpacing.xl),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: ColorUtils.slate200)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ColorUtils.slate900.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => AppNavigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          side: BorderSide(color: ColorUtils.slate300),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Cancel',
-                            'id': 'Batal',
-                          }),
-                          style: TextStyle(color: ColorUtils.slate600),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          AppNavigator.pop(context);
-                          setState(() {
-                            _selectedStatusFilter = tempSelectedStatus;
-                            _selectedPeriodFilter = tempSelectedPeriod;
-                            _checkActiveFilter();
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: _getPrimaryColor(),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Apply Filter',
-                            'id': 'Terapkan',
-                          }),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (context) => FinanceFilterSheet(
+        currentStatus: _selectedStatusFilter,
+        currentPeriod: _selectedPeriodFilter,
+        languageProvider: ref.read(languageRiverpod),
+        primaryColor: _getPrimaryColor(),
+        onApply: (status, period) {
+          setState(() {
+            _selectedStatusFilter = status;
+            _selectedPeriodFilter = period;
+            _checkActiveFilter();
+          });
+        },
       ),
     );
   }
 
-  String? _buildFinanceCacheKey() {
-    // Don't cache when filters or search are active
-    if (_selectedStatusFilter != null ||
-        _selectedPeriodFilter != null ||
-        _searchController.text.isNotEmpty) {
-      return null;
-    }
-    final academicYearProvider = ref.read(academicYearRiverpod);
-    final yearId =
-        academicYearProvider.selectedAcademicYear?['id']?.toString() ?? 'all';
-    return 'finance_data_$yearId';
-  }
+  String? _buildFinanceCacheKey() => _ctrl.buildFinanceCacheKey(
+        selectedStatusFilter: _selectedStatusFilter,
+        selectedPeriodFilter: _selectedPeriodFilter,
+        searchText: _searchController.text,
+      );
 
   Future<void> _forceRefresh() async {
     final cacheKey = _buildFinanceCacheKey();
@@ -808,7 +477,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       }
     }
 
-    // Step 2: Show skeleton only if no cached data displayed
+    // Step 2: Show skeleton only if no cached data is already displayed
     final hasData =
         _paymentTypeList.isNotEmpty ||
         _billList.isNotEmpty ||
@@ -820,23 +489,46 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       });
     }
 
-    // Step 3: Fetch fresh data from API
+    // Step 3: Fetch fresh data via controller methods (parallel)
     try {
-      await Future.wait([
-        _loadPaymentTypes(),
-        _loadTagihan(),
-        _loadPendingPayments(),
-        _loadDashboardData(),
-        _loadClassData(),
+      final results = await Future.wait([
+        _ctrl.loadPaymentTypes(),
+        _ctrl.loadBills(
+          page: 1,
+          perPage: _perPage,
+          statusFilter: _selectedStatusFilter,
+        ),
+        _ctrl.loadPendingPayments(page: 1, perPage: _pendingPerPage),
+        _ctrl.loadDashboardData(),
+        _ctrl.loadClassData(),
       ]);
+
+      final ptResult = results[0] as LoadPaymentTypesResult;
+      final billResult = results[1] as LoadBillsResult;
+      final pendingResult = results[2] as LoadPendingPaymentsResult;
+      final dashResult = results[3] as LoadDashboardResult;
+      final classResult = results[4] as LoadClassDataResult;
 
       if (mounted) {
         setState(() {
+          _paymentTypeList = ptResult.paymentTypeList;
+          _billList = billResult.bills;
+          _hasMoreData = billResult.hasMoreData;
+          _currentPage = 1;
+          _pendingPaymentList = pendingResult.pendingPaymentList;
+          _totalPendingPayments = pendingResult.totalPendingPayments;
+          _hasMorePending = pendingResult.hasMorePending;
+          _pendingPage = 1;
+          _dashboardData = dashResult.dashboardData;
+          _classList = classResult.classList;
+          _studentList = classResult.studentList;
+          _studentsByClass = classResult.studentsByClass;
+          _billsByStudent = classResult.billsByStudent;
           _isLoading = false;
         });
       }
 
-      // Save to cache (non-blocking)
+      // Persist to cache (non-blocking)
       if (cacheKey != null) {
         LocalCacheService.save(cacheKey, {
           'paymentTypes': _paymentTypeList,
@@ -855,7 +547,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          // Only show error if no cached data displayed
           if (!hasData) {
             _errorMessage = ErrorUtils.getFriendlyMessage(error);
           }
@@ -864,140 +555,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
   }
 
-  // Method to load class and student data
-  Future<void> _loadClassData() async {
-    try {
-      final academicYearProvider = ref.read(academicYearRiverpod);
-      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
-          ?.toString();
+  // _loadClassData and _loadBillsForStudents have been moved to
+  // AdminFinanceController. The screen uses _ctrl.loadClassData() directly
+  // inside _loadData().
 
-      // Load class data
-      String url = '/classes?limit=1000';
-      if (academicYearId != null) {
-        url += '&academic_year_id=$academicYearId';
-      }
-
-      final classResponse = await _apiService.get(url);
-      if (mounted) {
-        setState(() {
-          if (classResponse is Map && classResponse.containsKey('data')) {
-            _classList = classResponse['data'] is List
-                ? classResponse['data']
-                : [];
-          } else {
-            _classList = classResponse is List ? classResponse : [];
-          }
-        });
-      }
-
-      // Load student data
-      final studentResponse = await _apiService.get('/students?limit=1000');
-      final List<dynamic> allStudents;
-      if (studentResponse is Map && studentResponse.containsKey('data')) {
-        allStudents = studentResponse['data'] is List
-            ? studentResponse['data']
-            : [];
-      } else {
-        allStudents = studentResponse is List ? studentResponse : [];
-      }
-
-      // Group students by class
-      final Map<String, List<dynamic>> studentsByClass = {};
-      for (var student in allStudents) {
-        String? classId = student['class_id']?.toString();
-        // Fallback to nested class object if class_id is null (new schema)
-        if (classId == null && student['class'] != null) {
-          classId = student['class']['id']?.toString();
-        }
-
-        if (classId != null) {
-          if (!studentsByClass.containsKey(classId)) {
-            studentsByClass[classId] = [];
-          }
-          studentsByClass[classId]!.add(student);
-        }
-      }
-
-      if (mounted) {
-        setState(() {
-          _studentsByClass = studentsByClass;
-          _studentList = allStudents;
-        });
-      }
-
-      // Load bills for each student
-      await _loadBillsForStudents(allStudents);
-    } catch (error) {
-      AppLogger.error('finance', error);
-      if (mounted) {
-        SnackBarUtils.showError(
-          context,
-          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
-        );
-      }
-    }
-  }
-
-  Future<void> _loadBillsForStudents(List<dynamic> studentList) async {
-    try {
-      // Fetch all bills in a single API call instead of one per student
-      final billsResponse = await _apiService.get('/bills?limit=10000');
-
-      List<dynamic> allBills = [];
-      if (billsResponse is Map<String, dynamic> &&
-          billsResponse.containsKey('data')) {
-        allBills = billsResponse['data'] is List
-            ? billsResponse['data']
-            : [];
-      } else if (billsResponse is List) {
-        allBills = billsResponse;
-      }
-
-      // Group bills by student_id client-side
-      final Map<String, List<dynamic>> billsByStudent = {};
-      for (var bill in allBills) {
-        final studentId = bill['student_id']?.toString();
-        if (studentId != null) {
-          billsByStudent.putIfAbsent(studentId, () => []).add(bill);
-        }
-      }
-
-      if (mounted) {
-        setState(() {
-          _billsByStudent = billsByStudent;
-        });
-      }
-    } catch (error) {
-      AppLogger.error('finance', error);
-    }
-  }
-
-  // Helper method for parsing target/goal
-  Map<String, dynamic> _parseGoal(dynamic goalData) {
-    if (goalData == null) {
-      return {};
-    }
-
-    if (goalData is Map<String, dynamic>) {
-      return goalData;
-    }
-
-    if (goalData is String) {
-      try {
-        return json.decode(goalData) as Map<String, dynamic>;
-      } catch (e) {
-        AppLogger.error('finance', e);
-        return {};
-      }
-    }
-
-    return {};
-  }
-
-  String _getGoalDescription(dynamic goalData) {
-    final parsedGoal = _parseGoal(goalData);
-    return parsedGoal['description'] ?? 'Tujuan pembayaran';
-  }
+  String _getGoalDescription(dynamic goalData) =>
+      _ctrl.getGoalDescription(goalData);
 
   void _showTargetSelectionModal({
     Map<String, dynamic>? paymentType,
@@ -1017,121 +580,41 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  Future<void> _loadPaymentTypes() async {
-    try {
-      final response = await _apiService.get('/payment-types');
-      final List<dynamic> rawData;
-      if (response is Map && response.containsKey('data')) {
-        rawData = response['data'] is List ? response['data'] : [];
-      } else {
-        rawData = response is List ? response : [];
-      }
-
-      if (mounted) {
-        setState(() {
-          _paymentTypeList = rawData.map((item) {
-            if (item is Map<String, dynamic>) {
-              final newItem = Map<String, dynamic>.from(item);
-
-              // Map Status
-              if (newItem['status'] == 'active') {
-                newItem['status'] = 'aktif';
-              } else if (newItem['status'] == 'inactive') {
-                newItem['status'] = 'non-aktif';
-              }
-
-              // Map Periode (Normalize to lowercase / Indonesian)
-              final period = newItem['periode']?.toString().toUpperCase();
-              if (period == 'MONTHLY') {
-                newItem['periode'] = 'bulanan';
-              } else if (period == 'YEARLY') {
-                newItem['periode'] = 'tahunan';
-              } else if (period == 'SEMESTER') {
-                newItem['periode'] = 'semester';
-              } else if (period == 'ONCE') {
-                newItem['periode'] = 'sekali bayar';
-              } else if (newItem['periode'] != null) {
-                // Ensure lowercase for consistency if it was 'Bulanan' etc
-                newItem['periode'] = newItem['periode']
-                    .toString()
-                    .toLowerCase();
-              }
-
-              return newItem;
-            }
-            return item;
-          }).toList();
-        });
-      }
-    } catch (error) {
-      AppLogger.error('finance', error);
-      if (mounted) {
-        SnackBarUtils.showError(
-          context,
-          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
-        );
-      }
-    }
-  }
+  // _loadPaymentTypes has been moved to AdminFinanceController.loadPaymentTypes().
+  // The screen applies results via _loadData().
 
   Future<void> _loadTagihan({bool resetPage = true}) async {
-    try {
-      if (resetPage) {
-        _currentPage = 1;
-        _billList = [];
-        _hasMoreData = true;
-      }
+    if (resetPage) {
+      _currentPage = 1;
+      _billList = [];
+      _hasMoreData = true;
+    }
 
+    setState(() {
+      _isLoading = resetPage;
+      _isLoadingMore = !resetPage;
+    });
+
+    final result = await _ctrl.loadBills(
+      page: _currentPage,
+      perPage: _perPage,
+      statusFilter: _selectedStatusFilter,
+    );
+
+    if (mounted) {
       setState(() {
-        _isLoading = resetPage;
-        _isLoadingMore = !resetPage;
+        if (result.error != null) {
+          SnackBarUtils.showError(
+            context,
+            '${AppLocalizations.failedToLoad.tr}: ${result.error}',
+          );
+        } else {
+          _billList.addAll(result.bills);
+          _hasMoreData = result.hasMoreData;
+        }
+        _isLoading = false;
+        _isLoadingMore = false;
       });
-
-      final res = await FinanceService.getBillsPaginated(
-        page: _currentPage,
-        limit: _perPage,
-        status: _selectedStatusFilter,
-      );
-
-      if (res['success'] == true) {
-        final List<dynamic> pageData = res['data'] ?? [];
-        final Map<String, dynamic> pagination =
-            (res['pagination'] as Map?)?.cast<String, dynamic>() ?? {};
-
-        if (mounted) {
-          setState(() {
-            _billList.addAll(pageData);
-            _hasMoreData =
-                pagination['has_next_page'] ?? (pageData.length == _perPage);
-          });
-        }
-      } else if (res.containsKey('data')) {
-        final List<dynamic> pageData = res['data'] ?? [];
-        final Map<String, dynamic> pagination =
-            (res['pagination'] as Map?)?.cast<String, dynamic>() ?? {};
-        if (mounted) {
-          setState(() {
-            _billList.addAll(pageData);
-            _hasMoreData =
-                pagination['has_next_page'] ?? (pageData.length == _perPage);
-          });
-        }
-      }
-    } catch (error) {
-      AppLogger.error('finance', error);
-      if (mounted) {
-        SnackBarUtils.showError(
-          context,
-          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _isLoadingMore = false;
-        });
-      }
     }
   }
 
@@ -1143,174 +626,32 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Future<void> _loadMorePembayaranPending() async {
     if (!_hasMorePending) return;
-    setState(() {
-      _isLoadingMorePending = true;
-    });
-    await _loadPendingPayments(loadMore: true);
-    setState(() {
-      _isLoadingMorePending = false;
-    });
-  }
-
-  Future<void> _loadPendingPayments({bool loadMore = false}) async {
-    try {
-      if (!loadMore) {
-        setState(() {
-          _pendingPage = 1;
-          _hasMorePending = true;
-        });
-      } else {
-        _pendingPage++;
-      }
-
-      final academicYearProvider = ref.read(academicYearRiverpod);
-      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
-          ?.toString();
-
-      String url =
-          '/payments?status=pending&limit=$_pendingPerPage&page=$_pendingPage';
-      if (academicYearId != null) {
-        url += '&academic_year_id=$academicYearId';
-      }
-
-      final response = await _apiService.get(url);
-      if (mounted) {
-        setState(() {
-          final List<dynamic> rawList;
-          if (response is Map && response.containsKey('data')) {
-            rawList = response['data'] is List ? response['data'] : [];
-            // Parse total from pagination
-            if (response.containsKey('total')) {
-              _totalPendingPayments =
-                  int.tryParse(response['total'].toString()) ?? 0;
-            } else if (response.containsKey('meta') &&
-                response['meta'] is Map) {
-              _totalPendingPayments =
-                  int.tryParse(response['meta']['total'].toString()) ?? 0;
-            }
-          } else {
-            rawList = response is List ? response : [];
-            if (!loadMore) {
-              _totalPendingPayments = rawList.length; // Fallback if no meta
-            }
-          }
-
-          if (rawList.length < _pendingPerPage) {
-            _hasMorePending = false;
-          }
-
-          final mappedList = rawList.map((item) {
-            if (item is Map<String, dynamic>) {
-              final newItem = Map<String, dynamic>.from(item);
-              final bill = newItem['bill'] ?? {};
-              final student = bill['student'] ?? {};
-              final paymentType = bill['payment_type'] ?? {};
-
-              // Map nested data to flat keys used by UI
-              newItem['siswa_nama'] ??= student['name'];
-              newItem['jenis_pembayaran_nama'] ??= paymentType['name'];
-
-              // Safe extraction of class name
-              if (newItem['kelas_nama'] == null) {
-                if (student['classes'] is List &&
-                    (student['classes'] as List).isNotEmpty) {
-                  newItem['kelas_nama'] = student['classes'][0]['name'];
-                } else if (student['class_name'] != null) {
-                  newItem['kelas_nama'] = student['class_name'];
-                } else if (student['class'] != null) {
-                  newItem['kelas_nama'] = student['class']['name'];
-                }
-              }
-
-              return newItem;
-            }
-            return item;
-          }).toList();
-
-          if (loadMore) {
-            _pendingPaymentList.addAll(mappedList);
-          } else {
-            _pendingPaymentList = mappedList;
-          }
-        });
-      }
-    } catch (error) {
-      AppLogger.error('finance', error);
-      // Revert page if error
-      if (loadMore) _pendingPage--;
-    }
-  }
-
-  Future<void> _loadDashboardData() async {
-    try {
-      final academicYearProvider = ref.read(academicYearRiverpod);
-      final academicYearId = academicYearProvider.selectedAcademicYear?['id']
-          ?.toString();
-
-      String url = '/finance/dashboard';
-      if (academicYearId != null) {
-        url += '?academic_year_id=$academicYearId';
-      }
-
-      final response = await _apiService.get(url);
-      if (mounted) {
-        final data = Map<String, dynamic>.from(response is Map ? response : {});
-
-        // Fallback: If generated_batches is empty, fetch more bills to calculate summary
-        final List<dynamic> batches = data['generated_batches'] ?? [];
-        if (batches.isEmpty) {
-          final res = await FinanceService.getBillsPaginated(limit: 500);
-          final List<dynamic>? billsData = res['data'] is List
-              ? res['data']
-              : (res is List ? res : null);
-
-          if (billsData != null) {
-            data['generated_batches'] = _calculateBatchesFromBills(billsData);
-          }
+    setState(() => _isLoadingMorePending = true);
+    _pendingPage++;
+    final result = await _ctrl.loadPendingPayments(
+      page: _pendingPage,
+      perPage: _pendingPerPage,
+      loadMore: true,
+    );
+    if (mounted) {
+      setState(() {
+        if (result.error == null) {
+          _pendingPaymentList.addAll(result.pendingPaymentList);
+          _hasMorePending = result.hasMorePending;
+        } else {
+          _pendingPage--; // revert on error
         }
-
-        setState(() {
-          _dashboardData = data;
-        });
-      }
-    } catch (error) {
-      AppLogger.error('finance', error);
+        _isLoadingMorePending = false;
+      });
     }
   }
 
-  List<dynamic> _calculateBatchesFromBills(List<dynamic> bills) {
-    final Map<String, Map<String, dynamic>> batches = {};
 
-    for (var t in bills) {
-      final type = t['payment_type'] ?? {};
-      final typeId = (t['payment_type_id'] ?? type['id'])?.toString();
-      final dueDateStr = t['due_date']?.toString() ?? '';
+  // _loadDashboardData has been moved to AdminFinanceController.loadDashboardData().
+  // The screen applies results via _loadData().
 
-      if (typeId == null || dueDateStr.isEmpty) continue;
-
-      // Extract YYYY-MM
-      final month = dueDateStr.length >= 7
-          ? dueDateStr.substring(0, 7)
-          : 'Unknown';
-      final key = '${typeId}_$month';
-
-      if (!batches.containsKey(key)) {
-        batches[key] = {
-          'payment_type_id': typeId,
-          'name': type['name'] ?? 'No Name',
-          'amount': type['amount'] ?? t['amount'] ?? 0,
-          'month': month,
-          'count': 0,
-        };
-      }
-      batches[key]!['count']++;
-    }
-
-    final result = batches.values.toList();
-    // Sort by month desc
-    result.sort((a, b) => (b['month'] ?? '').compareTo(a['month'] ?? ''));
-    return result;
-  }
+  List<dynamic> _calculateBatchesFromBills(List<dynamic> bills) =>
+      _ctrl.calculateBatchesFromBills(bills);
 
   void _showAddEditPaymentType({Map<String, dynamic>? paymentType}) {
     showModalBottomSheet(
@@ -1340,21 +681,18 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
 
     if (confirmed == true) {
-      try {
-        await _apiService.delete('/payment-type/${paymentType['id']}');
-        if (mounted) {
+      final error = await _ctrl.deletePaymentType(paymentType);
+      if (mounted) {
+        if (error == null) {
           SnackBarUtils.showSuccess(
             context,
             'Jenis pembayaran berhasil dihapus',
           );
-        }
-        _loadData(useCache: false);
-      } catch (error) {
-        AppLogger.error('finance', error);
-        if (mounted) {
+          _loadData(useCache: false);
+        } else {
           SnackBarUtils.showError(
             context,
-            '${AppLocalizations.failedToDelete.tr}: ${ErrorUtils.getFriendlyMessage(error)}',
+            '${AppLocalizations.failedToDelete.tr}: $error',
           );
         }
       }
@@ -1382,7 +720,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
       context: context,
       builder: (context) => VerificationDialog(
         payment: payment,
-        apiService: _apiService,
+        apiService: ApiService(),
         formatCurrency: _formatCurrency,
         primaryColor: _getPrimaryColor(),
         onSuccess: () => _loadData(useCache: false),
@@ -1391,71 +729,22 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  List<dynamic> _getFilteredPaymentTypes() {
-    return _paymentTypeList.where((item) {
-      final searchTerm = _searchController.text.toLowerCase();
-      final name = item['name']?.toString().toLowerCase() ?? '';
-      final description = item['description']?.toString().toLowerCase() ?? '';
-
-      final matchesSearch =
-          searchTerm.isEmpty ||
-          name.contains(searchTerm) ||
-          description.contains(searchTerm);
-
-      // Status filter
-      final matchesStatus =
-          _selectedStatusFilter == null ||
-          (_selectedStatusFilter == 'aktif' && item['status'] == 'aktif') ||
-          (_selectedStatusFilter == 'non_aktif' &&
-              item['status'] == 'non-aktif');
-
-      // Period filter
-      final matchesPeriod =
-          _selectedPeriodFilter == null ||
-          (_selectedPeriodFilter == 'bulanan' &&
-              item['periode'] == 'bulanan') ||
-          (_selectedPeriodFilter == 'tahunan' && item['periode'] == 'tahunan');
-
-      return matchesSearch && matchesStatus && matchesPeriod;
-    }).toList();
-  }
+  List<dynamic> _getFilteredPaymentTypes() =>
+      _ctrl.getFilteredPaymentTypes(
+        paymentTypeList: _paymentTypeList,
+        searchTerm: _searchController.text,
+        statusFilter: _selectedStatusFilter,
+        periodFilter: _selectedPeriodFilter,
+      );
 
 
 
-  String _formatMonth(String? monthStr) {
-    if (monthStr == null || monthStr.isEmpty) return '';
-    try {
-      final parts = monthStr.split('-');
-      if (parts.length != 2) return monthStr;
-
-      final year = parts[0];
-      final month = int.tryParse(parts[1]) ?? 1;
-
-      const monthNames = [
-        'Januari',
-        'Februari',
-        'Maret',
-        'April',
-        'Mei',
-        'Juni',
-        'Juli',
-        'Agustus',
-        'September',
-        'Oktober',
-        'November',
-        'Desember',
-      ];
-
-      return '${monthNames[month - 1]} $year';
-    } catch (e) {
-      return monthStr;
-    }
-  }
+  String _formatMonth(String? monthStr) => _ctrl.formatMonth(monthStr);
 
   Future<void> _deleteGeneratedBills(Map<String, dynamic> item) async {
     final name = item['name'] ?? 'Tagihan';
     final monthStr = item['month'] ?? '';
-    final formattedMonth = _formatMonth(monthStr);
+    final formattedMonth = _ctrl.formatMonth(monthStr);
 
     final confirmed = await showDialog(
       context: context,
@@ -1469,40 +758,32 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
 
     if (confirmed == true) {
-      try {
-        setState(() => _isLoading = true);
-        await FinanceService.deleteBillsByType(
-          item['payment_type_id'].toString(),
-          month: monthStr,
-        );
-
-        if (mounted) {
+      setState(() => _isLoading = true);
+      final error = await _ctrl.deleteGeneratedBills(
+        paymentTypeId: item['payment_type_id'].toString(),
+        month: monthStr,
+      );
+      if (mounted) {
+        if (error == null) {
           SnackBarUtils.showSuccess(
             context,
             'Tagihan "$name" periode $formattedMonth berhasil dihapus',
           );
           _loadData(useCache: false);
-        }
-      } catch (e) {
-        if (mounted) {
+        } else {
           setState(() => _isLoading = false);
-          SnackBarUtils.showError(context, '${AppLocalizations.failedToDelete.tr}: $e');
+          SnackBarUtils.showError(
+            context,
+            '${AppLocalizations.failedToDelete.tr}: $error',
+          );
         }
       }
     }
   }
 
-  Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor('admin');
-  }
+  Color _getPrimaryColor() => _ctrl.getPrimaryColor();
 
-  LinearGradient _getCardGradient() {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
-    );
-  }
+  LinearGradient _getCardGradient() => _ctrl.getCardGradient();
 
   @override
   Widget build(BuildContext context) {
@@ -1992,7 +1273,10 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
     return null;
   }
 
-  // Restored methods needed by other dialogs
+  // Delegates to the extracted [PaymentProofDialog] widget.
+  // Guards against a missing proof file before pushing the dialog —
+  // like a Vue method that checks `if (!payment.proof) return` before
+  // emitting an open-modal event.
   void _showPaymentProof(Map<String, dynamic> payment) {
     final imageFile = payment['payment_proof'] ?? payment['payment_receipt'];
 
@@ -2003,174 +1287,16 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: double.infinity,
-          height: MediaQuery.of(context).size.height * 0.8,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  gradient: _getCardGradient(),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.photo_library, color: Colors.white, size: 20),
-                    SizedBox(width: AppSpacing.sm),
-                    Text(
-                      'Bukti Pembayaran',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Spacer(),
-                    IconButton(
-                      icon: Icon(Icons.close, color: Colors.white, size: 20),
-                      onPressed: () => AppNavigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Image
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      _getImageUrl(imageFile),
-                      width: double.infinity,
-                      fit: BoxFit.contain,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: ColorUtils.error600,
-                              size: 40,
-                            ),
-                            SizedBox(height: AppSpacing.sm),
-                            Text(
-                              AppLocalizations.failedToLoadImage.tr,
-                              style: TextStyle(color: ColorUtils.error600),
-                            ),
-                            SizedBox(height: AppSpacing.sm),
-                            Text(
-                              'File: $imageFile',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: ColorUtils.slate400,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-
-              // Info
-              Container(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: ColorUtils.slate50,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Informasi Pembayaran',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(height: AppSpacing.sm),
-                    FinanceInfoRow(label: 'Siswa', value: payment['siswa_nama'] ?? '-'),
-                    FinanceInfoRow(label: 'Kelas', value: payment['kelas_nama'] ?? '-'),
-                    FinanceInfoRow(
-                      label: 'Jenis',
-                      value: payment['jenis_pembayaran_nama'] ?? '-',
-                    ),
-                    FinanceInfoRow(label: 'Jumlah', value: _formatCurrency(payment['amount'])),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (context) => PaymentProofDialog(
+        payment: payment,
+        formatCurrency: _formatCurrency,
+        primaryColor: _getPrimaryColor(),
+        cardGradient: _getCardGradient(),
       ),
     );
   }
 
-  String _getTranslatedPeriod(String? period) {
-    if (period == null) return '-';
-
-    final languageProvider = ref.read(languageRiverpod);
-    final lower = period.toLowerCase();
-
-    if (lower == 'once' || lower == 'sekali') {
-      return languageProvider.getTranslatedText({
-        'en': 'One Time',
-        'id': 'Sekali',
-      });
-    } else if (lower == 'bulanan' || lower == 'monthly') {
-      return languageProvider.getTranslatedText({
-        'en': 'Monthly',
-        'id': 'Bulanan',
-      });
-    } else if (lower == 'tahunan' || lower == 'yearly') {
-      return languageProvider.getTranslatedText({
-        'en': 'Yearly',
-        'id': 'Tahunan',
-      });
-    } else if (lower == 'semester') {
-      return languageProvider.getTranslatedText({
-        'en': 'Semester',
-        'id': 'Semester',
-      });
-    }
-
-    return period;
-  }
-
-  String _getImageUrl(String? filename) {
-    if (filename == null) return '';
-    return '${ApiService.baseUrl.replaceFirst('/api', '')}/uploads/bukti-pembayaran/$filename';
-  }
+  String _getTranslatedPeriod(String? period) =>
+      _ctrl.getTranslatedPeriod(period);
 
 }
