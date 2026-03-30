@@ -649,18 +649,6 @@ class TeachingScheduleManagementScreenState
 
   Color _getPrimaryColor() => _controller.getPrimaryColor();
 
-  void _checkActiveFilter() {
-    setState(() {
-      _hasActiveFilter = _controller.checkActiveFilter(
-        selectedDayId: _selectedDayId,
-        selectedClassId: _selectedClassId,
-        selectedJamPelajaran: _selectedJamPelajaran,
-        selectedFilterSemester: _selectedFilterSemester,
-        selectedSemester: _selectedSemester,
-      );
-    });
-  }
-
   void _clearAllFilters() {
     setState(() {
       _selectedTeacherId = null;
@@ -671,8 +659,7 @@ class TeachingScheduleManagementScreenState
       _searchController.clear();
       _hasActiveFilter = false;
     });
-    _checkActiveFilter();
-    _loadData(); // Reload data to show default data
+    _loadData();
   }
 
   List<Map<String, dynamic>> _buildFilterChips(
@@ -720,9 +707,15 @@ class TeachingScheduleManagementScreenState
         'onRemove': () {
           setState(() {
             _selectedDayId = null;
-            _checkActiveFilter();
-            _loadData();
+            _hasActiveFilter = _controller.checkActiveFilter(
+              selectedDayId: null,
+              selectedClassId: _selectedClassId,
+              selectedJamPelajaran: _selectedJamPelajaran,
+              selectedFilterSemester: _selectedFilterSemester,
+              selectedSemester: _selectedSemester,
+            );
           });
+          _loadData();
         },
       });
     }
@@ -740,9 +733,15 @@ class TeachingScheduleManagementScreenState
         'onRemove': () {
           setState(() {
             _selectedClassId = null;
-            _checkActiveFilter();
-            _loadData();
+            _hasActiveFilter = _controller.checkActiveFilter(
+              selectedDayId: _selectedDayId,
+              selectedClassId: null,
+              selectedJamPelajaran: _selectedJamPelajaran,
+              selectedFilterSemester: _selectedFilterSemester,
+              selectedSemester: _selectedSemester,
+            );
           });
+          _loadData();
         },
       });
     }
@@ -773,9 +772,15 @@ class TeachingScheduleManagementScreenState
         'onRemove': () {
           setState(() {
             _selectedFilterSemester = null;
-            _checkActiveFilter();
-            _loadData(); // Reload to reset to default semester
+            _hasActiveFilter = _controller.checkActiveFilter(
+              selectedDayId: _selectedDayId,
+              selectedClassId: _selectedClassId,
+              selectedJamPelajaran: _selectedJamPelajaran,
+              selectedFilterSemester: null,
+              selectedSemester: _selectedSemester,
+            );
           });
+          _loadData();
         },
       });
     }
@@ -809,7 +814,13 @@ class TeachingScheduleManagementScreenState
             _selectedClassId = classId;
             _selectedFilterSemester = semester;
             _selectedJamPelajaran = jamPelajaran;
-            _checkActiveFilter();
+            _hasActiveFilter = _controller.checkActiveFilter(
+              selectedDayId: dayId,
+              selectedClassId: classId,
+              selectedJamPelajaran: jamPelajaran,
+              selectedFilterSemester: semester,
+              selectedSemester: _selectedSemester,
+            );
           });
           _loadData();
         },
@@ -1280,7 +1291,7 @@ class TeachingScheduleManagementScreenState
         formatScheduleDays: (s, [p]) => _controller.formatScheduleDays(
           s,
           _dayList,
-          p?.currentLanguage ?? ref.read(languageRiverpod).currentLanguage,
+          (p ?? ref.read(languageRiverpod))!.currentLanguage,
         ),
         getGradeLevel: (id) => _controller.getGradeLevel(id, _classList),
         onEdit: _editSchedule,
@@ -1315,57 +1326,41 @@ class TeachingScheduleManagementScreenState
     }
   }
 
+  /// Marks the tour as completed in the backend and local cache, then hides it.
+  void _completeTour() {
+    setState(() => _isTourShowing = false);
+    getIt<ApiTourService>().completeTour(
+      name: 'teaching_schedule_management_tour',
+      role: 'admin',
+      platform: 'mobile',
+    );
+    LocalCacheService.save(
+      CacheKeyBuilder.tourStatus('schedule_management', 'admin'),
+      {'should_show': false},
+    );
+  }
+
   void _showTour() {
     final List<TargetFocus> targets = _createTourTargets();
     if (targets.isEmpty) return;
 
-    final languageProvider = ref.read(languageRiverpod);
-
-    setState(() {
-      _isTourShowing = true;
-    });
+    setState(() => _isTourShowing = true);
 
     TutorialCoachMark(
       targets: targets,
       colorShadow: Colors.black,
-      textSkip: languageProvider.getTranslatedText({
+      textSkip: ref.read(languageRiverpod).getTranslatedText({
         'en': 'SKIP',
         'id': 'LEWATI',
       }),
       paddingFocus: 10,
       opacityShadow: 0.8,
-      onFinish: () {
-        setState(() {
-          _isTourShowing = false;
-        });
-        getIt<ApiTourService>().completeTour(
-          name: 'teaching_schedule_management_tour',
-          role: 'admin',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('schedule_management', 'admin'),
-          {'should_show': false},
-        );
-      },
+      onFinish: _completeTour,
       onSkip: () {
-        setState(() {
-          _isTourShowing = false;
-        });
-        getIt<ApiTourService>().completeTour(
-          name: 'teaching_schedule_management_tour',
-          role: 'admin',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('schedule_management', 'admin'),
-          {'should_show': false},
-        );
+        _completeTour();
         return true;
       },
-      onClickOverlay: (target) {
-        // Optional: you might want to handle this as well
-      },
+      onClickOverlay: (_) {},
     ).show(context: context);
   }
 
