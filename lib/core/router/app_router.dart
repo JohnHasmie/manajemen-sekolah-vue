@@ -9,8 +9,8 @@ library;
 import 'package:go_router/go_router.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/features/auth/screens/login_screen.dart';
-import 'package:manajemensekolah/features/dashboard/screens/dashboard_screen.dart';
+import 'package:manajemensekolah/features/auth/presentation/screens/login_screen.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:manajemensekolah/main.dart';
 
 /// The app's declarative router. Handles auth guard + role-based routing.
@@ -50,9 +50,8 @@ final GoRouter appRouter = GoRouter(
   routes: [
     GoRoute(
       path: '/login',
-      builder: (context, state) => LoginScreen(
-        initialError: state.extra as String?,
-      ),
+      builder: (context, state) =>
+          LoginScreen(initialError: state.extra as String?),
     ),
     GoRoute(
       path: '/',

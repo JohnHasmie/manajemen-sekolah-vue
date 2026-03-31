@@ -32,20 +32,18 @@ class TabSwitcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = primaryColor ?? ColorUtils.getRoleColor('guru');
-    
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
       ),
       child: Row(
         children: tabs.asMap().entries.map((entry) {
           final index = entry.key;
           final tab = entry.value;
-          return Expanded(
-            child: _buildTabButton(index, tab, color),
-          );
+          return Expanded(child: _buildTabButton(index, tab, color));
         }).toList(),
       ),
     );
@@ -57,10 +55,12 @@ class TabSwitcher extends StatelessWidget {
     final isSelected = tabController.index == tabIndex;
 
     return Material(
-      color: isSelected ? primaryColor.withValues(alpha: 0.85) : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
+      color: isSelected
+          ? primaryColor.withValues(alpha: 0.85)
+          : Colors.transparent,
+      borderRadius: const BorderRadius.all(Radius.circular(8)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
         onTap: () {
           tabController.animateTo(tabIndex);
         },

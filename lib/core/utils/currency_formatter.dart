@@ -43,7 +43,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
     }
 
     // Extract only digits
-    String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
     // If result is empty (e.g. user deleted all digits), return empty
     if (newText.isEmpty) {
@@ -51,7 +51,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
     }
 
     // Parse to integer
-    int value = int.parse(newText);
+    final int value = int.parse(newText);
 
     // Format currency
     final formatter = NumberFormat.currency(
@@ -60,7 +60,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
       decimalDigits: 0,
     );
 
-    String newString = formatter.format(value);
+    final String newString = formatter.format(value);
 
     // Return new value with cursor at the end
     return TextEditingValue(
@@ -73,7 +73,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
   /// Example: "Rp 10.000" -> 10000.0
   static double parseCurrency(String formattedValue) {
     if (formattedValue.isEmpty) return 0.0;
-    String cleanString = formattedValue.replaceAll(RegExp(r'[^0-9]'), '');
+    final String cleanString = formattedValue.replaceAll(RegExp(r'[^0-9]'), '');
     if (cleanString.isEmpty) return 0.0;
     return double.parse(cleanString);
   }

@@ -9,12 +9,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart'; // Required for MaterialPageRoute
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manajemensekolah/main.dart'; // Import navigatorKey
-import 'package:manajemensekolah/features/announcements/screens/admin_announcement_screen.dart';
-import 'package:manajemensekolah/features/announcements/screens/parent_announcement_screen.dart';
-import 'package:manajemensekolah/features/class_activity/screens/parent_class_activity_screen.dart';
-import 'package:manajemensekolah/features/grades/screens/parent_grade_screen.dart';
-import 'package:manajemensekolah/features/attendance/screens/parent_attendance_screen.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
+import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
+import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
+import 'package:manajemensekolah/core/constants/api_endpoints.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -127,6 +128,15 @@ class FCMService {
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
+  /// Whether FCM initialization completed successfully.
+  /// Check this after `initialize()` to detect broken notification setup.
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
+
+  /// The error that caused FCM initialization to fail, if any.
+  String? _initError;
+  String? get initError => _initError;
+
   /// ValueNotifier that UI components observe for background data changes.
   /// When a 'refresh_*' push notification arrives, this emits the message type
   /// so screens can reload their data. Like Vue's `watch()` on a reactive store,
@@ -143,7 +153,7 @@ class FCMService {
       AppLogger.debug('fcm', 'Initializing FCM Service...');
 
       // Request permission
-      NotificationSettings settings = await _firebaseMessaging
+      final NotificationSettings settings = await _firebaseMessaging
           .requestPermission(
             alert: true,
             announcement: false,
@@ -154,16 +164,28 @@ class FCMService {
             sound: true,
           );
 
-      AppLogger.info('fcm', 'Permission status: ${settings.authorizationStatus}');
+      AppLogger.info(
+        'fcm',
+        'Permission status: ${settings.authorizationStatus}',
+      );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
         // Initialize local notifications
         await _initializeLocalNotifications();
 
-        // Get FCM token
-        _fcmToken = await _firebaseMessaging.getToken();
-        AppLogger.debug('fcm', 'FCM Token: $_fcmToken');
+        // Get FCM token (on iOS, APNS token must be available first)
+        try {
+          final apnsToken = await _firebaseMessaging.getAPNSToken();
+          if (apnsToken != null) {
+            _fcmToken = await _firebaseMessaging.getToken();
+            AppLogger.debug('fcm', 'FCM Token: $_fcmToken');
+          } else {
+            AppLogger.warning('fcm', 'APNS token not available (simulator?), skipping FCM token fetch');
+          }
+        } catch (e) {
+          AppLogger.warning('fcm', 'Could not get FCM token: $e');
+        }
 
         // Save token locally
         if (_fcmToken != null) {
@@ -190,12 +212,15 @@ class FCMService {
           _firebaseMessagingBackgroundHandler,
         );
 
+        _isInitialized = true;
         AppLogger.info('fcm', 'FCM Service initialized successfully');
       } else {
-        AppLogger.error('fcm', 'Notification permission denied');
+        _initError = 'Notification permission denied';
+        AppLogger.error('fcm', _initError!);
       }
     } catch (e) {
-      AppLogger.error('fcm', 'Error initializing FCM: $e');
+      _initError = 'Error initializing FCM: $e';
+      AppLogger.error('fcm', _initError!);
     }
   }
 
@@ -271,7 +296,10 @@ class FCMService {
         Future.delayed(const Duration(milliseconds: 100), () {
           syncTrigger.value = null;
         });
-        AppLogger.debug('fcm', 'Teacher & Class cache invalidated in foreground');
+        AppLogger.debug(
+          'fcm',
+          'Teacher & Class cache invalidated in foreground',
+        );
         return;
       }
 
@@ -321,8 +349,8 @@ class FCMService {
   /// The message payload is encoded as JSON in the notification's `payload` field
   /// so it can be parsed when the user taps the notification.
   Future<void> _showLocalNotification(RemoteMessage message) async {
-    RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
+    final RemoteNotification? notification = message.notification;
+    final AndroidNotification? android = message.notification?.android;
 
     if (notification != null) {
       await _localNotifications.show(
@@ -375,19 +403,34 @@ class FCMService {
 
     if (type == 'absensi' || type == 'attendance') {
       _navigateToPresenceScreen(data);
-      AppLogger.info('fcm', 'Navigate to absensi screen for siswa: ${data['student_id']}');
+      AppLogger.info(
+        'fcm',
+        'Navigate to absensi screen for siswa: ${data['student_id']}',
+      );
     } else if (type == 'class_activity' || type == 'class_activity_detail') {
       _navigateToClassActivityScreen();
-      AppLogger.info('fcm', 'Navigate to class activity for kegiatan: ${data['activity_id']}',);
+      AppLogger.info(
+        'fcm',
+        'Navigate to class activity for kegiatan: ${data['activity_id']}',
+      );
     } else if (type == 'pengumuman' || type == 'announcement') {
       // Navigate to announcement screen
       AppLogger.info('fcm', 'navigating to announcement screen');
 
       _navigateToAnnouncementScreen();
 
-      AppLogger.info('fcm', 'Navigate to pengumuman: ${data['announcement_id']}');
-      AppLogger.debug('fcm', 'Title: ${data['title']}, Priority: ${data['priority']}');
-      AppLogger.debug('fcm', 'Target: ${data['target_role']}, Class: ${data['class_name']}');
+      AppLogger.info(
+        'fcm',
+        'Navigate to pengumuman: ${data['announcement_id']}',
+      );
+      AppLogger.debug(
+        'fcm',
+        'Title: ${data['title']}, Priority: ${data['priority']}',
+      );
+      AppLogger.debug(
+        'fcm',
+        'Target: ${data['target_role']}, Class: ${data['class_name']}',
+      );
     } else if (type == 'tagihan') {
       // Navigate to tagihan (billing) screen
       // This will be handled by the app's navigation system
@@ -409,10 +452,18 @@ class FCMService {
     try {
       AppLogger.debug('fcm', 'Sending FCM token to backend...');
 
-      await ApiService.sendFCMToken(token, 'mobile');
+      final prefs = PreferencesService();
+      final authToken = prefs.getString('token');
+      if (authToken == null) {
+        throw Exception('No auth token found');
+      }
+
+      await dioClient.post(
+        ApiEndpoints.fcmTokenEndpoint,
+        data: {'token': token, 'device_type': 'mobile'},
+      );
 
       AppLogger.info('fcm', 'FCM token sent to backend successfully');
-
       return true;
     } catch (e) {
       AppLogger.error('fcm', 'Error sending FCM token to backend: $e');
@@ -427,7 +478,16 @@ class FCMService {
       if (_fcmToken != null) {
         AppLogger.debug('fcm', 'Deleting FCM token from backend...');
 
-        await ApiService.deleteFCMToken(_fcmToken!);
+        final prefs = PreferencesService();
+        final authToken = prefs.getString('token');
+        if (authToken == null) {
+          throw Exception('No auth token found');
+        }
+
+        await dioClient.delete(
+          ApiEndpoints.fcmTokenEndpoint,
+          data: {'token': _fcmToken!},
+        );
 
         AppLogger.info('fcm', 'FCM token deleted from backend');
       }
@@ -469,7 +529,12 @@ class FCMService {
       // Delete the old token
       await _firebaseMessaging.deleteToken();
 
-      // Get new token
+      // Get new token (check APNS on iOS first)
+      final apnsToken = await _firebaseMessaging.getAPNSToken();
+      if (apnsToken == null) {
+        AppLogger.warning('fcm', 'APNS token not available, cannot refresh FCM token');
+        return null;
+      }
       _fcmToken = await _firebaseMessaging.getToken();
 
       AppLogger.debug('fcm', 'New FCM Token: $_fcmToken');

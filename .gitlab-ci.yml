@@ -1,0 +1,175 @@
+# GitLab CI/CD for KamilEdu Flutter App
+# Stages: analyze → test → build → deploy → patch
+#
+# Required CI/CD Variables (Settings → CI/CD → Variables):
+#   API_BASE_URL           - API endpoint URL
+#   KEYSTORE_BASE64        - base64-encoded .jks keystore file
+#   KEY_ALIAS              - keystore key alias
+#   KEY_PASSWORD           - key password
+#   STORE_PASSWORD         - keystore password
+#   PLAY_STORE_JSON_BASE64 - base64-encoded Google Play service account JSON
+#   SHOREBIRD_TOKEN        - Shorebird CI token (from: shorebird login:ci)
+#
+# To encode files for CI variables:
+#   base64 -i upload-keystore.jks | pbcopy          (macOS)
+#   base64 play-store-service-account.json | xclip   (Linux)
+#
+# Shorebird workflow:
+#   - "shorebird release" creates a new release (new native code / version bump)
+#   - "shorebird patch"   pushes a Dart-only OTA update to existing release
+#   - Users get patches instantly without Play Store review
+
+stages:
+  - analyze
+  - test
+  - build
+  - deploy
+  - patch
+
+variables:
+  FLUTTER_VERSION: "3.35.4"
+
+# ---------------------------------------------------------------------------
+# Reusable templates
+# ---------------------------------------------------------------------------
+.flutter_setup: &flutter_setup
+  image: ghcr.io/cirruslabs/flutter:${FLUTTER_VERSION}
+  before_script:
+    - echo "API_BASE_URL=${API_BASE_URL}" > .env
+    - flutter pub get
+
+.shorebird_setup: &shorebird_setup
+  image: ghcr.io/cirruslabs/flutter:${FLUTTER_VERSION}
+  before_script:
+    # Install Shorebird CLI
+    - curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+    - export PATH="$HOME/.shorebird/bin:$PATH"
+    - echo "API_BASE_URL=${API_BASE_URL}" > .env
+    - flutter pub get
+    # Decode keystore
+    - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
+    - |
+      cat > android/key.properties << EOF
+      storePassword=${STORE_PASSWORD}
+      keyPassword=${KEY_PASSWORD}
+      keyAlias=${KEY_ALIAS}
+      storeFile=upload-keystore.jks
+      EOF
+
+# ---------------------------------------------------------------------------
+# Stage 1: Analyze
+# ---------------------------------------------------------------------------
+analyze:
+  <<: *flutter_setup
+  stage: analyze
+  script:
+    - flutter analyze --fatal-warnings
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH  # runs on all branch pushes
+
+# ---------------------------------------------------------------------------
+# Stage 2: Test
+# ---------------------------------------------------------------------------
+test:
+  <<: *flutter_setup
+  stage: test
+  script:
+    - flutter test --reporter=expanded
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH  # runs on all branch pushes
+
+# ---------------------------------------------------------------------------
+# Stage 3: Build release AAB (without Shorebird — standard Flutter build)
+# ---------------------------------------------------------------------------
+build_android:
+  <<: *flutter_setup
+  stage: build
+  script:
+    - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
+    - |
+      cat > android/key.properties << EOF
+      storePassword=${STORE_PASSWORD}
+      keyPassword=${KEY_PASSWORD}
+      keyAlias=${KEY_ALIAS}
+      storeFile=upload-keystore.jks
+      EOF
+    - flutter build appbundle --release --dart-define=API_BASE_URL=${API_BASE_URL}
+  artifacts:
+    paths:
+      - build/app/outputs/bundle/release/app-release.aab
+    expire_in: 7 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------------------
+# Stage 4a: Deploy to Play Store (internal track)
+# ---------------------------------------------------------------------------
+deploy_playstore:
+  stage: deploy
+  image: ruby:3.2
+  needs:
+    - build_android
+  before_script:
+    - gem install fastlane --no-document
+  script:
+    - echo "${PLAY_STORE_JSON_BASE64}" | base64 -d > play-store-key.json
+    - |
+      fastlane supply \
+        --aab build/app/outputs/bundle/release/app-release.aab \
+        --json_key play-store-key.json \
+        --package_name com.kamillabs.kamiledu \
+        --track internal \
+        --skip_upload_metadata \
+        --skip_upload_images \
+        --skip_upload_screenshots
+    - rm -f play-store-key.json
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: false
+
+# ---------------------------------------------------------------------------
+# Stage 4b: Shorebird Release (new version → Play Store + OTA baseline)
+#
+# Use this INSTEAD of build_android + deploy_playstore when you want
+# Shorebird-enabled releases. This creates the release artifact that
+# future patches are diffed against.
+#
+# Run manually: only when bumping version or changing native code.
+# ---------------------------------------------------------------------------
+shorebird_release:
+  <<: *shorebird_setup
+  stage: deploy
+  script:
+    - export PATH="$HOME/.shorebird/bin:$PATH"
+    - shorebird release android --force --dart-define=API_BASE_URL=${API_BASE_URL}
+  artifacts:
+    paths:
+      - build/app/outputs/bundle/release/app-release.aab
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: false
+
+# ---------------------------------------------------------------------------
+# Stage 5: Shorebird Patch (OTA update — no Play Store review needed)
+#
+# Pushes a Dart-only code update to all users on the current release.
+# Users receive the patch silently on next app launch.
+#
+# Use when: bug fixes, UI tweaks, copy changes — anything that doesn't
+# touch native code (Kotlin/Swift), plugins, or assets.
+# ---------------------------------------------------------------------------
+shorebird_patch:
+  <<: *shorebird_setup
+  stage: patch
+  script:
+    - export PATH="$HOME/.shorebird/bin:$PATH"
+    - shorebird patch android --force --dart-define=API_BASE_URL=${API_BASE_URL}
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: false

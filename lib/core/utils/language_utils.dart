@@ -13,7 +13,12 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/legacy.dart' as riverpod_legacy;
 import 'package:manajemensekolah/core/services/preferences_service.dart';
+
+part 'language_utils_lesson_plans.dart';
+part 'language_utils_parent_dashboard.dart';
+part 'language_utils_settings_auth.dart';
 
 /// Manages the app's current language and notifies listeners on change.
 /// Like a Vuex store module - holds reactive global state that widgets can listen to.
@@ -84,6 +89,17 @@ extension LocalizedString on Map<String, String> {
   }
 }
 
+/// Riverpod provider for [LanguageProvider].
+/// Uses the existing global singleton instance to stay in sync with
+/// the `.tr` extension and old Provider-based widgets.
+///
+/// Usage: `ref.watch(languageRiverpod)` for reactive language changes
+final languageRiverpod = riverpod_legacy.ChangeNotifierProvider<LanguageProvider>((
+  ref,
+) {
+  return languageProvider; // Global singleton from language_utils.dart
+});
+
 /// Static translation dictionary containing all app strings in English and Indonesian.
 /// Like Laravel's `resources/lang/en/messages.php` and `resources/lang/id/messages.php`
 /// combined into a single class. Each getter returns a `Map<String, String>` of
@@ -93,1462 +109,449 @@ extension LocalizedString on Map<String, String> {
 /// Finance, Settings, Parent screens, etc.
 ///
 /// Usage: `AppLocalizations.welcome.tr` (via the [LocalizedString] extension).
+
 class AppLocalizations {
-  // Dashboard
-  static Map<String, String> get appTitle => {
-    'en': 'School Management',
-    'id': 'Manajemen Sekolah',
-  };
-
-  // Tambahkan di class AppLocalizations
-
-  // Class Management
-  static Map<String, String> get editClass => {
-    'en': 'Edit Class',
-    'id': 'Edit Kelas',
-  };
-
-  static Map<String, String> get addClass => {
-    'en': 'Add Class',
-    'id': 'Tambah Kelas',
-  };
-
-  static Map<String, String> get className => {
-    'en': 'Class Name',
-    'id': 'Nama Kelas',
-  };
-
-  static Map<String, String> get classNameRequired => {
-    'en': 'Class name is required',
-    'id': 'Nama kelas harus diisi',
-  };
-
-  static Map<String, String> get gradeLevel => {
-    'en': 'Grade Level',
-    'id': 'Tingkat Kelas',
-  };
-
+  // ── Core strings ─────────────────────────────────────────────────────────────
+  // Dashboard, Class Management, Filter Options, Common actions, Menu Items,
+  // Role Titles, Login Screen, Confirmation dialogs, Form fields, Time-related.
+  static Map<String, String> get appTitle => {'en': 'School Management', 'id': 'Manajemen Sekolah'};
+  static Map<String, String> get editClass => {'en': 'Edit Class', 'id': 'Edit Kelas'};
+  static Map<String, String> get addClass => {'en': 'Add Class', 'id': 'Tambah Kelas'};
+  static Map<String, String> get className => {'en': 'Class Name', 'id': 'Nama Kelas'};
+  static Map<String, String> get classNameRequired => {'en': 'Class name is required', 'id': 'Nama kelas harus diisi'};
+  static Map<String, String> get gradeLevel => {'en': 'Grade Level', 'id': 'Tingkat Kelas'};
   static Map<String, String> get retry => {'en': 'Retry', 'id': 'Ulang'};
-
-  static Map<String, String> get gradeLevelRequired => {
-    'en': 'Grade level is required',
-    'id': 'Tingkat kelas harus dipilih',
-  };
-
-  static Map<String, String> get selectGradeLevel => {
-    'en': 'Select Grade Level',
-    'id': 'Pilih Tingkat Kelas',
-  };
-
-  static Map<String, String> get homeroomTeacher => {
-    'en': 'Homeroom Teacher',
-    'id': 'Wali Kelas',
-  };
-
-  static Map<String, String> get noTeacher => {
-    'en': 'No Teacher',
-    'id': 'Tidak Ada Guru',
-  };
-
+  static Map<String, String> get gradeLevelRequired => {'en': 'Grade level is required', 'id': 'Tingkat kelas harus dipilih'};
+  static Map<String, String> get selectGradeLevel => {'en': 'Select Grade Level', 'id': 'Pilih Tingkat Kelas'};
+  static Map<String, String> get homeroomTeacher => {'en': 'Homeroom Teacher', 'id': 'Wali Kelas'};
+  static Map<String, String> get noTeacher => {'en': 'No Teacher', 'id': 'Tidak Ada Guru'};
   static Map<String, String> get update => {'en': 'Update', 'id': 'Perbarui'};
-
-  static Map<String, String> get classDetails => {
-    'en': 'Class Details',
-    'id': 'Detail Kelas',
-  };
-
-  static Map<String, String> get numberOfStudents => {
-    'en': 'Number of Students',
-    'id': 'Jumlah Siswa',
-  };
-
-  static Map<String, String> get notAssigned => {
-    'en': 'Not assigned',
-    'id': 'Tidak ada',
-  };
-
-  static Map<String, String> get classesFound => {
-    'en': 'classes found',
-    'id': 'kelas ditemukan',
-  };
-
-  static Map<String, String> get noClasses => {
-    'en': 'No classes',
-    'id': 'Tidak ada kelas',
-  };
-
-  static Map<String, String> get tapToAddClass => {
-    'en': 'Tap + to add a class',
-    'id': 'Tap + untuk menambah kelas',
-  };
-
-  static Map<String, String> get searchClasses => {
-    'en': 'Search classes...',
-    'id': 'Cari kelas...',
-  };
-
-  static Map<String, String> get loadingClassData => {
-    'en': 'Loading class data...',
-    'id': 'Memuat data kelas...',
-  };
-
-  static Map<String, String> get classSuccessfullyUpdated => {
-    'en': 'Class successfully updated',
-    'id': 'Kelas berhasil diperbarui',
-  };
-
-  static Map<String, String> get classSuccessfullyAdded => {
-    'en': 'Class successfully added',
-    'id': 'Kelas berhasil ditambahkan',
-  };
-
-  static Map<String, String> get classSuccessfullyDeleted => {
-    'en': 'Class successfully deleted',
-    'id': 'Kelas berhasil dihapus',
-  };
-
-  static Map<String, String> get failedToSaveClass => {
-    'en': 'Failed to save class',
-    'id': 'Gagal menyimpan kelas',
-  };
-
-  static Map<String, String> get failedToDeleteClass => {
-    'en': 'Failed to delete class',
-    'id': 'Gagal menghapus kelas',
-  };
-
-  static Map<String, String> get areYouSureDeleteClass => {
-    'en': 'Are you sure you want to delete this class?',
-    'id': 'Apakah Anda yakin ingin menghapus kelas ini?',
-  };
-
-  // Filter Options
+  static Map<String, String> get classDetails => {'en': 'Class Details', 'id': 'Detail Kelas'};
+  static Map<String, String> get numberOfStudents => {'en': 'Number of Students', 'id': 'Jumlah Siswa'};
+  static Map<String, String> get notAssigned => {'en': 'Not assigned', 'id': 'Tidak ada'};
+  static Map<String, String> get classesFound => {'en': 'classes found', 'id': 'kelas ditemukan'};
+  static Map<String, String> get noClasses => {'en': 'No classes', 'id': 'Tidak ada kelas'};
+  static Map<String, String> get tapToAddClass => {'en': 'Tap + to add a class', 'id': 'Tap + untuk menambah kelas'};
+  static Map<String, String> get searchClasses => {'en': 'Search classes...', 'id': 'Cari kelas...'};
+  static Map<String, String> get loadingClassData => {'en': 'Loading class data...', 'id': 'Memuat data kelas...'};
+  static Map<String, String> get classSuccessfullyUpdated => {'en': 'Class successfully updated', 'id': 'Kelas berhasil diperbarui'};
+  static Map<String, String> get classSuccessfullyAdded => {'en': 'Class successfully added', 'id': 'Kelas berhasil ditambahkan'};
+  static Map<String, String> get classSuccessfullyDeleted => {'en': 'Class successfully deleted', 'id': 'Kelas berhasil dihapus'};
+  static Map<String, String> get failedToSaveClass => {'en': 'Failed to save class', 'id': 'Gagal menyimpan kelas'};
+  static Map<String, String> get failedToDeleteClass => {'en': 'Failed to delete class', 'id': 'Gagal menghapus kelas'};
+  static Map<String, String> get areYouSureDeleteClass => {'en': 'Are you sure you want to delete this class?', 'id': 'Apakah Anda yakin ingin menghapus kelas ini?'};
   static Map<String, String> get all => {'en': 'All', 'id': 'Semua'};
-
-  static Map<String, String> get withHomeroomTeacher => {
-    'en': 'With Homeroom Teacher',
-    'id': 'Dengan Wali Kelas',
-  };
-
-  static Map<String, String> get withoutHomeroomTeacher => {
-    'en': 'Without Homeroom Teacher',
-    'id': 'Tanpa Wali Kelas',
-  };
-
-  static Map<String, String> get welcome => {
-    'en': 'Welcome,',
-    'id': 'Selamat datang,',
-  };
-
-  static Map<String, String> get activeAccount => {
-    'en': 'Active account',
-    'id': 'Akun aktif',
-  };
-
-  static Map<String, String> get searchHint => {
-    'en': 'Search features, data, or menus...',
-    'id': 'Cari fitur, data, atau menu...',
-  };
-
+  static Map<String, String> get withHomeroomTeacher => {'en': 'With Homeroom Teacher', 'id': 'Dengan Wali Kelas'};
+  static Map<String, String> get withoutHomeroomTeacher => {'en': 'Without Homeroom Teacher', 'id': 'Tanpa Wali Kelas'};
+  static Map<String, String> get welcome => {'en': 'Welcome,', 'id': 'Selamat datang,'};
+  static Map<String, String> get activeAccount => {'en': 'Active account', 'id': 'Akun aktif'};
+  static Map<String, String> get searchHint => {'en': 'Search features, data, or menus...', 'id': 'Cari fitur, data, atau menu...'};
   static Map<String, String> get logout => {'en': 'Logout', 'id': 'Keluar'};
-
-  static Map<String, String> get settings => {
-    'en': 'Settings',
-    'id': 'Pengaturan',
-  };
-
-  // Common
+  static Map<String, String> get settings => {'en': 'Settings', 'id': 'Pengaturan'};
   static Map<String, String> get save => {'en': 'Save', 'id': 'Simpan'};
-
   static Map<String, String> get cancel => {'en': 'Cancel', 'id': 'Batal'};
-
   static Map<String, String> get edit => {'en': 'Edit', 'id': 'Edit'};
-
   static Map<String, String> get delete => {'en': 'Delete', 'id': 'Hapus'};
-
   static Map<String, String> get add => {'en': 'Add', 'id': 'Tambah'};
-
-  static Map<String, String> get refresh => {
-    'en': 'Refresh',
-    'id': 'Muat Ulang',
-  };
-
+  static Map<String, String> get refresh => {'en': 'Refresh', 'id': 'Muat Ulang'};
   static Map<String, String> get search => {'en': 'Search', 'id': 'Cari'};
-
-  static Map<String, String> get loading => {
-    'en': 'Loading...',
-    'id': 'Memuat...',
-  };
-
-  static Map<String, String> get noData => {
-    'en': 'No data',
-    'id': 'Tidak ada data',
-  };
-
-  static Map<String, String> get noSearchResults => {
-    'en': 'No search results found',
-    'id': 'Tidak ditemukan hasil pencarian',
-  };
-
-  // Menu Items
-  static Map<String, String> get manageStudents => {
-    'en': 'Manage Students',
-    'id': 'Kelola Siswa',
-  };
-
-  static Map<String, String> get manageTeachers => {
-    'en': 'Manage Teachers',
-    'id': 'Kelola Guru',
-  };
-
-  static Map<String, String> get manageClasses => {
-    'en': 'Manage Classes',
-    'id': 'Kelola Kelas',
-  };
-
-  static Map<String, String> get manageSubjects => {
-    'en': 'Manage Subjects',
-    'id': 'Kelola Mata Pelajaran',
-  };
-
-  static Map<String, String> get manageTeachingSchedule => {
-    'en': 'Manage Schedule',
-    'id': 'Kelola Jadwal',
-  };
-
+  static Map<String, String> get loading => {'en': 'Loading...', 'id': 'Memuat...'};
+  static Map<String, String> get noData => {'en': 'No data', 'id': 'Tidak ada data'};
+  static Map<String, String> get noSearchResults => {'en': 'No search results found', 'id': 'Tidak ditemukan hasil pencarian'};
+  static Map<String, String> get manageStudents => {'en': 'Manage Students', 'id': 'Kelola Siswa'};
+  static Map<String, String> get manageTeachers => {'en': 'Manage Teachers', 'id': 'Kelola Guru'};
+  static Map<String, String> get manageClasses => {'en': 'Manage Classes', 'id': 'Kelola Kelas'};
+  static Map<String, String> get manageSubjects => {'en': 'Manage Subjects', 'id': 'Kelola Mata Pelajaran'};
+  static Map<String, String> get manageTeachingSchedule => {'en': 'Manage Schedule', 'id': 'Kelola Jadwal'};
   static Map<String, String> get reports => {'en': 'Reports', 'id': 'Laporan'};
-
   static Map<String, String> get finance => {'en': 'Finance', 'id': 'Keuangan'};
-
-  static Map<String, String> get announcements => {
-    'en': 'Announcements',
-    'id': 'Pengumuman',
-  };
-
-  static Map<String, String> get studentAttendance => {
-    'en': 'Student Attendance',
-    'id': 'Absensi Siswa',
-  };
-
+  static Map<String, String> get announcements => {'en': 'Announcements', 'id': 'Pengumuman'};
+  static Map<String, String> get studentAttendance => {'en': 'Student Attendance', 'id': 'Absensi Siswa'};
   static Map<String, String> get inputGrades => {'en': 'Grades', 'id': 'Nilai'};
-
-  static Map<String, String> get teachingSchedule => {
-    'en': 'Teaching Schedule',
-    'id': 'Jadwal Mengajar',
-  };
-
-  static Map<String, String> get classActivities => {
-    'en': 'Class Activities',
-    'id': 'Kegiatan Kelas',
-  };
-
-  static Map<String, String> get rppLearningMaterials => {
-    'en': 'Learning Materials',
-    'id': 'Materi Pembelajaran',
-  };
-
-  // TAMBAHKAN MENU RPP
-  static Map<String, String> get myRpp => {
-    'en': 'My Lesson Plans',
-    'id': 'RPP Saya',
-  };
-
-  static Map<String, String> get manageRpp => {
-    'en': 'Manage Lesson Plans',
-    'id': 'Kelola RPP',
-  };
-
-  // Tambahkan di class AppLocalizations
-  static Map<String, String> get tryAgain => {
-    'en': 'Try Again',
-    'id': 'Coba Lagi',
-  };
-
+  static Map<String, String> get teachingSchedule => {'en': 'Teaching Schedule', 'id': 'Jadwal Mengajar'};
+  static Map<String, String> get classActivities => {'en': 'Class Activities', 'id': 'Kegiatan Kelas'};
+  static Map<String, String> get lessonPlanLearningMaterials => {'en': 'Learning Materials', 'id': 'Materi Pembelajaran'};
+  static Map<String, String> get myLessonPlans => {'en': 'My Lesson Plans', 'id': 'RPP Saya'};
+  static Map<String, String> get manageLessonPlans => {'en': 'Manage Lesson Plans', 'id': 'Kelola RPP'};
+  static Map<String, String> get tryAgain => {'en': 'Try Again', 'id': 'Coba Lagi'};
+  static Map<String, String> get updateData => {'en': 'Update Data', 'id': 'Perbarui Data'};
+  static Map<String, String> get selectClass => {'en': 'Select Class', 'id': 'Pilih Kelas'};
+  static Map<String, String> get noAttendanceData => {'en': 'No attendance data for this period', 'id': 'Tidak ada data absensi untuk periode ini'};
+  static Map<String, String> get allMonths => {'en': 'All Months', 'id': 'Semua Bulan'};
+  static Map<String, String> get allTypes => {'en': 'All Types', 'id': 'Semua Jenis'};
+  static Map<String, String> get bankTransfer => {'en': 'Bank Transfer', 'id': 'Transfer Bank'};
+  static Map<String, String> get creditCard => {'en': 'Credit/Debit Card', 'id': 'Kartu Kredit/Debit'};
+  static Map<String, String> get dateFormatHint => {'en': 'Format date: YYYY-MM-DD', 'id': 'Format tanggal: YYYY-MM-DD'};
   static Map<String, String> get close => {'en': 'Close', 'id': 'Tutup'};
-
-  // Role Titles
   static Map<String, String> get adminRole => {'en': 'Admin', 'id': 'Admin'};
-
   static Map<String, String> get teacherRole => {'en': 'Teacher', 'id': 'Guru'};
-
   static Map<String, String> get staffRole => {'en': 'Staff', 'id': 'Staff'};
-
-  static Map<String, String> get parentRole => {
-    'en': 'Parent',
-    'id': 'Wali Murid',
-  };
-
-  // Login Screen
+  static Map<String, String> get parentRole => {'en': 'Parent', 'id': 'Wali Murid'};
   static Map<String, String> get login => {'en': 'Login', 'id': 'Masuk'};
-
   static Map<String, String> get email => {'en': 'Email', 'id': 'Email'};
-
-  static Map<String, String> get password => {
-    'en': 'Password',
-    'id': 'Kata Sandi',
-  };
-
-  static Map<String, String> get forgotPassword => {
-    'en': 'Forgot Password?',
-    'id': 'Lupa Kata Sandi?',
-  };
-
-  static Map<String, String> get loginSuccess => {
-    'en': 'Login Successful',
-    'id': 'Login Berhasil',
-  };
-
-  static Map<String, String> get loginError => {
-    'en': 'Login Failed',
-    'id': 'Login Gagal',
-  };
-
-  // Confirmation dialogs
-  static Map<String, String> get confirmDelete => {
-    'en': 'Confirm Delete',
-    'id': 'Konfirmasi Hapus',
-  };
-
-  static Map<String, String> get areYouSure => {
-    'en': 'Are you sure?',
-    'id': 'Apakah Anda yakin?',
-  };
-
-  // Form fields
+  static Map<String, String> get password => {'en': 'Password', 'id': 'Kata Sandi'};
+  static Map<String, String> get forgotPassword => {'en': 'Forgot Password?', 'id': 'Lupa Kata Sandi?'};
+  static Map<String, String> get loginSuccess => {'en': 'Login Successful', 'id': 'Login Berhasil'};
+  static Map<String, String> get loginError => {'en': 'Login Failed', 'id': 'Login Gagal'};
+  static Map<String, String> get confirmDelete => {'en': 'Confirm Delete', 'id': 'Konfirmasi Hapus'};
+  static Map<String, String> get areYouSure => {'en': 'Are you sure?', 'id': 'Apakah Anda yakin?'};
   static Map<String, String> get name => {'en': 'Name', 'id': 'Nama'};
-
   static Map<String, String> get class_ => {'en': 'Class', 'id': 'Kelas'};
-
-  static Map<String, String> get subject => {
-    'en': 'Subject',
-    'id': 'Mata Pelajaran',
-  };
-
+  static Map<String, String> get subject => {'en': 'Subject', 'id': 'Mata Pelajaran'};
   static Map<String, String> get teacher => {'en': 'Teacher', 'id': 'Guru'};
-
   static Map<String, String> get schedule => {'en': 'Schedule', 'id': 'Jadwal'};
-
-  // Success messages
   static Map<String, String> get success => {'en': 'Success', 'id': 'Berhasil'};
-
   static Map<String, String> get error => {'en': 'Error', 'id': 'Error'};
-
-  // Time related
-  static Map<String, String> get startTime => {
-    'en': 'Start Time',
-    'id': 'Jam Mulai',
-  };
-
-  static Map<String, String> get endTime => {
-    'en': 'End Time',
-    'id': 'Jam Selesai',
-  };
-
+  static Map<String, String> get startTime => {'en': 'Start Time', 'id': 'Jam Mulai'};
+  static Map<String, String> get endTime => {'en': 'End Time', 'id': 'Jam Selesai'};
   static Map<String, String> get day => {'en': 'Day', 'id': 'Hari'};
 
-  // ========== TAMBAHAN UNTUK FITUR RPP ==========
-
-  // RPP Screen Titles
-  static Map<String, String> get rpp => {
-    'en': 'Lesson Plan',
-    'id': 'Rencana Pelaksanaan Pembelajaran',
-  };
-
-  static Map<String, String> get rppList => {
-    'en': 'Lesson Plan List',
-    'id': 'Daftar RPP',
-  };
-
-  static Map<String, String> get createRpp => {
-    'en': 'Create Lesson Plan',
-    'id': 'Buat RPP',
-  };
-
-  static Map<String, String> get editRpp => {
-    'en': 'Edit Lesson Plan',
-    'id': 'Edit RPP',
-  };
-
-  // RPP Status
-  static Map<String, String> get status => {'en': 'Status', 'id': 'Status'};
-
-  static Map<String, String> get pending => {'en': 'Pending', 'id': 'Menunggu'};
-
-  static Map<String, String> get approved => {
-    'en': 'Approved',
-    'id': 'Disetujui',
-  };
-
-  static Map<String, String> get rejected => {
-    'en': 'Rejected',
-    'id': 'Ditolak',
-  };
-
-  // RPP Form Fields
-  static Map<String, String> get title => {'en': 'Title', 'id': 'Judul'};
-
-  static Map<String, String> get semester => {
-    'en': 'Semester',
-    'id': 'Semester',
-  };
-
-  static Map<String, String> get academicYear => {
-    'en': 'Academic Year',
-    'id': 'Tahun Ajaran',
-  };
-
-  static Map<String, String> get coreCompetence => {
-    'en': 'Core Competence',
-    'id': 'Kompetensi Inti',
-  };
-
-  static Map<String, String> get basicCompetence => {
-    'en': 'Basic Competence',
-    'id': 'Kompetensi Dasar',
-  };
-
-  static Map<String, String> get indicators => {
-    'en': 'Indicators',
-    'id': 'Indikator',
-  };
-
-  static Map<String, String> get learningObjectives => {
-    'en': 'Learning Objectives',
-    'id': 'Tujuan Pembelajaran',
-  };
-
-  static Map<String, String> get learningMaterials => {
-    'en': 'Learning Materials',
-    'id': 'Materi Pembelajaran',
-  };
-
-  static Map<String, String> get learningMethods => {
-    'en': 'Learning Methods',
-    'id': 'Metode Pembelajaran',
-  };
-
-  static Map<String, String> get mediaTools => {
-    'en': 'Media & Tools',
-    'id': 'Media dan Alat',
-  };
-
-  static Map<String, String> get learningResources => {
-    'en': 'Learning Resources',
-    'id': 'Sumber Belajar',
-  };
-
-  static Map<String, String> get learningActivities => {
-    'en': 'Learning Activities',
-    'id': 'Kegiatan Pembelajaran',
-  };
-
-  static Map<String, String> get assessment => {
-    'en': 'Assessment',
-    'id': 'Penilaian',
-  };
-
-  static Map<String, String> get attachment => {
-    'en': 'Attachment',
-    'id': 'Lampiran',
-  };
-
-  // RPP Actions
-  static Map<String, String> get createNewRpp => {
-    'en': 'Create New Lesson Plan',
-    'id': 'Buat RPP Baru',
-  };
-
-  static Map<String, String> get viewRpp => {
-    'en': 'View Lesson Plan',
-    'id': 'Lihat RPP',
-  };
-
-  static Map<String, String> get downloadRpp => {
-    'en': 'Download Lesson Plan',
-    'id': 'Unduh RPP',
-  };
-
-  static Map<String, String> get uploadFile => {
-    'en': 'Upload File',
-    'id': 'Unggah File',
-  };
-
-  static Map<String, String> get chooseFile => {
-    'en': 'Choose File',
-    'id': 'Pilih File',
-  };
-
-  static Map<String, String> get fileSelected => {
-    'en': 'File Selected',
-    'id': 'File Terpilih',
-  };
-
-  // RPP Messages
-  static Map<String, String> get noRppAvailable => {
-    'en': 'No lesson plans available',
-    'id': 'Belum ada RPP',
-  };
-
-  static Map<String, String> get rppCreatedSuccess => {
-    'en': 'Lesson plan created successfully',
-    'id': 'RPP berhasil dibuat',
-  };
-
-  static Map<String, String> get rppUpdatedSuccess => {
-    'en': 'Lesson plan updated successfully',
-    'id': 'RPP berhasil diperbarui',
-  };
-
-  static Map<String, String> get rppDeletedSuccess => {
-    'en': 'Lesson plan deleted successfully',
-    'id': 'RPP berhasil dihapus',
-  };
-
-  static Map<String, String> get rppStatusUpdated => {
-    'en': 'Lesson plan status updated',
-    'id': 'Status RPP berhasil diupdate',
-  };
-
-  // File Upload
-  static Map<String, String> get fileUploadSuccess => {
-    'en': 'File uploaded successfully',
-    'id': 'File berhasil diunggah',
-  };
-
-  static Map<String, String> get fileUploadError => {
-    'en': 'File upload failed',
-    'id': 'Gagal mengunggah file',
-  };
-
-  static Map<String, String> get invalidFileType => {
-    'en': 'Invalid file type. Please upload Word or PDF files only.',
-    'id': 'Tipe file tidak valid. Harap unggah file Word atau PDF saja.',
-  };
-
-  static Map<String, String> get fileTooLarge => {
-    'en': 'File too large. Maximum size is 10MB.',
-    'id': 'File terlalu besar. Ukuran maksimal 10MB.',
-  };
-
-  // Admin RPP Management
-  static Map<String, String> get allRpp => {
-    'en': 'All Lesson Plans',
-    'id': 'Semua RPP',
-  };
-
-  static Map<String, String> get filterByStatus => {
-    'en': 'Filter by Status',
-    'id': 'Filter Berdasarkan Status',
-  };
-
-  static Map<String, String> get teacherName => {
-    'en': 'Teacher Name',
-    'id': 'Nama Guru',
-  };
-
-  static Map<String, String> get subjectName => {
-    'en': 'Subject Name',
-    'id': 'Nama Mata Pelajaran',
-  };
-
-  // static Map<String, String> get className => {
-  //   'en': 'Class Name',
-  //   'id': 'Nama Kelas',
-  // };
-
-  static Map<String, String> get creationDate => {
-    'en': 'Creation Date',
-    'id': 'Tanggal Dibuat',
-  };
-
-  static Map<String, String> get updateStatus => {
-    'en': 'Update Status',
-    'id': 'Update Status',
-  };
-
-  static Map<String, String> get adminNotes => {
-    'en': 'Admin Notes',
-    'id': 'Catatan Admin',
-  };
-
-  static Map<String, String> get notesOptional => {
-    'en': 'Notes (Optional)',
-    'id': 'Catatan (Opsional)',
-  };
-
-  static Map<String, String> get approveRpp => {
-    'en': 'Approve Lesson Plan',
-    'id': 'Setujui RPP',
-  };
-
-  static Map<String, String> get rejectRpp => {
-    'en': 'Reject Lesson Plan',
-    'id': 'Tolak RPP',
-  };
-
-  // RPP Details
-  static Map<String, String> get rppDetails => {
-    'en': 'Lesson Plan Details',
-    'id': 'Detail RPP',
-  };
-
-  static Map<String, String> get basicInfo => {
-    'en': 'Basic Information',
-    'id': 'Informasi Dasar',
-  };
-
-  static Map<String, String> get learningComponents => {
-    'en': 'Learning Components',
-    'id': 'Komponen Pembelajaran',
-  };
-
-  static Map<String, String> get assessmentMethods => {
-    'en': 'Assessment Methods',
-    'id': 'Metode Penilaian',
-  };
-
-  // Empty States
-  static Map<String, String> get noRppCreated => {
-    'en': 'No lesson plans created yet',
-    'id': 'Belum ada RPP yang dibuat',
-  };
-
-  static Map<String, String> get clickPlusToCreate => {
-    'en': 'Press the + button to create a lesson plan',
-    'id': 'Tekan tombol + untuk membuat RPP',
-  };
-
-  static Map<String, String> get viewAndManageRpp => {
-    'en': 'View and manage your lesson plans',
-    'id': 'Lihat dan kelola RPP Anda',
-  };
-
-  static Map<String, String> get noRppForFilter => {
-    'en': 'No lesson plans found for the selected filter',
-    'id': 'Tidak ada RPP untuk filter yang dipilih',
-  };
-
-  // Validation Messages
-  static Map<String, String> get titleRequired => {
-    'en': 'Title is required',
-    'id': 'Judul harus diisi',
-  };
-
-  static Map<String, String> get subjectRequired => {
-    'en': 'Subject is required',
-    'id': 'Mata pelajaran harus dipilih',
-  };
-
-  static Map<String, String> get semesterRequired => {
-    'en': 'Semester is required',
-    'id': 'Semester harus dipilih',
-  };
-
-  static Map<String, String> get academicYearRequired => {
-    'en': 'Academic year is required',
-    'id': 'Tahun ajaran harus diisi',
-  };
-
-  // File Types
-  static Map<String, String> get wordDocument => {
-    'en': 'Word Document',
-    'id': 'Dokumen Word',
-  };
-
-  static Map<String, String> get pdfDocument => {
-    'en': 'PDF Document',
-    'id': 'Dokumen PDF',
-  };
-
-  static Map<String, String> get supportedFormats => {
-    'en': 'Supported formats: .doc, .docx, .pdf',
-    'id': 'Format yang didukung: .doc, .docx, .pdf',
-  };
-
-  static Map<String, String> get selectAndOrganizeMaterials => {
-    'en': 'Select and organize your teaching materials',
-    'id': 'Pilih dan kelola materi pembelajaran Anda',
-  };
-
-  // Missing Keys
-  static Map<String, String> get presence => {
-    'en': 'Presence',
-    'id': 'Kehadiran',
-  };
-
-  static Map<String, String> get billing => {'en': 'Billing', 'id': 'Tagihan'};
-
-  static Map<String, String> get materi => {'en': 'Materials', 'id': 'Materi'};
-
-  // Dashboard Statistics
-  static Map<String, String> get chooseLanguage => {
-    'en': 'Choose Language',
-    'id': 'Pilih Bahasa',
-  };
-
-  static Map<String, String> get totalStudents => {
-    'en': 'Total Students',
-    'id': 'Total Siswa',
-  };
-
-  static Map<String, String> get totalTeachers => {
-    'en': 'Total Teachers',
-    'id': 'Total Guru',
-  };
-
-  static Map<String, String> get totalClasses => {
-    'en': 'Total Classes',
-    'id': 'Total Kelas',
-  };
-
-  static Map<String, String> get switchRole => {
-    'en': 'Switch Role',
-    'id': 'Ganti Role',
-  };
-
-  static Map<String, String> get switchSchool => {
-    'en': 'Switch School',
-    'id': 'Ganti Sekolah',
-  };
-
-  static Map<String, String> get registered => {
-    'en': 'Registered',
-    'id': 'Terdaftar',
-  };
-
-  static Map<String, String> get active => {'en': 'Active', 'id': 'Aktif'};
-
-  static Map<String, String> get available => {
-    'en': 'Available',
-    'id': 'Tersedia',
-  };
-
-  static Map<String, String> get supervised => {
-    'en': 'Supervised',
-    'id': 'Diampu',
-  };
-
-  static Map<String, String> get todaysClasses => {
-    'en': "Today's Classes",
-    'id': 'Kelas Hari Ini',
-  };
-
-  static Map<String, String> get subjects => {
-    'en': 'Subjects',
-    'id': 'Mata Pelajaran',
-  };
-
-  static Map<String, String> get ongoing => {
-    'en': 'Ongoing',
-    'id': 'Sedang berlangsung',
-  };
-
-  static Map<String, String> get submitted => {
-    'en': 'Submitted',
-    'id': 'Terkirim',
-  };
-
-  static Map<String, String> get presenceReport => {
-    'en': 'Presence Report',
-    'id': 'Laporan Presensi',
-  };
-
-  static Map<String, String> get schoolSettings => {
-    'en': 'School Settings',
-    'id': 'Pengaturan Sekolah',
-  };
-
-  // Parent Dashboard
-  static Map<String, String> get latestInfo => {
-    'en': 'Latest Info',
-    'id': 'Info terbaru',
-  };
-
-  static Map<String, String> get childrenData => {
-    'en': 'Children Data',
-    'id': 'Data Anak',
-  };
-
-  static Map<String, String> get registeredChildren => {
-    'en': 'Registered Children',
-    'id': 'Anak terdaftar',
-  };
-
-  static Map<String, String> get grades => {'en': 'Grades', 'id': 'Nilai'};
-
-  // Parent Grade Screen
-  static Map<String, String> get noChildrenLinked => {
-    'en': 'No student/child linked to this account',
-    'id': 'Tidak ada data siswa/anak yang terhubung dengan akun ini',
-  };
-  static Map<String, String> get selectChild => {
-    'en': 'Select Child:',
-    'id': 'Pilih Anak:',
-  };
-  static Map<String, String> get nameNotAvailable => {
-    'en': 'Name not available',
-    'id': 'Nama tidak tersedia',
-  };
-  static Map<String, String> get classString => {'en': 'Class', 'id': 'Kelas'};
-
-  static Map<String, String> get assessmentDate => {
-    'en': 'Assessment Date',
-    'id': 'Tanggal Penilaian',
-  };
-  static Map<String, String> get teacherNotes => {
-    'en': 'Teacher Notes',
-    'id': 'Catatan Guru',
-  };
-  static Map<String, String> get selectChildToViewGrades => {
-    'en': 'Select child first to view grades',
-    'id': 'Pilih anak terlebih dahulu untuk melihat nilai',
-  };
-  static Map<String, String> get noGradesData => {
-    'en': 'No grades data for this child',
-    'id': 'Belum ada data nilai untuk anak ini',
-  };
-  static Map<String, String> get childAcademicGrades => {
-    'en': 'Child Academic Grades',
-    'id': 'Nilai Akademik Anak',
-  };
-  static Map<String, String> get monitorChildGrades => {
-    'en': 'Monitor your child\'s grade progress',
-    'id': 'Pantau perkembangan nilai anak Anda',
-  };
-
-  static Map<String, String> get unknown => {
-    'en': 'Unknown',
-    'id': 'Tidak Diketahui',
-  };
-
-  // Parent Activity Screen
-  static Map<String, String> get activityTitle => {
-    'en': 'Activity Title',
-    'id': 'Judul Kegiatan',
-  };
-
-  static Map<String, String> get date => {'en': 'Date', 'id': 'Tanggal'};
-  static Map<String, String> get deadline => {
-    'en': 'Deadline',
-    'id': 'Batas Waktu',
-  };
-  static Map<String, String> get description => {
-    'en': 'Description',
-    'id': 'Deskripsi',
-  };
-  static Map<String, String> get chapterInfo => {
-    'en': 'Chapter Info',
-    'id': 'Informasi Bab',
-  };
-  static Map<String, String> get chapter => {'en': 'Chapter', 'id': 'Bab'};
-  static Map<String, String> get mainSubChapter => {
-    'en': 'Main Sub-chapter',
-    'id': 'Sub Bab (Utama)',
-  };
-  static Map<String, String> get additionalSubChapter => {
-    'en': 'Additional Sub-chapter',
-    'id': 'Sub Bab (Tambahan)',
-  };
-  static Map<String, String> get selectChildToViewActivity => {
-    'en': 'Select child first to view activities',
-    'id': 'Pilih anak terlebih dahulu untuk melihat aktivitas',
-  };
-  static Map<String, String> get noActivityForChild => {
-    'en': 'No activity for this child',
-    'id': 'Belum ada aktivitas untuk anak ini',
-  };
-  static Map<String, String> get childClassActivity => {
-    'en': 'Child Class Activity',
-    'id': 'Aktivitas Kelas Anak',
-  };
-  static Map<String, String> get monitorChildActivity => {
-    'en': 'Monitor your child\'s activity',
-    'id': 'Pantau aktivitas anak Anda',
-  };
-  static Map<String, String> get assignment => {
-    'en': 'ASSIGNMENT',
-    'id': 'TUGAS',
-  };
-  static Map<String, String> get material => {'en': 'MATERIAL', 'id': 'MATERI'};
-
-  // Parent Billing Screen
-  static Map<String, String> get myBills => {
-    'en': 'My Bills',
-    'id': 'Tagihan Saya',
-  };
-  static Map<String, String> get manageBillPayments => {
-    'en': 'Manage bill payments',
-    'id': 'Kelola pembayaran tagihan',
-  };
-  static Map<String, String> get searchBills => {
-    'en': 'Search bills...',
-    'id': 'Cari tagihan...',
-  };
-  static Map<String, String> get paymentStatus => {
-    'en': 'Payment Status',
-    'id': 'Status Pembayaran',
-  };
-  static Map<String, String> get paid => {'en': 'Paid', 'id': 'Lunas'};
-
-  static Map<String, String> get waitingForVerification => {
-    'en': 'Waiting for Verification',
-    'id': 'Menunggu Verifikasi',
-  };
-  static Map<String, String> get paymentPeriod => {
-    'en': 'Payment Period',
-    'id': 'Periode Pembayaran',
-  };
-  static Map<String, String> get monthly => {'en': 'Monthly', 'id': 'Bulanan'};
-  static Map<String, String> get yearly => {'en': 'Yearly', 'id': 'Tahunan'};
-  static Map<String, String> get filter => {'en': 'Filter', 'id': 'Filter'};
-  static Map<String, String> get apply => {'en': 'Apply', 'id': 'Terapkan'};
-
-  static Map<String, String> get reset => {'en': 'Reset', 'id': 'Reset'};
-  static Map<String, String> get chooseSource => {
-    'en': 'Choose Source',
-    'id': 'Pilih Sumber',
-  };
-  static Map<String, String> get chooseImageSource => {
-    'en': 'Choose image source',
-    'id': 'Pilih sumber gambar',
-  };
-  static Map<String, String> get gallery => {'en': 'Gallery', 'id': 'Galeri'};
-  static Map<String, String> get camera => {'en': 'Camera', 'id': 'Kamera'};
-  static Map<String, String> get unsupportedFileFormat => {
-    'en': 'Unsupported file format. Only JPG, JPEG, and PNG are allowed.',
-    'id':
-        'Format file tidak didukung. Hanya JPG, JPEG, dan PNG yang diizinkan.',
-  };
-  static Map<String, String> get chooseFileType => {
-    'en': 'Choose File Type',
-    'id': 'Pilih Jenis File',
-  };
-  static Map<String, String> get imageCameraGallery => {
-    'en': 'Image (Camera/Gallery)',
-    'id': 'Gambar (Kamera/Galeri)',
-  };
-
-  static Map<String, String> get uploadPaymentProof => {
-    'en': 'Upload Payment Proof',
-    'id': 'Upload Bukti Pembayaran',
-  };
-  static Map<String, String> get billAmount => {
-    'en': 'Bill Amount',
-    'id': 'Jumlah Tagihan',
-  };
-  static Map<String, String> get student => {'en': 'Student', 'id': 'Siswa'};
-  static Map<String, String> get payNow => {
-    'en': 'Pay Now',
-    'id': 'Bayar Sekarang',
-  };
-
-  // Parent Presence Screen
-  static Map<String, String> get childPresence => {
-    'en': 'Child Presence',
-    'id': 'Absensi Anak',
-  };
-  static Map<String, String> get studentName => {
-    'en': 'Student Name',
-    'id': 'Nama Siswa',
-  };
-  static Map<String, String> get monthlyRecap => {
-    'en': 'Monthly Recap',
-    'id': 'Rekap Bulanan',
-  };
-  static Map<String, String> get attendanceRate => {
-    'en': 'Attendance Rate',
-    'id': 'Tingkat Kehadiran',
-  };
-  static Map<String, String> get present => {'en': 'Present', 'id': 'Hadir'};
-  static Map<String, String> get late => {
-    'en': 'Late',
-    'id': 'Terlambat',
-  }; // late is reserved keyword in dart? No.
-  static Map<String, String> get permission => {
-    'en': 'Permission',
-    'id': 'Izin',
-  };
-  static Map<String, String> get sick => {'en': 'Sick', 'id': 'Sakit'};
-  static Map<String, String> get alpha => {'en': 'Alpha', 'id': 'Alpha'};
-  static Map<String, String> get presenceHistory => {
-    'en': 'Presence History',
-    'id': 'Riwayat Absensi',
-  };
-  static Map<String, String> get noPresenceData => {
-    'en': 'No presence data',
-    'id': 'Tidak ada data absensi',
-  };
-  static Map<String, String> get forMonth => {
-    'en': 'For month',
-    'id': 'Untuk bulan',
-  };
-  static Map<String, String> get loadingPresenceData => {
-    'en': 'Loading presence data...',
-    'id': 'Memuat data absensi...',
-  };
-
-  // Finance
-  static Map<String, String> get financialManagement => {
-    'en': 'Financial Management',
-    'id': 'Manajemen Keuangan',
-  };
-
-  static Map<String, String> get dashboard => {
-    'en': 'Dashboard',
-    'id': 'Dashboard',
-  };
-
-  static Map<String, String> get paymentTypes => {
-    'en': 'Payment Types',
-    'id': 'Jenis Pembayaran',
-  };
-
-  static Map<String, String> get verification => {
-    'en': 'Verification',
-    'id': 'Verifikasi',
-  };
-
-  static Map<String, String> get monthlyIncome => {
-    'en': 'Monthly Income',
-    'id': 'Pendapatan Bulan Ini',
-  };
-
-  static Map<String, String> get pendingVerification => {
-    'en': 'Pending Verification',
-    'id': 'Menunggu Verifikasi',
-  };
-
-  static Map<String, String> get unpaid => {
-    'en': 'Unpaid',
-    'id': 'Belum Bayar',
-  };
-
-  static Map<String, String> get verified => {
-    'en': 'Verified',
-    'id': 'Terverifikasi',
-  };
-
-  static Map<String, String> get addPaymentType => {
-    'en': 'Add Payment Type',
-    'id': 'Tambah Jenis Pembayaran',
-  };
-
-  static Map<String, String> get editPaymentType => {
-    'en': 'Edit Payment Type',
-    'id': 'Edit Jenis Pembayaran',
-  };
-
-  static Map<String, String> get deletePaymentType => {
-    'en': 'Delete Payment Type',
-    'id': 'Hapus Jenis Pembayaran',
-  };
-
-  static Map<String, String> get paymentsPendingVerification => {
-    'en': 'Payments Pending Verification',
-    'id': 'Pembayaran Menunggu Verifikasi',
-  };
-
-  static Map<String, String> get classReport => {
-    'en': 'Class Report',
-    'id': 'Laporan Kelas',
-  };
-
-  static Map<String, String> get students => {'en': 'students', 'id': 'siswa'};
-
-  // Settings
-  static Map<String, String> get settingsMenu => {
-    'en': 'Settings Menu',
-    'id': 'Menu Pengaturan',
-  };
-
-  static Map<String, String> get generalSettings => {
-    'en': 'General Settings',
-    'id': 'Pengaturan Umum',
-  };
-
-  static Map<String, String> get timeSettings => {
-    'en': 'Time Settings',
-    'id': 'Pengaturan Waktu',
-  };
-
-  static Map<String, String> get userProfile => {
-    'en': 'User Profile',
-    'id': 'Profil Pengguna',
-  };
-
-  static Map<String, String> get personalInformation => {
-    'en': 'Personal Information',
-    'id': 'Informasi Pribadi',
-  };
-
-  static Map<String, String> get accountInformation => {
-    'en': 'Account Information',
-    'id': 'Informasi Akun',
-  };
-
-  static Map<String, String> get fullName => {
-    'en': 'Full Name',
-    'id': 'Nama Lengkap',
-  };
-
-  static Map<String, String> get phoneNumber => {
-    'en': 'Phone Number',
-    'id': 'No. Telepon',
-  };
-
-  static Map<String, String> get address => {'en': 'Address', 'id': 'Alamat'};
-
-  static Map<String, String> get role => {'en': 'Role', 'id': 'Role'};
-
-  static Map<String, String> get school => {'en': 'School', 'id': 'Sekolah'};
-
-  static Map<String, String> get editProfile => {
-    'en': 'Edit Profile',
-    'id': 'Edit Profil',
-  };
-
-  static Map<String, String> get changePassword => {
-    'en': 'Change Password',
-    'id': 'Ubah Kata Sandi',
-  };
-
-  static Map<String, String> get oldPassword => {
-    'en': 'Old Password',
-    'id': 'Kata Sandi Lama',
-  };
-
-  static Map<String, String> get newPassword => {
-    'en': 'New Password',
-    'id': 'Kata Sandi Baru',
-  };
-
-  static Map<String, String> get confirmPassword => {
-    'en': 'Confirm Password',
-    'id': 'Konfirmasi Kata Sandi',
-  };
-
-  static Map<String, String> get passwordMismatch => {
-    'en': 'Passwords do not match',
-    'id': 'Kata sandi tidak cocok',
-  };
-
-  static Map<String, String> get passwordMinLength => {
-    'en': 'Password must be at least 8 characters',
-    'id': 'Kata sandi minimal 8 karakter',
-  };
-
-  static Map<String, String> get passwordLetters => {
-    'en': 'Password must contain uppercase and lowercase letters',
-    'id': 'Kata sandi harus mengandung huruf besar dan kecil',
-  };
-
-  static Map<String, String> get passwordNumbers => {
-    'en': 'Password must contain numbers',
-    'id': 'Kata sandi harus mengandung angka',
-  };
-
-  static Map<String, String> get passwordSymbols => {
-    'en': 'Password must contain symbols',
-    'id': 'Kata sandi harus mengandung simbol',
-  };
-
-  static Map<String, String> get required => {
-    'en': 'Required',
-    'id': 'Wajib diisi',
-  };
-
-  static Map<String, String> get profileUpdatedSuccess => {
-    'en': 'Profile updated successfully',
-    'id': 'Profil berhasil diperbarui',
-  };
-
-  static Map<String, String> get passwordChangedSuccess => {
-    'en': 'Password changed successfully',
-    'id': 'Kata sandi berhasil diubah',
-  };
-
-  static Map<String, String> get failedToLoadProfile => {
-    'en': 'Failed to load profile',
-    'id': 'Gagal memuat profil',
-  };
-
-  static Map<String, String> get failedToUpdateProfile => {
-    'en': 'Failed to update profile',
-    'id': 'Gagal memperbarui profil',
-  };
-
-  static Map<String, String> get failedToChangePassword => {
-    'en': 'Failed to change password',
-    'id': 'Gagal mengubah kata sandi',
-  };
-
-  // Dashboard Section Headers
-  static Map<String, String> get quickAccess => {
-    'en': 'Quick Access',
-    'id': 'Akses Cepat',
-  };
-
-  static Map<String, String> get todaysOverview => {
-    'en': "Today's Overview",
-    'id': 'Ringkasan Hari Ini',
-  };
-
-  static Map<String, String> get menu => {'en': 'Menu', 'id': 'Menu'};
-
-  // Greetings
-  static Map<String, String> get goodMorning => {
-    'en': 'Good Morning',
-    'id': 'Selamat Pagi',
-  };
-
-  static Map<String, String> get goodAfternoon => {
-    'en': 'Good Afternoon',
-    'id': 'Selamat Siang',
-  };
-
-  static Map<String, String> get goodEvening => {
-    'en': 'Good Evening',
-    'id': 'Selamat Malam',
-  };
-
-  // Quick Action Labels
-  static Map<String, String> get data => {'en': 'Data', 'id': 'Data'};
-
-  static Map<String, String> get attendance => {
-    'en': 'Attendance',
-    'id': 'Absensi',
-  };
-
-  static Map<String, String> get activity => {
-    'en': 'Activity',
-    'id': 'Aktivitas',
-  };
-
-  // Overview Card Titles & Subtitles
-  static Map<String, String> get activeTeachers => {
-    'en': 'Active Teachers',
-    'id': 'Guru Aktif',
-  };
-
-  static Map<String, String> get currentlyTeaching => {
-    'en': 'Currently teaching',
-    'id': 'Sedang mengajar',
-  };
-
-  static Map<String, String> get recentUpdates => {
-    'en': 'Recent updates',
-    'id': 'Pembaruan terbaru',
-  };
-
-  static Map<String, String> get myChildren => {
-    'en': 'My Children',
-    'id': 'Anak Saya',
-  };
-
-  static Map<String, String> get registeredStudents => {
-    'en': 'Registered students',
-    'id': 'Siswa terdaftar',
-  };
-
-  static Map<String, String> get newGrades => {
-    'en': 'New Grades',
-    'id': 'Nilai Baru',
-  };
-
-  static Map<String, String> get newRecords => {
-    'en': 'New records',
-    'id': 'Catatan baru',
-  };
-
-  static Map<String, String> get latestInformation => {
-    'en': 'Latest info',
-    'id': 'Info terbaru',
-  };
-
-  static Map<String, String> get childAttendance => {
-    'en': 'Child Attendance',
-    'id': 'Kehadiran Anak',
-  };
-
-  // Category Section Titles
-  static Map<String, String> get categoryDataManagement => {
-    'en': 'DATA MANAGEMENT',
-    'id': 'MANAJEMEN DATA',
-  };
-
-  static Map<String, String> get categoryAcademicCommunication => {
-    'en': 'ACADEMIC & COMMUNICATION',
-    'id': 'AKADEMIK & KOMUNIKASI',
-  };
-
-  static Map<String, String> get categoryFinanceSettings => {
-    'en': 'FINANCE & SETTINGS',
-    'id': 'KEUANGAN & PENGATURAN',
-  };
-
-  static Map<String, String> get categoryTeaching => {
-    'en': 'TEACHING',
-    'id': 'MENGAJAR',
-  };
-
-  static Map<String, String> get categoryAssessmentPlanning => {
-    'en': 'ASSESSMENT & PLANNING',
-    'id': 'PENILAIAN & PERENCANAAN',
-  };
-
-  // Menu Items
-  static Map<String, String> get manageData => {
-    'en': 'Manage Data',
-    'id': 'Kelola Data',
-  };
-
-  static Map<String, String> get studentReport => {
-    'en': 'Student Report Card',
-    'id': 'Raport Siswa',
-  };
-
-  static Map<String, String> get gradeRecap => {
-    'en': 'Grade Recap',
-    'id': 'Rekap Nilai',
-  };
-
-  static Map<String, String> get reportCard => {
-    'en': 'Report Card',
-    'id': 'Raport',
-  };
-
-  static Map<String, String> get learningRecommendation => {
-    'en': 'Learning Recommendation',
-    'id': 'Rekomendasi Belajar',
-  };
-
-  static Map<String, String> get eRaport => {
-    'en': 'E-Report Card',
-    'id': 'E-Raport',
-  };
-
-  static Map<String, String> get selectSchool => {
-    'en': 'Select School',
-    'id': 'Pilih Sekolah',
-  };
-
-  // Verification & OTP
-  static Map<String, String> get verify => {
-    'en': 'Verify',
-    'id': 'Verifikasi',
-  };
-
-  // AI Regeneration
-  static Map<String, String> get regenerate => {
-    'en': 'Regenerate',
-    'id': 'Regenerasi',
-  };
-
-  static Map<String, String> get regenerateAll => {
-    'en': 'Regenerate All',
-    'id': 'Regenerasi Semua',
-  };
-
-  // Unsaved Changes
-  static Map<String, String> get unsavedChanges => {
-    'en': 'Unsaved Changes',
-    'id': 'Perubahan Belum Disimpan',
-  };
-
-  static Map<String, String> get unsavedChangesConfirm => {
-    'en':
-        'You have unsaved changes. Are you sure you want to leave? Changes will be lost.',
-    'id':
-        'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? Perubahan akan hilang.',
-  };
-
-  static Map<String, String> get leave => {'en': 'Leave', 'id': 'Keluar'};
-
-  // Delete Material (grade recap)
-  static Map<String, String> get deleteMaterial => {
-    'en': 'Delete Material',
-    'id': 'Hapus Materi',
-  };
-
-  static Map<String, String> get deleteColumnConfirm => {
-    'en':
-        'Are you sure you want to delete this material column along with all its grades?',
-    'id':
-        'Apakah Anda yakin ingin menghapus kolom materi ini beserta semua nilainya?',
-  };
-
-  // Subject class removal
-  static Map<String, String> get removeClass => {
-    'en': 'Remove Class',
-    'id': 'Hapus Kelas',
-  };
-
-  // Report Card
-  static Map<String, String> get sendReportCard => {
-    'en': 'Send Report Card to Parents?',
-    'id': 'Kirim Raport ke Wali Murid?',
-  };
-
-  static Map<String, String> get sendReportCardConfirm => {
-    'en':
-        'This action will publish report cards with "Final" status and automatically send notifications to the related parents. Continue?',
-    'id':
-        'Tindakan ini akan mempublikasikan raport dengan status "Final" dan secara otomatis mengirimkan notifikasi ke wali murid terkait. Lanjutkan?',
-  };
-
-  static Map<String, String> get yesSend => {
-    'en': 'Yes, Send',
-    'id': 'Ya, Kirim',
-  };
-
-  static Map<String, String> get finalizeReportCard => {
-    'en': 'Finalize Report Card?',
-    'id': 'Selesaikan Raport?',
-  };
-
-  static Map<String, String> get finalizeReportCardConfirm => {
-    'en':
-        'The report card will be saved as final. Sending to parents will be done by the Admin later.',
-    'id':
-        'Raport akan disimpan secara final. Pengiriman ke wali murid akan dilakukan oleh Admin nantinya.',
-  };
-
-  static Map<String, String> get yesFinalize => {
-    'en': 'Yes, Finalize',
-    'id': 'Ya, Selesaikan',
-  };
-
-  // Achievements
-  static Map<String, String> get achievements => {
-    'en': 'Achievements',
-    'id': 'Prestasi',
-  };
-
-  // Settings messages
-  static Map<String, String> get failedToSave => {
-    'en': 'Failed to save',
-    'id': 'Gagal menyimpan',
-  };
-
-  static Map<String, String> get settingsSavedSuccess => {
-    'en': 'Settings saved successfully',
-    'id': 'Pengaturan berhasil disimpan',
-  };
-
-  static Map<String, String> get schoolNameMinChars => {
-    'en': 'School name must be at least 3 characters',
-    'id': 'Nama sekolah minimal 3 karakter',
-  };
-
-  static Map<String, String> get enterOtp => {
-    'en': 'Enter 6-digit OTP code',
-    'id': 'Masukkan 6 digit kode OTP',
-  };
+  // ── Lesson Plans (RPP) ──────────────────────────────────────────────────────
+  // Data lives in language_utils_lesson_plans.dart (part of this library).
+  static Map<String, String> get lessonPlan => _kLessonPlan;
+  static Map<String, String> get lessonPlanList => _kLessonPlanList;
+  static Map<String, String> get createLessonPlan => _kCreateLessonPlan;
+  static Map<String, String> get editLessonPlan => _kEditLessonPlan;
+  static Map<String, String> get status => _kStatus;
+  static Map<String, String> get pending => _kPending;
+  static Map<String, String> get approved => _kApproved;
+  static Map<String, String> get rejected => _kRejected;
+  static Map<String, String> get title => _kTitle;
+  static Map<String, String> get academicTerm => _kAcademicTerm;
+  static Map<String, String> get academicYear => _kAcademicYear;
+  static Map<String, String> get coreCompetence => _kCoreCompetence;
+  static Map<String, String> get basicCompetence => _kBasicCompetence;
+  static Map<String, String> get indicators => _kIndicators;
+  static Map<String, String> get learningObjectives => _kLearningObjectives;
+  static Map<String, String> get learningMaterials => _kLearningMaterials;
+  static Map<String, String> get learningMethods => _kLearningMethods;
+  static Map<String, String> get mediaTools => _kMediaTools;
+  static Map<String, String> get learningResources => _kLearningResources;
+  static Map<String, String> get learningActivities => _kLearningActivities;
+  static Map<String, String> get assessment => _kAssessment;
+  static Map<String, String> get attachment => _kAttachment;
+  static Map<String, String> get createNewLessonPlan => _kCreateNewLessonPlan;
+  static Map<String, String> get viewLessonPlan => _kViewLessonPlan;
+  static Map<String, String> get downloadLessonPlan => _kDownloadLessonPlan;
+  static Map<String, String> get uploadFile => _kUploadFile;
+  static Map<String, String> get chooseFile => _kChooseFile;
+  static Map<String, String> get fileSelected => _kFileSelected;
+  static Map<String, String> get noLessonPlanAvailable => _kNoLessonPlanAvailable;
+  static Map<String, String> get lessonPlanCreatedSuccess => _kLessonPlanCreatedSuccess;
+  static Map<String, String> get lessonPlanUpdatedSuccess => _kLessonPlanUpdatedSuccess;
+  static Map<String, String> get lessonPlanDeletedSuccess => _kLessonPlanDeletedSuccess;
+  static Map<String, String> get lessonPlanStatusUpdated => _kLessonPlanStatusUpdated;
+  static Map<String, String> get fileUploadSuccess => _kFileUploadSuccess;
+  static Map<String, String> get fileUploadError => _kFileUploadError;
+  static Map<String, String> get invalidFileType => _kInvalidFileType;
+  static Map<String, String> get fileTooLarge => _kFileTooLarge;
+  static Map<String, String> get allLessonPlans => _kAllLessonPlans;
+  static Map<String, String> get filterByStatus => _kFilterByStatus;
+  static Map<String, String> get teacherName => _kTeacherName;
+  static Map<String, String> get subjectName => _kSubjectName;
+  static Map<String, String> get creationDate => _kCreationDate;
+  static Map<String, String> get updateStatus => _kUpdateStatus;
+  static Map<String, String> get adminNotes => _kAdminNotes;
+  static Map<String, String> get notesOptional => _kNotesOptional;
+  static Map<String, String> get approveLessonPlan => _kApproveLessonPlan;
+  static Map<String, String> get rejectLessonPlan => _kRejectLessonPlan;
+  static Map<String, String> get lessonPlanDetails => _kLessonPlanDetails;
+  static Map<String, String> get basicInfo => _kBasicInfo;
+  static Map<String, String> get learningComponents => _kLearningComponents;
+  static Map<String, String> get assessmentMethods => _kAssessmentMethods;
+  static Map<String, String> get noLessonPlanCreated => _kNoLessonPlanCreated;
+  static Map<String, String> get clickPlusToCreate => _kClickPlusToCreate;
+  static Map<String, String> get viewAndManageLessonPlans => _kViewAndManageLessonPlans;
+  static Map<String, String> get noLessonPlanForFilter => _kNoLessonPlanForFilter;
+  static Map<String, String> get titleRequired => _kTitleRequired;
+  static Map<String, String> get subjectRequired => _kSubjectRequired;
+  static Map<String, String> get academicTermRequired => _kAcademicTermRequired;
+  static Map<String, String> get academicYearRequired => _kAcademicYearRequired;
+  static Map<String, String> get wordDocument => _kWordDocument;
+  static Map<String, String> get pdfDocument => _kPdfDocument;
+  static Map<String, String> get supportedFormats => _kSupportedFormats;
+  static Map<String, String> get selectAndOrganizeMaterials => _kSelectAndOrganizeMaterials;
+  static Map<String, String> get presence => _kPresence;
+  static Map<String, String> get billing => _kBilling;
+  static Map<String, String> get materialsLabel => _kMaterialsLabel;
+
+  // ── Parent Screens & Dashboard Statistics ───────────────────────────────────
+  // Data lives in language_utils_parent_dashboard.dart (part of this library).
+  static Map<String, String> get chooseLanguage => _kChooseLanguage;
+  static Map<String, String> get totalStudents => _kTotalStudents;
+  static Map<String, String> get totalTeachers => _kTotalTeachers;
+  static Map<String, String> get totalClasses => _kTotalClasses;
+  static Map<String, String> get switchRole => _kSwitchRole;
+  static Map<String, String> get switchSchool => _kSwitchSchool;
+  static Map<String, String> get registered => _kRegistered;
+  static Map<String, String> get active => _kActive;
+  static Map<String, String> get available => _kAvailable;
+  static Map<String, String> get supervised => _kSupervised;
+  static Map<String, String> get todaysClasses => _kTodaysClasses;
+  static Map<String, String> get subjects => _kSubjects;
+  static Map<String, String> get ongoing => _kOngoing;
+  static Map<String, String> get submitted => _kSubmitted;
+  static Map<String, String> get presenceReport => _kPresenceReport;
+  static Map<String, String> get schoolSettings => _kSchoolSettings;
+  static Map<String, String> get latestInfo => _kLatestInfo;
+  static Map<String, String> get childrenData => _kChildrenData;
+  static Map<String, String> get registeredChildren => _kRegisteredChildren;
+  static Map<String, String> get grades => _kGrades;
+  static Map<String, String> get noChildrenLinked => _kNoChildrenLinked;
+  static Map<String, String> get selectChild => _kSelectChild;
+  static Map<String, String> get nameNotAvailable => _kNameNotAvailable;
+  static Map<String, String> get classString => _kClassString;
+  static Map<String, String> get assessmentDate => _kAssessmentDate;
+  static Map<String, String> get teacherNotes => _kTeacherNotes;
+  static Map<String, String> get selectChildToViewGrades => _kSelectChildToViewGrades;
+  static Map<String, String> get noGradesData => _kNoGradesData;
+  static Map<String, String> get childAcademicGrades => _kChildAcademicGrades;
+  static Map<String, String> get monitorChildGrades => _kMonitorChildGrades;
+  static Map<String, String> get unknown => _kUnknown;
+  static Map<String, String> get activityTitle => _kActivityTitle;
+  static Map<String, String> get date => _kDate;
+  static Map<String, String> get deadline => _kDeadline;
+  static Map<String, String> get description => _kDescription;
+  static Map<String, String> get chapterInfo => _kChapterInfo;
+  static Map<String, String> get chapter => _kChapter;
+  static Map<String, String> get mainSubChapter => _kMainSubChapter;
+  static Map<String, String> get additionalSubChapter => _kAdditionalSubChapter;
+  static Map<String, String> get selectChildToViewActivity => _kSelectChildToViewActivity;
+  static Map<String, String> get noActivityForChild => _kNoActivityForChild;
+  static Map<String, String> get childClassActivity => _kChildClassActivity;
+  static Map<String, String> get monitorChildActivity => _kMonitorChildActivity;
+  static Map<String, String> get assignment => _kAssignment;
+  static Map<String, String> get material => _kMaterial;
+  static Map<String, String> get myBills => _kMyBills;
+  static Map<String, String> get manageBillPayments => _kManageBillPayments;
+  static Map<String, String> get searchBills => _kSearchBills;
+  static Map<String, String> get paymentStatus => _kPaymentStatus;
+  static Map<String, String> get paid => _kPaid;
+  static Map<String, String> get waitingForVerification => _kWaitingForVerification;
+  static Map<String, String> get paymentPeriod => _kPaymentPeriod;
+  static Map<String, String> get monthly => _kMonthly;
+  static Map<String, String> get yearly => _kYearly;
+  static Map<String, String> get filter => _kFilter;
+  static Map<String, String> get apply => _kApply;
+  static Map<String, String> get reset => _kReset;
+  static Map<String, String> get chooseSource => _kChooseSource;
+  static Map<String, String> get chooseImageSource => _kChooseImageSource;
+  static Map<String, String> get gallery => _kGallery;
+  static Map<String, String> get camera => _kCamera;
+  static Map<String, String> get unsupportedFileFormat => _kUnsupportedFileFormat;
+  static Map<String, String> get chooseFileType => _kChooseFileType;
+  static Map<String, String> get imageCameraGallery => _kImageCameraGallery;
+  static Map<String, String> get uploadPaymentProof => _kUploadPaymentProof;
+  static Map<String, String> get billAmount => _kBillAmount;
+  static Map<String, String> get student => _kStudent;
+  static Map<String, String> get payNow => _kPayNow;
+  static Map<String, String> get childPresence => _kChildPresence;
+  static Map<String, String> get studentName => _kStudentName;
+  static Map<String, String> get monthlyRecap => _kMonthlyRecap;
+  static Map<String, String> get attendanceRate => _kAttendanceRate;
+  static Map<String, String> get present => _kPresent;
+  static Map<String, String> get late => _kLate;
+  static Map<String, String> get permission => _kPermission;
+  static Map<String, String> get sick => _kSick;
+  static Map<String, String> get alpha => _kAlpha;
+  static Map<String, String> get presenceHistory => _kPresenceHistory;
+  static Map<String, String> get noPresenceData => _kNoPresenceData;
+  static Map<String, String> get forMonth => _kForMonth;
+  static Map<String, String> get loadingPresenceData => _kLoadingPresenceData;
+  static Map<String, String> get financialManagement => _kFinancialManagement;
+  static Map<String, String> get dashboard => _kDashboard;
+  static Map<String, String> get paymentTypes => _kPaymentTypes;
+  static Map<String, String> get verification => _kVerification;
+  static Map<String, String> get monthlyIncome => _kMonthlyIncome;
+  static Map<String, String> get pendingVerification => _kPendingVerification;
+  static Map<String, String> get unpaid => _kUnpaid;
+  static Map<String, String> get verified => _kVerified;
+  static Map<String, String> get addPaymentType => _kAddPaymentType;
+  static Map<String, String> get editPaymentType => _kEditPaymentType;
+  static Map<String, String> get deletePaymentType => _kDeletePaymentType;
+  static Map<String, String> get paymentsPendingVerification => _kPaymentsPendingVerification;
+  static Map<String, String> get classReport => _kClassReport;
+  static Map<String, String> get students => _kStudents;
+
+  // ── Settings, Auth/Login, Navigation, Notifications, Generic Patterns ────────
+  // Data lives in language_utils_settings_auth.dart (part of this library).
+  static Map<String, String> get settingsMenu => _kSettingsMenu;
+  static Map<String, String> get generalSettings => _kGeneralSettings;
+  static Map<String, String> get timeSettings => _kTimeSettings;
+  static Map<String, String> get userProfile => _kUserProfile;
+  static Map<String, String> get personalInformation => _kPersonalInformation;
+  static Map<String, String> get accountInformation => _kAccountInformation;
+  static Map<String, String> get fullName => _kFullName;
+  static Map<String, String> get phoneNumber => _kPhoneNumber;
+  static Map<String, String> get address => _kAddress;
+  static Map<String, String> get role => _kRole;
+  static Map<String, String> get school => _kSchool;
+  static Map<String, String> get editProfile => _kEditProfile;
+  static Map<String, String> get changePassword => _kChangePassword;
+  static Map<String, String> get oldPassword => _kOldPassword;
+  static Map<String, String> get newPassword => _kNewPassword;
+  static Map<String, String> get confirmPassword => _kConfirmPassword;
+  static Map<String, String> get passwordMismatch => _kPasswordMismatch;
+  static Map<String, String> get passwordMinLength => _kPasswordMinLength;
+  static Map<String, String> get passwordLetters => _kPasswordLetters;
+  static Map<String, String> get passwordNumbers => _kPasswordNumbers;
+  static Map<String, String> get passwordSymbols => _kPasswordSymbols;
+  static Map<String, String> get required => _kRequired;
+  static Map<String, String> get profileUpdatedSuccess => _kProfileUpdatedSuccess;
+  static Map<String, String> get passwordChangedSuccess => _kPasswordChangedSuccess;
+  static Map<String, String> get failedToLoadProfile => _kFailedToLoadProfile;
+  static Map<String, String> get failedToUpdateProfile => _kFailedToUpdateProfile;
+  static Map<String, String> get failedToChangePassword => _kFailedToChangePassword;
+  static Map<String, String> get quickAccess => _kQuickAccess;
+  static Map<String, String> get todaysOverview => _kTodaysOverview;
+  static Map<String, String> get menu => _kMenu;
+  static Map<String, String> get goodMorning => _kGoodMorning;
+  static Map<String, String> get goodAfternoon => _kGoodAfternoon;
+  static Map<String, String> get goodEvening => _kGoodEvening;
+  static Map<String, String> get data => _kData;
+  static Map<String, String> get attendance => _kAttendance;
+  static Map<String, String> get activity => _kActivity;
+  static Map<String, String> get activeTeachers => _kActiveTeachers;
+  static Map<String, String> get currentlyTeaching => _kCurrentlyTeaching;
+  static Map<String, String> get recentUpdates => _kRecentUpdates;
+  static Map<String, String> get myChildren => _kMyChildren;
+  static Map<String, String> get registeredStudents => _kRegisteredStudents;
+  static Map<String, String> get newGrades => _kNewGrades;
+  static Map<String, String> get newRecords => _kNewRecords;
+  static Map<String, String> get latestInformation => _kLatestInformation;
+  static Map<String, String> get childAttendance => _kChildAttendance;
+  static Map<String, String> get categoryDataManagement => _kCategoryDataManagement;
+  static Map<String, String> get categoryAcademicCommunication => _kCategoryAcademicCommunication;
+  static Map<String, String> get categoryFinanceSettings => _kCategoryFinanceSettings;
+  static Map<String, String> get categoryTeaching => _kCategoryTeaching;
+  static Map<String, String> get categoryAssessmentPlanning => _kCategoryAssessmentPlanning;
+  static Map<String, String> get manageData => _kManageData;
+  static Map<String, String> get studentReport => _kStudentReport;
+  static Map<String, String> get gradeRecap => _kGradeRecap;
+  static Map<String, String> get reportCard => _kReportCard;
+  static Map<String, String> get learningRecommendation => _kLearningRecommendation;
+  static Map<String, String> get eReportCard => _kEReportCard;
+  static Map<String, String> get selectSchool => _kSelectSchool;
+  static Map<String, String> get verify => _kVerify;
+  static Map<String, String> get regenerate => _kRegenerate;
+  static Map<String, String> get regenerateAll => _kRegenerateAll;
+  static Map<String, String> get unsavedChanges => _kUnsavedChanges;
+  static Map<String, String> get unsavedChangesConfirm => _kUnsavedChangesConfirm;
+  static Map<String, String> get leave => _kLeave;
+  static Map<String, String> get deleteMaterial => _kDeleteMaterial;
+  static Map<String, String> get deleteColumnConfirm => _kDeleteColumnConfirm;
+  static Map<String, String> get removeClass => _kRemoveClass;
+  static Map<String, String> get sendReportCard => _kSendReportCard;
+  static Map<String, String> get sendReportCardConfirm => _kSendReportCardConfirm;
+  static Map<String, String> get yesSend => _kYesSend;
+  static Map<String, String> get finalizeReportCard => _kFinalizeReportCard;
+  static Map<String, String> get finalizeReportCardConfirm => _kFinalizeReportCardConfirm;
+  static Map<String, String> get yesFinalize => _kYesFinalize;
+  static Map<String, String> get achievements => _kAchievements;
+  static Map<String, String> get failedToSave => _kFailedToSave;
+  static Map<String, String> get settingsSavedSuccess => _kSettingsSavedSuccess;
+  static Map<String, String> get schoolNameMinChars => _kSchoolNameMinChars;
+  static Map<String, String> get enterOtp => _kEnterOtp;
+  static Map<String, String> get serverNotConnected => _kServerNotConnected;
+  static Map<String, String> get emailPasswordNotEmpty => _kEmailPasswordNotEmpty;
+  static Map<String, String> get emailInvalid => _kEmailInvalid;
+  static Map<String, String> get accountNotRegistered => _kAccountNotRegistered;
+  static Map<String, String> get accountNotRegisteredMsg => _kAccountNotRegisteredMsg;
+  static Map<String, String> get selectRole => _kSelectRole;
+  static Map<String, String> get selectRoleMsg => _kSelectRoleMsg;
+  static Map<String, String> get selectSchoolMsg => _kSelectSchoolMsg;
+  static Map<String, String> get understand => _kUnderstand;
+  static Map<String, String> get loginFailed => _kLoginFailed;
+  static Map<String, String> get backToLogin => _kBackToLogin;
+  static Map<String, String> get continueText => _kContinueText;
+  static Map<String, String> get verifyFailed => _kVerifyFailed;
+  static Map<String, String> get otpVerification => _kOtpVerification;
+  static Map<String, String> get otpSentToEmail => _kOtpSentToEmail;
+  static Map<String, String> get enterOtpDigits => _kEnterOtpDigits;
+  static Map<String, String> get otpCode => _kOtpCode;
+  static Map<String, String> get pleaseWait => _kPleaseWait;
+  static Map<String, String> get signInWithGoogle => _kSignInWithGoogle;
+  static Map<String, String> get schoolNoName => _kSchoolNoName;
+  static Map<String, String> get accessAs => _kAccessAs;
+  static Map<String, String> get roleDescAdmin => _kRoleDescAdmin;
+  static Map<String, String> get roleDescTeacher => _kRoleDescTeacher;
+  static Map<String, String> get roleDescParent => _kRoleDescParent;
+  static Map<String, String> get roleDescStaff => _kRoleDescStaff;
+  static Map<String, String> get roleDescDefault => _kRoleDescDefault;
+  static Map<String, String> get hello => _kHello;
+  static Map<String, String> get schoolLabel => _kSchoolLabel;
+  static Map<String, String> get authAccountNotRegisteredInAnySchool => _kAuthAccountNotRegisteredInAnySchool;
+  static Map<String, String> get authRolesNotAvailable => _kAuthRolesNotAvailable;
+  static Map<String, String> get authIncompleteLoginData => _kAuthIncompleteLoginData;
+  static Map<String, String> get authUserRoleNotFound => _kAuthUserRoleNotFound;
+  static Map<String, String> get authInvalidCredentials => _kAuthInvalidCredentials;
+  static Map<String, String> get googleSignInError => _kGoogleSignInError;
+  static Map<String, String> get information => _kInformation;
+  static Map<String, String> get ok => _kOk;
+  static Map<String, String> get selectAcademicYear => _kSelectAcademicYear;
+  static Map<String, String> get schoolSwitched => _kSchoolSwitched;
+  static Map<String, String> get classNotAvailable => _kClassNotAvailable;
+  static Map<String, String> get noStudentLinked => _kNoStudentLinked;
+  static Map<String, String> get errorAdminIdNotFound => _kErrorAdminIdNotFound;
+  static Map<String, String> get errorTeacherIdNotFound => _kErrorTeacherIdNotFound;
+  static Map<String, String> get noNotifications => _kNoNotifications;
+  static Map<String, String> get allNotificationsWillAppear => _kAllNotificationsWillAppear;
+  static Map<String, String> get justNow => _kJustNow;
+  static Map<String, String> get minutesAgo => _kMinutesAgo;
+  static Map<String, String> get hoursAgo => _kHoursAgo;
+  static Map<String, String> get daysAgo => _kDaysAgo;
+  static Map<String, String> get failedToLoad => _kFailedToLoad;
+  static Map<String, String> get failedToDelete => _kFailedToDelete;
+  static Map<String, String> get failedToExport => _kFailedToExport;
+  static Map<String, String> get failedToImport => _kFailedToImport;
+  static Map<String, String> get failedToGenerate => _kFailedToGenerate;
+  static Map<String, String> get failedToUpdate => _kFailedToUpdate;
+  static Map<String, String> get failedToVerify => _kFailedToVerify;
+  static Map<String, String> get failedToDownload => _kFailedToDownload;
+  static Map<String, String> get failedToOpenFile => _kFailedToOpenFile;
+  static Map<String, String> get failedToProcess => _kFailedToProcess;
+  static Map<String, String> get failedToLoadInitialData => _kFailedToLoadInitialData;
+  static Map<String, String> get failedToLoadDetail => _kFailedToLoadDetail;
+  static Map<String, String> get failedToLoadImage => _kFailedToLoadImage;
+  static Map<String, String> get failedToLoadSchedule => _kFailedToLoadSchedule;
+  static Map<String, String> get failedToLoadTeacherSubjects => _kFailedToLoadTeacherSubjects;
+  static Map<String, String> get failedToCreatePdfPreview => _kFailedToCreatePdfPreview;
+  static Map<String, String> get failedToGetJobId => _kFailedToGetJobId;
+  static Map<String, String> get dataSavedSuccessfully => _kDataSavedSuccessfully;
+  static Map<String, String> get downloadSuccessful => _kDownloadSuccessful;
+  static Map<String, String> get fileSavedSuccessfully => _kFileSavedSuccessfully;
+  static Map<String, String> get noDataToExport => _kNoDataToExport;
+  static Map<String, String> get noStudentsFoundForCriteria => _kNoStudentsFoundForCriteria;
+  static Map<String, String> get noStudentsMatchSearch => _kNoStudentsMatchSearch;
+  static Map<String, String> get noPaymentProof => _kNoPaymentProof;
+  static Map<String, String> get noTeachingSubjects => _kNoTeachingSubjects;
+  static Map<String, String> get noClassesForSubject => _kNoClassesForSubject;
+  static Map<String, String> get noActiveClasses => _kNoActiveClasses;
+  static Map<String, String> get noChapters => _kNoChapters;
+  static Map<String, String> get noStudentsInClass => _kNoStudentsInClass;
+  static Map<String, String> get noAnnouncementsMatchSearch => _kNoAnnouncementsMatchSearch;
+  static Map<String, String> get noAnnouncementsAvailable => _kNoAnnouncementsAvailable;
+  static Map<String, String> get failedToLoadReportCard => _kFailedToLoadReportCard;
+  static Map<String, String> get failedToSaveReportCard => _kFailedToSaveReportCard;
+  static Map<String, String> get failedToLoadMaterial => _kFailedToLoadMaterial;
+  static Map<String, String> get paymentRecordedSuccessfully => _kPaymentRecordedSuccessfully;
+  static Map<String, String> get paymentCancelled => _kPaymentCancelled;
+  static Map<String, String> get paymentVerifiedSuccessfully => _kPaymentVerifiedSuccessfully;
+  static Map<String, String> get paymentRejectedSuccessfully => _kPaymentRejectedSuccessfully;
+  static Map<String, String> get gradeRecapSaved => _kGradeRecapSaved;
+  static Map<String, String> get lessonPlanRegeneratedSuccessfully => _kLessonPlanRegeneratedSuccessfully;
+  static Map<String, String> get lessonPlanSavedSuccessfully => _kLessonPlanSavedSuccessfully;
+  static Map<String, String> get lessonPlanExportedToText => _kLessonPlanExportedToText;
+  static Map<String, String> get lessonPlanCopiedToClipboard => _kLessonPlanCopiedToClipboard;
+  static Map<String, String> get fieldRegeneratedSuccessfully => _kFieldRegeneratedSuccessfully;
+  static Map<String, String> get failedExceededLimit => _kFailedExceededLimit;
+  static Map<String, String> get lessonPlanAiGeneratedDescription => _kLessonPlanAiGeneratedDescription;
+  static Map<String, String> get failedToGenerateLessonPlan => _kFailedToGenerateLessonPlan;
+  static Map<String, String> get failedToGenerateMaterial => _kFailedToGenerateMaterial;
+  static Map<String, String> get noGradeDataFound => _kNoGradeDataFound;
+  static Map<String, String> get failedToRegenerateLessonPlan => _kFailedToRegenerateLessonPlan;
 }
 
-/// Convenience extension that provides pre-resolved translated strings as static getters.
-/// Instead of `AppLocalizations.editClass.tr`, you can use `AppLocalizationsExtension.editClass`.
-/// Like a facade pattern in Laravel that simplifies access to translated strings.
 extension AppLocalizationsExtension on AppLocalizations {
   // Class Management
   static String get editClass => AppLocalizations.editClass.tr;

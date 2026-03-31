@@ -37,7 +37,10 @@ class TokenService {
         return false;
       }
 
-      AppLogger.debug('auth', 'Checking token validity, length: ${token.length}');
+      AppLogger.debug(
+        'auth',
+        'Checking token validity, length: ${token.length}',
+      );
 
       if (!_isValidJWTFormat(token)) {
         AppLogger.error('auth', 'Token format invalid');
@@ -47,12 +50,15 @@ class TokenService {
 
       // Sanctum tokens (containing '|') — skip local expiration check
       if (token.contains('|')) {
-        AppLogger.info('auth', 'Sanctum token detected, skipping local expiration check');
+        AppLogger.info(
+          'auth',
+          'Sanctum token detected, skipping local expiration check',
+        );
         return true;
       }
 
       try {
-        bool isExpired = JwtDecoder.isExpired(token);
+        final bool isExpired = JwtDecoder.isExpired(token);
         AppLogger.debug('auth', 'Token expired: $isExpired');
         if (!isExpired) {
           final expirationDate = JwtDecoder.getExpirationDate(token);
@@ -111,7 +117,10 @@ class TokenService {
         await FCMService().clearLocalToken();
         AppLogger.info('auth', 'FCM token cleaned up');
       } catch (fcmError) {
-        AppLogger.warning('auth', 'FCM token cleanup failed (non-critical): $fcmError');
+        AppLogger.warning(
+          'auth',
+          'FCM token cleanup failed (non-critical): $fcmError',
+        );
       }
 
       // Revoke backend token
@@ -119,7 +128,10 @@ class TokenService {
         await ApiService().post('/auth/logout', {});
         AppLogger.info('auth', 'Backend token revoked');
       } catch (authError) {
-        AppLogger.warning('auth', 'Backend token revocation failed (non-critical): $authError');
+        AppLogger.warning(
+          'auth',
+          'Backend token revocation failed (non-critical): $authError',
+        );
       }
 
       // Clear secure storage (token + user data)
@@ -160,7 +172,10 @@ class TokenService {
       final userData = await getUserData();
 
       if (token == null || token.isEmpty || userData == null) {
-        AppLogger.debug('auth', 'Incomplete login state: token=${token != null}, user=${userData != null}');
+        AppLogger.debug(
+          'auth',
+          'Incomplete login state: token=${token != null}, user=${userData != null}',
+        );
         return false;
       }
 

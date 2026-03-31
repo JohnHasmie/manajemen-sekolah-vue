@@ -36,8 +36,6 @@ class ExcelGradeRecapService {
     required String subjectName,
     required BuildContext context,
   }) async {
-    
-
     try {
       final Map<String, dynamic> payload = {
         'tableData': tableData,
@@ -55,11 +53,11 @@ class ExcelGradeRecapService {
       // Get directory
       final Directory directory = await getApplicationDocumentsDirectory();
 
-      String formattedSubject = subjectName.replaceAll(
+      final String formattedSubject = subjectName.replaceAll(
         RegExp(r'[^a-zA-Z0-9]'),
         '_',
       );
-      String formattedClass = className.replaceAll(
+      final String formattedClass = className.replaceAll(
         RegExp(r'[^a-zA-Z0-9]'),
         '_',
       );
@@ -73,15 +71,23 @@ class ExcelGradeRecapService {
       // Open the file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Grade Rekap exported successfully',
-              'id': 'Rekap nilai berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Grade Rekap exported successfully',
+          'id': 'Rekap nilai berhasil diexport',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
     }
   }
 }

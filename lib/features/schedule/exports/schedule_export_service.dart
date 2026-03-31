@@ -31,8 +31,6 @@ class ExcelScheduleService {
     required List<dynamic> schedules,
     required BuildContext context,
   }) async {
-    
-
     try {
       // Validate data first
       final validatedData = validateScheduleData(schedules);
@@ -61,23 +59,29 @@ class ExcelScheduleService {
       // Open file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Schedule data exported successfully',
-              'id': 'Data jadwal mengajar berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Schedule data exported successfully',
+          'id': 'Data jadwal mengajar berhasil diexport',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
     }
   }
 
   /// Download a schedule import template from GET `/teaching-schedule/template`.
   /// Like Laravel returning `Excel::download(new ScheduleTemplateExport)`.
   static Future<void> downloadTemplate(BuildContext context) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/template',
@@ -96,15 +100,23 @@ class ExcelScheduleService {
       // Open file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Template downloaded successfully',
-              'id': 'Template berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Template downloaded successfully',
+          'id': 'Template berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download template: $e',
-              'id': 'Gagal mengunduh template: $e',
-            }));
+      SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download template: $e',
+          'id': 'Gagal mengunduh template: $e',
+        }),
+      );
     }
   }
 
@@ -120,7 +132,8 @@ class ExcelScheduleService {
 
       final responseData = response.data;
 
-      if (responseData is Map<String, dynamic> && responseData['success'] == true) {
+      if (responseData is Map<String, dynamic> &&
+          responseData['success'] == true) {
         return List<Map<String, dynamic>>.from(responseData['validatedData']);
       } else {
         throw Exception(responseData['message'] ?? 'Validation failed');
@@ -145,14 +158,14 @@ class ExcelScheduleService {
       final Map<String, dynamic> validatedSchedule = {};
 
       // Validate required fields
-      var teacherName = schedule['teacher_name'] ?? schedule['guru_nama'];
+      final teacherName = schedule['teacher_name'] ?? schedule['guru_nama'];
       if (teacherName == null || teacherName.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama guru tidak boleh kosong');
       } else {
         validatedSchedule['teacher_name'] = teacherName;
       }
 
-      var subjectName =
+      final subjectName =
           schedule['subject_name'] ?? schedule['mata_pelajaran_nama'];
       if (subjectName == null || subjectName.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama mata pelajaran tidak boleh kosong');
@@ -160,7 +173,7 @@ class ExcelScheduleService {
         validatedSchedule['subject_name'] = subjectName;
       }
 
-      var className = schedule['class_name'] ?? schedule['kelas_nama'];
+      final className = schedule['class_name'] ?? schedule['kelas_nama'];
       if (className == null || className.toString().isEmpty) {
         errors.add('Baris ${i + 1}: Nama kelas tidak boleh kosong');
       } else {

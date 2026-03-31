@@ -21,12 +21,13 @@ class _Keys {
 /// Singleton service for encrypted storage of auth-sensitive data.
 /// Uses flutter_secure_storage (Keychain on iOS, EncryptedSharedPreferences on Android).
 class SecureStorageService {
-  static final SecureStorageService _instance = SecureStorageService._internal();
+  static final SecureStorageService _instance =
+      SecureStorageService._internal();
   factory SecureStorageService() => _instance;
   SecureStorageService._internal();
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(migrateOnAlgorithmChange: true),
   );
 
   /// Saves the auth token securely.

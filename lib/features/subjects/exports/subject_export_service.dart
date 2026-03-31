@@ -29,8 +29,6 @@ class ExcelSubjectService {
     required List<dynamic> subjects,
     required BuildContext context,
   }) async {
-    
-
     try {
       // Validate data first
       final validatedData = validateSubjectData(subjects);
@@ -53,22 +51,28 @@ class ExcelSubjectService {
       // Open file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Subject data exported successfully',
-              'id': 'Data mata pelajaran berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Subject data exported successfully',
+          'id': 'Data mata pelajaran berhasil diexport',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
     }
   }
 
   /// Download a subject import template from GET `/subject/template`.
   static Future<void> downloadTemplate(BuildContext context) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/template',
@@ -87,15 +91,23 @@ class ExcelSubjectService {
       // Open file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Template downloaded successfully',
-              'id': 'Template berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Template downloaded successfully',
+          'id': 'Template berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download template: $e',
-              'id': 'Gagal mengunduh template: $e',
-            }));
+      SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download template: $e',
+          'id': 'Gagal mengunduh template: $e',
+        }),
+      );
     }
   }
 
@@ -111,7 +123,8 @@ class ExcelSubjectService {
 
       final responseData = response.data;
 
-      if (responseData is Map<String, dynamic> && responseData['success'] == true) {
+      if (responseData is Map<String, dynamic> &&
+          responseData['success'] == true) {
         return List<Map<String, dynamic>>.from(responseData['validatedData']);
       } else {
         throw Exception(responseData['message'] ?? 'Validation failed');

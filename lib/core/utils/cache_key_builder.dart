@@ -16,8 +16,7 @@ class CacheKeyBuilder {
   static String teacherClasses(String teacherId, String yearId) =>
       'teacher_classes_${teacherId}_$yearId';
 
-  static String teacherProfile(String userId) =>
-      'teacher_profile_$userId';
+  static String teacherProfile(String userId) => 'teacher_profile_$userId';
 
   static String teacherList(String schoolId, [String? query]) =>
       'teacher_list_${schoolId}_${query ?? 'all'}';
@@ -26,8 +25,7 @@ class CacheKeyBuilder {
   static String studentList(String schoolId, [String? query]) =>
       'student_list_${schoolId}_${query ?? 'all'}';
 
-  static String studentsByClass(String classId) =>
-      'students_class_$classId';
+  static String studentsByClass(String classId) => 'students_class_$classId';
 
   // ── Class ──
   static String classList(String schoolId, [String? query]) =>
@@ -37,8 +35,7 @@ class CacheKeyBuilder {
   static String subjectList(String schoolId, [String? query]) =>
       'subject_list_${schoolId}_${query ?? 'all'}';
 
-  static String subjectFilters(String schoolId) =>
-      'subject_filters_$schoolId';
+  static String subjectFilters(String schoolId) => 'subject_filters_$schoolId';
 
   // ── Schedule ──
   static String scheduleList(String schoolId, [String? query]) =>

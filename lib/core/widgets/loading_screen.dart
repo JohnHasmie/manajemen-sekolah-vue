@@ -47,7 +47,7 @@ class LoadingScreen extends StatelessWidget {
                 strokeWidth: 3,
               ),
             ),
-            SizedBox(height: AppSpacing.xl),
+            AppSpacing.v20,
             Text(
               message,
               style: TextStyle(

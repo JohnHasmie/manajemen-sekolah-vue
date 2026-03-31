@@ -53,7 +53,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
         height: 48,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
@@ -69,7 +69,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
               padding: EdgeInsets.only(left: 16),
               child: Icon(Icons.search_rounded, color: Colors.grey, size: 20),
             ),
-            
+
             // Search Field
             Expanded(
               child: Padding(
@@ -90,13 +90,13 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
                 ),
               ),
             ),
-            
+
             // Clear Search Button
             if (widget.controller.text.isNotEmpty)
               Container(
                 width: 36,
                 height: 36,
-                margin: EdgeInsets.only(right: 4),
+                margin: const EdgeInsets.only(right: 4),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
                   shape: BoxShape.circle,
@@ -110,7 +110,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
                   padding: EdgeInsets.zero,
                 ),
               ),
-            
+
             // Vertical Divider
             if (widget.showFilter && widget.filterOptions != null)
               Container(
@@ -119,20 +119,21 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
                 color: Colors.grey[300],
                 margin: const EdgeInsets.symmetric(horizontal: 8),
               ),
-            
+
             // Filter Dropdown with modern design
             if (widget.showFilter && widget.filterOptions != null)
               Container(
-                padding: EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.only(right: 12),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: widget.selectedFilter,
                     isDense: true,
-                    icon: const Icon(Icons.filter_list_rounded, color: Colors.grey, size: 18),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[700],
+                    icon: const Icon(
+                      Icons.filter_list_rounded,
+                      color: Colors.grey,
+                      size: 18,
                     ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                     items: widget.filterOptions!.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,

@@ -133,7 +133,9 @@ class ErrorInterceptor extends Interceptor {
     switch (statusCode) {
       case 401:
         // Auto-logout on authentication failure
-        await _handleAuthenticationError('Session expired. Please login again.');
+        await _handleAuthenticationError(
+          'Session expired. Please login again.',
+        );
         handler.reject(
           DioException(
             requestOptions: err.requestOptions,
@@ -162,7 +164,9 @@ class ErrorInterceptor extends Interceptor {
             ),
           );
         } else {
-          await _handleAuthenticationError('Access forbidden. Please login again.');
+          await _handleAuthenticationError(
+            'Access forbidden. Please login again.',
+          );
           handler.reject(
             DioException(
               requestOptions: err.requestOptions,
@@ -236,7 +240,8 @@ class ErrorInterceptor extends Interceptor {
     }
 
     // For any other error, pass it through with a generic message
-    final errorMessage = responseBody['error'] ??
+    final errorMessage =
+        responseBody['error'] ??
         responseBody['message'] ??
         'Request failed with status: $statusCode';
     handler.reject(
@@ -296,13 +301,20 @@ class LoggingInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    AppLogger.network(response.requestOptions.method, response.requestOptions.uri.toString(), response.statusCode);
+    AppLogger.network(
+      response.requestOptions.method,
+      response.requestOptions.uri.toString(),
+      response.statusCode,
+    );
     handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    AppLogger.error('dio', '${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: ${err.message}');
+    AppLogger.error(
+      'dio',
+      '${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: ${err.message}',
+    );
     handler.next(err);
   }
 }

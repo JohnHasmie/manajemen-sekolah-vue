@@ -21,7 +21,7 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 /// All exports are server-side: Flutter sends parameters, Laravel generates the file,
 /// Flutter saves and opens the binary response. Uses query parameters (GET) rather
 /// than POST body since the data is just IDs/filters.
-class ExcelRaportService {
+class ExcelReportCardService {
   static String get baseUrl => '/raports';
 
   /// Export an entire class's raport data to Excel via GET `/raports/export`.
@@ -35,8 +35,6 @@ class ExcelRaportService {
     required String className,
     required BuildContext context,
   }) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/export',
@@ -51,7 +49,7 @@ class ExcelRaportService {
       // Get directory
       final Directory directory = await getApplicationDocumentsDirectory();
 
-      String formattedClass = className.replaceAll(
+      final String formattedClass = className.replaceAll(
         RegExp(r'[^a-zA-Z0-9]'),
         '_',
       );
@@ -65,15 +63,23 @@ class ExcelRaportService {
       // Open the file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Raport exported successfully',
-              'id': 'Raport berhasil diexport',
-            }));
+      SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Raport exported successfully',
+          'id': 'Raport berhasil diexport',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
     }
   }
 
@@ -87,8 +93,6 @@ class ExcelRaportService {
     required String studentName,
     required BuildContext context,
   }) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/export-pdf',
@@ -103,7 +107,7 @@ class ExcelRaportService {
       // Get directory
       final Directory directory = await getApplicationDocumentsDirectory();
 
-      String formattedName = studentName.replaceAll(
+      final String formattedName = studentName.replaceAll(
         RegExp(r'[^a-zA-Z0-9]'),
         '_',
       );
@@ -117,15 +121,23 @@ class ExcelRaportService {
       // Open the file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'PDF downloaded successfully',
-              'id': 'PDF berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'PDF downloaded successfully',
+          'id': 'PDF berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download PDF: $e',
-              'id': 'Gagal mengunduh PDF: $e',
-            }));
+      SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download PDF: $e',
+          'id': 'Gagal mengunduh PDF: $e',
+        }),
+      );
     }
   }
 
@@ -138,8 +150,6 @@ class ExcelRaportService {
     required String studentName,
     required BuildContext context,
   }) async {
-    
-
     try {
       final response = await dioClient.get<List<int>>(
         '$baseUrl/export-certificate-pdf',
@@ -154,7 +164,7 @@ class ExcelRaportService {
       // Get directory
       final Directory directory = await getApplicationDocumentsDirectory();
 
-      String formattedName = studentName.replaceAll(
+      final String formattedName = studentName.replaceAll(
         RegExp(r'[^a-zA-Z0-9]'),
         '_',
       );
@@ -168,15 +178,23 @@ class ExcelRaportService {
       // Open the file
       await OpenFile.open(filePath);
 
-            SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-              'en': 'Certificate PDF downloaded successfully',
-              'id': 'Sertifikat PDF berhasil diunduh',
-            }));
+      SnackBarUtils.showSuccess(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Certificate PDF downloaded successfully',
+          'id': 'Sertifikat PDF berhasil diunduh',
+        }),
+      );
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to download Certificate PDF: $e',
-              'id': 'Gagal mengunduh Sertifikat PDF: $e',
-            }));
+      SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to download Certificate PDF: $e',
+          'id': 'Gagal mengunduh Sertifikat PDF: $e',
+        }),
+      );
     }
   }
 }

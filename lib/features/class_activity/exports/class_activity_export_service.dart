@@ -5,7 +5,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/features/class_activity/services/class_activity_service.dart';
+import 'package:manajemensekolah/features/class_activity/data/class_activity_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
@@ -39,8 +39,6 @@ class ExcelClassActivityService {
     required List<dynamic> activities,
     required BuildContext context,
   }) async {
-    
-
     try {
       // Format data first
       final formattedData = formatActivitiesForExport(activities);
@@ -49,9 +47,8 @@ class ExcelClassActivityService {
       final validatedData = await _validateAndPrepareData(formattedData);
 
       // Use existing ApiService
-      final response = await getIt<ApiClassActivityService>().exportClassActivities(
-        validatedData,
-      );
+      final response = await getIt<ApiClassActivityService>()
+          .exportClassActivities(validatedData);
 
       if (response.statusCode == 200) {
         // Get directory to save the file
@@ -71,10 +68,14 @@ class ExcelClassActivityService {
         // Open file
         await OpenFile.open(filePath);
 
-                SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({
-                'en': 'Class activities data exported successfully',
-                'id': 'Data kegiatan kelas berhasil diexport',
-              }));
+        SnackBarUtils.showSuccess(
+          // ignore: use_build_context_synchronously
+          context,
+          languageProvider.getTranslatedText({
+            'en': 'Class activities data exported successfully',
+            'id': 'Data kegiatan kelas berhasil diexport',
+          }),
+        );
       } else {
         final errorData = response.data;
         throw Exception(
@@ -83,10 +84,14 @@ class ExcelClassActivityService {
         );
       }
     } catch (e) {
-            SnackBarUtils.showError(context, languageProvider.getTranslatedText({
-              'en': 'Failed to export data: $e',
-              'id': 'Gagal mengexport data: $e',
-            }));
+      SnackBarUtils.showError(
+        // ignore: use_build_context_synchronously
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Failed to export data: $e',
+          'id': 'Gagal mengexport data: $e',
+        }),
+      );
       rethrow;
     }
   }

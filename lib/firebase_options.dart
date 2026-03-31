@@ -85,5 +85,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'managemen-sekolah-f352d.firebasestorage.app',
     measurementId: 'G-V702NT1KKY',
   );
-
 }

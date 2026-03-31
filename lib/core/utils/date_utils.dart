@@ -25,11 +25,11 @@ class AppDateUtils {
         final year = int.parse(parts[0]);
         final month = int.parse(parts[1]);
         final day = int.parse(parts[2]);
-        
+
         // Create DateTime as local time, not UTC
         return DateTime(year, month, day);
       }
-      
+
       // Fallback: parse normally but convert to local
       return DateTime.parse(dateString).toLocal();
     } catch (e) {
@@ -37,65 +37,68 @@ class AppDateUtils {
       return DateTime.now();
     }
   }
-  
+
   /// Format DateTime to YYYY-MM-DD string for sending to backend
   static String formatDateForApi(DateTime date) {
     return DateFormat('yyyy-MM-dd').format(date);
   }
-  
+
   /// Format DateTime to a more readable format: dd/MM/yyyy
   static String formatDateReadable(DateTime date) {
     return DateFormat('dd/MM/yyyy').format(date);
   }
-  
+
   /// Format DateTime to Indonesian format: dd MMMM yyyy
   static String formatDateIndonesian(DateTime date) {
     return DateFormat('dd MMMM yyyy', 'id_ID').format(date);
   }
-  
+
   /// Format DateTime to full format: EEEE, dd MMMM yyyy
   static String formatDateFull(DateTime date) {
     return DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(date);
   }
-  
+
   /// Safely parse date string from API response
   /// Handles various date formats and timezones
   static DateTime? parseApiDate(dynamic dateValue) {
     if (dateValue == null) return null;
-    
+
     try {
       if (dateValue is DateTime) {
         return dateValue;
       }
-      
+
       final String dateString = dateValue.toString();
-      
+
       // If format is YYYY-MM-DD (without time), parse as local date
       if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(dateString)) {
         return parseLocalDate(dateString);
       }
-      
+
       // If ISO timestamp (with T and timezone), parse normally
       if (dateString.contains('T')) {
         return DateTime.parse(dateString).toLocal();
       }
-      
+
       // Default fallback
       return parseLocalDate(dateString);
     } catch (e) {
       return null;
     }
   }
-  
+
   /// Format date from string to the desired format
   /// With correct timezone handling
-  static String formatDateString(String? dateString, {String format = 'dd/MM/yyyy'}) {
+  static String formatDateString(
+    String? dateString, {
+    String format = 'dd/MM/yyyy',
+  }) {
     if (dateString == null || dateString.isEmpty) return '-';
-    
+
     try {
       final date = parseApiDate(dateString);
       if (date == null) return dateString;
-      
+
       return DateFormat(format, 'id_ID').format(date);
     } catch (e) {
       return dateString;
