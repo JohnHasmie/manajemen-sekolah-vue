@@ -203,7 +203,7 @@ shorebird_patch:
   stage: deploy
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
-    - shorebird patch android --flutter-version=${FLUTTER_VERSION} --release-version=latest --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+    - shorebird patch android --release-version=latest --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
