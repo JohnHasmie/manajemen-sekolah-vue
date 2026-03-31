@@ -1,11 +1,11 @@
 # GitLab CI/CD for KamilEdu Flutter App
 #
 # Pipeline flow:
-#   Every push:      analyze (auto) → test (manual/skippable) → detect_changes
+#   Every push:      analyze (auto) → test (skippable) → detect_changes
 #   Manual buttons:  deploy_playstore | shorebird_release | shorebird_patch
 #
-# deploy_playstore & shorebird_release auto-increment version code
-# and commit back to repo before building.
+# Version code uses CI_PIPELINE_IID (auto-incrementing per project).
+# No git push needed — no CI_GIT_PUSH_TOKEN required.
 #
 # Required CI/CD Variables:
 #   API_BASE_URL           - API endpoint URL
@@ -13,7 +13,6 @@
 #   KEY_ALIAS, KEY_PASSWORD, STORE_PASSWORD
 #   PLAY_STORE_JSON_BASE64 - base64-encoded Google Play service account JSON
 #   SHOREBIRD_TOKEN        - Shorebird API key (console.shorebird.dev)
-#   CI_GIT_PUSH_TOKEN      - GitLab project access token (write_repository)
 
 stages:
   - analyze
@@ -23,6 +22,8 @@ stages:
 
 variables:
   FLUTTER_VERSION: "3.35.4"
+  LC_ALL: "en_US.UTF-8"
+  LANG: "en_US.UTF-8"
 
 # ---------------------------------------------------------------------------
 # Reusable templates
@@ -51,22 +52,15 @@ variables:
       storeFile=upload-keystore.jks
       EOF
 
-# Reusable version bump + git push script
-.bump_version: &bump_version
+.setup_keystore: &setup_keystore
+  - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
   - |
-    CURRENT=$(grep '^version:' pubspec.yaml | sed 's/version: //')
-    VERSION_NAME=$(echo "$CURRENT" | cut -d'+' -f1)
-    VERSION_CODE=$(echo "$CURRENT" | cut -d'+' -f2)
-    NEW_CODE=$((VERSION_CODE + 1))
-    sed -i '' "s/version: .*/version: ${VERSION_NAME}+${NEW_CODE}/" pubspec.yaml
-    echo "✅ Version bumped: ${CURRENT} → ${VERSION_NAME}+${NEW_CODE}"
-  - |
-    git config user.email "ci@kamillabs.com"
-    git config user.name "KamilEdu CI"
-    git remote set-url origin "https://oauth2:${CI_GIT_PUSH_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
-    git add pubspec.yaml
-    git commit -m "chore: bump version to $(grep '^version:' pubspec.yaml | sed 's/version: //') [skip ci]" || true
-    git push origin HEAD:main || true
+    cat > android/key.properties << EOF
+    storePassword=${STORE_PASSWORD}
+    keyPassword=${KEY_PASSWORD}
+    keyAlias=${KEY_ALIAS}
+    storeFile=upload-keystore.jks
+    EOF
 
 # ---------------------------------------------------------------------------
 # Stage 1: Analyze (auto — must pass)
@@ -81,7 +75,7 @@ analyze:
     - if: $CI_COMMIT_BRANCH
 
 # ---------------------------------------------------------------------------
-# Stage 2: Test (auto but skippable — allow_failure)
+# Stage 2: Test (auto but skippable)
 # ---------------------------------------------------------------------------
 test:
   <<: *flutter_setup
@@ -121,6 +115,8 @@ detect_changes:
       done
     - |
       echo ""
+      echo "Pipeline IID: ${CI_PIPELINE_IID} (used as build number)"
+      echo ""
       if [ "$NEEDS_RELEASE" = "true" ]; then
         echo "🚀 RELEASE REQUIRED — native/plugin changes detected"
         echo "   → Click: shorebird_release, then deploy_playstore"
@@ -133,22 +129,18 @@ detect_changes:
 
 # ---------------------------------------------------------------------------
 # Deploy to Play Store (manual)
-# Bumps version → builds AAB → uploads to Play Store internal track
+# Uses CI_PIPELINE_IID as build number — always unique, always increasing
 # ---------------------------------------------------------------------------
 deploy_playstore:
   <<: *flutter_setup
   stage: deploy
   script:
-    - *bump_version
-    - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
+    - *setup_keystore
     - |
-      cat > android/key.properties << EOF
-      storePassword=${STORE_PASSWORD}
-      keyPassword=${KEY_PASSWORD}
-      keyAlias=${KEY_ALIAS}
-      storeFile=upload-keystore.jks
-      EOF
-    - flutter build appbundle --release --dart-define=API_BASE_URL=${API_BASE_URL}
+      VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+      BUILD_NUMBER=${CI_PIPELINE_IID}
+      echo "Building ${VERSION_NAME}+${BUILD_NUMBER}"
+    - flutter build appbundle --release --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL}
     - command -v fastlane &>/dev/null || gem install fastlane --no-document
     - echo "${PLAY_STORE_JSON_BASE64}" | base64 -d > play-store-key.json
     - |
@@ -168,15 +160,18 @@ deploy_playstore:
 
 # ---------------------------------------------------------------------------
 # Shorebird Release (manual)
-# Bumps version → creates Shorebird-enabled release (OTA baseline)
+# Creates Shorebird-enabled release with CI_PIPELINE_IID as build number
 # ---------------------------------------------------------------------------
 shorebird_release:
   <<: *shorebird_setup
   stage: deploy
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
-    - *bump_version
-    - shorebird release android --force --dart-define=API_BASE_URL=${API_BASE_URL}
+    - |
+      VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+      BUILD_NUMBER=${CI_PIPELINE_IID}
+      echo "Shorebird release ${VERSION_NAME}+${BUILD_NUMBER}"
+    - shorebird release android --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   artifacts:
     paths:
       - build/app/outputs/bundle/release/app-release.aab
@@ -188,14 +183,14 @@ shorebird_release:
 
 # ---------------------------------------------------------------------------
 # Shorebird Patch (manual)
-# NO version bump — patches the current release via OTA
+# NO version change — patches the latest release via OTA
 # ---------------------------------------------------------------------------
 shorebird_patch:
   <<: *shorebird_setup
   stage: deploy
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
-    - shorebird patch android --force --dart-define=API_BASE_URL=${API_BASE_URL}
+    - shorebird patch android --release-version=latest --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
