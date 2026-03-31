@@ -60,12 +60,12 @@ class ParentGradeHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +78,7 @@ class ParentGradeHeader extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       AppLocalizations.monitorChildGrades.tr,
                       style: TextStyle(
@@ -104,7 +104,7 @@ class ParentGradeHeader extends StatelessWidget {
                           size: 20,
                           color: ColorUtils.info600,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Text(AppLocalizations.updateData.tr),
                       ],
                     ),

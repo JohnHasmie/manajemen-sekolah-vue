@@ -97,7 +97,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: TextField(
@@ -112,7 +112,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
           // Use the pre-resolved primary colour passed from the parent.
           prefixIcon: Icon(icon, color: widget.primaryColor, size: 20),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
       ),
     );
@@ -139,11 +139,11 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: DropdownButtonFormField<String>(
           initialValue: selectedValue,
           decoration: InputDecoration(
@@ -243,7 +243,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -252,7 +252,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
             // ── Gradient header ───────────────────────────────────────────────
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: _cardGradient(),
                 borderRadius: BorderRadius.only(
@@ -267,7 +267,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.verified,
@@ -275,7 +275,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
                       size: 20,
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(
                       'Verifikasi Pembayaran',
@@ -292,7 +292,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
 
             // ── Body ─────────────────────────────────────────────────────────
             Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -320,22 +320,22 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
                     value: widget.payment['metode_bayar'] ?? '-',
                   ),
 
-                  SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
                   Divider(),
-                  SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Payment proof banner — shown only when a receipt exists.
                   if (widget.payment['payment_receipt'] != null) ...[
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     GestureDetector(
                       onTap: widget.onShowPaymentProof,
                       child: Container(
-                        padding: EdgeInsets.all(AppSpacing.md),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: ColorUtils.corporateBlue600.withValues(
                             alpha: 0.08,
                           ),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                           border: Border.all(
                             color: ColorUtils.corporateBlue600.withValues(
                               alpha: 0.25,
@@ -349,7 +349,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
                               color: ColorUtils.corporateBlue600,
                               size: 20,
                             ),
-                            SizedBox(width: AppSpacing.sm),
+                            const SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -381,7 +381,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
                         ),
                       ),
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                   ],
 
                   // Verification status dropdown
@@ -397,7 +397,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
                     },
                   ),
 
-                  SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
 
                   // Optional admin notes text field
                   _buildDialogTextField(
@@ -412,7 +412,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
 
             // ── Action buttons ────────────────────────────────────────────────
             Container(
-              padding: EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 children: [
                   // Cancel button
@@ -421,9 +421,9 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
                       onPressed: () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         side: BorderSide(color: ColorUtils.slate300),
                       ),
                       child: Text(
@@ -432,7 +432,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   // Confirm button — colour reflects current status
                   Expanded(
                     child: ElevatedButton(
@@ -442,9 +442,9 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog> {
                             ? ColorUtils.success600
                             : ColorUtils.error600,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       child: Text(
                         _status == 'verified' ? 'Terima' : 'Tolak',

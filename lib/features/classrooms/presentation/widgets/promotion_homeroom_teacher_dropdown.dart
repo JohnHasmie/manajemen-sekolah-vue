@@ -45,7 +45,7 @@ class PromotionHomeroomTeacherDropdown extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<String>(
@@ -63,7 +63,7 @@ class PromotionHomeroomTeacherDropdown extends StatelessWidget {
             size: 18,
           ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
         items: [
           DropdownMenuItem<String>(

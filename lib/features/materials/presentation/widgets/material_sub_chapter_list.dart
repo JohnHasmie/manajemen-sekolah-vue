@@ -75,7 +75,7 @@ class MaterialSubChapterList extends StatelessWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: subChapterColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                       border: Border.all(
                         color: subChapterColor.withValues(alpha: 0.2),
                       ),
@@ -91,7 +91,7 @@ class MaterialSubChapterList extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(
                       subChapter['judul_sub_bab'] ?? 'Judul Sub Bab',

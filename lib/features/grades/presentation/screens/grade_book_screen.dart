@@ -9,6 +9,7 @@
 // Extracted from teacher_grade_input_screen.dart.
 // Contains:
 // - [GradeBookPage] -- the grade table with inline editing
+import 'package:manajemensekolah/core/constants/grade_constants.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -78,27 +79,13 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   List<Student> _studentList = [];
   List<Student> _filteredStudentList = [];
   List<Map<String, dynamic>> _gradeList = [];
-  final List<String> _allGradeTypeList = [
-    'uh',
-    'tugas',
-    'uts',
-    'uas',
-    'pts',
-    'pas',
-  ];
+  final List<String> _allGradeTypeList = GradeConstants.allTypes;
   List<String> _filteredGradeTypeList = [];
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
 
-  // Filter state
-  final Map<String, bool> _gradeTypeFilter = {
-    'uh': true,
-    'tugas': true,
-    'uts': true,
-    'uas': true,
-    'pts': true,
-    'pas': true,
-  };
+  // Filter state — all types visible by default
+  final Map<String, bool> _gradeTypeFilter = GradeConstants.defaultFilter;
 
   // Map to store unique assessments for each grade type
   // Key: type (e.g., 'harian'), Value: List of assessment headers
@@ -563,170 +550,39 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          // Pattern #7 Gradient Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              bottom: 16,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _getPrimaryColor(),
-                  _getPrimaryColor().withValues(alpha: 0.8),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _getPrimaryColor().withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    if (widget.onBack != null) {
-                      widget.onBack!();
-                    } else {
-                      AppNavigator.pop(context);
-                    }
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Grade Book',
-                          'id': 'Buku Nilai',
-                        }),
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        '${widget.subject['name'] ?? widget.subject['nama'] ?? ''} - ${widget.classData['name'] ?? widget.classData['nama'] ?? ''}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                // Export button
-                GestureDetector(
-                  onTap: () => _exportGrades(languageProvider),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(Icons.download, color: Colors.white, size: 20),
-                  ),
-                ),
-                SizedBox(width: AppSpacing.sm),
-                // Filter button with badge
-                Stack(
-                  key: _filterKey,
-                  children: [
-                    GestureDetector(
-                      onTap: () => _showFilterDialog(languageProvider),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.filter_list_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    if (activeFilterCount < _allGradeTypeList.length)
-                      Positioned(
-                        right: 4,
-                        top: 4,
-                        child: Container(
-                          padding: EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: ColorUtils.error600,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          constraints: BoxConstraints(
-                            minWidth: 14,
-                            minHeight: 14,
-                          ),
-                          child: Text(
-                            '${_allGradeTypeList.length - activeFilterCount}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                SizedBox(width: AppSpacing.sm),
-                // Refresh button
-                GestureDetector(
-                  onTap: _loadData,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(Icons.refresh, color: Colors.white, size: 20),
-                  ),
-                ),
-              ],
-            ),
+          // Pattern #7 Gradient Header — extracted to _GradeBookHeader
+          _GradeBookHeader(
+            primaryColor: _getPrimaryColor(),
+            title: languageProvider.getTranslatedText({
+              'en': 'Grade Book',
+              'id': 'Buku Nilai',
+            }),
+            subtitle:
+                '${widget.subject['name'] ?? widget.subject['nama'] ?? ''}'
+                ' - '
+                '${widget.classData['name'] ?? widget.classData['nama'] ?? ''}',
+            filterKey: _filterKey,
+            activeFilterCount: activeFilterCount,
+            totalGradeTypes: _allGradeTypeList.length,
+            onBack: () {
+              if (widget.onBack != null) {
+                widget.onBack!();
+              } else {
+                AppNavigator.pop(context);
+              }
+            },
+            onExport: () => _exportGrades(languageProvider),
+            onFilter: () => _showFilterDialog(languageProvider),
+            onRefresh: _loadData,
           ),
 
           // Body
           Expanded(
             child: _isLoading
                 ? SkeletonListLoading(
-                    padding: EdgeInsets.only(top: 8, bottom: 80),
+                    padding: const EdgeInsets.only(top: 8, bottom: 80),
                   )
-                : _isEditMode
+                : _isEditMode && _editGradeType != null && _editHeader != null
                 ? GradeEditTableWidget(
                     editGradeType: _editGradeType!,
                     editHeader: _editHeader!,
@@ -788,14 +644,14 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                     children: [
                       // Info bar (Pattern from spec)
                       Container(
-                        margin: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                         padding: EdgeInsets.symmetric(
                           horizontal: 14,
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                           border: Border.all(color: ColorUtils.slate200),
                           boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
                         ),
@@ -808,7 +664,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                 color: _getPrimaryColor().withValues(
                                   alpha: 0.1,
                                 ),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: const BorderRadius.all(Radius.circular(8)),
                               ),
                               child: Icon(
                                 Icons.book_outlined,
@@ -816,7 +672,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                 size: 18,
                               ),
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -849,10 +705,10 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
                       // Search Bar
                       Container(
-                        margin: EdgeInsets.fromLTRB(16, 10, 16, 0),
+                        margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                           border: Border.all(color: ColorUtils.slate200),
                           boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
                         ),
@@ -881,7 +737,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
                       if (_filteredStudentList.isNotEmpty)
                         Padding(
-                          padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                           child: Row(
                             children: [
                               Text(
@@ -905,7 +761,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                             ],
                           ),
                         ),
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
 
                       // Tabel Nilai
                       Expanded(
@@ -935,7 +791,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                                   border: Border.all(
                                     color: ColorUtils.slate200,
                                   ),
@@ -1137,4 +993,173 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       ref
           .read(gradeBookControllerProvider)
           .getGradeTypeLabel(type, languageProvider);
+}
+
+/// Gradient header bar for [GradeBookPage].
+/// Extracted from the build method to reduce its size and allow independent
+/// rebuilds. Like a Vue `<GradeBookHeader>` presentational component.
+class _GradeBookHeader extends StatelessWidget {
+  final Color primaryColor;
+  final String title;
+  final String subtitle;
+  final GlobalKey filterKey;
+  final int activeFilterCount;
+  final int totalGradeTypes;
+  final VoidCallback onBack;
+  final VoidCallback onExport;
+  final VoidCallback onFilter;
+  final VoidCallback onRefresh;
+
+  const _GradeBookHeader({
+    required this.primaryColor,
+    required this.title,
+    required this.subtitle,
+    required this.filterKey,
+    required this.activeFilterCount,
+    required this.totalGradeTypes,
+    required this.onBack,
+    required this.onExport,
+    required this.onFilter,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: onBack,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          // Export button
+          GestureDetector(
+            onTap: onExport,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: const Icon(Icons.download, color: Colors.white, size: 20),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          // Filter button with badge
+          Stack(
+            key: filterKey,
+            children: [
+              GestureDetector(
+                onTap: onFilter,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  ),
+                  child: const Icon(
+                    Icons.filter_list_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+              if (activeFilterCount < totalGradeTypes)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: ColorUtils.error600,
+                      borderRadius: const BorderRadius.all(Radius.circular(6)),
+                    ),
+                    constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                    child: Text(
+                      '${totalGradeTypes - activeFilterCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          // Refresh button
+          GestureDetector(
+            onTap: onRefresh,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: const Icon(Icons.refresh, color: Colors.white, size: 20),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

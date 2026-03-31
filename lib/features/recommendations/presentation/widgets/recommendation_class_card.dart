@@ -78,7 +78,7 @@ class RecommendationClassCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: [
           BoxShadow(
@@ -113,7 +113,7 @@ class RecommendationClassCard extends StatelessWidget {
                       height: 48,
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: const BorderRadius.all(Radius.circular(14)),
                         border: Border.all(
                           color: primaryColor.withValues(alpha: 0.15),
                         ),
@@ -288,7 +288,7 @@ class RecommendationClassCard extends StatelessWidget {
                             : primaryColor.withValues(alpha: 0.4),
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),

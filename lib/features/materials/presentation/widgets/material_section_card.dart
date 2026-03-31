@@ -50,7 +50,7 @@ class MaterialSectionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: [
           BoxShadow(
@@ -90,7 +90,7 @@ class MaterialSectionCard extends StatelessWidget {
                   height: 28,
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     border: Border.all(
                       color: accentColor.withValues(alpha: 0.15),
                     ),
@@ -122,7 +122,7 @@ class MaterialSectionCard extends StatelessWidget {
           ),
           // Section body
           Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: _buildFormattedContent(content, accentColor),
           ),
         ],

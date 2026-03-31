@@ -437,12 +437,12 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
           ),
           title: Row(
             children: [
               Icon(Icons.auto_awesome, color: _getPrimaryColor()),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 'Generate Ulang AI',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -458,13 +458,13 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                   'Sistem akan menyusun ulang materi berdasarkan Bab/Sub-Bab. Anda dapat menambahkan instruksi spesifik di bawah.',
                   style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(AppSpacing.md),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: ColorUtils.slate50,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                     border: Border.all(color: ColorUtils.slate200),
                   ),
                   child: Column(
@@ -478,7 +478,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                           color: ColorUtils.slate500,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         widget.title,
                         style: TextStyle(
@@ -492,7 +492,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                     ],
                   ),
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   'Instruksi Tambahan (Opsional)',
                   style: TextStyle(
@@ -501,7 +501,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
                 TextField(
                   controller: _promptController,
                   maxLines: 4,
@@ -515,11 +515,11 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                     filled: true,
                     fillColor: Colors.grey.shade50,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       borderSide: BorderSide(color: ColorUtils.slate300),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       borderSide: BorderSide(color: _getPrimaryColor()),
                     ),
                   ),
@@ -544,7 +544,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                 backgroundColor: _getPrimaryColor(),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
               ),
               child: Text('Generate'),
@@ -564,7 +564,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -577,19 +577,19 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                     color: ColorUtils.slate800,
                   ),
                 ),
-                SizedBox(height: AppSpacing.xs),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Pilih bagian yang ingin di-generate ulang oleh AI',
                   style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
                 ListTile(
                   leading: Container(
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
                       color: _getPrimaryColor().withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.auto_awesome,
@@ -613,7 +613,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.quiz_rounded,
@@ -639,7 +639,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.blue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.menu_book_rounded,
@@ -826,7 +826,7 @@ class MaterialAiResultScreenState extends State<MaterialAiResultScreen>
                           children: [
                             // Material tab — inline (12 lines, below extract threshold)
                             ListView.builder(
-                              padding: EdgeInsets.all(AppSpacing.lg),
+                              padding: const EdgeInsets.all(AppSpacing.lg),
                               itemCount: _parseMaterialContent().length,
                               itemBuilder: (context, index) {
                                 final sections = _parseMaterialContent();

@@ -41,7 +41,7 @@ class HeroStatCell extends StatelessWidget {
           padding: const EdgeInsets.all(9),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.2),
               width: 1,

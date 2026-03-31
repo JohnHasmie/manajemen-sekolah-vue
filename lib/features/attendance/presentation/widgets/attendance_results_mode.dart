@@ -93,7 +93,7 @@ class AttendanceResultsMode extends ConsumerWidget {
                           margin: const EdgeInsets.only(right: 6),
                           child: InkWell(
                             onTap: filter['onRemove'] as VoidCallback?,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
@@ -101,7 +101,7 @@ class AttendanceResultsMode extends ConsumerWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: primaryColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: const BorderRadius.all(Radius.circular(10)),
                                 border: Border.all(
                                   color: primaryColor.withValues(alpha: 0.3),
                                 ),
@@ -136,12 +136,12 @@ class AttendanceResultsMode extends ConsumerWidget {
                   padding: const EdgeInsets.only(right: 16),
                   child: InkWell(
                     onTap: onClearAllFilters,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: ColorUtils.error600.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                         border: Border.all(
                           color: ColorUtils.error600.withValues(alpha: 0.3),
                         ),

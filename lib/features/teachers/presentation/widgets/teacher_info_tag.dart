@@ -28,7 +28,7 @@ class TeacherInfoTag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: Row(

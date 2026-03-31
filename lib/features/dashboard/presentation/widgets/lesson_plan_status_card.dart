@@ -39,12 +39,12 @@ class LessonPlanStatusCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: Container(
-          padding: EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200, width: 1),
             boxShadow: [
               BoxShadow(
@@ -72,7 +72,7 @@ class LessonPlanStatusCard extends StatelessWidget {
                       color: ColorUtils.corporateBlue600.withValues(
                         alpha: 0.12,
                       ),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                       border: Border.all(
                         color: ColorUtils.corporateBlue600.withValues(
                           alpha: 0.15,
@@ -86,7 +86,7 @@ class LessonPlanStatusCard extends StatelessWidget {
                       color: ColorUtils.corporateBlue600,
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,7 +101,7 @@ class LessonPlanStatusCard extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           'Lesson Plans',
                           style: TextStyle(
@@ -119,9 +119,9 @@ class LessonPlanStatusCard extends StatelessWidget {
               Spacer(),
               // Status breakdown - vertical
               _buildStatusRow(ColorUtils.success600, 'Disetujui', approved),
-              SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.xs),
               _buildStatusRow(ColorUtils.error600, 'Ditolak', rejected),
-              SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.xs),
               _buildStatusRow(ColorUtils.warning600, 'Menunggu', pending),
             ],
           ),
@@ -138,7 +138,7 @@ class LessonPlanStatusCard extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        SizedBox(width: 6),
+        const SizedBox(width: 6),
         Expanded(
           child: Text(
             label,

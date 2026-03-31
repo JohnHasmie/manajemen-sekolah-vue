@@ -963,7 +963,7 @@ class TeachingScheduleScreenState
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.arrow_back,
@@ -972,7 +972,7 @@ class TeachingScheduleScreenState
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -988,7 +988,7 @@ class TeachingScheduleScreenState
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             languageProvider.getTranslatedText({
                               'en':
@@ -1019,7 +1019,7 @@ class TeachingScheduleScreenState
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           _isTableView ? Icons.grid_view : Icons.list,
@@ -1028,7 +1028,7 @@ class TeachingScheduleScreenState
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     PopupMenuButton<String>(
                       onSelected: (value) {
                         if (value == 'refresh') {
@@ -1045,7 +1045,7 @@ class TeachingScheduleScreenState
                                 size: 20,
                                 color: ColorUtils.info600,
                               ),
-                              SizedBox(width: AppSpacing.sm),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(AppLocalizations.updateData.tr),
                             ],
                           ),
@@ -1056,7 +1056,7 @@ class TeachingScheduleScreenState
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.more_vert_rounded,
@@ -1067,15 +1067,15 @@ class TeachingScheduleScreenState
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Role switcher: only show when user is also wali kelas
                 if (_homeroomClassesList.isNotEmpty)
                   Container(
-                    padding: EdgeInsets.all(AppSpacing.md),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     child: GestureDetector(
                       onTapDown: (TapDownDetails details) {
@@ -1123,7 +1123,7 @@ class TeachingScheduleScreenState
                             height: 40,
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Icon(
                               _isHomeroomView ? Icons.class_ : Icons.person,
@@ -1131,7 +1131,7 @@ class TeachingScheduleScreenState
                               size: 20,
                             ),
                           ),
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1166,7 +1166,7 @@ class TeachingScheduleScreenState
                       ),
                     ),
                   ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Search Bar with Filter using SeparatedSearchFilter
                 // Search Bar with Filter Button
@@ -1177,7 +1177,7 @@ class TeachingScheduleScreenState
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.95),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         child: Row(
                           children: [
@@ -1209,7 +1209,7 @@ class TeachingScheduleScreenState
                               ),
                             ),
                             Container(
-                              margin: EdgeInsets.only(right: 4),
+                              margin: const EdgeInsets.only(right: 4),
                               child: IconButton(
                                 icon: Icon(
                                   Icons.search,
@@ -1224,14 +1224,14 @@ class TeachingScheduleScreenState
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     // Filter Button
                     Container(
                       decoration: BoxDecoration(
                         color: _hasActiveFilter
                             ? Colors.white
                             : Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
@@ -1276,7 +1276,7 @@ class TeachingScheduleScreenState
 
                 // Filter Chips
                 if (_hasActiveFilter) ...[
-                  SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     height: 32,
                     child: Row(
@@ -1291,7 +1291,7 @@ class TeachingScheduleScreenState
                                 return GestureDetector(
                                   onTap: filter['onRemove'],
                                   child: Container(
-                                    margin: EdgeInsets.only(right: 6),
+                                    margin: const EdgeInsets.only(right: 6),
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 10,
                                       vertical: 6,
@@ -1300,7 +1300,7 @@ class TeachingScheduleScreenState
                                       color: Colors.white.withValues(
                                         alpha: 0.2,
                                       ),
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                                       border: Border.all(
                                         color: Colors.white.withValues(
                                           alpha: 0.3,
@@ -1319,7 +1319,7 @@ class TeachingScheduleScreenState
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                        SizedBox(width: AppSpacing.xs),
+                                        const SizedBox(width: AppSpacing.xs),
                                         Icon(
                                           Icons.close,
                                           size: 14,
@@ -1333,7 +1333,7 @@ class TeachingScheduleScreenState
                             ],
                           ),
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         InkWell(
                           onTap: _clearAllFilters,
                           child: Container(
@@ -1343,7 +1343,7 @@ class TeachingScheduleScreenState
                             ),
                             decoration: BoxDecoration(
                               color: Colors.red.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                               border: Border.all(
                                 color: Colors.red.withValues(alpha: 0.3),
                                 width: 1,
@@ -1377,9 +1377,9 @@ class TeachingScheduleScreenState
                 : Column(
                     children: [
                       // View Toggle Info
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Row(
                           children: [
                             Text(
@@ -1409,7 +1409,7 @@ class TeachingScheduleScreenState
                           ],
                         ),
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
 
                       Expanded(
                         child: filteredSchedules.isEmpty

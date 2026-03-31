@@ -54,7 +54,7 @@ class LessonPlanHeaderInfoCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: [
           BoxShadow(
@@ -70,7 +70,7 @@ class LessonPlanHeaderInfoCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -83,7 +83,7 @@ class LessonPlanHeaderInfoCard extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               title,
               style: TextStyle(
@@ -93,10 +93,10 @@ class LessonPlanHeaderInfoCard extends StatelessWidget {
               ),
             ),
             if (infoItems.isNotEmpty) ...[
-              SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.md),
               ...infoItems.map(
                 (item) => Padding(
-                  padding: EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: 4),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

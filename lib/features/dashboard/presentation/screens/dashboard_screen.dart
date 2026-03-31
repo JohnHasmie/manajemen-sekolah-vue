@@ -307,7 +307,7 @@ class _DashboardState extends ConsumerState<Dashboard>
               ref.read(dashboardProvider.notifier).reloadForYearChange();
               AppNavigator.pop(context);
             },
-            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -661,7 +661,7 @@ class _DashboardState extends ConsumerState<Dashboard>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
         title: Text(
           AppLocalizations.chooseLanguage.tr,
           style: TextStyle(
@@ -678,7 +678,7 @@ class _DashboardState extends ConsumerState<Dashboard>
               code: 'id',
               color: Colors.green,
             ),
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             LanguageOptionTile(
               languageProvider: languageProvider,
               language: 'English',
@@ -761,7 +761,7 @@ class _DashboardState extends ConsumerState<Dashboard>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
         title: Text(
           AppLocalizations.selectChild.tr,
           style: TextStyle(fontWeight: FontWeight.bold),

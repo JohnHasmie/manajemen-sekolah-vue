@@ -36,7 +36,7 @@ class AddActivityTargetInfoBox extends StatelessWidget {
             color: primaryColor,
             size: 20,
           ),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               initialTarget == 'khusus'

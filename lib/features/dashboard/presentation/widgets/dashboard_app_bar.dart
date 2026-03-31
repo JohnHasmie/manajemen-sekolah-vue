@@ -63,7 +63,7 @@ class DashboardAppBar extends StatelessWidget {
         ),
         child: SafeArea(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
                 // Logo — role-coloured square with school icon
@@ -72,11 +72,11 @@ class DashboardAppBar extends StatelessWidget {
                   height: 34,
                   decoration: BoxDecoration(
                     color: primaryColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Icon(Icons.school, color: Colors.white, size: 18),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
 
                 // Title — single line, truncated if too long
                 Expanded(
@@ -132,7 +132,7 @@ class DashboardAppBar extends StatelessWidget {
                         right: 4,
                         top: 2,
                         child: Container(
-                          padding: EdgeInsets.all(3),
+                          padding: const EdgeInsets.all(3),
                           decoration: BoxDecoration(
                             color: ColorUtils.error600,
                             shape: BoxShape.circle,

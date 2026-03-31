@@ -317,7 +317,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.arrow_back,
@@ -326,7 +326,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,7 +431,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                                       alpha: 0.08,
                                     )
                                   : ColorUtils.slate100,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                               border: Border.all(
                                 color: studentsWithGradeCount > 0
                                     ? ColorUtils.success600.withValues(
@@ -524,7 +524,7 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               minimumSize: const Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: const BorderRadius.all(Radius.circular(12)),
                               ),
                             ),
                             child: _isSaving

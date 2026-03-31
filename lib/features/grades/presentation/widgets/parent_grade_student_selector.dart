@@ -38,11 +38,11 @@ class ParentGradeStudentSelector extends StatelessWidget {
     // No children linked — show a warning banner instead of the dropdown.
     if (studentList.isEmpty) {
       return Container(
-        margin: EdgeInsets.all(AppSpacing.lg),
-        padding: EdgeInsets.all(AppSpacing.lg),
+        margin: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: ColorUtils.warning600.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           border: Border.all(
             color: ColorUtils.warning600.withValues(alpha: 0.3),
           ),
@@ -54,7 +54,7 @@ class ParentGradeStudentSelector extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: ColorUtils.warning600.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
               child: Icon(
                 Icons.warning_amber_rounded,
@@ -62,7 +62,7 @@ class ParentGradeStudentSelector extends StatelessWidget {
                 size: 20,
               ),
             ),
-            SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 AppLocalizations.noChildrenLinked.tr,
@@ -80,13 +80,13 @@ class ParentGradeStudentSelector extends StatelessWidget {
 
     return Container(
       key: selectorKey,
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 8),
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
               AppLocalizations.selectChild.tr,
               style: TextStyle(
@@ -99,15 +99,15 @@ class ParentGradeStudentSelector extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: ColorUtils.slate200),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
-            padding: EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             child: DropdownButton<String>(
               value: selectedStudentId,
               isExpanded: true,
-              underline: SizedBox(),
+              underline: const SizedBox(),
               icon: Icon(
                 Icons.keyboard_arrow_down_rounded,
                 color: ColorUtils.slate500,
@@ -116,7 +116,7 @@ class ParentGradeStudentSelector extends StatelessWidget {
                 return DropdownMenuItem<String>(
                   value: student['id'],
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,

@@ -81,7 +81,7 @@ void showAttendanceReportFilterSheet({
           children: [
             // Header with gradient
             Container(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -102,7 +102,7 @@ void showAttendanceReportFilterSheet({
                   Row(
                     children: [
                       Icon(Icons.tune, color: Colors.white, size: 22),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Filter',
@@ -143,7 +143,7 @@ void showAttendanceReportFilterSheet({
             // Filter Content
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -155,7 +155,7 @@ void showAttendanceReportFilterSheet({
                         'id': 'Rentang Tanggal',
                       }),
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -195,7 +195,7 @@ void showAttendanceReportFilterSheet({
                         );
                       }).toList(),
                     ),
-                    SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: AppSpacing.xxl),
 
                     // Subject Filter
                     _buildSectionHeader(
@@ -205,7 +205,7 @@ void showAttendanceReportFilterSheet({
                         'id': 'Mata Pelajaran',
                       }),
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -241,7 +241,7 @@ void showAttendanceReportFilterSheet({
                         );
                       }).toList(),
                     ),
-                    SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: AppSpacing.xxl),
 
                     // Day Filter
                     _buildSectionHeader(
@@ -251,7 +251,7 @@ void showAttendanceReportFilterSheet({
                         'id': 'Hari',
                       }),
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -299,7 +299,7 @@ void showAttendanceReportFilterSheet({
                             );
                           }).toList(),
                     ),
-                    SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: AppSpacing.xxl),
 
                     // Lesson Hour Filter
                     _buildSectionHeader(
@@ -309,7 +309,7 @@ void showAttendanceReportFilterSheet({
                         'id': 'Jam Pelajaran',
                       }),
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -345,7 +345,7 @@ void showAttendanceReportFilterSheet({
                         );
                       }).toList(),
                     ),
-                    SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: AppSpacing.xxl),
 
                     // Class Filter
                     _buildSectionHeader(
@@ -355,7 +355,7 @@ void showAttendanceReportFilterSheet({
                         'id': 'Kelas',
                       }),
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -397,7 +397,7 @@ void showAttendanceReportFilterSheet({
             ),
             // Apply / Cancel Buttons
             Container(
-              padding: EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -415,10 +415,10 @@ void showAttendanceReportFilterSheet({
                     child: OutlinedButton(
                       onPressed: () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorUtils.slate300),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                       child: Text(
@@ -430,7 +430,7 @@ void showAttendanceReportFilterSheet({
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -444,10 +444,10 @@ void showAttendanceReportFilterSheet({
                         ));
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                       child: Text(
@@ -474,7 +474,7 @@ Widget _buildSectionHeader({required IconData icon, required String label}) {
   return Row(
     children: [
       Icon(icon, size: 16, color: ColorUtils.slate700),
-      SizedBox(width: AppSpacing.sm),
+      const SizedBox(width: AppSpacing.sm),
       Text(
         label,
         style: TextStyle(

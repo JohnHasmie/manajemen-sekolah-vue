@@ -187,7 +187,7 @@ class EssayQuizCard extends StatelessWidget {
                     size: 14,
                     color: ColorUtils.violet500.withValues(alpha: 0.7),
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       quiz['explanation'] ?? '',
@@ -202,7 +202,7 @@ class EssayQuizCard extends StatelessWidget {
               ),
             ),
           ] else
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
         ],
       ),
     );

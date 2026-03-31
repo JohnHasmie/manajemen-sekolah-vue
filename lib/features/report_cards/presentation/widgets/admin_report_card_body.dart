@@ -82,7 +82,7 @@ class AdminReportCardBody extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   color: Colors.grey[50],
                 ),
                 child: DropdownButtonHideUnderline(
@@ -168,7 +168,7 @@ class AdminReportCardBody extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(color: Colors.grey[200]!),
                         boxShadow: [
                           BoxShadow(
@@ -179,7 +179,7 @@ class AdminReportCardBody extends StatelessWidget {
                         ],
                       ),
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         onTap: () => onViewDetail(student),
                         child: Padding(
                           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -230,7 +230,7 @@ class AdminReportCardBody extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: statusColor.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: const BorderRadius.all(Radius.circular(20)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,

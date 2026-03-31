@@ -28,13 +28,13 @@ class LessonPlanDialogField extends StatelessWidget {
           label,
           style: TextStyle(color: ColorUtils.slate500, fontSize: 12),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xs),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
             border: Border.all(color: Colors.grey.shade200),
           ),
           child: Text(

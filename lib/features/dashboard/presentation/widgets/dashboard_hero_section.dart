@@ -148,10 +148,10 @@ class DashboardHeroSection extends ConsumerWidget {
 
     return Container(
       key: heroSectionKey,
-      margin: EdgeInsets.fromLTRB(12, 8, 12, 0),
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       decoration: BoxDecoration(
         gradient: ColorUtils.heroGradient(primaryColor: primaryColor),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
         boxShadow: [
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.3),
@@ -161,7 +161,7 @@ class DashboardHeroSection extends ConsumerWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
         child: Stack(
           children: [
             // Decorative circle - top right
@@ -212,12 +212,12 @@ class DashboardHeroSection extends ConsumerWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: onAcademicYearTap,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.1),
                         width: 1,
@@ -227,7 +227,7 @@ class DashboardHeroSection extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          padding: EdgeInsets.all(AppSpacing.xs),
+                          padding: const EdgeInsets.all(AppSpacing.xs),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
@@ -238,7 +238,7 @@ class DashboardHeroSection extends ConsumerWidget {
                             color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
@@ -252,7 +252,7 @@ class DashboardHeroSection extends ConsumerWidget {
                                 height: 1.1,
                               ),
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 2),
                             Text(
                               semester,
                               style: TextStyle(
@@ -273,7 +273,7 @@ class DashboardHeroSection extends ConsumerWidget {
 
             // Main content
             Padding(
-              padding: EdgeInsets.all(14),
+              padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -290,14 +290,14 @@ class DashboardHeroSection extends ConsumerWidget {
                           letterSpacing: 0.3,
                         ),
                       ),
-                      SizedBox(width: AppSpacing.xs),
+                      const SizedBox(width: AppSpacing.xs),
                       Text(
                         _getGreetingEmoji(),
                         style: TextStyle(fontSize: 14),
                       ),
                     ],
                   ),
-                  SizedBox(height: 3),
+                  const SizedBox(height: 3),
 
                   // User name
                   Text(
@@ -311,7 +311,7 @@ class DashboardHeroSection extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 14),
+                  const SizedBox(height: 14),
 
                   // 4-Column Stats Grid — shows skeletons while loading
                   Row(

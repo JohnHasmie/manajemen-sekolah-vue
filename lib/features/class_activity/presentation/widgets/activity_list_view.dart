@@ -167,7 +167,7 @@ class ActivityListView extends ConsumerWidget {
                     backgroundColor: primaryColor.withValues(alpha: 0.7),
                     side: BorderSide.none,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,

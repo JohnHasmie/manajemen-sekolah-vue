@@ -87,7 +87,7 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
 
               return InkWell(
                 onTap: widget.onTap,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
                   child: Column(
@@ -102,7 +102,7 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
                             height: 32,
                             decoration: BoxDecoration(
                               color: widget.accentColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Icon(
                               widget.icon,
@@ -271,7 +271,7 @@ class _AttendanceBarChartCardState extends State<AttendanceBarChartCard> {
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: ColorUtils.slate200),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(

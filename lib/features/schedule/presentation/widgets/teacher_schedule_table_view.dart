@@ -169,7 +169,7 @@ class TeacherScheduleTableView extends StatelessWidget {
       child: SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Container(
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -182,13 +182,13 @@ class TeacherScheduleTableView extends StatelessWidget {
                   color: primaryColor,
                 ),
               ),
-              SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
 
               // Table container — like an HTML `<table>` with explicit borders.
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(color: ColorUtils.slate300),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
                 child: Column(
                   children: [
@@ -337,7 +337,7 @@ class TeacherScheduleTableView extends StatelessWidget {
                                 return Container(
                                   width: 200,
                                   height: 60,
-                                  padding: EdgeInsets.all(AppSpacing.xs),
+                                  padding: const EdgeInsets.all(AppSpacing.xs),
                                   decoration: BoxDecoration(
                                     border: Border(
                                       right: BorderSide(
@@ -355,7 +355,7 @@ class TeacherScheduleTableView extends StatelessWidget {
                                             color: _getDayColor(day)
                                                 .withValues(alpha: 0.1),
                                             borderRadius:
-                                                BorderRadius.circular(4),
+                                                const BorderRadius.all(Radius.circular(4)),
                                             border: Border.all(
                                               color: _getDayColor(day)
                                                   .withValues(alpha: 0.3),
@@ -405,12 +405,12 @@ class TeacherScheduleTableView extends StatelessWidget {
               ),
 
               // ── Legend ───────────────────────────────────────────────────
-              SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
               Container(
-                padding: EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                   border: Border.all(color: ColorUtils.slate300),
                 ),
                 child: Column(
@@ -423,7 +423,7 @@ class TeacherScheduleTableView extends StatelessWidget {
                         color: ColorUtils.slate600,
                       ),
                     ),
-                    SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.sm),
                     Wrap(
                       spacing: 16,
                       children: availableDays.map((day) {
@@ -435,10 +435,10 @@ class TeacherScheduleTableView extends StatelessWidget {
                               height: 12,
                               decoration: BoxDecoration(
                                 color: _getDayColor(day),
-                                borderRadius: BorderRadius.circular(2),
+                                borderRadius: const BorderRadius.all(Radius.circular(2)),
                               ),
                             ),
-                            SizedBox(width: AppSpacing.xs),
+                            const SizedBox(width: AppSpacing.xs),
                             Text(day, style: const TextStyle(fontSize: 12)),
                           ],
                         );

@@ -41,7 +41,7 @@ class DashboardQuickActionsSection extends StatelessWidget {
 
     return Padding(
       key: quickActionsKey,
-      padding: EdgeInsets.fromLTRB(12, 12, 12, 8),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -60,7 +60,7 @@ class DashboardQuickActionsSection extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
 
           // Horizontal scroll list — real buttons or skeleton placeholders
           SizedBox(
@@ -70,14 +70,14 @@ class DashboardQuickActionsSection extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     physics: BouncingScrollPhysics(),
                     itemCount: actions.length,
-                    separatorBuilder: (context, index) => SizedBox(width: 10),
+                    separatorBuilder: (context, index) => const SizedBox(width: 10),
                     itemBuilder: (context, index) => actions[index],
                   )
                 : ListView.separated(
                     scrollDirection: Axis.horizontal,
                     physics: NeverScrollableScrollPhysics(),
                     itemCount: 4,
-                    separatorBuilder: (context, index) => SizedBox(width: 10),
+                    separatorBuilder: (context, index) => const SizedBox(width: 10),
                     itemBuilder: (context, index) =>
                         const QuickActionSkeleton(),
                   ),

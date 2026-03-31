@@ -141,7 +141,7 @@ class ClassFinanceTable extends StatelessWidget {
             width: 150,
             height: 60,
             alignment: Alignment.centerLeft,
-            padding: EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(color: ColorUtils.slate300),
@@ -167,7 +167,7 @@ class ClassFinanceTable extends StatelessWidget {
               width: 150,
               height: 50,
               alignment: Alignment.centerLeft,
-              padding: EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 border: Border(
                   right: BorderSide(color: ColorUtils.slate300),
@@ -320,7 +320,7 @@ class ClassFinanceTable extends StatelessWidget {
                     ),
                     color: i % 2 == 0 ? Colors.white : ColorUtils.slate50,
                   ),
-                  child: SizedBox(),
+                  child: const SizedBox(),
                 ),
               );
             } else {

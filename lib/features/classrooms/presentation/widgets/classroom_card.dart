@@ -32,7 +32,7 @@ class ClassroomInfoTag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: Row(
@@ -108,12 +108,12 @@ class ClassroomCard extends ConsumerWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: ColorUtils.slate200, width: 1),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
@@ -132,7 +132,7 @@ class ClassroomCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 // Name + info tags
                 Expanded(
                   child: Column(
@@ -148,12 +148,12 @@ class ClassroomCard extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       ClassroomInfoTag(
                         icon: Icons.layers_outlined,
                         text: gradeText,
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       ClassroomInfoTag(
                         icon: Icons.person_outline,
                         text: teacherName,
@@ -161,7 +161,7 @@ class ClassroomCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 // Student count chip + edit/delete action buttons
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -177,7 +177,7 @@ class ClassroomCard extends ConsumerWidget {
                         }
                         return Column(
                           children: [
-                            SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: AppSpacing.sm),
                             Row(
                               children: [
                                 _buildIconButton(
@@ -216,7 +216,7 @@ class ClassroomCard extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
         border: Border.all(
           color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
         ),
@@ -232,7 +232,7 @@ class ClassroomCard extends ConsumerWidget {
               shape: BoxShape.circle,
             ),
           ),
-          SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: AppSpacing.xs),
           Text(
             '$studentCount ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
             style: TextStyle(
@@ -254,12 +254,12 @@ class ClassroomCard extends ConsumerWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: const BorderRadius.all(Radius.circular(8)),
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
         ),
         child: Icon(icon, size: 16, color: color),
       ),

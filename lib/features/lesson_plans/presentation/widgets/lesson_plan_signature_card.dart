@@ -23,10 +23,10 @@ class LessonPlanSignatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(top: 4),
+      margin: const EdgeInsets.only(top: 4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: [
           BoxShadow(
@@ -42,7 +42,7 @@ class LessonPlanSignatureCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xxl),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           children: [
             Row(
@@ -58,9 +58,9 @@ class LessonPlanSignatureCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       Text('Kepala Sekolah', style: TextStyle(fontSize: 13)),
-                      SizedBox(height: 40),
+                      const SizedBox(height: 40),
                       Text(
                         '...................................',
                         style: TextStyle(fontSize: 12),
@@ -80,12 +80,12 @@ class LessonPlanSignatureCard extends StatelessWidget {
                   child: Column(
                     children: [
                       Text('', style: TextStyle(fontSize: 13)),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         'Guru Mata Pelajaran',
                         style: TextStyle(fontSize: 13),
                       ),
-                      SizedBox(height: 40),
+                      const SizedBox(height: 40),
                       Text(
                         '...................................',
                         style: TextStyle(fontSize: 12),
@@ -104,9 +104,9 @@ class LessonPlanSignatureCard extends StatelessWidget {
             ),
             // AI-generated notice — only rendered when the RPP was AI-generated
             if (isAiGenerated) ...[
-              SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
               Divider(color: ColorUtils.slate200),
-              SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 'RPP ini digenerate secara otomatis menggunakan AI',
                 style: TextStyle(

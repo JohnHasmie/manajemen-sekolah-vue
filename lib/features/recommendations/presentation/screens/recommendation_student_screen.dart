@@ -219,7 +219,7 @@ class _LearningRecommendationStudentScreenState
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   border: Border.all(color: Colors.white24, width: 1),
                 ),
                 child: Column(
@@ -309,7 +309,7 @@ class _LearningRecommendationStudentScreenState
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: const Icon(
                       Icons.arrow_back,
@@ -394,7 +394,7 @@ class _LearningRecommendationStudentScreenState
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: const BorderRadius.all(Radius.circular(16)),
                           boxShadow: ColorUtils.corporateShadow(),
                         ),
                         child: ListTile(

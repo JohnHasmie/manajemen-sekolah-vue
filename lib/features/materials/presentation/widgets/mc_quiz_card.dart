@@ -41,10 +41,10 @@ class McQuizCard extends StatelessWidget {
     final options = quiz['options'] as List? ?? [];
 
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
@@ -53,7 +53,7 @@ class McQuizCard extends StatelessWidget {
         children: [
           // Question header
           Container(
-            padding: EdgeInsets.fromLTRB(14, 12, 14, 10),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.03),
               borderRadius: BorderRadius.vertical(top: Radius.circular(13)),
@@ -65,7 +65,7 @@ class McQuizCard extends StatelessWidget {
                   height: 28,
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Center(
                     child: Text(
@@ -78,7 +78,7 @@ class McQuizCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Pertanyaan ${index + 1}',
@@ -90,10 +90,10 @@ class McQuizCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: diffConfig.color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: const BorderRadius.all(Radius.circular(6)),
                     border: Border.all(
                       color: diffConfig.color.withValues(alpha: 0.2),
                     ),
@@ -112,7 +112,7 @@ class McQuizCard extends StatelessWidget {
           ),
           // Question text
           Padding(
-            padding: EdgeInsets.fromLTRB(14, 10, 14, 12),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
             child: Text(
               quiz['question'] ?? '',
               style: TextStyle(
@@ -128,13 +128,13 @@ class McQuizCard extends StatelessWidget {
             final option = opt as Map<String, dynamic>;
             final isCorrect = option['is_correct'] == true;
             return Container(
-              margin: EdgeInsets.fromLTRB(14, 0, 14, 8),
-              padding: EdgeInsets.all(10),
+              margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isCorrect
                     ? ColorUtils.emerald500.withValues(alpha: 0.08)
                     : ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
                 border: Border.all(
                   color: isCorrect
                       ? ColorUtils.emerald500.withValues(alpha: 0.3)
@@ -150,7 +150,7 @@ class McQuizCard extends StatelessWidget {
                       color: isCorrect
                           ? ColorUtils.emerald500.withValues(alpha: 0.15)
                           : Colors.white,
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: const BorderRadius.all(Radius.circular(6)),
                       border: Border.all(
                         color: isCorrect
                             ? ColorUtils.emerald500
@@ -174,7 +174,7 @@ class McQuizCard extends StatelessWidget {
                             ),
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       option['text'] ?? '',
@@ -197,11 +197,11 @@ class McQuizCard extends StatelessWidget {
           if (quiz['explanation'] != null &&
               quiz['explanation'].toString().isNotEmpty) ...[
             Container(
-              margin: EdgeInsets.fromLTRB(14, 4, 14, 14),
-              padding: EdgeInsets.all(AppSpacing.md),
+              margin: const EdgeInsets.fromLTRB(14, 4, 14, 14),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: ColorUtils.corporateBlue500.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
                 border: Border.all(
                   color: ColorUtils.corporateBlue500.withValues(alpha: 0.12),
                 ),
@@ -214,7 +214,7 @@ class McQuizCard extends StatelessWidget {
                     size: 16,
                     color: ColorUtils.corporateBlue500.withValues(alpha: 0.7),
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       quiz['explanation'] ?? '',
@@ -229,7 +229,7 @@ class McQuizCard extends StatelessWidget {
               ),
             ),
           ] else
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
         ],
       ),
     );

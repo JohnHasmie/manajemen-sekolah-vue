@@ -145,12 +145,12 @@ class GradeRecapTableView extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
                 boxShadow: ColorUtils.corporateShadow(),
                 border: Border.all(color: ColorUtils.slate200),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
                 child: IntrinsicHeight(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -196,7 +196,7 @@ class GradeRecapTableView extends StatelessWidget {
               foregroundColor: primaryColor,
               side: BorderSide(color: primaryColor),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
             ),
@@ -261,7 +261,7 @@ class GradeRecapTableView extends StatelessWidget {
                         height: 20,
                         decoration: BoxDecoration(
                           color: ColorUtils.slate300,
-                          borderRadius: BorderRadius.circular(1),
+                          borderRadius: const BorderRadius.all(Radius.circular(1)),
                         ),
                       ),
                     ),
@@ -569,11 +569,11 @@ class GradeRecapTableView extends StatelessWidget {
                       vertical: 10,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                       borderSide: BorderSide(color: ColorUtils.slate200),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                       borderSide: BorderSide(color: ColorUtils.slate200),
                     ),
                   ),
@@ -599,11 +599,11 @@ class GradeRecapTableView extends StatelessWidget {
                   isDense: true,
                   contentPadding: const EdgeInsets.all(10),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     borderSide: BorderSide(color: ColorUtils.slate200),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     borderSide: BorderSide(color: ColorUtils.slate200),
                   ),
                   fillColor: ColorUtils.slate50,

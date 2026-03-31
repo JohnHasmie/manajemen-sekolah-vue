@@ -63,7 +63,7 @@ class AddActivityHeader extends StatelessWidget {
                   size: 20,
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
                   isEditMode
@@ -94,7 +94,7 @@ class AddActivityHeader extends StatelessWidget {
               ),
               IconButton(
                 icon: Container(
-                  padding: EdgeInsets.all(AppSpacing.xs),
+                  padding: const EdgeInsets.all(AppSpacing.xs),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: const BorderRadius.all(Radius.circular(8)),

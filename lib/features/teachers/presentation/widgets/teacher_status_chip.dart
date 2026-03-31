@@ -50,7 +50,7 @@ class TeacherStatusChip extends StatelessWidget {
         color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300,
         width: 1,
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(10))),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     );
   }

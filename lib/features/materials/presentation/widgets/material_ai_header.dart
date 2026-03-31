@@ -79,12 +79,12 @@ class MaterialAiHeader extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
               child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
             ),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           // Title column
           Expanded(
             child: Column(
@@ -111,7 +111,7 @@ class MaterialAiHeader extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
           // Regenerate button — only shown once data is available
           if (!isLoading && hasData)
             GestureDetector(
@@ -121,7 +121,7 @@ class MaterialAiHeader extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
                 child: isRegenerating
                     ? const SizedBox(

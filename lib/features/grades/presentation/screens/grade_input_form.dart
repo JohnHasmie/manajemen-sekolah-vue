@@ -224,11 +224,11 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
             height: 36,
             decoration: BoxDecoration(
               color: ColorUtils.corporateBlue600.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
             child: Icon(icon, size: 18, color: ColorUtils.corporateBlue600),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,7 +299,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.arrow_back,
@@ -308,7 +308,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,7 +354,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: const BorderRadius.all(Radius.circular(14)),
                         border: Border.all(color: ColorUtils.slate200),
                         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                       ),
@@ -408,7 +408,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                     Container(
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
                       child: TextFormField(
@@ -438,7 +438,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                             vertical: 14,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             borderSide: BorderSide(
                               color: _getPrimaryColor(),
                               width: 1.5,
@@ -454,7 +454,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                     Container(
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
                       child: TextFormField(
@@ -476,7 +476,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                             vertical: 14,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             borderSide: BorderSide(
                               color: _getPrimaryColor(),
                               width: 1.5,
@@ -515,7 +515,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                     Container(
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
                       child: TextFormField(
@@ -537,7 +537,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                             vertical: 14,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             borderSide: BorderSide(
                               color: _getPrimaryColor(),
                               width: 1.5,
@@ -558,7 +558,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                       ),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
                       child: Row(
@@ -568,7 +568,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                             color: _getPrimaryColor(),
                             size: 20,
                           ),
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Date:',
@@ -609,7 +609,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                         ),
                         child: _isSaving

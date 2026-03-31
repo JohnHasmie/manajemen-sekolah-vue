@@ -23,14 +23,14 @@ class AnnouncementDeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Danger gradient header
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -52,7 +52,7 @@ class AnnouncementDeleteDialog extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: Icon(
                     Icons.delete_outline,
@@ -60,7 +60,7 @@ class AnnouncementDeleteDialog extends StatelessWidget {
                     size: 22,
                   ),
                 ),
-                SizedBox(width: 14),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +94,7 @@ class AnnouncementDeleteDialog extends StatelessWidget {
           ),
           // Message body
           Padding(
-            padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
             child: Text(
               languageProvider.getTranslatedText({
                 'en':
@@ -111,17 +111,17 @@ class AnnouncementDeleteDialog extends StatelessWidget {
           ),
           // Footer buttons
           Padding(
-            padding: EdgeInsets.fromLTRB(20, 8, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
             child: Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => AppNavigator.pop(context, false),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 13),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
                       side: BorderSide(color: ColorUtils.slate300),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(
@@ -136,17 +136,17 @@ class AnnouncementDeleteDialog extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => AppNavigator.pop(context, true),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 13),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
                       backgroundColor: ColorUtils.error600,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(

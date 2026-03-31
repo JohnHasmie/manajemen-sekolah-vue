@@ -98,7 +98,7 @@ class GradeBookTable extends StatelessWidget {
           Container(
             height: 70,
             width: 120,
-            padding: EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.md),
             alignment: Alignment.centerLeft,
             decoration: BoxDecoration(
               color: primaryColor,
@@ -120,7 +120,7 @@ class GradeBookTable extends StatelessWidget {
             return Container(
               height: 60,
               width: 120,
-              padding: EdgeInsets.all(AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
                 color: Colors.white,
@@ -199,7 +199,7 @@ class GradeBookTable extends StatelessWidget {
                         onTap: () => onColumnTap(type, header),
                         child: Container(
                           width: 90,
-                          padding: EdgeInsets.all(AppSpacing.xs),
+                          padding: const EdgeInsets.all(AppSpacing.xs),
                           decoration: BoxDecoration(
                             border: Border(
                               right: BorderSide(color: ColorUtils.slate200),
@@ -241,7 +241,7 @@ class GradeBookTable extends StatelessWidget {
                     widgets.add(
                       Container(
                         width: 65,
-                        padding: EdgeInsets.all(AppSpacing.xs),
+                        padding: const EdgeInsets.all(AppSpacing.xs),
                         decoration: BoxDecoration(
                           border: Border(
                             right: BorderSide(
@@ -262,7 +262,7 @@ class GradeBookTable extends StatelessWidget {
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 2),
                             InkWell(
                               onTap: () => onAddAssessment(type),
                               child: Icon(
@@ -309,7 +309,7 @@ class GradeBookTable extends StatelessWidget {
                       widgets.add(
                         Container(
                           width: 90,
-                          padding: EdgeInsets.all(AppSpacing.xs),
+                          padding: const EdgeInsets.all(AppSpacing.xs),
                           decoration: BoxDecoration(
                             border: Border(
                               right: BorderSide(color: ColorUtils.slate100),
@@ -327,7 +327,7 @@ class GradeBookTable extends StatelessWidget {
                                         alpha: 0.08,
                                       )
                                     : ColorUtils.slate50,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: const BorderRadius.all(Radius.circular(4)),
                                 border: Border.all(
                                   color: hasValue
                                       ? ColorUtils.success600.withValues(

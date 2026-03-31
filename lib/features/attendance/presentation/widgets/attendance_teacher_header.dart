@@ -84,7 +84,7 @@ class AttendanceTeacherHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(
                     Icons.arrow_back,
@@ -146,7 +146,7 @@ class AttendanceTeacherHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(
                     Icons.more_vert,

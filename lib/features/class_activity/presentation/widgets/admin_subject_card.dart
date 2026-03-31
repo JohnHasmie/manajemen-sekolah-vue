@@ -70,7 +70,7 @@ class AdminSubjectCard extends StatelessWidget {
                     size: 22,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 // Subject name + hint text
                 Expanded(
                   child: Column(
@@ -86,7 +86,7 @@ class AdminSubjectCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         'Ketuk untuk melihat kegiatan',
                         style: TextStyle(
@@ -97,7 +97,7 @@ class AdminSubjectCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 // Chevron
                 Container(
                   padding: const EdgeInsets.all(6),

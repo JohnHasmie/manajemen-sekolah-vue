@@ -86,28 +86,28 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
           size: 20,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: ColorUtils.slate200),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: ColorUtils.slate200),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: widget.primaryColor, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: ColorUtils.error600),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: ColorUtils.error600, width: 1.5),
         ),
         filled: true,
         fillColor: ColorUtils.slate50,
-        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -124,7 +124,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
         child: Column(
@@ -133,7 +133,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
             // Gradient Header (Pattern #10)
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -151,7 +151,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                     height: 44,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Icon(
                       Icons.lock_rounded,
@@ -159,7 +159,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                       size: 22,
                     ),
                   ),
-                  SizedBox(width: 14),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,7 +176,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           'Masukkan kata sandi baru Anda',
                           style: TextStyle(
@@ -193,7 +193,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
 
             // Form Fields
             Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -207,7 +207,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                       onToggle: () =>
                           setState(() => _obscureOld = !_obscureOld),
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildPasswordField(
                       controller: _newPasswordController,
                       label: ref
@@ -247,7 +247,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildPasswordField(
                       controller: _confirmPasswordController,
                       label: ref
@@ -274,23 +274,23 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
 
             // Footer
             Container(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border(top: BorderSide(color: ColorUtils.slate100)),
               ),
               child: Padding(
-                padding: EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.only(top: 16),
                 child: Row(
                   children: [
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => AppNavigator.pop(context),
                         style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 13),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
                           side: BorderSide(color: ColorUtils.slate300),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                         ),
                         child: Text(
@@ -301,15 +301,15 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _updatePassword,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: widget.primaryColor,
-                          padding: EdgeInsets.symmetric(vertical: 13),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                           elevation: 0,
                         ),

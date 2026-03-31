@@ -42,12 +42,12 @@ class AttendanceOverviewCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: Container(
-          padding: EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200, width: 1),
             boxShadow: [
               BoxShadow(
@@ -74,7 +74,7 @@ class AttendanceOverviewCard extends StatelessWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: ColorUtils.success600.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                       border: Border.all(
                         color: ColorUtils.success600.withValues(alpha: 0.15),
                         width: 1,
@@ -86,7 +86,7 @@ class AttendanceOverviewCard extends StatelessWidget {
                       color: ColorUtils.success600,
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,7 +101,7 @@ class AttendanceOverviewCard extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           'Absensi Hari Ini',
                           style: TextStyle(
@@ -120,7 +120,7 @@ class AttendanceOverviewCard extends StatelessWidget {
               if (hasData) ...[
                 // Mini bar showing attendance distribution
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: const BorderRadius.all(Radius.circular(4)),
                   child: SizedBox(
                     height: 6,
                     child: Row(
@@ -149,16 +149,16 @@ class AttendanceOverviewCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 // Legend
                 Row(
                   children: [
                     _buildLegend(ColorUtils.success600, 'H:$hadir'),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     _buildLegend(ColorUtils.info600, 'I:$izin'),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     _buildLegend(ColorUtils.warning600, 'S:$sakit'),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     _buildLegend(ColorUtils.error600, 'A:$alpha'),
                   ],
                 ),
@@ -188,7 +188,7 @@ class AttendanceOverviewCard extends StatelessWidget {
           height: 6,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        SizedBox(width: 3),
+        const SizedBox(width: 3),
         Text(
           text,
           style: TextStyle(

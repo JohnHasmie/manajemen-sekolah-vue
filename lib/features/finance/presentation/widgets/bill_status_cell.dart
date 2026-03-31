@@ -24,7 +24,7 @@ class BillStatusCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (bill == null) return SizedBox();
+    if (bill == null) return const SizedBox();
 
     final status = bill['status'];
     Color color;
@@ -59,12 +59,12 @@ class BillStatusCell extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: const BorderRadius.all(Radius.circular(10)),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
           border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
         ),
         child: Row(
@@ -75,7 +75,7 @@ class BillStatusCell extends StatelessWidget {
               height: 5,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
-            SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: AppSpacing.xs),
             Text(
               text,
               style: TextStyle(

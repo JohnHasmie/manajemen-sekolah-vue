@@ -408,7 +408,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: TextFormField(
@@ -426,7 +426,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
           hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
           prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -443,7 +443,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<dynamic>(
@@ -457,7 +457,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
           labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
           prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -483,7 +483,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
         children: [
           // Header (Pattern #10 gradient)
           Container(
-            padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
+            padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
             decoration: BoxDecoration(
               gradient: ColorUtils.heroGradient(primaryColor: primaryColor),
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -493,10 +493,10 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                 Container(
                   width: 40,
                   height: 4,
-                  margin: EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: const BorderRadius.all(Radius.circular(2)),
                   ),
                 ),
                 Row(
@@ -507,7 +507,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
@@ -518,7 +518,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                         size: 24,
                       ),
                     ),
-                    SizedBox(width: 14),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -539,7 +539,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             isEditMode
                                 ? languageProvider.getTranslatedText({
@@ -561,7 +561,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                     GestureDetector(
                       onTap: () => AppNavigator.pop(context),
                       child: Container(
-                        padding: EdgeInsets.all(AppSpacing.sm),
+                        padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
@@ -582,7 +582,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
           // Form Content
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -607,7 +607,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedSubjectId,
                       label:
@@ -641,7 +641,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedClassId,
                       label:
@@ -673,7 +673,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedTerm,
                       label:
@@ -691,7 +691,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                         });
                       },
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
                       controller: _academicYearController,
                       label:
@@ -708,7 +708,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                         return null;
                       },
                     ),
-                    SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.lg),
                     // File upload section
                     Text(
                       languageProvider.getTranslatedText({
@@ -721,14 +721,14 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                         color: ColorUtils.slate700,
                       ),
                     ),
-                    SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.sm),
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
                         border: Border.all(color: ColorUtils.slate200),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                       child: Row(
                         children: [
@@ -739,7 +739,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                               color: _selectedFileName != null
                                   ? ColorUtils.info600.withValues(alpha: 0.1)
                                   : ColorUtils.slate100,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: const BorderRadius.all(Radius.circular(10)),
                             ),
                             child: Icon(
                               _selectedFileName != null
@@ -751,7 +751,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                               size: 20,
                             ),
                           ),
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -796,7 +796,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                                   color: ColorUtils.info600.withValues(
                                     alpha: 0.1,
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                                   border: Border.all(
                                     color: ColorUtils.info600.withValues(
                                       alpha: 0.25,
@@ -810,7 +810,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                                 ),
                               ),
                             ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           GestureDetector(
                             onTap: _showFilePickerDialog,
                             child: Container(
@@ -820,7 +820,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                               ),
                               decoration: BoxDecoration(
                                 color: primaryColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: const BorderRadius.all(Radius.circular(10)),
                                 border: Border.all(
                                   color: primaryColor.withValues(alpha: 0.25),
                                 ),
@@ -849,7 +849,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
 
           // Footer Buttons (Enhanced Pattern)
           Container(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -871,9 +871,9 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                           : () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorUtils.slate300),
                       ),
                       child: Text(
@@ -889,16 +889,16 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog> {
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _isUploading ? null : _submitForm,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         elevation: 2,
                         shadowColor: primaryColor.withValues(alpha: 0.4),
                       ),

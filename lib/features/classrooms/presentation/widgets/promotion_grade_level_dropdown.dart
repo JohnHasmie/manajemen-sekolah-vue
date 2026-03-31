@@ -31,7 +31,7 @@ class PromotionGradeLevelDropdown extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<String>(
@@ -48,7 +48,7 @@ class PromotionGradeLevelDropdown extends StatelessWidget {
             size: 18,
           ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         ),
         items: availableGradeLevels.map((gradeStr) {
           final grade = int.tryParse(gradeStr) ?? 0;

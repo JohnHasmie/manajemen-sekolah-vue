@@ -109,11 +109,11 @@ class ActivityDetailDialog extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
             child: Icon(icon, size: 18, color: primaryColor),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,13 +152,13 @@ class ActivityDetailDialog extends StatelessWidget {
 
     return Dialog(
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // ── Gradient header ──────────────────────────────────────────────
           Container(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -173,7 +173,7 @@ class ActivityDetailDialog extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: Icon(
                     isAssignment
@@ -183,7 +183,7 @@ class ActivityDetailDialog extends StatelessWidget {
                     size: 24,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +225,7 @@ class ActivityDetailDialog extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 400),
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -308,7 +308,7 @@ class ActivityDetailDialog extends StatelessWidget {
                       side: BorderSide(color: ColorUtils.slate300),
                       foregroundColor: ColorUtils.slate700,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
                     ),
                     child: Text(
@@ -321,7 +321,7 @@ class ActivityDetailDialog extends StatelessWidget {
                   ),
                 ),
                 if (canEdit && onEditPressed != null) ...[
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -334,7 +334,7 @@ class ActivityDetailDialog extends StatelessWidget {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                       ),
                       child: Text(

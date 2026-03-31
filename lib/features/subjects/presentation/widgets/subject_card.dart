@@ -63,16 +63,16 @@ class SubjectCard extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
@@ -91,7 +91,7 @@ class SubjectCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
 
                 // Content area
                 Expanded(
@@ -107,7 +107,7 @@ class SubjectCard extends ConsumerWidget {
                           color: ColorUtils.slate800,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
 
                       // Subject code + active/inactive badge
                       Row(
@@ -120,7 +120,7 @@ class SubjectCard extends ConsumerWidget {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           // Dot separator
                           Container(
                             width: 4,
@@ -130,7 +130,7 @@ class SubjectCard extends ConsumerWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           // Status badge
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -142,7 +142,7 @@ class SubjectCard extends ConsumerWidget {
                                   ? ColorUtils.success600
                                       .withValues(alpha: 0.1)
                                   : ColorUtils.error600.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: const BorderRadius.all(Radius.circular(4)),
                             ),
                             child: Row(
                               children: [
@@ -156,7 +156,7 @@ class SubjectCard extends ConsumerWidget {
                                     shape: BoxShape.circle,
                                   ),
                                 ),
-                                SizedBox(width: AppSpacing.xs),
+                                const SizedBox(width: AppSpacing.xs),
                                 Text(
                                   isActive
                                       ? languageProvider.getTranslatedText({
@@ -180,7 +180,7 @@ class SubjectCard extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
 
                       // Info tags: class count and class names
                       Wrap(
@@ -213,7 +213,7 @@ class SubjectCard extends ConsumerWidget {
                       color: primaryColor,
                       onPressed: onEdit,
                     ),
-                    SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.sm),
                     SubjectCircleActionButton(
                       icon: Icons.delete_outline,
                       color: ColorUtils.error600,

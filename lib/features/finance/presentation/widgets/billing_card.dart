@@ -62,7 +62,7 @@ class BillingCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(
           color: isRead ? ColorUtils.slate200 : statusColor.withValues(alpha: 0.3),
           width: isRead ? 1 : 2,
@@ -73,7 +73,7 @@ class BillingCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -113,7 +113,7 @@ class BillingCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                         border: Border.all(color: statusColor.withValues(alpha: 0.2)),
                       ),
                       child: Row(
@@ -187,7 +187,7 @@ class BillingCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       decoration: BoxDecoration(
                         color: ColorUtils.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: const BorderRadius.all(Radius.circular(4)),
                       ),
                       child: Center(
                         child: Text(

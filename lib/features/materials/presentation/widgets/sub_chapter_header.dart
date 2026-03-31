@@ -70,12 +70,12 @@ class SubChapterHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +87,7 @@ class SubChapterHeader extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       chapter['judul_bab'] ?? 'Judul Bab',
                       style: TextStyle(
@@ -104,12 +104,12 @@ class SubChapterHeader extends StatelessWidget {
               GestureDetector(
                 onTap: onCheckToggle,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: isChecked
                         ? Colors.white.withValues(alpha: 0.3)
                         : Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.3),
                     ),
@@ -124,7 +124,7 @@ class SubChapterHeader extends StatelessWidget {
                         color: Colors.white,
                         size: 18,
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Done',
@@ -140,7 +140,7 @@ class SubChapterHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               GestureDetector(
                 onTap: onAiTap,
                 child: Container(
@@ -148,7 +148,7 @@ class SubChapterHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.orange.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                     border: Border.all(
                       color: Colors.orange.withValues(alpha: 0.5),
                     ),
@@ -162,12 +162,12 @@ class SubChapterHeader extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
           Container(
-            padding: EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
               border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: Row(
@@ -177,7 +177,7 @@ class SubChapterHeader extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Icon(
                     Icons.description_rounded,
@@ -185,7 +185,7 @@ class SubChapterHeader extends StatelessWidget {
                     size: 16,
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +197,7 @@ class SubChapterHeader extends StatelessWidget {
                           color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         subChapter['judul_sub_bab'] ?? 'Judul Sub Bab',
                         style: TextStyle(

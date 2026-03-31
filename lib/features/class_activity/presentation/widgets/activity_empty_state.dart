@@ -40,7 +40,7 @@ class ActivityEmptyState extends StatelessWidget {
                 color: ColorUtils.slate400,
               ),
             ),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               message,
               style: TextStyle(

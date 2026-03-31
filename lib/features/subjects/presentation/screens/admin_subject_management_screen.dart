@@ -521,7 +521,7 @@ class SubjectManagementScreenState
           height: 40,
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
           ),
           child: Icon(Icons.more_vert, color: Colors.white, size: 20),
         ),
@@ -531,7 +531,7 @@ class SubjectManagementScreenState
             child: Row(
               children: [
                 Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Refresh Data',
@@ -546,7 +546,7 @@ class SubjectManagementScreenState
             child: Row(
               children: [
                 Icon(Icons.download, size: 20),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Export to Excel',
@@ -561,7 +561,7 @@ class SubjectManagementScreenState
             child: Row(
               children: [
                 Icon(Icons.upload, size: 20),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Import from Excel',
@@ -576,7 +576,7 @@ class SubjectManagementScreenState
             child: Row(
               children: [
                 Icon(Icons.file_download, size: 20),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   languageProvider.getTranslatedText({
                     'en': 'Download Template',
@@ -595,7 +595,7 @@ class SubjectManagementScreenState
                 key: _searchKey,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                 ),
                 child: Row(
                   children: [
@@ -625,7 +625,7 @@ class SubjectManagementScreenState
                       ),
                     ),
                     Container(
-                      margin: EdgeInsets.only(right: 4),
+                      margin: const EdgeInsets.only(right: 4),
                       child: IconButton(
                         icon: Icon(Icons.search, color: ctrl.getPrimaryColor()),
                         onPressed: () {
@@ -640,14 +640,14 @@ class SubjectManagementScreenState
                 ),
               ),
             ),
-            SizedBox(width: AppSpacing.sm),
+            const SizedBox(width: AppSpacing.sm),
             Container(
               key: _filterKey,
               decoration: BoxDecoration(
                 color: _hasActiveFilter
                     ? Colors.white
                     : Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
               ),
               child: Stack(
@@ -670,7 +670,7 @@ class SubjectManagementScreenState
                       right: 8,
                       top: 8,
                       child: Container(
-                        padding: EdgeInsets.all(AppSpacing.xs),
+                        padding: const EdgeInsets.all(AppSpacing.xs),
                         decoration: BoxDecoration(
                           color: Colors.red,
                           shape: BoxShape.circle,
@@ -690,10 +690,10 @@ class SubjectManagementScreenState
               child: Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(AppSpacing.sm),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                     child: Icon(
                       Icons.filter_alt,
@@ -701,14 +701,14 @@ class SubjectManagementScreenState
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
                         ..._buildFilterChips(languageProvider).map((filter) {
                           return Container(
-                            margin: EdgeInsets.only(right: 6),
+                            margin: const EdgeInsets.only(right: 6),
                             child: Chip(
                               label: Text(
                                 filter['label'],
@@ -732,28 +732,28 @@ class SubjectManagementScreenState
                                 width: 1,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: const BorderRadius.all(Radius.circular(8)),
                               ),
                               padding: EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 4,
                               ),
-                              labelPadding: EdgeInsets.only(left: 4),
+                              labelPadding: const EdgeInsets.only(left: 4),
                             ),
                           );
                         }),
                       ],
                     ),
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   InkWell(
                     onTap: _clearAllFilters,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     child: Container(
-                      padding: EdgeInsets.all(AppSpacing.sm),
+                      padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: Colors.red,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                       ),
                       child: Icon(
                         Icons.clear_all,
@@ -821,14 +821,14 @@ class SubjectManagementScreenState
                     onRefresh: _loadSubjects,
                     child: ListView.builder(
                       controller: _scrollController,
-                      padding: EdgeInsets.only(top: 8, bottom: 16),
+                      padding: const EdgeInsets.only(top: 8, bottom: 16),
                       itemCount:
                           filteredSubjects.length + (_isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         // Show loading indicator at bottom
                         if (index == filteredSubjects.length) {
                           return Container(
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             alignment: Alignment.center,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           );
@@ -858,7 +858,7 @@ class SubjectManagementScreenState
         key: _fabKey,
         onPressed: _showAddEditDialog,
         backgroundColor: ctrl.getPrimaryColor(),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(16))),
         child: Icon(Icons.add, color: Colors.white, size: 20),
       ),
     );

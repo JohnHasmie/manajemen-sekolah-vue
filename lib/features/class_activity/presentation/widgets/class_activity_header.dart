@@ -121,7 +121,7 @@ class ClassActivityHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
 
               // Title + subtitle column
               Expanded(
@@ -180,7 +180,7 @@ class ClassActivityHeader extends StatelessWidget {
                           size: 20,
                           color: ColorUtils.info600,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Update Data',
@@ -195,7 +195,7 @@ class ClassActivityHeader extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(Icons.help_outline, size: 20),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Text('Help'),
                       ],
                     ),
@@ -209,7 +209,7 @@ class ClassActivityHeader extends StatelessWidget {
           // The widget is built by the parent so the TabController key stays
           // in the State. Same idea as a Vue named `<slot name="tabs">`.
           if (currentStep == 2 && tabSwitcherWidget != null) ...[
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             tabSwitcherWidget!,
           ],
         ],

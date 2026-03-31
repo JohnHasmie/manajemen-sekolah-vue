@@ -35,7 +35,7 @@ class PromotionStepIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
@@ -103,17 +103,17 @@ class PromotionStepIndicator extends StatelessWidget {
                 return Expanded(
                   child: Container(
                     height: 2.5,
-                    margin: EdgeInsets.symmetric(horizontal: 4),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       color: isActive ? primaryColor : ColorUtils.slate200,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: const BorderRadius.all(Radius.circular(2)),
                     ),
                   ),
                 );
               }
             }),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           // Labels
           Row(
             children: List.generate(totalSteps, (index) {

@@ -841,7 +841,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.arrow_back,
@@ -850,7 +850,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 // Title and subtitle
                 Expanded(
                   child: Column(
@@ -866,7 +866,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Manage payments & bills',
@@ -897,7 +897,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             size: 20,
                             color: ColorUtils.info600,
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Text(AppLocalizations.updateData.tr),
                         ],
                       ),
@@ -908,7 +908,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.more_vert_rounded,
@@ -939,7 +939,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                     onRefresh: _loadData,
                     color: _getPrimaryColor(),
                     child: ListView(
-                      padding: EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.only(bottom: 20),
                       children: [
                         FinanceDashboardStats(
                           unpaidCount: _dashboardData['tagihan_belum_dibayar'],
@@ -977,7 +977,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           languageProvider: languageProvider,
                           onDeleteBatch: _deleteGeneratedBills,
                         ),
-                        SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.lg),
                       ],
                     ),
                   ),
@@ -987,14 +987,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                     children: [
                       // Search Bar and Filter
                       Padding(
-                        padding: EdgeInsets.all(AppSpacing.lg),
+                        padding: const EdgeInsets.all(AppSpacing.lg),
                         child: Row(
                           children: [
                             Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                                   border: Border.all(
                                     color: ColorUtils.slate200,
                                   ),
@@ -1020,7 +1020,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                       ),
                                     ),
                                     Container(
-                                      margin: EdgeInsets.only(right: 4),
+                                      margin: const EdgeInsets.only(right: 4),
                                       child: IconButton(
                                         icon: Icon(
                                           Icons.search,
@@ -1033,14 +1033,14 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 ),
                               ),
                             ),
-                            SizedBox(width: AppSpacing.sm),
+                            const SizedBox(width: AppSpacing.sm),
                             // Filter Button
                             Container(
                               decoration: BoxDecoration(
                                 color: _hasActiveFilter
                                     ? _getPrimaryColor()
                                     : ColorUtils.slate50,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: const BorderRadius.all(Radius.circular(12)),
                                 border: Border.all(
                                   color: _hasActiveFilter
                                       ? _getPrimaryColor()
@@ -1064,7 +1064,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                       right: 8,
                                       top: 8,
                                       child: Container(
-                                        padding: EdgeInsets.all(AppSpacing.xs),
+                                        padding: const EdgeInsets.all(AppSpacing.xs),
                                         decoration: BoxDecoration(
                                           color: ColorUtils.error600,
                                           shape: BoxShape.circle,
@@ -1085,7 +1085,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                       // Filter Chips
                       if (_hasActiveFilter) ...[
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: SizedBox(
                             height: 32,
                             child: Row(
@@ -1098,7 +1098,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                         ref.read(languageRiverpod),
                                       ).map((filter) {
                                         return Container(
-                                          margin: EdgeInsets.only(right: 6),
+                                          margin: const EdgeInsets.only(right: 6),
                                           child: Chip(
                                             label: Text(
                                               filter['label'],
@@ -1123,7 +1123,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                             ),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(8),
+                                                  const BorderRadius.all(Radius.circular(8)),
                                             ),
                                             padding: EdgeInsets.symmetric(
                                               horizontal: 8,
@@ -1138,15 +1138,15 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     ],
                                   ),
                                 ),
-                                SizedBox(width: AppSpacing.sm),
+                                const SizedBox(width: AppSpacing.sm),
                                 InkWell(
                                   onTap: _clearAllFilters,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                                   child: Container(
-                                    padding: EdgeInsets.all(AppSpacing.sm),
+                                    padding: const EdgeInsets.all(AppSpacing.sm),
                                     decoration: BoxDecoration(
                                       color: ColorUtils.error600,
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                                     ),
                                     child: Icon(
                                       Icons.clear_all,
@@ -1159,12 +1159,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(height: AppSpacing.sm),
+                        const SizedBox(height: AppSpacing.sm),
                       ],
 
                       if (filteredPaymentTypes.isNotEmpty)
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
                             children: [
                               Text(
@@ -1177,7 +1177,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                             ],
                           ),
                         ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       Expanded(
                         child: filteredPaymentTypes.isEmpty
                             ? EmptyState(
@@ -1225,7 +1225,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen> {
                           itemBuilder: (context, index) {
                             if (index == _pendingPaymentList.length) {
                               return Padding(
-                                padding: EdgeInsets.all(16.0),
+                                padding: const EdgeInsets.all(16.0),
                                 child: Center(
                                   child: CircularProgressIndicator(),
                                 ),

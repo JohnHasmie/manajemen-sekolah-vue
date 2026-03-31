@@ -67,7 +67,7 @@ class AttendanceTableView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.class_outlined, size: 64, color: ColorUtils.slate400),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               languageProvider.getTranslatedText({
                 'en': 'Please select a class to view the table',
@@ -111,10 +111,10 @@ class AttendanceTableView extends StatelessWidget {
     }
 
     return Container(
-      margin: EdgeInsets.all(AppSpacing.lg),
+      margin: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         boxShadow: [
           BoxShadow(
             color: ColorUtils.slate100,
@@ -125,7 +125,7 @@ class AttendanceTableView extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: SfDataGrid(
           source: attendanceDataSource!,
           frozenColumnsCount: 1,
@@ -179,7 +179,7 @@ class AttendanceTableView extends StatelessWidget {
                   child: Container(
                     color: primaryColor.withValues(alpha: 0.05),
                     alignment: Alignment.centerLeft,
-                    padding: EdgeInsets.only(left: 16),
+                    padding: const EdgeInsets.only(left: 16),
                     child: Text(
                       languageProvider.getTranslatedText({
                         'en': 'STUDENT INFO',
@@ -240,7 +240,7 @@ class AttendanceTableView extends StatelessWidget {
                   columnName: '$date-$sId',
                   width: 100,
                   label: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       border: Border(

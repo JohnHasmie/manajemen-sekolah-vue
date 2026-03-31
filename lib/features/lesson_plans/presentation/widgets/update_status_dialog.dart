@@ -128,12 +128,12 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
         onTap: () => setState(() => selectedStatus = value),
         child: AnimatedContainer(
           duration: Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
                 ? color.withValues(alpha: 0.12)
                 : ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(
               color: isSelected ? color : ColorUtils.slate200,
               width: isSelected ? 1.5 : 1.0,
@@ -157,7 +157,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                   color: isSelected ? color : ColorUtils.slate400,
                 ),
               ),
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
@@ -178,14 +178,14 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
     final primaryColor = getPrimaryColor();
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       clipBehavior: Clip.antiAlias,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Gradient Header
           Container(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -200,7 +200,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                   height: 44,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: Icon(
                     Icons.swap_horiz_rounded,
@@ -208,7 +208,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     size: 24,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,7 +221,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         'Ubah status persetujuan RPP',
                         style: TextStyle(
@@ -238,7 +238,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
 
           // Form Content
           Padding(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -252,7 +252,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     color: ColorUtils.slate700,
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 // Status option chips
                 Row(
                   children: [
@@ -261,13 +261,13 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                       'Menunggu',
                       ColorUtils.warning600,
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     buildStatusOption(
                       'Approved',
                       'Disetujui',
                       ColorUtils.success600,
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     buildStatusOption(
                       'Rejected',
                       'Ditolak',
@@ -275,7 +275,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: AppSpacing.xl),
                 // Catatan label
                 Text(
                   'Catatan (Opsional)',
@@ -285,12 +285,12 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     color: ColorUtils.slate700,
                   ),
                 ),
-                SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
                 // Styled text field
                 Container(
                   decoration: BoxDecoration(
                     color: ColorUtils.slate50,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(color: ColorUtils.slate200),
                   ),
                   child: TextField(
@@ -299,7 +299,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     style: TextStyle(color: ColorUtils.slate900, fontSize: 14),
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.all(14),
+                      contentPadding: const EdgeInsets.all(14),
                       hintText: 'Berikan catatan untuk guru...',
                       hintStyle: TextStyle(
                         color: ColorUtils.slate400,
@@ -314,7 +314,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
 
           // Footer Buttons
           Container(
-            padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             decoration: BoxDecoration(
               border: Border(top: BorderSide(color: ColorUtils.slate100)),
             ),
@@ -326,10 +326,10 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                         ? null
                         : () => AppNavigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: ColorUtils.slate300),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(
@@ -338,16 +338,16 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: isUpdating ? null : updateStatus,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
-                      padding: EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: isUpdating

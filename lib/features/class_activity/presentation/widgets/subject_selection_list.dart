@@ -80,7 +80,7 @@ class SubjectSelectionList extends StatelessWidget {
                 }),
                 style: TextStyle(color: ColorUtils.slate500, fontSize: 12),
               ),
-              SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 selectedClassName ?? '-',
                 style: TextStyle(
@@ -109,7 +109,7 @@ class SubjectSelectionList extends StatelessWidget {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: const BorderRadius.all(Radius.circular(14)),
                     onTap: () => onSubjectSelected(
                       Map<String, dynamic>.from(subject as Map),
                     ),
@@ -120,7 +120,7 @@ class SubjectSelectionList extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: const BorderRadius.all(Radius.circular(14)),
                         border: Border.all(
                           color: ColorUtils.slate200,
                           width: 1,
@@ -137,7 +137,7 @@ class SubjectSelectionList extends StatelessWidget {
                               color: ColorUtils.getColorForIndex(
                                 index,
                               ).withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                               border: Border.all(
                                 color: ColorUtils.getColorForIndex(
                                   index,
@@ -150,7 +150,7 @@ class SubjectSelectionList extends StatelessWidget {
                               size: 22,
                             ),
                           ),
-                          SizedBox(width: AppSpacing.lg),
+                          const SizedBox(width: AppSpacing.lg),
 
                           // ── Subject name + code + read-only badge ────
                           Expanded(
@@ -165,7 +165,7 @@ class SubjectSelectionList extends StatelessWidget {
                                     color: ColorUtils.slate900,
                                   ),
                                 ),
-                                SizedBox(height: AppSpacing.xs),
+                                const SizedBox(height: AppSpacing.xs),
                                 Text(
                                   subjectCode.isNotEmpty
                                       ? subjectCode
@@ -187,7 +187,7 @@ class SubjectSelectionList extends StatelessWidget {
                                       color: ColorUtils.warning600.withValues(
                                         alpha: 0.1,
                                       ),
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                                       border: Border.all(
                                         color: ColorUtils.warning600.withValues(
                                           alpha: 0.5,
@@ -216,7 +216,7 @@ class SubjectSelectionList extends StatelessWidget {
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               color: ColorUtils.slate100,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Icon(
                               Icons.chevron_right,

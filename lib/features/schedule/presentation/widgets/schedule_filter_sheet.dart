@@ -145,7 +145,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
             height: 36,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
             ),
             child: const Icon(
               Icons.filter_list,
@@ -288,7 +288,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
             width: 1,
           ),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(10))),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           labelStyle: TextStyle(
             color: isSelected
@@ -328,7 +328,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
             width: 1,
           ),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(10))),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           labelStyle: TextStyle(
             color: isSelected
@@ -374,7 +374,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
             width: 1,
           ),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(10))),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           labelStyle: TextStyle(
             color: isSelected
@@ -421,7 +421,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
             width: 1,
           ),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(10))),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           labelStyle: TextStyle(
             color: isSelected
@@ -459,7 +459,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                 ),
                 side: BorderSide(color: ColorUtils.slate300),
               ),
@@ -495,7 +495,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 elevation: 2,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                 ),
               ),
               child: Text(

@@ -64,7 +64,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.arrow_back,
@@ -73,7 +73,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,7 +88,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                       ),
                       if ((lessonPlan['judul'] ?? lessonPlan['title'] ?? '')
                           .isNotEmpty) ...[
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           lessonPlan['judul'] ?? lessonPlan['title'] ?? '',
                           style: TextStyle(
@@ -115,7 +115,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(Icons.more_vert, color: Colors.white, size: 20),
                   ),
@@ -129,7 +129,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                             color: ColorUtils.success600,
                             size: 20,
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Text('Setujui RPP'),
                         ],
                       ),
@@ -143,7 +143,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                             color: ColorUtils.error600,
                             size: 20,
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Text('Tolak RPP'),
                         ],
                       ),
@@ -157,17 +157,17 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
           // Scrollable Body
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Status card
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(AppSpacing.lg),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: const BorderRadius.all(Radius.circular(14)),
                       border: Border.all(color: ColorUtils.slate200),
                       boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                     ),
@@ -182,7 +182,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                             color: ColorUtils.slate900,
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: 10,
@@ -190,7 +190,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: statusColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
                             border: Border.all(
                               color: statusColor.withValues(alpha: 0.3),
                             ),
@@ -206,7 +206,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               Text(
                                 getStatusLabelDetail(lessonPlan['status']),
                                 style: TextStyle(
@@ -222,15 +222,15 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Informasi Detail
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(AppSpacing.lg),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: const BorderRadius.all(Radius.circular(14)),
                       border: Border.all(color: ColorUtils.slate200),
                       boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                     ),
@@ -245,7 +245,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                             color: ColorUtils.slate600,
                           ),
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
                         buildDetailItem(
                           'Guru Pengajar',
                           lessonPlan['teacher_name'] ??
@@ -285,9 +285,9 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                           buildDetailItem('Catatan', lessonPlan['catatan']),
 
                         if (lessonPlan['catatan_admin'] != null) ...[
-                          SizedBox(height: AppSpacing.sm),
+                          const SizedBox(height: AppSpacing.sm),
                           Divider(),
-                          SizedBox(height: AppSpacing.sm),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             'Catatan Admin',
                             style: TextStyle(
@@ -296,7 +296,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                               color: ColorUtils.slate600,
                             ),
                           ),
-                          SizedBox(height: AppSpacing.xs),
+                          const SizedBox(height: AppSpacing.xs),
                           Text(
                             lessonPlan['catatan_admin']!,
                             style: TextStyle(
@@ -310,15 +310,15 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Isi RPP
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(AppSpacing.lg),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: const BorderRadius.all(Radius.circular(14)),
                       border: Border.all(color: ColorUtils.slate200),
                       boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                     ),
@@ -333,7 +333,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                             color: ColorUtils.slate600,
                           ),
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
                         buildContentSection(
                           'Kompetensi Inti',
                           lessonPlan['core_competence'],
@@ -380,13 +380,13 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
 
                   // File Attachment
                   if (lessonPlan['file_path'] != null) ...[
-                    SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.lg),
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(AppSpacing.lg),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: const BorderRadius.all(Radius.circular(14)),
                         border: Border.all(color: ColorUtils.slate200),
                         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                       ),
@@ -401,7 +401,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
                               color: ColorUtils.slate600,
                             ),
                           ),
-                          SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.md),
                           ElevatedButton.icon(
                             onPressed: () => downloadAndOpenFile(
                               context,
@@ -462,7 +462,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
 
   Widget buildDetailItem(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -476,7 +476,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(value, style: TextStyle(color: ColorUtils.slate700)),
           ),
@@ -488,7 +488,7 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
   Widget buildContentSection(String title, String? content) {
     if (content == null || content.isEmpty) return SizedBox.shrink();
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -500,13 +500,13 @@ class LessonPlanAdminDetailPage extends StatelessWidget {
               fontSize: 14,
             ),
           ),
-          SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.xs),
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: ColorUtils.slate50,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               border: Border.all(color: ColorUtils.slate200),
             ),
             child: Text(

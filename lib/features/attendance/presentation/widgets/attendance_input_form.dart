@@ -86,7 +86,7 @@ class AttendanceInputForm extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
@@ -108,7 +108,7 @@ class AttendanceInputForm extends StatelessWidget {
                     );
                     if (picked != null) onDatePicked(picked);
                   },
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -117,7 +117,7 @@ class AttendanceInputForm extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: ColorUtils.slate50,
                       border: Border.all(color: ColorUtils.slate200),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Row(
                       children: [
@@ -154,7 +154,7 @@ class AttendanceInputForm extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: ColorUtils.slate50,
                     border: Border.all(color: ColorUtils.slate200),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
@@ -220,7 +220,7 @@ class AttendanceInputForm extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: ColorUtils.slate50,
                     border: Border.all(color: ColorUtils.slate200),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
@@ -277,7 +277,7 @@ class AttendanceInputForm extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: ColorUtils.slate50,
                     border: Border.all(color: ColorUtils.slate200),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
@@ -372,7 +372,7 @@ class AttendanceInputForm extends StatelessWidget {
                           horizontal: 12,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                           borderSide: BorderSide(
                             color: ColorUtils.slate300,
                           ),
@@ -400,7 +400,7 @@ class AttendanceInputForm extends StatelessWidget {
                 Container(
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: IconButton(
                     icon: Icon(Icons.checklist_rtl, color: primaryColor),

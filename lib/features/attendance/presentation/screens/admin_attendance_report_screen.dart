@@ -569,7 +569,7 @@ class _AdminAttendanceReportScreenState
                     ColorUtils.error600.withValues(alpha: 0.85),
                   ],
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
                 ),
@@ -847,7 +847,7 @@ class _AdminAttendanceReportScreenState
                           ),
                         ),
                       ),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                     ],
                     PopupMenuButton<String>(
                       onSelected: (value) {
@@ -898,7 +898,7 @@ class _AdminAttendanceReportScreenState
                                 size: 20,
                                 color: ColorUtils.info600,
                               ),
-                              SizedBox(width: AppSpacing.sm),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(AppLocalizations.updateData.tr),
                             ],
                           ),
@@ -909,7 +909,7 @@ class _AdminAttendanceReportScreenState
                             child: Row(
                               children: [
                                 Icon(Icons.file_download, size: 20),
-                                SizedBox(width: AppSpacing.sm),
+                                const SizedBox(width: AppSpacing.sm),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Export Excel',
@@ -923,7 +923,7 @@ class _AdminAttendanceReportScreenState
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Search Bar with Filter Button
                 Row(
@@ -933,7 +933,7 @@ class _AdminAttendanceReportScreenState
                         key: _searchKey,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         child: Row(
                           children: [
@@ -955,7 +955,7 @@ class _AdminAttendanceReportScreenState
                                     color: ColorUtils.slate400,
                                   ),
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
+                                  contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 16,
                                     vertical: 12,
                                   ),
@@ -963,7 +963,7 @@ class _AdminAttendanceReportScreenState
                               ),
                             ),
                             Container(
-                              margin: EdgeInsets.only(right: 4),
+                              margin: const EdgeInsets.only(right: 4),
                               child: IconButton(
                                 icon: Icon(
                                   Icons.search,
@@ -976,14 +976,14 @@ class _AdminAttendanceReportScreenState
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     // Filter Button
                     Container(
                       decoration: BoxDecoration(
                         color: _hasActiveFilter
                             ? Colors.white
                             : Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
@@ -1009,7 +1009,7 @@ class _AdminAttendanceReportScreenState
                               right: 8,
                               top: 8,
                               child: Container(
-                                padding: EdgeInsets.all(AppSpacing.xs),
+                                padding: const EdgeInsets.all(AppSpacing.xs),
                                 decoration: BoxDecoration(
                                   color: ColorUtils.error600,
                                   shape: BoxShape.circle,
@@ -1028,7 +1028,7 @@ class _AdminAttendanceReportScreenState
 
                 // Filter Chips
                 if (_hasActiveFilter) ...[
-                  SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     height: 32,
                     child: Row(
@@ -1041,7 +1041,7 @@ class _AdminAttendanceReportScreenState
                                 filter,
                               ) {
                                 return Container(
-                                  margin: EdgeInsets.only(right: 6),
+                                  margin: const EdgeInsets.only(right: 6),
                                   child: Chip(
                                     label: Text(
                                       filter['label'],
@@ -1068,29 +1068,29 @@ class _AdminAttendanceReportScreenState
                                       ),
                                       width: 1,
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(8)),
                                     ),
-                                    padding: EdgeInsets.symmetric(
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
                                       vertical: 4,
                                     ),
-                                    labelPadding: EdgeInsets.only(left: 4),
+                                    labelPadding: const EdgeInsets.only(left: 4),
                                   ),
                                 );
                               }),
                             ],
                           ),
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         InkWell(
                           onTap: _clearAllFilters,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                           child: Container(
-                            padding: EdgeInsets.all(AppSpacing.sm),
+                            padding: const EdgeInsets.all(AppSpacing.sm),
                             decoration: BoxDecoration(
                               color: ColorUtils.error600,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Icon(
                               Icons.clear_all,
@@ -1160,7 +1160,7 @@ class _AdminAttendanceReportScreenState
                     icon: Icons.list_alt,
                   )
                 : ListView.builder(
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     itemCount: filteredSummaries.length,
                     itemBuilder: (context, index) {
                       final summary = filteredSummaries[index];

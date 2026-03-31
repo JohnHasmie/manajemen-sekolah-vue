@@ -71,12 +71,12 @@ class AdminScheduleCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: ColorUtils.slate200, width: 1),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
@@ -89,7 +89,7 @@ class AdminScheduleCard extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: const BorderRadius.all(Radius.circular(11)),
                     border: Border.all(
                       color: color.withValues(alpha: 0.2),
                       width: 1,

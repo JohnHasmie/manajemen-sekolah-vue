@@ -68,7 +68,7 @@ class FinanceNavigationBar extends StatelessWidget {
     ];
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -92,13 +92,13 @@ class FinanceNavigationBar extends StatelessWidget {
               onTap: () => onTabSelected(index),
               child: AnimatedContainer(
                 duration: Duration(milliseconds: 200),
-                margin: EdgeInsets.symmetric(horizontal: 3),
-                padding: EdgeInsets.symmetric(vertical: 8),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? primaryColor.withValues(alpha: 0.1)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   border: Border.all(
                     color: isSelected
                         ? primaryColor.withValues(alpha: 0.2)
@@ -127,7 +127,7 @@ class FinanceNavigationBar extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: ColorUtils.error600,
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: const BorderRadius.all(Radius.circular(10)),
                               ),
                               child: Text(
                                 badge > 99 ? '99+' : '$badge',
@@ -141,7 +141,7 @@ class FinanceNavigationBar extends StatelessWidget {
                           ),
                       ],
                     ),
-                    SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       item['label'] as String,
                       style: TextStyle(

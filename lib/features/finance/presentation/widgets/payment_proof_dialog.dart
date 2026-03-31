@@ -68,7 +68,7 @@ class PaymentProofDialog extends StatelessWidget {
         height: MediaQuery.of(context).size.height * 0.8,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -112,7 +112,7 @@ class PaymentProofDialog extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   child: Image.network(
                     _imageUrl(imageFile.toString()),
                     width: double.infinity,

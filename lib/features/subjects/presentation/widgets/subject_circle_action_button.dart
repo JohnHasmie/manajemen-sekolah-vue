@@ -28,7 +28,7 @@ class SubjectCircleActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: const BorderRadius.all(Radius.circular(18)),
       child: Container(
         width: 34,
         height: 34,

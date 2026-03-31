@@ -33,7 +33,7 @@ class LessonPlanSkeletonSection extends StatelessWidget {
             color: ColorUtils.slate800,
           ),
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Shimmer.fromColors(
           baseColor: ColorUtils.shimmerBaseColor,
           highlightColor: ColorUtils.shimmerHighlightColor,
@@ -42,7 +42,7 @@ class LessonPlanSkeletonSection extends StatelessWidget {
             height: height,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
           ),
         ),

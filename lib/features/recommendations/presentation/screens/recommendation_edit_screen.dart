@@ -219,7 +219,7 @@ class _LearningRecommendationEditScreenState
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: const Icon(
                       Icons.arrow_back,
@@ -261,7 +261,7 @@ class _LearningRecommendationEditScreenState
                       height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
                       child: const Icon(
                         Icons.check,
@@ -316,7 +316,7 @@ class _LearningRecommendationEditScreenState
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 52),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                 ),
                 elevation: 0,
               ),
@@ -335,7 +335,7 @@ class _LearningRecommendationEditScreenState
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: const BorderRadius.all(Radius.circular(24)),
         boxShadow: ColorUtils.corporateShadow(),
         border: Border.all(color: ColorUtils.slate100),
       ),
@@ -392,11 +392,11 @@ class _LearningRecommendationEditScreenState
                     filled: true,
                     fillColor: ColorUtils.slate50,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       borderSide: BorderSide(color: ColorUtils.slate200),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       borderSide: BorderSide(color: ColorUtils.slate200),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -438,7 +438,7 @@ class _LearningRecommendationEditScreenState
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
                             color: isSelected ? pColor : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             border: Border.all(
                               color: isSelected ? pColor : ColorUtils.slate200,
                             ),
@@ -500,7 +500,7 @@ class _LearningRecommendationEditScreenState
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                   border: Border.all(color: ColorUtils.slate200),
                 ),
                 child: Column(
@@ -574,7 +574,7 @@ class _LearningRecommendationEditScreenState
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             color: Colors.white,
           ),
           child: quill.QuillEditor.basic(

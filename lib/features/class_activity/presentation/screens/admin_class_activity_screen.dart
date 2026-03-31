@@ -525,7 +525,7 @@ class AdminClassActivityScreenState
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -534,7 +534,7 @@ class AdminClassActivityScreenState
               // Gradient header (Pattern #10)
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: _getCardGradient(),
                   borderRadius: BorderRadius.only(
@@ -549,7 +549,7 @@ class AdminClassActivityScreenState
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                       child: Icon(
                         isAssignment ? Icons.assignment : Icons.menu_book,
@@ -557,7 +557,7 @@ class AdminClassActivityScreenState
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(width: 14),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -572,7 +572,7 @@ class AdminClassActivityScreenState
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 3),
+                          const SizedBox(height: 3),
                           Text(
                             '${activity['mata_pelajaran_nama'] ?? ''} • ${activity['kelas_nama'] ?? ''}',
                             style: TextStyle(
@@ -589,7 +589,7 @@ class AdminClassActivityScreenState
 
               // Content
               Padding(
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -633,7 +633,7 @@ class AdminClassActivityScreenState
 
                     if (activity['deskripsi'] != null &&
                         activity['deskripsi'].isNotEmpty) ...[
-                      SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.lg),
                       Text(
                         'Deskripsi',
                         style: TextStyle(
@@ -642,12 +642,12 @@ class AdminClassActivityScreenState
                           color: ColorUtils.slate700,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
                       Container(
-                        padding: EdgeInsets.all(AppSpacing.md),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: ColorUtils.slate50,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                           border: Border.all(color: ColorUtils.slate200),
                         ),
                         child: Text(
@@ -663,7 +663,7 @@ class AdminClassActivityScreenState
 
                     if (activity['judul_bab'] != null ||
                         activity['judul_sub_bab'] != null) ...[
-                      SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.lg),
                       Text(
                         'Informasi Bab',
                         style: TextStyle(
@@ -672,7 +672,7 @@ class AdminClassActivityScreenState
                           color: ColorUtils.slate700,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
                       if (activity['judul_bab'] != null)
                         AdminActivityDetailItem(
                           icon: Icons.menu_book,
@@ -691,7 +691,7 @@ class AdminClassActivityScreenState
                           activity['additional_material'] is List &&
                           (activity['additional_material'] as List)
                               .isNotEmpty) ...[
-                        SizedBox(height: AppSpacing.xs),
+                        const SizedBox(height: AppSpacing.xs),
                         ...(activity['additional_material'] as List)
                             .map<Widget>((item) {
                               return AdminActivityDetailItem(
@@ -704,7 +704,7 @@ class AdminClassActivityScreenState
                       ],
                     ],
 
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
                     Row(
                       children: [
                         Expanded(
@@ -712,9 +712,9 @@ class AdminClassActivityScreenState
                             onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: const BorderRadius.all(Radius.circular(12)),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 13),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
                               side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
@@ -825,7 +825,7 @@ class AdminClassActivityScreenState
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.arrow_back,
@@ -834,7 +834,7 @@ class AdminClassActivityScreenState
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     // Title + subtitle
                     Expanded(
                       child: Column(
@@ -866,7 +866,7 @@ class AdminClassActivityScreenState
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             _showTeacherList
                                 ? languageProvider.getTranslatedText({
@@ -906,7 +906,7 @@ class AdminClassActivityScreenState
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.more_vert,
@@ -924,7 +924,7 @@ class AdminClassActivityScreenState
                                 size: 20,
                                 color: ColorUtils.info600,
                               ),
-                              SizedBox(width: AppSpacing.sm),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(AppLocalizations.updateData.tr),
                             ],
                           ),
@@ -933,14 +933,14 @@ class AdminClassActivityScreenState
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Search Bar
                 Container(
                   key: _searchKey,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: Row(
                     children: [
@@ -978,7 +978,7 @@ class AdminClassActivityScreenState
                         ),
                       ),
                       Container(
-                        margin: EdgeInsets.only(right: 4),
+                        margin: const EdgeInsets.only(right: 4),
                         child: IconButton(
                           icon: Icon(Icons.search, color: _getPrimaryColor()),
                           onPressed: () => setState(() {}),
@@ -1045,7 +1045,7 @@ class AdminClassActivityScreenState
                               : Icons.event_note),
                   )
                 : ListView.builder(
-                    padding: EdgeInsets.only(top: 8, bottom: 16),
+                    padding: const EdgeInsets.only(top: 8, bottom: 16),
                     itemCount: filteredItems.length,
                     itemBuilder: (context, index) {
                       final item = filteredItems[index];

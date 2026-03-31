@@ -66,7 +66,7 @@ class ParentStudentSelector extends StatelessWidget {
                 size: 20,
               ),
             ),
-            SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 AppLocalizations.noChildrenLinked.tr,

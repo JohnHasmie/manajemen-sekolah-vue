@@ -45,7 +45,7 @@ class LessonPlanCard extends StatelessWidget {
         height: 36,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
           border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Icon(icon, size: 18, color: color),
@@ -56,17 +56,17 @@ class LessonPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onView,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           child: Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
               border: Border.all(color: ColorUtils.slate200),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
             ),
@@ -82,7 +82,7 @@ class LessonPlanCard extends StatelessWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                       child: Icon(
                         Icons.description_rounded,
@@ -90,7 +90,7 @@ class LessonPlanCard extends StatelessWidget {
                         size: 22,
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,7 +105,7 @@ class LessonPlanCard extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 3),
+                          const SizedBox(height: 3),
                           Text(
                             lessonPlan['mata_pelajaran_nama'] ?? 'No Subject',
                             style: TextStyle(
@@ -118,12 +118,12 @@ class LessonPlanCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                         border: Border.all(
                           color: statusColor.withValues(alpha: 0.3),
                         ),
@@ -139,9 +139,9 @@ class LessonPlanCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
                 Divider(color: ColorUtils.slate100, height: 1),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 // Info tags: class
                 Wrap(
                   spacing: 8,
@@ -153,7 +153,7 @@ class LessonPlanCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
                 // Action buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -163,13 +163,13 @@ class LessonPlanCard extends StatelessWidget {
                       color: primaryColor,
                       onPressed: onView,
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     _circleActionButton(
                       icon: Icons.edit_outlined,
                       color: ColorUtils.warning600,
                       onPressed: onEdit,
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     _circleActionButton(
                       icon: Icons.delete_outlined,
                       color: ColorUtils.error600,

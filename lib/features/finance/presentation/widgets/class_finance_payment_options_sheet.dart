@@ -58,18 +58,18 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
         children: [
           // Handle bar
           Container(
-            margin: EdgeInsets.only(top: 12),
+            margin: const EdgeInsets.only(top: 12),
             width: 40,
             height: 4,
             decoration: BoxDecoration(
               color: ColorUtils.slate300,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: const BorderRadius.all(Radius.circular(2)),
             ),
           ),
           // Gradient Header
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             decoration: BoxDecoration(
               gradient: _cardGradient,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -81,7 +81,7 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: Icon(
                     Icons.payment_rounded,
@@ -89,7 +89,7 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
                     size: 22,
                   ),
                 ),
-                SizedBox(width: 14),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,7 +102,7 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       Row(
                         children: [
                           Container(
@@ -113,7 +113,7 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text(
                             isPaid
                                 ? 'Status: Lunas'
@@ -133,7 +133,7 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
           ),
           // Options
           Padding(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             child: Column(
               children: [
                 if (!isPaid)
@@ -192,12 +192,12 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: const BorderRadius.all(Radius.circular(12)),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
@@ -207,11 +207,11 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
               child: Icon(icon, color: color, size: 20),
             ),
-            SizedBox(width: 14),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

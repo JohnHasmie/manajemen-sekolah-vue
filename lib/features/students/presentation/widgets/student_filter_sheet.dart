@@ -124,7 +124,7 @@ class _StudentFilterSheetContentState
           children: [
             // Gradient header with "Reset" button
             Container(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -145,7 +145,7 @@ class _StudentFilterSheetContentState
                   Row(
                     children: [
                       Icon(Icons.filter_list, color: Colors.white, size: 24),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Text(
                         t({'en': 'Filter Students', 'id': 'Filter Siswa'}),
                         style: TextStyle(
@@ -180,13 +180,13 @@ class _StudentFilterSheetContentState
             // Scrollable filter content
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Guardian filter ──────────────────────────────────
                     Padding(
-                      padding: EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
                         children: [
                           Icon(
@@ -194,7 +194,7 @@ class _StudentFilterSheetContentState
                             size: 18,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Text(
                             t({
                               'en': 'Guardian Name',
@@ -207,7 +207,7 @@ class _StudentFilterSheetContentState
                         ],
                       ),
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     Autocomplete<String>(
                       optionsBuilder:
                           (TextEditingValue textEditingValue) async {
@@ -245,19 +245,19 @@ class _StudentFilterSheetContentState
                               vertical: 12,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                               borderSide: BorderSide(
                                 color: ColorUtils.slate300,
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                               borderSide: BorderSide(
                                 color: ColorUtils.slate300,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                               borderSide: BorderSide(
                                 color: widget.primaryColor,
                               ),
@@ -281,11 +281,11 @@ class _StudentFilterSheetContentState
                         );
                       },
                     ),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
 
                     // ── Status filter ────────────────────────────────────
                     Padding(
-                      padding: EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
                         children: [
                           Icon(
@@ -293,7 +293,7 @@ class _StudentFilterSheetContentState
                             size: 18,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Text(
                             t({'en': 'Status', 'id': 'Status'}),
                             style: DashboardTypography.subtitle(
@@ -303,7 +303,7 @@ class _StudentFilterSheetContentState
                         ],
                       ),
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -335,11 +335,11 @@ class _StudentFilterSheetContentState
                       ],
                     ),
 
-                    SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: AppSpacing.xxl),
 
                     // ── Class filter ─────────────────────────────────────
                     Padding(
-                      padding: EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
                         children: [
                           Icon(
@@ -347,7 +347,7 @@ class _StudentFilterSheetContentState
                             size: 18,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Text(
                             t({'en': 'Class', 'id': 'Kelas'}),
                             style: DashboardTypography.subtitle(
@@ -400,7 +400,7 @@ class _StudentFilterSheetContentState
                             width: 1,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                           ),
                           padding: EdgeInsets.symmetric(
                             horizontal: 12,
@@ -410,11 +410,11 @@ class _StudentFilterSheetContentState
                       }).toList(),
                     ),
 
-                    SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: AppSpacing.xxl),
 
                     // ── Gender filter ────────────────────────────────────
                     Padding(
-                      padding: EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
                         children: [
                           Icon(
@@ -422,7 +422,7 @@ class _StudentFilterSheetContentState
                             size: 18,
                             color: ColorUtils.slate700,
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Text(
                             t({'en': 'Gender', 'id': 'Jenis Kelamin'}),
                             style: DashboardTypography.subtitle(
@@ -432,7 +432,7 @@ class _StudentFilterSheetContentState
                         ],
                       ),
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -468,7 +468,7 @@ class _StudentFilterSheetContentState
 
             // Sticky footer: Cancel + Apply Filter
             Container(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -486,10 +486,10 @@ class _StudentFilterSheetContentState
                     child: OutlinedButton(
                       onPressed: () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorUtils.slate300),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                       child: Text(
@@ -501,7 +501,7 @@ class _StudentFilterSheetContentState
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -515,9 +515,9 @@ class _StudentFilterSheetContentState
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.primaryColor,
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         elevation: 2,
                       ),

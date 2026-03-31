@@ -547,7 +547,7 @@ class AdminClassManagementScreenState
                 height: 40,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
                 child: Icon(Icons.more_vert, color: Colors.white, size: 20),
               ),
@@ -557,7 +557,7 @@ class AdminClassManagementScreenState
                   child: Row(
                     children: [
                       Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Refresh Data',
@@ -572,7 +572,7 @@ class AdminClassManagementScreenState
                   child: Row(
                     children: [
                       Icon(Icons.download, size: 20),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Export to Excel',
@@ -587,7 +587,7 @@ class AdminClassManagementScreenState
                   child: Row(
                     children: [
                       Icon(Icons.upload, size: 20),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Import from Excel',
@@ -602,7 +602,7 @@ class AdminClassManagementScreenState
                   child: Row(
                     children: [
                       Icon(Icons.file_download, size: 20),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Download Template',
@@ -621,7 +621,7 @@ class AdminClassManagementScreenState
                     key: _searchKey,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Row(
                       children: [
@@ -654,7 +654,7 @@ class AdminClassManagementScreenState
                           ),
                         ),
                         Container(
-                          margin: EdgeInsets.only(right: 4),
+                          margin: const EdgeInsets.only(right: 4),
                           child: IconButton(
                             key: _filterKey,
                             icon: Icon(Icons.search, color: _getPrimaryColor()),
@@ -670,14 +670,14 @@ class AdminClassManagementScreenState
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 // Filter Button
                 Container(
                   decoration: BoxDecoration(
                     color: _hasActiveFilter
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.3),
                     ),
@@ -702,7 +702,7 @@ class AdminClassManagementScreenState
                           right: 8,
                           top: 8,
                           child: Container(
-                            padding: EdgeInsets.all(AppSpacing.xs),
+                            padding: const EdgeInsets.all(AppSpacing.xs),
                             decoration: BoxDecoration(
                               color: Colors.red,
                               shape: BoxShape.circle,
@@ -724,10 +724,10 @@ class AdminClassManagementScreenState
                     child: Row(
                       children: [
                         Container(
-                          padding: EdgeInsets.all(AppSpacing.sm),
+                          padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
                           ),
                           child: Icon(
                             Icons.filter_alt,
@@ -735,7 +735,7 @@ class AdminClassManagementScreenState
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: ListView(
                             scrollDirection: Axis.horizontal,
@@ -744,7 +744,7 @@ class AdminClassManagementScreenState
                                 filter,
                               ) {
                                 return Container(
-                                  margin: EdgeInsets.only(right: 6),
+                                  margin: const EdgeInsets.only(right: 6),
                                   child: Chip(
                                     label: Text(
                                       filter['label'],
@@ -769,28 +769,28 @@ class AdminClassManagementScreenState
                                       width: 1,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                                     ),
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 8,
                                       vertical: 4,
                                     ),
-                                    labelPadding: EdgeInsets.only(left: 4),
+                                    labelPadding: const EdgeInsets.only(left: 4),
                                   ),
                                 );
                               }),
                             ],
                           ),
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         InkWell(
                           onTap: _clearAllFilters,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                           child: Container(
-                            padding: EdgeInsets.all(AppSpacing.sm),
+                            padding: const EdgeInsets.all(AppSpacing.sm),
                             decoration: BoxDecoration(
                               color: Colors.red,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Icon(
                               Icons.clear_all,
@@ -830,14 +830,14 @@ class AdminClassManagementScreenState
                     onRefresh: _onRefresh,
                     child: ListView.builder(
                       controller: _scrollController,
-                      padding: EdgeInsets.only(top: 8, bottom: 16),
+                      padding: const EdgeInsets.only(top: 8, bottom: 16),
                       itemCount:
                           filteredClasses.length + (_isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         // Show loading indicator at bottom
                         if (index == filteredClasses.length) {
                           return Container(
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             alignment: Alignment.center,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           );
@@ -886,7 +886,7 @@ class AdminClassManagementScreenState
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                           boxShadow: [
                             BoxShadow(color: Colors.black12, blurRadius: 4),
                           ],
@@ -899,7 +899,7 @@ class AdminClassManagementScreenState
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       FloatingActionButton(
                         heroTag: 'fab_promote_class',
                         mini: true,
@@ -916,7 +916,7 @@ class AdminClassManagementScreenState
                     ],
                   ),
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
                 ScaleTransition(
                   scale: _fabScaleAnimation,
                   child: Row(
@@ -929,7 +929,7 @@ class AdminClassManagementScreenState
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                           boxShadow: [
                             BoxShadow(color: Colors.black12, blurRadius: 4),
                           ],
@@ -942,7 +942,7 @@ class AdminClassManagementScreenState
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       FloatingActionButton(
                         heroTag: 'fab_add_class',
                         mini: true,
@@ -959,7 +959,7 @@ class AdminClassManagementScreenState
                     ],
                   ),
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
               ],
               FloatingActionButton(
                 key: _fabKey,
@@ -976,7 +976,7 @@ class AdminClassManagementScreenState
                 },
                 backgroundColor: _getPrimaryColor(),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                 ),
                 child: RotationTransition(
                   turns: _fabRotateAnimation,

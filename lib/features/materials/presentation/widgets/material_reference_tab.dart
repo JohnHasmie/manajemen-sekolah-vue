@@ -58,7 +58,7 @@ class MaterialReferenceTab extends StatelessWidget {
               size: 48,
               color: ColorUtils.slate300,
             ),
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             Text(
               'Belum ada referensi',
               style: TextStyle(color: ColorUtils.slate500, fontSize: 15),
@@ -99,7 +99,7 @@ class MaterialReferenceTab extends StatelessWidget {
         // Scrollable reference list
         Expanded(
           child: ListView.builder(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             itemCount: refs.length,
             itemBuilder: (context, index) {
               final ref = Map<String, dynamic>.from(refs[index]);

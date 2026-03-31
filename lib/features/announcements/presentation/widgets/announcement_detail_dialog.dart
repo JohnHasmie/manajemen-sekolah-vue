@@ -36,7 +36,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -45,7 +45,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
             // Header with gradient
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: cardGradient,
                 borderRadius: BorderRadius.only(
@@ -63,7 +63,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.announcement,
@@ -71,7 +71,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                           size: 20,
                         ),
                       ),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
                           announcementData['title'] ?? 'No Title',
@@ -84,7 +84,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: AppSpacing.sm),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     formatDate(announcementData['created_at']),
                     style: TextStyle(
@@ -98,7 +98,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
 
             // Content
             Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -114,14 +114,14 @@ class AnnouncementDetailDialog extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.orange.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                         border: Border.all(color: Colors.orange),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.warning, size: 14, color: Colors.orange),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Important Announcement',
@@ -137,7 +137,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                       ),
                     ),
 
-                  SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // Content text
                   Text(
@@ -149,7 +149,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // Attachment Section
                   if (announcementData['file_path'] != null) ...[
@@ -164,27 +164,27 @@ class AnnouncementDetailDialog extends StatelessWidget {
                         color: ColorUtils.slate600,
                       ),
                     ),
-                    SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.sm),
                     InkWell(
                       onTap: () => onOpenFile(
                         announcementData['file_path'],
                         announcementData['file_name'] ?? 'attachment',
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       child: Container(
-                        padding: EdgeInsets.all(AppSpacing.md),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: ColorUtils.slate50,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                           border: Border.all(color: ColorUtils.slate200),
                         ),
                         child: Row(
                           children: [
                             Container(
-                              padding: EdgeInsets.all(AppSpacing.sm),
+                              padding: const EdgeInsets.all(AppSpacing.sm),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: const BorderRadius.all(Radius.circular(8)),
                                 border: Border.all(
                                   color: ColorUtils.slate200,
                                 ),
@@ -195,7 +195,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                                 size: 20,
                               ),
                             ),
-                            SizedBox(width: AppSpacing.md),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,15 +234,15 @@ class AnnouncementDetailDialog extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
                   ],
 
                   // Metadata
                   Container(
-                    padding: EdgeInsets.all(AppSpacing.lg),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
                       color: ColorUtils.slate50,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Column(
                       children: [
@@ -258,7 +258,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                               'Unknown',
                           primaryColor: primaryColor,
                         ),
-                        SizedBox(height: AppSpacing.sm),
+                        const SizedBox(height: AppSpacing.sm),
                         AnnouncementDetailRow(
                           icon: Icons.people,
                           label: languageProvider.getTranslatedText({
@@ -269,7 +269,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                           primaryColor: primaryColor,
                         ),
                         if (announcementData['start_date'] != null)
-                          SizedBox(height: AppSpacing.sm),
+                          const SizedBox(height: AppSpacing.sm),
                         if (announcementData['start_date'] != null)
                           AnnouncementDetailRow(
                             icon: Icons.calendar_today,
@@ -281,7 +281,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                             primaryColor: primaryColor,
                           ),
                         if (announcementData['end_date'] != null)
-                          SizedBox(height: AppSpacing.sm),
+                          const SizedBox(height: AppSpacing.sm),
                         if (announcementData['end_date'] != null)
                           AnnouncementDetailRow(
                             icon: Icons.event_busy,
@@ -301,7 +301,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
 
             // Close button
             Container(
-              padding: EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 children: [
                   Expanded(
@@ -310,9 +310,9 @@ class AnnouncementDetailDialog extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       child: Text(
                         languageProvider.getTranslatedText({

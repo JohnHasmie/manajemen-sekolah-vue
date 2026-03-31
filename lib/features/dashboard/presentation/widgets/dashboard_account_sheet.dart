@@ -101,7 +101,7 @@ class _DashboardAccountSheetState
                       height: 4,
                       decoration: BoxDecoration(
                         color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2),
+                        borderRadius: const BorderRadius.all(Radius.circular(2)),
                       ),
                     ),
                   ),
@@ -250,7 +250,7 @@ class _DashboardAccountSheetState
                   if (mounted) _switchingRole.value = null;
                 }
               },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -259,7 +259,7 @@ class _DashboardAccountSheetState
             color: isCurrent
                 ? _primaryColor.withValues(alpha: 0.1)
                 : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(
               color: isCurrent
                   ? _primaryColor.withValues(alpha: 0.3)
@@ -309,13 +309,13 @@ class _DashboardAccountSheetState
           AppNavigator.pop(context);
           widget.onShowSchoolSelection();
         },
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: const BorderRadius.all(Radius.circular(15)),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: _primaryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
             border: Border.all(
               color: _primaryColor.withValues(alpha: 0.3),
             ),
@@ -348,7 +348,7 @@ class _DashboardAccountSheetState
           AppNavigator.pop(context);
           AppNavigator.push(context, const SettingsScreen());
         },
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: const BorderRadius.all(Radius.circular(15)),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -395,13 +395,13 @@ class _DashboardAccountSheetState
                       if (mounted) _isLoggingOut.value = false;
                     }
                   },
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: const BorderRadius.all(Radius.circular(15)),
                 border: Border.all(color: Colors.red.shade100),
               ),
               child: Row(

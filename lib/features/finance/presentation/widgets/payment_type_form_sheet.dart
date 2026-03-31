@@ -120,12 +120,12 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
       },
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
               ? _primaryColor.withValues(alpha: 0.12)
               : ColorUtils.slate50,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
           border: Border.all(
             color: isSelected ? _primaryColor : ColorUtils.slate200,
             width: isSelected ? 1.5 : 1,
@@ -139,7 +139,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
               size: 18,
               color: isSelected ? _primaryColor : ColorUtils.slate500,
             ),
-            SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               label,
               style: TextStyle(
@@ -165,12 +165,12 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
       onTap: () => setState(() => _status = value),
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.1)
               : ColorUtils.slate50,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
           border: Border.all(
             color: isSelected ? color : ColorUtils.slate200,
             width: isSelected ? 1.5 : 1,
@@ -184,7 +184,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
               size: 16,
               color: isSelected ? color : ColorUtils.slate400,
             ),
-            SizedBox(width: 6),
+            const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
@@ -210,7 +210,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: TextField(
@@ -222,7 +222,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
           labelText: label,
           prefixIcon: Icon(icon, color: _primaryColor, size: 20),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
       ),
     );
@@ -248,7 +248,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
           // Header
           Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -270,7 +270,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                   height: 44,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: Icon(
                     isEdit ? Icons.edit_rounded : Icons.add_rounded,
@@ -278,7 +278,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                     size: 22,
                   ),
                 ),
-                SizedBox(width: 14),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,7 +321,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +332,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                       label: 'Nama Pembayaran',
                       icon: Icons.payment_rounded,
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     // Deskripsi
                     _buildDialogTextField(
                       controller: _descriptionController,
@@ -340,7 +340,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                       icon: Icons.description_rounded,
                       maxLines: 2,
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     // Jumlah
                     _buildDialogTextField(
                       controller: _amountController,
@@ -350,7 +350,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                       inputFormatters: [CurrencyInputFormatter()],
                     ),
 
-                    SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.lg),
                     // Periode section
                     Row(
                       children: [
@@ -359,7 +359,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                           size: 15,
                           color: ColorUtils.slate600,
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Text(
                           'Periode Pembayaran',
                           style: TextStyle(
@@ -370,7 +370,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
@@ -380,7 +380,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                             Icons.looks_one_rounded,
                           ),
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: _buildPeriodChip(
                             'bulanan',
@@ -388,7 +388,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                             Icons.calendar_view_month_rounded,
                           ),
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: _buildPeriodChip(
                             'semester',
@@ -396,7 +396,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                             Icons.date_range_rounded,
                           ),
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: _buildPeriodChip(
                             'tahunan',
@@ -407,7 +407,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                       ],
                     ),
 
-                    SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.lg),
                     // Tujuan Pembayaran
                     Row(
                       children: [
@@ -416,7 +416,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                           size: 15,
                           color: ColorUtils.slate600,
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Text(
                           'Tujuan Pembayaran',
                           style: TextStyle(
@@ -427,7 +427,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     InkWell(
                       onTap: () {
                         widget.onShowTargetSelection(
@@ -437,7 +437,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                           },
                         );
                       },
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       child: Container(
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(
@@ -448,7 +448,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                           color: _goalData != null && _goalData!.isNotEmpty
                               ? ColorUtils.success600.withValues(alpha: 0.06)
                               : ColorUtils.slate50,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                           border: Border.all(
                             color: _goalData != null && _goalData!.isNotEmpty
                                 ? ColorUtils.success600.withValues(alpha: 0.4)
@@ -466,7 +466,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                                         ? ColorUtils.success600
                                         : ColorUtils.corporateBlue600)
                                     .withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: const BorderRadius.all(Radius.circular(10)),
                               ),
                               child: Icon(
                                 _goalData != null && _goalData!.isNotEmpty
@@ -479,7 +479,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                                     : ColorUtils.corporateBlue600,
                               ),
                             ),
-                            SizedBox(width: AppSpacing.md),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,7 +519,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                       ),
                     ),
 
-                    SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.lg),
                     // Status section
                     Row(
                       children: [
@@ -528,7 +528,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                           size: 15,
                           color: ColorUtils.slate600,
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Text(
                           'Status',
                           style: TextStyle(
@@ -539,7 +539,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
@@ -550,7 +550,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                             Icons.check_circle_rounded,
                           ),
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: _buildStatusChip(
                             'inactive',
@@ -569,7 +569,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
 
           // Footer Actions
           Container(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -590,9 +590,9 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                       onPressed: () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorUtils.slate300),
                       ),
                       child: Text(
@@ -607,16 +607,16 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet> {
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => _onSubmit(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _primaryColor,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         elevation: 2,
                       ),

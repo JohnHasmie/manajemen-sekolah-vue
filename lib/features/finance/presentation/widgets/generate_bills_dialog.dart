@@ -172,7 +172,7 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
 
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
         width: MediaQuery.of(context).size.width * 0.9,
@@ -192,7 +192,7 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(gradient: widget.cardGradient),
       child: Row(
         children: [
@@ -201,11 +201,11 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
             height: 44,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
             child: Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
           ),
-          SizedBox(width: 14),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,17 +238,17 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
   // Academic year dropdown + month grid.
   Widget _buildContent() {
     return Padding(
-      padding: EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionLabel(Icons.school_rounded, 'Tahun Ajaran'),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           _buildAcademicYearDropdown(),
-          SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xl),
           _buildSectionLabel(Icons.date_range_rounded, 'Pilih Bulan'),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           _buildMonthGrid(),
         ],
       ),
@@ -259,7 +259,7 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
     return Row(
       children: [
         Icon(icon, size: 15, color: ColorUtils.slate600),
-        SizedBox(width: 6),
+        const SizedBox(width: 6),
         Text(
           text,
           style: TextStyle(
@@ -276,7 +276,7 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
     if (_isLoadingYears) {
       return Center(
         child: Padding(
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: CircularProgressIndicator(color: widget.primaryColor),
         ),
       );
@@ -285,10 +285,10 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: DropdownButtonHideUnderline(
         child: DropdownButtonFormField<String>(
           initialValue: _selectedAcademicYearId,
@@ -299,7 +299,7 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
               size: 18,
             ),
             border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
           ),
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -331,7 +331,7 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
     if (_isLoadingGenerated) {
       return Center(
         child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: CircularProgressIndicator(color: widget.primaryColor),
         ),
       );
@@ -358,7 +358,7 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
             onTap: isGenerated
                 ? null
                 : () => setState(() => _selectedMonth = month),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
             child: Container(
               alignment: Alignment.center,
               decoration: BoxDecoration(
@@ -367,7 +367,7 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
                     : isSelected
                     ? widget.primaryColor
                     : Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
                 border: Border.all(
                   color: isGenerated
                       ? ColorUtils.slate200
@@ -425,7 +425,7 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
   // Cancel / Generate buttons.
   Widget _buildFooter(bool canGenerate) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: Row(
         children: [
           Expanded(
@@ -433,9 +433,9 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
               onPressed: () => AppNavigator.pop(context),
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 13),
+                padding: const EdgeInsets.symmetric(vertical: 13),
                 side: BorderSide(color: ColorUtils.slate300),
               ),
               child: Text(
@@ -444,7 +444,7 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
               ),
             ),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: ElevatedButton.icon(
               onPressed: canGenerate ? _generate : null,
@@ -457,9 +457,9 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
                 backgroundColor: widget.primaryColor,
                 disabledBackgroundColor: ColorUtils.slate300,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 13),
+                padding: const EdgeInsets.symmetric(vertical: 13),
                 elevation: 0,
               ),
             ),

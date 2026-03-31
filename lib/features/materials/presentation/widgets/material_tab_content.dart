@@ -62,7 +62,7 @@ class MaterialTabContent extends StatelessWidget {
 
           // Poin Utama
           if (parsedContent!['poin_utama'] is List) ...[
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             SectionCard(
               icon: Icons.lightbulb_rounded,
               iconColor: ColorUtils.amber500,
@@ -88,7 +88,7 @@ class MaterialTabContent extends StatelessWidget {
                                 color: ColorUtils.amber500.withValues(
                                   alpha: 0.15,
                                 ),
-                                borderRadius: BorderRadius.circular(7),
+                                borderRadius: const BorderRadius.all(Radius.circular(7)),
                               ),
                               child: Center(
                                 child: Text(
@@ -123,7 +123,7 @@ class MaterialTabContent extends StatelessWidget {
 
           // Cara Mengajar
           if (parsedContent!['cara_mengajar'] != null) ...[
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             SectionCard(
               icon: Icons.school_rounded,
               iconColor: primaryColor,
@@ -157,12 +157,12 @@ class MaterialTabContent extends StatelessWidget {
 
         // ── AI Info Badge ────────────────────────────────────────────────
         if (aiGeneratedData != null) ...[
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               border: Border.all(
                 color: primaryColor.withValues(alpha: 0.12),
               ),
@@ -174,7 +174,7 @@ class MaterialTabContent extends StatelessWidget {
                   size: 16,
                   color: primaryColor.withValues(alpha: 0.6),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     'Dibuat oleh AI  •  ${aiGeneratedData!['ai_model_used'] ?? 'Claude'}',
@@ -203,7 +203,7 @@ class MaterialTabContent extends StatelessWidget {
 
         // ── Manual Content from backend ──────────────────────────────────
         if (contentList.isNotEmpty) ...[
-          SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
               Container(
@@ -211,7 +211,7 @@ class MaterialTabContent extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   color: ColorUtils.slate200,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
                 child: Icon(
                   Icons.article_rounded,
@@ -219,7 +219,7 @@ class MaterialTabContent extends StatelessWidget {
                   size: 16,
                 ),
               ),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 'Konten Manual',
                 style: TextStyle(
@@ -230,7 +230,7 @@ class MaterialTabContent extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
           ...contentList.asMap().entries.map((entry) {
             final index = entry.key;
             final content = entry.value;
@@ -240,7 +240,7 @@ class MaterialTabContent extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: const BorderRadius.all(Radius.circular(14)),
                 border: Border.all(color: ColorUtils.slate200),
                 boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
               ),
@@ -254,7 +254,7 @@ class MaterialTabContent extends StatelessWidget {
                       height: 36,
                       decoration: BoxDecoration(
                         color: cardColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(9),
+                        borderRadius: const BorderRadius.all(Radius.circular(9)),
                       ),
                       child: Center(
                         child: Text(
@@ -267,7 +267,7 @@ class MaterialTabContent extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,7 +282,7 @@ class MaterialTabContent extends StatelessWidget {
                               color: ColorUtils.slate900,
                             ),
                           ),
-                          SizedBox(height: AppSpacing.xs),
+                          const SizedBox(height: AppSpacing.xs),
                           Text(
                             content['isi_konten'] ??
                                 content['description'] ??

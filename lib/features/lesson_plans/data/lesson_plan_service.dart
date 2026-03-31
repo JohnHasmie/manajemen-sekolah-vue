@@ -5,6 +5,15 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 class LessonPlanService {
+  // ── Backend query-parameter keys ─────────────────────────────────────────
+  // The server uses these exact strings. English snake_case is used wherever
+  // the backend accepts it. The keys below are Indonesian because the server
+  // contract uses them and a backend change is not currently possible.
+  static const _kFilterSubjectId = 'mataPelajaranId'; // subject filter on RPP endpoint
+  static const _kAcademicYear   = 'tahun_ajaran';     // free-text year e.g. "2023/2024"
+  static const _kDateRangeStart = 'tanggalStart';
+  static const _kDateRangeEnd   = 'tanggalEnd';
+  // ─────────────────────────────────────────────────────────────────────────
   /// Fetches RPP (lesson plans) with optional filters.
   static Future<List<dynamic>> getLessonPlans({
     String? teacherId,
@@ -72,15 +81,15 @@ class LessonPlanService {
       queryParams['subject_id'] = subjectId;
     }
     if (filterSubjectId != null && filterSubjectId.isNotEmpty) {
-      queryParams['mataPelajaranId'] = filterSubjectId;
+      queryParams[_kFilterSubjectId] = filterSubjectId;
     }
-    if (classId != null && classId.isNotEmpty) queryParams['classId'] = classId;
-    if (date != null && date.isNotEmpty) queryParams['tanggal'] = date;
+    if (classId != null && classId.isNotEmpty) queryParams['class_id'] = classId;
+    if (date != null && date.isNotEmpty) queryParams['date'] = date;
     if (dateStart != null && dateStart.isNotEmpty) {
-      queryParams['tanggalStart'] = dateStart;
+      queryParams[_kDateRangeStart] = dateStart;
     }
     if (dateEnd != null && dateEnd.isNotEmpty) {
-      queryParams['tanggalEnd'] = dateEnd;
+      queryParams[_kDateRangeEnd] = dateEnd;
     }
     if (academicYearId != null && academicYearId.isNotEmpty) {
       queryParams['academic_year_id'] = academicYearId;
@@ -89,7 +98,7 @@ class LessonPlanService {
       queryParams['semester'] = semester;
     }
     if (academicYear != null && academicYear.isNotEmpty) {
-      queryParams['tahun_ajaran'] = academicYear;
+      queryParams[_kAcademicYear] = academicYear;
     }
 
     final response = await dioClient.get(

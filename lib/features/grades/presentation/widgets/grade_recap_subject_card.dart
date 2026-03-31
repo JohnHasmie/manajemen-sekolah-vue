@@ -33,10 +33,10 @@ class GradeRecapSubjectCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           boxShadow: ColorUtils.corporateShadow(),
         ),
         child: Padding(
@@ -49,7 +49,7 @@ class GradeRecapSubjectCard extends StatelessWidget {
                 height: 50,
                 decoration: BoxDecoration(
                   color: ColorUtils.warning600.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                 ),
                 child: Center(
                   child: Icon(
@@ -59,7 +59,7 @@ class GradeRecapSubjectCard extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.lg),
+              const SizedBox(width: AppSpacing.lg),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +72,7 @@ class GradeRecapSubjectCard extends StatelessWidget {
                         color: ColorUtils.slate900,
                       ),
                     ),
-                    SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.sm),
                     GradeRecapInfoTag(
                       icon: Icons.history_edu_outlined,
                       text: item['subject_code'] ?? 'Mata Pelajaran',

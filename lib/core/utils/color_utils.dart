@@ -345,7 +345,7 @@ class ColorUtils {
   }) {
     return BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(12), // Sharper than default 16
+      borderRadius: const BorderRadius.all(Radius.circular(12)), // Sharper than default 16
       border: withBorder ? Border.all(color: slate200, width: 1) : null,
       boxShadow: corporateShadow(),
     );
@@ -386,7 +386,7 @@ class ColorUtils {
   static BoxDecoration statCardDecoration({required Color accentColor}) {
     return BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: const BorderRadius.all(Radius.circular(16)),
       border: Border.all(color: slate200, width: 1),
       boxShadow: [
         BoxShadow(
@@ -410,7 +410,7 @@ class ColorUtils {
   }) {
     return BoxDecoration(
       color: accentColor.withValues(alpha: 0.05),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: const BorderRadius.all(Radius.circular(8)),
       border: Border.all(color: accentColor.withValues(alpha: 0.2), width: 1),
     );
   }
@@ -458,7 +458,7 @@ class ColorUtils {
   }) {
     return BoxDecoration(
       color: (color ?? Colors.white).withValues(alpha: opacity),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: const BorderRadius.all(Radius.circular(16)),
       border: Border.all(
         color: Colors.white.withValues(alpha: 0.2),
         width: 1.5,
@@ -477,7 +477,7 @@ class ColorUtils {
   static BoxDecoration quickActionDecoration({required Color color}) {
     return BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: const BorderRadius.all(Radius.circular(16)),
       border: Border.all(color: slate200, width: 1),
       boxShadow: [
         BoxShadow(

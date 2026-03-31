@@ -67,7 +67,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: const BorderRadius.all(Radius.circular(20)),
           ),
           clipBehavior: Clip.antiAlias,
           child: SingleChildScrollView(
@@ -76,7 +76,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
               children: [
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(AppSpacing.xl),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -94,7 +94,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                         height: 44,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         child: Icon(
                           Icons.payment_rounded,
@@ -102,7 +102,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                           size: 22,
                         ),
                       ),
-                      SizedBox(width: 14),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,7 +131,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                 ),
 
                 Padding(
-                  padding: EdgeInsets.all(AppSpacing.xl),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -146,9 +146,9 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                         formatCurrency(bill['amount'] ?? bill['bill_amount']),
                       ),
 
-                      SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.lg),
                       Divider(),
-                      SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.lg),
 
                       DropdownButtonFormField<String>(
                         initialValue: 'Tunai',
@@ -160,13 +160,13 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                             size: 20,
                           ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             borderSide: BorderSide(
                               color: ColorUtils.slate200,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             borderSide: BorderSide(
                               color: ColorUtils.slate200,
                             ),
@@ -202,7 +202,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                           }
                         },
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                       FinanceDialogTextField(
                         controller: amountController,
                         label: 'Jumlah Bayar',
@@ -210,7 +210,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                         primaryColor: primaryColor,
                         keyboardType: TextInputType.number,
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                       FinanceDialogTextField(
                         controller: paymentDateController,
                         label: 'Tanggal Bayar',
@@ -230,7 +230,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                           }
                         },
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
 
                       // File picker section — uses setDialogState to refresh
                       // the selected-file display inside this StatefulBuilder.
@@ -245,7 +245,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                 ),
 
                 Container(
-                  padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border(
@@ -266,9 +266,9 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                           onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                             ),
-                            padding: EdgeInsets.symmetric(vertical: 13),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
                             side: BorderSide(color: ColorUtils.slate300),
                           ),
                           child: Text(
@@ -277,7 +277,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                           ),
                         ),
                       ),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -297,9 +297,9 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                             ),
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           child: Text(
                             AppLocalizations.save.tr,
@@ -320,7 +320,7 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
 
   Widget _buildInfoItem(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Text(
@@ -355,10 +355,10 @@ class _FilePickerSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(
           color: selectedFile != null
               ? ColorUtils.success600
@@ -375,7 +375,7 @@ class _FilePickerSection extends StatelessWidget {
                 : ColorUtils.slate400,
             size: 40,
           ),
-          SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             selectedFile != null
                 ? 'File terpilih: ${selectedFile!.path.split('/').last}'
@@ -387,7 +387,7 @@ class _FilePickerSection extends StatelessWidget {
             ),
           ),
           if (selectedFile != null) ...[
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               getFileTypeText(selectedFile!.path),
               style: TextStyle(
@@ -396,13 +396,13 @@ class _FilePickerSection extends StatelessWidget {
               ),
             ),
           ],
-          SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
           ElevatedButton(
             onPressed: onPickFile,
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
             ),
             child: Text(

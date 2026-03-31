@@ -857,7 +857,7 @@ class AdminAnnouncementScreenState
         onPressed: _showAddEditDialog,
         backgroundColor: _getPrimaryColor(),
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(16))),
         child: Icon(Icons.add),
       ),
     );

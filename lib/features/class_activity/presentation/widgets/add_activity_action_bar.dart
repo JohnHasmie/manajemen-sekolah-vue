@@ -66,7 +66,7 @@ class AddActivityActionBar extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: ElevatedButton(
                 onPressed: isSubmitting ? null : onSubmit,

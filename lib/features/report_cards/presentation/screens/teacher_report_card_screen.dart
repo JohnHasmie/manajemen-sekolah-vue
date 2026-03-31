@@ -449,7 +449,7 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: const Icon(
                       Icons.arrow_back,
@@ -502,7 +502,7 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: const Icon(
                       Icons.more_vert,

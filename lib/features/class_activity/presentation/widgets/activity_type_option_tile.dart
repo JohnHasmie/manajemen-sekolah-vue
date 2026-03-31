@@ -57,7 +57,7 @@ class ActivityTypeOptionTile extends StatelessWidget {
               ),
               child: Icon(icon, color: color, size: 24),
             ),
-            SizedBox(width: AppSpacing.lg),
+            const SizedBox(width: AppSpacing.lg),
             // Title + description
             Expanded(
               child: Column(
@@ -71,7 +71,7 @@ class ActivityTypeOptionTile extends StatelessWidget {
                       color: ColorUtils.slate900,
                     ),
                   ),
-                  SizedBox(height: AppSpacing.xs),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     description,
                     style: TextStyle(fontSize: 12, color: ColorUtils.slate500),

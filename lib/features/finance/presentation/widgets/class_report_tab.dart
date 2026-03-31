@@ -75,7 +75,7 @@ class ClassReportTab extends ConsumerWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         onTap: () {
           AppNavigator.push(
             context,
@@ -86,11 +86,11 @@ class ClassReportTab extends ConsumerWidget {
           );
         },
         child: Container(
-          margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-          padding: EdgeInsets.all(AppSpacing.lg),
+          margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200, width: 1),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
@@ -101,14 +101,14 @@ class ClassReportTab extends ConsumerWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   border: Border.all(
                     color: primaryColor.withValues(alpha: 0.15),
                   ),
                 ),
                 child: Icon(Icons.class_, color: primaryColor, size: 22),
               ),
-              SizedBox(width: 14),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +121,7 @@ class ClassReportTab extends ConsumerWidget {
                         color: ColorUtils.slate900,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       '${classItem['student_count'] ?? studentList.length} siswa',
                       style: TextStyle(
@@ -133,13 +133,13 @@ class ClassReportTab extends ConsumerWidget {
                 ),
               ),
               _buildClassSummary(ref, studentList),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               Container(
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
                   color: ColorUtils.slate100,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
                 child: Icon(
                   Icons.chevron_right,
@@ -223,11 +223,11 @@ class ClassReportTab extends ConsumerWidget {
 
   Widget _buildStatusIndicator(Color color, int count) {
     return Container(
-      margin: EdgeInsets.only(left: 4),
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      margin: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(

@@ -140,7 +140,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(16))),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -311,7 +311,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
                 backgroundColor: ColorUtils.warning600,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -333,7 +333,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: ColorUtils.slate200),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -373,7 +373,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: ColorUtils.slate200),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -412,7 +412,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: ColorUtils.slate200),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(

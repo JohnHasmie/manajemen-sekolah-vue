@@ -44,7 +44,7 @@ class RecommendationCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: const BorderRadius.all(Radius.circular(24)),
         boxShadow: ColorUtils.corporateShadow(),
       ),
       child: Column(
@@ -66,7 +66,7 @@ class RecommendationCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: priorityColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
                       child: Text(
                         priority.toUpperCase(),
@@ -86,7 +86,7 @@ class RecommendationCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate100,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
                       child: Text(
                         type.toUpperCase(),
@@ -155,7 +155,7 @@ class RecommendationCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: ColorUtils.primary.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
               border: Border.all(
                 color: ColorUtils.primary.withValues(alpha: 0.1),
               ),

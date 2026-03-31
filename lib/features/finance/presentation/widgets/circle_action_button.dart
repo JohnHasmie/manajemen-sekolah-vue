@@ -23,13 +23,13 @@ class CircleActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final button = InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: const BorderRadius.all(Radius.circular(10)),
       child: Container(
         width: 36,
         height: 36,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
           border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Icon(icon, size: 18, color: color),

@@ -37,11 +37,11 @@ class ClassDetailItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
         border: Border.all(color: ColorUtils.slate100),
       ),
       child: Row(
@@ -51,14 +51,14 @@ class ClassDetailItem extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               border: Border.all(
                 color: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
               ),
             ),
             child: Icon(icon, size: 18, color: ColorUtils.corporateBlue600),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +72,7 @@ class ClassDetailItem extends StatelessWidget {
                     letterSpacing: 0.3,
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text(
                   value,
                   style: TextStyle(
@@ -173,7 +173,7 @@ class ClassDetailDialog extends StatelessWidget {
     final teacherName = _resolveTeacherName();
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -182,7 +182,7 @@ class ClassDetailDialog extends StatelessWidget {
             // ── Gradient header with avatar, name, grade badge, close button ──
             Container(
               width: double.infinity,
-              padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 12, 20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -230,7 +230,7 @@ class ClassDetailDialog extends StatelessWidget {
                           ),
                         ),
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                       Text(
                         name,
                         style: TextStyle(
@@ -240,7 +240,7 @@ class ClassDetailDialog extends StatelessWidget {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 6),
+                      const SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
@@ -252,7 +252,7 @@ class ClassDetailDialog extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: const BorderRadius.all(Radius.circular(20)),
                               border: Border.all(
                                 color: Colors.white.withValues(alpha: 0.3),
                               ),
@@ -265,7 +265,7 @@ class ClassDetailDialog extends StatelessWidget {
                                   size: 12,
                                   color: Colors.white,
                                 ),
-                                SizedBox(width: AppSpacing.xs),
+                                const SizedBox(width: AppSpacing.xs),
                                 Text(
                                   gradeText,
                                   style: TextStyle(
@@ -307,7 +307,7 @@ class ClassDetailDialog extends StatelessWidget {
 
             // ── Content: detail items + action buttons ──
             Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -329,7 +329,7 @@ class ClassDetailDialog extends StatelessWidget {
                     value: teacherName,
                   ),
 
-                  SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // ── View Students button (full width) ──
                   SizedBox(
@@ -355,18 +355,18 @@ class ClassDetailDialog extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ),
 
-                  SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // ── Footer: Close / Edit ──
                   Container(
-                    padding: EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.only(top: 12),
                     decoration: BoxDecoration(
                       border: Border(
                         top: BorderSide(color: ColorUtils.slate100),
@@ -378,10 +378,10 @@ class ClassDetailDialog extends StatelessWidget {
                           child: OutlinedButton(
                             onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 13),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
                               side: BorderSide(color: ColorUtils.slate300),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: const BorderRadius.all(Radius.circular(12)),
                               ),
                             ),
                             child: Text(
@@ -398,7 +398,7 @@ class ClassDetailDialog extends StatelessWidget {
                           ),
                         ),
                         if (!isReadOnly) ...[
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: ElevatedButton.icon(
                               onPressed: () {
@@ -423,12 +423,12 @@ class ClassDetailDialog extends StatelessWidget {
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: ColorUtils.corporateBlue600,
-                                padding: EdgeInsets.symmetric(vertical: 13),
+                                padding: const EdgeInsets.symmetric(vertical: 13),
                                 elevation: 2,
                                 shadowColor: ColorUtils.corporateBlue600
                                     .withValues(alpha: 0.4),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                                 ),
                               ),
                             ),

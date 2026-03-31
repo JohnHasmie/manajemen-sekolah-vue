@@ -42,7 +42,7 @@ class FinanceDashboardStats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
           Expanded(
@@ -55,7 +55,7 @@ class FinanceDashboardStats extends StatelessWidget {
               color: ColorUtils.warning600,
             ),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Expanded(
             child: FinanceStatCard(
               icon: Icons.verified_rounded,
@@ -66,7 +66,7 @@ class FinanceDashboardStats extends StatelessWidget {
               color: ColorUtils.success600,
             ),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Expanded(
             child: FinanceStatCard(
               icon: Icons.pending_actions_rounded,

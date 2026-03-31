@@ -70,7 +70,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
         children: [
           // --- Pattern #11 Gradient Header ---
           Container(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -95,7 +95,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                       color: Colors.white,
                       size: 22,
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Text(
                       languageProvider.getTranslatedText({
                         'en': 'Filter',
@@ -135,7 +135,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
           // --- Filter Content ---
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -147,7 +147,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                         size: 16,
                         color: ColorUtils.slate600,
                       ),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Priority',
@@ -161,7 +161,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -192,7 +192,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                           width: 1,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         padding: EdgeInsets.symmetric(
                           horizontal: 12,
@@ -202,7 +202,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                     }).toList(),
                   ),
 
-                  SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // Target Filter
                   Row(
@@ -212,7 +212,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                         size: 16,
                         color: ColorUtils.slate600,
                       ),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Target',
@@ -226,7 +226,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -286,7 +286,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                           width: 1,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         padding: EdgeInsets.symmetric(
                           horizontal: 12,
@@ -296,7 +296,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                     }).toList(),
                   ),
 
-                  SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.xl),
 
                   // Status Filter
                   Row(
@@ -306,7 +306,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                         size: 16,
                         color: ColorUtils.slate600,
                       ),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Status',
@@ -320,7 +320,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -373,7 +373,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                           width: 1,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         padding: EdgeInsets.symmetric(
                           horizontal: 12,
@@ -389,7 +389,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
 
           // --- Pattern #11 Footer ---
           Container(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -407,10 +407,10 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                   child: OutlinedButton(
                     onPressed: () => AppNavigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: ColorUtils.slate300),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(
@@ -425,7 +425,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
@@ -438,10 +438,10 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
-                      padding: EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 2,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(

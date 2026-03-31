@@ -72,7 +72,7 @@ class _FinanceBarChartCardState extends State<FinanceBarChartCard> {
 
               return InkWell(
                 onTap: widget.onTap,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Column(
@@ -86,7 +86,7 @@ class _FinanceBarChartCardState extends State<FinanceBarChartCard> {
                             height: 32,
                             decoration: BoxDecoration(
                               color: widget.accentColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Icon(
                               widget.icon,

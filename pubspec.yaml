@@ -99,6 +99,9 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/icon/
+    # TODO(security): .env is bundled as an asset and readable inside the APK/IPA.
+    # Migrate to platform-specific config (Android BuildConfig / iOS Info.plist)
+    # or fetch secrets from a secure backend endpoint at startup.
     - .env
     - shorebird.yaml
 

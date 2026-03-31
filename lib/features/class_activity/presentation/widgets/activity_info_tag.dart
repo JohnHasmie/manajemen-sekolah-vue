@@ -36,7 +36,7 @@ class ActivityInfoTag extends StatelessWidget {
         color: tagColor != null
             ? tagColor!.withValues(alpha: 0.08)
             : ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(
           color: tagColor != null
               ? tagColor!.withValues(alpha: 0.3)

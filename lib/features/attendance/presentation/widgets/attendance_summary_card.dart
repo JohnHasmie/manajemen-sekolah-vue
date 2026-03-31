@@ -54,13 +54,13 @@ class AttendanceSummaryCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
           ),
@@ -77,7 +77,7 @@ class AttendanceSummaryCard extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                       border: Border.all(
                         color: primaryColor.withValues(alpha: 0.15),
                       ),
@@ -163,7 +163,7 @@ class AttendanceSummaryCard extends StatelessWidget {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: onDelete,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
@@ -219,7 +219,7 @@ class AttendanceSummaryCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                         border: Border.all(
                           color: primaryColor.withValues(alpha: 0.2),
                         ),
@@ -252,7 +252,7 @@ class AttendanceSummaryCard extends StatelessWidget {
 
               // Attendance progress bar
               ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
                 child: LinearProgressIndicator(
                   value: summary.totalStudent > 0
                       ? summary.present / summary.totalStudent
@@ -300,7 +300,7 @@ class _AttendanceInfoTag extends StatelessWidget {
         color: tagColor != null
             ? tagColor!.withValues(alpha: 0.1)
             : ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(
           color: tagColor != null
               ? tagColor!.withValues(alpha: 0.2)

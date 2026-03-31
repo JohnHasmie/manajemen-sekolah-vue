@@ -43,11 +43,11 @@ class FinancePendingSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: EdgeInsets.all(AppSpacing.lg),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
@@ -67,7 +67,7 @@ class FinancePendingSection extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: ColorUtils.warning600.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
                 child: Icon(
                   Icons.pending_actions_rounded,
@@ -75,7 +75,7 @@ class FinancePendingSection extends StatelessWidget {
                   size: 20,
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,7 +88,7 @@ class FinancePendingSection extends StatelessWidget {
                         color: ColorUtils.slate900,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       '$pendingCount $paymentsNeedVerificationLabel',
                       style: TextStyle(color: ColorUtils.slate500, fontSize: 12),
@@ -97,10 +97,10 @@ class FinancePendingSection extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: ColorUtils.warning600.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: const BorderRadius.all(Radius.circular(20)),
                 ),
                 child: Text(
                   '$pendingCount',
@@ -114,7 +114,7 @@ class FinancePendingSection extends StatelessWidget {
             ],
           ),
           if (!isReadOnly) ...[
-            SizedBox(height: 14),
+            const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -132,9 +132,9 @@ class FinancePendingSection extends StatelessWidget {
                   backgroundColor: ColorUtils.warning600,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 11),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
                 ),
               ),
             ),

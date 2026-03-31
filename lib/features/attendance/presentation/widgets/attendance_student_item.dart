@@ -45,7 +45,7 @@ class AttendanceStudentItem extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
@@ -106,7 +106,7 @@ class AttendanceStudentItem extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     border: Border.all(
                       color: statusColor.withValues(alpha: 0.3),
                     ),
@@ -127,7 +127,7 @@ class AttendanceStudentItem extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 color: ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate200),
               ),
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),

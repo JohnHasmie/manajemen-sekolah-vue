@@ -49,7 +49,7 @@ class MaterialQuizTab extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.quiz_outlined, size: 48, color: ColorUtils.slate300),
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             Text(
               'Belum ada kuis',
               style: TextStyle(color: ColorUtils.slate500, fontSize: 15),
@@ -90,7 +90,7 @@ class MaterialQuizTab extends StatelessWidget {
         // Scrollable quiz list
         Expanded(
           child: ListView.builder(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             itemCount: quizzes.length,
             itemBuilder: (context, index) {
               return MaterialQuizCard(

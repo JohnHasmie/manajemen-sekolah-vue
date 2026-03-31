@@ -505,14 +505,14 @@ class StudentManagementScreenState
                       onRefresh: _onRefresh,
                       child: ListView.builder(
                         controller: _scrollController,
-                        padding: EdgeInsets.only(top: 8, bottom: 16),
+                        padding: const EdgeInsets.only(top: 8, bottom: 16),
                         itemCount:
                             filteredStudents.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           // Show loading indicator at bottom
                           if (index == filteredStudents.length) {
                             return Container(
-                              padding: EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                               alignment: Alignment.center,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             );
@@ -543,7 +543,7 @@ class StudentManagementScreenState
               onPressed: _showStudentDialog,
               backgroundColor: _getPrimaryColor(),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
               ),
               child: Icon(Icons.add, color: Colors.white, size: 20),
             ),

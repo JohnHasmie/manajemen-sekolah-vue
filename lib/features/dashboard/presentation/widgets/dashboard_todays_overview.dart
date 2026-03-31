@@ -36,7 +36,7 @@ class DashboardTodaysOverview extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       key: statsSectionKey,
-      padding: EdgeInsets.fromLTRB(12, 6, 12, 6),
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -50,7 +50,7 @@ class DashboardTodaysOverview extends StatelessWidget {
             ),
           ),
           GridView.count(
-            padding: EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: 12),
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
             crossAxisCount: 2,

@@ -43,12 +43,12 @@ class OverviewCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: Container(
-          padding: EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200, width: 1),
             boxShadow: [
               BoxShadow(
@@ -76,7 +76,7 @@ class OverviewCard extends StatelessWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: accentColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                       border: Border.all(
                         color: accentColor.withValues(alpha: 0.15),
                         width: 1,
@@ -84,7 +84,7 @@ class OverviewCard extends StatelessWidget {
                     ),
                     child: Icon(icon, size: 18, color: accentColor),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,7 +99,7 @@ class OverviewCard extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           title,
                           style: TextStyle(
@@ -116,7 +116,7 @@ class OverviewCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.sm),
 
               // Subtitle/description
               Text(

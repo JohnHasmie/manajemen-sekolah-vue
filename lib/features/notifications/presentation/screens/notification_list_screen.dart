@@ -166,7 +166,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
         clipBehavior: Clip.antiAlias,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -189,7 +189,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
                     height: 44,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Icon(icon, color: Colors.white, size: 22),
                   ),
@@ -248,7 +248,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
                       backgroundColor: color,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                       elevation: 0,
                     ),
@@ -391,12 +391,12 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               // Title and subtitle
               Expanded(
                 child: Column(
@@ -414,7 +414,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
                       ),
                     ),
                     if (unread > 0) ...[
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         '$unread ${languageProvider.getTranslatedText({'en': 'unread', 'id': 'belum dibaca'})}',
                         style: TextStyle(
@@ -435,7 +435,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: const Icon(
                       Icons.done_all_rounded,
@@ -475,7 +475,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
                   color: ColorUtils.corporateBlue600.withValues(alpha: 0.6),
                 ),
               ),
-              SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 AppLocalizations.noNotifications.tr,
                 style: TextStyle(
@@ -484,7 +484,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
                   color: ColorUtils.slate800,
                 ),
               ),
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
               Text(
                 AppLocalizations.allNotificationsWillAppear.tr,
                 style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
@@ -508,7 +508,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: ColorUtils.error600,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
@@ -516,7 +516,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.delete_rounded, color: Colors.white, size: 24),
-            SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               AppLocalizations.delete.tr,
               style: TextStyle(
@@ -538,7 +538,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
           margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
             border: Border.all(
               color: isRead
                   ? ColorUtils.slate200
@@ -550,7 +550,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
             ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -585,14 +585,14 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
                             height: 44,
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                               border: Border.all(
                                 color: color.withValues(alpha: 0.2),
                               ),
                             ),
                             child: Icon(_getIcon(type), color: color, size: 22),
                           ),
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           // Text content
                           Expanded(
                             child: Column(
@@ -629,7 +629,7 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
                                     ],
                                   ],
                                 ),
-                                SizedBox(height: AppSpacing.xs),
+                                const SizedBox(height: AppSpacing.xs),
                                 Text(
                                   notif['body'] ?? '-',
                                   style: TextStyle(
@@ -672,14 +672,14 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: ColorUtils.slate500),
-          SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: AppSpacing.xs),
           Text(
             text,
             style: TextStyle(

@@ -39,17 +39,17 @@ class PaymentTypeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           onTap: () {},
           child: Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
               border: Border.all(color: ColorUtils.slate200, width: 1),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
             ),
@@ -66,7 +66,7 @@ class PaymentTypeCard extends StatelessWidget {
                         color: ColorUtils.getColorForIndex(
                           index,
                         ).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: ColorUtils.getColorForIndex(
                             index,
@@ -79,7 +79,7 @@ class PaymentTypeCard extends StatelessWidget {
                         size: 22,
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +94,7 @@ class PaymentTypeCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             formatCurrency(item['amount']),
                             style: TextStyle(
@@ -106,17 +106,17 @@ class PaymentTypeCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     // Status chip
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color:
                             (item['status'] == 'aktif'
                                     ? ColorUtils.success600
                                     : ColorUtils.error600)
                                 .withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                         border: Border.all(
                           color:
                               (item['status'] == 'aktif'
@@ -138,7 +138,7 @@ class PaymentTypeCard extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                          SizedBox(width: 5),
+                          const SizedBox(width: 5),
                           Text(
                             item['status'] == 'aktif' ? 'Aktif' : 'Non-Aktif',
                             style: TextStyle(
@@ -157,7 +157,7 @@ class PaymentTypeCard extends StatelessWidget {
 
                 if (item['description'] != null &&
                     item['description'].isNotEmpty) ...[
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
                     item['description'],
                     style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
@@ -166,9 +166,9 @@ class PaymentTypeCard extends StatelessWidget {
                   ),
                 ],
 
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Divider(color: ColorUtils.slate100, height: 1),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
 
                 // Tags row: periode + tujuan
                 Wrap(
@@ -176,10 +176,10 @@ class PaymentTypeCard extends StatelessWidget {
                   runSpacing: 6,
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: const BorderRadius.all(Radius.circular(6)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -189,7 +189,7 @@ class PaymentTypeCard extends StatelessWidget {
                             size: 10,
                             color: primaryColor,
                           ),
-                          SizedBox(width: AppSpacing.xs),
+                          const SizedBox(width: AppSpacing.xs),
                           Text(
                             getTranslatedPeriod(item['periode']),
                             style: TextStyle(
@@ -209,7 +209,7 @@ class PaymentTypeCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: ColorUtils.info600.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: const BorderRadius.all(Radius.circular(6)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -219,7 +219,7 @@ class PaymentTypeCard extends StatelessWidget {
                               size: 10,
                               color: ColorUtils.info600,
                             ),
-                            SizedBox(width: AppSpacing.xs),
+                            const SizedBox(width: AppSpacing.xs),
                             ConstrainedBox(
                               constraints: BoxConstraints(maxWidth: 160),
                               child: Text(
@@ -239,7 +239,7 @@ class PaymentTypeCard extends StatelessWidget {
                   ],
                 ),
 
-                SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
 
                 // Action buttons
                 Row(
@@ -251,14 +251,14 @@ class PaymentTypeCard extends StatelessWidget {
                       onPressed: onGenerateBills,
                       tooltip: 'Generate Tagihan',
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     CircleActionButton(
                       icon: Icons.edit_rounded,
                       color: primaryColor,
                       onPressed: onEdit,
                       tooltip: AppLocalizations.edit.tr,
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     CircleActionButton(
                       icon: Icons.delete_rounded,
                       color: ColorUtils.error600,

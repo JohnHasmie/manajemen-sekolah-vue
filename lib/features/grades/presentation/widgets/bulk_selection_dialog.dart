@@ -118,7 +118,7 @@ void showBulkSelectionDialog({
                                 Divider(),
                                 Expanded(
                                   child: ListView.builder(
-                                    padding: EdgeInsets.all(8.0),
+                                    padding: const EdgeInsets.all(8.0),
                                     itemCount: allAvailableChapters.length,
                                     itemBuilder: (context, i) {
                                       final c = allAvailableChapters[i];

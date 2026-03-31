@@ -56,18 +56,18 @@ class LanguageOptionTile extends StatelessWidget {
           AppNavigator.pop(context);
           await languageProvider.setLanguage(code);
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: Container(
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
               Icon(Icons.language, color: color),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Text(
                 language,
                 style: TextStyle(

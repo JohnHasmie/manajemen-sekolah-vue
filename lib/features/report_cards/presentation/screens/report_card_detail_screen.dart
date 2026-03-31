@@ -544,7 +544,7 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
                       height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
                       child: const Icon(
                         Icons.arrow_back,
@@ -598,7 +598,7 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: const Icon(
                           Icons.print,
@@ -616,7 +616,7 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
                       height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
                       child: const Icon(
                         Icons.more_vert,
@@ -896,19 +896,19 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
             filled: true,
             fillColor: Colors.grey.shade50,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               borderSide: BorderSide(
                 color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               borderSide: BorderSide(
                 color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               borderSide: BorderSide(color: ColorUtils.getRoleColor('guru')),
             ),
             contentPadding: const EdgeInsets.symmetric(
@@ -938,7 +938,7 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
             border: Border.all(
               color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
             color: Colors.grey.shade50,
           ),
           child: DropdownButtonHideUnderline(

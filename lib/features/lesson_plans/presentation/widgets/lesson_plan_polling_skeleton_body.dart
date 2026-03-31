@@ -21,16 +21,16 @@ class LessonPlanPollingSkeletonBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Status banner — like an <Alert> component in Vue
           Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               border: Border.all(
                 color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.2),
               ),
@@ -45,7 +45,7 @@ class LessonPlanPollingSkeletonBody extends StatelessWidget {
                     color: ColorUtils.getRoleColor('guru'),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +58,7 @@ class LessonPlanPollingSkeletonBody extends StatelessWidget {
                           fontSize: 14,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         pollingStatus,
                         style: TextStyle(
@@ -72,20 +72,20 @@ class LessonPlanPollingSkeletonBody extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: AppSpacing.xxl),
+          const SizedBox(height: AppSpacing.xxl),
           // Skeleton placeholders for each RPP section
           LessonPlanSkeletonSection(title: 'Judul RPP', height: 48),
-          SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xl),
           LessonPlanSkeletonSection(title: 'Informasi Umum', height: 200),
-          SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xl),
           LessonPlanSkeletonSection(title: 'A. Kompetensi Inti (KI)', height: 120),
-          SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xl),
           LessonPlanSkeletonSection(title: 'B. Kompetensi Dasar (KD)', height: 120),
-          SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xl),
           LessonPlanSkeletonSection(title: 'C. Tujuan Pembelajaran', height: 120),
-          SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xl),
           LessonPlanSkeletonSection(title: 'D. Kegiatan Pembelajaran', height: 150),
-          SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xl),
           LessonPlanSkeletonSection(title: 'E. Penilaian (Asesmen)', height: 120),
         ],
       ),

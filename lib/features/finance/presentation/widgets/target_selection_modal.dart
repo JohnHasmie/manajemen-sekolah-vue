@@ -187,10 +187,10 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
         }).toList();
 
         return Container(
-          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: ColorUtils.slate200),
           ),
           child: ExpansionTile(
@@ -225,10 +225,10 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
             trailing: isClassSelected
                 ? Container(
                     padding:
-                        EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: _primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                     child: Text(
                       '${_selectedStudentsByClass[classId]?.length ?? 0}/${studentList.length}',
@@ -243,7 +243,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
             children: [
               if (filteredStudents.isEmpty)
                 Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Text(
                     AppLocalizations.noStudentsMatchSearch.tr,
                     style: TextStyle(
@@ -278,10 +278,10 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
             true;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
       ),
       child: CheckboxListTile(
         value: isSelected,
@@ -353,10 +353,10 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
         if (totalClasses == widget.classList.length &&
             totalStudents == _getTotalStudents())
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: ColorUtils.success600.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
             child: Text(
               'Semua Siswa',
@@ -386,7 +386,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
         children: [
           // Header
           Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: _primaryColor,
               borderRadius: BorderRadius.only(
@@ -397,7 +397,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
             child: Row(
               children: [
                 Icon(Icons.groups, color: Colors.white, size: 24),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     'Pilih Tujuan Pembayaran',
@@ -418,11 +418,11 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
 
           // Search
           Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Container(
               decoration: BoxDecoration(
                 color: ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate200),
               ),
               child: TextField(
@@ -431,7 +431,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
                   hintText: 'Cari siswa...',
                   prefixIcon: Icon(Icons.search, color: ColorUtils.slate400),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
                 onChanged: (value) {
                   setState(() {});
@@ -442,7 +442,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
 
           // Quick Actions
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
                 Expanded(
@@ -450,7 +450,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
                     onPressed: _selectAllClasses,
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                       ),
                       side: BorderSide(color: _primaryColor),
                     ),
@@ -460,13 +460,13 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: OutlinedButton(
                     onPressed: _clearAllSelection,
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                       ),
                       side: BorderSide(color: ColorUtils.error600),
                     ),
@@ -486,7 +486,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
 
           // Footer with summary
           Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: ColorUtils.slate50,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -494,7 +494,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
             child: Column(
               children: [
                 _buildSelectionSummary(),
-                SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
                     Expanded(
@@ -502,14 +502,14 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
                         onPressed: () => AppNavigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
-                          padding: EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         child: Text(AppLocalizations.cancel.tr),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
@@ -520,9 +520,9 @@ class _TargetSelectionModalState extends State<TargetSelectionModal> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _primaryColor,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
-                          padding: EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         child: Text(
                           AppLocalizations.save.tr,

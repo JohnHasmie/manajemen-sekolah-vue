@@ -46,7 +46,7 @@ class GradeRecapEditableCell extends StatelessWidget {
         style: TextStyle(fontSize: 13),
         decoration: InputDecoration(
           isDense: true,
-          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
           border: OutlineInputBorder(),
           // History icon lets the teacher pick from previous grade entries.
           // Like a Vue slot that opens a modal on click.

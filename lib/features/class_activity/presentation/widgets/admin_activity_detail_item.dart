@@ -46,11 +46,11 @@ class AdminActivityDetailItem extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
             child: Icon(icon, size: 18, color: primaryColor),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           // Label + value stacked vertically
           Expanded(
             child: Column(

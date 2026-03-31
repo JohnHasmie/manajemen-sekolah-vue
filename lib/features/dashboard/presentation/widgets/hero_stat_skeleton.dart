@@ -34,7 +34,7 @@ class HeroStatSkeleton extends StatelessWidget {
             height: 35,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
             ),
           ),
           const SizedBox(height: 6),
@@ -44,7 +44,7 @@ class HeroStatSkeleton extends StatelessWidget {
             height: 17,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: const BorderRadius.all(Radius.circular(4)),
             ),
           ),
           const SizedBox(height: 4),
@@ -54,7 +54,7 @@ class HeroStatSkeleton extends StatelessWidget {
             height: 9,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: const BorderRadius.all(Radius.circular(4)),
             ),
           ),
         ],

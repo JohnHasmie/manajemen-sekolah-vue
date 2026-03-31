@@ -27,7 +27,7 @@ class AttendanceStatCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(

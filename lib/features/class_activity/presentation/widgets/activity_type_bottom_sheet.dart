@@ -89,7 +89,7 @@ class ActivityTypeBottomSheet extends StatelessWidget {
                         size: 20,
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Text(
                       languageProvider.getTranslatedText({
                         'en': 'Select Activity Type',
@@ -126,7 +126,7 @@ class ActivityTypeBottomSheet extends StatelessWidget {
                     onActivityTypeSelected('tugas');
                   },
                 ),
-                SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
                 ActivityTypeOptionTile(
                   icon: Icons.menu_book_rounded,
                   title: languageProvider.getTranslatedText({
@@ -143,11 +143,11 @@ class ActivityTypeBottomSheet extends StatelessWidget {
                     onActivityTypeSelected('materi');
                   },
                 ),
-                SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: AppSpacing.xl),
               ],
             ),
           ),
-          SafeArea(top: false, child: SizedBox(height: AppSpacing.sm)),
+          SafeArea(top: false, child: const SizedBox(height: AppSpacing.sm)),
         ],
       ),
     );

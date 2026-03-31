@@ -26,15 +26,15 @@ class LessonPlanEditorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
           // Formatting toolbar (buttons are stubs — formatting is plain text for now)
           Container(
-            padding: EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               border: Border.all(color: ColorUtils.slate200),
               boxShadow: [
                 BoxShadow(
@@ -61,12 +61,12 @@ class LessonPlanEditorView extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate200),
                 boxShadow: [
                   BoxShadow(
@@ -87,7 +87,7 @@ class LessonPlanEditorView extends StatelessWidget {
                 maxLines: null,
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(AppSpacing.lg),
+                  contentPadding: const EdgeInsets.all(AppSpacing.lg),
                   hintText: 'Ketik RPP disini...',
                   hintStyle: TextStyle(color: ColorUtils.slate400),
                 ),

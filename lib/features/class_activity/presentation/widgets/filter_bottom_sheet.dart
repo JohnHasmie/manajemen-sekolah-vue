@@ -62,7 +62,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   Widget _buildSectionHeader(String title, IconData icon) {
     return Padding(
-      padding: EdgeInsets.only(top: 20, bottom: 12),
+      padding: const EdgeInsets.only(top: 20, bottom: 12),
       child: Row(
         children: [
           Container(
@@ -70,11 +70,11 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             height: 28,
             decoration: BoxDecoration(
               color: widget.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
             child: Icon(icon, size: 16, color: widget.primaryColor),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Text(
             title,
             style: TextStyle(
@@ -96,12 +96,12 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       ),
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
               ? widget.primaryColor.withValues(alpha: 0.1)
               : ColorUtils.slate50,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
           border: Border.all(
             color: isSelected ? widget.primaryColor : ColorUtils.slate200,
             width: isSelected ? 1.5 : 1,
@@ -163,7 +163,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       height: 36,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
                       child: const Icon(
                         Icons.tune_rounded,
@@ -171,7 +171,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         size: 20,
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(
                         languageProvider.getTranslatedText({
@@ -260,7 +260,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       ),
                     ],
                   ),
-                  SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.xl),
                 ],
               ),
             ),
@@ -286,7 +286,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                     child: OutlinedButton(
                       onPressed: () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorUtils.slate300),
                         foregroundColor: ColorUtils.slate700,
                         shape: const RoundedRectangleBorder(
@@ -302,7 +302,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -310,7 +310,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         widget.onApply(_tempDateFilter);
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         backgroundColor: widget.primaryColor,
                         foregroundColor: Colors.white,
                         elevation: 0,

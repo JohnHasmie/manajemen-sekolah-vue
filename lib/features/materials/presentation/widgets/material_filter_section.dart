@@ -82,7 +82,7 @@ class MaterialFilterSection extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
               border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
             ),
             child: Row(
@@ -92,7 +92,7 @@ class MaterialFilterSection extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Icon(
                     Icons.filter_alt_rounded,
@@ -116,7 +116,7 @@ class MaterialFilterSection extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Text(
                     '$totalChecked ${languageProvider.getTranslatedText({'en': 'checked', 'id': 'dicentang'})}',
@@ -130,7 +130,7 @@ class MaterialFilterSection extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
 
           // Generate Activity button if any items are checked
           if (totalChecked > 0 && checkedNotGeneratedCount > 0) ...[
@@ -154,7 +154,7 @@ class MaterialFilterSection extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
           ],
 
           // Dropdown Kelas
@@ -164,7 +164,7 @@ class MaterialFilterSection extends StatelessWidget {
             languageProvider: languageProvider,
             onClassChanged: onClassChanged,
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
 
           // Dropdown Mata Pelajaran
           MaterialSubjectDropdown(

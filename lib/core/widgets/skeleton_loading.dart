@@ -109,7 +109,7 @@ class SkeletonListCard extends StatelessWidget {
                   height: 20,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                 ),
                 if (showActions) ...[

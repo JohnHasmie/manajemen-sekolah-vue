@@ -67,11 +67,11 @@ class _SchoolSelectionDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       title: Row(
         children: [
           Icon(Icons.school_rounded, color: primaryColor),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             AppLocalizations.selectSchool.tr,
             style: TextStyle(
@@ -173,15 +173,15 @@ class _SchoolTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: isCurrent ? null : onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: Container(
-          padding: EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.md),
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: isCurrent
                 ? primaryColor.withValues(alpha: 0.1)
                 : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(
               color: isCurrent
                   ? primaryColor.withValues(alpha: 0.3)
@@ -194,7 +194,7 @@ class _SchoolTile extends StatelessWidget {
                 Icons.school,
                 color: isCurrent ? primaryColor : Colors.grey,
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,7 +208,7 @@ class _SchoolTile extends StatelessWidget {
                         color: Colors.grey.shade800,
                       ),
                     ),
-                    SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       school['address'] ?? '',
                       style: TextStyle(
@@ -267,11 +267,11 @@ void showDashboardRolePickerDialog({
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       title: Row(
         children: [
           Icon(Icons.swap_horiz_rounded, color: primaryColor),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             'Select Role / Pilih Role',
             style: TextStyle(
@@ -320,18 +320,18 @@ void showDashboardRolePickerDialog({
                     }
                   }
                 },
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 child: Container(
-                  padding: EdgeInsets.all(AppSpacing.md),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(color: Colors.grey.shade200),
                   ),
                   child: Row(
                     children: [
                       Icon(roleIcon(role), color: primaryColor),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Text(
                         roleName(role),
                         style: TextStyle(

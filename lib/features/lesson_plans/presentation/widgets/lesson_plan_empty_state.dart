@@ -26,7 +26,7 @@ class LessonPlanEmptyState extends StatelessWidget {
             height: 72,
             decoration: BoxDecoration(
               color: ColorUtils.slate100,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: const BorderRadius.all(Radius.circular(20)),
             ),
             child: Icon(
               Icons.description_outlined,
@@ -34,7 +34,7 @@ class LessonPlanEmptyState extends StatelessWidget {
               color: ColorUtils.slate400,
             ),
           ),
-          SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xl),
           Text(
             languageProvider.getTranslatedText({
               'en': 'No RPP created yet',
@@ -46,7 +46,7 @@ class LessonPlanEmptyState extends StatelessWidget {
               color: ColorUtils.slate700,
             ),
           ),
-          SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             languageProvider.getTranslatedText({
               'en': 'Click the "+" button to create your first RPP.',

@@ -67,7 +67,7 @@ class ReportCardPrintScreen extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: const Icon(
                       Icons.arrow_back,
@@ -113,7 +113,7 @@ class ReportCardPrintScreen extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: const Icon(
                       Icons.print,
@@ -132,7 +132,7 @@ class ReportCardPrintScreen extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: const BorderRadius.all(Radius.circular(4)),
                   boxShadow: [...ColorUtils.corporateShadow()],
                 ),
                 child: Padding(

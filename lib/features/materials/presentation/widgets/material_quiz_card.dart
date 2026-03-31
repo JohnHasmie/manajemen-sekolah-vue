@@ -50,11 +50,11 @@ class MaterialQuizCard extends StatelessWidget {
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         side: BorderSide(color: ColorUtils.slate200),
       ),
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -78,7 +78,7 @@ class MaterialQuizCard extends StatelessWidget {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate100,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: const BorderRadius.all(Radius.circular(6)),
                       ),
                       child: Text(
                         quiz['question_type']
@@ -100,7 +100,7 @@ class MaterialQuizCard extends StatelessWidget {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: diffColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: const BorderRadius.all(Radius.circular(6)),
                         border: Border.all(
                           color: diffColor.withValues(alpha: 0.3),
                         ),
@@ -118,7 +118,7 @@ class MaterialQuizCard extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             // Question text
             Text(
               quiz['question'] ?? '',
@@ -128,16 +128,16 @@ class MaterialQuizCard extends StatelessWidget {
                 color: ColorUtils.slate800,
               ),
             ),
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             // Options list — only rendered when options exist
             if (quiz['options'] != null &&
                 (quiz['options'] as List).isNotEmpty) ...[
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +159,7 @@ class MaterialQuizCard extends StatelessWidget {
                                 ? Colors.green
                                 : ColorUtils.slate400,
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               opt.toString(),
@@ -179,15 +179,15 @@ class MaterialQuizCard extends StatelessWidget {
                   }).toList(),
                 ),
               ),
-              SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.md),
             ],
             // Answer key + optional explanation block
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
                 border: Border.all(color: Colors.green.shade200),
               ),
               child: Column(
@@ -201,7 +201,7 @@ class MaterialQuizCard extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: AppSpacing.xs),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     quiz['correct_answer'] ?? '-',
                     style: TextStyle(
@@ -210,9 +210,9 @@ class MaterialQuizCard extends StatelessWidget {
                     ),
                   ),
                   if (quiz['explanation'] != null) ...[
-                    SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.sm),
                     Divider(color: Colors.green.shade200),
-                    SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       'Penjelasan:',
                       style: TextStyle(
@@ -221,7 +221,7 @@ class MaterialQuizCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       quiz['explanation'] ?? '',
                       style: TextStyle(

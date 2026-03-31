@@ -32,17 +32,17 @@ class TeacherSelectCard extends StatelessWidget {
     final avatarColor = ColorUtils.getColorForIndex(index);
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           child: Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
               border: Border.all(color: ColorUtils.slate200),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
@@ -63,7 +63,7 @@ class TeacherSelectCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,7 +76,7 @@ class TeacherSelectCard extends StatelessWidget {
                           color: ColorUtils.slate900,
                         ),
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 3),
                       Text(
                         teacher['employee_number'] != null
                             ? 'NIP: ${teacher['employee_number']}'
@@ -94,7 +94,7 @@ class TeacherSelectCard extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     color: ColorUtils.slate100,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(
                     Icons.arrow_forward_ios,

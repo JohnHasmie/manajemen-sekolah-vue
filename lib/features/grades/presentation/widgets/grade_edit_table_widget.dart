@@ -129,7 +129,7 @@ class GradeEditTableWidget extends StatelessWidget {
       children: [
         // ── Edit mode banner ────────────────────────────────────────────────
         Container(
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           color: ColorUtils.warning600.withValues(alpha: 0.08),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -159,7 +159,7 @@ class GradeEditTableWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(width: AppSpacing.lg),
+              const SizedBox(width: AppSpacing.lg),
               ElevatedButton.icon(
                 // "Finish" delegates all saving logic back to the parent via
                 // [onFinish], keeping this widget free of API/setState calls.
@@ -207,7 +207,7 @@ class GradeEditTableWidget extends StatelessWidget {
                         children: [
                           Container(
                             width: 150,
-                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             alignment: Alignment.centerLeft,
                             child: Text(
                               languageProvider.getTranslatedText({
@@ -219,7 +219,7 @@ class GradeEditTableWidget extends StatelessWidget {
                           ),
                           Container(
                             width: 100,
-                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             alignment: Alignment.center,
                             child: Text(
                               languageProvider.getTranslatedText({
@@ -231,7 +231,7 @@ class GradeEditTableWidget extends StatelessWidget {
                           ),
                           Expanded(
                             child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 languageProvider.getTranslatedText({
@@ -293,7 +293,7 @@ class GradeEditTableWidget extends StatelessWidget {
                             // Score input
                             Container(
                               width: 100,
-                              padding: EdgeInsets.all(AppSpacing.sm),
+                              padding: const EdgeInsets.all(AppSpacing.sm),
                               decoration: BoxDecoration(
                                 border: Border(
                                   left: BorderSide(color: ColorUtils.slate200),

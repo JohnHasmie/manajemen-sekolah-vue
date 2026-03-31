@@ -65,7 +65,7 @@ class FinanceGeneratedPaymentTypesSection extends StatelessWidget {
         ),
         if (generatedBatches.isEmpty)
           Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Center(
               child: Text(
                 'Belum ada tagihan yang digenerate',

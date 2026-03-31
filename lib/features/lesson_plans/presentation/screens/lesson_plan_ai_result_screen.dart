@@ -424,12 +424,12 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
           ),
           title: Row(
             children: [
               Icon(Icons.auto_awesome, color: ColorUtils.primary),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 'Generate Ulang AI',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
@@ -445,14 +445,14 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                   'Sistem akan menyusun ulang konten RPP berdasarkan data saat ini. Anda dapat menambahkan instruksi spesifik di bawah.',
                   style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
                 LessonPlanDialogField(
                   label: 'Mata Pelajaran',
                   value: _subjectNameController.text,
                 ),
-                SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
                 LessonPlanDialogField(label: 'Bab', value: _chapterController.text),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   'Instruksi / Prompt Tambahan (Opsional)',
                   style: TextStyle(
@@ -461,7 +461,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
                 TextField(
                   controller: _promptController,
                   maxLines: 4,
@@ -475,11 +475,11 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                     filled: true,
                     fillColor: Colors.grey.shade50,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       borderSide: BorderSide(color: ColorUtils.slate300),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       borderSide: BorderSide(color: ColorUtils.primary),
                     ),
                   ),
@@ -504,7 +504,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                 backgroundColor: ColorUtils.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
               ),
               child: Text('Generate'),
@@ -846,21 +846,21 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                 onBack: () => AppNavigator.pop(context),
               )
             : SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: EdgeInsets.all(AppSpacing.lg),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(color: Colors.blue.shade100),
                       ),
                       child: Row(
                         children: [
                           Icon(Icons.auto_awesome, color: Colors.blue.shade700),
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
                               AppLocalizations.lessonPlanAiGeneratedDescription.tr,
@@ -874,32 +874,32 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('Judul RPP'),
                     LessonPlanPlainTextField(controller: _titleController, maxLines: 1),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('Informasi Umum'),
                     _buildMetaInfoPanel(),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('A. Kompetensi Inti (KI)'),
                     LessonPlanRichTextField(controller:_coreCompetencyController),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader(
                       'B. Kompetensi Dasar (KD) dan Indikator (IPK)',
                     ),
                     LessonPlanRichTextField(controller:_basicCompetencyController),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('C. Tujuan Pembelajaran'),
                     LessonPlanRichTextField(controller:_objectivesController),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader(
                       'D. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup)',
                     ),
                     LessonPlanRichTextField(controller:_coreActivityController),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildSectionHeader('E. Penilaian (Asesmen)'),
                     LessonPlanRichTextField(controller:_assessmentController),
-                    SizedBox(height: 40),
+                    const SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -923,12 +923,12 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
                           backgroundColor: ColorUtils.success600,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 40),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -938,7 +938,7 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         title,
         style: TextStyle(
@@ -952,10 +952,10 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen> {
 
   Widget _buildMetaInfoPanel() {
     return Container(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: Column(

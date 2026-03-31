@@ -327,7 +327,7 @@ class _GenerateLessonPlanFormDialogState
             context: context,
             builder: (context) => AlertDialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
               ),
               icon: Icon(
                 Icons.timer_off_rounded,
@@ -352,9 +352,9 @@ class _GenerateLessonPlanFormDialogState
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                   ),
                   child: Text('Mengerti'),
                 ),
@@ -587,7 +587,7 @@ class _GenerateLessonPlanFormDialogState
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: TextFormField(
@@ -603,7 +603,7 @@ class _GenerateLessonPlanFormDialogState
           hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
           prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -620,7 +620,7 @@ class _GenerateLessonPlanFormDialogState
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<dynamic>(
@@ -634,7 +634,7 @@ class _GenerateLessonPlanFormDialogState
           labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
           prefixIcon: Icon(icon, color: _getPrimaryColor(), size: 18),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -659,7 +659,7 @@ class _GenerateLessonPlanFormDialogState
         children: [
           // Header
           Container(
-            padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
+            padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -673,10 +673,10 @@ class _GenerateLessonPlanFormDialogState
                 Container(
                   width: 40,
                   height: 4,
-                  margin: EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: const BorderRadius.all(Radius.circular(2)),
                   ),
                 ),
                 Row(
@@ -687,7 +687,7 @@ class _GenerateLessonPlanFormDialogState
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
@@ -698,7 +698,7 @@ class _GenerateLessonPlanFormDialogState
                         size: 24,
                       ),
                     ),
-                    SizedBox(width: 14),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -714,7 +714,7 @@ class _GenerateLessonPlanFormDialogState
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             languageProvider.getTranslatedText({
                               'en':
@@ -732,7 +732,7 @@ class _GenerateLessonPlanFormDialogState
                     GestureDetector(
                       onTap: () => AppNavigator.pop(context),
                       child: Container(
-                        padding: EdgeInsets.all(AppSpacing.sm),
+                        padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
@@ -753,7 +753,7 @@ class _GenerateLessonPlanFormDialogState
           // Form Content
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -774,7 +774,7 @@ class _GenerateLessonPlanFormDialogState
                         return null;
                       },
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedSubjectId,
                       label: '${AppLocalizations.subject.tr} *',
@@ -809,7 +809,7 @@ class _GenerateLessonPlanFormDialogState
                         return null;
                       },
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     Row(
                       children: [
                         Expanded(
@@ -841,7 +841,7 @@ class _GenerateLessonPlanFormDialogState
                             },
                           ),
                         ),
-                        SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: _buildDialogDropdown(
                             value: _selectedSemester,
@@ -862,7 +862,7 @@ class _GenerateLessonPlanFormDialogState
                         ),
                       ],
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedChapterId,
                       label:
@@ -897,7 +897,7 @@ class _GenerateLessonPlanFormDialogState
                         return null;
                       },
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildDialogDropdown(
                       value: _selectedSubChapterId,
                       label:
@@ -932,7 +932,7 @@ class _GenerateLessonPlanFormDialogState
                         });
                       },
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
                       controller: _academicYearController,
                       label: '${AppLocalizations.academicYear.tr} *',
@@ -953,7 +953,7 @@ class _GenerateLessonPlanFormDialogState
 
           // Footer Buttons
           Container(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -975,9 +975,9 @@ class _GenerateLessonPlanFormDialogState
                           : () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorUtils.slate300),
                       ),
                       child: Text(
@@ -990,16 +990,16 @@ class _GenerateLessonPlanFormDialogState
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _isAutoGenerating ? null : _submitForm,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         elevation: 2,
                         shadowColor: primaryColor.withValues(alpha: 0.4),
                       ),
@@ -1016,7 +1016,7 @@ class _GenerateLessonPlanFormDialogState
                                   ),
                                 ),
                                 if (_generationStatus.isNotEmpty) ...[
-                                  SizedBox(height: AppSpacing.xs),
+                                  const SizedBox(height: AppSpacing.xs),
                                   Text(
                                     _generationStatus,
                                     style: TextStyle(

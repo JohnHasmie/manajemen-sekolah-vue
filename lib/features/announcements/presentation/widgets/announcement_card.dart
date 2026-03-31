@@ -62,17 +62,17 @@ class AnnouncementCard extends StatelessWidget {
     final accentColor = isImportant ? Colors.orange : primaryColor;
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: ColorUtils.slate200, width: 1),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
@@ -85,7 +85,7 @@ class AnnouncementCard extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: accentColor.withValues(alpha: 0.25),
                     ),
@@ -98,7 +98,7 @@ class AnnouncementCard extends StatelessWidget {
                     size: 22,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
 
                 // Middle: title + content preview + info chips
                 Expanded(
@@ -116,7 +116,7 @@ class AnnouncementCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 3),
                       // Content preview
                       Text(
                         announcementData['content'] ?? '',
@@ -128,7 +128,7 @@ class AnnouncementCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
                       // Metadata chips row
                       Wrap(
                         spacing: 5,
@@ -153,7 +153,7 @@ class AnnouncementCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
 
                 // Right: unread dot + icon action buttons
                 Column(
@@ -163,7 +163,7 @@ class AnnouncementCard extends StatelessWidget {
                       Container(
                         width: 8,
                         height: 8,
-                        margin: EdgeInsets.only(bottom: 8),
+                        margin: const EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
                           color: ColorUtils.error600,
                           shape: BoxShape.circle,
@@ -172,12 +172,12 @@ class AnnouncementCard extends StatelessWidget {
                     // Edit icon button
                     InkWell(
                       onTap: onEdit,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                       child: Container(
-                        padding: EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                         ),
                         child: Icon(
                           Icons.edit_outlined,
@@ -186,16 +186,16 @@ class AnnouncementCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: 6),
+                    const SizedBox(height: 6),
                     // Delete icon button
                     InkWell(
                       onTap: onDelete,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                       child: Container(
-                        padding: EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: ColorUtils.error600.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                         ),
                         child: Icon(
                           Icons.delete_outline,

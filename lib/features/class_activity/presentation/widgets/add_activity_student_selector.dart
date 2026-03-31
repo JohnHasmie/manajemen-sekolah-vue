@@ -34,7 +34,7 @@ class AddActivityStudentSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.md),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -67,12 +67,12 @@ class AddActivityStudentSelector extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           height: 200,
           decoration: BoxDecoration(
             border: Border.all(color: ColorUtils.slate400),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
           ),
           child: isLoading
               ? Center(child: CircularProgressIndicator())

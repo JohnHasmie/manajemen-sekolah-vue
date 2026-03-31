@@ -46,7 +46,7 @@ class ReportCardClassSelector extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         boxShadow: ColorUtils.corporateShadow(),
       ),
       child: Row(
@@ -55,7 +55,7 @@ class ReportCardClassSelector extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: ColorUtils.slate50,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
             ),
             child: Icon(
               Icons.class_outlined,

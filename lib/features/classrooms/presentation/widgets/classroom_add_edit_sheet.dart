@@ -219,7 +219,7 @@ class ClassroomAddEditSheetState extends ConsumerState<ClassroomAddEditSheet> {
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
@@ -349,7 +349,7 @@ class ClassroomAddEditSheetState extends ConsumerState<ClassroomAddEditSheet> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: ColorUtils.slate300),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                         ),
                         child: Text(
@@ -374,7 +374,7 @@ class ClassroomAddEditSheetState extends ConsumerState<ClassroomAddEditSheet> {
                           shadowColor: ColorUtils.corporateBlue600
                               .withValues(alpha: 0.4),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                         ),
                         child: _isSaving

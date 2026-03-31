@@ -29,10 +29,10 @@ class OverviewCardSkeleton extends StatelessWidget {
       baseColor: ColorUtils.shimmerBaseColor,
       highlightColor: ColorUtils.shimmerHighlightColor,
       child: Container(
-        padding: EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           border: Border.all(color: ColorUtils.slate200, width: 1),
         ),
         child: Column(
@@ -51,7 +51,7 @@ class OverviewCardSkeleton extends StatelessWidget {
                     children: [
                       // Placeholder for the numeric value
                       _shimmerBox(width: 40, height: 20, borderRadius: 4),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       // Placeholder for the title
                       _shimmerBox(width: 70, height: 11, borderRadius: 4),
                     ],
@@ -59,7 +59,7 @@ class OverviewCardSkeleton extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             // Placeholder for the subtitle/footer line
             _shimmerBox(width: 100, height: 10, borderRadius: 4),
           ],

@@ -514,7 +514,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                       child: Icon(
                         Icons.arrow_back_ios_new_rounded,
@@ -523,7 +523,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -604,7 +604,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.arrow_back,
@@ -613,7 +613,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -639,7 +639,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Search Bar & Filter Button
                 Row(
@@ -648,7 +648,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         child: TextField(
                           decoration: InputDecoration(
@@ -672,11 +672,11 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     GestureDetector(
                       onTap: _showFilterSheet,
                       child: Container(
-                        padding: EdgeInsets.all(AppSpacing.md),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color:
                               (_selectedStatus != 'Semua' ||
@@ -684,7 +684,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
                                   _selectedPaymentTypeId != null)
                               ? Colors.white
                               : Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         child: Icon(
                           Icons.filter_list,
@@ -710,7 +710,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
             Container(
               width: double.infinity,
               color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -785,7 +785,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen> {
       deleteIcon: Icon(Icons.close, size: 16, color: _getPrimaryColor()),
       onDeleted: onDeleted,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
         side: BorderSide(color: _getPrimaryColor().withValues(alpha: 0.2)),
       ),
     );

@@ -29,7 +29,7 @@ class QuizStatsBar extends StatelessWidget {
         quizzes.where((q) => q['question_type'] == 'essay').length;
 
     return Container(
-      padding: EdgeInsets.all(14),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -37,7 +37,7 @@ class QuizStatsBar extends StatelessWidget {
             primaryColor.withValues(alpha: 0.03),
           ],
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
       ),
       child: Row(
@@ -53,9 +53,9 @@ class QuizStatsBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _DiffDot(color: Colors.green, count: easy),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 _DiffDot(color: Colors.orange, count: medium),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 _DiffDot(color: Colors.red, count: hard),
               ],
             ),
@@ -94,7 +94,7 @@ class _StatItem extends StatelessWidget {
               color: color,
             ),
           ),
-          SizedBox(height: 2),
+          const SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(
@@ -134,7 +134,7 @@ class _DiffDot extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        SizedBox(width: 3),
+        const SizedBox(width: 3),
         Text(
           '$count',
           style: TextStyle(

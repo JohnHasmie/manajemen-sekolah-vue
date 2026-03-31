@@ -169,17 +169,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             builder: (context, constraints) {
               return SingleChildScrollView(
                 physics: BouncingScrollPhysics(),
-                padding: EdgeInsets.symmetric(vertical: 20),
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     minHeight: constraints.maxHeight - 40,
                   ),
                   child: Center(
                     child: Card(
-                      margin: EdgeInsets.symmetric(horizontal: 20),
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
                       elevation: 8,
                       child: Padding(
-                        padding: EdgeInsets.all(30),
+                        padding: const EdgeInsets.all(30),
                         child: _buildCurrentAuthStep(authState),
                       ),
                     ),
@@ -438,7 +438,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             decoration: BoxDecoration(
               color: Colors.red[50],
               border: Border.all(color: Colors.red),
-              borderRadius: BorderRadius.circular(5),
+              borderRadius: const BorderRadius.all(Radius.circular(5)),
             ),
             child: Row(
               children: [
@@ -496,7 +496,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ? _handleLogin
                 : null,
             style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 15),
+              padding: const EdgeInsets.symmetric(vertical: 15),
               backgroundColor: ColorUtils.darkBlue,
               disabledBackgroundColor: ColorUtils.darkBlue.withValues(
                 alpha: 0.6,

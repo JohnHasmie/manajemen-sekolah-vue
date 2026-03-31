@@ -69,10 +69,10 @@ class LessonPlanFileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
@@ -89,27 +89,27 @@ class LessonPlanFileCard extends StatelessWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: InkWell(
           onTap: isDownloading ? null : onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Row(
               children: [
                 // File type icon badge
                 Container(
-                  padding: EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: _iconColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: _iconColor.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Icon(_fileIcon, color: _iconColor, size: 28),
                 ),
-                SizedBox(width: 14),
+                const SizedBox(width: 14),
                 // File label + name
                 Expanded(
                   child: Column(
@@ -123,7 +123,7 @@ class LessonPlanFileCard extends StatelessWidget {
                           color: ColorUtils.slate800,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         _fileName,
                         style: TextStyle(
@@ -135,7 +135,7 @@ class LessonPlanFileCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 // Download indicator: spinner while downloading, icon otherwise
                 isDownloading
                     ? SizedBox(
@@ -147,10 +147,10 @@ class LessonPlanFileCard extends StatelessWidget {
                         ),
                       )
                     : Container(
-                        padding: EdgeInsets.all(AppSpacing.sm),
+                        padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                           border: Border.all(
                             color: primaryColor.withValues(alpha: 0.2),
                           ),

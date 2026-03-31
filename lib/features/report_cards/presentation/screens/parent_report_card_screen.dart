@@ -238,7 +238,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: const Icon(
                       Icons.arrow_back,
@@ -398,11 +398,11 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
                         return Card(
                           elevation: 2,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                           margin: const EdgeInsets.only(bottom: 16),
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             onTap: () {
                               AppNavigator.push(
                                 context,

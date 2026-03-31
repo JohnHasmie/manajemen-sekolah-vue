@@ -64,10 +64,10 @@ class GradeConfigurationPanel extends StatelessWidget {
           children: [
             // Subject info card
             Container(
-              padding: EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate200),
               ),
               child: Row(
@@ -77,7 +77,7 @@ class GradeConfigurationPanel extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.menu_book_outlined,
@@ -118,7 +118,7 @@ class GradeConfigurationPanel extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate200),
               ),
               child: DropdownButtonFormField<String>(
@@ -134,7 +134,7 @@ class GradeConfigurationPanel extends StatelessWidget {
                     'id': 'Pilih jenis nilai',
                   }),
                   hintStyle: TextStyle(color: ColorUtils.slate400),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 style: TextStyle(color: ColorUtils.slate900),
                 items: gradeTypeList.map((String type) {
@@ -161,7 +161,7 @@ class GradeConfigurationPanel extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate200),
               ),
               child: Row(
@@ -203,7 +203,7 @@ class GradeConfigurationPanel extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: ColorUtils.slate50,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate200),
               ),
               child: TextFormField(
@@ -225,7 +225,7 @@ class GradeConfigurationPanel extends StatelessWidget {
                     color: ColorUtils.slate400,
                     fontSize: 11,
                   ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),
@@ -251,7 +251,7 @@ class GradeConfigurationPanel extends StatelessWidget {
                   disabledBackgroundColor: ColorUtils.slate200,
                   disabledForegroundColor: ColorUtils.slate500,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                 ),
               ),

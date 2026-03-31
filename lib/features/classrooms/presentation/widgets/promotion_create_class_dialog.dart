@@ -66,7 +66,7 @@ class _PromotionCreateClassDialogState
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
       ),
       clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
@@ -85,7 +85,7 @@ class _PromotionCreateClassDialogState
                     height: 44,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.3),
                       ),
@@ -96,7 +96,7 @@ class _PromotionCreateClassDialogState
                       size: 22,
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +112,7 @@ class _PromotionCreateClassDialogState
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           widget.languageProvider.getTranslatedText({
                             'en': 'Add a new target class',
@@ -144,7 +144,7 @@ class _PromotionCreateClassDialogState
                     }),
                     icon: Icons.school_rounded,
                   ),
-                  SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   PromotionGradeLevelDropdown(
                     value: _selectedGradeLevel,
                     onChanged: (val) {
@@ -156,7 +156,7 @@ class _PromotionCreateClassDialogState
                     availableGradeLevels: widget.availableGradeLevels,
                     primaryColor: widget.primaryColor,
                   ),
-                  SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   PromotionHomeroomTeacherDropdown(
                     value: _selectedHomeroomTeacherId,
                     onChanged: (val) {
@@ -183,7 +183,7 @@ class _PromotionCreateClassDialogState
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: ColorUtils.slate300),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 13),
                       ),
@@ -199,14 +199,14 @@ class _PromotionCreateClassDialogState
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _submit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         elevation: 2,
@@ -273,7 +273,7 @@ class _PromotionCreateClassDialogState
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: TextFormField(

@@ -40,7 +40,7 @@ class MaterialAiErrorView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, size: 60, color: Colors.red.shade400),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               AppLocalizations.failedToGenerateMaterial.tr,
               style: TextStyle(
@@ -49,13 +49,13 @@ class MaterialAiErrorView extends StatelessWidget {
                 color: ColorUtils.slate800,
               ),
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               errorMessage,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: ColorUtils.slate600),
             ),
-            SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.xxl),
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),

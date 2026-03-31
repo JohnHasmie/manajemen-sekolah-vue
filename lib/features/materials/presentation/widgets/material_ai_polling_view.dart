@@ -28,7 +28,7 @@ class MaterialAiPollingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xxxl),
+        padding: const EdgeInsets.all(AppSpacing.xxxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -40,7 +40,7 @@ class MaterialAiPollingView extends StatelessWidget {
                 strokeWidth: 3,
               ),
             ),
-            SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.xxl),
             Text(
               pollingStatus,
               textAlign: TextAlign.center,
@@ -50,7 +50,7 @@ class MaterialAiPollingView extends StatelessWidget {
                 color: ColorUtils.slate700,
               ),
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'Mohon tunggu, proses ini membutuhkan waktu beberapa saat...',
               textAlign: TextAlign.center,

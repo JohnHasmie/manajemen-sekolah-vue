@@ -98,7 +98,7 @@ class ParentAttendanceList extends StatelessWidget {
               height: 72,
               decoration: BoxDecoration(
                 color: ColorUtils.slate100,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
               ),
               child: Icon(
                 Icons.calendar_today,

@@ -37,7 +37,7 @@ class AdminDataManagementScreen extends StatelessWidget {
           // Menu items
           Expanded(
             child: ListView(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               children: [
                 MenuItemCard(
                   title: AppLocalizations.manageStudents.tr,
@@ -46,14 +46,14 @@ class AdminDataManagementScreen extends StatelessWidget {
                       AppNavigator.push(context, StudentManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
-                SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
                 MenuItemCard(
                   title: AppLocalizations.manageTeachers.tr,
                   icon: Icons.person_outline,
                   onTap: () => AppNavigator.push(context, TeacherAdminScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
-                SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
                 MenuItemCard(
                   title: AppLocalizations.manageClasses.tr,
                   icon: Icons.class_outlined,
@@ -61,7 +61,7 @@ class AdminDataManagementScreen extends StatelessWidget {
                       AppNavigator.push(context, AdminClassManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
-                SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
                 MenuItemCard(
                   title: AppLocalizations.manageSubjects.tr,
                   icon: Icons.book_outlined,
@@ -69,7 +69,7 @@ class AdminDataManagementScreen extends StatelessWidget {
                       AppNavigator.push(context, SubjectManagementScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
-                SizedBox(height: AppSpacing.xxl),
+                const SizedBox(height: AppSpacing.xxl),
               ],
             ),
           ),
@@ -116,12 +116,12 @@ class AdminDataManagementScreen extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
               child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
             ),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           // Title and subtitle
           Expanded(
             child: Column(
@@ -135,7 +135,7 @@ class AdminDataManagementScreen extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   'Kelola semua data master sistem',
                   style: TextStyle(

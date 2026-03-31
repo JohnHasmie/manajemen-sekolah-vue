@@ -41,7 +41,7 @@ class BillingList extends ConsumerWidget {
         return RefreshIndicator(
           onRefresh: () => ref.read(parentFinanceProvider.notifier).refreshBilling(),
           child: ListView.builder(
-            padding: const EdgeInsets.only(top: 8, bottom: 80),
+            padding: EdgeInsets.only(top: 8, bottom: 80),
             itemCount: state.billingItems.length,
             itemBuilder: (context, index) {
               final billing = state.billingItems[index];

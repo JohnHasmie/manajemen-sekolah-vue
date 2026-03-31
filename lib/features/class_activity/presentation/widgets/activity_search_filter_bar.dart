@@ -97,7 +97,7 @@ class ActivitySearchFilterBar extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
 
           // ── Filter icon button (filled when a filter is active) ───────
           Container(

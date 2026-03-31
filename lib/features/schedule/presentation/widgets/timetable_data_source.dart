@@ -72,7 +72,7 @@ class TimetableDataSource extends DataGridSource {
         if (cell.columnName == 'waktu') {
           return Container(
             alignment: Alignment.center,
-            padding: EdgeInsets.all(AppSpacing.xs),
+            padding: const EdgeInsets.all(AppSpacing.xs),
             child: Text(
               timeSlot,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
@@ -97,7 +97,7 @@ class TimetableDataSource extends DataGridSource {
     }
 
     return Container(
-      padding: EdgeInsets.all(2),
+      padding: const EdgeInsets.all(2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: cellSchedules.map((schedule) {
@@ -108,11 +108,11 @@ class TimetableDataSource extends DataGridSource {
               }
             },
             child: Container(
-              margin: EdgeInsets.only(bottom: 2),
-              padding: EdgeInsets.all(3),
+              margin: const EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 color: primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
                 border: Border.all(
                   color: primaryColor.withValues(alpha: 0.3),
                   width: 0.5,
@@ -124,10 +124,10 @@ class TimetableDataSource extends DataGridSource {
                   // Nama kelas
                   Container(
                     width: 24,
-                    padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+                    padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
                     decoration: BoxDecoration(
                       color: primaryColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: const BorderRadius.all(Radius.circular(3)),
                     ),
                     child: Text(
                       schedule.classroom,
@@ -141,7 +141,7 @@ class TimetableDataSource extends DataGridSource {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  SizedBox(width: 3),
+                  const SizedBox(width: 3),
                   // Info mapel dan guru
                   Expanded(
                     child: Column(

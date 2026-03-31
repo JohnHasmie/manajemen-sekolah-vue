@@ -71,7 +71,7 @@ class ParentClassActivityHeader extends ConsumerWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: const Icon(
                     Icons.arrow_back,
@@ -80,7 +80,7 @@ class ParentClassActivityHeader extends ConsumerWidget {
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,7 +119,7 @@ class ParentClassActivityHeader extends ConsumerWidget {
                           size: 20,
                           color: ColorUtils.info600,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Text(AppLocalizations.updateData.tr),
                       ],
                     ),
@@ -128,12 +128,12 @@ class ParentClassActivityHeader extends ConsumerWidget {
               ),
             ],
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
           Container(
-            padding: EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.2),
               ),
@@ -145,7 +145,7 @@ class ParentClassActivityHeader extends ConsumerWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: const Icon(
                     Icons.family_restroom,
@@ -153,7 +153,7 @@ class ParentClassActivityHeader extends ConsumerWidget {
                     size: 18,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

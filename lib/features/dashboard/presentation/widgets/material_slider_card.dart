@@ -46,7 +46,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: [
           BoxShadow(
@@ -70,9 +70,9 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
               final material = widget.materials[index];
               return InkWell(
                 onTap: widget.onTap,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
                 child: Padding(
-                  padding: EdgeInsets.all(AppSpacing.md),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   child: _buildSliderContent(material),
                 ),
               );
@@ -97,10 +97,10 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
       ),
       child: Center(
@@ -112,7 +112,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
               color: ColorUtils.slate400,
               size: 24,
             ),
-            SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               "No materials",
               style: TextStyle(
@@ -146,10 +146,10 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: EdgeInsets.all(6),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: ColorUtils.info600.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
               child: Icon(
                 Icons.menu_book_outlined,
@@ -158,10 +158,10 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
               ),
             ),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: ColorUtils.slate100,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
               ),
               child: Text(
                 '$completedChapters / $totalChapters Bab',
@@ -188,7 +188,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 2),
+        const SizedBox(height: 2),
         // Class name
         Text(
           className,
@@ -201,10 +201,10 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         // Progress bar
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
           child: LinearProgressIndicator(
             value: progress,
             minHeight: 4,
@@ -214,7 +214,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
             ),
           ),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xs),
         // Next chapter
         if (nextChapter != null)
           Text(
@@ -236,7 +236,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
               color: ColorUtils.success600,
             ),
           ),
-        SizedBox(height: AppSpacing.sm), // Space for dots
+        const SizedBox(height: AppSpacing.sm), // Space for dots
       ],
     );
   }

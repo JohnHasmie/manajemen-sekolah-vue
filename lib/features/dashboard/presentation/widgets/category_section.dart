@@ -119,7 +119,7 @@ class _CategorySectionState extends State<CategorySection>
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -128,9 +128,9 @@ class _CategorySectionState extends State<CategorySection>
             color: Colors.transparent,
             child: InkWell(
               onTap: _toggleExpansion,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: ColorUtils.categoryHeaderDecoration(
                   accentColor: widget.accentColor,
                   isExpanded: _isExpanded,
@@ -138,7 +138,7 @@ class _CategorySectionState extends State<CategorySection>
                 child: Row(
                   children: [
                     Icon(widget.icon, size: 18, color: widget.accentColor),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         widget.title,
@@ -174,11 +174,11 @@ class _CategorySectionState extends State<CategorySection>
 
   Widget _buildGrid() {
     return ListView.separated(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
       itemCount: widget.items.length,
-      separatorBuilder: (context, index) => SizedBox(height: AppSpacing.sm),
+      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, index) {
         final item = widget.items[index];
         return _buildAnimatedCard(item, index);

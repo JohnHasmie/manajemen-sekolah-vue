@@ -59,7 +59,7 @@ class _PromotionStudentSelectionSheetState
           // Gradient header
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(20, 16, 12, 16),
+            padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
             decoration: BoxDecoration(
               gradient: widget.cardGradient,
               borderRadius: BorderRadius.only(
@@ -74,10 +74,10 @@ class _PromotionStudentSelectionSheetState
                   child: Container(
                     width: 36,
                     height: 4,
-                    margin: EdgeInsets.only(bottom: 12),
+                    margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: const BorderRadius.all(Radius.circular(2)),
                     ),
                   ),
                 ),
@@ -88,7 +88,7 @@ class _PromotionStudentSelectionSheetState
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
@@ -99,7 +99,7 @@ class _PromotionStudentSelectionSheetState
                         size: 22,
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,7 +115,7 @@ class _PromotionStudentSelectionSheetState
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             '${widget.selectedStudentIds.length}/${widget.students.length} dipilih',
                             style: TextStyle(
@@ -151,7 +151,7 @@ class _PromotionStudentSelectionSheetState
           // Student list
           Expanded(
             child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: widget.students.length,
               itemBuilder: (context, index) {
                 final student = widget.students[index];
@@ -166,14 +166,14 @@ class _PromotionStudentSelectionSheetState
                 final avatarColor = ColorUtils.getColorForIndex(nameHash);
 
                 return Container(
-                  margin: EdgeInsets.symmetric(vertical: 4),
+                  margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
                     color: isPromoted
                         ? ColorUtils.slate50
                         : isSelected
                         ? widget.primaryColor.withValues(alpha: 0.05)
                         : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: isSelected
                           ? widget.primaryColor.withValues(alpha: 0.3)
@@ -183,7 +183,7 @@ class _PromotionStudentSelectionSheetState
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       onTap: isPromoted
                           ? null
                           : () {
@@ -221,7 +221,7 @@ class _PromotionStudentSelectionSheetState
                                 ),
                               ),
                             ),
-                            SizedBox(width: AppSpacing.md),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +263,7 @@ class _PromotionStudentSelectionSheetState
                                   color: isSelected
                                       ? widget.primaryColor
                                       : Colors.white,
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: const BorderRadius.all(Radius.circular(6)),
                                   border: Border.all(
                                     color: isSelected
                                         ? widget.primaryColor
@@ -291,7 +291,7 @@ class _PromotionStudentSelectionSheetState
 
           // Footer
           Container(
-            padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -311,9 +311,9 @@ class _PromotionStudentSelectionSheetState
                   onPressed: () => AppNavigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.primaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     elevation: 0,
                   ),

@@ -27,11 +27,11 @@ class SubjectFilterSectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(top: 20, bottom: 12),
+      padding: const EdgeInsets.only(top: 20, bottom: 12),
       child: Row(
         children: [
           Icon(icon, size: 16, color: ColorUtils.slate600),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(

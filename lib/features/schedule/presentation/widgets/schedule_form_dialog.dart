@@ -459,7 +459,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                           width: 1,
@@ -582,7 +582,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: ColorUtils.slate300),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                         ),
                         child: Text(
@@ -606,7 +606,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           elevation: 2,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                         ),
                         child: Text(
@@ -655,11 +655,11 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
@@ -750,11 +750,11 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
@@ -802,7 +802,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
               ),
               suffixIcon: _isLoadingSubjects
                   ? Padding(
-                      padding: EdgeInsets.all(AppSpacing.md),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       child: SizedBox(
                         width: 16,
                         height: 16,
@@ -841,11 +841,11 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
@@ -927,13 +927,13 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: ColorUtils.slate200),
           ),
           child: Column(
@@ -984,7 +984,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
                       width: 1,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -1038,11 +1038,11 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
@@ -1114,11 +1114,11 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
@@ -1203,11 +1203,11 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
             color: ColorUtils.slate700,
           ),
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonFormField<String>(
@@ -1317,7 +1317,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog> {
               ),
               suffixIcon: _isLoadingLessonHour
                   ? Padding(
-                      padding: EdgeInsets.all(AppSpacing.md),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       child: SizedBox(
                         width: 16,
                         height: 16,

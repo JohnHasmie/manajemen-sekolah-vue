@@ -44,7 +44,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: [
           BoxShadow(
@@ -68,9 +68,9 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
               final schedule = widget.schedules[index];
               return InkWell(
                 onTap: widget.onTap,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
                 child: Padding(
-                  padding: EdgeInsets.all(AppSpacing.md),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   child: _buildScheduleContent(schedule),
                 ),
               );
@@ -96,10 +96,10 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
       ),
       child: Center(
@@ -107,7 +107,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.event_busy, color: ColorUtils.slate400, size: 24),
-            SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               "No classes",
               style: TextStyle(
@@ -148,10 +148,10 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: EdgeInsets.all(6),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: ColorUtils.corporateBlue50,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
               child: Icon(
                 Icons.class_outlined,
@@ -160,10 +160,10 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
               ),
             ),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: ColorUtils.slate100,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
               ),
               child: Text(
                 formattedTime,
@@ -189,7 +189,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 2),
+        const SizedBox(height: 2),
         Text(
           className,
           style: TextStyle(
@@ -201,7 +201,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: AppSpacing.md), // Space for dots
+        const SizedBox(height: AppSpacing.md), // Space for dots
       ],
     );
   }
@@ -249,14 +249,14 @@ class SmoothPageIndicator extends StatelessWidget {
             final bool isActive = (page.round() == index);
             return AnimatedContainer(
               duration: Duration(milliseconds: 200),
-              margin: EdgeInsets.symmetric(horizontal: 2),
+              margin: const EdgeInsets.symmetric(horizontal: 2),
               width: isActive ? 12 : 6,
               height: 6,
               decoration: BoxDecoration(
                 color: isActive
                     ? ColorUtils.corporateBlue600
                     : ColorUtils.slate300,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: const BorderRadius.all(Radius.circular(3)),
               ),
             );
           }),

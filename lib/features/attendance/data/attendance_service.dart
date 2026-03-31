@@ -5,6 +5,13 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
 
 class AttendanceService {
+  // ── Backend query-parameter keys ─────────────────────────────────────────
+  // The server uses these exact strings. English snake_case keys are used
+  // wherever the backend accepts them; the two date-range keys are Indonesian
+  // camelCase because the server contract has not been updated.
+  static const _kDateRangeStart = 'tanggalStart';
+  static const _kDateRangeEnd = 'tanggalEnd';
+  // ─────────────────────────────────────────────────────────────────────────
   /// Fetches attendance (absensi) records with multiple optional filters.
   static Future<List<Attendance>> getAttendance({
     String? teacherId,
@@ -17,10 +24,10 @@ class AttendanceService {
   }) async {
     final queryParams = <String, dynamic>{};
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
-    if (date != null) queryParams['tanggal'] = date;
-    if (subjectId != null) queryParams['mataPelajaranId'] = subjectId;
+    if (date != null) queryParams['date'] = date;
+    if (subjectId != null) queryParams['subject_id'] = subjectId;
     if (studentId != null) queryParams['student_id'] = studentId;
-    if (classId != null) queryParams['classId'] = classId;
+    if (classId != null) queryParams['class_id'] = classId;
     if (academicYearId != null) {
       queryParams['academic_year_id'] = academicYearId;
     }
@@ -107,9 +114,9 @@ class AttendanceService {
       }
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
       if (dateStart != null && dateStart.isNotEmpty) {
-        params['tanggalStart'] = dateStart;
+        params[_kDateRangeStart] = dateStart;
       }
-      if (dateEnd != null && dateEnd.isNotEmpty) params['tanggalEnd'] = dateEnd;
+      if (dateEnd != null && dateEnd.isNotEmpty) params[_kDateRangeEnd] = dateEnd;
       if (academicYearId != null && academicYearId.isNotEmpty) {
         params['academic_year_id'] = academicYearId;
       }
@@ -154,8 +161,8 @@ class AttendanceService {
     final queryParams = <String, dynamic>{};
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
     if (date != null) queryParams['date'] = date;
-    if (subjectId != null) queryParams['subjectId'] = subjectId;
-    if (classId != null) queryParams['classId'] = classId;
+    if (subjectId != null) queryParams['subject_id'] = subjectId;
+    if (classId != null) queryParams['class_id'] = classId;
     if (academicYearId != null) {
       queryParams['academic_year_id'] = academicYearId;
     }
@@ -197,14 +204,14 @@ class AttendanceService {
         params['teacher_id'] = teacherId;
       }
       if (subjectId != null && subjectId.isNotEmpty) {
-        params['mataPelajaranId'] = subjectId;
+        params['subject_id'] = subjectId;
       }
-      if (classId != null && classId.isNotEmpty) params['classId'] = classId;
-      if (date != null && date.isNotEmpty) params['tanggal'] = date;
+      if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
+      if (date != null && date.isNotEmpty) params['date'] = date;
       if (dateStart != null && dateStart.isNotEmpty) {
-        params['tanggalStart'] = dateStart;
+        params[_kDateRangeStart] = dateStart;
       }
-      if (dateEnd != null && dateEnd.isNotEmpty) params['tanggalEnd'] = dateEnd;
+      if (dateEnd != null && dateEnd.isNotEmpty) params[_kDateRangeEnd] = dateEnd;
       if (dayIds != null && dayIds.isNotEmpty) {
         params['day_ids'] = dayIds.join(',');
       }
@@ -287,7 +294,7 @@ class AttendanceService {
     String? lessonHourId,
   }) async {
     final queryParams = <String, dynamic>{};
-    if (date != null && date.isNotEmpty) queryParams['tanggal'] = date;
+    if (date != null && date.isNotEmpty) queryParams['date'] = date;
     if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
     }

@@ -144,7 +144,7 @@ class TeacherScheduleFilterSheetState
             height: 28,
             decoration: BoxDecoration(
               color: widget.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
             child: Icon(icon, size: 15, color: widget.primaryColor),
           ),
@@ -173,7 +173,7 @@ class TeacherScheduleFilterSheetState
           color: selected
               ? widget.primaryColor.withValues(alpha: 0.12)
               : Colors.white,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
           border: Border.all(
             color: selected ? widget.primaryColor : ColorUtils.slate300,
             width: selected ? 1.5 : 1,
@@ -241,7 +241,7 @@ class TeacherScheduleFilterSheetState
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: const BorderRadius.all(Radius.circular(2)),
             ),
           ),
           Row(
@@ -251,7 +251,7 @@ class TeacherScheduleFilterSheetState
                 height: 36,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
                 child: const Icon(
                   Icons.tune_rounded,
@@ -279,7 +279,7 @@ class TeacherScheduleFilterSheetState
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -422,7 +422,7 @@ class TeacherScheduleFilterSheetState
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   side: BorderSide(color: ColorUtils.slate300),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                 ),
                 child: Text(
@@ -456,7 +456,7 @@ class TeacherScheduleFilterSheetState
                   backgroundColor: widget.primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   elevation: 0,
                 ),

@@ -391,7 +391,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.arrow_back_rounded,
@@ -400,7 +400,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,7 +416,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             languageProvider.getTranslatedText({
                               'en':
@@ -489,14 +489,14 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
 
   Widget _buildStepContainer(Widget child) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: child,
     );
   }
 
   Widget _buildBottomControls(LanguageProvider languageProvider) {
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -532,15 +532,15 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     side: BorderSide(color: ColorUtils.slate300),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
             ],
             Expanded(
               child: ElevatedButton.icon(
@@ -571,9 +571,9 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                   backgroundColor: _currentStep == 3
                       ? ColorUtils.success600
                       : _getPrimaryColor(),
-                  padding: EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   elevation: 2,
                   shadowColor: _getPrimaryColor().withValues(alpha: 0.4),
@@ -601,12 +601,12 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
           }),
           primaryColor: _getPrimaryColor(),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xs),
         Container(
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
@@ -624,14 +624,14 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                   color: ColorUtils.slate600,
                 ),
               ),
-              SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.sm),
               Container(
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   border: Border.all(color: ColorUtils.slate200),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _selectedSourceClassId,
@@ -676,12 +676,12 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 ),
               ),
               if (_selectedSourceClassId != null) ...[
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
                 Container(
-                  padding: EdgeInsets.all(AppSpacing.md),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: _getPrimaryColor().withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                     border: Border.all(
                       color: _getPrimaryColor().withValues(alpha: 0.15),
                     ),
@@ -693,7 +693,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                         height: 36,
                         decoration: BoxDecoration(
                           color: _getPrimaryColor().withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                         ),
                         child: Icon(
                           Icons.info_outline_rounded,
@@ -701,7 +701,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                           color: _getPrimaryColor(),
                         ),
                       ),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
                           languageProvider.getTranslatedText({
@@ -748,14 +748,14 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
           }),
           primaryColor: _getPrimaryColor(),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xs),
 
         // Stats card
         Container(
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
@@ -770,7 +770,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 value: _students.length.toString(),
                 color: _getPrimaryColor(),
               ),
-              SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.sm),
               PromotionStatRow(
                 icon: Icons.check_circle_rounded,
                 label: languageProvider.getTranslatedText({
@@ -781,7 +781,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 color: ColorUtils.success600,
               ),
               if (alreadyPromotedCount > 0) ...[
-                SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
                 PromotionStatRow(
                   icon: Icons.warning_rounded,
                   label: languageProvider.getTranslatedText({
@@ -795,7 +795,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             ],
           ),
         ),
-        SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.lg),
 
         // Action buttons
         Row(
@@ -819,10 +819,10 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   backgroundColor: _getPrimaryColor(),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   elevation: 0,
                 ),
@@ -845,7 +845,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 },
               ),
             ),
-            SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: OutlinedButton.icon(
                 icon: Icon(
@@ -865,10 +865,10 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   side: BorderSide(color: _getPrimaryColor()),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                 ),
                 onPressed: () => _showStudentSelectionDialog(languageProvider),
@@ -876,17 +876,17 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             ),
           ],
         ),
-        SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: AppSpacing.xl),
 
         // Selected count badge
         Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: _selectedStudentIds.isNotEmpty
                 ? ColorUtils.success600.withValues(alpha: 0.08)
                 : ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(
               color: _selectedStudentIds.isNotEmpty
                   ? ColorUtils.success600.withValues(alpha: 0.25)
@@ -905,7 +905,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                     ? ColorUtils.success600
                     : ColorUtils.slate500,
               ),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 languageProvider.getTranslatedText({
                   'en': 'Selected: ${_selectedStudentIds.length} students',
@@ -941,12 +941,12 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
           }),
           primaryColor: _getPrimaryColor(),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xs),
         Container(
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
@@ -980,7 +980,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 icon: Icons.calendar_today_rounded,
                 primaryColor: _getPrimaryColor(),
               ),
-              SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
               PromotionDropdown(
                 label: languageProvider.getTranslatedText({
                   'en': 'Target Class',
@@ -1012,7 +1012,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                 icon: Icons.class_rounded,
                 primaryColor: _getPrimaryColor(),
               ),
-              SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.xl),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -1032,10 +1032,10 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     side: BorderSide(color: _getPrimaryColor()),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                   ),
                   onPressed: _showCreateClassDialog,
@@ -1080,14 +1080,14 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
           }),
           primaryColor: _getPrimaryColor(),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xs),
 
         // Summary info card
         Container(
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
@@ -1132,7 +1132,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
             ],
           ),
         ),
-        SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.lg),
 
         // Student list
         PromotionSectionHeader(
@@ -1143,18 +1143,18 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
           }),
           primaryColor: _getPrimaryColor(),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xs),
         Container(
           constraints: BoxConstraints(maxHeight: 220),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
           child: ListView.separated(
             shrinkWrap: true,
-            padding: EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: selectedStudentsList.length,
             separatorBuilder: (ctx, i) =>
                 Divider(height: 1, color: ColorUtils.slate100),
@@ -1165,7 +1165,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
               final avatarColor = ColorUtils.getColorForIndex(nameHash);
 
               return Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
                   children: [
                     CircleAvatar(
@@ -1180,7 +1180,7 @@ class _ClassPromotionWizardState extends ConsumerState<ClassPromotionWizard> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         '${index + 1}. $nameStr',

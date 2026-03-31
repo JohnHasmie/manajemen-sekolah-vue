@@ -38,7 +38,7 @@ class ClassActivityCircleActionButton extends StatelessWidget {
         height: 36,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
           border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Icon(icon, size: 18, color: color),

@@ -70,7 +70,7 @@ class AttendanceDataSource extends DataGridSource {
           final data = dataGridCell.value as AttendanceGridData;
           return Container(
             alignment: Alignment.centerLeft,
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
                 CircleAvatar(
@@ -87,7 +87,7 @@ class AttendanceDataSource extends DataGridSource {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -103,7 +103,7 @@ class AttendanceDataSource extends DataGridSource {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         data.nis,
                         style: TextStyle(

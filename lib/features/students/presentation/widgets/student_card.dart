@@ -51,17 +51,17 @@ class StudentCard extends StatelessWidget {
   /// Small icon+text chip -- like a Vue `<InfoTag>` sub-component.
   Widget _buildInfoTag(IconData icon, String text) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 11, color: ColorUtils.slate600),
-          SizedBox(width: 3),
+          const SizedBox(width: 3),
           Text(
             text,
             style: TextStyle(
@@ -85,17 +85,17 @@ class StudentCard extends StatelessWidget {
     final className = student['class']?['name'] ?? '-';
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: ColorUtils.slate200, width: 1),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
@@ -114,7 +114,7 @@ class StudentCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
 
                 // Student Info (expanded)
                 Expanded(
@@ -132,19 +132,19 @@ class StudentCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       // Compact info chips
                       Row(
                         children: [
                           _buildInfoTag(Icons.school_outlined, className),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           _buildInfoTag(Icons.person_outline, genderText),
                         ],
                       ),
                     ],
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
 
                 // Right side: status + actions
                 Column(
@@ -152,10 +152,10 @@ class StudentCard extends StatelessWidget {
                   children: [
                     // Status dot
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: ColorUtils.success600.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                         border: Border.all(
                           color: ColorUtils.success600.withValues(alpha: 0.3),
                         ),
@@ -171,7 +171,7 @@ class StudentCard extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                          SizedBox(width: AppSpacing.xs),
+                          const SizedBox(width: AppSpacing.xs),
                           Text(
                             'Active',
                             style: TextStyle(
@@ -184,18 +184,18 @@ class StudentCard extends StatelessWidget {
                       ),
                     ),
                     if (!isReadOnly) ...[
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
                       Row(
                         children: [
                           // Edit button
                           InkWell(
                             onTap: onEdit,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
                             child: Container(
-                              padding: EdgeInsets.all(6),
+                              padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 color: primaryColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: const BorderRadius.all(Radius.circular(8)),
                               ),
                               child: Icon(
                                 Icons.edit_outlined,
@@ -204,18 +204,18 @@ class StudentCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           // Delete button
                           InkWell(
                             onTap: onDelete,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
                             child: Container(
-                              padding: EdgeInsets.all(6),
+                              padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 color: ColorUtils.error600.withValues(
                                   alpha: 0.1,
                                 ),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: const BorderRadius.all(Radius.circular(8)),
                               ),
                               child: Icon(
                                 Icons.delete_outline,

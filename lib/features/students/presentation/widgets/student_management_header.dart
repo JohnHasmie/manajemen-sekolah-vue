@@ -87,7 +87,7 @@ class StudentManagementHeader extends StatelessWidget {
         height: 40,
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
         ),
         child: Icon(Icons.more_vert, color: Colors.white, size: 20),
       ),
@@ -97,7 +97,7 @@ class StudentManagementHeader extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 languageProvider.getTranslatedText({
                   'en': 'Refresh Data',
@@ -112,7 +112,7 @@ class StudentManagementHeader extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.download, size: 20),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 languageProvider.getTranslatedText({
                   'en': 'Export to Excel',
@@ -127,7 +127,7 @@ class StudentManagementHeader extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.upload, size: 20),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 languageProvider.getTranslatedText({
                   'en': 'Import from Excel',
@@ -142,7 +142,7 @@ class StudentManagementHeader extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.file_download, size: 20),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 languageProvider.getTranslatedText({
                   'en': 'Download Template',
@@ -165,7 +165,7 @@ class StudentManagementHeader extends StatelessWidget {
             key: searchKey,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
             child: Row(
               children: [
@@ -193,7 +193,7 @@ class StudentManagementHeader extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.only(right: 4),
+                  margin: const EdgeInsets.only(right: 4),
                   child: IconButton(
                     icon: Icon(Icons.search, color: primaryColor),
                     onPressed: onSearch,
@@ -203,14 +203,14 @@ class StudentManagementHeader extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(width: AppSpacing.sm),
+        const SizedBox(width: AppSpacing.sm),
         Container(
           key: filterKey,
           decoration: BoxDecoration(
             color: hasActiveFilter
                 ? Colors.white
                 : Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
           ),
           child: Stack(
@@ -231,7 +231,7 @@ class StudentManagementHeader extends StatelessWidget {
                   right: 8,
                   top: 8,
                   child: Container(
-                    padding: EdgeInsets.all(AppSpacing.xs),
+                    padding: const EdgeInsets.all(AppSpacing.xs),
                     decoration: BoxDecoration(
                       color: ColorUtils.error600,
                       shape: BoxShape.circle,
@@ -253,20 +253,20 @@ class StudentManagementHeader extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
             child: Icon(Icons.filter_alt, size: 18, color: Colors.white),
           ),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: filterChips.map((filter) {
                 return Container(
-                  margin: EdgeInsets.only(right: 6),
+                  margin: const EdgeInsets.only(right: 6),
                   child: Chip(
                     label: Text(
                       filter['label'] as String,
@@ -288,24 +288,24 @@ class StudentManagementHeader extends StatelessWidget {
                       width: 1,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    labelPadding: EdgeInsets.only(left: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    labelPadding: const EdgeInsets.only(left: 4),
                   ),
                 );
               }).toList(),
             ),
           ),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
           InkWell(
             onTap: onClearFilters,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
             child: Container(
-              padding: EdgeInsets.all(AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: ColorUtils.error600,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
               child: Icon(Icons.clear_all, size: 18, color: Colors.white),
             ),

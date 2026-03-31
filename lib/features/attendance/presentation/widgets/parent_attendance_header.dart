@@ -87,7 +87,7 @@ class ParentAttendanceHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: const Icon(
                     Icons.arrow_back,
@@ -151,7 +151,7 @@ class ParentAttendanceHeader extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: TextField(
                     controller: searchController,
@@ -186,7 +186,7 @@ class ParentAttendanceHeader extends StatelessWidget {
                     color: hasActiveFilter
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: Stack(
                     children: [
@@ -231,7 +231,7 @@ class ParentAttendanceHeader extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 8),
                       child: InkWell(
                         onTap: chip['onRemove'] as VoidCallback,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -239,7 +239,7 @@ class ParentAttendanceHeader extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                             border: Border.all(
                               color: Colors.white.withValues(alpha: 0.5),
                             ),
@@ -269,7 +269,7 @@ class ParentAttendanceHeader extends StatelessWidget {
                   }),
                   InkWell(
                     onTap: onClearAllFilters,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,

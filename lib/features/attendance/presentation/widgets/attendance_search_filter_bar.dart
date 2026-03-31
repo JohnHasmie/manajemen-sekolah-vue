@@ -58,7 +58,7 @@ class AttendanceSearchFilterBar extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate200),
                 boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
               ),
@@ -98,7 +98,7 @@ class AttendanceSearchFilterBar extends StatelessWidget {
               height: 44,
               decoration: BoxDecoration(
                 color: hasActiveFilter ? primaryColor : Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(
                   color: hasActiveFilter ? primaryColor : ColorUtils.slate200,
                 ),

@@ -25,7 +25,7 @@ class LessonPlanPollingErrorBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xxl),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -34,7 +34,7 @@ class LessonPlanPollingErrorBody extends StatelessWidget {
               height: 72,
               decoration: BoxDecoration(
                 color: ColorUtils.error600.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
               ),
               child: Icon(
                 Icons.error_outline_rounded,
@@ -42,7 +42,7 @@ class LessonPlanPollingErrorBody extends StatelessWidget {
                 color: ColorUtils.error600,
               ),
             ),
-            SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
             Text(
               AppLocalizations.failedToGenerateLessonPlan.tr,
               style: TextStyle(
@@ -51,13 +51,13 @@ class LessonPlanPollingErrorBody extends StatelessWidget {
                 color: ColorUtils.slate700,
               ),
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               pollingError ?? '',
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
             ElevatedButton(
               onPressed: onBack,
               style: ElevatedButton.styleFrom(
@@ -65,9 +65,9 @@ class LessonPlanPollingErrorBody extends StatelessWidget {
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text('Kembali'),
             ),

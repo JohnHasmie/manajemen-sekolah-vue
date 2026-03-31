@@ -41,12 +41,12 @@ class ScopeOptionTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => AppNavigator.pop(ctx, value),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               border: Border.all(color: ColorUtils.slate200),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
             child: Row(
               children: [
@@ -55,7 +55,7 @@ class ScopeOptionTile extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                     border: Border.all(color: color.withValues(alpha: 0.2)),
                   ),
                   child: Icon(icon, size: 20, color: color),

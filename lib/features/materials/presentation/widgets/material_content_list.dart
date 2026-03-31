@@ -67,7 +67,7 @@ class MaterialContentList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: filteredChapterMaterials.length,
       itemBuilder: (context, index) {
         final chapter = filteredChapterMaterials[index];
@@ -76,18 +76,18 @@ class MaterialContentList extends StatelessWidget {
         final isExpanded = expandedChapter[chapterIdStr] ?? false;
 
         return Container(
-          margin: EdgeInsets.only(bottom: 10),
+          margin: const EdgeInsets.only(bottom: 10),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               onTap: () {
                 onChapterExpanded(chapterIdStr, !isExpanded);
               },
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: const BorderRadius.all(Radius.circular(14)),
                   border: Border.all(color: ColorUtils.slate200),
                   boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
                 ),
@@ -95,7 +95,7 @@ class MaterialContentList extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(AppSpacing.lg),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       child: Row(
                         children: [
                           Container(
@@ -103,7 +103,7 @@ class MaterialContentList extends StatelessWidget {
                             height: 44,
                             decoration: BoxDecoration(
                               color: cardColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: const BorderRadius.all(Radius.circular(10)),
                               border: Border.all(
                                 color: cardColor.withValues(alpha: 0.25),
                               ),
@@ -119,7 +119,7 @@ class MaterialContentList extends StatelessWidget {
                               ),
                             ),
                           ),
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,7 +134,7 @@ class MaterialContentList extends StatelessWidget {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
                                   'Bab ${chapter['urutan']}',
                                   style: TextStyle(
@@ -157,7 +157,7 @@ class MaterialContentList extends StatelessWidget {
                             height: 32,
                             decoration: BoxDecoration(
                               color: ColorUtils.slate100,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Icon(
                               isExpanded

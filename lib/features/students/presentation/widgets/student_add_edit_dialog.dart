@@ -256,11 +256,11 @@ class _StudentAddEditSheetContentState
           context: context,
           builder: (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
+                borderRadius: const BorderRadius.all(Radius.circular(16))),
             title: Row(
               children: [
                 Icon(Icons.error_outline, color: ColorUtils.error600),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   _t({'en': 'Error', 'id': 'Gagal'}),
                   style: TextStyle(color: ColorUtils.error600),
@@ -328,7 +328,7 @@ class _StudentAddEditSheetContentState
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                             color: Colors.white.withValues(alpha: 0.3)),
                       ),
@@ -522,7 +522,7 @@ class _StudentAddEditSheetContentState
                           decoration: BoxDecoration(
                             color: ColorUtils.warning600
                                 .withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             border: Border.all(
                               color: ColorUtils.warning600
                                   .withValues(alpha: 0.2),
@@ -628,7 +628,7 @@ class _StudentAddEditSheetContentState
                           side:
                               BorderSide(color: ColorUtils.slate300),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                              borderRadius: const BorderRadius.all(Radius.circular(12))),
                         ),
                         child: Text(
                           t({'en': 'Cancel', 'id': 'Batal'}),
@@ -647,7 +647,7 @@ class _StudentAddEditSheetContentState
                           disabledBackgroundColor:
                               widget.primaryColor.withValues(alpha: 0.6),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                              borderRadius: const BorderRadius.all(Radius.circular(12))),
                           padding:
                               const EdgeInsets.symmetric(vertical: 14),
                           elevation: 2,

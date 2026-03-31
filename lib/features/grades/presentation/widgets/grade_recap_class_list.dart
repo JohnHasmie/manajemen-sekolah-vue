@@ -82,7 +82,7 @@ class GradeRecapClassList extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.search_off, size: 64, color: ColorUtils.slate300),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               emptyLabel,
               style: TextStyle(color: ColorUtils.slate500, fontSize: 16),
@@ -115,6 +115,7 @@ class GradeRecapClassList extends StatelessWidget {
         );
 
         return GradeRecapClassCard(
+          key: ValueKey(classId),
           item: Map<String, dynamic>.from(item as Map),
           primaryColor: primaryColor,
           isToday: isToday,

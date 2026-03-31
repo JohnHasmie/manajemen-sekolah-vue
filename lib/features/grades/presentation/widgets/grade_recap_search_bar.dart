@@ -39,7 +39,7 @@ class GradeRecapSearchBar extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           border: Border.all(color: ColorUtils.slate200),
           boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
         ),

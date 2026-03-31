@@ -64,7 +64,7 @@ class GradeInputTable extends StatelessWidget {
                   children: [
                     Container(
                       width: 150,
-                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       alignment: Alignment.centerLeft,
                       child: Text(
                         languageProvider.getTranslatedText({
@@ -76,7 +76,7 @@ class GradeInputTable extends StatelessWidget {
                     ),
                     Container(
                       width: 100,
-                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       alignment: Alignment.center,
                       child: Text(
                         languageProvider.getTranslatedText({
@@ -88,7 +88,7 @@ class GradeInputTable extends StatelessWidget {
                     ),
                     Expanded(
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         alignment: Alignment.centerLeft,
                         child: Text(
                           languageProvider.getTranslatedText({
@@ -148,7 +148,7 @@ class GradeInputTable extends StatelessWidget {
                       // Grade input column
                       Container(
                         width: 100,
-                        padding: EdgeInsets.all(AppSpacing.sm),
+                        padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           border: Border(
                             left: BorderSide(color: ColorUtils.slate200),

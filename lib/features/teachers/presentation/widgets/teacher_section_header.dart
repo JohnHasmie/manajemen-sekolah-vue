@@ -35,7 +35,7 @@ class TeacherSectionHeader extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 16, color: ColorUtils.corporateBlue600),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(

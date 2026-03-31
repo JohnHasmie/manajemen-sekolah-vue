@@ -180,7 +180,7 @@ class SubjectClassManagementPageState
         builder: (context, setDialogState) {
           return Dialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: const BorderRadius.all(Radius.circular(20)),
             ),
             child: SingleChildScrollView(
               child: Column(
@@ -189,7 +189,7 @@ class SubjectClassManagementPageState
                   // Header with gradient
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.fromLTRB(20, 20, 16, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -212,7 +212,7 @@ class SubjectClassManagementPageState
                           height: 44,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             border: Border.all(
                               color: Colors.white.withValues(alpha: 0.3),
                             ),
@@ -223,7 +223,7 @@ class SubjectClassManagementPageState
                             size: 22,
                           ),
                         ),
-                        SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +236,7 @@ class SubjectClassManagementPageState
                                   color: Colors.white,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              const SizedBox(height: 2),
                               Text(
                                 'Pilih kelas untuk ditambahkan',
                                 style: TextStyle(
@@ -249,7 +249,7 @@ class SubjectClassManagementPageState
                         ),
                         InkWell(
                           onTap: () => AppNavigator.pop(context),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: const BorderRadius.all(Radius.circular(16)),
                           child: Container(
                             width: 32,
                             height: 32,
@@ -269,7 +269,7 @@ class SubjectClassManagementPageState
                   ),
 
                   Padding(
-                    padding: EdgeInsets.all(AppSpacing.xl),
+                    padding: const EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -281,13 +281,13 @@ class SubjectClassManagementPageState
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.lg),
 
                         // Search bar dalam dialog
                         Container(
                           decoration: BoxDecoration(
                             color: ColorUtils.slate50,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             border: Border.all(color: ColorUtils.slate200),
                           ),
                           child: TextField(
@@ -310,7 +310,7 @@ class SubjectClassManagementPageState
                             },
                           ),
                         ),
-                        SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.lg),
 
                         Container(
                           constraints: BoxConstraints(maxHeight: 300),
@@ -324,7 +324,7 @@ class SubjectClassManagementPageState
                                         size: 48,
                                         color: Colors.green,
                                       ),
-                                      SizedBox(height: AppSpacing.sm),
+                                      const SizedBox(height: AppSpacing.sm),
                                       Text(
                                         'Semua kelas sudah ditambahkan',
                                         style: TextStyle(
@@ -341,7 +341,7 @@ class SubjectClassManagementPageState
                                   itemBuilder: (context, index) {
                                     final classItem = unassignedClasses[index];
                                     return Card(
-                                      margin: EdgeInsets.symmetric(vertical: 4),
+                                      margin: const EdgeInsets.symmetric(vertical: 4),
                                       elevation: 1,
                                       child: ListTile(
                                         leading: Container(
@@ -351,9 +351,7 @@ class SubjectClassManagementPageState
                                             color: getPrimaryColor().withValues(
                                               alpha: 0.1,
                                             ),
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
+                                            borderRadius: const BorderRadius.all(Radius.circular(6)),
                                           ),
                                           child: Icon(
                                             Icons.class_,
@@ -390,11 +388,9 @@ class SubjectClassManagementPageState
                                         trailing: Container(
                                           decoration: BoxDecoration(
                                             color: getPrimaryColor(),
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
+                                            borderRadius: const BorderRadius.all(Radius.circular(6)),
                                           ),
-                                          padding: EdgeInsets.all(6),
+                                          padding: const EdgeInsets.all(6),
                                           child: Icon(
                                             Icons.add,
                                             color: Colors.white,
@@ -416,7 +412,7 @@ class SubjectClassManagementPageState
 
                   // Actions footer
                   Container(
-                    padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border(
@@ -430,9 +426,9 @@ class SubjectClassManagementPageState
                             onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: const BorderRadius.all(Radius.circular(12)),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(color: ColorUtils.slate300),
                             ),
                             child: Text(
@@ -444,7 +440,7 @@ class SubjectClassManagementPageState
                             ),
                           ),
                         ),
-                        SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
@@ -455,9 +451,9 @@ class SubjectClassManagementPageState
                               backgroundColor: ColorUtils.corporateBlue600,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: const BorderRadius.all(Radius.circular(12)),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               elevation: 2,
                             ),
                             child: Text(
@@ -513,10 +509,10 @@ class SubjectClassManagementPageState
     bool isAssigned,
   ) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(
           color: isAssigned
               ? ColorUtils.corporateBlue600.withValues(alpha: 0.3)
@@ -529,9 +525,9 @@ class SubjectClassManagementPageState
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           onTap: () {
             if (isAssigned) {
               removeClassFromSubject(classItem);
@@ -540,7 +536,7 @@ class SubjectClassManagementPageState
             }
           },
           child: Padding(
-            padding: EdgeInsets.all(14),
+            padding: const EdgeInsets.all(14),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -552,7 +548,7 @@ class SubjectClassManagementPageState
                     color: isAssigned
                         ? ColorUtils.corporateBlue600.withValues(alpha: 0.1)
                         : ColorUtils.slate100,
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: const BorderRadius.all(Radius.circular(11)),
                     border: Border.all(
                       color: isAssigned
                           ? ColorUtils.corporateBlue600.withValues(alpha: 0.2)
@@ -567,7 +563,7 @@ class SubjectClassManagementPageState
                     size: 22,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
 
                 // Informasi kelas
                 Expanded(
@@ -582,7 +578,7 @@ class SubjectClassManagementPageState
                           color: ColorUtils.slate800,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       Wrap(
                         spacing: 6,
                         runSpacing: 4,
@@ -603,15 +599,15 @@ class SubjectClassManagementPageState
                   ),
                 ),
 
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 // Status indicator
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: isAssigned
                         ? ColorUtils.success600.withValues(alpha: 0.1)
                         : ColorUtils.corporateBlue600.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                     border: Border.all(
                       color: isAssigned
                           ? ColorUtils.success600.withValues(alpha: 0.3)
@@ -630,7 +626,7 @@ class SubjectClassManagementPageState
                             ? ColorUtils.success600
                             : ColorUtils.corporateBlue600,
                       ),
-                      SizedBox(width: AppSpacing.xs),
+                      const SizedBox(width: AppSpacing.xs),
                       Text(
                         isAssigned ? 'Terdaftar' : 'Tambahkan',
                         style: TextStyle(
@@ -658,17 +654,17 @@ class SubjectClassManagementPageState
 
   Widget buildClassInfoTag(IconData icon, String text) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 11, color: ColorUtils.slate600),
-          SizedBox(width: 3),
+          const SizedBox(width: 3),
           Text(
             text,
             style: TextStyle(
@@ -740,8 +736,8 @@ class SubjectClassManagementPageState
               children: [
                 // Quick stats
                 Container(
-                  margin: EdgeInsets.all(AppSpacing.lg),
-                  padding: EdgeInsets.all(AppSpacing.lg),
+                  margin: const EdgeInsets.all(AppSpacing.lg),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -751,7 +747,7 @@ class SubjectClassManagementPageState
                         ColorUtils.corporateBlue600.withValues(alpha: 0.75),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
                     boxShadow: ColorUtils.corporateShadow(elevation: 2.0),
                   ),
                   child: Row(
@@ -808,7 +804,7 @@ class SubjectClassManagementPageState
 
                 if (filteredClasses.isNotEmpty)
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
                         Text(
@@ -821,7 +817,7 @@ class SubjectClassManagementPageState
                       ],
                     ),
                   ),
-                SizedBox(height: AppSpacing.xs),
+                const SizedBox(height: AppSpacing.xs),
 
                 Expanded(
                   child: filteredClasses.isEmpty
@@ -851,7 +847,7 @@ class SubjectClassManagementPageState
               onPressed: showQuickAddClassDialog,
               backgroundColor: getPrimaryColor(),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
               ),
               child: Icon(Icons.add, color: Colors.white, size: 20),
             ),
@@ -871,11 +867,11 @@ class SubjectClassManagementPageState
           height: 36,
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
           ),
           child: Icon(icon, color: color, size: 18),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           value,
           style: TextStyle(

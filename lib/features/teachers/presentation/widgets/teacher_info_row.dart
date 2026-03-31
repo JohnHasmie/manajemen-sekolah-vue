@@ -82,7 +82,7 @@ class TeacherInfoRow extends StatelessWidget {
               color: ColorUtils.corporateBlue600,
             ),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

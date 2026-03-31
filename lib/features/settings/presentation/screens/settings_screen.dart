@@ -140,7 +140,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
         clipBehavior: Clip.antiAlias,
         child: SingleChildScrollView(
           child: Column(
@@ -149,7 +149,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               // Gradient Header (Pattern #10)
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -167,7 +167,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                       child: Icon(
                         Icons.person_rounded,
@@ -175,7 +175,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         size: 22,
                       ),
                     ),
-                    SizedBox(width: 14),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,7 +192,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             'Perbarui informasi profil Anda',
                             style: TextStyle(
@@ -208,7 +208,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               // Form Fields
               Padding(
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   children: [
                     _buildDialogTextField(
@@ -218,7 +218,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           .getTranslatedText(AppLocalizations.fullName),
                       icon: Icons.person_outline_rounded,
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
                       controller: phoneController,
                       label: ref
@@ -227,7 +227,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     _buildDialogTextField(
                       controller: addressController,
                       label: ref
@@ -241,23 +241,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               // Footer
               Container(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(top: BorderSide(color: ColorUtils.slate100)),
                 ),
                 child: Padding(
-                  padding: EdgeInsets.only(top: 16),
+                  padding: const EdgeInsets.only(top: 16),
                   child: Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 13),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
                             side: BorderSide(color: ColorUtils.slate300),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                             ),
                           ),
                           child: Text(
@@ -268,7 +268,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () async {
@@ -314,9 +314,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _primaryColor,
-                            padding: EdgeInsets.symmetric(vertical: 13),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                             ),
                             elevation: 0,
                           ),
@@ -364,20 +364,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         labelText: label,
         prefixIcon: Icon(icon, color: _primaryColor, size: 20),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: ColorUtils.slate200),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: ColorUtils.slate200),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: _primaryColor, width: 1.5),
         ),
         filled: true,
         fillColor: ColorUtils.slate50,
-        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }
@@ -391,11 +391,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           height: 38,
           decoration: BoxDecoration(
             color: _primaryColor.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
           ),
           child: Icon(icon, color: _primaryColor, size: 18),
         ),
-        SizedBox(width: 14),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,7 +408,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
                 value.isNotEmpty ? value : '-',
                 style: TextStyle(
@@ -432,12 +432,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xl),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -448,11 +448,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   height: 32,
                   decoration: BoxDecoration(
                     color: _primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Icon(sectionIcon, color: _primaryColor, size: 17),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
                   sectionTitle,
                   style: TextStyle(
@@ -463,9 +463,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 14),
+            const SizedBox(height: 14),
             Divider(color: ColorUtils.slate100, height: 1),
-            SizedBox(height: 14),
+            const SizedBox(height: 14),
             ...children,
           ],
         ),
@@ -514,7 +514,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         height: 36,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.edit_rounded,
@@ -540,14 +540,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 size: 20,
                                 color: ColorUtils.info600,
                               ),
-                              SizedBox(width: AppSpacing.sm),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(AppLocalizations.updateData.tr),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                   ],
                   flexibleSpace: FlexibleSpaceBar(
                     background: Container(
@@ -563,7 +563,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       child: SafeArea(
                         child: Padding(
-                          padding: EdgeInsets.fromLTRB(20, 56, 20, 20),
+                          padding: const EdgeInsets.fromLTRB(20, 56, 20, 20),
                           child: Row(
                             children: [
                               // Avatar with initials
@@ -589,7 +589,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ),
                                 ),
                               ),
-                              SizedBox(width: AppSpacing.lg),
+                              const SizedBox(width: AppSpacing.lg),
                               Expanded(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -603,7 +603,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         color: Colors.white,
                                       ),
                                     ),
-                                    SizedBox(height: AppSpacing.xs),
+                                    const SizedBox(height: AppSpacing.xs),
                                     Text(
                                       email,
                                       style: TextStyle(
@@ -613,7 +613,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         ),
                                       ),
                                     ),
-                                    SizedBox(height: AppSpacing.sm),
+                                    const SizedBox(height: AppSpacing.sm),
                                     Container(
                                       padding: EdgeInsets.symmetric(
                                         horizontal: 10,
@@ -623,7 +623,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         color: Colors.white.withValues(
                                           alpha: 0.2,
                                         ),
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                                         border: Border.all(
                                           color: Colors.white.withValues(
                                             alpha: 0.3,
@@ -652,7 +652,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.all(AppSpacing.lg),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       children: [
                         // Personal Information Card
@@ -671,19 +671,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               _profileData['name'] ?? '',
                               Icons.person_rounded,
                             ),
-                            SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.md),
                             _buildInfoRow(
                               'Email',
                               _profileData['email'] ?? '',
                               Icons.email_rounded,
                             ),
-                            SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.md),
                             _buildInfoRow(
                               'No. Telepon',
                               _profileData['phone_number'] ?? '',
                               Icons.phone_rounded,
                             ),
-                            SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.md),
                             _buildInfoRow(
                               'Alamat',
                               _profileData['address'] ?? '',
@@ -691,7 +691,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
 
                         // Account Information Card
                         _buildSectionCard(
@@ -709,7 +709,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               role,
                               Icons.badge_rounded,
                             ),
-                            SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.md),
                             _buildInfoRow(
                               ref
                                   .read(languageRiverpod)
@@ -719,7 +719,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: AppSpacing.xxl),
+                        const SizedBox(height: AppSpacing.xxl),
 
                         // Change Password Button
                         SizedBox(
@@ -747,13 +747,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _primaryColor,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: const BorderRadius.all(Radius.circular(14)),
                               ),
                               elevation: 0,
                             ),
                           ),
                         ),
-                        SizedBox(height: AppSpacing.xxl),
+                        const SizedBox(height: AppSpacing.xxl),
                       ],
                     ),
                   ),

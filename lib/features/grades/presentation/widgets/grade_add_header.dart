@@ -51,7 +51,7 @@ class GradeAddHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       color: ColorUtils.warning600.withValues(alpha: 0.08),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -69,7 +69,7 @@ class GradeAddHeader extends StatelessWidget {
                     color: ColorUtils.warning600,
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Icon(Icons.edit, size: 16, color: ColorUtils.warning600),
               ],
             ),

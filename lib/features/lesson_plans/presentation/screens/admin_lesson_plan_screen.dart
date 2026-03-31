@@ -181,7 +181,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
               children: [
                 // Header (Pattern #11 gradient)
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -206,7 +206,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                             color: Colors.white,
                             size: 22,
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Filter',
@@ -251,7 +251,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                 // Scrollable Content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(AppSpacing.xl),
+                    padding: const EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -263,7 +263,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                               size: 18,
                               color: ColorUtils.slate700,
                             ),
-                            SizedBox(width: AppSpacing.sm),
+                            const SizedBox(width: AppSpacing.sm),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Status',
@@ -277,7 +277,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -334,7 +334,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
 
                 // Bottom Action Buttons
                 Container(
-                  padding: EdgeInsets.all(AppSpacing.lg),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -352,10 +352,10 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                         child: OutlinedButton(
                           onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(color: ColorUtils.slate300),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                             ),
                           ),
                           child: Text(
@@ -367,7 +367,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -379,10 +379,10 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _getPrimaryColor(),
-                            padding: EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                             ),
                           ),
                           child: Text(
@@ -883,7 +883,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.arrow_back,
@@ -892,7 +892,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -916,7 +916,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                             ),
                           ),
                           if (_showTeacherList || _selectedTeacherName == null)
-                            SizedBox(height: 2),
+                            const SizedBox(height: 2),
                           if (_showTeacherList || _selectedTeacherName == null)
                             Text(
                               _showTeacherList
@@ -954,7 +954,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.more_vert,
@@ -969,7 +969,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                             child: Row(
                               children: [
                                 Icon(Icons.download, size: 20),
-                                SizedBox(width: AppSpacing.sm),
+                                const SizedBox(width: AppSpacing.sm),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Export to Excel',
@@ -988,7 +988,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                                 size: 20,
                                 color: ColorUtils.info600,
                               ),
-                              SizedBox(width: AppSpacing.sm),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(AppLocalizations.updateData.tr),
                             ],
                           ),
@@ -997,7 +997,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Search Bar
                 Row(
@@ -1007,7 +1007,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         child: Row(
                           children: [
@@ -1042,7 +1042,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                               ),
                             ),
                             Container(
-                              margin: EdgeInsets.only(right: 4),
+                              margin: const EdgeInsets.only(right: 4),
                               child: IconButton(
                                 icon: Icon(
                                   Icons.search,
@@ -1056,7 +1056,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                       ),
                     ),
                     if (!_showTeacherList) ...[
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       // Filter Button (RPP only)
                       Container(
                         key: _filterKey,
@@ -1064,7 +1064,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                           color: _hasActiveFilter
                               ? Colors.white
                               : Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                           border: Border.all(
                             color: Colors.white.withValues(alpha: 0.3),
                           ),
@@ -1089,7 +1089,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                                 right: 8,
                                 top: 8,
                                 child: Container(
-                                  padding: EdgeInsets.all(AppSpacing.xs),
+                                  padding: const EdgeInsets.all(AppSpacing.xs),
                                   decoration: BoxDecoration(
                                     color: ColorUtils.error600,
                                     shape: BoxShape.circle,
@@ -1109,7 +1109,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
 
                 // Filter Chips (RPP only)
                 if (!_showTeacherList && _hasActiveFilter) ...[
-                  SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     height: 32,
                     child: Row(
@@ -1125,7 +1125,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                                   border: Border.all(
                                     color: Colors.white.withValues(alpha: 0.5),
                                   ),
@@ -1140,7 +1140,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                                         fontSize: 12,
                                       ),
                                     ),
-                                    SizedBox(width: AppSpacing.sm),
+                                    const SizedBox(width: AppSpacing.sm),
                                     GestureDetector(
                                       onTap: _clearAllFilters,
                                       child: Icon(
@@ -1201,13 +1201,13 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                       onRefresh: _forceRefresh,
                       child: ListView.builder(
                         controller: _scrollController,
-                        padding: EdgeInsets.only(top: 16, bottom: 16),
+                        padding: const EdgeInsets.only(top: 16, bottom: 16),
                         itemCount:
                             filteredTeachers.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index >= filteredTeachers.length) {
                             return Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Center(child: CircularProgressIndicator()),
                             );
                           }
@@ -1245,7 +1245,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                           onRefresh: _forceRefresh,
                           child: ListView.builder(
                             controller: _scrollController,
-                            padding: EdgeInsets.only(top: 16, bottom: 16),
+                            padding: const EdgeInsets.only(top: 16, bottom: 16),
                             itemCount:
                                 filteredLessonPlans.length +
                                 (_isLoadingMore ? 1 : 0),
@@ -1253,7 +1253,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen> {
                               if (index >= filteredLessonPlans.length) {
                                 // loading indicator
                                 return Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                   child: Center(
                                     child: CircularProgressIndicator(),
                                   ),

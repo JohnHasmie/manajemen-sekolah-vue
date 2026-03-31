@@ -232,7 +232,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.arrow_back_rounded,
@@ -241,7 +241,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,7 +254,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         nameStr.isNotEmpty ? nameStr : 'Informasi lengkap guru',
                         style: TextStyle(
@@ -274,7 +274,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.refresh_rounded,
@@ -310,7 +310,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             strokeWidth: 3,
                           ),
                         ),
-                        SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.lg),
                         Text(
                           'Memuat detail guru...',
                           style: TextStyle(
@@ -324,7 +324,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                 : _errorMessage != null
                 ? Center(
                     child: Padding(
-                      padding: EdgeInsets.all(AppSpacing.xxl),
+                      padding: const EdgeInsets.all(AppSpacing.xxl),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -348,7 +348,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                               color: ColorUtils.error600,
                             ),
                           ),
-                          SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.lg),
                           Text(
                             'Terjadi kesalahan',
                             style: TextStyle(
@@ -357,7 +357,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                               color: ColorUtils.slate800,
                             ),
                           ),
-                          SizedBox(height: AppSpacing.sm),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             _errorMessage!,
                             style: TextStyle(
@@ -366,7 +366,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: AppSpacing.xl),
+                          const SizedBox(height: AppSpacing.xl),
                           ElevatedButton.icon(
                             onPressed: _loadTeacherDetail,
                             icon: Icon(
@@ -384,7 +384,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ColorUtils.corporateBlue600,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: const BorderRadius.all(Radius.circular(12)),
                               ),
                               padding: EdgeInsets.symmetric(
                                 horizontal: 24,
@@ -398,14 +398,14 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                     ),
                   )
                 : SingleChildScrollView(
-                    padding: EdgeInsets.all(AppSpacing.lg),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // --- Profile Header Card ---
                         Container(
                           width: double.infinity,
-                          padding: EdgeInsets.fromLTRB(20, 24, 20, 20),
+                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
@@ -417,7 +417,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                 ),
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: const BorderRadius.all(Radius.circular(16)),
                             boxShadow: ColorUtils.corporateShadow(
                               elevation: 2.0,
                             ),
@@ -455,7 +455,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: AppSpacing.md),
+                              const SizedBox(height: AppSpacing.md),
                               Text(
                                 nameStr,
                                 style: TextStyle(
@@ -465,7 +465,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              SizedBox(height: AppSpacing.sm),
+                              const SizedBox(height: AppSpacing.sm),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
@@ -480,7 +480,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                         color: Colors.white.withValues(
                                           alpha: 0.2,
                                         ),
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius: const BorderRadius.all(Radius.circular(20)),
                                         border: Border.all(
                                           color: Colors.white.withValues(
                                             alpha: 0.3,
@@ -495,7 +495,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                             size: 12,
                                             color: Colors.white,
                                           ),
-                                          SizedBox(width: AppSpacing.xs),
+                                          const SizedBox(width: AppSpacing.xs),
                                           Text(
                                             'NIP: $nip',
                                             style: TextStyle(
@@ -508,7 +508,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                       ),
                                     ),
                                   if (homeroomStatus != '-') ...[
-                                    SizedBox(width: AppSpacing.sm),
+                                    const SizedBox(width: AppSpacing.sm),
                                     Container(
                                       padding: EdgeInsets.symmetric(
                                         horizontal: 10,
@@ -518,7 +518,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                         color: Colors.white.withValues(
                                           alpha: 0.2,
                                         ),
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius: const BorderRadius.all(Radius.circular(20)),
                                         border: Border.all(
                                           color: Colors.white.withValues(
                                             alpha: 0.3,
@@ -533,7 +533,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                                             size: 12,
                                             color: Colors.white,
                                           ),
-                                          SizedBox(width: AppSpacing.xs),
+                                          const SizedBox(width: AppSpacing.xs),
                                           Text(
                                             'Wali Kelas',
                                             style: TextStyle(
@@ -551,14 +551,14 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             ],
                           ),
                         ),
-                        SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.lg),
 
                         // --- Personal Information Card ---
                         Container(
-                          padding: EdgeInsets.all(AppSpacing.lg),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: const BorderRadius.all(Radius.circular(16)),
                             border: Border.all(color: ColorUtils.slate200),
                             boxShadow: ColorUtils.corporateShadow(
                               elevation: 1.0,
@@ -583,14 +583,14 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             ],
                           ),
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
 
                         // --- Teaching Information Card ---
                         Container(
-                          padding: EdgeInsets.all(AppSpacing.lg),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: const BorderRadius.all(Radius.circular(16)),
                             border: Border.all(color: ColorUtils.slate200),
                             boxShadow: ColorUtils.corporateShadow(
                               elevation: 1.0,
@@ -628,7 +628,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                             ],
                           ),
                         ),
-                        SizedBox(height: AppSpacing.xxl),
+                        const SizedBox(height: AppSpacing.xxl),
 
                         // --- Back Button ---
                         SizedBox(
@@ -648,15 +648,15 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
                               ),
                             ),
                             style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 13),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
                               side: BorderSide(color: ColorUtils.slate300),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: const BorderRadius.all(Radius.circular(12)),
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.lg),
                       ],
                     ),
                   ),

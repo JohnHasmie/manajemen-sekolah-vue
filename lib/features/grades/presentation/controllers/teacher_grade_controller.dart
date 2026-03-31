@@ -94,11 +94,11 @@ class TeacherGradeController extends AsyncNotifier<TeacherGradeState> {
   // --- Actions ---
 
   Future<void> setStep(int step) async {
-    state = AsyncData(state.value!.copyWith(currentStep: step));
+    state = state.whenData((s) => s.copyWith(currentStep: step));
   }
 
   Future<void> selectClass(Map<String, dynamic> classData) async {
-    state = AsyncData(state.value!.copyWith(
+    state = state.whenData((s) => s.copyWith(
       selectedClass: classData,
       currentStep: 1,
       subjectList: [],
@@ -108,12 +108,12 @@ class TeacherGradeController extends AsyncNotifier<TeacherGradeState> {
   }
 
   Future<void> selectSubject(Map<String, dynamic> subjectData) async {
-    state = AsyncData(state.value!.copyWith(selectedSubject: subjectData));
+    state = state.whenData((s) => s.copyWith(selectedSubject: subjectData));
   }
 
   Future<void> updateSearch(String query) async {
-    state = AsyncData(state.value!.copyWith(searchQuery: query, currentPage: 1));
-    if (state.value!.currentStep == 0) {
+    state = state.whenData((s) => s.copyWith(searchQuery: query, currentPage: 1));
+    if (state.value?.currentStep == 0) {
       await _loadClasses(resetPage: true, useCache: false);
     }
     // Step 1: Subjects are filtered locally in UI for now
@@ -221,14 +221,15 @@ class TeacherGradeController extends AsyncNotifier<TeacherGradeState> {
   }
 
   Future<void> loadMoreClasses() async {
-    if (state.value!.isLoadingMore || !state.value!.hasMoreData) return;
-    state = AsyncData(state.value!.copyWith(isLoadingMore: true, currentPage: state.value!.currentPage + 1));
+    final current = state.value;
+    if (current == null || current.isLoadingMore || !current.hasMoreData) return;
+    state = AsyncData(current.copyWith(isLoadingMore: true, currentPage: current.currentPage + 1));
     state = AsyncData(await _loadClasses(resetPage: false, useCache: false));
   }
 
   Future<void> loadSubjects({bool useCache = true}) async {
-    final currentState = state.value!;
-    if (currentState.selectedClass == null) return;
+    final currentState = state.value;
+    if (currentState == null || currentState.selectedClass == null) return;
 
     // 1. Cache
     if (useCache) {

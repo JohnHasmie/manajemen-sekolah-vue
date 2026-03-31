@@ -42,7 +42,7 @@ class GradeConfirmDeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -103,7 +103,7 @@ class GradeConfirmDeleteDialog extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       side: BorderSide(color: ColorUtils.slate300),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(
@@ -123,7 +123,7 @@ class GradeConfirmDeleteDialog extends StatelessWidget {
                       backgroundColor: ColorUtils.error600,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(

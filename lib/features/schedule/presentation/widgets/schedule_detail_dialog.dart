@@ -60,7 +60,7 @@ class ScheduleDetailDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -89,7 +89,7 @@ class ScheduleDetailDialog extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.3),
                       width: 1,
@@ -231,7 +231,7 @@ class ScheduleDetailDialog extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       side: BorderSide(color: ColorUtils.slate300),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(
@@ -271,7 +271,7 @@ class ScheduleDetailDialog extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         elevation: 2,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                     ),

@@ -59,11 +59,11 @@ class StudentInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
         border: Border.all(color: ColorUtils.slate100),
       ),
       child: Row(
@@ -76,7 +76,7 @@ class StudentInfoRow extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               border: Border.all(
                 color: primaryColor.withValues(alpha: 0.15),
               ),
@@ -87,7 +87,7 @@ class StudentInfoRow extends StatelessWidget {
               color: primaryColor,
             ),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,7 +101,7 @@ class StudentInfoRow extends StatelessWidget {
                     letterSpacing: 0.3,
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text(
                   value.isNotEmpty ? value : 'Tidak ada',
                   style: TextStyle(

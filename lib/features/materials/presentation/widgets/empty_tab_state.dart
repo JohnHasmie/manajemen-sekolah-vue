@@ -32,7 +32,7 @@ class EmptyTabState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xxxl),
+        padding: const EdgeInsets.all(AppSpacing.xxxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -41,11 +41,11 @@ class EmptyTabState extends StatelessWidget {
               height: 56,
               decoration: BoxDecoration(
                 color: ColorUtils.slate100,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
               ),
               child: Icon(icon, size: 28, color: ColorUtils.slate400),
             ),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               title,
               style: TextStyle(
@@ -54,20 +54,20 @@ class EmptyTabState extends StatelessWidget {
                 color: ColorUtils.slate700,
               ),
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               subtitle,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             ),
-            SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
             GestureDetector(
               onTap: onGenerateTap,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 decoration: BoxDecoration(
                   color: primaryColor,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                   boxShadow: [
                     BoxShadow(
                       color: primaryColor.withValues(alpha: 0.3),
@@ -80,7 +80,7 @@ class EmptyTabState extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.auto_awesome, size: 16, color: Colors.white),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
                       'Generate AI',
                       style: TextStyle(

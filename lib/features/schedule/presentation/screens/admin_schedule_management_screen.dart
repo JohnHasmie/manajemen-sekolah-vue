@@ -901,7 +901,7 @@ class TeachingScheduleManagementScreenState
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       _showTableView ? Icons.view_list : Icons.table_chart,
@@ -910,7 +910,7 @@ class TeachingScheduleManagementScreenState
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 PopupMenuButton<String>(
                   key: _menuKey,
                   onSelected: (value) {
@@ -934,7 +934,7 @@ class TeachingScheduleManagementScreenState
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(Icons.more_vert, color: Colors.white, size: 20),
                   ),
@@ -948,7 +948,7 @@ class TeachingScheduleManagementScreenState
                             size: 20,
                             color: ColorUtils.info600,
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Refresh Data',
@@ -963,7 +963,7 @@ class TeachingScheduleManagementScreenState
                       child: Row(
                         children: [
                           Icon(Icons.download, size: 20),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Export to Excel',
@@ -979,7 +979,7 @@ class TeachingScheduleManagementScreenState
                         child: Row(
                           children: [
                             Icon(Icons.upload, size: 20),
-                            SizedBox(width: AppSpacing.sm),
+                            const SizedBox(width: AppSpacing.sm),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Import from Excel',
@@ -994,7 +994,7 @@ class TeachingScheduleManagementScreenState
                       child: Row(
                         children: [
                           Icon(Icons.file_download, size: 20),
-                          SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Download Template',
@@ -1015,7 +1015,7 @@ class TeachingScheduleManagementScreenState
                     key: _searchKey,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Row(
                       children: [
@@ -1049,7 +1049,7 @@ class TeachingScheduleManagementScreenState
                           ),
                         ),
                         Container(
-                          margin: EdgeInsets.only(right: 4),
+                          margin: const EdgeInsets.only(right: 4),
                           child: IconButton(
                             icon: Icon(Icons.search, color: _getPrimaryColor()),
                             onPressed: () {
@@ -1065,7 +1065,7 @@ class TeachingScheduleManagementScreenState
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 // Filter Button
                 Container(
                   key: _filterKey,
@@ -1073,7 +1073,7 @@ class TeachingScheduleManagementScreenState
                     color: _hasActiveFilter
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.3),
                     ),
@@ -1098,7 +1098,7 @@ class TeachingScheduleManagementScreenState
                           right: 8,
                           top: 8,
                           child: Container(
-                            padding: EdgeInsets.all(AppSpacing.xs),
+                            padding: const EdgeInsets.all(AppSpacing.xs),
                             decoration: BoxDecoration(
                               color: Colors.red,
                               shape: BoxShape.circle,
@@ -1127,7 +1127,7 @@ class TeachingScheduleManagementScreenState
                                 filter,
                               ) {
                                 return Container(
-                                  margin: EdgeInsets.only(right: 6),
+                                  margin: const EdgeInsets.only(right: 6),
                                   child: Chip(
                                     label: Text(
                                       filter['label'],
@@ -1149,20 +1149,20 @@ class TeachingScheduleManagementScreenState
                                       width: 0,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                                     ),
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 8,
                                       vertical: 4,
                                     ),
-                                    labelPadding: EdgeInsets.only(left: 4),
+                                    labelPadding: const EdgeInsets.only(left: 4),
                                   ),
                                 );
                               }),
                             ],
                           ),
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         InkWell(
                           onTap: _clearAllFilters,
                           child: Container(
@@ -1172,7 +1172,7 @@ class TeachingScheduleManagementScreenState
                             ),
                             decoration: BoxDecoration(
                               color: Colors.red.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                               border: Border.all(
                                 color: Colors.red.withValues(alpha: 0.3),
                                 width: 1,
@@ -1199,7 +1199,7 @@ class TeachingScheduleManagementScreenState
           Expanded(
             child: _isLoading
                 ? SkeletonListLoading(
-                    padding: EdgeInsets.only(top: 8, bottom: 80),
+                    padding: const EdgeInsets.only(top: 8, bottom: 80),
                   )
                 : _showTableView
                 ? _buildTableView()
@@ -1221,7 +1221,7 @@ class TeachingScheduleManagementScreenState
                     },
                     child: ListView.builder(
                       controller: _scrollController,
-                      padding: EdgeInsets.only(top: 8, bottom: 80),
+                      padding: const EdgeInsets.only(top: 8, bottom: 80),
                       itemCount:
                           filteredSchedules.length + (_hasMoreData ? 1 : 0),
                       itemBuilder: (context, index) {
@@ -1258,7 +1258,7 @@ class TeachingScheduleManagementScreenState
               onPressed: _addSchedule,
               backgroundColor: _getPrimaryColor(),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
               ),
               child: Icon(Icons.add, color: Colors.white, size: 20),
             ),

@@ -984,7 +984,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ),
                       ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Kelas
                     Builder(
@@ -1064,7 +1064,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ),
                       ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Toggle + Chapter + Sub-chapter selector
                     AddActivityMaterialSelector(
@@ -1131,7 +1131,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                             })
                           : null,
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Deskripsi
                     TextFormField(
@@ -1145,7 +1145,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       ),
                       maxLines: 3,
                     ),
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Tanggal
                     ListTile(

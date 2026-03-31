@@ -66,12 +66,12 @@ class MaterialScreenHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +87,7 @@ class MaterialScreenHeader extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       AppLocalizations.selectAndOrganizeMaterials.tr,
                       style: TextStyle(
@@ -105,7 +105,7 @@ class MaterialScreenHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(
                     Icons.auto_awesome_rounded,
@@ -114,7 +114,7 @@ class MaterialScreenHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'refresh') {
@@ -126,7 +126,7 @@ class MaterialScreenHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(Icons.more_vert, color: Colors.white, size: 20),
                 ),
@@ -140,7 +140,7 @@ class MaterialScreenHeader extends StatelessWidget {
                           size: 20,
                           color: ColorUtils.info600,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Text(AppLocalizations.updateData.tr),
                       ],
                     ),

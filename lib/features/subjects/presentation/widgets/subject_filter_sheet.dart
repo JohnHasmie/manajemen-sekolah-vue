@@ -90,7 +90,7 @@ class SubjectFilterSheetState extends ConsumerState<SubjectFilterSheet> {
             width: 1,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           labelStyle: TextStyle(
@@ -140,7 +140,7 @@ class SubjectFilterSheetState extends ConsumerState<SubjectFilterSheet> {
                     height: 36,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: const Icon(
                       Icons.filter_list,
@@ -287,7 +287,7 @@ class SubjectFilterSheetState extends ConsumerState<SubjectFilterSheet> {
                             width: 1,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                           ),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -337,7 +337,7 @@ class SubjectFilterSheetState extends ConsumerState<SubjectFilterSheet> {
                               width: 1,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: const BorderRadius.all(Radius.circular(10)),
                             ),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
@@ -386,7 +386,7 @@ class SubjectFilterSheetState extends ConsumerState<SubjectFilterSheet> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorUtils.slate300),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                       child: Text(
@@ -419,7 +419,7 @@ class SubjectFilterSheetState extends ConsumerState<SubjectFilterSheet> {
                         backgroundColor: ColorUtils.corporateBlue600,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         elevation: 2,
                       ),

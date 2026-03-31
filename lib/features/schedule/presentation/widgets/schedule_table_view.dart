@@ -93,7 +93,7 @@ class ScheduleTableView extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
           ),
@@ -104,7 +104,7 @@ class ScheduleTableView extends StatelessWidget {
                 height: 36,
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
                 child: Icon(
                   Icons.table_chart_outlined,
@@ -156,7 +156,7 @@ class ScheduleTableView extends StatelessWidget {
                     vertical: 10,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   textStyle: const TextStyle(
                     fontSize: 13,
@@ -176,7 +176,7 @@ class ScheduleTableView extends StatelessWidget {
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
               border: Border.all(color: ColorUtils.slate200),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
@@ -285,7 +285,7 @@ class ScheduleTableView extends StatelessWidget {
                                       color: Colors.white.withValues(
                                         alpha: 0.22,
                                       ),
-                                      borderRadius: BorderRadius.circular(4),
+                                      borderRadius: const BorderRadius.all(Radius.circular(4)),
                                     ),
                                     child: Text(
                                       className.toString().length > 4

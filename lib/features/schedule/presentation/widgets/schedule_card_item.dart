@@ -177,7 +177,7 @@ class ScheduleCardItem extends StatelessWidget {
 
     return Container(
       key: index == 0 ? firstScheduleKey : null,
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -211,12 +211,12 @@ class ScheduleCardItem extends StatelessWidget {
               ),
             );
           },
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           child: Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
               border: Border.all(color: ColorUtils.slate200),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
             ),
@@ -233,7 +233,7 @@ class ScheduleCardItem extends StatelessWidget {
                       height: 48,
                       decoration: BoxDecoration(
                         color: dayColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: dayColor.withValues(alpha: 0.2),
                         ),
@@ -244,7 +244,7 @@ class ScheduleCardItem extends StatelessWidget {
                         size: 24,
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     // Subject name + academic year
                     Expanded(
                       child: Column(
@@ -264,7 +264,7 @@ class ScheduleCardItem extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 3),
+                          const SizedBox(height: 3),
                           Text(
                             schedule['tahun_ajaran_nama'] ?? selectedAcademicYear,
                             style: TextStyle(
@@ -275,7 +275,7 @@ class ScheduleCardItem extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     // Day badge (e.g. "Senin")
                     Container(
                       padding: EdgeInsets.symmetric(
@@ -284,7 +284,7 @@ class ScheduleCardItem extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: dayColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                         border: Border.all(
                           color: dayColor.withValues(alpha: 0.3),
                         ),
@@ -301,9 +301,9 @@ class ScheduleCardItem extends StatelessWidget {
                   ],
                 ),
 
-                SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
                 Divider(height: 1, color: ColorUtils.slate100),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
 
                 // ── Info tags: time, class, session, semester ─────────────
                 Wrap(
@@ -335,7 +335,7 @@ class ScheduleCardItem extends StatelessWidget {
                   ],
                 ),
 
-                SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
 
                 // ── Action buttons: Material | Activity ───────────────────
                 Row(
@@ -385,14 +385,14 @@ class ScheduleCardItem extends StatelessWidget {
                             width: 1.5,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                           ),
-                          padding: EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           backgroundColor: primary.withValues(alpha: 0.05),
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     // Class Activity button
                     Expanded(
                       child: ElevatedButton.icon(
@@ -456,9 +456,9 @@ class ScheduleCardItem extends StatelessWidget {
                           backgroundColor: primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                           ),
-                          padding: EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           elevation: 0,
                         ),
                       ),

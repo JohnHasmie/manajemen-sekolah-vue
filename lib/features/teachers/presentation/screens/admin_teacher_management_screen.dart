@@ -876,7 +876,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                 height: 40,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
                 child: Icon(Icons.more_vert, color: Colors.white, size: 20),
               ),
@@ -886,7 +886,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                   child: Row(
                     children: [
                       Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Refresh Data',
@@ -901,7 +901,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                   child: Row(
                     children: [
                       Icon(Icons.download, size: 20),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Export to Excel',
@@ -916,7 +916,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                   child: Row(
                     children: [
                       Icon(Icons.upload, size: 20),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Import from Excel',
@@ -931,7 +931,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                   child: Row(
                     children: [
                       Icon(Icons.file_download, size: 20),
-                      SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Download Template',
@@ -950,7 +950,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                     key: _searchKey,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Row(
                       children: [
@@ -983,7 +983,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                           ),
                         ),
                         Container(
-                          margin: EdgeInsets.only(right: 4),
+                          margin: const EdgeInsets.only(right: 4),
                           child: IconButton(
                             icon: Icon(Icons.search, color: getPrimaryColor()),
                             onPressed: () {
@@ -998,7 +998,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 // Filter Button
                 Container(
                   key: _filterKey,
@@ -1006,7 +1006,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                     color: _hasActiveFilter
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.3),
                     ),
@@ -1031,7 +1031,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                           right: 8,
                           top: 8,
                           child: Container(
-                            padding: EdgeInsets.all(AppSpacing.xs),
+                            padding: const EdgeInsets.all(AppSpacing.xs),
                             decoration: BoxDecoration(
                               color: Colors.red,
                               shape: BoxShape.circle,
@@ -1053,10 +1053,10 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                     child: Row(
                       children: [
                         Container(
-                          padding: EdgeInsets.all(AppSpacing.sm),
+                          padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: const BorderRadius.all(Radius.circular(8)),
                           ),
                           child: Icon(
                             Icons.filter_alt,
@@ -1064,7 +1064,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: ListView(
                             scrollDirection: Axis.horizontal,
@@ -1073,7 +1073,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                 filter,
                               ) {
                                 return Container(
-                                  margin: EdgeInsets.only(right: 6),
+                                  margin: const EdgeInsets.only(right: 6),
                                   child: Chip(
                                     label: Text(
                                       filter['label'],
@@ -1098,28 +1098,28 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                                       width: 1,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                                     ),
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 8,
                                       vertical: 4,
                                     ),
-                                    labelPadding: EdgeInsets.only(left: 4),
+                                    labelPadding: const EdgeInsets.only(left: 4),
                                   ),
                                 );
                               }),
                             ],
                           ),
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         InkWell(
                           onTap: _clearAllFilters,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                           child: Container(
-                            padding: EdgeInsets.all(AppSpacing.sm),
+                            padding: const EdgeInsets.all(AppSpacing.sm),
                             decoration: BoxDecoration(
                               color: Colors.red,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Icon(
                               Icons.clear_all,
@@ -1133,7 +1133,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                   )
                 : null,
           ),
-          SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
           Expanded(
             child: _isLoading && _teachers.isEmpty
                 ? SkeletonListLoading(itemCount: 6, infoTagCount: 2)
@@ -1159,14 +1159,14 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
                     onRefresh: onRefresh,
                     child: ListView.builder(
                       controller: _scrollController,
-                      padding: EdgeInsets.only(top: 8, bottom: 16),
+                      padding: const EdgeInsets.only(top: 8, bottom: 16),
                       itemCount:
                           displayedTeachers.length + (_isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         // Show loading indicator at bottom
                         if (index == displayedTeachers.length) {
                           return Container(
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             alignment: Alignment.center,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           );
@@ -1193,7 +1193,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
               onPressed: _openTeacherFormDialog,
               backgroundColor: getPrimaryColor(),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
               ),
               child: Icon(Icons.add, color: Colors.white, size: 20),
             ),

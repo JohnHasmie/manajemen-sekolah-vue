@@ -26,7 +26,7 @@ class ParentGradeEmptyState extends StatelessWidget {
             height: 72,
             decoration: BoxDecoration(
               color: ColorUtils.slate100,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: const BorderRadius.all(Radius.circular(20)),
             ),
             child: Icon(
               Icons.assignment_outlined,
@@ -34,7 +34,7 @@ class ParentGradeEmptyState extends StatelessWidget {
               color: ColorUtils.slate400,
             ),
           ),
-          SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             message,
             style: TextStyle(

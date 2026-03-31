@@ -77,7 +77,7 @@ class ActivityCard extends StatelessWidget {
         color: tagColor != null
             ? tagColor.withValues(alpha: 0.08)
             : ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(
           color: tagColor != null
               ? tagColor.withValues(alpha: 0.3)
@@ -118,7 +118,7 @@ class ActivityCard extends StatelessWidget {
         height: 36,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
           border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Icon(icon, size: 18, color: color),
@@ -141,13 +141,13 @@ class ActivityCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           onTap: onTap,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: ColorUtils.slate200, width: 1),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
@@ -160,7 +160,7 @@ class ActivityCard extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: accentColor.withValues(alpha: 0.25),
                     ),
@@ -173,7 +173,7 @@ class ActivityCard extends StatelessWidget {
                     size: 22,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 // Body: title, subject/class, info tags, description
                 Expanded(
                   child: Column(
@@ -199,7 +199,7 @@ class ActivityCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
                       Wrap(
                         spacing: 5,
                         runSpacing: 4,
@@ -266,7 +266,7 @@ class ActivityCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 // Right side: edit/delete buttons or chevron
                 if (canEdit)
                   Column(
@@ -289,7 +289,7 @@ class ActivityCard extends StatelessWidget {
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: ColorUtils.slate100,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                     child: Icon(
                       Icons.chevron_right,

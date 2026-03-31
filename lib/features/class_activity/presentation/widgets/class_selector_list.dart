@@ -73,13 +73,13 @@ class ClassSelectorList extends StatelessWidget {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               onTap: () => onClassSelected(classData),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: const BorderRadius.all(Radius.circular(14)),
                   border: Border.all(color: ColorUtils.slate200, width: 1),
                   boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                 ),
@@ -92,7 +92,7 @@ class ClassSelectorList extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: ColorUtils.getColorForIndex(index)
                             .withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: ColorUtils.getColorForIndex(index)
                               .withValues(alpha: 0.25),
@@ -105,7 +105,7 @@ class ClassSelectorList extends StatelessWidget {
                         color: ColorUtils.getColorForIndex(index),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.lg),
+                    const SizedBox(width: AppSpacing.lg),
                     // ── Class name + grade/major + homeroom teacher ───────
                     Expanded(
                       child: Column(
@@ -133,7 +133,7 @@ class ClassSelectorList extends StatelessWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     color: ColorUtils.primary,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                                   ),
                                   child: const Text(
                                     'Wali Kelas',
@@ -146,7 +146,7 @@ class ClassSelectorList extends StatelessWidget {
                                 ),
                             ],
                           ),
-                          SizedBox(height: AppSpacing.xs),
+                          const SizedBox(height: AppSpacing.xs),
                           // Grade • Major subtitle
                           if ([
                             classData['tingkat'],
@@ -185,7 +185,7 @@ class ClassSelectorList extends StatelessWidget {
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate100,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                       ),
                       child: Icon(
                         Icons.chevron_right,

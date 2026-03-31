@@ -178,7 +178,7 @@ class _FinanceFilterSheetState extends State<FinanceFilterSheet> {
                           width: 1,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
@@ -246,7 +246,7 @@ class _FinanceFilterSheetState extends State<FinanceFilterSheet> {
                           width: 1,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
@@ -287,7 +287,7 @@ class _FinanceFilterSheetState extends State<FinanceFilterSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: ColorUtils.slate300),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(
@@ -308,7 +308,7 @@ class _FinanceFilterSheetState extends State<FinanceFilterSheet> {
                       backgroundColor: primary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(

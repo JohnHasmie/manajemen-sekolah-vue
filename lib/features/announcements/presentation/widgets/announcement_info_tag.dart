@@ -27,12 +27,12 @@ class AnnouncementInfoTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = tagColor ?? ColorUtils.slate600;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: tagColor != null
             ? tagColor!.withValues(alpha: 0.08)
             : ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(
           color: tagColor != null
               ? tagColor!.withValues(alpha: 0.3)
@@ -43,7 +43,7 @@ class AnnouncementInfoTag extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 10, color: c),
-          SizedBox(width: 3),
+          const SizedBox(width: 3),
           Flexible(
             child: Text(
               text,

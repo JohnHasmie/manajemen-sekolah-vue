@@ -45,11 +45,11 @@ class MaterialClassDropdown extends StatelessWidget {
             color: ColorUtils.slate600,
           ),
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
             border: Border.all(color: ColorUtils.slate200),
           ),
           child: DropdownButtonHideUnderline(
@@ -69,7 +69,7 @@ class MaterialClassDropdown extends StatelessWidget {
                           size: 16,
                           color: ColorUtils.slate500,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
                             c['name'] ?? c['nama'] ?? 'Unknown',

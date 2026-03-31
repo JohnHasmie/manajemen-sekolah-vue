@@ -29,7 +29,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
       children: lines.map((line) {
         // Blank line → vertical gap
         if (line.trim().isEmpty) {
-          return SizedBox(height: AppSpacing.lg);
+          return const SizedBox(height: AppSpacing.lg);
         }
 
         // Main title line
@@ -45,7 +45,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.sm),
             ],
           );
         }
@@ -55,7 +55,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
           return Container(
             height: 2,
             color: ColorUtils.slate200,
-            margin: EdgeInsets.symmetric(vertical: 8),
+            margin: const EdgeInsets.symmetric(vertical: 8),
           );
         }
 
@@ -71,7 +71,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 line,
                 style: TextStyle(
@@ -80,7 +80,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
                   color: primaryColor,
                 ),
               ),
-              SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.sm),
             ],
           );
         }
@@ -88,7 +88,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
         // Media/tools label lines
         if (line.contains('Media :') || line.contains('Alat/Bahan :')) {
           return Padding(
-            padding: EdgeInsets.only(bottom: 4),
+            padding: const EdgeInsets.only(bottom: 4),
             child: Text(
               line,
               style: TextStyle(
@@ -105,7 +105,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
             line.startsWith('1.') ||
             line.startsWith('2.')) {
           return Padding(
-            padding: EdgeInsets.only(left: 16, bottom: 4),
+            padding: const EdgeInsets.only(left: 16, bottom: 4),
             child: Text(line, style: TextStyle(fontSize: 14, height: 1.5)),
           );
         }
@@ -115,7 +115,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
             line.contains('Kepala Sekolah') ||
             line.contains('Guru Mata Pelajaran')) {
           return Padding(
-            padding: EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(top: 8),
             child: Text(
               line,
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
@@ -125,7 +125,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
 
         // Default body text
         return Padding(
-          padding: EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 8),
           child: Text(line, style: TextStyle(fontSize: 14, height: 1.5)),
         );
       }).toList(),
@@ -146,7 +146,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
           return Expanded(
             flex: 2,
             child: Container(
-              padding: EdgeInsets.all(AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 border: Border.all(color: ColorUtils.slate200),
               ),

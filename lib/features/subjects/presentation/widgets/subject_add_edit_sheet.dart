@@ -203,7 +203,7 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet> {
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
@@ -256,7 +256,7 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet> {
                     ),
                     InkWell(
                       onTap: () => AppNavigator.pop(context),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: const BorderRadius.all(Radius.circular(16)),
                       child: Container(
                         width: 32,
                         height: 32,
@@ -424,7 +424,7 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet> {
                         decoration: BoxDecoration(
                           color: ColorUtils.slate50,
                           border: Border.all(color: ColorUtils.slate200),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         child: SwitchListTile(
                           title: Text(
@@ -481,7 +481,7 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: ColorUtils.slate300),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                         ),
                         child: Text(
@@ -501,7 +501,7 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet> {
                           backgroundColor: ColorUtils.corporateBlue600,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           elevation: 2,

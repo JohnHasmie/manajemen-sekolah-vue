@@ -167,7 +167,7 @@ class _ExtraItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(
           color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
         ),
@@ -233,7 +233,7 @@ class _AchievementItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(
           color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
         ),
@@ -308,19 +308,19 @@ class _CompactTextField extends StatelessWidget {
         filled: true,
         fillColor: Colors.grey.shade50,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
           borderSide: BorderSide(
             color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
           borderSide: BorderSide(
             color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
           borderSide: BorderSide(color: ColorUtils.getRoleColor('guru')),
         ),
         contentPadding: const EdgeInsets.symmetric(

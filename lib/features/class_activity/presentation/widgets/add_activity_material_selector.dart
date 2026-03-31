@@ -56,7 +56,7 @@ class AddActivityMaterialSelector extends StatelessWidget {
         Row(
           children: [
             Icon(Icons.title, size: 20, color: ColorUtils.slate600),
-            SizedBox(width: AppSpacing.sm),
+            const SizedBox(width: AppSpacing.sm),
             Text(
               languageProvider.getTranslatedText({
                 'en': 'Choose from material',
@@ -72,7 +72,7 @@ class AddActivityMaterialSelector extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
 
         // Chapter dropdown (only when toggle is ON)
         if (useMaterialTitle) ...[
@@ -129,7 +129,7 @@ class AddActivityMaterialSelector extends StatelessWidget {
               );
             },
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
         ],
 
         // Sub-chapter multi-select tap (only when chapter is selected)
@@ -171,7 +171,7 @@ class AddActivityMaterialSelector extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
         ],
       ],
     );

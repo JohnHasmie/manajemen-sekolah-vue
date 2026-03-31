@@ -33,24 +33,24 @@ class LessonPlanRegenAllButton extends StatelessWidget {
             primaryColor.withValues(alpha: 0.04),
           ],
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: InkWell(
           onTap: isRegenerating ? null : onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
                 Container(
-                  padding: EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: primaryColor.withValues(alpha: 0.15),
                     ),
@@ -70,7 +70,7 @@ class LessonPlanRegenAllButton extends StatelessWidget {
                           size: 20,
                         ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +85,7 @@ class LessonPlanRegenAllButton extends StatelessWidget {
                           color: ColorUtils.slate800,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         'Generate ulang seluruh konten RPP dengan AI',
                         style: TextStyle(

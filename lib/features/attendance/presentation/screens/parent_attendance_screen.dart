@@ -525,17 +525,17 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                       topRight: Radius.circular(24),
                     ),
                   ),
-                  padding: EdgeInsets.fromLTRB(20, 14, 16, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 14, 16, 20),
                   child: Column(
                     children: [
                       Center(
                         child: Container(
                           width: 36,
                           height: 4,
-                          margin: EdgeInsets.only(bottom: 14),
+                          margin: const EdgeInsets.only(bottom: 14),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(2),
+                            borderRadius: const BorderRadius.all(Radius.circular(2)),
                           ),
                         ),
                       ),
@@ -546,7 +546,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                             height: 36,
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: const BorderRadius.all(Radius.circular(10)),
                             ),
                             child: Icon(
                               Icons.filter_list,
@@ -554,7 +554,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                               size: 20,
                             ),
                           ),
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
                               languageProvider.getTranslatedText({
@@ -595,7 +595,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                 // Scrollable content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(AppSpacing.xl),
+                    padding: const EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -607,7 +607,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                           }),
                           Icons.calendar_month_outlined,
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -651,7 +651,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                           }),
                           Icons.school_outlined,
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -693,7 +693,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
 
                 // Footer buttons
                 Container(
-                  padding: EdgeInsets.fromLTRB(20, 12, 20, 24),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -704,10 +704,10 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                         child: OutlinedButton(
                           onPressed: () => AppNavigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 13),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
                             side: BorderSide(color: ColorUtils.slate300),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                             ),
                           ),
                           child: Text(
@@ -722,7 +722,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                           ),
                         ),
                       ),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -734,12 +734,12 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                             AppNavigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 13),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
                             backgroundColor: _getPrimaryColor(),
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                             ),
                           ),
                           child: Text(
@@ -831,11 +831,11 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
   // Pattern #11 filter section header
   Widget _buildSectionHeader(String title, IconData icon) {
     return Padding(
-      padding: EdgeInsets.only(top: 24, bottom: 0),
+      padding: const EdgeInsets.only(top: 24, bottom: 0),
       child: Row(
         children: [
           Icon(icon, size: 16, color: ColorUtils.slate700),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: TextStyle(
@@ -1007,7 +1007,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
                         padding: const EdgeInsets.all(AppSpacing.lg),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: const BorderRadius.all(Radius.circular(14)),
                           border: Border.all(color: ColorUtils.slate200),
                           boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                         ),
@@ -1075,7 +1075,7 @@ class PresenceParentPageState extends ConsumerState<PresenceParentPage> {
 
                       // Daftar absensi
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           languageProvider.getTranslatedText({
                             'en': 'Attendance History',

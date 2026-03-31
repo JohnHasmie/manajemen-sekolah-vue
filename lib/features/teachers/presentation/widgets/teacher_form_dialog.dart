@@ -164,7 +164,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: TextField(
@@ -175,7 +175,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
           prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             borderSide: BorderSide(
               color: ColorUtils.corporateBlue600,
               width: 1.5,
@@ -199,7 +199,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<String>(
@@ -210,7 +210,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
           prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             borderSide: BorderSide(
               color: ColorUtils.corporateBlue600,
               width: 1.5,
@@ -222,7 +222,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
         onChanged: onChanged,
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         icon: Icon(
           Icons.keyboard_arrow_down_rounded,
           color: ColorUtils.slate500,
@@ -254,7 +254,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
               // Header with gradient
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+                padding: const EdgeInsets.fromLTRB(20, 20, 12, 20),
                 decoration: BoxDecoration(
                   gradient: getCardGradient(),
                   borderRadius: BorderRadius.only(
@@ -269,7 +269,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
@@ -358,7 +358,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                         }),
                         icon: Icons.person,
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                       if (widget.teacher != null)
                         Container(
                           margin: const EdgeInsets.only(bottom: 12),
@@ -366,7 +366,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                             color: ColorUtils.warning600.withValues(
                               alpha: 0.05,
                             ),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             border: Border.all(
                               color: ColorUtils.warning600.withValues(
                                 alpha: 0.2,
@@ -415,13 +415,13 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                         icon: Icons.email,
                         keyboardType: TextInputType.emailAddress,
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                       buildDialogTextField(
                         controller: nipController,
                         label: 'NIP',
                         icon: Icons.badge,
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
 
                       // Gender Dropdown
                       buildDialogDropdown(
@@ -455,7 +455,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                           setState(() => selectedGender = value);
                         },
                       ),
-                      SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // Subjects Section
                       Container(
@@ -463,7 +463,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                           border: Border.all(
                             color: Colors.grey.shade200,
                           ),
@@ -482,7 +482,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                                 color: Colors.grey.shade700,
                               ),
                             ),
-                            SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: AppSpacing.sm),
                             ...widget.subjects
                                 .where(
                                   (subject) =>
@@ -518,7 +518,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                           ],
                         ),
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
 
                       // Homeroom Class Dropdown
                       buildDialogDropdown(
@@ -565,7 +565,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                           setState(() => selectedWaliKelasId = value);
                         },
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
 
                       // Employment Status Dropdown
                       buildDialogDropdown(
@@ -647,7 +647,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: ColorUtils.slate300),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                         ),
                         child: Text(
@@ -659,7 +659,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: isSaving ? null : _saveTeacher,
@@ -668,7 +668,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                           disabledBackgroundColor:
                               ColorUtils.corporateBlue600.withValues(alpha: 0.6),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           elevation: 2,

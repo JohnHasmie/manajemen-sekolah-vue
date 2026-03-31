@@ -162,19 +162,19 @@ class _LabeledTextField extends StatelessWidget {
             filled: true,
             fillColor: Colors.grey.shade50,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               borderSide: BorderSide(
                 color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               borderSide: BorderSide(
                 color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               borderSide: BorderSide(color: ColorUtils.getRoleColor('guru')),
             ),
             contentPadding: const EdgeInsets.symmetric(
@@ -216,7 +216,7 @@ class _LabeledDropdown extends StatelessWidget {
             border: Border.all(
               color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
             color: Colors.grey.shade50,
           ),
           child: DropdownButtonHideUnderline(

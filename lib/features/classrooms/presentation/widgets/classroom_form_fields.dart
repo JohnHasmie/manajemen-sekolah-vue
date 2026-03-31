@@ -30,7 +30,7 @@ class ClassroomDialogTextField extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: TextField(
@@ -41,13 +41,13 @@ class ClassroomDialogTextField extends StatelessWidget {
           prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 18),
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             borderSide: BorderSide(
               color: ColorUtils.corporateBlue600,
               width: 1.5,
             ),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
       ),
@@ -81,7 +81,7 @@ class ClassroomGradeLevelDropdown extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<String>(
@@ -99,13 +99,13 @@ class ClassroomGradeLevelDropdown extends StatelessWidget {
           ),
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             borderSide: BorderSide(
               color: ColorUtils.corporateBlue600,
               width: 1.5,
             ),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         ),
         items: availableGradeLevels.map((gradeStr) {
           final grade = int.tryParse(gradeStr) ?? 0;
@@ -125,7 +125,7 @@ class ClassroomGradeLevelDropdown extends StatelessWidget {
         onChanged: onChanged,
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         icon: Icon(
           Icons.keyboard_arrow_down_rounded,
           color: ColorUtils.slate500,
@@ -179,7 +179,7 @@ class ClassroomHomeroomTeacherDropdown extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<String>(
@@ -198,13 +198,13 @@ class ClassroomHomeroomTeacherDropdown extends StatelessWidget {
           ),
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             borderSide: BorderSide(
               color: ColorUtils.corporateBlue600,
               width: 1.5,
             ),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
         items: [
           DropdownMenuItem<String>(
@@ -231,7 +231,7 @@ class ClassroomHomeroomTeacherDropdown extends StatelessWidget {
         onChanged: onChanged,
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         icon: Icon(
           Icons.keyboard_arrow_down_rounded,
           color: ColorUtils.slate500,

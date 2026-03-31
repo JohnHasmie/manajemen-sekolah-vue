@@ -53,7 +53,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
         height: 48,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),

@@ -70,7 +70,7 @@ class ReportCardStudentList extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             boxShadow: ColorUtils.corporateShadow(),
           ),
           child: Material(
@@ -88,7 +88,7 @@ class ReportCardStudentList extends StatelessWidget {
                   ),
                 ).then((_) => onReturnFromDetail());
               },
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Row(

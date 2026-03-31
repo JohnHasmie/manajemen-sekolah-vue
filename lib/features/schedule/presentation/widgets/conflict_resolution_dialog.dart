@@ -43,7 +43,7 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
@@ -58,7 +58,7 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
                   color: Colors.orange,
                   size: 28,
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     languageProvider.getTranslatedText({
@@ -75,7 +75,7 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
               ],
             ),
 
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
 
             // Description
             Text(
@@ -88,7 +88,7 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
               style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
             ),
 
-            SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
 
             // List of conflicting schedules
             Container(
@@ -111,7 +111,7 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
               ),
             ),
 
-            SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
 
             // Action buttons
             Row(
@@ -121,9 +121,9 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
                     onPressed: widget.onCancel,
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       side: BorderSide(color: Colors.grey.shade400),
                     ),
                     child: Text(
@@ -132,7 +132,7 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _selectedScheduleToDelete != null
@@ -145,9 +145,9 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
                           ? Colors.red.shade600
                           : Colors.grey.shade400,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: Text(
                       languageProvider.getTranslatedText({
@@ -176,13 +176,13 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
     final isSelected = _selectedScheduleToDelete == scheduleId;
 
     return Container(
-      margin: EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         border: Border.all(
           color: isSelected ? Colors.red.shade400 : Colors.grey.shade300,
           width: isSelected ? 2 : 1,
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         color: isSelected ? Colors.red.shade50 : Colors.white,
       ),
       child: RadioListTile<String>(
@@ -193,17 +193,17 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
               schedule['mata_pelajaran_nama'] ?? 'No Subject',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               '${languageProvider.getTranslatedText({'en': 'Teacher', 'id': 'Guru'})}: ${schedule['guru_nama'] ?? 'No Teacher'}',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
-            SizedBox(height: 2),
+            const SizedBox(height: 2),
             Text(
               '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: ${schedule['kelas_nama'] ?? 'No Class'}',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
-            SizedBox(height: 2),
+            const SizedBox(height: 2),
             Text(
               '${languageProvider.getTranslatedText({'en': 'Time', 'id': 'Waktu'})}: ${schedule['jam_mulai']?.toString().substring(0, 5) ?? ''} - ${schedule['jam_selesai']?.toString().substring(0, 5) ?? ''}',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),

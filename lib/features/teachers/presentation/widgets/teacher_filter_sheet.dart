@@ -116,7 +116,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
           children: [
             // Header gradient (Pattern #11)
             Container(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -141,7 +141,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                         color: Colors.white,
                         size: 22,
                       ),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Text(
                         languageProvider.getTranslatedText({
                           'en': 'Filter Teachers',
@@ -183,7 +183,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
             // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -195,7 +195,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                       ),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
                       child: Row(
@@ -245,7 +245,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                         ],
                       ),
                     ),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
 
                     // Gender Section
                     Row(
@@ -255,7 +255,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                           size: 16,
                           color: ColorUtils.slate600,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Gender',
@@ -269,7 +269,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -302,7 +302,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                         }),
                       ],
                     ),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
 
                     // Employment Status Section
                     Row(
@@ -312,7 +312,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                           size: 16,
                           color: ColorUtils.slate600,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Employment Status',
@@ -326,7 +326,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -359,7 +359,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                         }),
                       ],
                     ),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
 
                     // Teaching Class Section
                     Row(
@@ -369,7 +369,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                           size: 16,
                           color: ColorUtils.slate600,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Teaching Class',
@@ -383,13 +383,13 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
                         border: Border.all(color: ColorUtils.slate200),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
@@ -426,7 +426,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                         ),
                       ),
                     ),
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
 
                     // Homeroom Status Section
                     Row(
@@ -436,7 +436,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                           size: 16,
                           color: ColorUtils.slate600,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Homeroom Teacher Status',
@@ -450,7 +450,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -503,7 +503,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
 
             // Footer Buttons (Pattern #11)
             Container(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border(
@@ -526,7 +526,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorUtils.slate300),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                       child: Text(
@@ -541,7 +541,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -556,10 +556,10 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ColorUtils.corporateBlue600,
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         elevation: 2,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                       child: Text(

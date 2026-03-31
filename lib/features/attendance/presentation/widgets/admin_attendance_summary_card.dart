@@ -54,13 +54,13 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          padding: EdgeInsets.all(AppSpacing.lg),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.5),
           ),
@@ -77,7 +77,7 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                       border: Border.all(
                         color: primaryColor.withValues(alpha: 0.15),
                       ),
@@ -88,7 +88,7 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                       size: 20,
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   // Subject + class + date info
                   Expanded(
                     child: Column(
@@ -104,7 +104,7 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Row(
                           children: [
                             Icon(
@@ -112,7 +112,7 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                               size: 12,
                               color: primaryColor,
                             ),
-                            SizedBox(width: AppSpacing.xs),
+                            const SizedBox(width: AppSpacing.xs),
                             Text(
                               summary.className,
                               style: TextStyle(
@@ -141,7 +141,7 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                             ],
                           ],
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           DateFormat(
                             'EEEE, dd MMMM yyyy',
@@ -157,15 +157,15 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   // Delete button
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: onDelete,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
                       child: Container(
-                        padding: EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: ColorUtils.error600.withValues(alpha: 0.08),
                           shape: BoxShape.circle,
@@ -184,9 +184,9 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                 ],
               ),
 
-              SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.md),
               Divider(color: ColorUtils.slate100, height: 1),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
 
               // Attendance info row
               Row(
@@ -196,13 +196,13 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                     label: '${summary.present} Hadir',
                     tagColor: ColorUtils.success600,
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   _AdminAttendanceInfoTag(
                     icon: Icons.cancel_outlined,
                     label: '${summary.absent} Absen',
                     tagColor: ColorUtils.error600,
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   _AdminAttendanceInfoTag(
                     icon: Icons.people_outline,
                     label: '${summary.totalStudents} Siswa',
@@ -219,7 +219,7 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                         border: Border.all(
                           color: primaryColor.withValues(alpha: 0.2),
                         ),
@@ -232,7 +232,7 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                             size: 12,
                             color: primaryColor,
                           ),
-                          SizedBox(width: AppSpacing.xs),
+                          const SizedBox(width: AppSpacing.xs),
                           Text(
                             'Detail',
                             style: TextStyle(
@@ -248,11 +248,11 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                 ],
               ),
 
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
 
               // Progress bar
               ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
                 child: LinearProgressIndicator(
                   value: summary.totalStudents > 0
                       ? summary.present / summary.totalStudents
@@ -262,7 +262,7 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                   valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                 ),
               ),
-              SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 '$attendanceRate% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
                 style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
@@ -296,17 +296,17 @@ class _AdminAttendanceInfoTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = tagColor ?? ColorUtils.slate600;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 10, color: color),
-          SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: AppSpacing.xs),
           Flexible(
             child: Text(
               label,

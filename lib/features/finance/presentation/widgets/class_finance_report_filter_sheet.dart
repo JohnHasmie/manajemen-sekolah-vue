@@ -135,7 +135,7 @@ class _ClassFinanceReportFilterSheetState
                     size: 20,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     'Filter Laporan',
@@ -183,7 +183,7 @@ class _ClassFinanceReportFilterSheetState
           // Scrollable content
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -217,7 +217,7 @@ class _ClassFinanceReportFilterSheetState
                             color: isSelected
                                 ? widget.primaryColor.withValues(alpha: 0.12)
                                 : Colors.white,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                             border: Border.all(
                               color: isSelected
                                   ? widget.primaryColor
@@ -242,7 +242,7 @@ class _ClassFinanceReportFilterSheetState
                     }).toList(),
                   ),
 
-                  SizedBox(height: AppSpacing.xxl),
+                  const SizedBox(height: AppSpacing.xxl),
                   // Month Filter
                   _buildSectionHeader('Bulan', Icons.calendar_month_rounded),
                   _buildStyledDropdown<String?>(
@@ -266,7 +266,7 @@ class _ClassFinanceReportFilterSheetState
                     },
                   ),
 
-                  SizedBox(height: AppSpacing.xxl),
+                  const SizedBox(height: AppSpacing.xxl),
                   // Payment Type Filter
                   _buildSectionHeader(
                     'Jenis Pembayaran',
@@ -317,7 +317,7 @@ class _ClassFinanceReportFilterSheetState
                   child: OutlinedButton(
                     onPressed: () => AppNavigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: ColorUtils.slate300),
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -329,13 +329,13 @@ class _ClassFinanceReportFilterSheetState
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => AppNavigator.pop(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: widget.primaryColor,
-                      padding: EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),

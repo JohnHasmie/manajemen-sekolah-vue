@@ -119,12 +119,12 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
               return Expanded(
                 child: InkWell(
                   onTap: () => pickTime(isStart),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                     decoration: BoxDecoration(
                       color: ColorUtils.slate50,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       border: Border.all(color: ColorUtils.slate200),
                     ),
                     child: Row(
@@ -134,7 +134,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                           size: 16,
                           color: ColorUtils.corporateBlue600,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -145,7 +145,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                 color: ColorUtils.slate500,
                               ),
                             ),
-                            SizedBox(height: 1),
+                            const SizedBox(height: 1),
                             Text(
                               time.format(context),
                               style: TextStyle(
@@ -178,7 +178,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                   // Gradient Header (Pattern #10)
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(AppSpacing.xl),
+                    padding: const EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -196,7 +196,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                           height: 44,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                           child: Icon(
                             isEdit ? Icons.edit_rounded : Icons.add_rounded,
@@ -204,7 +204,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                             size: 22,
                           ),
                         ),
-                        SizedBox(width: 14),
+                        const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,7 +217,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                   color: Colors.white,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              const SizedBox(height: 2),
                               Text(
                                 'Atur jam pelajaran untuk hari ini',
                                 style: TextStyle(
@@ -235,7 +235,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                   Expanded(
                     child: SingleChildScrollView(
                       child: Padding(
-                        padding: EdgeInsets.all(AppSpacing.xl),
+                        padding: const EdgeInsets.all(AppSpacing.xl),
                         child: Column(
                           children: [
                             TextField(
@@ -249,19 +249,19 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                   size: 20,
                                 ),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                                   borderSide: BorderSide(
                                     color: ColorUtils.slate200,
                                   ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                                   borderSide: BorderSide(
                                     color: ColorUtils.slate200,
                                   ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                                   borderSide: BorderSide(
                                     color: ColorUtils.corporateBlue600,
                                     width: 1.5,
@@ -275,11 +275,11 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                 ),
                               ),
                             ),
-                            SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.md),
                             Row(
                               children: [
                                 buildTimeField('Mulai', startTime, true),
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
                                 buildTimeField('Selesai', endTime, false),
                               ],
                             ),
@@ -290,7 +290,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                   ),
                   // Enhanced Footer Actions
                   Container(
-                    padding: EdgeInsets.all(AppSpacing.xl),
+                    padding: const EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border(
@@ -313,9 +313,9 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                               onPressed: () => AppNavigator.pop(context),
                               style: OutlinedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                                 ),
-                                padding: EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
                                 side: BorderSide(color: ColorUtils.slate300),
                               ),
                               child: Text(
@@ -327,7 +327,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                               ),
                             ),
                           ),
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: ElevatedButton(
                               onPressed: isSaving
@@ -392,9 +392,9 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                     .corporateBlue600
                                     .withValues(alpha: 0.6),
                                 foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                                 ),
                                 elevation: 2,
                               ),
@@ -478,14 +478,14 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
         clipBehavior: Clip.antiAlias,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -503,7 +503,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.copy_rounded,
@@ -511,7 +511,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       size: 20,
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Text(
                     'Salin Jadwal Dari...',
                     style: TextStyle(
@@ -526,7 +526,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
             SizedBox(
               height: 280,
               child: ListView.separated(
-                padding: EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: availableDays.length,
                 separatorBuilder: (_, __) => Divider(
                   height: 1,
@@ -546,7 +546,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                         color: ColorUtils.corporateBlue600.withValues(
                           alpha: 0.1,
                         ),
-                        borderRadius: BorderRadius.circular(9),
+                        borderRadius: const BorderRadius.all(Radius.circular(9)),
                       ),
                       child: Icon(
                         Icons.calendar_today_rounded,
@@ -582,16 +582,16 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () => AppNavigator.pop(context),
                   style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: ColorUtils.slate300),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                   ),
                   child: Text(
@@ -612,14 +612,14 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
         clipBehavior: Clip.antiAlias,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -637,7 +637,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.delete_rounded,
@@ -645,7 +645,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       size: 20,
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Text(
                     'Hapus Jam Pelajaran',
                     style: TextStyle(
@@ -658,24 +658,24 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Text(
                 'Apakah Anda yakin ingin menghapus jam pelajaran ini? Data yang dihapus tidak dapat dikembalikan.',
                 style: TextStyle(fontSize: 14, color: ColorUtils.slate600),
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => AppNavigator.pop(context, false),
                       style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 13),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                         side: BorderSide(color: ColorUtils.slate300),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                       child: Text(
@@ -684,15 +684,15 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => AppNavigator.pop(context, true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ColorUtils.error600,
-                        padding: EdgeInsets.symmetric(vertical: 13),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         elevation: 0,
                       ),
@@ -736,13 +736,13 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: const BorderRadius.all(Radius.circular(8)),
       child: Container(
         width: 32,
         height: 32,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
           border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Icon(icon, size: 16, color: color),
@@ -765,7 +765,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
           // Gradient Header (Pattern #11)
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(20, 10, 12, 18),
+            padding: const EdgeInsets.fromLTRB(20, 10, 12, 18),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -783,10 +783,10 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                 Container(
                   width: 40,
                   height: 4,
-                  margin: EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: const BorderRadius.all(Radius.circular(2)),
                   ),
                 ),
                 Row(
@@ -796,7 +796,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
                       child: Icon(
                         Icons.schedule_rounded,
@@ -804,7 +804,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                         size: 20,
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -817,7 +817,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             '${_sessions.length} jam pelajaran terdaftar',
                             style: TextStyle(
@@ -835,7 +835,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                         height: 32,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                         ),
                         child: Icon(
                           Icons.close_rounded,
@@ -870,7 +870,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                             color: ColorUtils.slate400,
                           ),
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
                         Text(
                           'Belum ada jadwal',
                           style: TextStyle(
@@ -879,7 +879,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                             color: ColorUtils.slate700,
                           ),
                         ),
-                        SizedBox(height: AppSpacing.xs),
+                        const SizedBox(height: AppSpacing.xs),
                         Text(
                           'Tambah jam pelajaran di bawah',
                           style: TextStyle(
@@ -892,7 +892,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                           return dId != widget.day['id'].toString() &&
                               (widget.allSessionsByDay[dId] ?? []).isNotEmpty;
                         })) ...[
-                          SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.lg),
                           OutlinedButton.icon(
                             onPressed: _showCopyDialog,
                             icon: Icon(Icons.copy_rounded, size: 16),
@@ -903,7 +903,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                               ),
                               foregroundColor: ColorUtils.corporateBlue600,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: const BorderRadius.all(Radius.circular(10)),
                               ),
                             ),
                           ),
@@ -912,10 +912,10 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                     ),
                   )
                 : ListView.separated(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     itemCount: _sessions.length,
                     separatorBuilder: (_, __) =>
-                        SizedBox(height: AppSpacing.sm),
+                        const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
                       final session = _sessions[index];
                       return Container(
@@ -925,7 +925,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                           border: Border.all(color: ColorUtils.slate200),
                           boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
                         ),
@@ -956,7 +956,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                 ),
                               ),
                             ),
-                            SizedBox(width: AppSpacing.md),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -988,7 +988,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                                     session: session,
                                   ),
                                 ),
-                                SizedBox(width: AppSpacing.sm),
+                                const SizedBox(width: AppSpacing.sm),
                                 _buildActionButton(
                                   icon: Icons.delete_rounded,
                                   color: ColorUtils.error600,
@@ -1006,7 +1006,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
 
           // Enhanced Footer Action
           Container(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -1034,9 +1034,9 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ColorUtils.corporateBlue600,
-                    padding: EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: const BorderRadius.all(Radius.circular(14)),
                     ),
                     elevation: 0,
                   ),

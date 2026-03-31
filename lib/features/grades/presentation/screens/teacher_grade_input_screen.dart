@@ -88,17 +88,17 @@ class GradePageState extends ConsumerState<GradePage> {
 
   Widget _buildInfoTag(IconData icon, String text) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 11, color: ColorUtils.slate600),
-          SizedBox(width: 3),
+          const SizedBox(width: 3),
           Text(
             text,
             style: TextStyle(
@@ -126,7 +126,7 @@ class GradePageState extends ConsumerState<GradePage> {
     }).toList();
 
     if (state.isLoading) {
-      return SkeletonListLoading(padding: EdgeInsets.only(top: 8, bottom: 80));
+      return SkeletonListLoading(padding: const EdgeInsets.only(top: 8, bottom: 80));
     }
 
     if (filtered.isEmpty) {
@@ -149,12 +149,12 @@ class GradePageState extends ConsumerState<GradePage> {
       },
       child: ListView.builder(
         controller: _scrollController,
-        padding: EdgeInsets.only(top: 8, bottom: 80),
+        padding: const EdgeInsets.only(top: 8, bottom: 80),
         itemCount: filtered.length + (state.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == filtered.length) {
             return Container(
-              padding: EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 16),
               alignment: Alignment.center,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
@@ -163,6 +163,7 @@ class GradePageState extends ConsumerState<GradePage> {
             );
           }
           final classData = filtered[index];
+          final classId = classData['id']?.toString();
           final isHomeroom = classData['is_homeroom'] == true;
           final accentColor = isHomeroom ? ColorUtils.primary : _getPrimaryColor();
           final isToday = state.todaySchedules.any(
@@ -172,7 +173,8 @@ class GradePageState extends ConsumerState<GradePage> {
           final homeroomTeacher = classData['homeroom_teacher_name'];
 
           return Container(
-            margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+            key: ValueKey(classId),
+            margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
@@ -180,12 +182,12 @@ class GradePageState extends ConsumerState<GradePage> {
                   _searchController.clear();
                   ref.read(teacherGradeProvider(_controllerParams).notifier).selectClass(classData);
                 },
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: const BorderRadius.all(Radius.circular(14)),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: const BorderRadius.all(Radius.circular(14)),
                     border: Border.all(color: ColorUtils.slate200, width: 1),
                     boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                   ),
@@ -196,7 +198,7 @@ class GradePageState extends ConsumerState<GradePage> {
                         height: 48,
                         decoration: BoxDecoration(
                           color: accentColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                           border: Border.all(color: accentColor.withValues(alpha: 0.15)),
                         ),
                         child: Icon(
@@ -205,7 +207,7 @@ class GradePageState extends ConsumerState<GradePage> {
                           size: 24,
                         ),
                       ),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +220,7 @@ class GradePageState extends ConsumerState<GradePage> {
                                 color: ColorUtils.slate900,
                               ),
                             ),
-                            SizedBox(height: AppSpacing.xs),
+                            const SizedBox(height: AppSpacing.xs),
                             Wrap(
                               spacing: 4,
                               runSpacing: 4,
@@ -230,17 +232,17 @@ class GradePageState extends ConsumerState<GradePage> {
                                   _buildInfoTag(Icons.person_outlined, homeroomTeacher.toString()),
                                 if (isToday)
                                   Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                     decoration: BoxDecoration(
                                       color: ColorUtils.success600.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: const BorderRadius.all(Radius.circular(6)),
                                       border: Border.all(color: ColorUtils.success600.withValues(alpha: 0.3)),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(Icons.today, size: 11, color: ColorUtils.success600),
-                                        SizedBox(width: 3),
+                                        const SizedBox(width: 3),
                                         Text(
                                           'Today',
                                           style: TextStyle(
@@ -274,7 +276,7 @@ class GradePageState extends ConsumerState<GradePage> {
     TeacherGradeState state,
   ) {
     if (state.isLoading) {
-      return SkeletonListLoading(padding: EdgeInsets.only(top: 8, bottom: 80));
+      return SkeletonListLoading(padding: const EdgeInsets.only(top: 8, bottom: 80));
     }
 
     final searchTerm = _searchController.text.toLowerCase();
@@ -303,10 +305,11 @@ class GradePageState extends ConsumerState<GradePage> {
         ref.read(teacherGradeProvider(_controllerParams).notifier).loadSubjects(useCache: false);
       },
       child: ListView.builder(
-        padding: EdgeInsets.only(top: 8, bottom: 80),
+        padding: const EdgeInsets.only(top: 8, bottom: 80),
         itemCount: filtered.length,
         itemBuilder: (context, index) {
           final subject = filtered[index];
+          final subjectId = subject['id']?.toString();
           final subjectCode = subject['kode'] ?? subject['code'];
           final canEdit = subject['can_edit'] != false;
           final isToday = state.todaySchedules.any(
@@ -317,7 +320,8 @@ class GradePageState extends ConsumerState<GradePage> {
           final accentColor = ColorUtils.warning600;
 
           return Container(
-            margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+            key: ValueKey(subjectId),
+            margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
@@ -325,12 +329,12 @@ class GradePageState extends ConsumerState<GradePage> {
                   ref.read(teacherGradeProvider(_controllerParams).notifier).selectSubject(subject);
                   ref.read(teacherGradeProvider(_controllerParams).notifier).setStep(2);
                 },
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: const BorderRadius.all(Radius.circular(14)),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: const BorderRadius.all(Radius.circular(14)),
                     border: Border.all(color: ColorUtils.slate200, width: 1),
                     boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                   ),
@@ -341,12 +345,12 @@ class GradePageState extends ConsumerState<GradePage> {
                         height: 48,
                         decoration: BoxDecoration(
                           color: accentColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                           border: Border.all(color: accentColor.withValues(alpha: 0.15)),
                         ),
                         child: Icon(Icons.book_outlined, color: accentColor, size: 24),
                       ),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,7 +363,7 @@ class GradePageState extends ConsumerState<GradePage> {
                                 color: ColorUtils.slate900,
                               ),
                             ),
-                            SizedBox(height: AppSpacing.xs),
+                            const SizedBox(height: AppSpacing.xs),
                             Wrap(
                               spacing: 4,
                               runSpacing: 4,
@@ -368,17 +372,17 @@ class GradePageState extends ConsumerState<GradePage> {
                                   _buildInfoTag(Icons.tag, subjectCode.toString()),
                                 if (isToday)
                                   Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                     decoration: BoxDecoration(
                                       color: ColorUtils.success600.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: const BorderRadius.all(Radius.circular(6)),
                                       border: Border.all(color: ColorUtils.success600.withValues(alpha: 0.3)),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(Icons.today, size: 11, color: ColorUtils.success600),
-                                        SizedBox(width: 3),
+                                        const SizedBox(width: 3),
                                         Text(
                                           'Today',
                                           style: TextStyle(
@@ -392,17 +396,17 @@ class GradePageState extends ConsumerState<GradePage> {
                                   ),
                                 if (!canEdit)
                                   Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                     decoration: BoxDecoration(
                                       color: ColorUtils.warning600.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: const BorderRadius.all(Radius.circular(6)),
                                       border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.3)),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(Icons.lock_outline, size: 11, color: ColorUtils.warning600),
-                                        SizedBox(width: 3),
+                                        const SizedBox(width: 3),
                                         Text(
                                           languageProvider.getTranslatedText({
                                             'en': 'Read Only',
@@ -505,12 +509,12 @@ class GradePageState extends ConsumerState<GradePage> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -523,7 +527,7 @@ class GradePageState extends ConsumerState<GradePage> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: TextStyle(
@@ -538,11 +542,11 @@ class GradePageState extends ConsumerState<GradePage> {
               ),
             ],
           ),
-          SizedBox(height: AppSpacing.xxl),
+          const SizedBox(height: AppSpacing.xxl),
           Container(
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
             child: Row(
               children: [
@@ -563,13 +567,13 @@ class GradePageState extends ConsumerState<GradePage> {
                       hintStyle: TextStyle(color: Colors.grey),
                       prefixIcon: Icon(Icons.search, color: Colors.grey),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                     onSubmitted: (_) => _handleSearch(),
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.only(right: 4),
+                  margin: const EdgeInsets.only(right: 4),
                   child: IconButton(
                     icon: Icon(Icons.search, color: _getPrimaryColor()),
                     onPressed: _handleSearch,

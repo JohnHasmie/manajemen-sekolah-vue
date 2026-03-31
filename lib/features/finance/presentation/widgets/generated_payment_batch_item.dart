@@ -52,11 +52,11 @@ class GeneratedPaymentBatchItem extends StatelessWidget {
     final count = item['count'] ?? 0;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      padding: EdgeInsets.all(14),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
@@ -67,7 +67,7 @@ class GeneratedPaymentBatchItem extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               border: Border.all(
                 color: primaryColor.withValues(alpha: 0.15),
               ),
@@ -78,7 +78,7 @@ class GeneratedPaymentBatchItem extends StatelessWidget {
               size: 22,
             ),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,19 +93,19 @@ class GeneratedPaymentBatchItem extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   formattedMonth,
                   style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: const BorderRadius.all(Radius.circular(6)),
                       ),
                       child: Text(
                         amount,
@@ -116,12 +116,12 @@ class GeneratedPaymentBatchItem extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
                         color: ColorUtils.info600.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: const BorderRadius.all(Radius.circular(6)),
                       ),
                       child: Text(
                         '$count Tagihan',

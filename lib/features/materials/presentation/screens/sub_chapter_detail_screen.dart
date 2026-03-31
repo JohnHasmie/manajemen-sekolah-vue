@@ -337,7 +337,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
           Expanded(
             child: _isLoading
                 ? SkeletonListLoading(
-                    padding: EdgeInsets.only(top: 8, bottom: 80),
+                    padding: const EdgeInsets.only(top: 8, bottom: 80),
                     showActions: false,
                   )
                 : (_contentList.isEmpty &&
@@ -396,17 +396,17 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
       children: [
         // Tab Bar
         Container(
-          margin: EdgeInsets.fromLTRB(16, 12, 16, 0),
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           decoration: BoxDecoration(
             color: ColorUtils.slate100,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
           ),
-          padding: EdgeInsets.all(AppSpacing.xs),
+          padding: const EdgeInsets.all(AppSpacing.xs),
           child: TabBar(
             controller: _tabController,
             indicator: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
               boxShadow: [
                 BoxShadow(
                   color: primaryColor.withValues(alpha: 0.12),
@@ -436,7 +436,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.auto_stories_rounded, size: 16),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text('Materi'),
                   ],
                 ),
@@ -447,10 +447,10 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.quiz_rounded, size: 16),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text('Kuis'),
                     if (quizzes.isNotEmpty) ...[
-                      SizedBox(width: AppSpacing.xs),
+                      const SizedBox(width: AppSpacing.xs),
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 5,
@@ -458,7 +458,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                         ),
                         decoration: BoxDecoration(
                           color: primaryColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                         ),
                         child: Text(
                           '${quizzes.length}',
@@ -478,7 +478,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.menu_book_rounded, size: 16),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text('Referensi'),
                   ],
                 ),
@@ -486,7 +486,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
             ],
           ),
         ),
-        SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.md),
         // Tab Content
         Expanded(
           child: TabBarView(
@@ -537,11 +537,11 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
         .toList();
 
     return ListView(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       children: [
         // Stats row
         _buildQuizStats(quizzes),
-        SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.lg),
 
         // Pilihan Ganda
         if (mcQuizzes.isNotEmpty) ...[
@@ -551,7 +551,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
             count: mcQuizzes.length,
             color: _getPrimaryColor(),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           ...mcQuizzes.asMap().entries.map(
             (entry) =>
                 _buildMcQuizCard(entry.key, entry.value, mcQuizzes.length),
@@ -560,14 +560,14 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
 
         // Essay
         if (essayQuizzes.isNotEmpty) ...[
-          SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
           _buildSubSectionHeader(
             icon: Icons.edit_note_rounded,
             title: 'Essay',
             count: essayQuizzes.length,
             color: ColorUtils.violet500,
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           ...essayQuizzes.asMap().entries.map(
             (entry) => _buildEssayQuizCard(entry.key, entry.value),
           ),
@@ -593,11 +593,11 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
           height: 26,
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(7),
+            borderRadius: const BorderRadius.all(Radius.circular(7)),
           ),
           child: Icon(icon, size: 14, color: color),
         ),
-        SizedBox(width: AppSpacing.sm),
+        const SizedBox(width: AppSpacing.sm),
         Text(
           title,
           style: TextStyle(
@@ -606,12 +606,12 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
             color: ColorUtils.slate800,
           ),
         ),
-        SizedBox(width: 6),
+        const SizedBox(width: 6),
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: const BorderRadius.all(Radius.circular(6)),
           ),
           child: Text(
             '$count',

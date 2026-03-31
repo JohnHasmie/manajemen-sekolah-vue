@@ -76,9 +76,9 @@ class ReferenceTabContent extends StatelessWidget {
     }
 
     return ListView.separated(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       itemCount: references.length,
-      separatorBuilder: (_, __) => SizedBox(height: AppSpacing.md),
+      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
         final ref = references[index];
         final refType = ref['type']?.toString() ?? '';
@@ -87,7 +87,7 @@ class ReferenceTabContent extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
@@ -96,7 +96,7 @@ class ReferenceTabContent extends StatelessWidget {
             children: [
               // Header with type badge
               Container(
-                padding: EdgeInsets.fromLTRB(14, 12, 14, 10),
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
                 decoration: BoxDecoration(
                   color: typeConfig.color.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(13)),
@@ -108,7 +108,7 @@ class ReferenceTabContent extends StatelessWidget {
                       height: 28,
                       decoration: BoxDecoration(
                         color: typeConfig.color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                       ),
                       child: Icon(
                         typeConfig.icon,
@@ -116,7 +116,7 @@ class ReferenceTabContent extends StatelessWidget {
                         color: typeConfig.color,
                       ),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Container(
                         padding: EdgeInsets.symmetric(
@@ -125,7 +125,7 @@ class ReferenceTabContent extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: typeConfig.color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: const BorderRadius.all(Radius.circular(6)),
                         ),
                         child: Text(
                           typeConfig.label,
@@ -142,7 +142,7 @@ class ReferenceTabContent extends StatelessWidget {
               ),
               // Title
               Padding(
-                padding: EdgeInsets.fromLTRB(14, 8, 14, 6),
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
                 child: Text(
                   ref['title'] ?? '',
                   style: TextStyle(
@@ -154,7 +154,7 @@ class ReferenceTabContent extends StatelessWidget {
               ),
               // Content
               Padding(
-                padding: EdgeInsets.fromLTRB(14, 0, 14, 14),
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                 child: Text(
                   stripHtml(ref['content'] ?? ''),
                   style: TextStyle(
@@ -189,7 +189,7 @@ class _EmptyReferenceState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xxxl),
+        padding: const EdgeInsets.all(AppSpacing.xxxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -198,7 +198,7 @@ class _EmptyReferenceState extends StatelessWidget {
               height: 56,
               decoration: BoxDecoration(
                 color: ColorUtils.slate100,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
               ),
               child: Icon(
                 Icons.menu_book_rounded,
@@ -206,7 +206,7 @@ class _EmptyReferenceState extends StatelessWidget {
                 color: ColorUtils.slate400,
               ),
             ),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               'Belum Ada Referensi',
               style: TextStyle(
@@ -215,20 +215,20 @@ class _EmptyReferenceState extends StatelessWidget {
                 color: ColorUtils.slate700,
               ),
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'Generate materi AI untuk mendapatkan referensi otomatis.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             ),
-            SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
             GestureDetector(
               onTap: onGenerateTap,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 decoration: BoxDecoration(
                   color: primaryColor,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                   boxShadow: [
                     BoxShadow(
                       color: primaryColor.withValues(alpha: 0.3),
@@ -241,7 +241,7 @@ class _EmptyReferenceState extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.auto_awesome, size: 16, color: Colors.white),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
                       'Generate AI',
                       style: TextStyle(

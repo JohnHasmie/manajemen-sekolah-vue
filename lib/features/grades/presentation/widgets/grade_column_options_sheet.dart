@@ -124,7 +124,7 @@ class GradeColumnOptionsSheet extends StatelessWidget {
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
                 child: Icon(
                   Icons.visibility,
@@ -151,7 +151,7 @@ class GradeColumnOptionsSheet extends StatelessWidget {
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: ColorUtils.warning600.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Icon(Icons.edit, color: ColorUtils.warning600),
                 ),
@@ -172,7 +172,7 @@ class GradeColumnOptionsSheet extends StatelessWidget {
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: ColorUtils.error600.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Icon(
                     Icons.delete_outline,

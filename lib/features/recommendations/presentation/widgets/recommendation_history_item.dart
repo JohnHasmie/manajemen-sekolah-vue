@@ -101,7 +101,7 @@ class RecommendationHistoryItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: const BorderRadius.all(Radius.circular(5)),
       ),
       child: Text(
         text,
@@ -133,12 +133,12 @@ class RecommendationHistoryItem extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
             border: Border.all(color: ColorUtils.slate200),
           ),
           child: Row(
@@ -149,7 +149,7 @@ class RecommendationHistoryItem extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: periodInfo.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                   border: Border.all(
                     color: periodInfo.color.withValues(alpha: 0.2),
                   ),
@@ -186,7 +186,7 @@ class RecommendationHistoryItem extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: periodInfo.color.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: const BorderRadius.all(Radius.circular(6)),
                             border: Border.all(
                               color: periodInfo.color.withValues(alpha: 0.2),
                             ),

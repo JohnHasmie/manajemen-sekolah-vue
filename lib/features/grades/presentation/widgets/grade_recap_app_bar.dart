@@ -132,7 +132,7 @@ class GradeRecapAppBar extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
               child: const Icon(
                 Icons.arrow_back,
@@ -180,7 +180,7 @@ class GradeRecapAppBar extends StatelessWidget {
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
                 child: isSaving
                     ? const Center(
@@ -209,7 +209,7 @@ class GradeRecapAppBar extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
               child: const Icon(
                 Icons.more_vert,

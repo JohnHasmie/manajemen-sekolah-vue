@@ -162,7 +162,7 @@ class _GradeFilterSheetState extends State<GradeFilterSheet> {
                     value: _localFilter[type] ?? true,
                     activeColor: widget.primaryColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                     onChanged: (bool? value) => _toggleType(type, value),
                   );
@@ -185,7 +185,7 @@ class _GradeFilterSheetState extends State<GradeFilterSheet> {
                   backgroundColor: widget.primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                 ),
                 child: const Text(

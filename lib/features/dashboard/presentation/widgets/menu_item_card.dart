@@ -51,13 +51,13 @@ class MenuItemCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: Container(
           height: 66,
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
             border: Border.all(color: ColorUtils.slate200, width: 1),
             boxShadow: [
               BoxShadow(
@@ -80,7 +80,7 @@ class MenuItemCard extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: effectivePrimaryColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   border: Border.all(
                     color: effectivePrimaryColor.withValues(alpha: 0.15),
                     width: 1,
@@ -88,7 +88,7 @@ class MenuItemCard extends StatelessWidget {
                 ),
                 child: _buildIconWidget(icon, effectivePrimaryColor),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
 
               // Title and badge
               Expanded(
@@ -114,14 +114,14 @@ class MenuItemCard extends StatelessWidget {
                         // Notification badge
                         if (badgeCount != null && badgeCount! > 0)
                           Container(
-                            margin: EdgeInsets.only(left: 8),
+                            margin: const EdgeInsets.only(left: 8),
                             padding: EdgeInsets.symmetric(
                               horizontal: 7,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
                               color: ColorUtils.error600,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                               boxShadow: [
                                 BoxShadow(
                                   color: ColorUtils.error600.withValues(

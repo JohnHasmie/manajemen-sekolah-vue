@@ -42,7 +42,7 @@ class PromotionDropdown extends StatelessWidget {
             color: ColorUtils.slate600,
           ),
         ),
-        SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
@@ -54,7 +54,7 @@ class PromotionDropdown extends StatelessWidget {
             children: [
               if (icon != null) ...[
                 Icon(icon, size: 18, color: primaryColor),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
               ],
               Expanded(
                 child: DropdownButtonHideUnderline(

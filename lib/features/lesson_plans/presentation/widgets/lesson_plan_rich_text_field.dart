@@ -23,7 +23,7 @@ class LessonPlanRichTextField extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: [
           BoxShadow(
@@ -58,7 +58,7 @@ class LessonPlanRichTextField extends StatelessWidget {
           Divider(height: 1, color: ColorUtils.slate200),
           Container(
             height: 200,
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: quill.QuillEditor.basic(
               controller: controller,
               config: const quill.QuillEditorConfig(),

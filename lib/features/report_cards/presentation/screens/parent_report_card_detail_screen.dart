@@ -79,7 +79,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: const Icon(
                       Icons.arrow_back,
@@ -222,7 +222,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         side: BorderSide(color: Colors.grey[200]!),
       ),
       child: Padding(
@@ -264,7 +264,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         side: BorderSide(color: Colors.grey[200]!),
       ),
       child: Padding(
@@ -295,7 +295,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
       return Card(
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           side: BorderSide(color: Colors.grey[200]!),
         ),
         child: Padding(
@@ -314,7 +314,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         side: BorderSide(color: Colors.grey[200]!),
       ),
       child: Padding(
@@ -364,7 +364,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         side: BorderSide(color: Colors.grey[200]!),
       ),
       child: Padding(
@@ -395,7 +395,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         side: BorderSide(color: Colors.grey[200]!),
       ),
       child: Padding(
@@ -423,7 +423,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         side: BorderSide(color: Colors.grey[200]!),
       ),
       child: Padding(
@@ -489,7 +489,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         side: BorderSide(color: Colors.grey[200]!),
       ),
       child: Padding(
@@ -513,7 +513,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
       color: ColorUtils.corporateBlue600.withValues(alpha: 0.05),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         side: BorderSide(
           color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
         ),

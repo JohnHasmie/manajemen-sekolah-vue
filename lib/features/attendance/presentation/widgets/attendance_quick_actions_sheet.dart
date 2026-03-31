@@ -45,7 +45,7 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
           topRight: Radius.circular(20),
         ),
       ),
-      padding: EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -56,7 +56,7 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
             }),
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
           _buildOption(context, 'hadir'),
           _buildOption(context, 'terlambat'),
           _buildOption(context, 'izin'),

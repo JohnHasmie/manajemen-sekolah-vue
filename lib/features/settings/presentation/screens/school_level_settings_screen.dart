@@ -86,7 +86,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
           builder: (context, setDialogState) => Dialog(
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: const BorderRadius.all(Radius.circular(20)),
             ),
             clipBehavior: Clip.antiAlias,
             child: SingleChildScrollView(
@@ -96,7 +96,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                   // Gradient Header (Pattern #10)
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(AppSpacing.xl),
+                    padding: const EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -114,7 +114,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                           height: 44,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                           ),
                           child: Icon(
                             Icons.school_rounded,
@@ -122,7 +122,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                             size: 22,
                           ),
                         ),
-                        SizedBox(width: 14),
+                        const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,7 +135,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              const SizedBox(height: 2),
                               Text(
                                 'Perbarui data informasi sekolah',
                                 style: TextStyle(
@@ -151,7 +151,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                   ),
                   // Form Fields
                   Padding(
-                    padding: EdgeInsets.all(AppSpacing.xl),
+                    padding: const EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       children: [
                         _buildStyledTextField(
@@ -159,14 +159,14 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                           label: 'Nama Sekolah',
                           icon: Icons.school_outlined,
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
                         _buildStyledTextField(
                           controller: addressController,
                           label: 'Alamat Sekolah',
                           icon: Icons.location_on_outlined,
                           maxLines: 2,
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
                         DropdownButtonFormField<String>(
                           initialValue: tempJenjang,
                           decoration: InputDecoration(
@@ -177,19 +177,19 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                               size: 20,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                               borderSide: BorderSide(
                                 color: ColorUtils.slate200,
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                               borderSide: BorderSide(
                                 color: ColorUtils.slate200,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.all(Radius.circular(12)),
                               borderSide: BorderSide(
                                 color: ColorUtils.corporateBlue600,
                                 width: 1.5,
@@ -219,7 +219,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                   ),
                   // Footer
                   Container(
-                    padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border(
@@ -227,17 +227,17 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                       ),
                     ),
                     child: Padding(
-                      padding: EdgeInsets.only(top: 16),
+                      padding: const EdgeInsets.only(top: 16),
                       child: Row(
                         children: [
                           Expanded(
                             child: OutlinedButton(
                               onPressed: () => AppNavigator.pop(context),
                               style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(vertical: 13),
+                                padding: const EdgeInsets.symmetric(vertical: 13),
                                 side: BorderSide(color: ColorUtils.slate300),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                                 ),
                               ),
                               child: Text(
@@ -246,7 +246,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: ElevatedButton(
                               onPressed: isSaving
@@ -320,9 +320,9 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                 disabledBackgroundColor: ColorUtils
                                     .corporateBlue600
                                     .withValues(alpha: 0.6),
-                                padding: EdgeInsets.symmetric(vertical: 13),
+                                padding: const EdgeInsets.symmetric(vertical: 13),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                                 ),
                                 elevation: 0,
                               ),
@@ -370,15 +370,15 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
         labelText: label,
         prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 20),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: ColorUtils.slate200),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: ColorUtils.slate200),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(
             color: ColorUtils.corporateBlue600,
             width: 1.5,
@@ -386,7 +386,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
         ),
         filled: true,
         fillColor: ColorUtils.slate50,
-        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }
@@ -394,10 +394,10 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
   Widget _buildInfoCard(String label, String value, IconData icon) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
@@ -409,14 +409,14 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
             height: 44,
             decoration: BoxDecoration(
               color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               border: Border.all(
                 color: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
               ),
             ),
             child: Icon(icon, color: ColorUtils.corporateBlue600, size: 22),
           ),
-          SizedBox(width: AppSpacing.lg),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,7 +429,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: AppSpacing.xs),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   value.isNotEmpty ? value : '-',
                   style: TextStyle(
@@ -487,7 +487,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Icon(
                       Icons.arrow_back,
@@ -496,7 +496,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,7 +509,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         'Jenjang & informasi sekolah',
                         style: TextStyle(
@@ -528,7 +528,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
                       child: Icon(
                         Icons.edit_rounded,
@@ -552,12 +552,12 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                       color: ColorUtils.corporateBlue600,
                       child: SingleChildScrollView(
                         physics: AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.all(AppSpacing.lg),
+                        padding: const EdgeInsets.all(AppSpacing.lg),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.only(bottom: 16),
                               child: Row(
                                 children: [
                                   Container(
@@ -566,7 +566,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                     decoration: BoxDecoration(
                                       color: ColorUtils.corporateBlue600
                                           .withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                                     ),
                                     child: Icon(
                                       Icons.info_outline_rounded,
@@ -574,7 +574,7 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                                       size: 17,
                                     ),
                                   ),
-                                  SizedBox(width: 10),
+                                  const SizedBox(width: 10),
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -604,13 +604,13 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen> {
                               _schoolName,
                               Icons.school_rounded,
                             ),
-                            SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.md),
                             _buildInfoCard(
                               'Alamat Sekolah',
                               _schoolAddress,
                               Icons.location_on_rounded,
                             ),
-                            SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.md),
                             _buildInfoCard(
                               'Jenjang Pendidikan',
                               _selectedJenjang,

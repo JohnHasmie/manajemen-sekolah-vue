@@ -516,13 +516,13 @@ class ParentClassActivityScreenState
       context: context,
       builder: (context) => Dialog(
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Gradient header
             Container(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -537,7 +537,7 @@ class ParentClassActivityScreenState
                     height: 44,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
                     child: Icon(
                       isAssignment
@@ -547,7 +547,7 @@ class ParentClassActivityScreenState
                       size: 24,
                     ),
                   ),
-                  SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,7 +591,7 @@ class ParentClassActivityScreenState
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: 400),
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -680,7 +680,7 @@ class ParentClassActivityScreenState
 
             // Footer
             Container(
-              padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
               decoration: BoxDecoration(
                 border: Border(top: BorderSide(color: ColorUtils.slate100)),
               ),
@@ -689,11 +689,11 @@ class ParentClassActivityScreenState
                 child: OutlinedButton(
                   onPressed: () => AppNavigator.pop(context),
                   style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: ColorUtils.slate300),
                     foregroundColor: ColorUtils.slate700,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                   ),
                   child: Text(
@@ -730,7 +730,7 @@ class ParentClassActivityScreenState
 
     return ListView.builder(
       key: _activityListKey,
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: _activityList.length,
       itemBuilder: (context, index) {
         final activity = _activityList[index];
@@ -752,17 +752,17 @@ class ParentClassActivityScreenState
           builder: (context) {
             _onItemVisible(activity);
             return Container(
-              margin: EdgeInsets.symmetric(vertical: 5),
+              margin: const EdgeInsets.symmetric(vertical: 5),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => _showActivityDetail(activity),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: const BorderRadius.all(Radius.circular(14)),
                   child: Container(
-                    padding: EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: const BorderRadius.all(Radius.circular(14)),
                       border: Border.all(color: ColorUtils.slate200),
                       boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                     ),
@@ -775,7 +775,7 @@ class ParentClassActivityScreenState
                           height: 44,
                           decoration: BoxDecoration(
                             color: accentColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             border: Border.all(
                               color: accentColor.withValues(alpha: 0.25),
                             ),
@@ -788,7 +788,7 @@ class ParentClassActivityScreenState
                             size: 22,
                           ),
                         ),
-                        SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.md),
                         // Content
                         Expanded(
                           child: Column(
@@ -811,7 +811,7 @@ class ParentClassActivityScreenState
                                   ),
                                   // Unread dot
                                   if (!isRead) ...[
-                                    SizedBox(width: AppSpacing.sm),
+                                    const SizedBox(width: AppSpacing.sm),
                                     Container(
                                       width: 8,
                                       height: 8,
@@ -823,7 +823,7 @@ class ParentClassActivityScreenState
                                   ],
                                 ],
                               ),
-                              SizedBox(height: 3),
+                              const SizedBox(height: 3),
                               Text(
                                 '${activity['mata_pelajaran_nama'] ?? '-'} • ${activity['kelas_nama'] ?? '-'}',
                                 style: TextStyle(
@@ -838,7 +838,7 @@ class ParentClassActivityScreenState
                               if (activity['deskripsi'] != null &&
                                   activity['deskripsi'].toString().isNotEmpty &&
                                   activity['deskripsi'] != 'null') ...[
-                                SizedBox(height: 6),
+                                const SizedBox(height: 6),
                                 Text(
                                   activity['deskripsi'].toString(),
                                   style: TextStyle(
@@ -853,7 +853,7 @@ class ParentClassActivityScreenState
 
                               // Chapter info
                               if (activity['judul_bab'] != null) ...[
-                                SizedBox(height: 6),
+                                const SizedBox(height: 6),
                                 Row(
                                   children: [
                                     Icon(
@@ -861,7 +861,7 @@ class ParentClassActivityScreenState
                                       size: 12,
                                       color: ColorUtils.info600,
                                     ),
-                                    SizedBox(width: AppSpacing.xs),
+                                    const SizedBox(width: AppSpacing.xs),
                                     Expanded(
                                       child: Text(
                                         '${activity['judul_bab']}${activity['judul_sub_bab'] != null ? ' • ${activity['judul_sub_bab']}' : ''}',
@@ -877,7 +877,7 @@ class ParentClassActivityScreenState
                                 ),
                               ],
 
-                              SizedBox(height: AppSpacing.sm),
+                              const SizedBox(height: AppSpacing.sm),
 
                               // Info tags
                               Wrap(

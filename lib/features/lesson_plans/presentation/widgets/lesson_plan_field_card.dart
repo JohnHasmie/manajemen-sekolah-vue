@@ -50,7 +50,7 @@ class LessonPlanFieldCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: [
           BoxShadow(
@@ -70,7 +70,7 @@ class LessonPlanFieldCard extends StatelessWidget {
         children: [
           // Field header row: label, regen count badge, regen icon button
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.04),
               borderRadius: BorderRadius.only(
@@ -93,12 +93,12 @@ class LessonPlanFieldCard extends StatelessWidget {
                 // Regen quota badge: "used/max" — hidden while limits are loading
                 if (regenInfo != null && !isLoadingLimits) ...[
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: remaining > 0
                           ? primaryColor.withValues(alpha: 0.1)
                           : ColorUtils.slate200,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                     child: Text(
                       '$used/$max',
@@ -111,22 +111,22 @@ class LessonPlanFieldCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                 ],
                 // Regen trigger button (star icon)
                 Material(
                   color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                   child: InkWell(
                     onTap: isRegeneratingThis ? null : onRegenTap,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     child: Container(
-                      padding: EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: remaining > 0
                             ? primaryColor.withValues(alpha: 0.1)
                             : ColorUtils.slate100,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                         border: Border.all(
                           color: remaining > 0
                               ? primaryColor.withValues(alpha: 0.2)
@@ -157,7 +157,7 @@ class LessonPlanFieldCard extends StatelessWidget {
           ),
           // Field content (HTML stripped by caller-provided function)
           Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: SelectableText(
               stripHtml(value),
               style: TextStyle(

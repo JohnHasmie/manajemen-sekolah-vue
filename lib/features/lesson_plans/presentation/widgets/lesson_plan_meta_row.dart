@@ -55,7 +55,7 @@ class LessonPlanMetaRow extends StatelessWidget {
                 ),
                 border: OutlineInputBorder(
                   borderSide: BorderSide(color: ColorUtils.slate300),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: const BorderRadius.all(Radius.circular(6)),
                 ),
               ),
             ),

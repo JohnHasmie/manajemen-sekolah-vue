@@ -66,12 +66,12 @@ class ParentAnnouncementCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: ColorUtils.slate200, width: 1),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
@@ -84,7 +84,7 @@ class ParentAnnouncementCard extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: accentColor.withValues(alpha: 0.25),
                     ),
@@ -97,7 +97,7 @@ class ParentAnnouncementCard extends StatelessWidget {
                     size: 22,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
 
                 // Middle: title + content preview + metadata info chips
                 Expanded(
@@ -127,7 +127,7 @@ class ParentAnnouncementCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
                       // Metadata chip row: date · creator · target · priority
                       Wrap(
                         spacing: 5,
@@ -156,7 +156,7 @@ class ParentAnnouncementCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
 
                 // Right: unread indicator dot (red circle when not yet read)
                 if (isUnread)

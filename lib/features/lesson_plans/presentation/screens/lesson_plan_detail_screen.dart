@@ -225,7 +225,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(16))),
         title: Text(
           'Regenerasi $fieldLabel',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -238,7 +238,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               'Sisa regenerasi: $remaining dari ${regenInfo?['max'] ?? 2}',
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             ),
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             TextField(
               controller: textController,
               maxLines: 3,
@@ -246,18 +246,18 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                 hintText: 'Tambahan instruksi (opsional)',
                 hintStyle: TextStyle(fontSize: 13, color: ColorUtils.slate400),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   borderSide: BorderSide(color: ColorUtils.slate200),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   borderSide: BorderSide(color: ColorUtils.slate200),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   borderSide: BorderSide(color: _primaryColor),
                 ),
-                contentPadding: EdgeInsets.all(AppSpacing.md),
+                contentPadding: const EdgeInsets.all(AppSpacing.md),
               ),
             ),
           ],
@@ -276,7 +276,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               backgroundColor: _primaryColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
             ),
             child: Text(AppLocalizations.regenerate.tr),
@@ -295,7 +295,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(16))),
         icon: Icon(Icons.auto_awesome, color: _primaryColor, size: 40),
         title: Text(
           'Regenerasi Semua Field',
@@ -309,7 +309,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               'Semua field RPP akan di-generate ulang. Setiap field memiliki batas regenerasi masing-masing.',
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             ),
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             TextField(
               controller: textController,
               maxLines: 3,
@@ -317,18 +317,18 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                 hintText: 'Tambahan instruksi untuk semua field (opsional)',
                 hintStyle: TextStyle(fontSize: 13, color: ColorUtils.slate400),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   borderSide: BorderSide(color: ColorUtils.slate200),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   borderSide: BorderSide(color: ColorUtils.slate200),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   borderSide: BorderSide(color: _primaryColor),
                 ),
-                contentPadding: EdgeInsets.all(AppSpacing.md),
+                contentPadding: const EdgeInsets.all(AppSpacing.md),
               ),
             ),
           ],
@@ -349,7 +349,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               backgroundColor: _primaryColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
             ),
           ),
@@ -366,7 +366,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(16))),
         icon: Icon(
           Icons.timer_off_rounded,
           color: ColorUtils.warning600,
@@ -387,7 +387,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               backgroundColor: _primaryColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
             ),
             child: Text('Mengerti'),
@@ -1010,12 +1010,12 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1028,7 +1028,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       _lessonPlanData['judul']?.toString() ??
                           _lessonPlanData['title']?.toString() ??
@@ -1061,7 +1061,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
             _saveLessonPlan();
           },
         ),
-        SizedBox(width: AppSpacing.sm),
+        const SizedBox(width: AppSpacing.sm),
         _buildHeaderButton(icon: Icons.close_rounded, onTap: _toggleEdit),
       ];
     }
@@ -1075,13 +1075,13 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         ),
       if (!widget.isNew) ...[
         _buildHeaderButton(icon: Icons.edit_outlined, onTap: _toggleEdit),
-        SizedBox(width: AppSpacing.sm),
+        const SizedBox(width: AppSpacing.sm),
         if (_hasAiAdditionalData) ...[
           _buildHeaderButton(
             icon: Icons.smart_toy_rounded,
             onTap: _openAiLessonPlanScreen,
           ),
-          SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.sm),
         ],
         PopupMenuButton<String>(
           onSelected: (value) {
@@ -1094,12 +1094,12 @@ class RPPDetailPageState extends State<RPPDetailPage> {
             height: 40,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
             ),
             child: Icon(Icons.more_vert, color: Colors.white, size: 20),
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
           ),
           itemBuilder: (BuildContext context) => [
             PopupMenuItem(
@@ -1107,7 +1107,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               child: Row(
                 children: [
                   Icon(Icons.picture_as_pdf, color: Colors.red, size: 20),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text('Export ke PDF'),
                 ],
               ),
@@ -1117,7 +1117,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               child: Row(
                 children: [
                   Icon(Icons.description, color: Colors.blue, size: 20),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text('Export ke Text'),
                 ],
               ),
@@ -1127,7 +1127,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
               child: Row(
                 children: [
                   Icon(Icons.content_copy, color: _primaryColor, size: 20),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text('Copy ke Clipboard'),
                 ],
               ),
@@ -1150,11 +1150,11 @@ class RPPDetailPageState extends State<RPPDetailPage> {
         height: 40,
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
         ),
         child: isLoading
             ? Padding(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: Colors.white,
@@ -1177,7 +1177,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     final bool canRegen = _hasAiAdditionalData && _lessonPlanId != null;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
           // File attachment card
@@ -1186,7 +1186,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
           // Regenerate All button
           if (canRegen) ...[
             _buildRegenAllButton(),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
           ],
 
           // RPP content - structured fields with regen buttons
@@ -1196,7 +1196,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: const BorderRadius.all(Radius.circular(14)),
                 border: Border.all(color: ColorUtils.slate200, width: 1),
                 boxShadow: [
                   BoxShadow(
@@ -1212,7 +1212,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
                 ],
               ),
               child: Padding(
-                padding: EdgeInsets.all(AppSpacing.xxl),
+                padding: const EdgeInsets.all(AppSpacing.xxl),
                 child: _buildFormattedContent(),
               ),
             ),
@@ -1233,7 +1233,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
     // Header info card
     final headerWidgets = <Widget>[
       _buildHeaderInfoCard(),
-      SizedBox(height: AppSpacing.md),
+      const SizedBox(height: AppSpacing.md),
     ];
 
     // Field cards
@@ -1244,7 +1244,7 @@ class RPPDetailPageState extends State<RPPDetailPage> {
       final value = _getFieldValue(fieldKey, altKey);
       if (value.isEmpty) return SizedBox.shrink();
       return Padding(
-        padding: EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(bottom: 12),
         child: LessonPlanFieldCard(
           fieldKey: fieldKey,
           fieldLabel: fieldLabel,

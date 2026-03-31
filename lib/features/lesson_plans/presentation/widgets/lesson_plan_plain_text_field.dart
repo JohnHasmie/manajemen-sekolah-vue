@@ -24,7 +24,7 @@ class LessonPlanPlainTextField extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: [
           BoxShadow(
@@ -40,7 +40,7 @@ class LessonPlanPlainTextField extends StatelessWidget {
         style: TextStyle(fontSize: 14, height: 1.6, color: ColorUtils.slate800),
         decoration: InputDecoration(
           border: InputBorder.none,
-          contentPadding: EdgeInsets.all(AppSpacing.lg),
+          contentPadding: const EdgeInsets.all(AppSpacing.lg),
         ),
       ),
     );
