@@ -28,7 +28,7 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/subjects/presentation/controllers/admin_subject_controller.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_add_edit_sheet.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_card.dart';
-import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_class_management_page.dart';
+import 'package:manajemensekolah/features/subjects/presentation/screens/subject_class_management_page.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_filter_sheet.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 

@@ -17,7 +17,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/features/settings/presentation/screens/day_session_management_sheet.dart';
+import 'package:manajemensekolah/features/settings/presentation/widgets/day_session_management_sheet.dart';
 
 /// Time settings screen - configure lesson hour sessions for each school day.
 ///

@@ -25,7 +25,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/features/recommendations/presentation/screens/subject_picker_sheet.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/widgets/subject_picker_sheet.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/scope_option_tile.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_class_card.dart';
 

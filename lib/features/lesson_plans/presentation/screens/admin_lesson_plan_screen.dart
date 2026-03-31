@@ -28,7 +28,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/update_status_dialog.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_detail_page.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_admin_detail_page.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_card.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/teacher_select_card.dart';
 
