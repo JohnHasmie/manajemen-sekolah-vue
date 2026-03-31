@@ -24,6 +24,7 @@ variables:
   FLUTTER_VERSION: "3.35.4"
   LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
+  GIT_STRATEGY: fetch
 
 # ---------------------------------------------------------------------------
 # Reusable templates
@@ -171,7 +172,7 @@ shorebird_release:
       VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
       BUILD_NUMBER=${CI_PIPELINE_IID}
       echo "Shorebird release ${VERSION_NAME}+${BUILD_NUMBER}"
-    - shorebird release android --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+    - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   artifacts:
     paths:
       - build/app/outputs/bundle/release/app-release.aab
@@ -190,7 +191,7 @@ shorebird_patch:
   stage: deploy
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
-    - shorebird patch android --release-version=latest --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+    - shorebird patch android --flutter-version=${FLUTTER_VERSION} --release-version=latest --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
