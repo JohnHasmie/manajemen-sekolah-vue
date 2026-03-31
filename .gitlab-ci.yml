@@ -28,19 +28,18 @@ variables:
 # Reusable templates
 # ---------------------------------------------------------------------------
 .flutter_setup: &flutter_setup
-  image: ghcr.io/cirruslabs/flutter:${FLUTTER_VERSION}
   before_script:
+    - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$PATH"
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
 
 .shorebird_setup: &shorebird_setup
-  image: ghcr.io/cirruslabs/flutter:${FLUTTER_VERSION}
   before_script:
+    - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$HOME/.shorebird/bin:$PATH"
     - |
       if ! command -v shorebird &>/dev/null; then
         curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
       fi
-    - export PATH="$HOME/.shorebird/bin:$PATH"
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
     - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
@@ -93,9 +92,8 @@ test:
 # ---------------------------------------------------------------------------
 detect_changes:
   stage: detect
-  image: alpine:latest
   script:
-    - apk add --no-cache git
+    - echo "Detecting changes..."
 
     # Files that require a full release (native code, plugins, config)
     # If ANY of these changed → must do shorebird release + Play Store upload
