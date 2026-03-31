@@ -32,6 +32,7 @@ variables:
 .flutter_setup: &flutter_setup
   before_script:
     - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$PATH"
+    - rm -rf android/app/src/main/java/io/flutter/plugins/
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
 
@@ -42,6 +43,8 @@ variables:
       if ! command -v shorebird &>/dev/null; then
         curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
       fi
+    # Clean stale generated files from previous builds
+    - rm -rf android/app/src/main/java/io/flutter/plugins/
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
     - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
