@@ -64,7 +64,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
     super.initState();
     // Pre-fill data if editing
     if (widget.existingGrade != null) {
-      _scoreController.text = widget.existingGrade!['nilai'].toString();
+      _scoreController.text = (widget.existingGrade!['score'] ?? widget.existingGrade!['nilai'] ?? '').toString();
       _deskripsiController.text =
           widget.existingGrade!['deskripsi']?.toString() ?? '';
       _titleController.text = widget.existingGrade!['title']?.toString() ?? '';
@@ -76,9 +76,19 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
       if (widget.initialDate != null) {
         _selectedDate = widget.initialDate!;
       }
-      if (widget.initialTitle != null) {
+      if (widget.initialTitle != null && widget.initialTitle!.isNotEmpty) {
         _titleController.text = widget.initialTitle!;
+      } else {
+        // Prefill with "Nilai [Type]" as requested
+        final label = _getGradeTypeLabel(widget.gradeType, ref.read(languageRiverpod));
+        _titleController.text = 'Nilai $label';
       }
+    }
+    
+    // Also handle case where existing grade has no title
+    if (widget.existingGrade != null && _titleController.text.isEmpty) {
+      final label = _getGradeTypeLabel(widget.gradeType, ref.read(languageRiverpod));
+      _titleController.text = 'Nilai $label';
     }
   }
 

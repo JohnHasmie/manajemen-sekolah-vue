@@ -182,13 +182,17 @@ class _DashboardState extends ConsumerState<Dashboard>
           DashboardAppBar(
             schoolName: state.userData['nama_sekolah'],
             primaryColor: primaryColor,
+            unreadNotifications: state.stats['unread_notifications'],
             unreadAnnouncements: state.stats['unread_announcements'],
             profileHeaderKey: _profileHeaderKey,
             onLanguageTap: () => _showLanguageDialog(context, languageProvider),
-            onNotificationTap: () => AppNavigator.push(
-              context,
-              NotificationListScreen(role: widget.role),
-            ),
+            onNotificationTap: () async {
+              await AppNavigator.push(
+                context,
+                NotificationListScreen(role: widget.role),
+              );
+              ref.read(dashboardProvider.notifier).refreshStats();
+            },
             onAccountTap: () => _showAccountBottomSheet(context, state),
           ),
           SliverToBoxAdapter(
@@ -251,6 +255,7 @@ class _DashboardState extends ConsumerState<Dashboard>
           DashboardAppBar(
             schoolName: null,
             primaryColor: primaryColor,
+            unreadNotifications: null,
             unreadAnnouncements: null,
             profileHeaderKey: _profileHeaderKey,
             onLanguageTap: () => _showLanguageDialog(context, languageProvider),

@@ -175,7 +175,7 @@ class AdminAnnouncementScreenState
         _searchController.text.trim().isNotEmpty) {
       return null;
     }
-    return 'announcement_list';
+    return 'announcement_list_admin';
   }
 
   /// Invalidates cache and reloads data from API. Like a Vue method for manual refresh.
@@ -367,7 +367,7 @@ class AdminAnnouncementScreenState
         final cacheKey = _buildAnnouncementCacheKey();
         if (cacheKey != null) {
           final cached = await LocalCacheService.load(cacheKey);
-          if (cached != null && cached['data'] != null && mounted) {
+          if (cached != null && cached is Map && cached['data'] != null && mounted) {
             final cachedList = cached['data'] as List<dynamic>;
             if (cachedList.isNotEmpty) {
               setState(() {

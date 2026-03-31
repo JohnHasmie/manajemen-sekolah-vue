@@ -317,7 +317,7 @@ class GradeEditTableWidget extends StatelessWidget {
                                 ),
                                 onFieldSubmitted: (value) => onSaveGrade(
                                   student,
-                                  'nilai',
+                                  'score',
                                   value,
                                 ),
                               ),

@@ -419,7 +419,7 @@ class GradeTableWidget extends StatelessWidget {
     for (final header in headers) {
       final gradeRecord = _getGradeForStudentAndHeader(student, type, header);
       final scoreText = gradeRecord?.isNotEmpty == true
-          ? _formatGradeValue(gradeRecord!['nilai'])
+          ? _formatGradeValue(gradeRecord!['score'])
           : '-';
       final hasValue = gradeRecord?.isNotEmpty == true;
 

@@ -47,11 +47,11 @@ class ApiNotificationService {
     }
   }
 
-  /// Marks a single notification as read by ID.
-  /// Like `$notification->markAsRead()` in Laravel's Notification system.
+  /// Marks a single notification as read by deleting it.
+  /// The API exposes DELETE /notifications/{id} — there is no PUT/PATCH route.
   Future<void> markAsRead(String id) async {
     try {
-      await dioClient.put('/notifications/$id', data: {'is_read': true});
+      await dioClient.delete('/notifications/$id');
     } catch (e) {
       rethrow;
     }
