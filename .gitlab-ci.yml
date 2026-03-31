@@ -36,7 +36,10 @@ variables:
 .shorebird_setup: &shorebird_setup
   image: ghcr.io/cirruslabs/flutter:${FLUTTER_VERSION}
   before_script:
-    - curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+    - |
+      if ! command -v shorebird &>/dev/null; then
+        curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+      fi
     - export PATH="$HOME/.shorebird/bin:$PATH"
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
@@ -206,12 +209,11 @@ build_android:
 # ---------------------------------------------------------------------------
 deploy_playstore:
   stage: deploy
-  image: ruby:3.2
   needs:
     - build_android
     - detect_changes
   before_script:
-    - gem install fastlane --no-document
+    - command -v fastlane &>/dev/null || gem install fastlane --no-document
   script:
     - echo "${PLAY_STORE_JSON_BASE64}" | base64 -d > play-store-key.json
     - |
