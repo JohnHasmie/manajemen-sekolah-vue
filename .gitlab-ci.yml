@@ -63,8 +63,9 @@ analyze:
 
 # ---------------------------------------------------------------------------
 # Stage 2: Test
-# Runs automatically by default. To skip: click the ▶ button instead of
-# waiting, or cancel the job from the pipeline view.
+# On MR: runs as manual (click ▶ to run, or merge without running).
+# On branch push: runs automatically.
+# GitLab merge check: pipeline passes when analyze ✅ + test ✅ or skipped.
 # ---------------------------------------------------------------------------
 test:
   <<: *flutter_setup
@@ -74,6 +75,7 @@ test:
   allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
     - if: $CI_COMMIT_BRANCH
 
 # ---------------------------------------------------------------------------
