@@ -23,6 +23,8 @@ stages:
 
 variables:
   FLUTTER_VERSION: "3.35.4"
+  LC_ALL: "en_US.UTF-8"
+  LANG: "en_US.UTF-8"
 
 # ---------------------------------------------------------------------------
 # Reusable templates
