@@ -411,6 +411,7 @@ class DashboardNotifier extends AsyncNotifier<DashboardState> {
         'rpp_rejected': _toInt(data['rpp_rejected']),
         'rpp_pending': _toInt(data['rpp_pending']),
         'attendance_summary': data['attendance_summary'] is Map ? data['attendance_summary'] : {},
+        'unread_notifications': _toInt(data['unread_notifications']),
         'unread_announcements': _toInt(data['unread_announcements']),
         'unread_class_activities': _toInt(data['unread_class_activities']),
       };
@@ -420,12 +421,14 @@ class DashboardNotifier extends AsyncNotifier<DashboardState> {
         'total_teachers': _toInt(data['total_teachers'] ?? data['total_guru']),
         'total_classes': _toInt(data['total_classes'] ?? data['total_kelas']),
         'total_subjects': _toInt(data['total_subjects'] ?? data['total_mapel']),
+        'unread_notifications': _toInt(data['unread_notifications']),
         'unread_announcements': _toInt(data['unread_announcements']),
         'unread_class_activities': _toInt(data['unread_class_activities']),
       };
     } else if (effectiveRole == 'wali') {
       stats = {
         'children_registered': _toInt(data['children_registered'] ?? data['anak_terdaftar']),
+        'unread_notifications': _toInt(data['unread_notifications']),
         'unread_announcements': _toInt(data['unread_announcements']),
         'unread_class_activities': _toInt(data['unread_class_activities']),
         'unread_grades': _toInt(data['unread_grades']),

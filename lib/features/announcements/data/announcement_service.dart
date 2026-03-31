@@ -76,8 +76,16 @@ class ApiAnnouncementService {
             },
           };
         }
+        AppLogger.warning(
+          'announcement',
+          'API response is Map but missing pagination keys. Using raw data.',
+        );
         return result;
       }
+      AppLogger.warning(
+        'announcement',
+        'API response is not a Map (type: ${result.runtimeType}). Returning as list if possible.',
+      );
       return {
         'success': true,
         'data': result is List ? result : [],

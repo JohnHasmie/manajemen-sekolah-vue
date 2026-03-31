@@ -20,7 +20,10 @@ class DashboardAppBar extends StatelessWidget {
   /// Role-specific primary color used for the logo container.
   final Color primaryColor;
 
-  /// Number of unread announcements — drives the notification badge.
+  /// Total unread notifications — drives the notification bell badge.
+  final int? unreadNotifications;
+
+  /// Number of unread announcements — kept for backward compatibility.
   final int? unreadAnnouncements;
 
   /// GlobalKey placed on the profile IconButton (used by the onboarding tour).
@@ -39,6 +42,7 @@ class DashboardAppBar extends StatelessWidget {
     super.key,
     this.schoolName,
     required this.primaryColor,
+    this.unreadNotifications,
     this.unreadAnnouncements,
     this.profileHeaderKey,
     required this.onLanguageTap,
@@ -127,7 +131,7 @@ class DashboardAppBar extends StatelessWidget {
                       splashRadius: 18,
                       onPressed: onNotificationTap,
                     ),
-                    if (unreadAnnouncements != null && unreadAnnouncements! > 0)
+                    if ((unreadNotifications ?? unreadAnnouncements ?? 0) > 0)
                       Positioned(
                         right: 4,
                         top: 2,
@@ -142,9 +146,9 @@ class DashboardAppBar extends StatelessWidget {
                             minHeight: 14,
                           ),
                           child: Text(
-                            unreadAnnouncements! > 9
+                            (unreadNotifications ?? unreadAnnouncements ?? 0) > 9
                                 ? '9+'
-                                : unreadAnnouncements.toString(),
+                                : (unreadNotifications ?? unreadAnnouncements ?? 0).toString(),
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 7,

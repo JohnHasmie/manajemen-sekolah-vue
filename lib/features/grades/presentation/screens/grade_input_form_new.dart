@@ -375,8 +375,16 @@ class GradeInputFormNewState extends ConsumerState<GradeInputFormNew> {
                       titleController: _titleController,
                       isReadOnly: _isReadOnly,
                       languageProvider: languageProvider,
-                      onGradeTypeChanged: (value) =>
-                          setState(() => _selectedGradeType = value),
+                      onGradeTypeChanged: (value) {
+                        setState(() {
+                          _selectedGradeType = value;
+                          // Prefill title if empty
+                          if (_titleController.text.isEmpty && value != null) {
+                            final label = _getGradeTypeLabel(value, languageProvider);
+                            _titleController.text = 'Nilai $label';
+                          }
+                        });
+                      },
                       onSelectDate: () => _selectDate(context),
                       onConfirm: () => setState(() {
                         _isConfigurationSet = true;

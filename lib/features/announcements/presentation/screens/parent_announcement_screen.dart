@@ -77,21 +77,33 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
 
   @override
   void dispose() {
-    _markReadDebounce?.cancel(); // Cancel visibility debounce
-    if (_pendingReadIds.isNotEmpty) {
-      _flushMarkReadSilently(List.from(_pendingReadIds));
-      _pendingReadIds.clear();
-    }
+    _markReadDebounce?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _flushMarkReadSilently(List<String> ids) async {
+  /// Flush all pending read IDs to the API and wait for it to complete.
+  /// Called before the screen pops so that refreshStats() on the dashboard
+  /// sees the updated unread count.
+  Future<void> _flushPendingReads() async {
+    _markReadDebounce?.cancel();
+    if (_pendingReadIds.isEmpty) return;
+    final ids = _pendingReadIds.toList();
+    _pendingReadIds.clear();
     try {
       await AnnouncementService.markAnnouncementRead(ids);
     } catch (e) {
       AppLogger.error('announcement', e);
     }
   }
+
+  /// Flush pending reads then pop — ensures the dashboard badge refreshes
+  /// with the correct unread count.
+  Future<void> _popWithFlush(BuildContext context) async {
+    await _flushPendingReads();
+    if (context.mounted) AppNavigator.pop(context);
+  }
+
 
   void _onItemVisible(Map<String, dynamic> announcement) {
     final id = announcement['id'].toString();
@@ -149,27 +161,18 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
     _loadData();
   }
 
-  static const String _announcementCacheKey = 'announcement_list';
+  String get _announcementCacheKey => 'announcement_list_$_userRole';
 
+  /// Pull-to-refresh: fetch fresh data from API, keep existing list visible
+  /// while loading (no skeleton flash).
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('announcement_');
-    _loadData(useCache: false);
+    await _fetchFromApi();
   }
 
-  /// Loads announcements from API with cache-first strategy.
-  /// Like `axios.get('/api/announcements')` in Vue.
+  /// Loads announcements with cache-first strategy (used on initial load).
   Future<void> _loadData({bool useCache = true}) async {
-    // Load user role from SharedPreferences
-    final prefs = PreferencesService();
-    final userData = prefs.getString('user');
-    if (userData != null) {
-      final user = json.decode(userData);
-      if (mounted) {
-        setState(() {
-          _userRole = user['role'] ?? 'wali'; // API role identifier
-        });
-      }
-    }
+    _resolveUserRole();
 
     // Step 1: Try cache → return early
     if (useCache) {
@@ -191,14 +194,32 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
       }
     }
 
-    // Step 2: Show loading & fetch from API
+    // Step 2: No cache — show skeleton and fetch
     if (mounted) {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
     }
+    await _fetchFromApi();
+  }
 
+  void _resolveUserRole() {
+    final prefs = PreferencesService();
+    final userData = prefs.getString('user');
+    if (userData != null) {
+      final user = json.decode(userData);
+      if (mounted) {
+        setState(() {
+          _userRole = user['role'] ?? 'wali';
+        });
+      }
+    }
+  }
+
+  /// Fetches announcements from the API and updates state + cache.
+  Future<void> _fetchFromApi() async {
+    _resolveUserRole();
     try {
       final response = await _apiService.get('/announcement/user/current');
 
@@ -213,10 +234,10 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
         setState(() {
           _announcementList = announcementList;
           _isLoading = false;
+          _errorMessage = null;
         });
       }
 
-      // Save to cache
       await LocalCacheService.save(_announcementCacheKey, announcementList);
     } catch (e) {
       AppLogger.error('announcement', e);
@@ -584,7 +605,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () => AppNavigator.pop(context),
+                        onPressed: () => _popWithFlush(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _getPrimaryColor(),
                           shape: const RoundedRectangleBorder(
@@ -791,7 +812,13 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _popWithFlush(context);
+      },
+      child: Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
@@ -820,7 +847,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                 Row(
                   children: [
                     GestureDetector(
-                      onTap: () => AppNavigator.pop(context),
+                      onTap: () => _popWithFlush(context),
                       child: Container(
                         width: 40,
                         height: 40,
@@ -963,7 +990,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                     highlightColor: _getPrimaryColor().withValues(alpha: 0.05),
                   )
                 : _errorMessage != null
-                ? ErrorScreen(errorMessage: _errorMessage!, onRetry: _loadData)
+                ? ErrorScreen(errorMessage: _errorMessage!, onRetry: _forceRefresh)
                 : _filteredAnnouncement.isEmpty
                 ? EmptyState(
                     icon: Icons.announcement_outlined,
@@ -983,10 +1010,10 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                       'en': 'Refresh',
                       'id': 'Muat Ulang',
                     }),
-                    onPressed: _loadData,
+                    onPressed: _forceRefresh,
                   )
                 : RefreshIndicator(
-                    onRefresh: _loadData,
+                    onRefresh: _forceRefresh,
                     color: _getPrimaryColor(),
                     backgroundColor: Colors.white,
                     child: ListView.builder(
@@ -1010,6 +1037,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 

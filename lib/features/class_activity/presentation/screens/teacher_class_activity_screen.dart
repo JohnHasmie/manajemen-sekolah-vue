@@ -347,10 +347,19 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
           _teacherName = teacherProvider.teacherName ?? 'Guru';
         });
 
+        // If initial params provided, jump straight to activity list
+        // without loading the class/subject selection screens first
+        if (widget.initialClassId != null && widget.initialSubjectId != null) {
+          await _handleInitialNavigation();
+          // Load classes in background for back-navigation
+          _loadClassesAndSchedule(teacherProvider.teacherId!, isAdmin: false);
+          return;
+        }
+
         // Load classes and schedule using cached teacher ID
         await _loadClassesAndSchedule(teacherProvider.teacherId!, isAdmin: false);
 
-        // If initial params provided, try to navigate deep
+        // If only class provided (no subject), navigate to subject selection
         await _handleInitialNavigation();
         return;
       }
@@ -432,9 +441,14 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
                 _teacherId = resolvedTeacherId!;
               });
 
-              await _loadClassesAndSchedule(resolvedTeacherId, isAdmin: false);
-
-              await _handleInitialNavigation();
+              // If initial params provided, jump straight to activity list
+              if (widget.initialClassId != null && widget.initialSubjectId != null) {
+                await _handleInitialNavigation();
+                _loadClassesAndSchedule(resolvedTeacherId, isAdmin: false);
+              } else {
+                await _loadClassesAndSchedule(resolvedTeacherId, isAdmin: false);
+                await _handleInitialNavigation();
+              }
             } else {
               // FALLBACK: Teacher resolution failed.
               AppLogger.error(

@@ -1,5 +1,8 @@
 # GitLab CI/CD for KamilEdu Flutter App
-# Stages: analyze → test → build → deploy → patch
+# Stages: analyze → test → detect → build → deploy → patch
+#
+# The "detect_changes" job automatically checks what changed and tells you
+# whether to use shorebird_release (new version) or shorebird_patch (OTA).
 #
 # Required CI/CD Variables (Settings → CI/CD → Variables):
 #   API_BASE_URL           - API endpoint URL
@@ -8,20 +11,12 @@
 #   KEY_PASSWORD           - key password
 #   STORE_PASSWORD         - keystore password
 #   PLAY_STORE_JSON_BASE64 - base64-encoded Google Play service account JSON
-#   SHOREBIRD_TOKEN        - Shorebird CI token (from: shorebird login:ci)
-#
-# To encode files for CI variables:
-#   base64 -i upload-keystore.jks | pbcopy          (macOS)
-#   base64 play-store-service-account.json | xclip   (Linux)
-#
-# Shorebird workflow:
-#   - "shorebird release" creates a new release (new native code / version bump)
-#   - "shorebird patch"   pushes a Dart-only OTA update to existing release
-#   - Users get patches instantly without Play Store review
+#   SHOREBIRD_TOKEN        - Shorebird API key (from console.shorebird.dev)
 
 stages:
   - analyze
   - test
+  - detect
   - build
   - deploy
   - patch
@@ -41,12 +36,10 @@ variables:
 .shorebird_setup: &shorebird_setup
   image: ghcr.io/cirruslabs/flutter:${FLUTTER_VERSION}
   before_script:
-    # Install Shorebird CLI
     - curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
     - export PATH="$HOME/.shorebird/bin:$PATH"
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
-    # Decode keystore
     - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
     - |
       cat > android/key.properties << EOF
@@ -66,7 +59,7 @@ analyze:
     - flutter analyze --fatal-warnings
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH  # runs on all branch pushes
+    - if: $CI_COMMIT_BRANCH
 
 # ---------------------------------------------------------------------------
 # Stage 2: Test
@@ -78,14 +71,111 @@ test:
     - flutter test --reporter=expanded
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH  # runs on all branch pushes
+    - if: $CI_COMMIT_BRANCH
 
 # ---------------------------------------------------------------------------
-# Stage 3: Build release AAB (without Shorebird — standard Flutter build)
+# Stage 3: Detect change type (patch vs release)
+#
+# Compares changed files against the last merge into main.
+# Native changes → NEEDS_RELEASE    (shorebird release + Play Store)
+# Dart-only      → PATCH_OK         (shorebird patch, instant OTA)
+#
+# Result is printed in the job log AND saved as a dotenv artifact
+# so downstream jobs can read DEPLOY_TYPE.
+# ---------------------------------------------------------------------------
+detect_changes:
+  stage: detect
+  image: alpine:latest
+  script:
+    - apk add --no-cache git
+
+    # Files that require a full release (native code, plugins, config)
+    # If ANY of these changed → must do shorebird release + Play Store upload
+    - |
+      NATIVE_PATTERNS="
+        android/
+        ios/
+        macos/
+        linux/
+        windows/
+        web/
+        pubspec.yaml
+        pubspec.lock
+        shorebird.yaml
+      "
+
+    - |
+      echo "Checking changes since last commit on main..."
+      if [ "$CI_MERGE_REQUEST_DIFF_BASE_SHA" != "" ]; then
+        BASE_SHA="$CI_MERGE_REQUEST_DIFF_BASE_SHA"
+      elif [ "$CI_COMMIT_BEFORE_SHA" != "" ] && [ "$CI_COMMIT_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+        BASE_SHA="$CI_COMMIT_BEFORE_SHA"
+      else
+        BASE_SHA="HEAD~1"
+      fi
+      echo "Base: $BASE_SHA"
+      echo "Head: $CI_COMMIT_SHA"
+
+    - |
+      CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$CI_COMMIT_SHA" 2>/dev/null || git diff --name-only HEAD~1 HEAD)
+      echo ""
+      echo "===== Changed files ====="
+      echo "$CHANGED_FILES"
+      echo "========================="
+      echo ""
+
+    - |
+      NEEDS_RELEASE=false
+      RELEASE_REASONS=""
+      for pattern in $NATIVE_PATTERNS; do
+        pattern_clean=$(echo "$pattern" | tr -d ' ')
+        if echo "$CHANGED_FILES" | grep -q "^${pattern_clean}"; then
+          NEEDS_RELEASE=true
+          MATCHED=$(echo "$CHANGED_FILES" | grep "^${pattern_clean}" | head -3)
+          RELEASE_REASONS="${RELEASE_REASONS}\n  - ${pattern_clean}* → ${MATCHED}"
+        fi
+      done
+
+    - |
+      echo ""
+      echo "╔══════════════════════════════════════════════════╗"
+      if [ "$NEEDS_RELEASE" = "true" ]; then
+        echo "║  🚀 RELEASE REQUIRED (native/plugin changes)    ║"
+        echo "╠══════════════════════════════════════════════════╣"
+        echo "║  Use: shorebird_release → deploy_playstore       ║"
+        echo "╠══════════════════════════════════════════════════╣"
+        echo -e "║  Reason:${RELEASE_REASONS}"
+        DEPLOY_TYPE="release"
+      else
+        echo "║  ⚡ PATCH OK (Dart-only changes)                 ║"
+        echo "╠══════════════════════════════════════════════════╣"
+        echo "║  Use: shorebird_patch (instant OTA, no review)   ║"
+        DEPLOY_TYPE="patch"
+      fi
+      echo "╚══════════════════════════════════════════════════╝"
+      echo ""
+
+    # Save result as dotenv artifact for downstream jobs
+    - echo "DEPLOY_TYPE=${DEPLOY_TYPE}" > deploy.env
+    - cat deploy.env
+
+  artifacts:
+    reports:
+      dotenv: deploy.env
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------------------
+# Stage 4: Build release AAB
 # ---------------------------------------------------------------------------
 build_android:
   <<: *flutter_setup
   stage: build
+  needs:
+    - analyze
+    - test
+    - detect_changes
   script:
     - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
     - |
@@ -104,13 +194,15 @@ build_android:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 # ---------------------------------------------------------------------------
-# Stage 4a: Deploy to Play Store (internal track)
+# Stage 5a: Deploy to Play Store
+# Auto-shown when detect_changes says "release", otherwise manual
 # ---------------------------------------------------------------------------
 deploy_playstore:
   stage: deploy
   image: ruby:3.2
   needs:
     - build_android
+    - detect_changes
   before_script:
     - gem install fastlane --no-document
   script:
@@ -131,17 +223,16 @@ deploy_playstore:
       allow_failure: false
 
 # ---------------------------------------------------------------------------
-# Stage 4b: Shorebird Release (new version → Play Store + OTA baseline)
-#
-# Use this INSTEAD of build_android + deploy_playstore when you want
-# Shorebird-enabled releases. This creates the release artifact that
-# future patches are diffed against.
-#
-# Run manually: only when bumping version or changing native code.
+# Stage 5b: Shorebird Release (new version + OTA baseline)
+# Use when detect_changes says "release"
 # ---------------------------------------------------------------------------
 shorebird_release:
   <<: *shorebird_setup
   stage: deploy
+  needs:
+    - analyze
+    - test
+    - detect_changes
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
     - shorebird release android --force --dart-define=API_BASE_URL=${API_BASE_URL}
@@ -155,17 +246,16 @@ shorebird_release:
       allow_failure: false
 
 # ---------------------------------------------------------------------------
-# Stage 5: Shorebird Patch (OTA update — no Play Store review needed)
-#
-# Pushes a Dart-only code update to all users on the current release.
-# Users receive the patch silently on next app launch.
-#
-# Use when: bug fixes, UI tweaks, copy changes — anything that doesn't
-# touch native code (Kotlin/Swift), plugins, or assets.
+# Stage 6: Shorebird Patch (OTA hotfix — no Play Store review)
+# Use when detect_changes says "patch"
 # ---------------------------------------------------------------------------
 shorebird_patch:
   <<: *shorebird_setup
   stage: patch
+  needs:
+    - analyze
+    - test
+    - detect_changes
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
     - shorebird patch android --force --dart-define=API_BASE_URL=${API_BASE_URL}
