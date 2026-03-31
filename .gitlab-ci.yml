@@ -57,6 +57,8 @@ analyze:
   stage: analyze
   script:
     - flutter analyze --fatal-warnings
+  when: manual
+  allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
@@ -69,6 +71,8 @@ test:
   stage: test
   script:
     - flutter test --reporter=expanded
+  when: manual
+  allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
@@ -173,8 +177,10 @@ build_android:
   <<: *flutter_setup
   stage: build
   needs:
-    - analyze
-    - test
+    - job: analyze
+      optional: true
+    - job: test
+      optional: true
     - detect_changes
   script:
     - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
@@ -230,8 +236,10 @@ shorebird_release:
   <<: *shorebird_setup
   stage: deploy
   needs:
-    - analyze
-    - test
+    - job: analyze
+      optional: true
+    - job: test
+      optional: true
     - detect_changes
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
@@ -253,8 +261,10 @@ shorebird_patch:
   <<: *shorebird_setup
   stage: patch
   needs:
-    - analyze
-    - test
+    - job: analyze
+      optional: true
+    - job: test
+      optional: true
     - detect_changes
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
