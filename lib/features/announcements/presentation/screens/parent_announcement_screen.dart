@@ -305,7 +305,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -314,10 +314,10 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
               // Header with gradient
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   gradient: _getCardGradient(),
-                  borderRadius: BorderRadius.only(
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
                   ),
@@ -332,7 +332,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                           ),
                           child: Icon(
                             Icons.announcement,
@@ -340,7 +340,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                             size: 20,
                           ),
                         ),
-                        SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Text(
                             announcementData['title'] ?? 'No Title',
@@ -353,7 +353,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       _formatDate(announcementData['created_at']),
                       style: TextStyle(
@@ -367,7 +367,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
 
               // Content
               Padding(
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -377,13 +377,13 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                       'important',
                     ].contains(announcementData['priority']))
                       Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
                           color: ColorUtils.warning600.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                           border: Border.all(
                             color: ColorUtils.warning600.withValues(alpha: 0.4),
                           ),
@@ -396,7 +396,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                               size: 14,
                               color: ColorUtils.warning600,
                             ),
-                            SizedBox(width: 6),
+                            const SizedBox(width: 6),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Important Announcement',
@@ -412,7 +412,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         ),
                       ),
 
-                    SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.lg),
 
                     // Content text
                     Text(
@@ -424,7 +424,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                       ),
                     ),
 
-                    SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
 
                     // Attachment Section
                     if (announcementData['file_path'] != null) ...[
@@ -439,27 +439,27 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                           color: ColorUtils.slate600,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
                       InkWell(
                         onTap: () => _openFile(
                           _getFileUrl(announcementData['file_path']),
                           announcementData['file_name'] ?? 'attachment',
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         child: Container(
-                          padding: EdgeInsets.all(AppSpacing.md),
+                          padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
                             color: ColorUtils.slate50,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.all(Radius.circular(12)),
                             border: Border.all(color: ColorUtils.slate200),
                           ),
                           child: Row(
                             children: [
                               Container(
-                                padding: EdgeInsets.all(AppSpacing.sm),
+                                padding: const EdgeInsets.all(AppSpacing.sm),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                                   border: Border.all(
                                     color: ColorUtils.slate200,
                                   ),
@@ -470,7 +470,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                                   size: 20,
                                 ),
                               ),
-                              SizedBox(width: AppSpacing.md),
+                              const SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,15 +509,15 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: AppSpacing.xl),
+                      const SizedBox(height: AppSpacing.xl),
                     ],
 
                     // Metadata
                     Container(
-                      padding: EdgeInsets.all(AppSpacing.lg),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
                       child: Column(
                         children: [
@@ -531,7 +531,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                                 announcementData['pembuat_nama'] ?? 'Unknown',
                             primaryColor: _getPrimaryColor(),
                           ),
-                          SizedBox(height: AppSpacing.sm),
+                          const SizedBox(height: AppSpacing.sm),
                           AnnouncementDetailRow(
                             icon: Icons.people,
                             label: languageProvider.getTranslatedText({
@@ -545,7 +545,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                             primaryColor: _getPrimaryColor(),
                           ),
                           if (announcementData['start_date'] != null)
-                            SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: AppSpacing.sm),
                           if (announcementData['start_date'] != null)
                             AnnouncementDetailRow(
                               icon: Icons.calendar_today,
@@ -559,7 +559,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                               primaryColor: _getPrimaryColor(),
                             ),
                           if (announcementData['end_date'] != null)
-                            SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: AppSpacing.sm),
                           if (announcementData['end_date'] != null)
                             AnnouncementDetailRow(
                               icon: Icons.event_busy,
@@ -579,7 +579,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
 
               // Close button
               Container(
-                padding: EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: [
                     Expanded(
@@ -587,10 +587,10 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         onPressed: () => AppNavigator.pop(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _getPrimaryColor(),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
                           ),
-                          padding: EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         child: Text(
                           languageProvider.getTranslatedText({
@@ -669,17 +669,17 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
     final accentColor = isImportant ? ColorUtils.warning600 : primaryColor;
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _showAnnouncementDetail(announcementData),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: ColorUtils.slate200, width: 1),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
@@ -692,7 +692,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                   height: 44,
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: accentColor.withValues(alpha: 0.25),
                     ),
@@ -705,7 +705,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                     size: 22,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
 
                 // Middle: title + preview + info chips
                 Expanded(
@@ -723,7 +723,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 3),
                       // Content preview
                       Text(
                         announcementData['content'] ?? '',
@@ -735,7 +735,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
                       // Info chips row
                       Wrap(
                         spacing: 5,
@@ -767,14 +767,14 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                     ],
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
 
                 // Right: unread dot
                 if (isUnread)
                   Container(
                     width: 8,
                     height: 8,
-                    margin: EdgeInsets.only(top: 4),
+                    margin: const EdgeInsets.only(top: 4),
                     decoration: BoxDecoration(
                       color: ColorUtils.error600,
                       shape: BoxShape.circle,
@@ -826,7 +826,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.arrow_back,
@@ -835,7 +835,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -851,7 +851,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'View school announcements',
@@ -874,7 +874,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.more_vert,
@@ -892,7 +892,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                                 size: 20,
                                 color: ColorUtils.info600,
                               ),
-                              SizedBox(width: AppSpacing.sm),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(AppLocalizations.updateData.tr),
                             ],
                           ),
@@ -901,14 +901,14 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Search Bar
                 Container(
                   key: _searchKey,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: Row(
                     children: [
@@ -927,7 +927,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                               color: ColorUtils.slate400,
                             ),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 12,
                             ),
@@ -938,7 +938,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                         ),
                       ),
                       Container(
-                        margin: EdgeInsets.only(right: 4),
+                        margin: const EdgeInsets.only(right: 4),
                         child: IconButton(
                           icon: Icon(Icons.search, color: _getPrimaryColor()),
                           onPressed: () {
@@ -991,7 +991,7 @@ class AnnouncementScreenState extends ConsumerState<AnnouncementScreen> {
                     backgroundColor: Colors.white,
                     child: ListView.builder(
                       key: _listKey,
-                      padding: EdgeInsets.only(top: 8, bottom: 16),
+                      padding: const EdgeInsets.only(top: 8, bottom: 16),
                       itemCount: _filteredAnnouncement.length,
                       itemBuilder: (context, index) {
                         return Builder(

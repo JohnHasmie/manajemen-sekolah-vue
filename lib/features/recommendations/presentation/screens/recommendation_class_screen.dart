@@ -16,7 +16,6 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, Consumer;
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_student_screen.dart';

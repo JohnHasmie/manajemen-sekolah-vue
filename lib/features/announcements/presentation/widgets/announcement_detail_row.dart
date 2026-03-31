@@ -30,7 +30,7 @@ class AnnouncementDetailRow extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 16, color: primaryColor),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,7 +39,7 @@ class AnnouncementDetailRow extends StatelessWidget {
                 label,
                 style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
                 value,
                 style: TextStyle(

@@ -24,8 +24,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController otpController = TextEditingController();
 
-  bool _obscurePassword = true;
-
   @override
   void initState() {
     super.initState();
@@ -296,7 +294,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           AppLocalizations.selectSchool.tr,
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 10),
+        AppSpacing.v10,
         Text(
           '${AppLocalizations.hello.tr} ${authState.userData?['name'] ?? authState.userData?['nama'] ?? 'User'},',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
@@ -305,7 +303,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           AppLocalizations.selectSchoolMsg.tr,
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
-        SizedBox(height: AppSpacing.xl),
+        AppSpacing.v20,
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -313,7 +311,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           itemBuilder: (context, index) {
             final sekolah = authState.schoolList[index];
             return Card(
-              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+              margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
                 key: ValueKey('school_${sekolah['school_id'] ?? index}'),
                 leading: Icon(Icons.school, color: ColorUtils.darkBlue),
@@ -321,7 +319,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   sekolah['school_name'] ?? AppLocalizations.schoolNoName.tr,
                 ),
                 subtitle: Text(sekolah['address'] ?? ''),
-                trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: authState.isLoading
                     ? null
                     : () async {
@@ -333,7 +331,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             );
           },
         ),
-        SizedBox(height: AppSpacing.xl),
+        AppSpacing.v20,
         TextButton(
           onPressed: () => ref.read(authProvider.notifier).resetToLogin(),
           child: Text(AppLocalizations.backToLogin.tr),
@@ -363,7 +361,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           AppLocalizations.selectRole.tr,
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 10),
+        AppSpacing.v10,
         Text(
           '${AppLocalizations.hello.tr} ${authState.userData?['name'] ?? authState.userData?['nama'] ?? 'User'},',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
@@ -372,7 +370,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           '${AppLocalizations.schoolLabel.tr}: $schoolName',
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
-        SizedBox(height: AppSpacing.xl),
+        AppSpacing.v20,
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -380,7 +378,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           itemBuilder: (context, index) {
             final role = authState.roleList[index];
             return Card(
-              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+              margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
                 key: ValueKey('role_$role'),
                 leading: _getRoleIcon(role),
@@ -388,7 +386,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 subtitle: Text(
                   '${AppLocalizations.accessAs.tr} ${_getRoleDescription(role)}',
                 ),
-                trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: authState.isLoading
                     ? null
                     : () async {
@@ -400,7 +398,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             );
           },
         ),
-        SizedBox(height: AppSpacing.xl),
+        AppSpacing.v20,
         if (authState.schoolList.length > 1)
           TextButton(
             onPressed: () {
@@ -427,16 +425,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Image.asset('assets/icon/KamilEdu.png', height: 80),
-        SizedBox(height: AppSpacing.xl),
-        Text(
+        AppSpacing.v20,
+        const Text(
           'Kamil Edu',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
 
         if (!authState.isServerConnected) ...[
-          SizedBox(height: 10),
+          AppSpacing.v10,
           Container(
-            padding: EdgeInsets.all(AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: Colors.red[50],
               border: Border.all(color: Colors.red),
@@ -444,8 +442,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.warning, color: Colors.red),
-                SizedBox(width: AppSpacing.sm),
+                const Icon(Icons.warning, color: Colors.red),
+                AppSpacing.h8,
                 Expanded(
                   child: Text(
                     AppLocalizations.serverNotConnected.tr,
@@ -457,13 +455,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ],
 
-        SizedBox(height: 30),
+        const SizedBox(height: 30),
         AutofillGroup(
           child: Column(
             children: [
               TextField(
+                key: const Key('email_field'),
                 controller: emailController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.email),
                   border: OutlineInputBorder(),
@@ -472,29 +471,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.email],
               ),
-              SizedBox(height: 15),
-              TextField(
+              const SizedBox(height: 15),
+              // Extracted into its own StatefulWidget so toggling password
+              // visibility only rebuilds this small field, not the entire screen.
+              _PasswordTextField(
                 controller: passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock),
-                  border: OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                ),
-                obscureText: _obscurePassword,
-                textInputAction: TextInputAction.done,
-                autofillHints: const [AutofillHints.password],
-                onSubmitted: (_) {
-                  if (!authState.isLoading &&
-                      emailController.text.trim().isNotEmpty &&
+                isLoading: authState.isLoading,
+                onSubmitted: () {
+                  if (emailController.text.trim().isNotEmpty &&
                       passwordController.text.isNotEmpty) {
                     _handleLogin();
                   }
@@ -503,10 +487,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ],
           ),
         ),
-        SizedBox(height: AppSpacing.xl),
+        AppSpacing.v20,
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
+            key: const Key('login_button'),
             onPressed: (authState.isServerConnected && !authState.isLoading)
                 ? _handleLogin
                 : null,
@@ -613,5 +598,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       default:
         return AppLocalizations.roleDescDefault.tr;
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Extracted widget: password field with its own visibility-toggle state.
+//
+// Why: the parent screen (_LoginScreenState) used setState() to flip
+// _obscurePassword, which rebuilt the entire login form — including the email
+// field, the logo, the server-status banner, and the login button — just to
+// swap one icon. Keeping the toggle state here means only this widget
+// rebuilds on every eye-icon tap.
+// ---------------------------------------------------------------------------
+
+class _PasswordTextField extends StatefulWidget {
+  final TextEditingController controller;
+  final bool isLoading;
+  final VoidCallback? onSubmitted;
+
+  const _PasswordTextField({
+    required this.controller,
+    required this.isLoading,
+    this.onSubmitted,
+  });
+
+  @override
+  State<_PasswordTextField> createState() => _PasswordTextFieldState();
+}
+
+class _PasswordTextFieldState extends State<_PasswordTextField> {
+  bool _obscure = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      key: const Key('password_field'),
+      controller: widget.controller,
+      decoration: InputDecoration(
+        labelText: 'Password',
+        prefixIcon: const Icon(Icons.lock),
+        border: const OutlineInputBorder(),
+        suffixIcon: IconButton(
+          icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+          onPressed: () => setState(() => _obscure = !_obscure),
+        ),
+      ),
+      obscureText: _obscure,
+      textInputAction: TextInputAction.done,
+      autofillHints: const [AutofillHints.password],
+      onSubmitted: widget.isLoading ? null : (_) => widget.onSubmitted?.call(),
+    );
   }
 }

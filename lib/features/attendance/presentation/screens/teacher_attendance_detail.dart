@@ -121,15 +121,15 @@ class _TeacherAttendanceDetailPageState
     final avatarColor = ColorUtils.getColorForIndex(index);
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
       child: Padding(
-        padding: EdgeInsets.all(14),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -149,7 +149,7 @@ class _TeacherAttendanceDetailPageState
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,7 +164,7 @@ class _TeacherAttendanceDetailPageState
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         'NIS: ${student.studentNumber}',
                         style: TextStyle(
@@ -176,10 +176,10 @@ class _TeacherAttendanceDetailPageState
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     border: Border.all(
                       color: statusColor.withValues(alpha: 0.3),
                     ),
@@ -196,14 +196,14 @@ class _TeacherAttendanceDetailPageState
               ],
             ),
             if (state.isEditing) ...[
-              SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.md),
               Container(
                 decoration: BoxDecoration(
                   color: ColorUtils.slate50,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   border: Border.all(color: ColorUtils.slate200),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -355,13 +355,13 @@ class _TeacherAttendanceDetailPageState
 
   Widget _buildStatCard(String label, int count, Color color, IconData icon) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       child: Container(
         width: 90,
-        padding: EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
@@ -376,7 +376,7 @@ class _TeacherAttendanceDetailPageState
               ),
               child: Icon(icon, color: color, size: 18),
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               count.toString(),
               style: TextStyle(
@@ -385,7 +385,7 @@ class _TeacherAttendanceDetailPageState
                 color: color,
               ),
             ),
-            SizedBox(height: 2),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
@@ -449,7 +449,7 @@ class _TeacherAttendanceDetailPageState
                         CircularProgressIndicator(
                           color: _getPrimaryColor(),
                         ),
-                        SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.lg),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Saving changes...',
@@ -468,12 +468,12 @@ class _TeacherAttendanceDetailPageState
                   child: Column(
                     children: [
                       // Statistics Row
-                      SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.lg),
                       SizedBox(
                         height: 120,
                         child: ListView(
                           scrollDirection: Axis.horizontal,
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           children: [
                             _buildStatCard(
                               languageProvider.getTranslatedText({
@@ -528,11 +528,11 @@ class _TeacherAttendanceDetailPageState
                         ),
                       ),
 
-                      SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
 
                       // Student List Header
                       Padding(
-                        padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                         child: Row(
                           children: [
                             Container(
@@ -540,10 +540,10 @@ class _TeacherAttendanceDetailPageState
                               height: 16,
                               decoration: BoxDecoration(
                                 color: _getPrimaryColor(),
-                                borderRadius: BorderRadius.circular(2),
+                                borderRadius: const BorderRadius.all(Radius.circular(2)),
                               ),
                             ),
-                            SizedBox(width: AppSpacing.sm),
+                            const SizedBox(width: AppSpacing.sm),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Student List',
@@ -557,13 +557,13 @@ class _TeacherAttendanceDetailPageState
                             ),
                             Spacer(),
                             Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
                                 color: ColorUtils.slate100,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: const BorderRadius.all(Radius.circular(8)),
                               ),
                               child: Text(
                                 '${state.students.length} ${AppLocalizations.students.tr}',
@@ -590,7 +590,7 @@ class _TeacherAttendanceDetailPageState
                                       size: 64,
                                       color: ColorUtils.slate300,
                                     ),
-                                    SizedBox(height: AppSpacing.md),
+                                    const SizedBox(height: AppSpacing.md),
                                     Text(
                                       languageProvider.getTranslatedText({
                                         'en': 'No student data found',
@@ -605,7 +605,7 @@ class _TeacherAttendanceDetailPageState
                                 ),
                               )
                             : ListView.builder(
-                                padding: EdgeInsets.only(bottom: 16),
+                                padding: const EdgeInsets.only(bottom: 16),
                                 itemCount: state.students.length,
                                 itemBuilder: (context, index) =>
                                     _buildStudentCard(
@@ -672,7 +672,7 @@ class _TeacherAttendanceDetailPageState
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(
                     isEditing ? Icons.close : Icons.arrow_back,
@@ -681,7 +681,7 @@ class _TeacherAttendanceDetailPageState
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
 
               // Title
               Expanded(
@@ -734,11 +734,11 @@ class _TeacherAttendanceDetailPageState
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                     child: isSaving
                         ? Padding(
-                            padding: EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(10),
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
@@ -755,7 +755,7 @@ class _TeacherAttendanceDetailPageState
                 ),
             ],
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Icon(
@@ -763,7 +763,7 @@ class _TeacherAttendanceDetailPageState
                 size: 14,
                 color: Colors.white.withValues(alpha: 0.8),
               ),
-              SizedBox(width: 6),
+              const SizedBox(width: 6),
               Text(
                 DateFormat(
                   'EEEE, dd MMMM yyyy',

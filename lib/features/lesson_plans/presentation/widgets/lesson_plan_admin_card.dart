@@ -86,7 +86,7 @@ class LessonPlanAdminCard extends StatelessWidget {
   }) {
     final color = tagColor ?? ColorUtils.slate500;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
@@ -145,14 +145,14 @@ class LessonPlanAdminCard extends StatelessWidget {
     final statusColor = _statusColor();
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -196,7 +196,7 @@ class LessonPlanAdminCard extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 3),
+                          const SizedBox(height: 3),
                           Text(
                             lessonPlan['mata_pelajaran_nama'] ??
                                 lessonPlan['subject_name'] ??
@@ -214,7 +214,7 @@ class LessonPlanAdminCard extends StatelessWidget {
                     SizedBox(width: AppSpacing.sm),
                     Container(
                       padding:
-                          EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -235,7 +235,7 @@ class LessonPlanAdminCard extends StatelessWidget {
                 ),
                 SizedBox(height: AppSpacing.md),
                 Divider(color: ColorUtils.slate100, height: 1),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 // Info tags: class + teacher
                 Wrap(
                   spacing: 8,

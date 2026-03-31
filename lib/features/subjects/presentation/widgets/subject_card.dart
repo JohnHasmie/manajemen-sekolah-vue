@@ -60,7 +60,7 @@ class SubjectCard extends ConsumerWidget {
         .toList();
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -74,7 +74,7 @@ class SubjectCard extends ConsumerWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Padding(
-            padding: EdgeInsets.all(14),
+            padding: const EdgeInsets.all(14),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -133,7 +133,7 @@ class SubjectCard extends ConsumerWidget {
                           SizedBox(width: AppSpacing.sm),
                           // Status badge
                           Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: 6,
                               vertical: 2,
                             ),

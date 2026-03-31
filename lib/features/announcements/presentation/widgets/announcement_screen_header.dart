@@ -103,7 +103,7 @@ class AnnouncementScreenHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: const Icon(
                     Icons.arrow_back,
@@ -112,7 +112,7 @@ class AnnouncementScreenHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +151,7 @@ class AnnouncementScreenHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: const Icon(
                     Icons.more_vert,
@@ -169,7 +169,7 @@ class AnnouncementScreenHeader extends StatelessWidget {
                           size: 20,
                           color: ColorUtils.info600,
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Text(
                           languageProvider.getTranslatedText({
                             'en': 'Update Data',
@@ -183,7 +183,7 @@ class AnnouncementScreenHeader extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
 
           // ── Search bar + filter button row ──
           Row(
@@ -192,7 +192,7 @@ class AnnouncementScreenHeader extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: Row(
                     children: [
@@ -231,7 +231,7 @@ class AnnouncementScreenHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
               // ── Filter button with active-state badge dot ──
               Container(
                 key: filterKey,
@@ -239,7 +239,7 @@ class AnnouncementScreenHeader extends StatelessWidget {
                   color: hasActiveFilter
                       ? Colors.white
                       : Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.3),
                   ),
@@ -262,7 +262,7 @@ class AnnouncementScreenHeader extends StatelessWidget {
                         right: 8,
                         top: 8,
                         child: Container(
-                          padding: EdgeInsets.all(AppSpacing.xs),
+                          padding: const EdgeInsets.all(AppSpacing.xs),
                           decoration: BoxDecoration(
                             color: ColorUtils.error600,
                             shape: BoxShape.circle,
@@ -281,16 +281,16 @@ class AnnouncementScreenHeader extends StatelessWidget {
 
           // ── Active filter chip row (only shown when filters are applied) ──
           if (hasActiveFilter) ...[
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             SizedBox(
               height: 36,
               child: Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(AppSpacing.sm),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                     child: const Icon(
                       Icons.filter_alt,
@@ -298,7 +298,7 @@ class AnnouncementScreenHeader extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: ListView(
                       scrollDirection: Axis.horizontal,
@@ -327,8 +327,8 @@ class AnnouncementScreenHeader extends StatelessWidget {
                                 color: Colors.white.withValues(alpha: 0.4),
                                 width: 1,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(8)),
                               ),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 6,
@@ -344,15 +344,15 @@ class AnnouncementScreenHeader extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   InkWell(
                     onTap: onClearAllFilters,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     child: Container(
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
                         color: ColorUtils.error600,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                       ),
                       child: const Icon(
                         Icons.clear_all,

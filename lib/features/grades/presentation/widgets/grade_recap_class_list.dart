@@ -94,7 +94,7 @@ class GradeRecapClassList extends StatelessWidget {
 
     return ListView.builder(
       controller: scrollController,
-      padding: EdgeInsets.fromLTRB(16, 4, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
       // +1 for the loading-more spinner row when paginating.
       itemCount: filteredList.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {

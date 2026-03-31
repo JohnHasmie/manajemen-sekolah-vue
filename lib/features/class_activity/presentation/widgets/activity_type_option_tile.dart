@@ -37,13 +37,13 @@ class ActivityTypeOptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: const BorderRadius.all(Radius.circular(12)),
       child: Container(
-        padding: EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.05),
           border: Border.all(color: color.withValues(alpha: 0.3)),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
         ),
         child: Row(
           children: [
@@ -53,7 +53,7 @@ class ActivityTypeOptionTile extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
               ),
               child: Icon(icon, color: color, size: 24),
             ),
@@ -85,7 +85,7 @@ class ActivityTypeOptionTile extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
               child: Icon(
                 Icons.arrow_forward_ios_rounded,

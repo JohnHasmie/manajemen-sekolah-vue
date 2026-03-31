@@ -552,14 +552,14 @@ class _AdminAttendanceReportScreenState
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Gradient danger header
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -581,7 +581,7 @@ class _AdminAttendanceReportScreenState
                     color: Colors.white,
                     size: 24,
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text(
                     languageProvider.getTranslatedText({
                       'en': 'Delete Attendance',
@@ -597,7 +597,7 @@ class _AdminAttendanceReportScreenState
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 children: [
                   Text(
@@ -610,7 +610,7 @@ class _AdminAttendanceReportScreenState
                     style: TextStyle(fontSize: 14, color: ColorUtils.slate700),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.xl),
                   Row(
                     children: [
                       Expanded(

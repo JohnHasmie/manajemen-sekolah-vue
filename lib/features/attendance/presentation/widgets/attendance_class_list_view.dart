@@ -80,8 +80,8 @@ class AttendanceClassListView extends StatelessWidget {
       onRefresh: onRefresh,
       color: primaryColor,
       child: ListView.builder(
-        padding: EdgeInsets.all(AppSpacing.lg),
-        physics: AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: filteredClasses.length,
         itemBuilder: (context, index) {
           final classItem = filteredClasses[index] as Map<String, dynamic>;
@@ -91,8 +91,8 @@ class AttendanceClassListView extends StatelessWidget {
               onTap: () => onClassSelected(classItem),
               borderRadius: BorderRadius.circular(14),
               child: Container(
-                margin: EdgeInsets.only(bottom: 10),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
@@ -117,7 +117,7 @@ class AttendanceClassListView extends StatelessWidget {
                         size: 22,
                       ),
                     ),
-                    SizedBox(width: 14),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +130,7 @@ class AttendanceClassListView extends StatelessWidget {
                               color: ColorUtils.slate900,
                             ),
                           ),
-                          SizedBox(height: 3),
+                          const SizedBox(height: 3),
                           Text(
                             '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${classItem['grade_level'] ?? '-'}',
                             style: TextStyle(

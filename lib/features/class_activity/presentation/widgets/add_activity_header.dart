@@ -26,24 +26,24 @@ class AddActivityHeader extends StatelessWidget {
     final isAssignment = activityType == 'tugas';
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
+      padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
         ),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
           Container(
             width: 40,
             height: 4,
-            margin: EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: const BorderRadius.all(Radius.circular(2)),
             ),
           ),
           Row(
@@ -53,7 +53,7 @@ class AddActivityHeader extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
                 child: Icon(
                   isAssignment
@@ -97,9 +97,9 @@ class AddActivityHeader extends StatelessWidget {
                   padding: EdgeInsets.all(AppSpacing.xs),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.close_rounded,
                     color: Colors.white,
                     size: 20,

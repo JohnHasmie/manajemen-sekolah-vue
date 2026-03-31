@@ -37,7 +37,7 @@ class TabSwitcher extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
       ),
       child: Row(
         children: tabs.asMap().entries.map((entry) {
@@ -58,9 +58,9 @@ class TabSwitcher extends StatelessWidget {
       color: isSelected
           ? primaryColor.withValues(alpha: 0.85)
           : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: const BorderRadius.all(Radius.circular(8)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
         onTap: () {
           tabController.animateTo(tabIndex);
         },

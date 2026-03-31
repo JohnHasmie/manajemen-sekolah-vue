@@ -422,7 +422,7 @@ class _AdminAttendanceDetailPageState
       bottomNavigationBar: _isEditing
           ? SafeArea(
               child: Container(
-                padding: EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   boxShadow: [
@@ -438,8 +438,8 @@ class _AdminAttendanceDetailPageState
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _getPrimaryColor(),
                     minimumSize: Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                   ),
                   child: _isSaving
@@ -512,7 +512,7 @@ class _AdminAttendanceDetailPageState
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           _isEditing ? Icons.close : Icons.arrow_back,
@@ -521,7 +521,7 @@ class _AdminAttendanceDetailPageState
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,7 +567,7 @@ class _AdminAttendanceDetailPageState
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           _isEditing ? Icons.check : Icons.edit,
@@ -576,7 +576,7 @@ class _AdminAttendanceDetailPageState
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     if (!_isEditing)
                       PopupMenuButton<String>(
                         onSelected: (value) {
@@ -588,7 +588,7 @@ class _AdminAttendanceDetailPageState
                           height: 40,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                           ),
                           child: Icon(
                             Icons.more_vert,
@@ -602,7 +602,7 @@ class _AdminAttendanceDetailPageState
                             child: Row(
                               children: [
                                 Icon(Icons.file_download, size: 20),
-                                SizedBox(width: AppSpacing.sm),
+                                const SizedBox(width: AppSpacing.sm),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Export to Excel',
@@ -617,7 +617,7 @@ class _AdminAttendanceDetailPageState
                             child: Row(
                               children: [
                                 Icon(Icons.refresh, size: 20),
-                                SizedBox(width: AppSpacing.sm),
+                                const SizedBox(width: AppSpacing.sm),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en': 'Refresh',
@@ -631,7 +631,7 @@ class _AdminAttendanceDetailPageState
                       ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
                     Icon(
@@ -639,7 +639,7 @@ class _AdminAttendanceDetailPageState
                       size: 14,
                       color: Colors.white.withValues(alpha: 0.8),
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text(
                       DateFormat(
                         'EEEE, dd MMMM yyyy',
@@ -674,12 +674,12 @@ class _AdminAttendanceDetailPageState
           ),
 
           // Statistics Cards
-          SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
           SizedBox(
             height: 120,
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
                 AttendanceStatCard(
                   label: languageProvider.getTranslatedText({
@@ -734,7 +734,7 @@ class _AdminAttendanceDetailPageState
 
           // Student List Header
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
               children: [
                 Text(
@@ -767,7 +767,7 @@ class _AdminAttendanceDetailPageState
                   )
                 : _studentList.isEmpty
                 ? Padding(
-                    padding: EdgeInsets.only(top: 40),
+                    padding: const EdgeInsets.only(top: 40),
                     child: EmptyState(
                       title: languageProvider.getTranslatedText({
                         'en': 'No Students Found',
@@ -777,7 +777,7 @@ class _AdminAttendanceDetailPageState
                     ),
                   )
                 : ListView.builder(
-                    padding: EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.only(bottom: 16),
                     itemCount: _studentList.length,
                     itemBuilder: (context, index) {
                       final student = _studentList[index];

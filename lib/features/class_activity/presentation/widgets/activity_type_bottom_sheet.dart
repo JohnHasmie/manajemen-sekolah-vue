@@ -48,30 +48,30 @@ class ActivityTypeBottomSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
+            padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
               ),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
               children: [
                 Container(
                   width: 40,
                   height: 4,
-                  margin: EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: const BorderRadius.all(Radius.circular(2)),
                   ),
                 ),
                 Row(
@@ -81,9 +81,9 @@ class ActivityTypeBottomSheet extends StatelessWidget {
                       height: 36,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.add_circle_rounded,
                         color: Colors.white,
                         size: 20,
@@ -107,7 +107,7 @@ class ActivityTypeBottomSheet extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
             child: Column(
               children: [
                 ActivityTypeOptionTile(

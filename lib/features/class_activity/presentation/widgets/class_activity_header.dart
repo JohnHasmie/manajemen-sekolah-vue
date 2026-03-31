@@ -112,9 +112,9 @@ class ClassActivityHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.arrow_back,
                     color: Colors.white,
                     size: 20,
@@ -136,7 +136,7 @@ class ClassActivityHeader extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: TextStyle(
@@ -162,9 +162,9 @@ class ClassActivityHeader extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.more_vert,
                     color: Colors.white,
                     size: 20,

@@ -61,14 +61,14 @@ class ParentAnnouncementCard extends StatelessWidget {
     final accentColor = isImportant ? ColorUtils.warning600 : primaryColor;
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
@@ -115,7 +115,7 @@ class ParentAnnouncementCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 3),
                       // Content preview — two lines max
                       Text(
                         announcementData['content'] ?? '',
@@ -163,7 +163,7 @@ class ParentAnnouncementCard extends StatelessWidget {
                   Container(
                     width: 8,
                     height: 8,
-                    margin: EdgeInsets.only(top: 4),
+                    margin: const EdgeInsets.only(top: 4),
                     decoration: BoxDecoration(
                       color: ColorUtils.error600,
                       shape: BoxShape.circle,

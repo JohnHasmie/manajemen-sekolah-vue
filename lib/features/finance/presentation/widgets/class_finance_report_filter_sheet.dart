@@ -96,27 +96,27 @@ class _ClassFinanceReportFilterSheetState
       height: MediaQuery.of(context).size.height * 0.75,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
           // Handle bar
           Container(
-            margin: EdgeInsets.only(top: 10),
+            margin: const EdgeInsets.only(top: 10),
             width: 40,
             height: 4,
             decoration: BoxDecoration(
               color: ColorUtils.slate300,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: const BorderRadius.all(Radius.circular(2)),
             ),
           ),
           // Gradient Header
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(20, 14, 12, 18),
+            padding: const EdgeInsets.fromLTRB(20, 14, 12, 18),
             decoration: BoxDecoration(
               gradient: _cardGradient,
-              borderRadius: BorderRadius.vertical(
+              borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(24),
               ),
             ),
@@ -127,9 +127,9 @@ class _ClassFinanceReportFilterSheetState
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.filter_list_rounded,
                     color: Colors.white,
                     size: 20,
@@ -159,10 +159,10 @@ class _ClassFinanceReportFilterSheetState
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.white.withValues(alpha: 0.2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
                     ),
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 6,
                     ),
@@ -299,7 +299,7 @@ class _ClassFinanceReportFilterSheetState
 
           // Footer
           Container(
-            padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate100)),
@@ -319,8 +319,8 @@ class _ClassFinanceReportFilterSheetState
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: ColorUtils.slate300),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(
@@ -336,8 +336,8 @@ class _ClassFinanceReportFilterSheetState
                     style: ElevatedButton.styleFrom(
                       backgroundColor: widget.primaryColor,
                       padding: EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
                       elevation: 0,
                     ),
@@ -360,7 +360,7 @@ class _ClassFinanceReportFilterSheetState
 
   Widget _buildSectionHeader(String title, IconData icon) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Container(
@@ -368,7 +368,7 @@ class _ClassFinanceReportFilterSheetState
             height: 28,
             decoration: BoxDecoration(
               color: widget.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(7),
+              borderRadius: const BorderRadius.all(Radius.circular(7)),
             ),
             child: Icon(icon, size: 15, color: widget.primaryColor),
           ),
@@ -393,11 +393,11 @@ class _ClassFinanceReportFilterSheetState
     required ValueChanged<T?> onChanged,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: ColorUtils.slate200),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         boxShadow: [
           BoxShadow(
             color: ColorUtils.slate900.withValues(alpha: 0.04),

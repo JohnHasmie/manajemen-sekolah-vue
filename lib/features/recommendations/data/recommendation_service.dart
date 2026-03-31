@@ -167,8 +167,9 @@ class ApiRecommendationService {
       'page': page.toString(),
       'per_page': perPage.toString(),
     };
-    if (teacherId != null && teacherId.isNotEmpty)
+    if (teacherId != null && teacherId.isNotEmpty) {
       params['teacher_id'] = teacherId;
+    }
     if (classId != null) params['class_id'] = classId;
     if (studentId != null) params['student_id'] = studentId;
     if (subjectId != null) params['subject_id'] = subjectId;

@@ -114,16 +114,16 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _openDaySettings(day),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: Container(
-          margin: EdgeInsets.only(bottom: 10),
+          margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
-          padding: EdgeInsets.all(14),
+          padding: const EdgeInsets.all(14),
           child: Row(
             children: [
               Container(
@@ -131,7 +131,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                 height: 44,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   border: Border.all(color: color.withValues(alpha: 0.2)),
                 ),
                 child: Icon(
@@ -140,7 +140,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                   size: 20,
                 ),
               ),
-              SizedBox(width: 14),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,7 +153,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                         color: ColorUtils.slate900,
                       ),
                     ),
-                    SizedBox(height: 3),
+                    const SizedBox(height: 3),
                     Text(
                       sessions.isEmpty
                           ? 'Belum ada sesi'
@@ -173,7 +173,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                 height: 28,
                 decoration: BoxDecoration(
                   color: ColorUtils.slate100,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
                 child: Icon(
                   Icons.chevron_right_rounded,
@@ -229,16 +229,16 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.arrow_back,
                       color: Colors.white,
                       size: 20,
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,7 +251,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         'Jadwal & waktu pembelajaran',
                         style: TextStyle(
@@ -273,12 +273,12 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
               child: _isLoadingTime
                   ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
                   : SingleChildScrollView(
-                      padding: EdgeInsets.all(AppSpacing.lg),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Padding(
-                            padding: EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.only(bottom: 16),
                             child: Row(
                               children: [
                                 Container(
@@ -287,7 +287,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                                   decoration: BoxDecoration(
                                     color: ColorUtils.corporateBlue600
                                         .withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                                   ),
                                   child: Icon(
                                     Icons.calendar_today_outlined,
@@ -295,7 +295,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                                     size: 17,
                                   ),
                                 ),
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

@@ -20,11 +20,11 @@ class AddActivityTargetInfoBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(AppSpacing.md),
-      margin: EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: primaryColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
         border: Border.all(
           color: primaryColor.withValues(alpha: 0.3),
         ),

@@ -29,7 +29,7 @@ class ClassroomInfoTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
         borderRadius: BorderRadius.circular(6),
@@ -39,7 +39,7 @@ class ClassroomInfoTag extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 11, color: ColorUtils.slate600),
-          SizedBox(width: 3),
+          const SizedBox(width: 3),
           Flexible(
             child: Text(
               text,
@@ -103,14 +103,14 @@ class ClassroomCard extends ConsumerWidget {
     final teacherName = _resolveTeacherName(classData, languageProvider);
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
@@ -185,7 +185,7 @@ class ClassroomCard extends ConsumerWidget {
                                   color: ColorUtils.corporateBlue600,
                                   onTap: onEdit,
                                 ),
-                                SizedBox(width: 6),
+                                const SizedBox(width: 6),
                                 _buildIconButton(
                                   icon: Icons.delete_outline,
                                   color: ColorUtils.error600,
@@ -213,7 +213,7 @@ class ClassroomCard extends ConsumerWidget {
     LanguageProvider languageProvider,
   ) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
@@ -256,7 +256,7 @@ class ClassroomCard extends ConsumerWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: EdgeInsets.all(6),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),

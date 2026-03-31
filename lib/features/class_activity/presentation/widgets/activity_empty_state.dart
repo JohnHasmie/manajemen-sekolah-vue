@@ -23,7 +23,7 @@ class ActivityEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(AppSpacing.xl),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -32,7 +32,7 @@ class ActivityEmptyState extends StatelessWidget {
               height: 72,
               decoration: BoxDecoration(
                 color: ColorUtils.slate100,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
               ),
               child: Icon(
                 Icons.event_note_outlined,

@@ -21,10 +21,10 @@ class AttendanceStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       child: Container(
         width: 90,
-        padding: EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
@@ -42,7 +42,7 @@ class AttendanceStatCard extends StatelessWidget {
               ),
               child: Icon(icon, color: color, size: 18),
             ),
-            SizedBox(height: AppSpacing.sm),
+            AppSpacing.v8,
             Text(
               count.toString(),
               style: TextStyle(
@@ -51,7 +51,7 @@ class AttendanceStatCard extends StatelessWidget {
                 color: color,
               ),
             ),
-            SizedBox(height: 2),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(

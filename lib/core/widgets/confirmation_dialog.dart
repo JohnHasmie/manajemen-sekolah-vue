@@ -44,21 +44,21 @@ class ConfirmationDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Header with gradient
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [confirmColor, confirmColor.withValues(alpha: 0.8)],
               ),
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
               ),
@@ -70,15 +70,15 @@ class ConfirmationDialog extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.warning_rounded,
                     color: Colors.white,
                     size: 18,
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                AppSpacing.h12,
                 Expanded(
                   child: Text(
                     title,
@@ -95,7 +95,7 @@ class ConfirmationDialog extends StatelessWidget {
 
           // Content
           Padding(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Text(
               content,
               style: TextStyle(
@@ -109,7 +109,7 @@ class ConfirmationDialog extends StatelessWidget {
 
           // Actions
           Container(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Row(
               children: [
                 Expanded(
@@ -117,9 +117,9 @@ class ConfirmationDialog extends StatelessWidget {
                     onPressed: () => AppNavigator.pop(context, false),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       side: BorderSide(color: Colors.grey.shade300),
                     ),
                     child: Text(
@@ -128,16 +128,16 @@ class ConfirmationDialog extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                AppSpacing.h12,
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => AppNavigator.pop(context, true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: confirmColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: Text(
                       confirmText,

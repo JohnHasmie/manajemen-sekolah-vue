@@ -58,7 +58,7 @@ class EmptyState extends StatelessWidget {
               color: ColorUtils.blue600.withValues(alpha: 0.5),
             ),
           ),
-          SizedBox(height: AppSpacing.xl),
+          AppSpacing.v20,
           Text(
             title,
             style: TextStyle(
@@ -67,7 +67,7 @@ class EmptyState extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: AppSpacing.sm),
+          AppSpacing.v8,
           Text(
             subtitle,
             style: TextStyle(fontSize: 14, color: Colors.grey.shade500),

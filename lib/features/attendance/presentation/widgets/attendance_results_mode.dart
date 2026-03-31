@@ -78,7 +78,7 @@ class AttendanceResultsMode extends ConsumerWidget {
 
         // Active filter chips row
         if (hasActiveFilter) ...[
-          SizedBox(height: AppSpacing.xs),
+          AppSpacing.v4,
           SizedBox(
             height: 34,
             child: Row(
@@ -86,16 +86,16 @@ class AttendanceResultsMode extends ConsumerWidget {
                 Expanded(
                   child: ListView(
                     scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     children: [
                       ...filterChips.map((filter) {
                         return Container(
-                          margin: EdgeInsets.only(right: 6),
+                          margin: const EdgeInsets.only(right: 6),
                           child: InkWell(
                             onTap: filter['onRemove'] as VoidCallback?,
                             borderRadius: BorderRadius.circular(10),
                             child: Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
                                 vertical: 6,
                               ),
@@ -117,7 +117,7 @@ class AttendanceResultsMode extends ConsumerWidget {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  SizedBox(width: AppSpacing.xs),
+                                  AppSpacing.h4,
                                   Icon(
                                     Icons.close,
                                     size: 14,
@@ -133,12 +133,12 @@ class AttendanceResultsMode extends ConsumerWidget {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.only(right: 16),
                   child: InkWell(
                     onTap: onClearAllFilters,
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: ColorUtils.error600.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
@@ -163,10 +163,10 @@ class AttendanceResultsMode extends ConsumerWidget {
               ],
             ),
           ),
-          SizedBox(height: AppSpacing.xs),
+          AppSpacing.v4,
         ],
 
-        SizedBox(height: AppSpacing.sm),
+        AppSpacing.v8,
 
         Expanded(
           child: filteredSummaries.isEmpty
@@ -187,7 +187,7 @@ class AttendanceResultsMode extends ConsumerWidget {
                   icon: Icons.list_alt,
                 )
               : ListView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   itemCount: filteredSummaries.length,
                   itemBuilder: (context, index) {
                     final summary = filteredSummaries[index];

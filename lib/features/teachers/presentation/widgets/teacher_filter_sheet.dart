@@ -106,7 +106,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
       height: MediaQuery.of(context).size.height * 0.75,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
@@ -126,7 +126,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                     ColorUtils.corporateBlue600.withValues(alpha: 0.8),
                   ],
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
                 ),
@@ -136,7 +136,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                 children: [
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.filter_list_rounded,
                         color: Colors.white,
                         size: 22,
@@ -215,7 +215,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                                     color: ColorUtils.slate800,
                                   ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
                                   languageProvider.getTranslatedText({
                                     'en':
@@ -385,7 +385,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                     ),
                     SizedBox(height: 10),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
                         border: Border.all(color: ColorUtils.slate200),
@@ -523,7 +523,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
                     child: OutlinedButton(
                       onPressed: () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorUtils.slate300),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

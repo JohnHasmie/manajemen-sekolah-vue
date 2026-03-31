@@ -38,10 +38,10 @@ class EssayQuizCard extends StatelessWidget {
     final diffConfig = _difficultyConfig(difficulty);
 
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
@@ -50,10 +50,10 @@ class EssayQuizCard extends StatelessWidget {
         children: [
           // Header
           Container(
-            padding: EdgeInsets.fromLTRB(14, 12, 14, 10),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             decoration: BoxDecoration(
               color: ColorUtils.violet500.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(13)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
             ),
             child: Row(
               children: [
@@ -62,7 +62,7 @@ class EssayQuizCard extends StatelessWidget {
                   height: 28,
                   decoration: BoxDecoration(
                     color: ColorUtils.violet500.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Center(
                     child: Text(
@@ -75,7 +75,7 @@ class EssayQuizCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Essay ${index + 1}',
@@ -87,10 +87,10 @@ class EssayQuizCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: diffConfig.color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: const BorderRadius.all(Radius.circular(6)),
                     border: Border.all(
                       color: diffConfig.color.withValues(alpha: 0.2),
                     ),
@@ -109,7 +109,7 @@ class EssayQuizCard extends StatelessWidget {
           ),
           // Question
           Padding(
-            padding: EdgeInsets.fromLTRB(14, 10, 14, 12),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
             child: Text(
               quiz['question'] ?? '',
               style: TextStyle(
@@ -123,11 +123,11 @@ class EssayQuizCard extends StatelessWidget {
           // Answer key
           if (quiz['correct_answer'] != null) ...[
             Container(
-              margin: EdgeInsets.fromLTRB(14, 0, 14, 8),
-              padding: EdgeInsets.all(AppSpacing.md),
+              margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: ColorUtils.emerald500.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
                 border: Border.all(
                   color: ColorUtils.emerald500.withValues(alpha: 0.2),
                 ),
@@ -142,7 +142,7 @@ class EssayQuizCard extends StatelessWidget {
                         size: 14,
                         color: ColorUtils.emerald500,
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
                         'Kunci Jawaban',
                         style: TextStyle(
@@ -153,7 +153,7 @@ class EssayQuizCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Text(
                     quiz['correct_answer'] ?? '',
                     style: TextStyle(
@@ -170,11 +170,11 @@ class EssayQuizCard extends StatelessWidget {
           if (quiz['explanation'] != null &&
               quiz['explanation'].toString().isNotEmpty) ...[
             Container(
-              margin: EdgeInsets.fromLTRB(14, 0, 14, 14),
-              padding: EdgeInsets.all(AppSpacing.md),
+              margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: ColorUtils.violet500.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
                 border: Border.all(
                   color: ColorUtils.violet500.withValues(alpha: 0.12),
                 ),

@@ -49,7 +49,7 @@ class ActivitySearchFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         key: searchFilterKey,
         children: [
@@ -58,7 +58,7 @@ class ActivitySearchFilterBar extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate300),
               ),
               child: Row(
@@ -78,7 +78,7 @@ class ActivitySearchFilterBar extends StatelessWidget {
                           color: ColorUtils.slate400,
                         ),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
                         ),
@@ -87,7 +87,7 @@ class ActivitySearchFilterBar extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.only(right: 4),
+                    margin: const EdgeInsets.only(right: 4),
                     child: IconButton(
                       icon: Icon(Icons.search, color: primaryColor),
                       onPressed: onSearchSubmitted,
@@ -103,7 +103,7 @@ class ActivitySearchFilterBar extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               color: hasActiveFilter ? primaryColor : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               border: Border.all(
                 color: hasActiveFilter ? primaryColor : ColorUtils.slate300,
               ),

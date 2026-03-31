@@ -280,16 +280,16 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.arrow_back,
                       color: Colors.white,
                       size: 20,
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,7 +302,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         'Kelola pengaturan sekolah',
                         style: TextStyle(
@@ -323,13 +323,13 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
               context: context,
               removeTop: true,
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Section header
                     Padding(
-                      padding: EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 16),
                       child: Row(
                         children: [
                           Container(
@@ -339,7 +339,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
                               color: ColorUtils.corporateBlue600.withValues(
                                 alpha: 0.1,
                               ),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Icon(
                               Icons.tune_rounded,
@@ -347,7 +347,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
                               size: 17,
                             ),
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           Text(
                             lang.getTranslatedText(
                               AppLocalizations.settingsMenu,
@@ -392,15 +392,15 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
       child: InkWell(
         key: item.key,
         onTap: item.onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -412,7 +412,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
                     height: 48,
                     decoration: BoxDecoration(
                       color: item.color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       border: Border.all(
                         color: item.color.withValues(alpha: 0.2),
                       ),
@@ -424,7 +424,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
                     height: 28,
                     decoration: BoxDecoration(
                       color: ColorUtils.slate100,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                     child: Icon(
                       Icons.chevron_right_rounded,
@@ -445,7 +445,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: 3),
+              const SizedBox(height: 3),
               Text(
                 item.subtitle,
                 style: TextStyle(fontSize: 11, color: ColorUtils.slate500),

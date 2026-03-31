@@ -40,7 +40,7 @@ class MaterialTabContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       children: [
         // ── AI Materi Section ────────────────────────────────────────────
         if (parsedContent != null) ...[
@@ -83,7 +83,7 @@ class MaterialTabContent extends StatelessWidget {
                             Container(
                               width: 24,
                               height: 24,
-                              margin: EdgeInsets.only(top: 2),
+                              margin: const EdgeInsets.only(top: 2),
                               decoration: BoxDecoration(
                                 color: ColorUtils.amber500.withValues(
                                   alpha: 0.15,
@@ -101,7 +101,7 @@ class MaterialTabContent extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 entry.value.toString(),
@@ -159,7 +159,7 @@ class MaterialTabContent extends StatelessWidget {
         if (aiGeneratedData != null) ...[
           SizedBox(height: AppSpacing.md),
           Container(
-            padding: EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(12),
@@ -237,7 +237,7 @@ class MaterialTabContent extends StatelessWidget {
             final cardColor = ColorUtils.getColorForIndex(index);
 
             return Container(
-              margin: EdgeInsets.only(bottom: 10),
+              margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
@@ -245,7 +245,7 @@ class MaterialTabContent extends StatelessWidget {
                 boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
               ),
               child: Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

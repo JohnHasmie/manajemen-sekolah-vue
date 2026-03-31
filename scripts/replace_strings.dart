@@ -8,7 +8,7 @@ void main() {
 
   for (final file in files) {
     String content = file.readAsStringSync();
-    String originalContent = content;
+    final String originalContent = content;
 
     // Add necessary import if not present and we replace something
     bool needsImport = false;
@@ -52,13 +52,13 @@ void main() {
 
     if (content != originalContent) {
       if (needsImport && !content.contains("import 'package:manajemensekolah/core/utils/language_utils.dart';")) {
-        int lastImportIndex = content.lastIndexOf(RegExp(r"import\s+['\x22].*['\x22];"));
+        final int lastImportIndex = content.lastIndexOf(RegExp(r"import\s+['\x22].*['\x22];"));
         if (lastImportIndex != -1) {
           int endOfLine = content.indexOf('\n', lastImportIndex);
           if (endOfLine == -1) endOfLine = content.length;
-          content = content.substring(0, endOfLine) + "\nimport 'package:manajemensekolah/core/utils/language_utils.dart';" + content.substring(endOfLine);
+          content = "${content.substring(0, endOfLine)}\nimport 'package:manajemensekolah/core/utils/language_utils.dart';${content.substring(endOfLine)}";
         } else {
-          content = "import 'package:manajemensekolah/core/utils/language_utils.dart';\n" + content;
+          content = "import 'package:manajemensekolah/core/utils/language_utils.dart';\n$content";
         }
       }
       

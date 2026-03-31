@@ -889,7 +889,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -975,7 +975,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                     ),
                     if (widget.subjectList.isEmpty)
                       Padding(
-                        padding: EdgeInsets.only(top: 4, left: 12),
+                        padding: const EdgeInsets.only(top: 4, left: 12),
                         child: Text(
                           AppLocalizations.noTeachingSubjects.tr,
                           style: TextStyle(
@@ -1053,7 +1053,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                     if (_selectedSubjectId != null &&
                         _getUniqueClassItems().isEmpty)
                       Padding(
-                        padding: EdgeInsets.only(top: 4, left: 12),
+                        padding: const EdgeInsets.only(top: 4, left: 12),
                         child: Text(
                           widget.initialTarget == 'khusus'
                               ? AppLocalizations.noClassesForSubject.tr
@@ -1162,7 +1162,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                             ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
                             : 'Pilih tanggal',
                       ),
-                      trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () async {
                         final date = await showDatePicker(
                           context: context,
@@ -1195,7 +1195,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                               ? '${_deadline!.day}/${_deadline!.month}/${_deadline!.year} ${_deadline!.hour}:${_deadline!.minute.toString().padLeft(2, '0')}'
                               : 'Pilih batas waktu (opsional)',
                         ),
-                        trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () async {
                           final date = await showDatePicker(
                             context: context,

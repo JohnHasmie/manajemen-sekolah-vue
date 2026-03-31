@@ -49,15 +49,30 @@ class DashboardAccountSheet extends ConsumerStatefulWidget {
 
 class _DashboardAccountSheetState
     extends ConsumerState<DashboardAccountSheet> {
-  bool _isLoggingOut = false;
-  String? _switchingRole; // tracks which role button is in-progress
+  // ValueNotifiers instead of plain booleans so only the affected subtree
+  // rebuilds on change — not the entire bottom sheet.
+  //
+  // Before: setState() on _isLoggingOut rebuilt the whole sheet (user info row,
+  // all role tiles, school/settings buttons, and the logout button).
+  // After: only the logout button's ListenableBuilder subtree rebuilds.
+  //
+  // Similarly, _switchingRole now only rebuilds the role-tiles Column.
+  final _isLoggingOut = ValueNotifier<bool>(false);
+  final _switchingRole = ValueNotifier<String?>(null);
 
   Color get _primaryColor => widget.primaryColor;
 
   @override
+  void dispose() {
+    _isLoggingOut.dispose();
+    _switchingRole.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(AppSpacing.xl),
+      margin: const EdgeInsets.all(AppSpacing.xl),
       child: Wrap(
         children: [
           Container(
@@ -90,12 +105,12 @@ class _DashboardAccountSheetState
                       ),
                     ),
                   ),
-                  SizedBox(height: AppSpacing.xl),
+                  AppSpacing.v20,
 
                   // User info row
                   _buildUserInfoRow(),
 
-                  SizedBox(height: AppSpacing.xxl),
+                  AppSpacing.v24,
 
                   // Role switcher (only when user has more than one role)
                   if (widget.state.availableRoles.length > 1) ...[
@@ -109,25 +124,33 @@ class _DashboardAccountSheetState
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    ...widget.state.availableRoles.map(
-                      (role) => _buildRoleTile(context, role),
+                    // Only this Column rebuilds when _switchingRole changes —
+                    // user info, school/settings buttons, and logout are unaffected.
+                    ValueListenableBuilder<String?>(
+                      valueListenable: _switchingRole,
+                      builder: (context, switchingRole, _) => Column(
+                        children: widget.state.availableRoles
+                            .map((role) =>
+                                _buildRoleTile(context, role, switchingRole))
+                            .toList(),
+                      ),
                     ),
-                    SizedBox(height: AppSpacing.lg),
+                    AppSpacing.v16,
                     const Divider(),
-                    SizedBox(height: AppSpacing.lg),
+                    AppSpacing.v16,
                   ],
 
                   // Switch school (only when user has access to multiple schools)
                   if (widget.state.accessibleSchools.length > 1) ...[
                     _buildSwitchSchoolButton(context),
-                    SizedBox(height: AppSpacing.lg),
+                    AppSpacing.v16,
                     const Divider(),
-                    SizedBox(height: AppSpacing.lg),
+                    AppSpacing.v16,
                   ],
 
                   // Settings
                   _buildSettingsButton(context),
-                  SizedBox(height: AppSpacing.lg),
+                  AppSpacing.v16,
 
                   // Logout
                   _buildLogoutButton(context),
@@ -163,7 +186,7 @@ class _DashboardAccountSheetState
             size: 32,
           ),
         ),
-        SizedBox(width: AppSpacing.lg),
+        AppSpacing.h16,
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +200,7 @@ class _DashboardAccountSheetState
                   color: Colors.grey.shade800,
                 ),
               ),
-              SizedBox(height: AppSpacing.xs),
+              AppSpacing.v4,
               Text(
                 widget.state.userData['email'] ?? '',
                 style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
@@ -196,17 +219,20 @@ class _DashboardAccountSheetState
     );
   }
 
-  Widget _buildRoleTile(BuildContext context, dynamic role) {
+  // [switchingRole] is passed from the ValueListenableBuilder above so only
+  // the role-tiles Column rebuilds — not the rest of the sheet.
+  Widget _buildRoleTile(
+      BuildContext context, dynamic role, String? switchingRole) {
     final isCurrent = role == widget.state.userData['role'];
-    final isSwitching = _switchingRole == role;
+    final isSwitching = switchingRole == role;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: (isCurrent || _switchingRole != null)
+        onTap: (isCurrent || switchingRole != null)
             ? null
             : () async {
-                setState(() => _switchingRole = role);
+                _switchingRole.value = role;
                 try {
                   await ref
                       .read(dashboardProvider.notifier)
@@ -221,13 +247,13 @@ class _DashboardAccountSheetState
                     context.go('/$effectiveRolePath');
                   }
                 } finally {
-                  if (mounted) setState(() => _switchingRole = null);
+                  if (mounted) _switchingRole.value = null;
                 }
               },
         borderRadius: BorderRadius.circular(12),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.md),
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: isCurrent
@@ -253,7 +279,7 @@ class _DashboardAccountSheetState
                 )
               else
                 _roleIcon(role.toString()),
-              SizedBox(width: AppSpacing.md),
+              AppSpacing.h12,
               Expanded(
                 child: Text(
                   isSwitching
@@ -286,7 +312,7 @@ class _DashboardAccountSheetState
         borderRadius: BorderRadius.circular(15),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: _primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(15),
@@ -298,7 +324,7 @@ class _DashboardAccountSheetState
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.school_rounded, color: _primaryColor, size: 20),
-              SizedBox(width: AppSpacing.sm),
+              AppSpacing.h8,
               Text(
                 AppLocalizations.switchSchool.tr,
                 style: TextStyle(
@@ -325,12 +351,12 @@ class _DashboardAccountSheetState
         borderRadius: BorderRadius.circular(15),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.settings, color: roleColor, size: 20),
-              SizedBox(width: AppSpacing.sm),
+              AppSpacing.h8,
               Text(
                 AppLocalizations.settings.tr,
                 style: TextStyle(
@@ -346,63 +372,72 @@ class _DashboardAccountSheetState
   }
 
   Widget _buildLogoutButton(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: (_isLoggingOut || _switchingRole != null)
-            ? null
-            : () async {
-                setState(() => _isLoggingOut = true);
-                try {
-                  await TokenService().logout();
-                  if (context.mounted) {
-                    appRouter.go('/login');
-                  }
-                } finally {
-                  if (mounted) setState(() => _isLoggingOut = false);
-                }
-              },
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: Colors.red.shade50,
+    // Listens to both notifiers so the button correctly disables itself while
+    // a role switch is in progress — without needing a full sheet rebuild.
+    return ListenableBuilder(
+      listenable: Listenable.merge([_isLoggingOut, _switchingRole]),
+      builder: (context, _) {
+        final isLoggingOut = _isLoggingOut.value;
+        final isSwitching = _switchingRole.value != null;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: (isLoggingOut || isSwitching)
+                ? null
+                : () async {
+                    _isLoggingOut.value = true;
+                    try {
+                      await TokenService().logout();
+                      if (context.mounted) {
+                        appRouter.go('/login');
+                      }
+                    } finally {
+                      if (mounted) _isLoggingOut.value = false;
+                    }
+                  },
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.red.shade100),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (_isLoggingOut)
-                const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.redAccent,
-                  ),
-                )
-              else
-                const Icon(
-                  Icons.logout_rounded,
-                  color: Colors.redAccent,
-                  size: 20,
-                ),
-              SizedBox(width: AppSpacing.sm),
-              Text(
-                _isLoggingOut
-                    ? 'Logging out...'
-                    : AppLocalizations.logout.tr,
-                style: const TextStyle(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.w600,
-                ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.red.shade100),
               ),
-            ],
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (isLoggingOut)
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.redAccent,
+                      ),
+                    )
+                  else
+                    const Icon(
+                      Icons.logout_rounded,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
+                  AppSpacing.h8,
+                  Text(
+                    isLoggingOut
+                        ? 'Logging out...'
+                        : AppLocalizations.logout.tr,
+                    style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

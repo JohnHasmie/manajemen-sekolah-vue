@@ -46,11 +46,11 @@ class SkeletonListCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(color: ColorUtils.slate200, width: 1),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
       ),
@@ -61,7 +61,7 @@ class SkeletonListCard extends StatelessWidget {
           children: [
             // Avatar placeholder
             CircleAvatar(radius: 22, backgroundColor: Colors.white),
-            SizedBox(width: AppSpacing.md),
+            AppSpacing.h12,
 
             // Content placeholder
             Expanded(
@@ -74,10 +74,10 @@ class SkeletonListCard extends StatelessWidget {
                     height: 14,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: const BorderRadius.all(Radius.circular(4)),
                     ),
                   ),
-                  SizedBox(height: AppSpacing.sm),
+                  AppSpacing.v8,
                   // Info tags
                   ...List.generate(
                     infoTagCount,
@@ -88,7 +88,7 @@ class SkeletonListCard extends StatelessWidget {
                       child: Row(
                         children: [
                           _buildTagPlaceholder(60),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           if (index == 0) _buildTagPlaceholder(50),
                         ],
                       ),
@@ -97,7 +97,7 @@ class SkeletonListCard extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(width: AppSpacing.sm),
+            AppSpacing.h8,
 
             // Right side placeholders
             Column(
@@ -113,7 +113,7 @@ class SkeletonListCard extends StatelessWidget {
                   ),
                 ),
                 if (showActions) ...[
-                  SizedBox(height: AppSpacing.sm),
+                  AppSpacing.v8,
                   Row(
                     children: [
                       Container(
@@ -121,16 +121,16 @@ class SkeletonListCard extends StatelessWidget {
                         height: 28,
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                         ),
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Container(
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
                         ),
                       ),
                     ],
@@ -150,7 +150,7 @@ class SkeletonListCard extends StatelessWidget {
       height: 18,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
       ),
     );
   }
@@ -194,7 +194,7 @@ class SkeletonListLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       padding: padding,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: itemCount,
       itemBuilder: (context, index) => SkeletonListCard(
         infoTagCount: infoTagCount,

@@ -55,7 +55,7 @@ class ErrorScreen extends StatelessWidget {
                 color: Colors.red.withValues(alpha: 0.6),
               ),
             ),
-            SizedBox(height: AppSpacing.xl),
+            AppSpacing.v20,
             Text(
               'Oops! Terjadi Kesalahan',
               style: TextStyle(
@@ -64,16 +64,16 @@ class ErrorScreen extends StatelessWidget {
                 color: Colors.grey.shade700,
               ),
             ),
-            SizedBox(height: AppSpacing.sm),
+            AppSpacing.v8,
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Text(
                 errorMessage,
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ),
-            SizedBox(height: AppSpacing.xl),
+            AppSpacing.v20,
             ElevatedButton(
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(
@@ -81,7 +81,7 @@ class ErrorScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: Text('Coba Lagi', style: TextStyle(color: Colors.white)),
             ),

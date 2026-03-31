@@ -46,7 +46,7 @@ class MaterialSubChapterList extends StatelessWidget {
 
     if (subChaptersForChapter.isEmpty) {
       return Padding(
-        padding: EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Text(
           'Tidak ada sub-bab',
           style: TextStyle(color: ColorUtils.slate400),
@@ -67,7 +67,7 @@ class MaterialSubChapterList extends StatelessWidget {
           child: InkWell(
             onTap: () => onSubChapterTap(subChapter, chapter),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   Container(

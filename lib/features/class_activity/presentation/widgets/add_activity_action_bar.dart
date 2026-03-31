@@ -27,7 +27,7 @@ class AddActivityActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -48,9 +48,9 @@ class AddActivityActionBar extends StatelessWidget {
                 onPressed:
                     isSubmitting ? null : () => AppNavigator.pop(context),
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   side: BorderSide(color: ColorUtils.slate300),
                 ),
@@ -72,9 +72,9 @@ class AddActivityActionBar extends StatelessWidget {
                 onPressed: isSubmitting ? null : onSubmit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   elevation: 1,
                 ),

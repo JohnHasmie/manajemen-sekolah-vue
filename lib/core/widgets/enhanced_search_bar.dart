@@ -96,7 +96,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
               Container(
                 width: 36,
                 height: 36,
-                margin: EdgeInsets.only(right: 4),
+                margin: const EdgeInsets.only(right: 4),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
                   shape: BoxShape.circle,
@@ -123,7 +123,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
             // Filter Dropdown with modern design
             if (widget.showFilter && widget.filterOptions != null)
               Container(
-                padding: EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.only(right: 12),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: widget.selectedFilter,

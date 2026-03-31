@@ -126,12 +126,12 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       height: MediaQuery.of(context).size.height * 0.55,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
+            padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -141,7 +141,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   widget.primaryColor.withValues(alpha: 0.85),
                 ],
               ),
-              borderRadius: BorderRadius.vertical(
+              borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(24),
               ),
             ),
@@ -150,10 +150,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 Container(
                   width: 40,
                   height: 4,
-                  margin: EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: const BorderRadius.all(Radius.circular(2)),
                   ),
                 ),
                 Row(
@@ -165,7 +165,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.tune_rounded,
                         color: Colors.white,
                         size: 20,
@@ -196,8 +196,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         backgroundColor: Colors.white.withValues(
                           alpha: 0.2,
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
                       ),
                       child: Text(
@@ -219,7 +219,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -266,7 +266,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ),
           ),
           Container(
-            padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -289,8 +289,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         padding: EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorUtils.slate300),
                         foregroundColor: ColorUtils.slate700,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                       child: Text(
@@ -314,8 +314,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         backgroundColor: widget.primaryColor,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                       child: Text(

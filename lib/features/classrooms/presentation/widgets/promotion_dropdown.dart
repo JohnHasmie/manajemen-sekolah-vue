@@ -46,10 +46,10 @@ class PromotionDropdown extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             color: ColorUtils.slate50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(color: ColorUtils.slate200),
           ),
-          padding: EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
               if (icon != null) ...[

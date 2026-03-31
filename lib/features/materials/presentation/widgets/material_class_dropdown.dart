@@ -61,7 +61,7 @@ class MaterialClassDropdown extends StatelessWidget {
                 return DropdownMenuItem<String>(
                   value: c['id'],
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
                       children: [
                         Icon(

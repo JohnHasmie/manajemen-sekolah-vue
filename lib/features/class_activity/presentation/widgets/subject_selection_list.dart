@@ -68,7 +68,7 @@ class SubjectSelectionList extends StatelessWidget {
         // Like a Vue `<div class="selection-header">` at the top.
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           color: ColorUtils.slate50,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +97,7 @@ class SubjectSelectionList extends StatelessWidget {
         // One tappable card per subject, like a Vue `v-for` list.
         Expanded(
           child: ListView.builder(
-            padding: EdgeInsets.only(top: 8, bottom: 16),
+            padding: const EdgeInsets.only(top: 8, bottom: 16),
             itemCount: subjectList.length,
             itemBuilder: (context, index) {
               final subject = subjectList[index];
@@ -105,7 +105,7 @@ class SubjectSelectionList extends StatelessWidget {
               final subjectCode = subject['code'] ?? subject['kode'] ?? '';
 
               return Container(
-                margin: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+                margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -114,7 +114,7 @@ class SubjectSelectionList extends StatelessWidget {
                       Map<String, dynamic>.from(subject as Map),
                     ),
                     child: Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 12,
                       ),
@@ -178,8 +178,8 @@ class SubjectSelectionList extends StatelessWidget {
                                 // Read-only badge when teacher cannot edit
                                 if (subject['can_edit'] == false)
                                   Container(
-                                    margin: EdgeInsets.only(top: 4),
-                                    padding: EdgeInsets.symmetric(
+                                    margin: const EdgeInsets.only(top: 4),
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
                                       vertical: 2,
                                     ),
@@ -213,7 +213,7 @@ class SubjectSelectionList extends StatelessWidget {
 
                           // ── Chevron ──────────────────────────────────
                           Container(
-                            padding: EdgeInsets.all(6),
+                            padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               color: ColorUtils.slate100,
                               borderRadius: BorderRadius.circular(8),

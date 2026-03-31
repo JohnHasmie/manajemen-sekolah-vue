@@ -120,7 +120,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
               // --- Scrollable Form Body ---
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(AppSpacing.xl),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -133,7 +133,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
                         icon: Icons.title,
                         primaryColor: primaryColor,
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                       _buildDialogTextField(
                         controller: _contentController,
                         label: lang.getTranslatedText({
@@ -144,11 +144,11 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
                         maxLines: 4,
                         primaryColor: primaryColor,
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                       _buildPrioritasDropdown(lang, primaryColor),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                       _buildRoleTargetDropdown(lang, primaryColor),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                       Row(
                         children: [
                           Expanded(
@@ -166,7 +166,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
                               primaryColor: primaryColor,
                             ),
                           ),
-                          SizedBox(width: AppSpacing.md),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: _buildDateField(
                               label: lang.getTranslatedText({
@@ -184,7 +184,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
                           ),
                         ],
                       ),
-                      SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
                       _buildFilePicker(lang, primaryColor),
                     ],
                   ),
@@ -207,7 +207,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
   Widget _buildHeader(LanguageProvider lang, Color primaryColor) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 20, 12, 20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 12, 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -229,7 +229,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
             height: 44,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.3),
               ),
@@ -240,7 +240,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
               size: 22,
             ),
           ),
-          SizedBox(width: 14),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +261,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   _isEdit
                       ? lang.getTranslatedText({
@@ -307,7 +307,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
 
   Widget _buildFooter(LanguageProvider lang, Color primaryColor) {
     return Container(
-      padding: EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -327,10 +327,10 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
             child: OutlinedButton(
               onPressed: () => AppNavigator.pop(context),
               style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 side: BorderSide(color: ColorUtils.slate300),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
                 ),
               ),
               child: Text(
@@ -345,18 +345,18 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
               ),
             ),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: ElevatedButton(
               onPressed: _isSaving ? null : () => _handleSave(lang),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 disabledBackgroundColor: primaryColor.withValues(alpha: 0.6),
-                padding: EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 elevation: 2,
                 shadowColor: primaryColor.withValues(alpha: 0.4),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
                 ),
               ),
               child: _isSaving
@@ -512,7 +512,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: TextField(
@@ -525,10 +525,10 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
           prefixIcon: Icon(icon, color: primaryColor, size: 20),
           border: InputBorder.none,
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             borderSide: BorderSide(color: primaryColor, width: 1.5),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
       ),
     );
@@ -538,7 +538,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<String>(
@@ -555,7 +555,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
             size: 20,
           ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         ),
         items: [
           DropdownMenuItem(
@@ -563,7 +563,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
             child: Row(
               children: [
                 Icon(Icons.circle, color: ColorUtils.slate400, size: 16),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   lang.getTranslatedText({
                     'en': 'Normal',
@@ -578,7 +578,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
             child: Row(
               children: [
                 Icon(Icons.warning, color: Colors.orange, size: 16),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   lang.getTranslatedText({
                     'en': 'Important',
@@ -599,7 +599,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: DropdownButtonFormField<String>(
@@ -612,7 +612,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
           labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
           prefixIcon: Icon(Icons.people, color: primaryColor, size: 20),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         ),
         items: [
           DropdownMenuItem(
@@ -646,14 +646,14 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
       child: Container(
         decoration: BoxDecoration(
           color: ColorUtils.slate50,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           border: Border.all(color: ColorUtils.slate200),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
         child: Row(
           children: [
             Icon(Icons.calendar_today, color: primaryColor, size: 20),
-            SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 value != null
@@ -692,10 +692,10 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
   Widget _buildFilePicker(LanguageProvider lang, Color primaryColor) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: ColorUtils.slate200),
       ),
       child: Column(
@@ -712,19 +712,19 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
           if (_selectedFile != null)
             Container(
-              padding: EdgeInsets.all(AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
                 border: Border.all(color: ColorUtils.slate300),
               ),
               child: Row(
                 children: [
                   Icon(Icons.description, color: primaryColor, size: 20),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       _selectedFile!.path.split('/').last,
@@ -752,13 +752,13 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
           if (_selectedFile == null)
             InkWell(
               onTap: _pickFile,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
                   border: Border.all(
                     color: primaryColor.withValues(alpha: 0.5),
                     style: BorderStyle.solid,
@@ -771,7 +771,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
                       color: primaryColor,
                       size: 24,
                     ),
-                    SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       lang.getTranslatedText({
                         'en': 'Tap to upload file',

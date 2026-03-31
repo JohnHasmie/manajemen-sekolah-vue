@@ -42,11 +42,11 @@ class ParentStudentSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     if (studentList.isEmpty) {
       return Container(
-        margin: EdgeInsets.all(AppSpacing.lg),
-        padding: EdgeInsets.all(AppSpacing.lg),
+        margin: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: ColorUtils.warning600.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           border: Border.all(
             color: ColorUtils.warning600.withValues(alpha: 0.3),
           ),
@@ -58,7 +58,7 @@ class ParentStudentSelector extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: ColorUtils.warning600.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
               child: Icon(
                 Icons.warning_amber_rounded,
@@ -103,7 +103,7 @@ class ParentStudentSelector extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: ColorUtils.slate200),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),

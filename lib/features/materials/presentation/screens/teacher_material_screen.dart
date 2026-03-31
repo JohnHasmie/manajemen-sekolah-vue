@@ -1223,7 +1223,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
           // Search Results Info
           if (_searchController.text.isNotEmpty)
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   Text(
@@ -1233,13 +1233,13 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
                 ],
               ),
             ),
-          SizedBox(height: AppSpacing.sm),
+          AppSpacing.v8,
 
           // Content Section
           Expanded(
             child: _isLoading
                 ? SkeletonListLoading(
-                    padding: EdgeInsets.only(top: 8, bottom: 80),
+                    padding: const EdgeInsets.only(top: 8, bottom: 80),
                     showActions: false,
                   )
                 : _selectedSubject == null
@@ -1252,7 +1252,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
                   )
                 : _isLoadingBab || _isLoadingProgress
                 ? SkeletonListLoading(
-                    padding: EdgeInsets.only(top: 8, bottom: 80),
+                    padding: const EdgeInsets.only(top: 8, bottom: 80),
                     showActions: false,
                   )
                 : _chapterMaterialList.isEmpty

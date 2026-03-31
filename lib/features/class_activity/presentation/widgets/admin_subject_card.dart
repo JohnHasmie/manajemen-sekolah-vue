@@ -42,12 +42,12 @@ class AdminSubjectCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: ColorUtils.slate200, width: 1),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
@@ -59,7 +59,7 @@ class AdminSubjectCard extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: subjectColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     border: Border.all(
                       color: subjectColor.withValues(alpha: 0.25),
                     ),
@@ -103,7 +103,7 @@ class AdminSubjectCard extends StatelessWidget {
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: ColorUtils.slate100,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Icon(
                     Icons.chevron_right,

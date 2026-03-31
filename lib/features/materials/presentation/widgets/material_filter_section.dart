@@ -68,7 +68,7 @@ class MaterialFilterSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: containerKey,
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -79,7 +79,7 @@ class MaterialFilterSection extends StatelessWidget {
         children: [
           // Info Filter Aktif
           Container(
-            padding: EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
@@ -100,7 +100,7 @@ class MaterialFilterSection extends StatelessWidget {
                     color: primaryColor,
                   ),
                 ),
-                SizedBox(width: 10),
+                AppSpacing.h10,
                 Expanded(
                   child: Text(
                     subjectList.isEmpty
@@ -113,7 +113,7 @@ class MaterialFilterSection extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
@@ -146,9 +146,9 @@ class MaterialFilterSection extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ColorUtils.success600,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   elevation: 0,
                 ),

@@ -181,7 +181,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
               width: 1.5,
             ),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         keyboardType: keyboardType,
@@ -216,7 +216,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
               width: 1.5,
             ),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         ),
         items: items,
         onChanged: onChanged,
@@ -282,7 +282,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                         size: 22,
                       ),
                     ),
-                    SizedBox(width: 14),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,7 +303,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             widget.teacher == null
                                 ? languageProvider.getTranslatedText({
@@ -333,7 +333,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                           color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.close_rounded,
                           color: Colors.white,
                           size: 18,
@@ -361,7 +361,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                       SizedBox(height: AppSpacing.md),
                       if (widget.teacher != null)
                         Container(
-                          margin: EdgeInsets.only(bottom: 12),
+                          margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
                             color: ColorUtils.warning600.withValues(
                               alpha: 0.05,
@@ -460,7 +460,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                       // Subjects Section
                       Container(
                         width: double.infinity,
-                        padding: EdgeInsets.all(AppSpacing.md),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
@@ -624,7 +624,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
 
               // Footer
               Container(
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(
@@ -644,7 +644,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                       child: OutlinedButton(
                         onPressed: () => AppNavigator.pop(context),
                         style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: ColorUtils.slate300),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -670,7 +670,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          padding: EdgeInsets.symmetric(vertical: 13),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
                           elevation: 2,
                           shadowColor:
                               ColorUtils.corporateBlue600.withValues(alpha: 0.4),

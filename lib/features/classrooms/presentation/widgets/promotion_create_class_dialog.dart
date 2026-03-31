@@ -76,7 +76,7 @@ class _PromotionCreateClassDialogState
             // Gradient header
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(gradient: widget.cardGradient),
               child: Row(
                 children: [
@@ -90,7 +90,7 @@ class _PromotionCreateClassDialogState
                         color: Colors.white.withValues(alpha: 0.3),
                       ),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.add_rounded,
                       color: Colors.white,
                       size: 22,
@@ -132,7 +132,7 @@ class _PromotionCreateClassDialogState
 
             // Form body
             Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -174,7 +174,7 @@ class _PromotionCreateClassDialogState
 
             // Footer
             Container(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
                 children: [
                   Expanded(
@@ -185,7 +185,7 @@ class _PromotionCreateClassDialogState
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 13),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                       ),
                       child: Text(
                         widget.languageProvider.getTranslatedText({
@@ -208,7 +208,7 @@ class _PromotionCreateClassDialogState
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 13),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                         elevation: 2,
                         shadowColor: widget.primaryColor.withValues(alpha: 0.4),
                       ),
@@ -284,7 +284,7 @@ class _PromotionCreateClassDialogState
           labelStyle: TextStyle(color: ColorUtils.slate600, fontSize: 13),
           prefixIcon: Icon(icon, color: widget.primaryColor, size: 18),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
       ),
     );

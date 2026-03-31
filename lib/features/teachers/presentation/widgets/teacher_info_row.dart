@@ -54,11 +54,11 @@ class TeacherInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
         border: Border.all(color: ColorUtils.slate100),
       ),
       child: Row(
@@ -71,7 +71,7 @@ class TeacherInfoRow extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               border: Border.all(
                 color: ColorUtils.corporateBlue600.withValues(alpha: 0.15),
               ),
@@ -96,14 +96,14 @@ class TeacherInfoRow extends StatelessWidget {
                     letterSpacing: 0.3,
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 if (value is List<String>)
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
                     children: (value as List<String>).map((item) {
                       return Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 3,
                         ),
@@ -111,7 +111,7 @@ class TeacherInfoRow extends StatelessWidget {
                           color: ColorUtils.corporateBlue600.withValues(
                             alpha: 0.08,
                           ),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: const BorderRadius.all(Radius.circular(6)),
                           border: Border.all(
                             color: ColorUtils.corporateBlue600.withValues(
                               alpha: 0.2,
