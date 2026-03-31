@@ -161,7 +161,7 @@ deploy_playstore:
         --aab build/app/outputs/bundle/release/app-release.aab \
         --json_key play-store-key.json \
         --package_name com.kamillabs.kamiledu \
-        --track internal \
+        --track alpha \
         --skip_upload_metadata \
         --skip_upload_images \
         --skip_upload_screenshots
