@@ -176,7 +176,7 @@ shorebird_release:
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
     - *bump_version
-    - shorebird release android --force --dart-define=API_BASE_URL=${API_BASE_URL}
+    - shorebird release android --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   artifacts:
     paths:
       - build/app/outputs/bundle/release/app-release.aab
@@ -195,7 +195,7 @@ shorebird_patch:
   stage: deploy
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
-    - shorebird patch android --force --dart-define=API_BASE_URL=${API_BASE_URL}
+    - shorebird patch android --release-version=latest --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
