@@ -932,444 +932,63 @@ class TeachingScheduleScreenState
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          // Header with gradient
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              bottom: 16,
-            ),
-            decoration: BoxDecoration(
-              gradient: _getCardGradient(),
-              boxShadow: [
-                BoxShadow(
-                  color: _getPrimaryColor().withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => AppNavigator.pop(context),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: const BorderRadius.all(Radius.circular(10)),
-                        ),
-                        child: Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Teaching Schedule',
-                              'id': 'Jadwal Mengajar',
-                            }),
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en':
-                                  _isHomeroomView &&
-                                      _selectedHomeroomClass != null
-                                  ? 'Viewing Homeroom Schedule'
-                                  : 'View your teaching schedule',
-                              'id':
-                                  _isHomeroomView &&
-                                      _selectedHomeroomClass != null
-                                  ? 'Melihat Jadwal Wali Kelas'
-                                  : 'Lihat jadwal mengajar Anda',
-                            }),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // RE-ADDED: Toggle view button
-                    GestureDetector(
-                      key: _toggleViewKey,
-                      onTap: _toggleView,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: const BorderRadius.all(Radius.circular(10)),
-                        ),
-                        child: Icon(
-                          _isTableView ? Icons.grid_view : Icons.list,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'refresh') {
-                          _forceRefresh();
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem<String>(
-                          value: 'refresh',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.refresh,
-                                size: 20,
-                                color: ColorUtils.info600,
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Text(AppLocalizations.updateData.tr),
-                            ],
-                          ),
-                        ),
-                      ],
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: const BorderRadius.all(Radius.circular(10)),
-                        ),
-                        child: Icon(
-                          Icons.more_vert_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-
-                // Role switcher: only show when user is also wali kelas
-                if (_homeroomClassesList.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    ),
-                    child: GestureDetector(
-                      onTapDown: (TapDownDetails details) {
-                        showMenu(
-                          context: context,
-                          position: RelativeRect.fromLTRB(
-                            details.globalPosition.dx,
-                            details.globalPosition.dy,
-                            details.globalPosition.dx,
-                            details.globalPosition.dy,
-                          ),
-                          items: [
-                            PopupMenuItem(
-                              value: 'guru',
-                              child: Text('Guru (Lihat Jadwal Mengajar)'),
-                            ),
-                            ..._homeroomClassesList.map(
-                              (c) => PopupMenuItem(
-                                value: c,
-                                child: Text(
-                                  'Wali Kelas - ${c['name'] ?? c['nama']}',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ).then((value) {
-                          if (value != null) {
-                            setState(() {
-                              if (value == 'guru') {
-                                _isHomeroomView = false;
-                              } else {
-                                _isHomeroomView = true;
-                                _selectedHomeroomClass =
-                                    value as Map<String, dynamic>;
-                              }
-                            });
-                            _loadSchedule();
-                          }
-                        });
-                      },
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              borderRadius: const BorderRadius.all(Radius.circular(8)),
-                            ),
-                            child: Icon(
-                              _isHomeroomView ? Icons.class_ : Icons.person,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _teacherNama,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  _isHomeroomView &&
-                                          _selectedHomeroomClass != null
-                                      ? 'Wali Kelas - ${(_selectedHomeroomClass!['name'] ?? _selectedHomeroomClass!['nama'] ?? '').toString()}'
-                                      : 'Guru',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.swap_horiz_rounded,
-                            color: Colors.white.withValues(alpha: 0.8),
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: AppSpacing.lg),
-
-                // Search Bar with Filter using SeparatedSearchFilter
-                // Search Bar with Filter Button
-                Row(
-                  key: _searchFilterKey,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.95),
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _searchController,
-                                style: TextStyle(color: ColorUtils.slate800),
-                                decoration: InputDecoration(
-                                  hintText: languageProvider.getTranslatedText({
-                                    'en': 'Search schedules...',
-                                    'id': 'Cari jadwal...',
-                                  }),
-                                  hintStyle: TextStyle(
-                                    color: ColorUtils.slate400,
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.search,
-                                    color: ColorUtils.slate500,
-                                  ),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                ),
-                                onSubmitted: (_) {
-                                  setState(() {});
-                                },
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(right: 4),
-                              child: IconButton(
-                                icon: Icon(
-                                  Icons.search,
-                                  color: _getPrimaryColor(),
-                                ),
-                                onPressed: () {
-                                  setState(() {});
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    // Filter Button
-                    Container(
-                      decoration: BoxDecoration(
-                        color: _hasActiveFilter
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: 0.2),
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Stack(
-                        children: [
-                          IconButton(
-                            onPressed: _showFilterSheet,
-                            icon: Icon(
-                              Icons.tune,
-                              color: _hasActiveFilter
-                                  ? _getPrimaryColor()
-                                  : Colors.white,
-                            ),
-                            tooltip: languageProvider.getTranslatedText({
-                              'en': 'Filter',
-                              'id': 'Filter',
-                            }),
-                          ),
-                          if (_hasActiveFilter)
-                            Positioned(
-                              right: 6,
-                              top: 6,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: ColorUtils.error600,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 1.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Filter Chips
-                if (_hasActiveFilter) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  SizedBox(
-                    height: 32,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: [
-                              ..._buildFilterChips(languageProvider).map((
-                                filter,
-                              ) {
-                                return GestureDetector(
-                                  onTap: filter['onRemove'],
-                                  child: Container(
-                                    margin: const EdgeInsets.only(right: 6),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.2,
-                                      ),
-                                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                                      border: Border.all(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.3,
-                                        ),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          filter['label'],
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        const SizedBox(width: AppSpacing.xs),
-                                        Icon(
-                                          Icons.close,
-                                          size: 14,
-                                          color: Colors.white,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        InkWell(
-                          onTap: _clearAllFilters,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.2),
-                              borderRadius: const BorderRadius.all(Radius.circular(8)),
-                              border: Border.all(
-                                color: Colors.red.withValues(alpha: 0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Clear All',
-                                'id': 'Hapus Semua',
-                              }),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
+          // Header with gradient — extracted to _TeacherScheduleHeader
+          _TeacherScheduleHeader(
+            primaryColor: _getPrimaryColor(),
+            gradient: _getCardGradient(),
+            title: languageProvider.getTranslatedText({
+              'en': 'Teaching Schedule',
+              'id': 'Jadwal Mengajar',
+            }),
+            subtitle: languageProvider.getTranslatedText({
+              'en': _isHomeroomView && _selectedHomeroomClass != null
+                  ? 'Viewing Homeroom Schedule'
+                  : 'View your teaching schedule',
+              'id': _isHomeroomView && _selectedHomeroomClass != null
+                  ? 'Melihat Jadwal Wali Kelas'
+                  : 'Lihat jadwal mengajar Anda',
+            }),
+            isHomeroomView: _isHomeroomView,
+            selectedHomeroomClass: _selectedHomeroomClass,
+            homeroomClassesList: _homeroomClassesList,
+            teacherNama: _teacherNama,
+            isTableView: _isTableView,
+            hasActiveFilter: _hasActiveFilter,
+            toggleViewKey: _toggleViewKey,
+            searchFilterKey: _searchFilterKey,
+            searchController: _searchController,
+            filterChips: _buildFilterChips(languageProvider),
+            clearAllLabel: languageProvider.getTranslatedText({
+              'en': 'Clear All',
+              'id': 'Hapus Semua',
+            }),
+            filterTooltip: languageProvider.getTranslatedText({
+              'en': 'Filter',
+              'id': 'Filter',
+            }),
+            searchHint: languageProvider.getTranslatedText({
+              'en': 'Search schedules...',
+              'id': 'Cari jadwal...',
+            }),
+            updateDataLabel: AppLocalizations.updateData.tr,
+            onBack: () => AppNavigator.pop(context),
+            onToggleView: _toggleView,
+            onRefresh: _forceRefresh,
+            onShowFilter: _showFilterSheet,
+            onClearAllFilters: _clearAllFilters,
+            onRoleSelected: (value) {
+              setState(() {
+                if (value == 'guru') {
+                  _isHomeroomView = false;
+                } else {
+                  _isHomeroomView = true;
+                  _selectedHomeroomClass = value as Map<String, dynamic>;
+                }
+              });
+              _loadSchedule();
+            },
+            onSearch: () => setState(() {}),
           ),
-
           // Content
           Expanded(
             child: _isLoading
@@ -1471,4 +1090,361 @@ class TeachingScheduleScreenState
     );
   }
 
+}
+
+/// Gradient header for the teacher schedule screen.
+///
+/// Extracted from [TeachingScheduleScreenState.build] to keep the build method
+/// readable. Receives all state as constructor params — no direct widget-tree
+/// coupling. Like a Blade partial in Laravel: `@include('schedule._header')`.
+class _TeacherScheduleHeader extends StatelessWidget {
+  final Color primaryColor;
+  final LinearGradient gradient;
+  final String title;
+  final String subtitle;
+  final bool isHomeroomView;
+  final Map<String, dynamic>? selectedHomeroomClass;
+  final List<dynamic> homeroomClassesList;
+  final String teacherNama;
+  final bool isTableView;
+  final bool hasActiveFilter;
+  final GlobalKey toggleViewKey;
+  final GlobalKey searchFilterKey;
+  final TextEditingController searchController;
+  final List<Map<String, dynamic>> filterChips;
+  final String clearAllLabel;
+  final String filterTooltip;
+  final String searchHint;
+  final String updateDataLabel;
+  final VoidCallback onBack;
+  final VoidCallback onToggleView;
+  final VoidCallback onRefresh;
+  final VoidCallback onShowFilter;
+  final VoidCallback onClearAllFilters;
+  final void Function(dynamic) onRoleSelected;
+  final VoidCallback onSearch;
+
+  const _TeacherScheduleHeader({
+    required this.primaryColor,
+    required this.gradient,
+    required this.title,
+    required this.subtitle,
+    required this.isHomeroomView,
+    required this.selectedHomeroomClass,
+    required this.homeroomClassesList, // List<dynamic> — entries are Map<String,dynamic>
+    required this.teacherNama,
+    required this.isTableView,
+    required this.hasActiveFilter,
+    required this.toggleViewKey,
+    required this.searchFilterKey,
+    required this.searchController,
+    required this.filterChips,
+    required this.clearAllLabel,
+    required this.filterTooltip,
+    required this.searchHint,
+    required this.updateDataLabel,
+    required this.onBack,
+    required this.onToggleView,
+    required this.onRefresh,
+    required this.onShowFilter,
+    required this.onClearAllFilters,
+    required this.onRoleSelected,
+    required this.onSearch,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + AppSpacing.lg,
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
+        bottom: AppSpacing.lg,
+      ),
+      decoration: BoxDecoration(gradient: gradient),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top row: back, title/subtitle, toggle view, overflow menu
+          Row(
+            children: [
+              GestureDetector(
+                onTap: onBack,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  ),
+                  child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.9)),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                key: toggleViewKey,
+                onTap: onToggleView,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  ),
+                  child: Icon(isTableView ? Icons.grid_view : Icons.list, color: Colors.white, size: 20),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              PopupMenuButton<String>(
+                onSelected: (value) { if (value == 'refresh') onRefresh(); },
+                itemBuilder: (context) => [
+                  PopupMenuItem<String>(
+                    value: 'refresh',
+                    child: Row(
+                      children: [
+                        Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(updateDataLabel),
+                      ],
+                    ),
+                  ),
+                ],
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  ),
+                  child: const Icon(Icons.more_vert_rounded, color: Colors.white, size: 20),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Role switcher — only visible when teacher is also homeroom teacher
+          if (homeroomClassesList.isNotEmpty)
+            Builder(
+              builder: (ctx) => GestureDetector(
+                onTapDown: (TapDownDetails details) {
+                  showMenu<dynamic>(
+                    context: ctx,
+                    position: RelativeRect.fromLTRB(
+                      details.globalPosition.dx,
+                      details.globalPosition.dy,
+                      details.globalPosition.dx,
+                      details.globalPosition.dy,
+                    ),
+                    items: [
+                      const PopupMenuItem(value: 'guru', child: Text('Guru (Lihat Jadwal Mengajar)')),
+                      ...homeroomClassesList.map(
+                        (c) => PopupMenuItem(
+                          value: c,
+                          child: Text('Wali Kelas - ${c['name'] ?? c['nama']}'),
+                        ),
+                      ),
+                    ],
+                  ).then((value) { if (value != null) onRoleSelected(value); });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        ),
+                        child: Icon(
+                          isHomeroomView ? Icons.class_ : Icons.person,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              teacherNama,
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                            Text(
+                              isHomeroomView && selectedHomeroomClass != null
+                                  ? 'Wali Kelas - ${(selectedHomeroomClass!['name'] ?? selectedHomeroomClass!['nama'] ?? '').toString()}'
+                                  : 'Guru',
+                              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.swap_horiz_rounded, color: Colors.white.withValues(alpha: 0.8), size: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Search bar + filter button
+          Row(
+            key: searchFilterKey,
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: searchController,
+                          style: TextStyle(color: ColorUtils.slate800),
+                          decoration: InputDecoration(
+                            hintText: searchHint,
+                            hintStyle: TextStyle(color: ColorUtils.slate400),
+                            prefixIcon: Icon(Icons.search, color: ColorUtils.slate500),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          onSubmitted: (_) => onSearch(),
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(right: 4),
+                        child: IconButton(
+                          icon: Icon(Icons.search, color: primaryColor),
+                          onPressed: onSearch,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Container(
+                decoration: BoxDecoration(
+                  color: hasActiveFilter ? Colors.white : Colors.white.withValues(alpha: 0.2),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                ),
+                child: Stack(
+                  children: [
+                    IconButton(
+                      onPressed: onShowFilter,
+                      icon: Icon(Icons.tune, color: hasActiveFilter ? primaryColor : Colors.white),
+                      tooltip: filterTooltip,
+                    ),
+                    if (hasActiveFilter)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: ColorUtils.error600,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Active filter chips row
+          if (hasActiveFilter) ...[
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              height: 32,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: filterChips.map((filter) {
+                        return GestureDetector(
+                          onTap: filter['onRemove'] as VoidCallback?,
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: const BorderRadius.all(Radius.circular(8)),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  filter['label'] as String,
+                                  style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                const Icon(Icons.close, size: 14, color: Colors.white),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  InkWell(
+                    onTap: onClearAllFilters,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.2),
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        clearAllLabel,
+                        style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }

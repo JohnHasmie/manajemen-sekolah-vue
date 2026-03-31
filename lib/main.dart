@@ -202,7 +202,11 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
       if (!SchoolManagementApp.skipFCM) {
         try {
           await FCMService().initialize();
-          AppLogger.info('init', 'FCM Service initialized in app');
+          if (!FCMService().isInitialized) {
+            AppLogger.warning('init', 'FCM failed to initialize: ${FCMService().initError ?? "unknown"}. Push notifications will not work.');
+          } else {
+            AppLogger.info('init', 'FCM Service initialized in app');
+          }
         } catch (e) {
           AppLogger.warning(
             'init',

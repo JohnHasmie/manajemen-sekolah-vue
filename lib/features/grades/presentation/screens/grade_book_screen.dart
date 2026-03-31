@@ -271,7 +271,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         initialTitle: header?['title'],
       ),
     ).then((_) {
-      _loadData();
+      _loadData(useCache: false);
     });
   }
 
@@ -375,7 +375,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       _showErrorSnackBar(error);
       return;
     }
-    if (reload) _loadData(showLoading: false);
+    if (reload) _loadData(showLoading: false, useCache: false);
   }
 
   String _formatDateDisplay(String dateStr) =>
@@ -397,7 +397,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       final existingGrade = _getGradeForStudentAndHeader(student, type, header);
       if (existingGrade != null && existingGrade.isNotEmpty) {
         gradedCount++;
-        totalScore += double.tryParse(existingGrade['nilai'].toString()) ?? 0.0;
+        totalScore += double.tryParse((existingGrade['score'] ?? existingGrade['nilai'] ?? 0).toString()) ?? 0.0;
       }
     }
     final double average = gradedCount > 0 ? totalScore / gradedCount : 0;
@@ -485,7 +485,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
       return;
     }
     _showSuccessSnackBar('Assessment deleted successfully');
-    _loadData();
+    _loadData(useCache: false);
   }
 
   Future<void> _addNewAssessment(String type) async {
@@ -537,7 +537,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
         studentList: _studentList,
       ),
     ).then((_) {
-      _loadData();
+      _loadData(useCache: false);
     });
   }
 
@@ -610,7 +610,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                               student,
                               _editGradeType!,
                               _editHeader!,
-                              'nilai',
+                              'score',
                               _editControllers[scoreKey]!.text,
                               reload: false,
                             );
@@ -626,7 +626,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                             );
                           }
                         }
-                        await _loadData();
+                        await _loadData(useCache: false);
                         setState(() {
                           _isEditMode = false;
                           _editGradeType = null;

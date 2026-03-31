@@ -128,6 +128,15 @@ class FCMService {
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
+  /// Whether FCM initialization completed successfully.
+  /// Check this after `initialize()` to detect broken notification setup.
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
+
+  /// The error that caused FCM initialization to fail, if any.
+  String? _initError;
+  String? get initError => _initError;
+
   /// ValueNotifier that UI components observe for background data changes.
   /// When a 'refresh_*' push notification arrives, this emits the message type
   /// so screens can reload their data. Like Vue's `watch()` on a reactive store,
@@ -203,12 +212,15 @@ class FCMService {
           _firebaseMessagingBackgroundHandler,
         );
 
+        _isInitialized = true;
         AppLogger.info('fcm', 'FCM Service initialized successfully');
       } else {
-        AppLogger.error('fcm', 'Notification permission denied');
+        _initError = 'Notification permission denied';
+        AppLogger.error('fcm', _initError!);
       }
     } catch (e) {
-      AppLogger.error('fcm', 'Error initializing FCM: $e');
+      _initError = 'Error initializing FCM: $e';
+      AppLogger.error('fcm', _initError!);
     }
   }
 

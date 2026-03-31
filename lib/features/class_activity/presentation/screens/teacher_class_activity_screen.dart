@@ -405,7 +405,7 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
                       .selectedAcademicYear?['id']
                       ?.toString();
                 }
-              } catch (e) {}
+              } catch (_) { /* academicYear read may fail before provider is ready */ }
 
               await teacherProvider.ensureLoaded(
                 academicYearId: academicYearId,

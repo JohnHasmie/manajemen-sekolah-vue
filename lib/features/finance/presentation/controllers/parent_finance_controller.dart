@@ -50,13 +50,13 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
   // --- Actions ---
 
   Future<void> selectStudent(Student student) async {
-    state = AsyncData(state.value!.copyWith(
+    state = state.whenData((s) => s.copyWith(
       selectedStudent: student,
       isLoading: true,
       billingItems: [],
     ));
     final billing = await _loadBilling(student.id, useCache: true);
-    state = AsyncData(state.value!.copyWith(
+    state = state.whenData((s) => s.copyWith(
       billingItems: billing,
       isLoading: false,
     ));
@@ -71,7 +71,7 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
       isLoading: true,
     ));
     final billing = await _loadBilling(currentState.selectedStudent!.id, useCache: false);
-    state = AsyncData(state.value!.copyWith(
+    state = state.whenData((s) => s.copyWith(
       billingItems: billing,
       isLoading: false,
     ));
@@ -82,14 +82,15 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
     if (currentState?.selectedStudent == null) return;
     state = AsyncData(currentState!.copyWith(searchQuery: query, isLoading: true));
     final billing = await _loadBilling(currentState.selectedStudent!.id, useCache: false);
-    state = AsyncData(state.value!.copyWith(
+    state = state.whenData((s) => s.copyWith(
       billingItems: billing,
       isLoading: false,
     ));
   }
 
   void markItemVisible(String id, bool isRead) {
-    final currentState = state.value!;
+    final currentState = state.value;
+    if (currentState == null) return;
     if (!isRead && !currentState.processedReadIds.contains(id)) {
       final newProcessed = {...currentState.processedReadIds, id};
       final newPending = {...currentState.pendingReadIds, id};
@@ -115,8 +116,8 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
   }
 
   Future<void> _markAsReadBulk(List<String> ids) async {
-    final currentState = state.value!;
-    if (currentState.selectedStudent == null) return;
+    final currentState = state.value;
+    if (currentState == null || currentState.selectedStudent == null) return;
 
     // Optimistic Update
     final newBillingItems = currentState.billingItems.map((item) {
@@ -144,7 +145,7 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
   }
 
   Future<void> forceRefresh() async {
-    state = AsyncData(state.value!.copyWith(isLoading: true));
+    state = state.whenData((s) => s.copyWith(isLoading: true));
     await LocalCacheService.clearStartingWith('parent_billing_');
     state = AsyncData(await _init());
   }
@@ -200,9 +201,9 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
         '/bill/parent',
         params: {
           'student_id': studentId,
-          if (state.value?.searchQuery.isNotEmpty ?? false) 'search': state.value!.searchQuery,
-          if (state.value?.statusFilter != null) 'status': state.value!.statusFilter,
-          if (state.value?.periodFilter != null) 'periode': state.value!.periodFilter,
+          if (state.value?.searchQuery.isNotEmpty ?? false) 'search': state.value?.searchQuery,
+          if (state.value?.statusFilter != null) 'status': state.value?.statusFilter,
+          if (state.value?.periodFilter != null) 'periode': state.value?.periodFilter,
         },
       );
       final list = response is List ? response : [];
@@ -221,10 +222,11 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
   }
 
   Future<void> refreshBilling() async {
-    if (state.value?.selectedStudent == null) return;
-    state = AsyncData(state.value!.copyWith(isLoading: true));
-    final billing = await _loadBilling(state.value!.selectedStudent!.id, useCache: false);
-    state = AsyncData(state.value!.copyWith(
+    final current = state.value;
+    if (current?.selectedStudent == null) return;
+    state = state.whenData((s) => s.copyWith(isLoading: true));
+    final billing = await _loadBilling(current!.selectedStudent!.id, useCache: false);
+    state = state.whenData((s) => s.copyWith(
       billingItems: billing,
       isLoading: false,
     ));

@@ -18,6 +18,7 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
+import 'package:manajemensekolah/features/schedule/domain/models/school_day.dart';
 
 /// Riverpod provider for [TeacherScheduleController].
 /// Use `ref.read(teacherScheduleControllerProvider)` from the screen.
@@ -207,16 +208,16 @@ class TeacherScheduleController {
       }
 
       if (dayData.isNotEmpty) {
+        final days = dayData
+            .map((d) => SchoolDay.fromJson(Map<String, dynamic>.from(d)))
+            .toList();
         final Map<String, String> newDayIdMap = {};
         final List<String> newDayOptions = ['Semua Hari'];
 
-        for (var day in dayData) {
-          final name =
-              day['name_id']?.toString() ?? day['name']?.toString() ?? '';
-          final id = day['id']?.toString() ?? '';
-          if (name.isNotEmpty && id.isNotEmpty) {
-            newDayIdMap[name] = id;
-            newDayOptions.add(name);
+        for (final day in days) {
+          if (day.nameId.isNotEmpty && day.id.isNotEmpty) {
+            newDayIdMap[day.nameId] = day.id;
+            newDayOptions.add(day.nameId);
           }
         }
 

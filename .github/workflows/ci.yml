@@ -22,9 +22,7 @@ jobs:
           cache: true
 
       - name: Create .env
-        run: |
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
-          echo "LOG_API_KEY=${{ secrets.LOG_API_KEY }}" >> .env
+        run: echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" > .env
 
       - run: flutter pub get
       - run: flutter analyze --fatal-warnings
@@ -41,9 +39,7 @@ jobs:
           cache: true
 
       - name: Create .env
-        run: |
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
-          echo "LOG_API_KEY=${{ secrets.LOG_API_KEY }}" >> .env
+        run: echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" > .env
 
       - run: flutter pub get
       - run: flutter test --reporter=github
@@ -65,13 +61,13 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
+      # Minimal .env kept because flutter_dotenv.load() expects the asset to exist.
+      # The --dart-define value takes priority at runtime (see ApiService.init).
       - name: Create .env
-        run: |
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
-          echo "LOG_API_KEY=${{ secrets.LOG_API_KEY }}" >> .env
+        run: echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" > .env
 
       - run: flutter pub get
-      - run: flutter build apk --debug
+      - run: flutter build apk --debug --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}
 
   build-ios:
     name: Build iOS
@@ -86,9 +82,7 @@ jobs:
           cache: true
 
       - name: Create .env
-        run: |
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
-          echo "LOG_API_KEY=${{ secrets.LOG_API_KEY }}" >> .env
+        run: echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" > .env
 
       - run: flutter pub get
-      - run: flutter build ios --no-codesign --debug
+      - run: flutter build ios --no-codesign --debug --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}

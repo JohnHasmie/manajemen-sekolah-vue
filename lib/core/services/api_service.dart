@@ -39,11 +39,22 @@ class ApiService {
   /// The base URL for all API calls. Loaded once from `.env` at app startup.
   static late final String baseUrl;
 
-  /// Initializes the base URL from the `.env` file. Must be called before
-  /// any API usage. Called from `main()` during app startup.
+  /// Initializes the base URL. Resolution order:
+  /// 1. `--dart-define=API_BASE_URL=...` (compile-time, preferred for CI/CD)
+  /// 2. `.env` file via flutter_dotenv (development convenience)
+  ///
+  /// Must be called before any API usage. Called from `main()` during startup.
   static Future<void> init() async {
-    final envBaseUrl = dotenv.env['API_BASE_URL'];
+    // 1. Compile-time define (flutter run --dart-define=API_BASE_URL=https://...)
+    const defineUrl = String.fromEnvironment('API_BASE_URL');
+    if (defineUrl.isNotEmpty) {
+      baseUrl = defineUrl;
+      AppLogger.debug('api', 'API Base URL from --dart-define: $baseUrl');
+      return;
+    }
 
+    // 2. .env file fallback (development)
+    final envBaseUrl = dotenv.env['API_BASE_URL'];
     if (envBaseUrl != null && envBaseUrl.isNotEmpty) {
       baseUrl = envBaseUrl;
       AppLogger.debug('api', 'API Base URL from .env: $baseUrl');
