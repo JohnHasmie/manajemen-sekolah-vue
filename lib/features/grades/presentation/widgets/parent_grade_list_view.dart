@@ -45,6 +45,12 @@ class ParentGradeListView extends StatelessWidget {
   /// Called when the user taps a grade card; the screen shows the detail dialog.
   final void Function(Map<String, dynamic> grade) onGradeTap;
 
+  /// Optional scroll controller — attach for infinite-scroll pagination.
+  final ScrollController? controller;
+
+  /// Whether the next page is currently loading (shows a footer spinner).
+  final bool isLoadingMore;
+
   const ParentGradeListView({
     super.key,
     required this.gradeList,
@@ -56,6 +62,8 @@ class ParentGradeListView extends StatelessWidget {
     required this.getGradeTypeLabel,
     required this.onItemVisible,
     required this.onGradeTap,
+    this.controller,
+    this.isLoadingMore = false,
   });
 
   // ---------------------------------------------------------------------------
@@ -65,12 +73,12 @@ class ParentGradeListView extends StatelessWidget {
   Widget _buildInfoTag(IconData icon, String text, {Color? tagColor}) {
     final c = tagColor ?? ColorUtils.slate600;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: tagColor != null
             ? tagColor.withValues(alpha: 0.08)
             : ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
         border: Border.all(
           color: tagColor != null
               ? tagColor.withValues(alpha: 0.3)
@@ -81,7 +89,7 @@ class ParentGradeListView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 10, color: c),
-          SizedBox(width: 3),
+          const SizedBox(width: 3),
           Text(
             text,
             style: TextStyle(
@@ -114,9 +122,16 @@ class ParentGradeListView extends StatelessWidget {
 
     return ListView.builder(
       key: listKey,
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: gradeList.length,
+      controller: controller,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: gradeList.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
+        if (index == gradeList.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
         final grade = gradeList[index];
         final type = grade['type']?.toString().toLowerCase() ?? 'tugas';
         final typeColor = gradeTypeColorMap[type] ?? ColorUtils.corporateBlue600;
@@ -134,17 +149,17 @@ class ParentGradeListView extends StatelessWidget {
             // be queued for "mark as read" — like calling $emit('item-visible').
             onItemVisible(grade);
             return Container(
-              margin: EdgeInsets.symmetric(vertical: 5),
+              margin: const EdgeInsets.symmetric(vertical: 5),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => onGradeTap(grade),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: const BorderRadius.all(Radius.circular(14)),
                   child: Container(
-                    padding: EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: const BorderRadius.all(Radius.circular(14)),
                       border: Border.all(color: ColorUtils.slate200),
                       boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
                     ),
@@ -157,7 +172,7 @@ class ParentGradeListView extends StatelessWidget {
                           height: 54,
                           decoration: BoxDecoration(
                             color: typeColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: const BorderRadius.all(Radius.circular(14)),
                             border: Border.all(
                               color: typeColor.withValues(alpha: 0.25),
                             ),
@@ -178,7 +193,7 @@ class ParentGradeListView extends StatelessWidget {
                             ],
                           ),
                         ),
-                        SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.md),
                         // Card body — subject, title, info tags.
                         Expanded(
                           child: Column(
@@ -202,7 +217,7 @@ class ParentGradeListView extends StatelessWidget {
                                   ),
                                   // Unread indicator dot (like a Vue v-if badge).
                                   if (!isRead) ...[
-                                    SizedBox(width: AppSpacing.sm),
+                                    const SizedBox(width: AppSpacing.sm),
                                     Container(
                                       width: 8,
                                       height: 8,
@@ -216,7 +231,7 @@ class ParentGradeListView extends StatelessWidget {
                               ),
                               if (assessmentTitle != null &&
                                   assessmentTitle.isNotEmpty) ...[
-                                SizedBox(height: 3),
+                                const SizedBox(height: 3),
                                 Text(
                                   assessmentTitle,
                                   style: TextStyle(
@@ -227,7 +242,7 @@ class ParentGradeListView extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
-                              SizedBox(height: AppSpacing.sm),
+                              const SizedBox(height: AppSpacing.sm),
                               // Info tags row — type, date, teacher.
                               Wrap(
                                 spacing: 6,

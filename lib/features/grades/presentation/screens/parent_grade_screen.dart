@@ -22,6 +22,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Provider, Consumer;
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:manajemensekolah/core/mixins/pagination_mixin.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -49,7 +50,8 @@ class ParentGradeScreen extends ConsumerStatefulWidget {
 ///
 /// Like a Vue page component with `data() { return {...} }`.
 /// Key state: grade list, student selector, visibility-based read tracking.
-class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
+class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
+    with PaginationMixin<ParentGradeScreen> {
   List<dynamic> _gradeList = [];
   List<dynamic> _studentList = [];
   String? _selectedStudentId;
@@ -65,12 +67,39 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
 
   @override
   void dispose() {
+    disposePagination();
     _markReadDebounce?.cancel(); // Cancel visibility debounce
     if (_pendingReadIds.isNotEmpty) {
       _flushMarkReadSilently(List.from(_pendingReadIds));
       _pendingReadIds.clear();
     }
     super.dispose();
+  }
+
+  /// PaginationMixin contract — appends one page of grades to [_gradeList].
+  @override
+  Future<void> loadPage(int page) async {
+    try {
+      final result = await GradeService.getGradesPaginated(
+        studentId: _selectedStudentId,
+        academicYearId: widget.academicYearId,
+        page: page,
+      );
+      final newItems = List<dynamic>.from(result['data'] ?? []);
+      if (mounted) {
+        setState(() {
+          if (page == 1) {
+            _gradeList = newItems;
+          } else {
+            _gradeList = [..._gradeList, ...newItems];
+          }
+        });
+        updatePaginationFromMeta(result['pagination'] as Map<String, dynamic>?);
+      }
+    } catch (e) {
+      AppLogger.error('grades', 'loadPage($page) error: $e');
+      if (page == 1) rethrow;
+    }
   }
 
   Future<void> _flushMarkReadSilently(List<String> ids) async {
@@ -152,6 +181,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
   @override
   void initState() {
     super.initState();
+    initPagination();
     _loadUserData();
   }
 
@@ -252,7 +282,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
 
     final cacheKey = _buildGradesCacheKey();
 
-    // Try cache — return early if hit (don't use for grades with is_read tracking)
+    // Try cache — return early if hit
     if (useCache) {
       final cached = await LocalCacheService.load(
         cacheKey,
@@ -261,13 +291,12 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
       if (cached != null && cached is List && cached.isNotEmpty) {
         if (!mounted) return;
         setState(() {
-          _gradeList = cached;
+          _gradeList = List<dynamic>.from(cached);
           _isLoading = false;
         });
-        AppLogger.debug(
-          'grades',
-          'ParentGrades: from cache (${cached.length})',
-        );
+        AppLogger.debug('grades', 'ParentGrades: from cache (${cached.length})');
+        resetPagination();
+        hasMoreData = false; // cached data is a single complete page
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _studentList.isNotEmpty) _checkAndShowTour();
         });
@@ -275,25 +304,20 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
       }
     }
 
-    // No cache — fetch from API
+    // Reset pagination and load page 1 from API
+    resetPagination();
     if (_gradeList.isEmpty && mounted) {
       setState(() => _isLoading = true);
     }
 
     try {
-      final grades = await GradeService.getGrades(
-        studentId: _selectedStudentId,
-        academicYearId: widget.academicYearId,
-      );
-
+      await loadPage(1);
       if (!mounted) return;
-
-      LocalCacheService.save(cacheKey, grades);
-
-      setState(() {
-        _gradeList = grades;
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
+      // Cache first page (unfiltered)
+      if (_gradeList.isNotEmpty) {
+        LocalCacheService.save(cacheKey, _gradeList);
+      }
     } catch (e) {
       AppLogger.error('grades', e);
       if (!mounted) return;
@@ -512,13 +536,13 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
       context: context,
       builder: (context) => Dialog(
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Gradient header
             Container(
-              padding: EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -534,7 +558,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                     height: 56,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: const BorderRadius.all(Radius.circular(14)),
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.3),
                       ),
@@ -550,7 +574,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 14),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -577,7 +601,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                         ),
                         if (grade['title'] != null &&
                             grade['title'].toString().isNotEmpty) ...[
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             grade['title'],
                             style: TextStyle(
@@ -599,7 +623,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: 350),
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -634,7 +658,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
 
             // Footer
             Container(
-              padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
               decoration: BoxDecoration(
                 border: Border(top: BorderSide(color: ColorUtils.slate100)),
               ),
@@ -643,11 +667,11 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                 child: OutlinedButton(
                   onPressed: () => AppNavigator.pop(context),
                   style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: ColorUtils.slate300),
                     foregroundColor: ColorUtils.slate700,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
                     ),
                   ),
                   child: Text(
@@ -671,7 +695,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
   }) {
     final c = iconColor ?? _getPrimaryColor();
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -680,11 +704,11 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
             height: 36,
             decoration: BoxDecoration(
               color: c.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
             child: Icon(icon, size: 18, color: c),
           ),
-          SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -697,7 +721,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   value,
                   style: TextStyle(
@@ -771,6 +795,8 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen> {
       getGradeTypeLabel: _getGradeTypeLabel,
       onItemVisible: _onItemVisible,
       onGradeTap: _showGradeDetail,
+      controller: paginationScrollController,
+      isLoadingMore: isLoadingMore,
     );
   }
 

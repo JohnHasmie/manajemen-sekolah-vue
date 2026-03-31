@@ -6,6 +6,7 @@
 // The [LessonPlanFormDialog] has been extracted to a separate file.
 // In Laravel terms: `LessonPlanController@index`, `@store`, `@update`, `@destroy`.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/mixins/pagination_mixin.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_detail_screen.dart';
@@ -52,7 +53,8 @@ class LessonPlanScreen extends ConsumerStatefulWidget {
 ///
 /// Like a Vue page component with `data() { return { rppList, isLoading, ... } }`.
 /// Manages the RPP list, search, status filter, and CRUD operations.
-class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
+class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
+    with PaginationMixin<LessonPlanScreen> {
   List<dynamic> _lessonPlanList = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -69,14 +71,45 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
   @override
   void initState() {
     super.initState();
+    initPagination();
     _loadLessonPlans();
   }
 
   /// Like Vue's `beforeUnmount()` -- disposes search controller.
   @override
   void dispose() {
+    disposePagination();
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// PaginationMixin contract — appends one page of results to [_lessonPlanList].
+  @override
+  Future<void> loadPage(int page) async {
+    try {
+      final result = await LessonPlanService.getLessonPlansPaginated(
+        teacherId: widget.teacherId,
+        page: page,
+        search: _searchController.text,
+        status: _selectedStatusFilter,
+        academicYearId: _getAcademicYearId(),
+      );
+      final newItems = List<dynamic>.from(result['data'] ?? []);
+      if (mounted) {
+        setState(() {
+          if (page == 1) {
+            _lessonPlanList = newItems;
+          } else {
+            _lessonPlanList = [..._lessonPlanList, ...newItems];
+          }
+        });
+        updatePaginationFromMeta(
+            result['pagination'] as Map<String, dynamic>?);
+      }
+    } catch (e) {
+      AppLogger.error('lesson_plan', 'loadPage($page) error: $e');
+      if (page == 1) rethrow;
+    }
   }
 
   void _checkActiveFilter() {
@@ -90,6 +123,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
       _selectedStatusFilter = null;
       _hasActiveFilter = false;
     });
+    _loadLessonPlans();
   }
 
   String _buildFilterSummary(LanguageProvider languageProvider) {
@@ -129,7 +163,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
               children: [
                 // Header (Pattern #11 gradient)
                 Container(
-                  padding: EdgeInsets.fromLTRB(20, 10, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -148,10 +182,10 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                       Container(
                         width: 40,
                         height: 4,
-                        margin: EdgeInsets.only(bottom: 12),
+                        margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: const BorderRadius.all(Radius.circular(2)),
                         ),
                       ),
                       Row(
@@ -164,7 +198,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                                 color: Colors.white,
                                 size: 22,
                               ),
-                              SizedBox(width: 10),
+                              const SizedBox(width: 10),
                               Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Filter',
@@ -194,7 +228,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                                 alpha: 0.2,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: const BorderRadius.all(Radius.circular(8)),
                               ),
                             ),
                             child: Text(
@@ -217,7 +251,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                 // Scrollable Content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(AppSpacing.xl),
+                    padding: const EdgeInsets.all(AppSpacing.xl),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -229,7 +263,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                               size: 18,
                               color: ColorUtils.slate700,
                             ),
-                            SizedBox(width: AppSpacing.sm),
+                            const SizedBox(width: AppSpacing.sm),
                             Text(
                               languageProvider.getTranslatedText({
                                 'en': 'Status',
@@ -243,7 +277,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.md),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -299,7 +333,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                 ),
 
                 Container(
-                  padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border(top: BorderSide(color: ColorUtils.slate200)),
@@ -319,10 +353,10 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                           child: OutlinedButton(
                             onPressed: () => AppNavigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(color: ColorUtils.slate300),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: const BorderRadius.all(Radius.circular(12)),
                               ),
                             ),
                             child: Text(
@@ -334,7 +368,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
@@ -347,10 +381,10 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _getPrimaryColor(),
-                              padding: EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: const BorderRadius.all(Radius.circular(12)),
                               ),
                             ),
                             child: Text(
@@ -417,8 +451,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
     _loadLessonPlans(useCache: false);
   }
 
-  /// Fetches RPP list from API with cache-first strategy.
-  /// Like `axios.get('/api/rpp')` in Vue with localStorage caching.
+  /// Resets to page 1 and fetches RPP list with cache-first strategy.
   Future<void> _loadLessonPlans({bool useCache = true}) async {
     final isFilteredOrSearched =
         _searchController.text.isNotEmpty || _selectedStatusFilter != null;
@@ -440,39 +473,34 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
           'lesson_plan',
           'LessonPlanScreen: Data from cache (${cached.length})',
         );
+        resetPagination();
+        hasMoreData = false; // cached data is treated as a single complete page
         return;
       }
     }
 
-    // Step 2: Show loading & fetch from API
+    // Step 2: Reset pagination and load page 1 from API
+    resetPagination();
     if (mounted) {
       setState(() {
+        _lessonPlanList = [];
         _isLoading = true;
         _errorMessage = null;
       });
     }
 
     try {
-      final academicYearId = _getAcademicYearId();
-
-      final lessonPlanData = await LessonPlanService.getLessonPlans(
-        teacherId: widget.teacherId,
-        search: _searchController.text,
-        status: _selectedStatusFilter,
-        academicYearId: academicYearId,
-      );
-
+      await loadPage(1);
       if (mounted) {
         setState(() {
-          _lessonPlanList = lessonPlanData;
           _isLoading = false;
           _hasActiveFilter = _selectedStatusFilter != null;
         });
       }
 
-      // Save to cache only for unfiltered default view
-      if (!isFilteredOrSearched) {
-        await LocalCacheService.save(lessonPlanCacheKey, lessonPlanData);
+      // Cache first page (unfiltered only)
+      if (!isFilteredOrSearched && _lessonPlanList.isNotEmpty) {
+        await LocalCacheService.save(lessonPlanCacheKey, _lessonPlanList);
       }
     } catch (e) {
       AppLogger.error('lesson_plan', 'Load RPP error: $e');
@@ -484,9 +512,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
       }
     } finally {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _checkAndShowTour();
-        }
+        if (mounted) _checkAndShowTour();
       });
     }
   }
@@ -499,7 +525,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: EdgeInsets.all(AppSpacing.xxl),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -510,10 +536,10 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
             Container(
               width: 40,
               height: 4,
-              margin: EdgeInsets.only(bottom: 24),
+              margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
                 color: ColorUtils.slate200,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: const BorderRadius.all(Radius.circular(2)),
               ),
             ),
             Text(
@@ -527,7 +553,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                 color: ColorUtils.slate900,
               ),
             ),
-            SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.xxl),
             Row(
               children: [
                 Expanded(
@@ -537,10 +563,10 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                       _showLessonPlanFormDialog();
                     },
                     child: Container(
-                      padding: EdgeInsets.all(AppSpacing.lg),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: _getPrimaryColor().withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
                         border: Border.all(
                           color: _getPrimaryColor().withValues(alpha: 0.2),
                         ),
@@ -552,7 +578,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                             size: 32,
                             color: _getPrimaryColor(),
                           ),
-                          SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.md),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Upload Manual',
@@ -570,7 +596,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSpacing.lg),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
@@ -578,10 +604,10 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                       _showGenerateLessonPlanFormDialog();
                     },
                     child: Container(
-                      padding: EdgeInsets.all(AppSpacing.lg),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: ColorUtils.success600.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
                         border: Border.all(
                           color: ColorUtils.success600.withValues(alpha: 0.2),
                         ),
@@ -593,7 +619,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                             size: 32,
                             color: ColorUtils.success600,
                           ),
-                          SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.md),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Generate AI',
@@ -613,7 +639,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                 ),
               ],
             ),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
           ],
         ),
       ),
@@ -709,7 +735,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
               backgroundColor: ColorUtils.error600,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
             ),
             child: Text(
@@ -864,7 +890,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.arrow_back,
@@ -873,7 +899,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -889,7 +915,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'View and manage your RPP documents',
@@ -912,7 +938,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
                         ),
                         child: Icon(
                           Icons.more_vert,
@@ -930,7 +956,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                                 size: 20,
                                 color: ColorUtils.info600,
                               ),
-                              SizedBox(width: AppSpacing.sm),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(AppLocalizations.updateData.tr),
                             ],
                           ),
@@ -939,7 +965,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Search Bar with Filter Button
                 Row(
@@ -948,7 +974,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
                         ),
                         child: Row(
                           children: [
@@ -980,7 +1006,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                               ),
                             ),
                             Container(
-                              margin: EdgeInsets.only(right: 4),
+                              margin: const EdgeInsets.only(right: 4),
                               child: IconButton(
                                 icon: Icon(
                                   Icons.search,
@@ -993,7 +1019,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.sm),
                     // Filter Button
                     Container(
                       key: _filterKey,
@@ -1001,7 +1027,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                         color: _hasActiveFilter
                             ? Colors.white
                             : Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
@@ -1026,7 +1052,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                               right: 8,
                               top: 8,
                               child: Container(
-                                padding: EdgeInsets.all(AppSpacing.xs),
+                                padding: const EdgeInsets.all(AppSpacing.xs),
                                 decoration: BoxDecoration(
                                   color: ColorUtils.error600,
                                   shape: BoxShape.circle,
@@ -1045,7 +1071,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
 
                 // Filter Chips
                 if (_hasActiveFilter) ...[
-                  SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     height: 32,
                     child: Row(
@@ -1061,7 +1087,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                                   border: Border.all(
                                     color: Colors.white.withValues(alpha: 0.5),
                                   ),
@@ -1076,7 +1102,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                                         fontSize: 12,
                                       ),
                                     ),
-                                    SizedBox(width: AppSpacing.sm),
+                                    const SizedBox(width: AppSpacing.sm),
                                     GestureDetector(
                                       onTap: _clearAllFilters,
                                       child: Icon(
@@ -1113,14 +1139,22 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
                 : RefreshIndicator(
                     onRefresh: _loadLessonPlans,
                     child: ListView.builder(
+                      controller: paginationScrollController,
                       padding: EdgeInsets.only(
                         top: 16,
                         bottom: 16,
                         left: 5,
                         right: 5,
                       ),
-                      itemCount: filteredLessonPlans.length,
+                      itemCount: filteredLessonPlans.length +
+                          (isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
+                        if (index == filteredLessonPlans.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
                         final lessonPlan =
                             filteredLessonPlans[index] as Map<String, dynamic>;
                         return LessonPlanCard(
@@ -1145,7 +1179,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen> {
         key: _addRppKey,
         onPressed: _addLessonPlan,
         backgroundColor: _getPrimaryColor(),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(16))),
         child: Icon(Icons.add, color: Colors.white),
       ),
     );

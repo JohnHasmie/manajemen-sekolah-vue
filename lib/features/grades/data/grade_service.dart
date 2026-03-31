@@ -97,4 +97,84 @@ class GradeService {
       AppLogger.error('api', 'Error marking grades as read: $e');
     }
   }
+
+  /// Fetches a page of student grades with pagination metadata.
+  ///
+  /// Returns a map matching the pagination contract used by AttendanceService
+  /// and LessonPlanService:
+  /// ```
+  /// {
+  ///   'data': List<dynamic>,
+  ///   'pagination': {
+  ///     'current_page': int,
+  ///     'total_pages': int,
+  ///     'has_next_page': bool,
+  ///     'per_page': int,
+  ///     'total_items': int,
+  ///   }
+  /// }
+  /// ```
+  static Future<Map<String, dynamic>> getGradesPaginated({
+    int page = 1,
+    int limit = 20,
+    String? studentId,
+    String? teacherId,
+    String? subjectId,
+    String? gradeType,
+    String? academicYearId,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+      };
+      if (studentId != null) queryParams['student_id'] = studentId;
+      if (teacherId != null) queryParams['teacher_id'] = teacherId;
+      if (subjectId != null) queryParams['subject_id'] = subjectId;
+      if (gradeType != null) queryParams['grade_type'] = gradeType;
+      if (academicYearId != null) {
+        queryParams['academic_year_id'] = academicYearId;
+      }
+
+      final response = await dioClient.get(
+        ApiEndpoints.grades,
+        queryParameters: queryParams,
+      );
+
+      final result = response.data;
+
+      // Server already returns paginated envelope
+      if (result is Map<String, dynamic> && result.containsKey('pagination')) {
+        return {
+          'data': result['data'] ?? [],
+          'pagination': result['pagination'],
+        };
+      }
+
+      // Server returned a flat list — wrap in a synthetic single-page envelope
+      final items = result is List ? result : (result is Map && result['data'] is List ? result['data'] as List : []);
+      return {
+        'data': items,
+        'pagination': {
+          'current_page': page,
+          'total_pages': items.length < limit ? page : page + 1,
+          'has_next_page': items.length >= limit,
+          'per_page': limit,
+          'total_items': items.length,
+        },
+      };
+    } catch (e) {
+      AppLogger.error('api', 'Error fetching paginated grades (page $page): $e');
+      return {
+        'data': [],
+        'pagination': {
+          'current_page': page,
+          'total_pages': 1,
+          'has_next_page': false,
+          'per_page': limit,
+          'total_items': 0,
+        },
+      };
+    }
+  }
 }
