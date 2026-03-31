@@ -57,21 +57,20 @@ analyze:
   stage: analyze
   script:
     - flutter analyze --fatal-warnings
-  when: manual
-  allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
 
 # ---------------------------------------------------------------------------
 # Stage 2: Test
+# Runs automatically by default. To skip: click the ▶ button instead of
+# waiting, or cancel the job from the pipeline view.
 # ---------------------------------------------------------------------------
 test:
   <<: *flutter_setup
   stage: test
   script:
     - flutter test --reporter=expanded
-  when: manual
   allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
