@@ -1227,18 +1227,15 @@ class AttendancePageState extends ConsumerState<AttendancePage>
           await Future.delayed(const Duration(milliseconds: 50));
         } catch (e) {
           errorCount++;
-          // Debug logging as requested
+          // Debug logging for developer
           AppLogger.error(
             'attendance',
             'Attendance save error for ${student.name}: $e',
           );
 
-          // Clean user-friendly message
-          final String cleanerMessage = e.toString().replaceAll(
-            'Exception: ',
-            '',
-          );
-          errorMessages.add('${student.name}: $cleanerMessage');
+          // User-friendly message instead of technical DioException
+          final String friendlyMessage = ErrorUtils.getFriendlyMessage(e);
+          errorMessages.add('${student.name}: $friendlyMessage');
         }
       }
 
@@ -1304,15 +1301,16 @@ class AttendancePageState extends ConsumerState<AttendancePage>
             children: [
               Text(
                 languageProvider.getTranslatedText({
-                  'en': 'Some attendance failed to save:',
-                  'id': 'Beberapa absensi gagal disimpan:',
+                  'en': 'Some attendance failed to save due to following reasons:',
+                  'id': 'Beberapa absensi gagal disimpan karena:',
                 }),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: AppSpacing.lg),
-              ...errors.map(
+              const SizedBox(height: AppSpacing.md),
+              ..._formatErrorMessages(errors).map(
                 (error) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text('• $error', style: const TextStyle(fontSize: 12)),
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('• $error', style: const TextStyle(fontSize: 13)),
                 ),
               ),
             ],
@@ -1331,6 +1329,39 @@ class AttendancePageState extends ConsumerState<AttendancePage>
         ],
       ),
     );
+  }
+
+  /// Groups multiple error messages sharing the same content to reduce redundancy.
+  /// Example: ["John: Date error", "Jane: Date error"] -> ["Date error: John, Jane"]
+  List<String> _formatErrorMessages(List<String> errors) {
+    if (errors.isEmpty) return [];
+
+    // Map to group student names by their common error message
+    final Map<String, List<String>> groupedErrors = {};
+
+    for (final error in errors) {
+      final parts = error.split(': ');
+      if (parts.length >= 2) {
+        final name = parts[0];
+        final message = parts.sublist(1).join(': ');
+        groupedErrors.putIfAbsent(message, () => []).add(name);
+      } else {
+        groupedErrors.putIfAbsent(error, () => []).add('');
+      }
+    }
+
+    final List<String> formatted = [];
+    groupedErrors.forEach((message, names) {
+      if (names.length > 3) {
+        formatted.add('$message (${names.length} siswa)');
+      } else if (names.isNotEmpty && names[0].isNotEmpty) {
+        formatted.add('$message: ${names.join(", ")}');
+      } else {
+        formatted.add(message);
+      }
+    });
+
+    return formatted;
   }
 
   void _resetForm() {
@@ -1432,38 +1463,44 @@ class AttendancePageState extends ConsumerState<AttendancePage>
     final languageProvider = ref.watch(languageRiverpod);
 
     if (widget.embedded) {
-      return Scaffold(
-        backgroundColor: ColorUtils.slate50,
-        appBar: AppBar(
-          backgroundColor: _getPrimaryColor(),
-          foregroundColor: Colors.white,
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.of(context).pop(),
+      return GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Scaffold(
+          backgroundColor: ColorUtils.slate50,
+          appBar: AppBar(
+            backgroundColor: _getPrimaryColor(),
+            foregroundColor: Colors.white,
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            title: Text(
+              '${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Presensi'})} — ${widget.initialSubjectName ?? ''} ${widget.initialClassName ?? ''}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            elevation: 0,
           ),
-          title: Text(
-            '${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Presensi'})} — ${widget.initialSubjectName ?? ''} ${widget.initialClassName ?? ''}',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          elevation: 0,
+          body: _tabController.index == 0
+              ? _buildResultsMode()
+              : _buildInputMode(),
         ),
-        body: _tabController.index == 0
-            ? _buildResultsMode()
-            : _buildInputMode(),
       );
     }
 
-    return Scaffold(
-      backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHeader(languageProvider),
-          Expanded(
-            child: _tabController.index == 0
-                ? _buildResultsMode()
-                : _buildInputMode(),
-          ),
-        ],
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Scaffold(
+        backgroundColor: ColorUtils.slate50,
+        body: Column(
+          children: [
+            _buildHeader(languageProvider),
+            Expanded(
+              child: _tabController.index == 0
+                  ? _buildResultsMode()
+                  : _buildInputMode(),
+            ),
+          ],
+        ),
       ),
     );
   }

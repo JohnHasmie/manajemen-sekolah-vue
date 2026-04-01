@@ -87,6 +87,7 @@ class AttendanceInputMode extends ConsumerWidget {
                     child: TextField(
                       controller: searchController,
                       onChanged: (_) => onSearchChanged(),
+                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
                       decoration: InputDecoration(
                         hintText: languageProvider.getTranslatedText({

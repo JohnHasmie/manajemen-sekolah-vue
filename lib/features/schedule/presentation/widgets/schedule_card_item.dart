@@ -56,47 +56,25 @@ class ScheduleCardItem extends StatelessWidget {
     this.firstScheduleKey,
     this.actionButtonsKey,
     this.isPast = false,
+    this.isCurrent = false,
+    this.isNext = false,
     this.dailySummary,
   });
 
-  /// The raw schedule map from the API (e.g. `{ 'mata_pelajaran_nama': '...' }`).
   final Map<String, dynamic> schedule;
-
-  /// Used for translating UI strings to the user's locale.
   final LanguageProvider languageProvider;
-
-  /// Zero-based position in the list — used to attach GlobalKeys for the
-  /// onboarding tour to the first card's elements.
   final int index;
-
-  /// Maps day names (Bahasa) to their numeric IDs, e.g. `{'Senin': '1', ...}`.
   final Map<String, String> dayIdMap;
-
-  /// Maps day names to their brand colors, e.g. `{'Senin': Color(...), ...}`.
   final Map<String, Color> dayColorMap;
-
-  /// Ordered list of day names used to compute "next occurrence" dates.
   final List<String> dayOptions;
-
-  /// Currently selected academic year string, e.g. `"2024/2025"`.
   final String selectedAcademicYear;
-
-  /// The logged-in teacher's ID (passed to navigation destinations).
   final String teacherId;
-
-  /// The logged-in teacher's display name.
   final String teacherNama;
-
-  /// Attached to the card container of the first item for the onboarding tour.
   final GlobalKey? firstScheduleKey;
-
-  /// Attached to the action-buttons row of the first item for the onboarding tour.
   final GlobalKey? actionButtonsKey;
-
-  /// Whether this schedule hour has already passed (dimmed styling).
   final bool isPast;
-
-  /// Daily summary data keyed by "{class_id}__{subject_id}" for button fill states.
+  final bool isCurrent;
+  final bool isNext;
   final Map<String, dynamic>? dailySummary;
 
   // ---------------------------------------------------------------------------
@@ -207,10 +185,15 @@ class ScheduleCardItem extends StatelessWidget {
     final allFilled = attendanceFilled && activityFilled && materialFilled;
 
     // When all 3 are filled, card gets theme background
-    final cardBg = allFilled ? primary.withValues(alpha: 0.08) : Colors.white;
-    final cardBorder = allFilled
-        ? primary.withValues(alpha: 0.3)
-        : isPast ? ColorUtils.slate200 : ColorUtils.slate200;
+    final cardBg = allFilled || isCurrent
+        ? primary.withValues(alpha: 0.08)
+        : (isNext ? primary.withValues(alpha: 0.04) : Colors.white);
+    
+    final cardBorder = isCurrent 
+        ? primary.withValues(alpha: 0.5)
+        : (isNext ? primary.withValues(alpha: 0.2) : ColorUtils.slate200);
+    
+    final borderWidth = isCurrent ? 1.5 : (isNext ? 1.2 : 1.0);
 
     return Container(
       key: index == 0 ? firstScheduleKey : null,
@@ -220,16 +203,22 @@ class ScheduleCardItem extends StatelessWidget {
         child: InkWell(
           onTap: () => _showSummarySheet(context, summary),
           borderRadius: const BorderRadius.all(Radius.circular(16)),
-          child: Opacity(
-            opacity: isPast ? 0.7 : 1.0,
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                color: cardBg,
-                borderRadius: const BorderRadius.all(Radius.circular(16)),
-                border: Border.all(color: cardBorder),
-                boxShadow: isPast ? [] : ColorUtils.corporateShadow(elevation: 1.5),
-              ),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
+              border: Border.all(color: cardBorder, width: borderWidth),
+              boxShadow: isCurrent 
+                  ? [
+                      BoxShadow(
+                        color: primary.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      )
+                    ]
+                  : (isPast ? [] : ColorUtils.corporateShadow(elevation: 1.0)),
+            ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -241,11 +230,30 @@ class ScheduleCardItem extends StatelessWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.12),
+                          color: isCurrent
+                              ? accentColor
+                              : (isPast
+                                  ? ColorUtils.slate100
+                                  : accentColor.withValues(alpha: 0.12)),
                           borderRadius: const BorderRadius.all(Radius.circular(12)),
-                          border: Border.all(color: accentColor.withValues(alpha: 0.2)),
+                          border: Border.all(
+                            color: isPast
+                                ? ColorUtils.slate200
+                                : accentColor.withValues(alpha: 0.2),
+                          ),
                         ),
-                        child: Icon(Icons.menu_book_rounded, color: accentColor, size: 22),
+                        child: Center(
+                          child: Text(
+                            '${schedule['jam_ke'] ?? "-"}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: isCurrent 
+                                  ? Colors.white 
+                                  : (isPast ? ColorUtils.slate400 : accentColor),
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
@@ -278,13 +286,14 @@ class ScheduleCardItem extends StatelessWidget {
                     children: [
                       ScheduleInfoTag(
                         icon: Icons.access_time_rounded,
-                        label: '${_formatTime(schedule["jam_mulai"])} – ${_formatTime(schedule["jam_selesai"])}',
-                        color: accentColor,
+                        label:
+                            '${_formatTime(schedule["jam_mulai"])} – ${_formatTime(schedule["jam_selesai"])}',
+                        color: isPast ? ColorUtils.slate400 : accentColor,
                       ),
                       ScheduleInfoTag(
                         icon: Icons.format_list_numbered_rounded,
                         label: 'Jam ke-${schedule["jam_ke"] ?? "-"}',
-                        color: accentColor,
+                        color: isPast ? ColorUtils.slate400 : accentColor,
                       ),
                       if (schedule['semester_nama'] != null)
                         ScheduleInfoTag(
@@ -342,8 +351,7 @@ class ScheduleCardItem extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   // ---------------------------------------------------------------------------

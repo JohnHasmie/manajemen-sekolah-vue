@@ -1240,8 +1240,10 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
               elevation: 0,
             )
           : null,
-      body: Column(
-        children: [
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
+          children: [
           if (!widget.embedded)
             MaterialScreenHeader(
               gradient: _getCardGradient(),
@@ -1316,6 +1318,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -1341,6 +1344,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
           'id': 'Cari materi...',
         }),
         onChanged: (_) => setState(() {}),
+        onSubmitted: (_) => FocusScope.of(context).unfocus(),
         filterOptions: translatedFilterOptions,
         selectedFilter: translatedFilterOptions[_selectedFilter == 'All'
             ? 0

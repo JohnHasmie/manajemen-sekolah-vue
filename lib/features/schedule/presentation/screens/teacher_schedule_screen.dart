@@ -150,9 +150,23 @@ class TeachingScheduleScreenState
 
     _setDefaultAcademicPeriod();
     _loadUserData();
+    _loadViewPreference();
 
     // Listen to real-time sync trigger
     FCMService().syncTrigger.addListener(_onSyncTriggered);
+  }
+
+  Future<void> _loadViewPreference() async {
+    try {
+      final cached = await LocalCacheService.load('schedule_view_preference');
+      if (cached != null && cached is Map && mounted) {
+        setState(() {
+          _isTableView = cached['is_table_view'] ?? false;
+        });
+      }
+    } catch (e) {
+      AppLogger.error('schedule', 'Error loading view preference: $e');
+    }
   }
 
   void _onSyncTriggered() {
@@ -705,6 +719,10 @@ class TeachingScheduleScreenState
     setState(() {
       _isTableView = !_isTableView;
     });
+    // Save preference to cache
+    LocalCacheService.save('schedule_view_preference', {
+      'is_table_view': _isTableView,
+    });
   }
 
   Color _getPrimaryColor() {
@@ -1041,16 +1059,18 @@ class TeachingScheduleScreenState
                                 onPressed: _loadSchedule,
                               )
                             : _isTableView
-                                    ? RefreshIndicator(
-                                        onRefresh: _forceRefresh,
-                                        color: _getPrimaryColor(),
-                                        child: TeacherScheduleTableView(
-                                          schedules: filteredSchedules,
-                                          dayIdMap: _dayIdMap,
-                                          dayColorMap: _dayColorMap,
-                                          primaryColor: _getPrimaryColor(),
-                                        ),
-                                      )
+                                ? TeacherScheduleTableView(
+                                    schedules: filteredSchedules,
+                                    dayIdMap: _dayIdMap,
+                                    dayColorMap: _dayColorMap,
+                                    dayOptions: _dayOptions,
+                                    primaryColor: _getPrimaryColor(),
+                                    teacherId: _teacherId,
+                                    teacherNama: _teacherNama,
+                                    dailySummary: _dailySummary,
+                                    onRefresh: _forceRefresh,
+                                    languageProvider: languageProvider,
+                                  )
                                     : RefreshIndicator(
                                         onRefresh: _forceRefresh,
                                         color: _getPrimaryColor(),
@@ -1187,44 +1207,6 @@ class _TeacherScheduleHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              GestureDetector(
-                key: toggleViewKey,
-                onTap: onToggleView,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  ),
-                  child: Icon(isTableView ? Icons.grid_view : Icons.list, color: Colors.white, size: 20),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              PopupMenuButton<String>(
-                onSelected: (value) { if (value == 'refresh') onRefresh(); },
-                itemBuilder: (context) => [
-                  PopupMenuItem<String>(
-                    value: 'refresh',
-                    child: Row(
-                      children: [
-                        Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(updateDataLabel),
-                      ],
-                    ),
-                  ),
-                ],
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  ),
-                  child: const Icon(Icons.more_vert_rounded, color: Colors.white, size: 20),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -1244,6 +1226,7 @@ class _TeacherScheduleHeader extends StatelessWidget {
             children: [
               Expanded(
                 child: Container(
+                  height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.95),
                     borderRadius: const BorderRadius.all(Radius.circular(12)),
@@ -1253,21 +1236,25 @@ class _TeacherScheduleHeader extends StatelessWidget {
                       Expanded(
                         child: TextField(
                           controller: searchController,
-                          style: TextStyle(color: ColorUtils.slate800),
+                          textAlignVertical: TextAlignVertical.center,
+                          style: TextStyle(color: ColorUtils.slate800, fontSize: 13),
                           decoration: InputDecoration(
+                            isDense: true,
                             hintText: searchHint,
-                            hintStyle: TextStyle(color: ColorUtils.slate400),
-                            prefixIcon: Icon(Icons.search, color: ColorUtils.slate500),
+                            hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
                             border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                           ),
-                          onSubmitted: (_) => onSearch(),
+                          onSubmitted: (_) {
+                            onSearch();
+                            FocusScope.of(context).unfocus();
+                          },
                         ),
                       ),
                       Container(
                         margin: const EdgeInsets.only(right: 4),
                         child: IconButton(
-                          icon: Icon(Icons.search, color: primaryColor),
+                          icon: Icon(Icons.search, color: primaryColor, size: 20),
                           onPressed: onSearch,
                         ),
                       ),
@@ -1277,22 +1264,25 @@ class _TeacherScheduleHeader extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Container(
+                height: 48,
+                width: 48,
                 decoration: BoxDecoration(
                   color: hasActiveFilter ? Colors.white : Colors.white.withValues(alpha: 0.2),
                   borderRadius: const BorderRadius.all(Radius.circular(12)),
                   border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 child: Stack(
+                  alignment: Alignment.center,
                   children: [
                     IconButton(
                       onPressed: onShowFilter,
-                      icon: Icon(Icons.tune, color: hasActiveFilter ? primaryColor : Colors.white),
+                      icon: Icon( Icons.tune, color: hasActiveFilter ? primaryColor : Colors.white, size: 20),
                       tooltip: filterTooltip,
                     ),
                     if (hasActiveFilter)
                       Positioned(
-                        right: 6,
-                        top: 6,
+                        right: 8,
+                        top: 8,
                         child: Container(
                           width: 8,
                           height: 8,
@@ -1304,6 +1294,25 @@ class _TeacherScheduleHeader extends StatelessWidget {
                         ),
                       ),
                   ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              GestureDetector(
+                key: toggleViewKey,
+                onTap: onToggleView,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                  ),
+                  child: Icon(
+                    isTableView ? Icons.grid_view : Icons.list,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
             ],

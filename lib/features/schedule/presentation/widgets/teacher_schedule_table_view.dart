@@ -1,47 +1,170 @@
-// Excel-like weekly timetable widget for the teacher schedule screen.
-// Extracted from TeachingScheduleScreenState._buildTableView() and
-// _buildTimeForSession() — purely presentational, all data flows in via params.
+// Mobile-optimized weekly timetable for the teacher schedule screen.
+// Replaces the old Excel-like grid (too wide for phones) with a
+// day-tab + session-row layout that fits any screen width.
 
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/embedded_activity_list_screen.dart';
+import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 
-/// Renders the teacher's weekly schedule as a scrollable grid table.
-///
-/// Like a Vue `<TeacherScheduleTable :schedules="..." :day-id-map="..." />`
-/// component — it only reads data, never calls setState on its own.
-/// The parent screen owns filter + load state and passes resolved values here.
-///
-/// Columns: session number | time slot | one column per available day×class.
-/// Rows: one per unique "jam ke-" (session number) in [schedules].
-class TeacherScheduleTableView extends StatelessWidget {
+const _kDayOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+const _kDayTranslations = <String, Map<String, String>>{
+  'Senin': {'en': 'Mon', 'id': 'Sen'},
+  'Selasa': {'en': 'Tue', 'id': 'Sel'},
+  'Rabu': {'en': 'Wed', 'id': 'Rab'},
+  'Kamis': {'en': 'Thu', 'id': 'Kam'},
+  'Jumat': {'en': 'Fri', 'id': 'Jum'},
+  'Sabtu': {'en': 'Sat', 'id': 'Sab'},
+};
+
+const _kDayFullTranslations = <String, Map<String, String>>{
+  'Senin': {'en': 'Monday', 'id': 'Senin'},
+  'Selasa': {'en': 'Tuesday', 'id': 'Selasa'},
+  'Rabu': {'en': 'Wednesday', 'id': 'Rabu'},
+  'Kamis': {'en': 'Thursday', 'id': 'Kamis'},
+  'Jumat': {'en': 'Friday', 'id': 'Jumat'},
+  'Sabtu': {'en': 'Saturday', 'id': 'Sabtu'},
+};
+
+class TeacherScheduleTableView extends StatefulWidget {
+  final List<dynamic> schedules;
+  final Map<String, String> dayIdMap;
+  final Map<String, Color> dayColorMap;
+  final Color primaryColor;
+  final List<String> dayOptions;
+  final String teacherId;
+  final String teacherNama;
+  final Map<String, dynamic>? dailySummary;
+  final VoidCallback onRefresh;
+  final LanguageProvider? languageProvider;
+
   const TeacherScheduleTableView({
     super.key,
     required this.schedules,
     required this.dayIdMap,
     required this.dayColorMap,
     required this.primaryColor,
+    required this.dayOptions,
+    required this.teacherId,
+    required this.teacherNama,
+    required this.onRefresh,
+    this.dailySummary,
+    this.languageProvider,
   });
 
-  /// Filtered schedule list from the parent screen (already search/filter applied).
-  final List<dynamic> schedules;
+  @override
+  State<TeacherScheduleTableView> createState() =>
+      _TeacherScheduleTableViewState();
+}
 
-  /// Maps localized day name → day ID string, e.g. `{'Senin': '1', ...}`.
-  /// Used to resolve raw `day_id` / `days_ids` values back to readable names.
-  final Map<String, String> dayIdMap;
+class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
+    with TickerProviderStateMixin {
+  TabController? _tabController;
+  List<String> _availableDays = [];
 
-  /// Maps localized day name → brand color for that day column.
-  final Map<String, Color> dayColorMap;
+  @override
+  void initState() {
+    super.initState();
+    _rebuildTabs();
+  }
 
-  /// Role-specific accent color (teacher = indigo). Used for header and title.
-  final Color primaryColor;
+  @override
+  void didUpdateWidget(TeacherScheduleTableView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.schedules != widget.schedules) {
+      _rebuildTabs();
+    }
+  }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  void _rebuildTabs() {
+    final newDays = _computeAvailableDays();
+    if (newDays.length == _availableDays.length &&
+        _tabController != null) {
+      // Same number of tabs — just update the day list, keep controller.
+      _availableDays = newDays;
+      return;
+    }
+    _availableDays = newDays;
+    _tabController?.dispose();
+    if (_availableDays.isEmpty) {
+      _tabController = null;
+      return;
+    }
+    _tabController = TabController(
+      length: _availableDays.length,
+      vsync: this,
+      initialIndex: _findTodayTabIndex(),
+    );
+  }
 
-  /// Returns the display color for [day], falling back to slate-grey.
-  Color _getDayColor(String day) => dayColorMap[day] ?? const Color(0xFF6B7280);
+  @override
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
+  }
 
-  /// Formats a raw time string (e.g. "07.30.00" or "07:30:00") to "HH:MM".
+  // ── Day helpers ──
+
+  List<String> _computeAvailableDays() {
+    final daySet = <String>{};
+    for (final schedule in widget.schedules) {
+      final dayName = _resolveDayName(schedule);
+      if (dayName != null) daySet.add(dayName);
+    }
+    return _kDayOrder.where(daySet.contains).toList();
+  }
+
+  String? _resolveDayName(dynamic schedule) {
+    final dayId = (schedule['day_id'] ?? schedule['hari_id'])?.toString();
+    if (dayId != null) {
+      final entry = widget.dayIdMap.entries.firstWhere(
+        (e) => e.value.toString() == dayId,
+        orElse: () => const MapEntry('', ''),
+      );
+      if (entry.key.isNotEmpty) return _normalizeDayName(entry.key);
+    }
+    final rawName =
+        (schedule['hari_nama'] ?? schedule['day_name'] ?? '').toString();
+    return rawName.isNotEmpty ? _normalizeDayName(rawName) : null;
+  }
+
+  String _normalizeDayName(String name) {
+    name = name.trim().toLowerCase();
+    if (name.contains('senin') || name.contains('monday')) return 'Senin';
+    if (name.contains('selasa') || name.contains('tuesday')) return 'Selasa';
+    if (name.contains('rabu') || name.contains('wednesday')) return 'Rabu';
+    if (name.contains('kamis') || name.contains('thursday')) return 'Kamis';
+    if (name.contains('jumat') || name.contains('friday')) return 'Jumat';
+    if (name.contains('sabtu') || name.contains('saturday')) return 'Sabtu';
+    return 'Senin';
+  }
+
+  int _dayWeekday(String dayName) {
+    final idx = _kDayOrder.indexOf(dayName);
+    return idx >= 0 ? idx + 1 : 1;
+  }
+
+  bool _isDayPast(String dayName) =>
+      _dayWeekday(dayName) < DateTime.now().weekday;
+  bool _isDayToday(String dayName) =>
+      _dayWeekday(dayName) == DateTime.now().weekday;
+
+  int _findTodayTabIndex() {
+    for (int i = 0; i < _availableDays.length; i++) {
+      if (_isDayToday(_availableDays[i])) return i;
+    }
+    // If today has no schedule, find the next upcoming day
+    for (int i = 0; i < _availableDays.length; i++) {
+      if (!_isDayPast(_availableDays[i])) return i;
+    }
+    return 0;
+  }
+
+  // ── Time helpers ──
+
   String _formatTime(String? time) {
     if (time == null || time.isEmpty) return '--:--';
     final cleaned = time.replaceAll('.', ':');
@@ -52,424 +175,630 @@ class TeacherScheduleTableView extends StatelessWidget {
     return time.length >= 5 ? time.substring(0, 5) : time;
   }
 
-  /// Finds the schedule entry whose `jam_ke` matches [session] and returns a
-  /// widget showing its start / end time, or placeholder dashes when absent.
-  Widget _buildTimeForSession(int session) {
-    // Like `array_first($schedules, fn($s) => $s['jam_ke'] == $session)` in PHP.
-    final match = schedules.firstWhere(
-      (s) => (int.tryParse(s['jam_ke']?.toString() ?? '') ?? 0) == session,
-      orElse: () => <String, dynamic>{},
-    );
+  int _startTimeMinutes(Map<String, dynamic> schedule) {
+    final time =
+        (schedule['jam_mulai'] ?? schedule['start_time'])?.toString();
+    if (time == null || time.isEmpty) return 0;
+    final parts = time.replaceAll('.', ':').split(':');
+    if (parts.length < 2) return 0;
+    return (int.tryParse(parts[0]) ?? 0) * 60 +
+        (int.tryParse(parts[1]) ?? 0);
+  }
 
-    if ((match as Map).isNotEmpty) {
-      final start = _formatTime(match['jam_mulai'] as String?);
-      final end = _formatTime(match['jam_selesai'] as String?);
-      return Text(
-        '$start\n$end',
-        style: const TextStyle(fontSize: 10),
-        textAlign: TextAlign.center,
-      );
+  bool _isHourPast(String dayName, Map<String, dynamic> schedule) {
+    if (!_isDayToday(dayName)) return _isDayPast(dayName);
+    final endTime =
+        (schedule['jam_selesai'] ?? schedule['end_time'])?.toString();
+    if (endTime == null || endTime.isEmpty) return false;
+    final parts = endTime.replaceAll('.', ':').split(':');
+    if (parts.length < 2) return false;
+    final endHour = int.tryParse(parts[0]) ?? 0;
+    final endMinute = int.tryParse(parts[1]) ?? 0;
+    final now = DateTime.now();
+    return now.hour > endHour ||
+        (now.hour == endHour && now.minute >= endMinute);
+  }
+
+  bool _isHourCurrent(String dayName, Map<String, dynamic> schedule) {
+    if (!_isDayToday(dayName)) return false;
+    final startTime =
+        (schedule['jam_mulai'] ?? schedule['start_time'])?.toString();
+    final endTime =
+        (schedule['jam_selesai'] ?? schedule['end_time'])?.toString();
+    if (startTime == null || endTime == null) return false;
+
+    int toMinutes(String t) {
+      final parts = t.replaceAll('.', ':').split(':');
+      if (parts.length < 2) return 0;
+      return (int.tryParse(parts[0]) ?? 0) * 60 +
+          (int.tryParse(parts[1]) ?? 0);
     }
 
-    return Text(
-      '--:--\n--:--',
-      style: TextStyle(fontSize: 10, color: ColorUtils.slate400),
-      textAlign: TextAlign.center,
+    final nowMinutes = DateTime.now().hour * 60 + DateTime.now().minute;
+    return nowMinutes >= toMinutes(startTime) &&
+        nowMinutes < toMinutes(endTime);
+  }
+
+
+  // ── Data grouping ──
+
+  List<Map<String, dynamic>> _getSchedulesForDay(String dayName) {
+    final result = <Map<String, dynamic>>[];
+    for (final schedule in widget.schedules) {
+      final resolved = _resolveDayName(schedule);
+      if (resolved == dayName) {
+        result.add(schedule as Map<String, dynamic>);
+      }
+    }
+    result.sort(
+        (a, b) => _startTimeMinutes(a).compareTo(_startTimeMinutes(b)));
+    return result;
+  }
+
+  String _tr(Map<String, String> map) {
+    return widget.languageProvider?.getTranslatedText(map) ?? map['id'] ?? '';
+  }
+
+  // ── Summary & Navigation helpers ──
+
+  Map<String, dynamic>? _getSummary(Map<String, dynamic> schedule, String dayName) {
+    if (widget.dailySummary == null) return null;
+    // Only show summary if it's the schedule's day
+    if (!_isDayToday(dayName)) return null;
+    final summaries = widget.dailySummary!['summaries'];
+    if (summaries == null || summaries is! Map) return null;
+    final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
+    final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
+    if (classId == null || subjectId == null) return null;
+    final key = '${classId}__$subjectId';
+    final s = summaries[key];
+    return s is Map<String, dynamic> ? s : null;
+  }
+
+  bool _hasAttendance(Map<String, dynamic>? summary) =>
+      summary != null && summary['attendance']?['filled'] == true;
+
+  bool _hasActivity(Map<String, dynamic>? summary) =>
+      summary != null && summary['class_activity']?['filled'] == true;
+
+  bool _hasMaterial(Map<String, dynamic>? summary) =>
+      summary != null && (summary['material_progress']?['checked'] ?? 0) > 0;
+
+  DateTime _computeScheduleDate(Map<String, dynamic> schedule) {
+    final now = DateTime.now();
+    final scheduleDay = widget.dayIdMap.entries
+        .firstWhere(
+          (entry) => entry.value.toString() == (schedule['day_id'] ?? schedule['hari_id'])?.toString(),
+          orElse: () => const MapEntry('Senin', '1'),
+        )
+        .key;
+    final scheduleDayIndex = widget.dayOptions.indexOf(scheduleDay);
+    final todayIndex = now.weekday;
+    int daysUntil = scheduleDayIndex - todayIndex;
+    if (daysUntil < 0) daysUntil += 7;
+    return now.add(Duration(days: daysUntil));
+  }
+
+  void _openAttendance(BuildContext context, Map<String, dynamic> schedule, bool hasData, Map<String, dynamic>? summary) {
+    _showAttendanceDialog(context, schedule, 1);
+  }
+
+  void _showAttendanceDialog(BuildContext context, Map<String, dynamic> schedule, int tabIndex) {
+    final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
+    final subjectName = (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'])?.toString();
+    final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
+    final className = (schedule['class_name'] ?? schedule['kelas_nama'])?.toString();
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black54,
+      pageBuilder: (_, __, ___) => AttendancePage(
+        teacher: {'id': widget.teacherId, 'nama': widget.teacherNama},
+        initialDate: _computeScheduleDate(schedule),
+        initialSubjectId: subjectId,
+        initialSubjectName: subjectName,
+        initialclassId: classId,
+        initialClassName: className,
+        initialLessonHourNumber: int.tryParse(schedule['jam_ke']?.toString() ?? ''),
+        initialTabIndex: tabIndex,
+        embedded: true,
+      ),
     );
   }
 
-  /// Finds the schedule entry for a specific [session] × [day] × [className]
-  /// cell, returning `null` when the cell is empty.
-  Map<String, dynamic>? _getScheduleForCell(
-    int session,
-    String day,
-    String className,
-  ) {
-    try {
-      final result = schedules.firstWhere(
-        (s) =>
-            (int.tryParse(s['jam_ke']?.toString() ?? '') ?? 0) == session &&
-            s['hari_nama']?.toString() == day &&
-            s['kelas_nama']?.toString() == className,
-        orElse: () => <String, dynamic>{},
-      );
-      final map = result as Map<String, dynamic>;
-      return map.isNotEmpty ? map : null;
-    } catch (_) {
-      return null;
-    }
-  }
+  void _openMaterial(BuildContext context, Map<String, dynamic> schedule) {
+    final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
+    final subjectName = (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'])?.toString();
+    final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
+    final className = (schedule['class_name'] ?? schedule['kelas_nama'])?.toString();
 
-  // ── Build ──────────────────────────────────────────────────────────────────
-
-  @override
-  Widget build(BuildContext context) {
-    // ── Step 1: group schedules by day → class → [entries] ──────────────────
-    // Like a Laravel Collection `groupBy('hari_id')` chained with `groupBy('kelas_nama')`.
-    final Map<String, Map<String, List<dynamic>>> scheduleMap = {};
-
-    for (final schedule in schedules) {
-      // A schedule may span multiple days (`days_ids` list) or a single day
-      // (`day_id` / `hari_id` scalar).
-      final daysIds = <dynamic>[];
-      if (schedule['days_ids'] != null) {
-        if (schedule['days_ids'] is List) {
-          daysIds.addAll(schedule['days_ids'] as List);
-        } else if (schedule['days_ids'] is String) {
-          try {
-            final parsed = (schedule['days_ids'] as String)
-                .replaceAll('[', '')
-                .replaceAll(']', '')
-                .split(',');
-            daysIds.addAll(parsed);
-          } catch (_) {}
-        }
-      }
-      if (daysIds.isEmpty) {
-        if (schedule['day_id'] != null) {
-          daysIds.add(schedule['day_id']);
-        } else if (schedule['hari_id'] != null) {
-          daysIds.add(schedule['hari_id']);
-        }
-      }
-
-      for (final rawDayId in daysIds) {
-        // Resolve numeric/string ID → localized day name.
-        final entry = dayIdMap.entries.firstWhere(
-          (e) => e.value.toString() == rawDayId.toString(),
-          orElse: () => const MapEntry('Unknown', ''),
-        );
-        final day = entry.key;
-        if (day == 'Unknown') continue;
-
-        final classItem = schedule['kelas_nama']?.toString() ?? 'Unknown';
-        scheduleMap.putIfAbsent(day, () => {});
-        scheduleMap[day]!.putIfAbsent(classItem, () => []);
-        scheduleMap[day]![classItem]!.add(schedule);
-      }
-    }
-
-    // ── Step 2: derive column/row axis lists ─────────────────────────────────
-    final classes =
-        scheduleMap.values.expand((d) => d.keys).toSet().toList()..sort();
-
-    // Keep canonical day order rather than insertion order.
-    const orderedDays = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    final availableDays = orderedDays.where(scheduleMap.containsKey).toList();
-
-    final allSessions = schedules
-        .map((s) => int.tryParse(s['jam_ke']?.toString() ?? '') ?? 0)
-        .toSet()
-        .toList()
-      ..sort();
-
-    // ── Step 3: render ───────────────────────────────────────────────────────
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title
-              Text(
-                'JADWAL PELAJARAN',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Table container — like an HTML `<table>` with explicit borders.
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: ColorUtils.slate300),
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
-                ),
-                child: Column(
-                  children: [
-                    // ── Header row 1: day names ────────────────────────────
-                    Container(
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.1),
-                        border: Border(
-                          bottom: BorderSide(color: ColorUtils.slate300),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          // "Jam Ke-" header cell
-                          _headerCell(
-                            width: 80,
-                            height: 60,
-                            child: const Text(
-                              'Jam Ke-',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          // "Waktu" header cell
-                          _headerCell(
-                            width: 100,
-                            height: 60,
-                            child: const Text(
-                              'Waktu',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          // One merged day-column per available day
-                          ...availableDays.expand((day) => [
-                            Container(
-                              width: 200 * classes.length.toDouble(),
-                              height: 60,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  right: BorderSide(
-                                    color: availableDays.last == day
-                                        ? Colors.transparent
-                                        : ColorUtils.slate300,
-                                  ),
-                                ),
-                              ),
-                              child: Text(
-                                day,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: _getDayColor(day),
-                                ),
-                              ),
-                            ),
-                          ]),
-                        ],
-                      ),
-                    ),
-
-                    // ── Header row 2: class names ──────────────────────────
-                    Container(
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.05),
-                        border: Border(
-                          bottom: BorderSide(color: ColorUtils.slate300),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          // Empty cells under "Jam Ke-" and "Waktu"
-                          _headerCell(width: 80, height: 40),
-                          _headerCell(width: 100, height: 40),
-                          // Class name sub-headers for each day
-                          ...availableDays.expand((day) {
-                            return classes.asMap().entries.map((classEntry) {
-                              final isLastInDay =
-                                  classEntry.key == classes.length - 1;
-                              final isLastDay = availableDays.last == day;
-                              return Container(
-                                width: 200,
-                                height: 40,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    right: BorderSide(
-                                      color: (isLastInDay && !isLastDay)
-                                          ? ColorUtils.slate300
-                                          : Colors.transparent,
-                                    ),
-                                  ),
-                                ),
-                                child: Text(
-                                  classEntry.value,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: ColorUtils.slate600,
-                                  ),
-                                ),
-                              );
-                            });
-                          }),
-                        ],
-                      ),
-                    ),
-
-                    // ── Data rows: one per session number ──────────────────
-                    ...allSessions.map((session) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: session == allSessions.last
-                                  ? Colors.transparent
-                                  : ColorUtils.slate300,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            // Session number cell
-                            _headerCell(
-                              width: 80,
-                              height: 60,
-                              child: Text(
-                                session.toString(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            // Time range cell
-                            _headerCell(
-                              width: 100,
-                              height: 60,
-                              child: _buildTimeForSession(session),
-                            ),
-                            // Data cells for each day × class
-                            ...availableDays.expand((day) {
-                              return classes.map((classItem) {
-                                final cell = _getScheduleForCell(
-                                  session,
-                                  day,
-                                  classItem,
-                                );
-                                return Container(
-                                  width: 200,
-                                  height: 60,
-                                  padding: const EdgeInsets.all(AppSpacing.xs),
-                                  decoration: BoxDecoration(
-                                    border: Border(
-                                      right: BorderSide(
-                                        color: classes.last == classItem &&
-                                                availableDays.last != day
-                                            ? ColorUtils.slate300
-                                            : Colors.transparent,
-                                      ),
-                                    ),
-                                  ),
-                                  child: cell != null
-                                      ? Container(
-                                          padding: const EdgeInsets.all(6),
-                                          decoration: BoxDecoration(
-                                            color: _getDayColor(day)
-                                                .withValues(alpha: 0.1),
-                                            borderRadius:
-                                                const BorderRadius.all(Radius.circular(4)),
-                                            border: Border.all(
-                                              color: _getDayColor(day)
-                                                  .withValues(alpha: 0.3),
-                                            ),
-                                          ),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                cell['mata_pelajaran_nama'] ??
-                                                    '',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: _getDayColor(day),
-                                                ),
-                                                textAlign: TextAlign.center,
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              if (cell['guru_nama'] != null)
-                                                Text(
-                                                  cell['guru_nama']!,
-                                                  style: TextStyle(
-                                                    fontSize: 8,
-                                                    color: ColorUtils.slate500,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                            ],
-                                          ),
-                                        )
-                                      : const SizedBox.shrink(),
-                                );
-                              });
-                            }),
-                          ],
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-
-              // ── Legend ───────────────────────────────────────────────────
-              const SizedBox(height: AppSpacing.lg),
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: ColorUtils.slate50,
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
-                  border: Border.all(color: ColorUtils.slate300),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Keterangan:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: ColorUtils.slate600,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Wrap(
-                      spacing: 16,
-                      children: availableDays.map((day) {
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: _getDayColor(day),
-                                borderRadius: const BorderRadius.all(Radius.circular(2)),
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Text(day, style: const TextStyle(fontSize: 12)),
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.9,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: TeacherMaterialScreen(
+            teacher: {'id': widget.teacherId, 'nama': widget.teacherNama},
+            initialSubjectId: subjectId,
+            initialSubjectName: subjectName,
+            initialClassId: classId,
+            initialClassName: className,
+            embedded: true,
           ),
         ),
       ),
     );
   }
 
-  /// Shared cell container used by both header rows and the session/time column.
-  /// Has a right border to separate columns, like `border-right: 1px solid`
-  /// in CSS table cells.
-  Widget _headerCell({
-    required double width,
-    required double height,
-    Widget? child,
-  }) {
-    return Container(
-      width: width,
-      height: height,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        border: Border(right: BorderSide(color: ColorUtils.slate300)),
+  void _openClassActivity(BuildContext context, Map<String, dynamic> schedule) {
+    final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
+    final subjectName = (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'])?.toString();
+    final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
+    final className = (schedule['class_name'] ?? schedule['kelas_nama'])?.toString();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.9,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: EmbeddedActivityListScreen(
+            teacherId: widget.teacherId,
+            teacherName: widget.teacherNama,
+            classId: classId ?? '',
+            className: className ?? '',
+            subjectId: subjectId ?? '',
+            subjectName: subjectName ?? '',
+            initialDate: _computeScheduleDate(schedule),
+          ),
+        ),
       ),
-      child: child,
+    );
+  }
+
+  // ── Build ──
+
+  @override
+  Widget build(BuildContext context) {
+    if (_availableDays.isEmpty || _tabController == null) {
+      return const Center(child: Text('No schedule data'));
+    }
+
+    return Column(
+      children: [
+        // Day tabs
+        _buildDayTabBar(),
+        // Session rows for selected day
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: _availableDays.map(_buildDayPage).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDayTabBar() {
+    final primary = widget.primaryColor;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(3),
+      child: TabBar(
+        controller: _tabController,
+        isScrollable: _availableDays.length > 5,
+        indicator: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerHeight: 0,
+        labelColor: primary,
+        unselectedLabelColor: ColorUtils.slate500,
+        labelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+        tabs: _availableDays.map((day) {
+          final isToday = _isDayToday(day);
+          final shortLabel = _kDayTranslations[day];
+          final label = shortLabel != null ? _tr(shortLabel) : day;
+
+          return Tab(
+            height: 40,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(label),
+                if (isToday)
+                  Container(
+                    margin: const EdgeInsets.only(top: 2),
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildDayPage(String dayName) {
+    final schedules = _getSchedulesForDay(dayName);
+    final isToday = _isDayToday(dayName);
+    final isPastDay = _isDayPast(dayName);
+    final fullLabel = _kDayFullTranslations[dayName];
+    final dayLabel = fullLabel != null ? _tr(fullLabel) : dayName;
+
+    final nextScheduleIdx = schedules.indexWhere((s) => !_isHourPast(dayName, s) && !_isHourCurrent(dayName, s));
+
+    return RefreshIndicator(
+      onRefresh: () async => widget.onRefresh(),
+      color: widget.primaryColor,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        children: [
+        // Day header
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isPastDay ? ColorUtils.slate300 : widget.primaryColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                dayLabel,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: isPastDay ? ColorUtils.slate400 : ColorUtils.slate800,
+                ),
+              ),
+              if (isToday) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: widget.primaryColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    _tr({'en': 'Today', 'id': 'Hari ini'}),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: widget.primaryColor,
+                    ),
+                  ),
+                ),
+              ],
+              const Spacer(),
+              Text(
+                '${schedules.length} ${_tr({'en': schedules.length == 1 ? 'session' : 'sessions', 'id': 'sesi'})}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: ColorUtils.slate500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Session rows
+        if (schedules.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            child: Center(
+              child: Text(
+                _tr({
+                  'en': 'No classes this day',
+                  'id': 'Tidak ada jadwal hari ini',
+                }),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: ColorUtils.slate400,
+                ),
+              ),
+            ),
+          )
+        else
+          ...schedules.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final schedule = entry.value;
+            final isPast = _isHourPast(dayName, schedule);
+            final isCurrent = _isHourCurrent(dayName, schedule);
+            final isNext = idx == nextScheduleIdx;
+
+            return _buildSessionRow(
+              schedule: schedule,
+              dayName: dayName,
+              isPast: isPast,
+              isCurrent: isCurrent,
+              isNext: isNext,
+              isLast: idx == schedules.length - 1,
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSessionRow({
+    required Map<String, dynamic> schedule,
+    required String dayName,
+    required bool isPast,
+    required bool isCurrent,
+    required bool isNext,
+    required bool isLast,
+  }) {
+    final sessionNum = schedule['jam_ke']?.toString() ?? '-';
+    final startTime = _formatTime(
+        (schedule['jam_mulai'] ?? schedule['start_time'])?.toString());
+    final endTime = _formatTime(
+        (schedule['jam_selesai'] ?? schedule['end_time'])?.toString());
+    final subjectName =
+        schedule['mata_pelajaran_nama']?.toString() ?? '-';
+    final className = schedule['kelas_nama']?.toString() ?? '-';
+
+    final primary = widget.primaryColor;
+
+    // Summary data for buttons
+    final summary = _getSummary(schedule, dayName);
+    final attFilled = _hasAttendance(summary);
+    final matFilled = _hasMaterial(summary);
+    final actFilled = _hasActivity(summary);
+
+    final decoration = BoxDecoration(
+      color: isCurrent 
+          ? primary.withValues(alpha: 0.08) 
+          : (isNext ? primary.withValues(alpha: 0.04) : Colors.white),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: isCurrent 
+            ? primary.withValues(alpha: 0.5) 
+            : (isNext ? primary.withValues(alpha: 0.2) : ColorUtils.slate200),
+        width: isCurrent ? 1.5 : (isNext ? 1.2 : 1.0),
+      ),
+      boxShadow: isCurrent 
+          ? [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.15),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              )
+            ] 
+          : (isNext ? [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              )
+            ] : []),
+    );
+
+    return Container(
+      margin: EdgeInsets.only(bottom: isLast ? 0 : 8),
+      padding: const EdgeInsets.all(12),
+      decoration: decoration,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Session number + time column
+          SizedBox(
+            width: 56,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: isCurrent || isNext
+                        ? primary
+                        : (isPast ? ColorUtils.slate200 : ColorUtils.slate100),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    sessionNum,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isCurrent || isNext ? Colors.white : (isPast ? ColorUtils.slate500 : ColorUtils.slate700),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  startTime,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: isPast ? ColorUtils.slate400 : ColorUtils.slate700,
+                  ),
+                ),
+                Text(
+                  endTime,
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: isPast ? ColorUtils.slate300 : ColorUtils.slate400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          // Divider
+          Container(
+            width: 1,
+            height: 48,
+            color: ColorUtils.slate200,
+          ),
+
+          const SizedBox(width: 12),
+
+          // Subject + Class Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        subjectName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isPast ? ColorUtils.slate500 : ColorUtils.slate800,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  className,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: isPast ? ColorUtils.slate400 : ColorUtils.slate500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          // Action Buttons Column
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _MiniActionButton(
+                label: _tr({'en': 'Atten', 'id': 'Presensi'}),
+                isFilled: attFilled,
+                isPast: isPast,
+                primary: primary,
+                onTap: () => _openAttendance(context, schedule, attFilled, summary),
+              ),
+              const SizedBox(width: 4),
+              _MiniActionButton(
+                label: _tr({'en': 'Mat', 'id': 'Materi'}),
+                isFilled: matFilled,
+                isPast: isPast,
+                primary: primary,
+                onTap: () => _openMaterial(context, schedule),
+              ),
+              const SizedBox(width: 4),
+              _MiniActionButton(
+                label: _tr({'en': 'Act', 'id': 'Kegiatan'}),
+                isFilled: actFilled,
+                isPast: isPast,
+                primary: primary,
+                onTap: () => _openClassActivity(context, schedule),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Compact action button for table view rows.
+class _MiniActionButton extends StatelessWidget {
+  final String label;
+  final bool isFilled;
+  final bool isPast;
+  final Color primary;
+  final VoidCallback onTap;
+
+  const _MiniActionButton({
+    required this.label,
+    required this.isFilled,
+    required this.isPast,
+    required this.primary,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isFilled ? primary : Colors.transparent;
+    final borderColor = isFilled 
+        ? color 
+        : (isPast ? ColorUtils.slate200 : ColorUtils.slate200);
+    final textColor = isFilled 
+        ? Colors.white 
+        : (isPast ? ColorUtils.slate400 : primary);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        constraints: const BoxConstraints(minWidth: 60),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: borderColor,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: textColor,
+          ),
+        ),
+      ),
     );
   }
 }
