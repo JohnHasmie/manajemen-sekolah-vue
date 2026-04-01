@@ -61,6 +61,8 @@ class AttendancePage extends ConsumerStatefulWidget {
   final String? initialStartTime;
   final int initialTabIndex;
 
+  final bool embedded;
+
   const AttendancePage({
     super.key,
     required this.teacher,
@@ -72,6 +74,7 @@ class AttendancePage extends ConsumerStatefulWidget {
     this.initialLessonHourNumber,
     this.initialStartTime,
     this.initialTabIndex = 0,
+    this.embedded = false,
   });
 
   @override
@@ -111,7 +114,6 @@ class AttendancePageState extends ConsumerState<AttendancePage>
   bool _isLoadingInput = true;
   bool _isSubmitting = false;
   bool _hasActiveFilter = false;
-  bool _showSearch = false;
 
   // Lesson Hour State
   List<dynamic> _lessonHours = [];
@@ -1053,10 +1055,12 @@ class AttendancePageState extends ConsumerState<AttendancePage>
         classList: _classList,
         selectedSubjectId: _selectedSubjectId,
         subjectTeacher: _subjectTeacher,
-        showSearch: _showSearch,
-        searchController: _searchControllerInput,
         primaryColor: _getPrimaryColor(),
         languageProvider: languageProvider,
+        embedded: widget.embedded,
+        initialClassName: widget.initialClassName,
+        initialSubjectName: widget.initialSubjectName,
+        initialLessonHourNumber: widget.initialLessonHourNumber,
         onDatePicked: (picked) {
           setState(() {
             _selectedDate = picked;
@@ -1080,19 +1084,6 @@ class AttendancePageState extends ConsumerState<AttendancePage>
             _selectedSubjectId = value;
           });
         },
-        onSearchChanged: _filterStudents,
-        onSearchClosed: () {
-          setState(() {
-            _showSearch = false;
-            _searchControllerInput.clear();
-            _filterStudents();
-          });
-        },
-        onSearchToggled: () {
-          setState(() {
-            _showSearch = true;
-          });
-        },
         onQuickActionsPressed: () => _showQuickActionsSheet(languageProvider),
       ),
       selectedSubjectId: _selectedSubjectId,
@@ -1100,6 +1091,9 @@ class AttendancePageState extends ConsumerState<AttendancePage>
       attendanceStatus: _attendanceStatus,
       isSubmitting: _isSubmitting,
       primaryColor: _getPrimaryColor(),
+      searchController: _searchControllerInput,
+      onSearchChanged: _filterStudents,
+      onQuickActionsPressed: () => _showQuickActionsSheet(languageProvider),
       onStatusChanged: (studentId, status) {
         setState(() {
           _attendanceStatus[studentId] = status;
@@ -1392,14 +1386,34 @@ class AttendancePageState extends ConsumerState<AttendancePage>
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
+
+    if (widget.embedded) {
+      return Scaffold(
+        backgroundColor: ColorUtils.slate50,
+        appBar: AppBar(
+          backgroundColor: _getPrimaryColor(),
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            '${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Presensi'})} — ${widget.initialSubjectName ?? ''} ${widget.initialClassName ?? ''}',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          elevation: 0,
+        ),
+        body: _tabController.index == 0
+            ? _buildResultsMode()
+            : _buildInputMode(),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: ColorUtils.slate50, // Background same as announcements
+      backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          // Header baru seperti pengumuman
           _buildHeader(languageProvider),
-
-          // Content
           Expanded(
             child: _tabController.index == 0
                 ? _buildResultsMode()

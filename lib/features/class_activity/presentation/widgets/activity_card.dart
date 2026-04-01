@@ -206,8 +206,13 @@ class ActivityCard extends StatelessWidget {
                         children: [
                           _buildInfoTag(
                             Icons.calendar_today_outlined,
-                            '${activity['day'] ?? '-'} • ${_formatDate(activity['date'])}',
+                            '${activity['day'] ?? '-'}, ${_formatDate(activity['date'])}',
                           ),
+                          if (activity['class_name'] != null || activity['kelas_nama'] != null)
+                            _buildInfoTag(
+                              Icons.class_rounded,
+                              'Kelas: ${activity['class_name'] ?? activity['kelas_nama'] ?? '-'}',
+                            ),
                           _buildInfoTag(
                             isAssignment
                                 ? Icons.assignment_outlined

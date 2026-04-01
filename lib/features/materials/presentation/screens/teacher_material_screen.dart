@@ -53,6 +53,8 @@ class TeacherMaterialScreen extends ConsumerStatefulWidget {
   final String? initialClassId;
   final String? initialClassName;
 
+  final bool embedded;
+
   const TeacherMaterialScreen({
     super.key,
     required this.teacher,
@@ -60,6 +62,7 @@ class TeacherMaterialScreen extends ConsumerStatefulWidget {
     this.initialSubjectName,
     this.initialClassId,
     this.initialClassName,
+    this.embedded = false,
   });
 
   @override
@@ -1203,36 +1206,49 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     final languageProvider = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
+      appBar: widget.embedded
+          ? AppBar(
+              backgroundColor: _getPrimaryColor(),
+              foregroundColor: Colors.white,
+              leading: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              title: Text(
+                '${languageProvider.getTranslatedText({'en': 'Material', 'id': 'Materi'})} — ${widget.initialSubjectName ?? ''} ${widget.initialClassName ?? ''}',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              elevation: 0,
+            )
+          : null,
       body: Column(
         children: [
-          // Header with gradient like presence_teacher
-          MaterialScreenHeader(
-            gradient: _getCardGradient(),
-            primaryColor: _getPrimaryColor(),
-            languageProvider: languageProvider,
-            onGenerateTap: _navigateToGenerateRPP,
-            onRefreshTap: _forceRefresh,
-          ),
-
-          // Filter Section
-          _buildFilterSection(languageProvider),
-
-          // Search Bar
-          _buildSearchBar(languageProvider),
-
-          // Search Results Info
-          if (_searchController.text.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Text(
-                    '${_getFilteredChapterContent().length} ${languageProvider.getTranslatedText({'en': 'materials found', 'id': 'materi ditemukan'})}',
-                    style: TextStyle(color: ColorUtils.slate500, fontSize: 14),
-                  ),
-                ],
-              ),
+          if (!widget.embedded)
+            MaterialScreenHeader(
+              gradient: _getCardGradient(),
+              primaryColor: _getPrimaryColor(),
+              languageProvider: languageProvider,
+              onGenerateTap: _navigateToGenerateRPP,
+              onRefreshTap: _forceRefresh,
             ),
+
+          if (!widget.embedded) ...[
+            // Full mode: filter dropdowns + search
+            _buildFilterSection(languageProvider),
+            _buildSearchBar(languageProvider),
+            if (_searchController.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Text(
+                      '${_getFilteredChapterContent().length} ${languageProvider.getTranslatedText({'en': 'materials found', 'id': 'materi ditemukan'})}',
+                      style: TextStyle(color: ColorUtils.slate500, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+          ],
           AppSpacing.v8,
 
           // Content Section
@@ -1395,9 +1411,44 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     }
   }
 
+  bool _hasAutoExpanded = false;
+
+  /// In embedded mode, auto-expand and scroll to the first un-checked chapter
+  /// (or the last checked one if all filled). Called once after content loads.
+  void _autoExpandToRelevantChapter() {
+    if (!widget.embedded || _hasAutoExpanded || _chapterMaterialList.isEmpty) return;
+    _hasAutoExpanded = true;
+
+    // Find first chapter that is NOT fully checked
+    String? targetChapterId;
+    for (final chapter in _chapterMaterialList) {
+      final chapterId = chapter['id']?.toString();
+      if (chapterId == null) continue;
+
+      final isChecked = _checkedChapter[chapterId] == true;
+      if (!isChecked) {
+        targetChapterId = chapterId;
+        break;
+      }
+    }
+
+    // If all checked, go to last chapter
+    if (targetChapterId == null && _chapterMaterialList.isNotEmpty) {
+      targetChapterId = _chapterMaterialList.last['id']?.toString();
+    }
+
+    if (targetChapterId != null) {
+      setState(() {
+        _expandedChapter[targetChapterId!] = true;
+      });
+    }
+  }
+
   /// Delegates to [MaterialContentList] — purely presentational.
   /// Expand/collapse and checkbox mutations flow back via callbacks.
   Widget _buildContentList() {
+    // Auto-expand relevant chapter in embedded mode
+    if (widget.embedded) _autoExpandToRelevantChapter();
     return MaterialContentList(
       filteredChapterMaterials: _getFilteredChapterContent(),
       subChapterMaterialList: _subChapterMaterialList,

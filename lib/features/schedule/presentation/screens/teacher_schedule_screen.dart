@@ -32,6 +32,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/schedule/presentation/controllers/teacher_schedule_controller.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_schedule_card_view.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_schedule_filter_sheet.dart';
@@ -67,6 +68,7 @@ class TeachingScheduleScreenState
 
   List<dynamic> _scheduleList = [];
   List<dynamic> _termList = [];
+  Map<String, dynamic>? _dailySummary;
   bool _isLoading = true;
   String _teacherId = '';
   String _teacherNama = '';
@@ -441,7 +443,24 @@ class TeachingScheduleScreenState
 
     final ctrl = ref.read(teacherScheduleControllerProvider);
     await ctrl.invalidateScheduleCache(_buildScheduleCacheKey());
-    _loadSchedule(useCache: false);
+    await LocalCacheService.clearStartingWith('schedule_daily_summary');
+    await _loadSchedule(useCache: false);
+    _loadDailySummary();
+  }
+
+  Future<void> _loadDailySummary() async {
+    if (_teacherId.isEmpty) return;
+    try {
+      final service = getIt<ApiScheduleService>();
+      AppLogger.debug('schedule', 'Loading daily summary for teacherId=$_teacherId');
+      final result = await service.getDailySummary(teacherId: _teacherId);
+      AppLogger.debug('schedule', 'Daily summary result: ${result.keys.toList()}, summaries=${result['summaries']}');
+      if (mounted) {
+        setState(() => _dailySummary = result);
+      }
+    } catch (e) {
+      AppLogger.error('schedule', 'Error loading daily summary: $e');
+    }
   }
 
   /// Fetches the teacher's schedule — cache-first, then fresh from API.
@@ -510,6 +529,9 @@ class TeachingScheduleScreenState
           prefKeyLastCacheKey: _prefKeyLastCacheKey,
         );
       }
+
+      // Load daily summary for button fill states (non-blocking)
+      _loadDailySummary();
 
       // Show tour after first successful load
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -993,46 +1015,8 @@ class TeachingScheduleScreenState
           Expanded(
             child: _isLoading
                 ? SkeletonListLoading(itemCount: 5, infoTagCount: 2)
-                : Column(
-                    children: [
-                      // View Toggle Info
-                      const SizedBox(height: AppSpacing.sm),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Text(
-                              '${filteredSchedules.length} ${languageProvider.getTranslatedText({'en': 'schedules found', 'id': 'jadwal ditemukan'})}',
-                              style: TextStyle(
-                                color: ColorUtils.slate500,
-                                fontSize: 12,
-                              ),
-                            ),
-                            Spacer(),
-                            Text(
-                              _isTableView
-                                  ? languageProvider.getTranslatedText({
-                                      'en': 'Table View',
-                                      'id': 'Tampilan Tabel',
-                                    })
-                                  : languageProvider.getTranslatedText({
-                                      'en': 'Card View',
-                                      'id': 'Tampilan Kartu',
-                                    }),
-                              style: TextStyle(
-                                color: _getPrimaryColor(),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-
-                      Expanded(
-                        child: filteredSchedules.isEmpty
-                            ? EmptyState(
+                : filteredSchedules.isEmpty
+                    ? EmptyState(
                                 icon: Icons.schedule_outlined,
                                 title: languageProvider.getTranslatedText({
                                   'en': 'No Teaching Schedules',
@@ -1056,34 +1040,35 @@ class TeachingScheduleScreenState
                                 }),
                                 onPressed: _loadSchedule,
                               )
-                            : RefreshIndicator(
-                                onRefresh: _loadSchedule,
-                                color: _getPrimaryColor(),
-                                backgroundColor: Colors.white,
-                                child: _isTableView
-                                    ? TeacherScheduleTableView(
-                                        schedules: filteredSchedules,
-                                        dayIdMap: _dayIdMap,
-                                        dayColorMap: _dayColorMap,
-                                        primaryColor: _getPrimaryColor(),
+                            : _isTableView
+                                    ? RefreshIndicator(
+                                        onRefresh: _forceRefresh,
+                                        color: _getPrimaryColor(),
+                                        child: TeacherScheduleTableView(
+                                          schedules: filteredSchedules,
+                                          dayIdMap: _dayIdMap,
+                                          dayColorMap: _dayColorMap,
+                                          primaryColor: _getPrimaryColor(),
+                                        ),
                                       )
-                                    : TeacherScheduleCardView(
-                                        schedules: filteredSchedules,
-                                        languageProvider: languageProvider,
-                                        dayIdMap: _dayIdMap,
-                                        dayColorMap: _dayColorMap,
-                                        dayOptions: _dayOptions,
-                                        selectedAcademicYear:
-                                            _selectedAcademicYear,
-                                        teacherId: _teacherId,
-                                        teacherNama: _teacherNama,
-                                        firstScheduleKey: _firstScheduleKey,
-                                        actionButtonsKey: _actionButtonsKey,
+                                    : RefreshIndicator(
+                                        onRefresh: _forceRefresh,
+                                        color: _getPrimaryColor(),
+                                        child: TeacherScheduleCardView(
+                                          schedules: filteredSchedules,
+                                          languageProvider: languageProvider,
+                                          dayIdMap: _dayIdMap,
+                                          dayColorMap: _dayColorMap,
+                                          dayOptions: _dayOptions,
+                                          selectedAcademicYear:
+                                              _selectedAcademicYear,
+                                          teacherId: _teacherId,
+                                          teacherNama: _teacherNama,
+                                          firstScheduleKey: _firstScheduleKey,
+                                          actionButtonsKey: _actionButtonsKey,
+                                          dailySummary: _dailySummary,
+                                        ),
                                       ),
-                              ),
-                      ),
-                    ],
-                  ),
           ),
         ],
       ),
@@ -1244,76 +1229,14 @@ class _TeacherScheduleHeader extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          // Role switcher — only visible when teacher is also homeroom teacher
-          if (homeroomClassesList.isNotEmpty)
-            Builder(
-              builder: (ctx) => GestureDetector(
-                onTapDown: (TapDownDetails details) {
-                  showMenu<dynamic>(
-                    context: ctx,
-                    position: RelativeRect.fromLTRB(
-                      details.globalPosition.dx,
-                      details.globalPosition.dy,
-                      details.globalPosition.dx,
-                      details.globalPosition.dy,
-                    ),
-                    items: [
-                      const PopupMenuItem(value: 'guru', child: Text('Guru (Lihat Jadwal Mengajar)')),
-                      ...homeroomClassesList.map(
-                        (c) => PopupMenuItem(
-                          value: c,
-                          child: Text('Wali Kelas - ${c['name'] ?? c['nama']}'),
-                        ),
-                      ),
-                    ],
-                  ).then((value) { if (value != null) onRoleSelected(value); });
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          borderRadius: const BorderRadius.all(Radius.circular(8)),
-                        ),
-                        child: Icon(
-                          isHomeroomView ? Icons.class_ : Icons.person,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              teacherNama,
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                            Text(
-                              isHomeroomView && selectedHomeroomClass != null
-                                  ? 'Wali Kelas - ${(selectedHomeroomClass!['name'] ?? selectedHomeroomClass!['nama'] ?? '').toString()}'
-                                  : 'Guru',
-                              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.swap_horiz_rounded, color: Colors.white.withValues(alpha: 0.8), size: 20),
-                    ],
-                  ),
-                ),
-              ),
+            _RoleSegmentedControl(
+              primaryColor: primaryColor,
+              isHomeroomView: isHomeroomView,
+              selectedHomeroomClass: selectedHomeroomClass,
+              homeroomClassesList: homeroomClassesList,
+              onRoleSelected: onRoleSelected,
             ),
-          const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.md),
 
           // Search bar + filter button
           Row(
@@ -1446,5 +1369,165 @@ class _TeacherScheduleHeader extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// A custom pill-style segmented control for role switching in the header.
+class _RoleSegmentedControl extends StatelessWidget {
+  final Color primaryColor;
+  final bool isHomeroomView;
+  final Map<String, dynamic>? selectedHomeroomClass;
+  final List<dynamic> homeroomClassesList;
+  final void Function(dynamic) onRoleSelected;
+
+  const _RoleSegmentedControl({
+    required this.primaryColor,
+    required this.isHomeroomView,
+    required this.selectedHomeroomClass,
+    required this.homeroomClassesList,
+    required this.onRoleSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (homeroomClassesList.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      height: 46,
+      padding: const EdgeInsets.all(AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Sliding active pill
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            alignment: isHomeroomView ? Alignment.centerRight : Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: 0.5,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Clickable segment labels
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildSegment(
+                  context: context,
+                  label: 'Mengajar',
+                  icon: Icons.person_outline_rounded,
+                  isActive: !isHomeroomView,
+                  onTap: () => onRoleSelected('guru'),
+                ),
+              ),
+              Expanded(
+                child: _buildSegment(
+                  context: context,
+                  label: isHomeroomView && selectedHomeroomClass != null
+                      ? 'Kelas ${selectedHomeroomClass!['name'] ?? selectedHomeroomClass!['nama'] ?? ''}'
+                      : 'Wali Kelas',
+                  icon: Icons.class_outlined,
+                  isActive: isHomeroomView,
+                  showDropdown: homeroomClassesList.length > 1 && isHomeroomView,
+                  onTap: () {
+                    // If already active and multiple classes exist, show picker menu
+                    if (isHomeroomView && homeroomClassesList.length > 1) {
+                      _showClassPicker(context);
+                    } else {
+                      onRoleSelected(homeroomClassesList.first);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSegment({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required bool isActive,
+    required VoidCallback onTap,
+    bool showDropdown = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isActive ? primaryColor : Colors.white.withValues(alpha: 0.9),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  color: isActive ? primaryColor : Colors.white.withValues(alpha: 0.9),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (showDropdown) ...[
+              const SizedBox(width: 4),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 16,
+                color: primaryColor,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showClassPicker(BuildContext context) {
+    // RelativeRect for showMenu (position it near the center/right of header)
+    final screenSize = MediaQuery.of(context).size;
+    showMenu<dynamic>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        screenSize.width - 200,
+        220, // Approximate height of header role switcher
+        screenSize.width - 16,
+        0,
+      ),
+      items: homeroomClassesList.map(
+        (c) => PopupMenuItem(
+          value: c,
+          child: Text('Wali Kelas - ${c['name'] ?? c['nama']}'),
+        ),
+      ).toList(),
+    ).then((value) { if (value != null) onRoleSelected(value); });
   }
 }

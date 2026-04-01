@@ -61,6 +61,8 @@ class ClassActivityScreen extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>>? materialsToMarkAsGenerated;
   final bool autoShowActivityDialog;
 
+  final bool embedded;
+
   const ClassActivityScreen({
     super.key,
     this.initialDate,
@@ -73,6 +75,7 @@ class ClassActivityScreen extends ConsumerStatefulWidget {
     this.initialAdditionalMaterials,
     this.materialsToMarkAsGenerated,
     this.autoShowActivityDialog = false,
+    this.embedded = false,
   });
 
   @override
@@ -510,9 +513,15 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
     await _loadSubjectsForClass();
 
     if (widget.initialSubjectId != null && mounted) {
+      // Find the subject in the loaded list to get can_edit flag
+      final matchedSubject = _subjectList.firstWhere(
+        (s) => s['id']?.toString() == widget.initialSubjectId,
+        orElse: () => <String, dynamic>{},
+      );
       setState(() {
         _selectedSubjectId = widget.initialSubjectId;
         _selectedSubjectName = widget.initialSubjectName;
+        _selectedSubjectCanEdit = matchedSubject['can_edit'] == true || widget.embedded;
         _currentStep = 2;
       });
       await _loadActivities();
@@ -1163,9 +1172,24 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
       },
       child: Scaffold(
         backgroundColor: ColorUtils.slate50,
+        appBar: widget.embedded
+            ? AppBar(
+                backgroundColor: _getPrimaryColor(),
+                foregroundColor: Colors.white,
+                leading: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                title: Text(
+                  '${languageProvider.getTranslatedText({'en': 'Class Activity', 'id': 'Kegiatan Kelas'})} — ${widget.initialSubjectName ?? ''} ${widget.initialClassName ?? ''}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                elevation: 0,
+              )
+            : null,
         body: Column(
           children: [
-            _buildHeader(languageProvider),
+            if (!widget.embedded) _buildHeader(languageProvider),
             Expanded(child: _buildBodyContent(languageProvider)),
           ],
         ),
@@ -1188,6 +1212,11 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen>
   }
 
   Widget _buildBodyContent(LanguageProvider languageProvider) {
+    // In embedded mode, skip class/subject selection — show loading or activity list
+    if (widget.embedded && _currentStep < 2) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     switch (_currentStep) {
       case 0:
         return _buildClassList(languageProvider);

@@ -34,6 +34,9 @@ class AttendanceInputMode extends ConsumerWidget {
   final Map<String, String> attendanceStatus;
   final bool isSubmitting;
   final Color primaryColor;
+  final TextEditingController searchController;
+  final VoidCallback onSearchChanged;
+  final VoidCallback onQuickActionsPressed;
   final void Function(String studentId, String status) onStatusChanged;
   final VoidCallback onSubmit;
 
@@ -46,6 +49,9 @@ class AttendanceInputMode extends ConsumerWidget {
     required this.attendanceStatus,
     required this.isSubmitting,
     required this.primaryColor,
+    required this.searchController,
+    required this.onSearchChanged,
+    required this.onQuickActionsPressed,
     required this.onStatusChanged,
     required this.onSubmit,
   });
@@ -63,7 +69,73 @@ class AttendanceInputMode extends ConsumerWidget {
         // 1. Form Section -- pre-built AttendanceInputForm passed from parent.
         inputFormWidget,
 
-        // 2. Student List Area
+        // 2. Search & Bulk Action Bar -- Moved here to be "not on center input form"
+        if (selectedSubjectId != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: ColorUtils.slate200),
+                boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: (_) => onSearchChanged(),
+                      style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
+                      decoration: InputDecoration(
+                        hintText: languageProvider.getTranslatedText({
+                          'en': 'Search student...',
+                          'id': 'Cari siswa...',
+                        }),
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: ColorUtils.slate400,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          size: 20,
+                          color: ColorUtils.slate400,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 24,
+                    color: ColorUtils.slate200,
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.checklist_rtl,
+                      color: primaryColor,
+                      size: 22,
+                    ),
+                    onPressed: onQuickActionsPressed,
+                    tooltip: languageProvider.getTranslatedText({
+                      'en': 'Quick Attendance',
+                      'id': 'Presensi Cepat',
+                    }),
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // 3. Student List Area
         Expanded(
           child: selectedSubjectId == null
               ? Center(

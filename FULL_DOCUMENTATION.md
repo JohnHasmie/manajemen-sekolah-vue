@@ -1694,6 +1694,57 @@ flowchart LR
 - Teacher view: filtered to logged-in teacher's schedule
 - Cached with manual invalidation after mutations
 
+**Teacher Schedule Card View (Redesigned):**
+
+The teacher schedule screen groups schedule cards by day of the week (Senin → Sabtu) with sticky day divider headers using the `flutter_sticky_header` package.
+
+**Visual states:**
+- **Past days** — entire day group is dimmed (grey accent color, reduced opacity)
+- **Past hours within today** — individual card dimmed while other today-cards remain active
+- **Auto-scroll** — on load, scrolls to today's day section (or first upcoming day if today has no schedules)
+- **Guru ↔ Wali Kelas switcher** — only shown when teacher has homeroom classes; label shows "Lihat sebagai" with role name
+
+**3-Button Action Row per card:**
+Each card shows 3 action buttons: **Presensi**, **Materi**, **Kegiatan Kelas**
+
+| State | Button Style |
+|-------|-------------|
+| No data for today | Outlined (ghost) |
+| Data exists for today | Filled (solid primary color) |
+| All 3 filled | Card background becomes tinted primary |
+
+Button fill state is determined by `GET /teaching-schedule/daily-summary` — a batch endpoint that returns attendance, activity, and material-progress status for all class+subject combos in exactly 3 SQL queries (no N+1).
+
+**Card tap → Summary bottom sheet:**
+Tapping a card opens a "Ringkasan Jadwal Ini" bottom sheet showing:
+- Presensi status (hadir/sakit/izin/alpha counts) → tap opens attendance dialog
+- Kegiatan Kelas count → tap opens activity dialog
+- Progress Materi (checked/total bab) → tap opens material dialog
+
+**Embedded dialog mode:**
+All 3 screens (Attendance, Material, Class Activity) support `embedded: true` mode:
+- Attendance: detail sheet when filled (with edit button), full-screen dialog for input with minimalist header (subject/class/date as labels instead of dropdowns)
+- Material: compact info bar replacing dropdowns, auto-expands first un-checked chapter
+- Class Activity: shows loading spinner during navigation, FAB for adding new activities
+
+**Daily Summary API:**
+```
+GET /teaching-schedule/daily-summary?teacher_id=xxx&date=2026-04-01
+```
+Response keyed by `{class_id}__{subject_id}`:
+```json
+{
+  "date": "2026-04-01",
+  "summaries": {
+    "uuid1__uuid2": {
+      "attendance": { "filled": true, "hadir": 28, "sakit": 1, "izin": 0, "alpha": 1, "total": 30 },
+      "class_activity": { "filled": true, "count": 2 },
+      "material_progress": { "total": 10, "checked": 4 }
+    }
+  }
+}
+```
+
 **Conflict Detection Flow:**
 ```mermaid
 flowchart TD
