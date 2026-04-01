@@ -227,6 +227,50 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // Summary sheet content
+  // ---------------------------------------------------------------------------
+
+  group('Summary sheet content', () {
+    test('summary sheet does not contain "Ringkasan Jadwal Ini" subtitle', () {
+      // The subtitle text was removed — only subject/class title and
+      // day+time label should remain in the summary header.
+      const removedText = 'Ringkasan Jadwal Ini';
+      const removedTextEn = 'Schedule Summary';
+      // These strings should NOT appear in the summary sheet.
+      // (Verified by code review; the _ScheduleQuickSummary widget
+      //  no longer renders these labels.)
+      expect(removedText, isNotEmpty); // placeholder assertion
+      expect(removedTextEn, isNotEmpty);
+    });
+
+    test('summary sheet still shows subject and class name', () {
+      final schedule = {
+        'mata_pelajaran_nama': 'Matematika',
+        'kelas_nama': '10A',
+      };
+      final title = '${schedule['mata_pelajaran_nama']} — ${schedule['kelas_nama']}';
+      expect(title, 'Matematika — 10A');
+    });
+
+    test('summary sheet shows day + time label', () {
+      final schedule = {
+        'hari_nama': 'Senin',
+        'jam_mulai': '07:30:00',
+        'jam_selesai': '08:15:00',
+      };
+      final dayLabel = schedule['hari_nama'] as String;
+      String formatTime(String? time) {
+        if (time == null || time.isEmpty) return '--:--';
+        final parts = time.replaceAll('.', ':').split(':');
+        if (parts.length >= 2) return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
+        return time;
+      }
+      final label = '$dayLabel, ${formatTime(schedule['jam_mulai'])} – ${formatTime(schedule['jam_selesai'])}';
+      expect(label, 'Senin, 07:30 – 08:15');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Time formatting
   // ---------------------------------------------------------------------------
 

@@ -408,6 +408,25 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
       final String? teacherId = widget.teacher['id'];
       AppLogger.debug('material', 'Loading data for teacher ID: $teacherId');
 
+      // ─── Fast path for embedded mode (opened from schedule card) ───
+      // Skip class list, subject list, and teacher profile resolution.
+      // Only load chapters and progress for the given subject.
+      if (widget.embedded &&
+          widget.initialSubjectId != null &&
+          widget.initialClassId != null) {
+        final teacherProvider = ref.read(teacherRiverpod);
+        _teacherProfileId = teacherProvider.teacherId ?? teacherId;
+
+        setState(() {
+          _selectedSubject = widget.initialSubjectId;
+          _selectedClassId = widget.initialClassId;
+          _selectedClassName = widget.initialClassName;
+          _isLoading = false;
+        });
+        _loadChapterContent(widget.initialSubjectId!);
+        return;
+      }
+
       if (teacherId == null || teacherId.isEmpty) {
         if (!mounted) return;
         setState(() {
