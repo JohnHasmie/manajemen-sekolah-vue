@@ -1041,15 +1041,12 @@ class TeachingScheduleScreenState
                                 onPressed: _loadSchedule,
                               )
                             : _isTableView
-                                    ? RefreshIndicator(
-                                        onRefresh: _forceRefresh,
-                                        color: _getPrimaryColor(),
-                                        child: TeacherScheduleTableView(
-                                          schedules: filteredSchedules,
-                                          dayIdMap: _dayIdMap,
-                                          dayColorMap: _dayColorMap,
-                                          primaryColor: _getPrimaryColor(),
-                                        ),
+                                    ? TeacherScheduleTableView(
+                                        schedules: filteredSchedules,
+                                        dayIdMap: _dayIdMap,
+                                        dayColorMap: _dayColorMap,
+                                        primaryColor: _getPrimaryColor(),
+                                        languageProvider: languageProvider,
                                       )
                                     : RefreshIndicator(
                                         onRefresh: _forceRefresh,
