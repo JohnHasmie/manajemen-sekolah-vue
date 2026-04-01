@@ -584,4 +584,45 @@ class ApiScheduleService {
       return {};
     }
   }
+
+  /// Fetches daily summary (attendance, activity, material progress) for all
+  /// of a teacher's class+subject combos. Cached for 5 minutes.
+  /// Returns a map keyed by "{class_id}__{subject_id}".
+  Future<Map<String, dynamic>> getDailySummary({
+    required String teacherId,
+    String? date,
+  }) async {
+    final dateStr = date ?? DateTime.now().toIso8601String().split('T').first;
+    final cacheKey = 'schedule_daily_summary_${teacherId}_$dateStr';
+
+    // Try cache first
+    final cached = await LocalCacheService.load(
+      cacheKey,
+      ttl: const Duration(minutes: 5),
+    );
+    if (cached != null && cached is Map) {
+      AppLogger.debug('schedule', 'Daily summary loaded from cache');
+      return Map<String, dynamic>.from(cached);
+    }
+
+    try {
+      final response = await dioClient.get(
+        '/teaching-schedule/daily-summary',
+        queryParameters: {
+          'teacher_id': teacherId,
+          'date': dateStr,
+        },
+      );
+
+      final result = response.data is Map<String, dynamic>
+          ? response.data as Map<String, dynamic>
+          : <String, dynamic>{};
+
+      await LocalCacheService.save(cacheKey, result);
+      return result;
+    } catch (e) {
+      AppLogger.error('schedule', 'Error fetching daily summary: $e');
+      return {};
+    }
+  }
 }

@@ -42,8 +42,6 @@ class AttendanceInputForm extends StatelessWidget {
   final List<dynamic> classList;
   final String? selectedSubjectId;
   final List<dynamic> subjectTeacher;
-  final bool showSearch;
-  final TextEditingController searchController;
   final Color primaryColor;
   final LanguageProvider languageProvider;
 
@@ -51,10 +49,12 @@ class AttendanceInputForm extends StatelessWidget {
   final void Function(String? value) onLessonHourChanged;
   final void Function(String? value) onClassChanged;
   final void Function(String? value) onSubjectChanged;
-  final VoidCallback onSearchChanged;
-  final VoidCallback onSearchClosed;
-  final VoidCallback onSearchToggled;
   final VoidCallback onQuickActionsPressed;
+
+  final bool embedded;
+  final String? initialClassName;
+  final String? initialSubjectName;
+  final int? initialLessonHourNumber;
 
   const AttendanceInputForm({
     super.key,
@@ -65,22 +65,97 @@ class AttendanceInputForm extends StatelessWidget {
     required this.classList,
     required this.selectedSubjectId,
     required this.subjectTeacher,
-    required this.showSearch,
-    required this.searchController,
     required this.primaryColor,
     required this.languageProvider,
     required this.onDatePicked,
     required this.onLessonHourChanged,
     required this.onClassChanged,
     required this.onSubjectChanged,
-    required this.onSearchChanged,
-    required this.onSearchClosed,
-    required this.onSearchToggled,
     required this.onQuickActionsPressed,
+    this.embedded = false,
+    this.initialClassName,
+    this.initialSubjectName,
+    this.initialLessonHourNumber,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (embedded) {
+      final dateStr = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(selectedDate);
+
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: ColorUtils.slate200),
+        ),
+        child: Column(
+          children: [
+            // Info row
+            Row(
+              children: [
+                // Subject + class
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.menu_book_rounded, size: 16, color: primaryColor),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              initialSubjectName ?? '-',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ColorUtils.slate800),
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              'Kelas: ${initialClassName ?? '-'} · Jam ke-${initialLessonHourNumber ?? '-'}',
+                              style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Date
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate50,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: ColorUtils.slate200),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.calendar_today_rounded, size: 12, color: ColorUtils.slate500),
+                      const SizedBox(width: 4),
+                      Text(
+                        dateStr,
+                        style: TextStyle(fontSize: 11, color: ColorUtils.slate600, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      );
+    }
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -350,76 +425,7 @@ class AttendanceInputForm extends StatelessWidget {
 
           const SizedBox(height: AppSpacing.md),
 
-          // ── Row 3: Inline student search + quick-fill button ────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (showSearch)
-                Expanded(
-                  child: SizedBox(
-                    height: 36,
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: (_) => onSearchChanged(),
-                      style: TextStyle(fontSize: 13),
-                      decoration: InputDecoration(
-                        hintText: languageProvider.getTranslatedText({
-                          'en': 'Search name/NIS...',
-                          'id': 'Cari nama/NIS...',
-                        }),
-                        prefixIcon: Icon(Icons.search, size: 16),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: const BorderRadius.all(Radius.circular(8)),
-                          borderSide: BorderSide(
-                            color: ColorUtils.slate300,
-                          ),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.close, size: 16),
-                          onPressed: onSearchClosed,
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              else
-                IconButton(
-                  icon: Icon(Icons.search, color: ColorUtils.slate600),
-                  onPressed: onSearchToggled,
-                  tooltip: languageProvider.getTranslatedText({
-                    'en': 'Search Student',
-                    'id': 'Cari Siswa',
-                  }),
-                ),
-
-              if (!showSearch) ...[
-                const SizedBox(width: AppSpacing.sm),
-                Container(
-                  decoration: BoxDecoration(
-                    color: primaryColor.withValues(alpha: 0.1),
-                    borderRadius: const BorderRadius.all(Radius.circular(8)),
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.checklist_rtl, color: primaryColor),
-                    onPressed: onQuickActionsPressed,
-                    tooltip: languageProvider.getTranslatedText({
-                      'en': 'Quick Attendance',
-                      'id': 'Presensi Cepat',
-                    }),
-                    constraints: const BoxConstraints(
-                      minWidth: 36,
-                      minHeight: 36,
-                    ),
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    iconSize: 20,
-                  ),
-                ),
-              ],
-            ],
-          ),
+          const SizedBox(height: AppSpacing.sm),
         ],
       ),
     );

@@ -70,6 +70,7 @@ dependencies:
   flutter_widget_from_html: ^0.17.1
   syncfusion_flutter_core: any
   upgrader: ^12.5.0
+  flutter_sticky_header: ^0.8.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
