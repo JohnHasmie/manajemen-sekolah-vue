@@ -67,7 +67,6 @@ class ClassActivityScreen extends ConsumerStatefulWidget {
 class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
   static const String _prefKeyLastCacheKey = 'class_activity_last_cache_key';
 
-  List<dynamic> _scheduleList = [];
   List<dynamic> _subjectList = [];
   bool _isLoading = true;
   String _teacherId = '';
@@ -152,7 +151,6 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
               final cachedData = Map<String, dynamic>.from(cached);
               setState(() {
                 _classList = List<dynamic>.from(cachedData['classes'] ?? []);
-                _scheduleList = List<dynamic>.from(cachedData['schedules'] ?? []);
                 if (_classList.isNotEmpty) _isLoading = false;
               });
             }
@@ -306,7 +304,6 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
           final cachedData = Map<String, dynamic>.from(cached);
           setState(() {
             _classList = List<dynamic>.from(cachedData['classes'] ?? []);
-            _scheduleList = List<dynamic>.from(cachedData['schedules'] ?? []);
             _isLoading = false;
           });
         }
@@ -332,7 +329,6 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
 
       setState(() {
         _classList = classes;
-        _scheduleList = schedules;
         _isLoading = false;
       });
 
