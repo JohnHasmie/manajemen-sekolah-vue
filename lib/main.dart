@@ -51,6 +51,7 @@ import 'package:manajemensekolah/core/services/log_service.dart';
 import 'package:manajemensekolah/core/services/performance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:upgrader/upgrader.dart';
 
 /// Global navigator key that enables navigation from anywhere without a BuildContext.
 /// Like a global `$router` reference in Vue, or using `app()->make('redirect')` in Laravel.
@@ -300,6 +301,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
     }
 
     final langProvider = ref.watch(languageRiverpod);
+    final isIndonesian = langProvider.currentLanguage == 'id';
+
     return MaterialApp.router(
       routerConfig: appRouter,
       title: langProvider.getTranslatedText({
@@ -318,6 +321,14 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
       ],
       supportedLocales: const [Locale('en', 'US'), Locale('id', 'ID')],
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return UpgradeAlert(
+          upgrader: Upgrader(
+            languageCode: isIndonesian ? 'id' : 'en',
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }
