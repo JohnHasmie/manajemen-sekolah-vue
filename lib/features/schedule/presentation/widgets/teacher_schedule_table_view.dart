@@ -5,6 +5,9 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/embedded_activity_list_screen.dart';
+import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 
 const _kDayOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
@@ -27,20 +30,30 @@ const _kDayFullTranslations = <String, Map<String, String>>{
 };
 
 class TeacherScheduleTableView extends StatefulWidget {
+  final List<dynamic> schedules;
+  final Map<String, String> dayIdMap;
+  final Map<String, Color> dayColorMap;
+  final Color primaryColor;
+  final List<String> dayOptions;
+  final String teacherId;
+  final String teacherNama;
+  final Map<String, dynamic>? dailySummary;
+  final VoidCallback onRefresh;
+  final LanguageProvider? languageProvider;
+
   const TeacherScheduleTableView({
     super.key,
     required this.schedules,
     required this.dayIdMap,
     required this.dayColorMap,
     required this.primaryColor,
+    required this.dayOptions,
+    required this.teacherId,
+    required this.teacherNama,
+    required this.onRefresh,
+    this.dailySummary,
     this.languageProvider,
   });
-
-  final List<dynamic> schedules;
-  final Map<String, String> dayIdMap;
-  final Map<String, Color> dayColorMap;
-  final Color primaryColor;
-  final LanguageProvider? languageProvider;
 
   @override
   State<TeacherScheduleTableView> createState() =>
@@ -48,14 +61,38 @@ class TeacherScheduleTableView extends StatefulWidget {
 }
 
 class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  late List<String> _availableDays;
+    with TickerProviderStateMixin {
+  TabController? _tabController;
+  List<String> _availableDays = [];
 
   @override
   void initState() {
     super.initState();
-    _availableDays = _computeAvailableDays();
+    _rebuildTabs();
+  }
+
+  @override
+  void didUpdateWidget(TeacherScheduleTableView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.schedules != widget.schedules) {
+      _rebuildTabs();
+    }
+  }
+
+  void _rebuildTabs() {
+    final newDays = _computeAvailableDays();
+    if (newDays.length == _availableDays.length &&
+        _tabController != null) {
+      // Same number of tabs — just update the day list, keep controller.
+      _availableDays = newDays;
+      return;
+    }
+    _availableDays = newDays;
+    _tabController?.dispose();
+    if (_availableDays.isEmpty) {
+      _tabController = null;
+      return;
+    }
     _tabController = TabController(
       length: _availableDays.length,
       vsync: this,
@@ -64,27 +101,8 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
   }
 
   @override
-  void didUpdateWidget(TeacherScheduleTableView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.schedules != widget.schedules) {
-      final newDays = _computeAvailableDays();
-      if (newDays.length != _availableDays.length) {
-        _availableDays = newDays;
-        _tabController.dispose();
-        _tabController = TabController(
-          length: _availableDays.length,
-          vsync: this,
-          initialIndex: _findTodayTabIndex(),
-        );
-      } else {
-        _availableDays = newDays;
-      }
-    }
-  }
-
-  @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose();
     super.dispose();
   }
 
@@ -201,8 +219,6 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
         nowMinutes < toMinutes(endTime);
   }
 
-  Color _getDayColor(String day) =>
-      widget.dayColorMap[day] ?? const Color(0xFF6B7280);
 
   // ── Data grouping ──
 
@@ -223,11 +239,134 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
     return widget.languageProvider?.getTranslatedText(map) ?? map['id'] ?? '';
   }
 
+  // ── Summary & Navigation helpers ──
+
+  Map<String, dynamic>? _getSummary(Map<String, dynamic> schedule, String dayName) {
+    if (widget.dailySummary == null) return null;
+    // Only show summary if it's the schedule's day
+    if (!_isDayToday(dayName)) return null;
+    final summaries = widget.dailySummary!['summaries'];
+    if (summaries == null || summaries is! Map) return null;
+    final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
+    final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
+    if (classId == null || subjectId == null) return null;
+    final key = '${classId}__$subjectId';
+    final s = summaries[key];
+    return s is Map<String, dynamic> ? s : null;
+  }
+
+  bool _hasAttendance(Map<String, dynamic>? summary) =>
+      summary != null && summary['attendance']?['filled'] == true;
+
+  bool _hasActivity(Map<String, dynamic>? summary) =>
+      summary != null && summary['class_activity']?['filled'] == true;
+
+  bool _hasMaterial(Map<String, dynamic>? summary) =>
+      summary != null && (summary['material_progress']?['checked'] ?? 0) > 0;
+
+  DateTime _computeScheduleDate(Map<String, dynamic> schedule) {
+    final now = DateTime.now();
+    final scheduleDay = widget.dayIdMap.entries
+        .firstWhere(
+          (entry) => entry.value.toString() == (schedule['day_id'] ?? schedule['hari_id'])?.toString(),
+          orElse: () => const MapEntry('Senin', '1'),
+        )
+        .key;
+    final scheduleDayIndex = widget.dayOptions.indexOf(scheduleDay);
+    final todayIndex = now.weekday;
+    int daysUntil = scheduleDayIndex - todayIndex;
+    if (daysUntil < 0) daysUntil += 7;
+    return now.add(Duration(days: daysUntil));
+  }
+
+  void _openAttendance(BuildContext context, Map<String, dynamic> schedule, bool hasData, Map<String, dynamic>? summary) {
+    _showAttendanceDialog(context, schedule, 1);
+  }
+
+  void _showAttendanceDialog(BuildContext context, Map<String, dynamic> schedule, int tabIndex) {
+    final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
+    final subjectName = (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'])?.toString();
+    final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
+    final className = (schedule['class_name'] ?? schedule['kelas_nama'])?.toString();
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black54,
+      pageBuilder: (_, __, ___) => AttendancePage(
+        teacher: {'id': widget.teacherId, 'nama': widget.teacherNama},
+        initialDate: _computeScheduleDate(schedule),
+        initialSubjectId: subjectId,
+        initialSubjectName: subjectName,
+        initialclassId: classId,
+        initialClassName: className,
+        initialLessonHourNumber: int.tryParse(schedule['jam_ke']?.toString() ?? ''),
+        initialTabIndex: tabIndex,
+        embedded: true,
+      ),
+    );
+  }
+
+  void _openMaterial(BuildContext context, Map<String, dynamic> schedule) {
+    final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
+    final subjectName = (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'])?.toString();
+    final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
+    final className = (schedule['class_name'] ?? schedule['kelas_nama'])?.toString();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.9,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: TeacherMaterialScreen(
+            teacher: {'id': widget.teacherId, 'nama': widget.teacherNama},
+            initialSubjectId: subjectId,
+            initialSubjectName: subjectName,
+            initialClassId: classId,
+            initialClassName: className,
+            embedded: true,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openClassActivity(BuildContext context, Map<String, dynamic> schedule) {
+    final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
+    final subjectName = (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'])?.toString();
+    final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
+    final className = (schedule['class_name'] ?? schedule['kelas_nama'])?.toString();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.9,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: EmbeddedActivityListScreen(
+            teacherId: widget.teacherId,
+            teacherName: widget.teacherNama,
+            classId: classId ?? '',
+            className: className ?? '',
+            subjectId: subjectId ?? '',
+            subjectName: subjectName ?? '',
+            initialDate: _computeScheduleDate(schedule),
+          ),
+        ),
+      ),
+    );
+  }
+
   // ── Build ──
 
   @override
   Widget build(BuildContext context) {
-    if (_availableDays.isEmpty) {
+    if (_availableDays.isEmpty || _tabController == null) {
       return const Center(child: Text('No schedule data'));
     }
 
@@ -316,13 +455,18 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
     final schedules = _getSchedulesForDay(dayName);
     final isToday = _isDayToday(dayName);
     final isPastDay = _isDayPast(dayName);
-    final dayColor = _getDayColor(dayName);
     final fullLabel = _kDayFullTranslations[dayName];
     final dayLabel = fullLabel != null ? _tr(fullLabel) : dayName;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-      children: [
+    final nextScheduleIdx = schedules.indexWhere((s) => !_isHourPast(dayName, s) && !_isHourCurrent(dayName, s));
+
+    return RefreshIndicator(
+      onRefresh: () async => widget.onRefresh(),
+      color: widget.primaryColor,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        children: [
         // Day header
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -332,7 +476,7 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
                 width: 4,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: isPastDay ? ColorUtils.slate300 : dayColor,
+                  color: isPastDay ? ColorUtils.slate300 : widget.primaryColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -351,7 +495,7 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: dayColor.withValues(alpha: 0.12),
+                    color: widget.primaryColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -359,7 +503,7 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: dayColor,
+                      color: widget.primaryColor,
                     ),
                   ),
                 ),
@@ -400,26 +544,28 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
             final schedule = entry.value;
             final isPast = _isHourPast(dayName, schedule);
             final isCurrent = _isHourCurrent(dayName, schedule);
+            final isNext = idx == nextScheduleIdx;
 
             return _buildSessionRow(
               schedule: schedule,
               dayName: dayName,
-              dayColor: dayColor,
               isPast: isPast,
               isCurrent: isCurrent,
+              isNext: isNext,
               isLast: idx == schedules.length - 1,
             );
           }),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildSessionRow({
     required Map<String, dynamic> schedule,
     required String dayName,
-    required Color dayColor,
     required bool isPast,
     required bool isCurrent,
+    required bool isNext,
     required bool isLast,
   }) {
     final sessionNum = schedule['jam_ke']?.toString() ?? '-';
@@ -431,147 +577,226 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
         schedule['mata_pelajaran_nama']?.toString() ?? '-';
     final className = schedule['kelas_nama']?.toString() ?? '-';
 
-    final opacity = isPast ? 0.5 : 1.0;
-    final bgColor = isCurrent
-        ? dayColor.withValues(alpha: 0.06)
-        : Colors.white;
-    final borderColor = isCurrent
-        ? dayColor.withValues(alpha: 0.3)
-        : ColorUtils.slate200;
+    final primary = widget.primaryColor;
 
-    return Opacity(
-      opacity: opacity,
-      child: Container(
-        margin: EdgeInsets.only(bottom: isLast ? 0 : 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
-          boxShadow: isPast
-              ? []
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
+    // Summary data for buttons
+    final summary = _getSummary(schedule, dayName);
+    final attFilled = _hasAttendance(summary);
+    final matFilled = _hasMaterial(summary);
+    final actFilled = _hasActivity(summary);
+
+    final decoration = BoxDecoration(
+      color: isCurrent 
+          ? primary.withValues(alpha: 0.08) 
+          : (isNext ? primary.withValues(alpha: 0.04) : Colors.white),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: isCurrent 
+            ? primary.withValues(alpha: 0.5) 
+            : (isNext ? primary.withValues(alpha: 0.2) : ColorUtils.slate200),
+        width: isCurrent ? 1.5 : (isNext ? 1.2 : 1.0),
+      ),
+      boxShadow: isCurrent 
+          ? [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.15),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              )
+            ] 
+          : (isNext ? [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              )
+            ] : []),
+    );
+
+    return Container(
+      margin: EdgeInsets.only(bottom: isLast ? 0 : 8),
+      padding: const EdgeInsets.all(12),
+      decoration: decoration,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Session number + time column
+          SizedBox(
+            width: 56,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: isCurrent || isNext
+                        ? primary
+                        : (isPast ? ColorUtils.slate200 : ColorUtils.slate100),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
-        ),
-        child: Row(
-          children: [
-            // Session number + time column
-            SizedBox(
-              width: 56,
-              child: Column(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: isCurrent
-                          ? dayColor
-                          : dayColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      sessionNum,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: isCurrent ? Colors.white : dayColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    startTime,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: ColorUtils.slate600,
-                    ),
-                  ),
-                  Text(
-                    endTime,
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: ColorUtils.slate400,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 12),
-
-            // Divider line
-            Container(
-              width: 1,
-              height: 48,
-              color: isCurrent
-                  ? dayColor.withValues(alpha: 0.3)
-                  : ColorUtils.slate200,
-            ),
-
-            const SizedBox(width: 12),
-
-            // Subject + class info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    subjectName,
+                  alignment: Alignment.center,
+                  child: Text(
+                    sessionNum,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isCurrent ? dayColor : ColorUtils.slate800,
+                      fontWeight: FontWeight.w700,
+                      color: isCurrent || isNext ? Colors.white : (isPast ? ColorUtils.slate500 : ColorUtils.slate700),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: dayColor.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      className,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: dayColor,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  startTime,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: isPast ? ColorUtils.slate400 : ColorUtils.slate700,
+                  ),
+                ),
+                Text(
+                  endTime,
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: isPast ? ColorUtils.slate300 : ColorUtils.slate400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          // Divider
+          Container(
+            width: 1,
+            height: 48,
+            color: ColorUtils.slate200,
+          ),
+
+          const SizedBox(width: 12),
+
+          // Subject + Class Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        subjectName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isPast ? ColorUtils.slate500 : ColorUtils.slate800,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  className,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: isPast ? ColorUtils.slate400 : ColorUtils.slate500,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
-            // Current indicator
-            if (isCurrent)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: dayColor,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  _tr({'en': 'Now', 'id': 'Now'}),
-                  style: const TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
+          const SizedBox(width: 12),
+
+          // Action Buttons Column
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _MiniActionButton(
+                label: _tr({'en': 'Atten', 'id': 'Presensi'}),
+                isFilled: attFilled,
+                isPast: isPast,
+                primary: primary,
+                onTap: () => _openAttendance(context, schedule, attFilled, summary),
               ),
-          ],
+              const SizedBox(width: 4),
+              _MiniActionButton(
+                label: _tr({'en': 'Mat', 'id': 'Materi'}),
+                isFilled: matFilled,
+                isPast: isPast,
+                primary: primary,
+                onTap: () => _openMaterial(context, schedule),
+              ),
+              const SizedBox(width: 4),
+              _MiniActionButton(
+                label: _tr({'en': 'Act', 'id': 'Kegiatan'}),
+                isFilled: actFilled,
+                isPast: isPast,
+                primary: primary,
+                onTap: () => _openClassActivity(context, schedule),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Compact action button for table view rows.
+class _MiniActionButton extends StatelessWidget {
+  final String label;
+  final bool isFilled;
+  final bool isPast;
+  final Color primary;
+  final VoidCallback onTap;
+
+  const _MiniActionButton({
+    required this.label,
+    required this.isFilled,
+    required this.isPast,
+    required this.primary,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isFilled ? primary : Colors.transparent;
+    final borderColor = isFilled 
+        ? color 
+        : (isPast ? ColorUtils.slate200 : ColorUtils.slate200);
+    final textColor = isFilled 
+        ? Colors.white 
+        : (isPast ? ColorUtils.slate400 : primary);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        constraints: const BoxConstraints(minWidth: 60),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: borderColor,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: textColor,
+          ),
         ),
       ),
     );

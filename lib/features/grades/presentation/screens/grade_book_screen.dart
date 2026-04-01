@@ -548,8 +548,10 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
+          children: [
           // Pattern #7 Gradient Header — extracted to _GradeBookHeader
           _GradeBookHeader(
             primaryColor: _getPrimaryColor(),
@@ -732,6 +734,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                               vertical: 12,
                             ),
                           ),
+                          onSubmitted: (_) => FocusScope.of(context).unfocus(),
                         ),
                       ),
 
@@ -823,6 +826,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                   ),
           ),
         ],
+      ),
       ),
       floatingActionButton: (_isEditMode || !_canEdit || _isReadOnly)
           ? null

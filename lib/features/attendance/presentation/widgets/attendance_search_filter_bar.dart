@@ -86,6 +86,7 @@ class AttendanceSearchFilterBar extends StatelessWidget {
                   ),
                 ),
                 onChanged: (_) => onSearchChanged(),
+                onSubmitted: (_) => FocusScope.of(context).unfocus(),
               ),
             ),
           ),

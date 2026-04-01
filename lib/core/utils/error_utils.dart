@@ -122,6 +122,11 @@ class ErrorUtils {
       return 'Terlalu banyak permintaan. Silakan tunggu beberapa saat lagi.';
     }
 
+    // Validation Errors (Laravel)
+    if (errorStr.contains('the date field must be a date before or equal to today')) {
+      return 'Tanggal tidak boleh lebih dari hari ini.';
+    }
+
     if (errorStr.contains('exception') || errorStr.contains('failed')) {
       return 'Terjadi kesalahan sistem, silakan hubungi admin.';
     }

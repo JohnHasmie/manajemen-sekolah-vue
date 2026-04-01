@@ -71,9 +71,6 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.schedules != widget.schedules) {
       _hasScrolledToTarget = false;
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(0);
-      }
     }
   }
 
@@ -309,7 +306,7 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
-            '$count ${widget.languageProvider.getTranslatedText({'en': count == 1 ? 'class' : 'classes', 'id': 'kelas'})}',
+            '$count ${widget.languageProvider.getTranslatedText({'en': count == 1 ? 'session' : 'sessions', 'id': 'sesi'})}',
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
           ),
         ),
@@ -347,20 +344,14 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
         firstScheduleKey: cardIdx == 0 ? widget.firstScheduleKey : null,
         actionButtonsKey: cardIdx == 0 ? widget.actionButtonsKey : null,
         isPast: isPast,
+        isCurrent: isScrollTarget && scrollTarget.isCurrent,
+        isNext: isScrollTarget && !scrollTarget.isCurrent,
         dailySummary: widget.dailySummary,
       );
 
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: isScrollTarget
-            ? _ScrollTargetBadge(
-                key: _scrollTargetKey,
-                isCurrent: scrollTarget.isCurrent,
-                primaryColor: _primaryColor(),
-                languageProvider: widget.languageProvider,
-                child: card,
-              )
-            : card,
+        child: isScrollTarget ? KeyedSubtree(key: _scrollTargetKey, child: card) : card,
       );
     });
   }
@@ -386,101 +377,4 @@ class _ScrollTarget {
 }
 
 /// Overlays a small "Now" / "Next" badge on the top-right of the target card.
-/// Fades in after scroll settles so the user sees which lesson was targeted.
-class _ScrollTargetBadge extends StatefulWidget {
-  final bool isCurrent;
-  final Color primaryColor;
-  final LanguageProvider languageProvider;
-  final Widget child;
 
-  const _ScrollTargetBadge({
-    super.key,
-    required this.isCurrent,
-    required this.primaryColor,
-    required this.languageProvider,
-    required this.child,
-  });
-
-  @override
-  State<_ScrollTargetBadge> createState() => _ScrollTargetBadgeState();
-}
-
-class _ScrollTargetBadgeState extends State<_ScrollTargetBadge>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _opacity;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    Future.delayed(const Duration(milliseconds: 700), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final color = widget.primaryColor;
-    final label = widget.isCurrent
-        ? widget.languageProvider.getTranslatedText({'en': 'Now', 'id': 'Sekarang'})
-        : widget.languageProvider.getTranslatedText({'en': 'Next', 'id': 'Selanjutnya'});
-    final icon = widget.isCurrent ? Icons.play_circle_fill_rounded : Icons.arrow_forward_rounded;
-
-    return Stack(
-      children: [
-        widget.child,
-        Positioned(
-          top: 8,
-          right: 4,
-          child: FadeTransition(
-            opacity: _opacity,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: widget.isCurrent ? color : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: color.withValues(alpha: widget.isCurrent ? 1.0 : 0.5),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.25),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 11, color: widget.isCurrent ? Colors.white : color),
-                  const SizedBox(width: 3),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: widget.isCurrent ? Colors.white : color,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}

@@ -24,6 +24,7 @@ class EnhancedSearchBar extends StatefulWidget {
   final List<String>? filterOptions;
   final String? selectedFilter;
   final ValueChanged<String>? onFilterChanged;
+  final ValueChanged<String>? onSubmitted;
   final bool showFilter;
 
   const EnhancedSearchBar({
@@ -34,6 +35,7 @@ class EnhancedSearchBar extends StatefulWidget {
     this.filterOptions,
     this.selectedFilter,
     this.onFilterChanged,
+    this.onSubmitted,
     this.showFilter = false,
   });
 
@@ -87,6 +89,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
                     isDense: true,
                   ),
                   onChanged: widget.onChanged,
+                  onSubmitted: widget.onSubmitted,
                 ),
               ),
             ),
