@@ -1,6 +1,7 @@
 // Card-list view for the teacher's teaching schedule screen.
 // Groups schedule cards by day (Senin → Sabtu) with sticky day dividers.
-// Past days/hours are visually dimmed. Auto-scrolls to today's section.
+// Past days/hours are visually dimmed. Auto-scrolls to the current/next
+// lesson with a smooth spring-like animation.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
@@ -52,7 +53,10 @@ class TeacherScheduleCardView extends StatefulWidget {
 
 class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
   final ScrollController _scrollController = ScrollController();
-  bool _hasScrolledToToday = false;
+  bool _hasScrolledToTarget = false;
+
+  /// Key attached to the card we want to scroll to (current or next lesson).
+  final GlobalKey _scrollTargetKey = GlobalKey();
 
   static const _dayOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 
@@ -66,7 +70,7 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
   void didUpdateWidget(TeacherScheduleCardView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.schedules != widget.schedules) {
-      _hasScrolledToToday = false;
+      _hasScrolledToTarget = false;
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(0);
       }
@@ -74,6 +78,8 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
   }
 
   Color _primaryColor() => ColorUtils.getRoleColor('guru');
+
+  // ── Day / time helpers ──
 
   String _getDayName(Map<String, dynamic> schedule) {
     final dayId = (schedule['day_id'] ?? schedule['hari_id'])?.toString();
@@ -119,6 +125,21 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
     return now.hour > endHour || (now.hour == endHour && now.minute >= endMinute);
   }
 
+  bool _isHourCurrent(Map<String, dynamic> schedule) {
+    final startTime = (schedule['jam_mulai'] ?? schedule['start_time'])?.toString();
+    final endTime = (schedule['jam_selesai'] ?? schedule['end_time'])?.toString();
+    if (startTime == null || endTime == null) return false;
+
+    int toMinutes(String t) {
+      final parts = t.replaceAll('.', ':').split(':');
+      if (parts.length < 2) return 0;
+      return (int.tryParse(parts[0]) ?? 0) * 60 + (int.tryParse(parts[1]) ?? 0);
+    }
+
+    final nowMinutes = DateTime.now().hour * 60 + DateTime.now().minute;
+    return nowMinutes >= toMinutes(startTime) && nowMinutes < toMinutes(endTime);
+  }
+
   int _startTimeMinutes(Map<String, dynamic> schedule) {
     final time = (schedule['jam_mulai'] ?? schedule['start_time'])?.toString();
     if (time == null || time.isEmpty) return 0;
@@ -126,6 +147,8 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
     if (parts.length < 2) return 0;
     return (int.tryParse(parts[0]) ?? 0) * 60 + (int.tryParse(parts[1]) ?? 0);
   }
+
+  // ── Grouping ──
 
   List<_DayGroup> _groupByDay() {
     final grouped = <String, List<Map<String, dynamic>>>{};
@@ -146,38 +169,76 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
     return groups;
   }
 
-  void _autoScroll(List<_DayGroup> groups) {
-    if (_hasScrolledToToday) return;
-    _hasScrolledToToday = true;
+  // ── Scroll target finder ──
 
-    int? targetGroupIdx;
-    for (int i = 0; i < groups.length; i++) {
-      if (_isDayToday(groups[i].dayName)) { targetGroupIdx = i; break; }
-      if (!_isDayPast(groups[i].dayName) && targetGroupIdx == null) targetGroupIdx = i;
+  /// Finds the card that should be scrolled to:
+  /// 1. The currently running lesson (if any)
+  /// 2. The next upcoming lesson today
+  /// 3. The first lesson of the next school day
+  _ScrollTarget? _findScrollTarget(List<_DayGroup> groups) {
+    // Today: find current or next lesson
+    for (int g = 0; g < groups.length; g++) {
+      if (!_isDayToday(groups[g].dayName)) continue;
+      for (int i = 0; i < groups[g].schedules.length; i++) {
+        final schedule = groups[g].schedules[i];
+        if (_isHourCurrent(schedule)) {
+          return _ScrollTarget(groupIdx: g, scheduleIdx: i, isCurrent: true);
+        }
+        if (!_isHourPast(schedule)) {
+          return _ScrollTarget(groupIdx: g, scheduleIdx: i, isCurrent: false);
+        }
+      }
     }
 
-    if (targetGroupIdx == null || targetGroupIdx == 0) return;
+    // Today passed entirely — find first lesson of next upcoming day
+    for (int g = 0; g < groups.length; g++) {
+      if (!_isDayPast(groups[g].dayName) && !_isDayToday(groups[g].dayName)) {
+        return _ScrollTarget(groupIdx: g, scheduleIdx: 0, isCurrent: false);
+      }
+    }
 
-    final target = targetGroupIdx;
+    return null;
+  }
+
+  // ── Auto-scroll with ensureVisible ──
+
+  void _autoScroll() {
+    if (_hasScrolledToTarget) return;
+    _hasScrolledToTarget = true;
+
+    // Wait for layout to complete, then scroll to the keyed widget.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      double offset = 0;
-      for (int i = 0; i < target; i++) {
-        offset += 44 + groups[i].schedules.length * 200;
-      }
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      if (offset > 0 && maxScroll > 0) {
-        _scrollController.animateTo(offset.clamp(0, maxScroll), duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
-      }
+      if (!mounted) return;
+      _performScrollToTarget();
     });
   }
+
+  Future<void> _performScrollToTarget() async {
+    // Small delay to ensure sticky headers are fully laid out.
+    await Future.delayed(const Duration(milliseconds: 150));
+    if (!mounted) return;
+    final targetContext = _scrollTargetKey.currentContext;
+    if (targetContext == null || !targetContext.mounted) return;
+
+    Scrollable.ensureVisible(
+      targetContext,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutCubic,
+      alignment: 0.15,
+    );
+  }
+
+  // ── Build ──
 
   @override
   Widget build(BuildContext context) {
     final groups = _groupByDay();
     final primary = _primaryColor();
+    final scrollTarget = _findScrollTarget(groups);
 
-    _autoScroll(groups);
+    if (scrollTarget != null) {
+      _autoScroll();
+    }
 
     // Pre-compute card start indices per group
     final startIndices = <int>[];
@@ -199,7 +260,7 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
         ),
         sliver: SliverList(
           delegate: SliverChildListDelegate(
-            _buildCardsForGroup(group, startIndices[g]),
+            _buildCardsForGroup(group, startIndices[g], g, scrollTarget),
           ),
         ),
       ));
@@ -241,12 +302,27 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
         const SizedBox(width: 8),
         Expanded(child: Divider(height: 1, color: isPastDay ? ColorUtils.slate200 : color.withValues(alpha: 0.3))),
         const SizedBox(width: 8),
-        Text('$count', style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500)),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            '$count ${widget.languageProvider.getTranslatedText({'en': count == 1 ? 'class' : 'classes', 'id': 'kelas'})}',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
+          ),
+        ),
       ],
     );
   }
 
-  List<Widget> _buildCardsForGroup(_DayGroup group, int startIdx) {
+  List<Widget> _buildCardsForGroup(
+    _DayGroup group,
+    int startIdx,
+    int groupIdx,
+    _ScrollTarget? scrollTarget,
+  ) {
     final isPastDay = _isDayPast(group.dayName);
     final isToday = _isDayToday(group.dayName);
 
@@ -254,31 +330,157 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
       final schedule = group.schedules[i];
       final isPast = isPastDay || (isToday && _isHourPast(schedule));
       final cardIdx = startIdx + i;
+      final isScrollTarget = scrollTarget != null &&
+          scrollTarget.groupIdx == groupIdx &&
+          scrollTarget.scheduleIdx == i;
+
+      final card = ScheduleCardItem(
+        schedule: schedule,
+        languageProvider: widget.languageProvider,
+        index: cardIdx,
+        dayIdMap: widget.dayIdMap,
+        dayColorMap: widget.dayColorMap,
+        dayOptions: widget.dayOptions,
+        selectedAcademicYear: widget.selectedAcademicYear,
+        teacherId: widget.teacherId,
+        teacherNama: widget.teacherNama,
+        firstScheduleKey: cardIdx == 0 ? widget.firstScheduleKey : null,
+        actionButtonsKey: cardIdx == 0 ? widget.actionButtonsKey : null,
+        isPast: isPast,
+        dailySummary: widget.dailySummary,
+      );
 
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ScheduleCardItem(
-          schedule: schedule,
-          languageProvider: widget.languageProvider,
-          index: cardIdx,
-          dayIdMap: widget.dayIdMap,
-          dayColorMap: widget.dayColorMap,
-          dayOptions: widget.dayOptions,
-          selectedAcademicYear: widget.selectedAcademicYear,
-          teacherId: widget.teacherId,
-          teacherNama: widget.teacherNama,
-          firstScheduleKey: cardIdx == 0 ? widget.firstScheduleKey : null,
-          actionButtonsKey: cardIdx == 0 ? widget.actionButtonsKey : null,
-          isPast: isPast,
-          dailySummary: widget.dailySummary,
-        ),
+        child: isScrollTarget
+            ? _ScrollTargetBadge(
+                key: _scrollTargetKey,
+                isCurrent: scrollTarget.isCurrent,
+                primaryColor: _primaryColor(),
+                languageProvider: widget.languageProvider,
+                child: card,
+              )
+            : card,
       );
     });
   }
 }
 
+// ── Private models ──
+
 class _DayGroup {
   final String dayName;
   final List<Map<String, dynamic>> schedules;
   const _DayGroup({required this.dayName, required this.schedules});
+}
+
+class _ScrollTarget {
+  final int groupIdx;
+  final int scheduleIdx;
+  final bool isCurrent;
+  const _ScrollTarget({
+    required this.groupIdx,
+    required this.scheduleIdx,
+    required this.isCurrent,
+  });
+}
+
+/// Overlays a small "Now" / "Next" badge on the top-right of the target card.
+/// Fades in after scroll settles so the user sees which lesson was targeted.
+class _ScrollTargetBadge extends StatefulWidget {
+  final bool isCurrent;
+  final Color primaryColor;
+  final LanguageProvider languageProvider;
+  final Widget child;
+
+  const _ScrollTargetBadge({
+    super.key,
+    required this.isCurrent,
+    required this.primaryColor,
+    required this.languageProvider,
+    required this.child,
+  });
+
+  @override
+  State<_ScrollTargetBadge> createState() => _ScrollTargetBadgeState();
+}
+
+class _ScrollTargetBadgeState extends State<_ScrollTargetBadge>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.primaryColor;
+    final label = widget.isCurrent
+        ? widget.languageProvider.getTranslatedText({'en': 'Now', 'id': 'Sekarang'})
+        : widget.languageProvider.getTranslatedText({'en': 'Next', 'id': 'Selanjutnya'});
+    final icon = widget.isCurrent ? Icons.play_circle_fill_rounded : Icons.arrow_forward_rounded;
+
+    return Stack(
+      children: [
+        widget.child,
+        Positioned(
+          top: 8,
+          right: 4,
+          child: FadeTransition(
+            opacity: _opacity,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: widget.isCurrent ? color : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: color.withValues(alpha: widget.isCurrent ? 1.0 : 0.5),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 11, color: widget.isCurrent ? Colors.white : color),
+                  const SizedBox(width: 3),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: widget.isCurrent ? Colors.white : color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

@@ -10,7 +10,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/embedded_activity_list_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_info_tag.dart';
 
@@ -428,14 +428,14 @@ class ScheduleCardItem extends StatelessWidget {
         height: MediaQuery.of(context).size.height * 0.9,
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          child: ClassActivityScreen(
+          child: EmbeddedActivityListScreen(
+            teacherId: teacherId,
+            teacherName: teacherNama,
+            classId: _classId ?? '',
+            className: _className ?? '',
+            subjectId: _subjectId ?? '',
+            subjectName: _subjectName ?? '',
             initialDate: _computeScheduleDate(),
-            initialSubjectId: _subjectId,
-            initialSubjectName: _subjectName,
-            initialClassId: _classId,
-            initialClassName: _className,
-            autoShowActivityDialog: false,
-            embedded: true,
           ),
         ),
       ),
@@ -534,6 +534,7 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
+
 // ---------------------------------------------------------------------------
 // Quick summary bottom sheet shown on card tap
 // ---------------------------------------------------------------------------
@@ -612,11 +613,6 @@ class _ScheduleQuickSummary extends StatelessWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ColorUtils.slate900),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
-          Text(
-            languageProvider.getTranslatedText({'en': 'Schedule Summary', 'id': 'Ringkasan Jadwal Ini'}),
-            style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
-          ),
           const SizedBox(height: 2),
           Text(
             _buildDayTimeLabel(),
@@ -661,6 +657,56 @@ class _ScheduleQuickSummary extends StatelessWidget {
             onTap: onMaterialTap,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _SummaryRow({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ColorUtils.slate800)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: TextStyle(fontSize: 12, color: ColorUtils.slate500)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: ColorUtils.slate400, size: 20),
+          ],
+        ),
       ),
     );
   }
@@ -862,52 +908,3 @@ class _BreakdownItem extends StatelessWidget {
   }
 }
 
-class _SummaryRow extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _SummaryRow({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ColorUtils.slate800)),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: TextStyle(fontSize: 12, color: ColorUtils.slate500)),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: ColorUtils.slate400, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-}

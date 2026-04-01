@@ -224,6 +224,50 @@ class AttendancePageState extends ConsumerState<AttendancePage>
       final cacheKey = _buildPresenceCacheKey();
       final teacherId = widget.teacher['id']?.toString() ?? '';
 
+      // ─── Fast path for embedded mode (opened from schedule card) ───
+      // Skip class list, subject list, and schedule auto-detection.
+      // Only load students and lesson hours (needed for the input form).
+      if (widget.embedded &&
+          widget.initialclassId != null &&
+          widget.initialSubjectId != null) {
+        final [studentList, lessonHours] = await Future.wait([
+          _loadWithCache(
+            cacheKey: 'school_student_data_$academicYearId',
+            ttl: const Duration(hours: 6),
+            apiFetcher: () => getIt<ApiStudentService>().getStudent(
+              academicYearId: academicYearId,
+            ),
+            useCache: useCache,
+          ),
+          _loadWithCache(
+            cacheKey: 'school_lesson_hour_data',
+            ttl: const Duration(hours: 24),
+            apiFetcher: () => getIt<ApiScheduleService>().getJamPelajaran(),
+            useCache: useCache,
+          ),
+        ]);
+
+        if (!mounted) return;
+
+        setState(() {
+          _studentList = studentList.map((s) => Student.fromJson(s)).toList();
+          final seen = <String>{};
+          _lessonHours = lessonHours.where((lh) {
+            final key =
+                '${lh['hour_number'] ?? lh['name']}_${lh['start_time']}_${lh['end_time']}';
+            return seen.add(key);
+          }).toList();
+          _filteredStudentList = _studentList;
+          for (var student in _studentList) {
+            _attendanceStatus[student.id] = 'hadir';
+          }
+          _isLoadingInput = false;
+        });
+
+        _detectCurrentLessonHour();
+        return;
+      }
+
       // ─── Step 1: Try TeacherProvider for classList (populated by Dashboard) ───
       final teacherProvider = ref.read(teacherRiverpod);
 
