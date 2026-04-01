@@ -32,6 +32,8 @@ KamilEdu is a school management platform that provides:
 - **Staff**: Administration, student data, inventory, correspondence
 - **Parent (Wali Murid)**: View child's attendance, grades, billing, announcements, report cards
 
+The app includes an **in-app update prompt** — on startup it checks the Play Store / App Store for a newer version and prompts users to update via the [`upgrader`](https://pub.dev/packages/upgrader) package.
+
 The app connects to two backend services:
 1. **Main API** (Laravel) - Core CRUD operations, authentication, school management
 2. **AI API** (Laravel) - AI-powered features: learning recommendations, material generation, lesson plan generation
@@ -51,6 +53,7 @@ The app connects to two backend services:
 | PDF Generation | Syncfusion Flutter PDF |
 | Excel Export | Syncfusion Flutter XlsIO |
 | Rich Text Editor | Flutter Quill |
+| In-App Update | `upgrader` (Play Store / App Store version check) |
 | Font | Poppins (Regular + Bold) |
 | Environment | flutter_dotenv (.env file) |
 
@@ -505,6 +508,7 @@ Uses Syncfusion Flutter XlsIO for Excel generation.
 - **LocalCacheService** - SharedPreferences-based cache with TTL (24h default)
 - **LogService** - Error logging
 - **TokenService** - JWT token storage, validation, and user data management
+- **Upgrader (UpgradeAlert)** - Checks Play Store / App Store for newer versions and shows an update prompt on app startup
 
 ## Models
 
