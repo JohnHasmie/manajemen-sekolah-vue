@@ -121,4 +121,7 @@ class ApiEndpoints {
   // ── Days / Semesters ──
   static const days = '/day';
   static const semesters = '/semester';
+
+  // ── Mobile (web routes, not under /api) ──
+  static const appcast = '/mobile/appcast.xml';
 }
