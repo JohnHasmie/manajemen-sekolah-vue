@@ -1,6 +1,4 @@
-// Tests for AttendanceStudentItem.
-// The widget needs a LanguageProvider, which reads from SharedPreferences, so
-// we initialise PreferencesService via mock values before each test.
+// Tests for AttendanceStudentItem with compact and descriptive modes.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,7 +8,6 @@ import 'package:manajemensekolah/features/attendance/presentation/widgets/attend
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 void main() {
-  // Minimal Student fixture — all required fields satisfied.
   const testStudent = Student(
     id: 'stu-1',
     name: 'Budi Santoso',
@@ -32,6 +29,8 @@ void main() {
   Widget buildWidget({
     Student student = testStudent,
     String currentStatus = 'hadir',
+    int index = 0,
+    bool compactMode = false,
     void Function(String, String)? onStatusChanged,
   }) {
     return MaterialApp(
@@ -42,6 +41,8 @@ void main() {
             currentStatus: currentStatus,
             onStatusChanged: onStatusChanged ?? (_, __) {},
             languageProvider: langProvider,
+            index: index,
+            compactMode: compactMode,
           ),
         ),
       ),
@@ -59,26 +60,36 @@ void main() {
       expect(find.text('Budi Santoso'), findsOneWidget);
     });
 
-    testWidgets('shows student NIS', (WidgetTester tester) async {
-      await tester.pumpWidget(buildWidget());
-      expect(find.text('NIS: 20240001'), findsOneWidget);
+    testWidgets('shows row number', (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(index: 2));
+      expect(find.text('3'), findsOneWidget);
     });
 
-    testWidgets('shows all five quick-status button labels',
+    testWidgets('descriptive mode shows full status labels',
         (WidgetTester tester) async {
-      await tester.pumpWidget(buildWidget());
+      await tester.pumpWidget(buildWidget(compactMode: false));
+      // Default language is 'id', so labels are Indonesian
+      for (final label in ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpha']) {
+        expect(find.text(label), findsWidgets);
+      }
+    });
+
+    testWidgets('compact mode shows letter labels',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget(compactMode: true));
       for (final label in ['H', 'T', 'S', 'I', 'A']) {
         expect(find.text(label), findsOneWidget);
       }
     });
 
-    testWidgets('onStatusChanged fires with correct studentId and status',
+    testWidgets('onStatusChanged fires with correct studentId and status (descriptive)',
         (WidgetTester tester) async {
       String? capturedId;
       String? capturedStatus;
 
       await tester.pumpWidget(
         buildWidget(
+          compactMode: false,
           onStatusChanged: (id, status) {
             capturedId = id;
             capturedStatus = status;
@@ -86,7 +97,30 @@ void main() {
         ),
       );
 
-      // Tap the "S" (sakit) button.
+      // Tap the "Sakit" button in descriptive mode.
+      await tester.tap(find.text('Sakit'));
+      await tester.pump();
+
+      expect(capturedId, equals('stu-1'));
+      expect(capturedStatus, equals('sakit'));
+    });
+
+    testWidgets('onStatusChanged fires with correct studentId and status (compact)',
+        (WidgetTester tester) async {
+      String? capturedId;
+      String? capturedStatus;
+
+      await tester.pumpWidget(
+        buildWidget(
+          compactMode: true,
+          onStatusChanged: (id, status) {
+            capturedId = id;
+            capturedStatus = status;
+          },
+        ),
+      );
+
+      // Tap the "S" button in compact mode.
       await tester.tap(find.text('S'));
       await tester.pump();
 
@@ -97,7 +131,6 @@ void main() {
     testWidgets('avatar shows first letter of student name',
         (WidgetTester tester) async {
       await tester.pumpWidget(buildWidget());
-      // 'B' is the uppercase first letter of "Budi Santoso".
       expect(find.text('B'), findsOneWidget);
     });
   });

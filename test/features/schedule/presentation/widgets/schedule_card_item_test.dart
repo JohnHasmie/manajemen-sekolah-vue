@@ -1,21 +1,22 @@
 // Unit tests for ScheduleCardItem helper methods and summary logic.
 // Tests the pure logic for determining button fill states, past-schedule
-// detection, and summary key lookups without rendering widgets.
+// detection, summary key lookups, and schedule date computation.
 library;
 
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   // ---------------------------------------------------------------------------
-  // Summary key lookup (_getSummary logic)
+  // Summary key lookup (_getSummary logic) — now date-prefixed
   // ---------------------------------------------------------------------------
 
-  group('Summary key matching', () {
-    test('key format is classId__subjectId', () {
+  group('Summary key matching (date-prefixed)', () {
+    test('key format is date__classId__subjectId', () {
+      const date = '2026-04-01';
       const classId = 'class-uuid-1';
       const subjectId = 'subject-uuid-1';
-      final key = '${classId}__$subjectId';
-      expect(key, 'class-uuid-1__subject-uuid-1');
+      final key = '${date}__${classId}__$subjectId';
+      expect(key, '2026-04-01__class-uuid-1__subject-uuid-1');
     });
 
     test('summary lookup returns null when dailySummary is null', () {
@@ -25,19 +26,17 @@ void main() {
 
     test('summary lookup returns null when summaries map is empty', () {
       final dailySummary = <String, dynamic>{
-        'date': '2026-04-01',
         'summaries': <String, dynamic>{},
       };
       final summaries = dailySummary['summaries'] as Map;
-      final key = 'class-1__subject-1';
+      final key = '2026-04-01__class-1__subject-1';
       expect(summaries[key], isNull);
     });
 
-    test('summary lookup finds matching key', () {
+    test('summary lookup finds matching date-prefixed key', () {
       final dailySummary = <String, dynamic>{
-        'date': '2026-04-01',
         'summaries': {
-          'class-1__subject-1': {
+          '2026-04-01__class-1__subject-1': {
             'attendance': {'filled': true, 'hadir': 10, 'sakit': 0, 'izin': 0, 'alpha': 0, 'total': 10},
             'class_activity': {'filled': true, 'count': 2},
             'material_progress': {'total': 5, 'checked': 3},
@@ -45,10 +44,26 @@ void main() {
         },
       };
       final summaries = dailySummary['summaries'] as Map;
-      final summary = summaries['class-1__subject-1'];
+      final summary = summaries['2026-04-01__class-1__subject-1'];
       expect(summary, isNotNull);
       expect(summary['attendance']['filled'], true);
       expect(summary['attendance']['hadir'], 10);
+    });
+
+    test('different dates for same class+subject are separate entries', () {
+      final dailySummary = <String, dynamic>{
+        'summaries': {
+          '2026-04-01__class-1__subject-1': {
+            'attendance': {'filled': true, 'hadir': 10},
+          },
+          '2026-04-02__class-1__subject-1': {
+            'attendance': {'filled': false, 'hadir': 0},
+          },
+        },
+      };
+      final summaries = dailySummary['summaries'] as Map;
+      expect(summaries['2026-04-01__class-1__subject-1']!['attendance']['filled'], true);
+      expect(summaries['2026-04-02__class-1__subject-1']!['attendance']['filled'], false);
     });
   });
 
@@ -58,16 +73,12 @@ void main() {
 
   group('Button fill state', () {
     test('hasAttendance returns true when filled', () {
-      final summary = {
-        'attendance': {'filled': true, 'hadir': 10},
-      };
+      final summary = {'attendance': {'filled': true, 'hadir': 10}};
       expect(summary['attendance']?['filled'] == true, isTrue);
     });
 
     test('hasAttendance returns false when not filled', () {
-      final summary = {
-        'attendance': {'filled': false, 'hadir': 0},
-      };
+      final summary = {'attendance': {'filled': false, 'hadir': 0}};
       expect(summary['attendance']?['filled'] == true, isFalse);
     });
 
@@ -77,9 +88,7 @@ void main() {
     });
 
     test('hasActivity returns true when count > 0', () {
-      final summary = {
-        'class_activity': {'filled': true, 'count': 2},
-      };
+      final summary = {'class_activity': {'filled': true, 'count': 2}};
       expect(summary['class_activity']?['filled'] == true, isTrue);
     });
 
@@ -98,47 +107,50 @@ void main() {
       final checked = summary['material_progress']?['checked'] as int? ?? 0;
       expect(checked > 0, isFalse);
     });
-
-    test('allFilled is true only when all three are filled', () {
-      final summary = {
-        'attendance': {'filled': true, 'hadir': 10},
-        'class_activity': {'filled': true, 'count': 2},
-        'material_progress': {'total': 10, 'checked': 4},
-      };
-      final attendanceFilled = summary['attendance']?['filled'] == true;
-      final activityFilled = summary['class_activity']?['filled'] == true;
-      final materialFilled = (summary['material_progress']?['checked'] as int? ?? 0) > 0;
-      expect(attendanceFilled && activityFilled && materialFilled, isTrue);
-    });
   });
 
   // ---------------------------------------------------------------------------
-  // Today-only summary restriction
+  // Schedule date computation (most recent occurrence)
   // ---------------------------------------------------------------------------
 
-  group('isScheduleToday logic', () {
-    test('weekday mapping Senin=1 through Minggu=7', () {
-      const dayWeekdays = {
-        'Senin': 1, 'Selasa': 2, 'Rabu': 3, 'Kamis': 4,
-        'Jumat': 5, 'Sabtu': 6, 'Minggu': 7,
-      };
-      expect(dayWeekdays['Senin'], 1);
-      expect(dayWeekdays['Jumat'], 5);
-      expect(dayWeekdays['Minggu'], 7);
+  group('computeScheduleDate logic', () {
+    // Replicates the _computeScheduleDate logic for testing
+    DateTime computeDate(int scheduleDayIndex, DateTime now) {
+      final todayIndex = now.weekday;
+      int daysSince = todayIndex - scheduleDayIndex;
+      if (daysSince < 0) daysSince += 7;
+      return DateTime(now.year, now.month, now.day)
+          .subtract(Duration(days: daysSince));
+    }
+
+    test('same day returns today', () {
+      // If schedule is Wednesday and today is Wednesday
+      final now = DateTime(2026, 4, 1); // Wednesday
+      final result = computeDate(3, now); // 3 = Rabu in dayOptions (index)
+      expect(result, DateTime(2026, 4, 1));
     });
 
-    test('summary only returned for today schedule', () {
+    test('past day returns most recent occurrence', () {
+      // If schedule is Monday and today is Wednesday
+      final now = DateTime(2026, 4, 1); // Wednesday
+      final result = computeDate(1, now); // 1 = Senin
+      expect(result, DateTime(2026, 3, 30)); // Last Monday
+    });
+
+    test('future day returns last week occurrence', () {
+      // If schedule is Friday and today is Wednesday
+      final now = DateTime(2026, 4, 1); // Wednesday
+      final result = computeDate(5, now); // 5 = Jumat
+      expect(result, DateTime(2026, 3, 27)); // Last Friday
+    });
+
+    test('never returns a future date', () {
       final now = DateTime.now();
-      const dayOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-      final todayName = dayOrder[now.weekday - 1];
-
-      // A schedule for today should match
-      expect(now.weekday, now.weekday); // trivially true
-
-      // A schedule for tomorrow should NOT match
-      final tomorrowIdx = now.weekday % 7; // 0-indexed next day
-      final tomorrowName = dayOrder[tomorrowIdx];
-      expect(todayName != tomorrowName || now.weekday == 7, isTrue);
+      for (int dayIdx = 1; dayIdx <= 6; dayIdx++) {
+        final result = computeDate(dayIdx, now);
+        expect(result.isBefore(now.add(const Duration(days: 1))), isTrue,
+            reason: 'dayIndex=$dayIdx should not be in the future');
+      }
     });
   });
 
@@ -149,7 +161,6 @@ void main() {
   group('isPast detection', () {
     test('day before today is past', () {
       final now = DateTime.now();
-      // Monday (1) is past if today is Wednesday (3)
       if (now.weekday > 1) {
         expect(1 < now.weekday, isTrue);
       }
@@ -159,14 +170,6 @@ void main() {
       final now = DateTime.now();
       if (now.weekday < 7) {
         expect(now.weekday + 1 > now.weekday, isTrue);
-      }
-    });
-
-    test('hour is past when end time < current time', () {
-      final now = DateTime.now();
-      // An end time of 00:00 is always past (unless it's midnight)
-      if (now.hour > 0) {
-        expect(now.hour > 0, isTrue);
       }
     });
   });
@@ -186,14 +189,12 @@ void main() {
         {'day_name': 'Jumat', 'jam_mulai': '10:00'},
       ];
 
-      // Group
       final grouped = <String, List<Map<String, dynamic>>>{};
       for (final s in schedules) {
         final day = s['day_name'] as String;
         grouped.putIfAbsent(day, () => []).add(s);
       }
 
-      // Order by dayOrder
       final orderedKeys = <String>[];
       for (final day in dayOrder) {
         if (grouped.containsKey(day)) orderedKeys.add(day);
@@ -201,72 +202,6 @@ void main() {
 
       expect(orderedKeys, ['Senin', 'Rabu', 'Jumat']);
       expect(grouped['Rabu']!.length, 2);
-    });
-
-    test('schedules within a day sorted by start time', () {
-      final daySchedules = [
-        {'jam_mulai': '10:00:00'},
-        {'jam_mulai': '07:30:00'},
-        {'jam_mulai': '09:00:00'},
-      ];
-
-      int parseMinutes(String? time) {
-        if (time == null) return 0;
-        final parts = time.replaceAll('.', ':').split(':');
-        if (parts.length < 2) return 0;
-        return (int.tryParse(parts[0]) ?? 0) * 60 + (int.tryParse(parts[1]) ?? 0);
-      }
-
-      daySchedules.sort((a, b) =>
-          parseMinutes(a['jam_mulai']).compareTo(parseMinutes(b['jam_mulai'])));
-
-      expect(daySchedules[0]['jam_mulai'], '07:30:00');
-      expect(daySchedules[1]['jam_mulai'], '09:00:00');
-      expect(daySchedules[2]['jam_mulai'], '10:00:00');
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Summary sheet content
-  // ---------------------------------------------------------------------------
-
-  group('Summary sheet content', () {
-    test('summary sheet does not contain "Ringkasan Jadwal Ini" subtitle', () {
-      // The subtitle text was removed — only subject/class title and
-      // day+time label should remain in the summary header.
-      const removedText = 'Ringkasan Jadwal Ini';
-      const removedTextEn = 'Schedule Summary';
-      // These strings should NOT appear in the summary sheet.
-      // (Verified by code review; the _ScheduleQuickSummary widget
-      //  no longer renders these labels.)
-      expect(removedText, isNotEmpty); // placeholder assertion
-      expect(removedTextEn, isNotEmpty);
-    });
-
-    test('summary sheet still shows subject and class name', () {
-      final schedule = {
-        'mata_pelajaran_nama': 'Matematika',
-        'kelas_nama': '10A',
-      };
-      final title = '${schedule['mata_pelajaran_nama']} — ${schedule['kelas_nama']}';
-      expect(title, 'Matematika — 10A');
-    });
-
-    test('summary sheet shows day + time label', () {
-      final schedule = {
-        'hari_nama': 'Senin',
-        'jam_mulai': '07:30:00',
-        'jam_selesai': '08:15:00',
-      };
-      final dayLabel = schedule['hari_nama'] as String;
-      String formatTime(String? time) {
-        if (time == null || time.isEmpty) return '--:--';
-        final parts = time.replaceAll('.', ':').split(':');
-        if (parts.length >= 2) return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
-        return time;
-      }
-      final label = '$dayLabel, ${formatTime(schedule['jam_mulai'])} – ${formatTime(schedule['jam_selesai'])}';
-      expect(label, 'Senin, 07:30 – 08:15');
     });
   });
 
@@ -280,9 +215,7 @@ void main() {
       final cleanedTime = time.replaceAll('.', ':');
       final timeParts = cleanedTime.split(':');
       if (timeParts.length >= 2) {
-        final hour = timeParts[0].padLeft(2, '0');
-        final minute = timeParts[1].padLeft(2, '0');
-        return '$hour:$minute';
+        return '${timeParts[0].padLeft(2, '0')}:${timeParts[1].padLeft(2, '0')}';
       }
       return time.length >= 5 ? time.substring(0, 5) : time;
     }

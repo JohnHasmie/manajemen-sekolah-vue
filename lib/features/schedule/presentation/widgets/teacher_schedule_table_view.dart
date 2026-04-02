@@ -243,14 +243,15 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
 
   Map<String, dynamic>? _getSummary(Map<String, dynamic> schedule, String dayName) {
     if (widget.dailySummary == null) return null;
-    // Only show summary if it's the schedule's day
-    if (!_isDayToday(dayName)) return null;
     final summaries = widget.dailySummary!['summaries'];
     if (summaries == null || summaries is! Map) return null;
     final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
     final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
     if (classId == null || subjectId == null) return null;
-    final key = '${classId}__$subjectId';
+    // Key format: "{date}__{classId}__{subjectId}"
+    final date = _computeScheduleDate(schedule);
+    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final key = '${dateStr}__${classId}__$subjectId';
     final s = summaries[key];
     return s is Map<String, dynamic> ? s : null;
   }
@@ -264,6 +265,8 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
   bool _hasMaterial(Map<String, dynamic>? summary) =>
       summary != null && (summary['material_progress']?['checked'] ?? 0) > 0;
 
+  /// Returns the most recent occurrence of the schedule's day (today or earlier).
+  /// For attendance input, the date must be <= today.
   DateTime _computeScheduleDate(Map<String, dynamic> schedule) {
     final now = DateTime.now();
     final scheduleDay = widget.dayIdMap.entries
@@ -274,9 +277,9 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
         .key;
     final scheduleDayIndex = widget.dayOptions.indexOf(scheduleDay);
     final todayIndex = now.weekday;
-    int daysUntil = scheduleDayIndex - todayIndex;
-    if (daysUntil < 0) daysUntil += 7;
-    return now.add(Duration(days: daysUntil));
+    int daysSince = todayIndex - scheduleDayIndex;
+    if (daysSince < 0) daysSince += 7;
+    return DateTime(now.year, now.month, now.day).subtract(Duration(days: daysSince));
   }
 
   void _openAttendance(BuildContext context, Map<String, dynamic> schedule, bool hasData, Map<String, dynamic>? summary) {
@@ -289,22 +292,33 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
     final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
     final className = (schedule['class_name'] ?? schedule['kelas_nama'])?.toString();
 
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black54,
-      pageBuilder: (_, __, ___) => AttendancePage(
-        teacher: {'id': widget.teacherId, 'nama': widget.teacherNama},
-        initialDate: _computeScheduleDate(schedule),
-        initialSubjectId: subjectId,
-        initialSubjectName: subjectName,
-        initialclassId: classId,
-        initialClassName: className,
-        initialLessonHourNumber: int.tryParse(schedule['jam_ke']?.toString() ?? ''),
-        initialTabIndex: tabIndex,
-        embedded: true,
-      ),
-    );
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.96,
+          expand: false,
+          builder: (context, scrollController) {
+            return AttendancePage(
+              teacher: {'id': widget.teacherId, 'nama': widget.teacherNama},
+              initialDate: _computeScheduleDate(schedule),
+              initialSubjectId: subjectId,
+              initialSubjectName: subjectName,
+              initialclassId: classId,
+              initialClassName: className,
+              initialLessonHourNumber: int.tryParse(schedule['jam_ke']?.toString() ?? ''),
+              initialTabIndex: tabIndex,
+              embedded: true,
+              scrollController: scrollController,
+            );
+          },
+        );
+      },
+    ).then((_) => widget.onRefresh());
   }
 
   void _openMaterial(BuildContext context, Map<String, dynamic> schedule) {
@@ -676,13 +690,14 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
 
           const SizedBox(width: 12),
 
-          // Subject + Class Info
+          // Subject + Class Info + Buttons
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Flexible(
@@ -691,57 +706,56 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: isPast ? ColorUtils.slate500 : ColorUtils.slate800,
+                          color: isPast
+                              ? ColorUtils.slate500
+                              : ColorUtils.slate800,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Kelas: $className',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isPast ? ColorUtils.slate400 : primary,
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  className,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isPast ? ColorUtils.slate400 : ColorUtils.slate500,
-                  ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _MiniActionButton(
+                      label: _tr({'en': 'Atten', 'id': 'Presensi'}),
+                      isFilled: attFilled,
+                      isPast: isPast,
+                      primary: primary,
+                      onTap: () => _openAttendance(
+                          context, schedule, attFilled, summary),
+                    ),
+                    const SizedBox(width: 4),
+                    _MiniActionButton(
+                      label: _tr({'en': 'Mat', 'id': 'Materi'}),
+                      isFilled: matFilled,
+                      isPast: isPast,
+                      primary: primary,
+                      onTap: () => _openMaterial(context, schedule),
+                    ),
+                    const SizedBox(width: 4),
+                    _MiniActionButton(
+                      label: _tr({'en': 'Act', 'id': 'Kegiatan'}),
+                      isFilled: actFilled,
+                      isPast: isPast,
+                      primary: primary,
+                      onTap: () => _openClassActivity(context, schedule),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Action Buttons Column
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _MiniActionButton(
-                label: _tr({'en': 'Atten', 'id': 'Presensi'}),
-                isFilled: attFilled,
-                isPast: isPast,
-                primary: primary,
-                onTap: () => _openAttendance(context, schedule, attFilled, summary),
-              ),
-              const SizedBox(width: 4),
-              _MiniActionButton(
-                label: _tr({'en': 'Mat', 'id': 'Materi'}),
-                isFilled: matFilled,
-                isPast: isPast,
-                primary: primary,
-                onTap: () => _openMaterial(context, schedule),
-              ),
-              const SizedBox(width: 4),
-              _MiniActionButton(
-                label: _tr({'en': 'Act', 'id': 'Kegiatan'}),
-                isFilled: actFilled,
-                isPast: isPast,
-                primary: primary,
-                onTap: () => _openClassActivity(context, schedule),
-              ),
-            ],
           ),
         ],
       ),

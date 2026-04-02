@@ -59,6 +59,7 @@ class ScheduleCardItem extends StatelessWidget {
     this.isCurrent = false,
     this.isNext = false,
     this.dailySummary,
+    this.onRefresh,
   });
 
   final Map<String, dynamic> schedule;
@@ -76,6 +77,7 @@ class ScheduleCardItem extends StatelessWidget {
   final bool isCurrent;
   final bool isNext;
   final Map<String, dynamic>? dailySummary;
+  final VoidCallback? onRefresh;
 
   // ---------------------------------------------------------------------------
   // Pure helper methods (no state read — safe to be static / top-level)
@@ -101,39 +103,23 @@ class ScheduleCardItem extends StatelessWidget {
   // ---------------------------------------------------------------------------
 
   /// Looks up this card's summary from the daily summary map.
-  /// Only returns data for today's schedule — attendance/activity are date-specific,
-  /// so showing "filled" on other days would be misleading.
+  /// Uses the schedule's computed date to find the right summary entry.
   Map<String, dynamic>? _getSummary() {
     if (dailySummary == null) return null;
-    // Only show summary for today's schedules
-    if (!_isScheduleToday()) return null;
     final summaries = dailySummary!['summaries'];
     if (summaries == null || summaries is! Map) return null;
     final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
     final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
     if (classId == null || subjectId == null) return null;
-    final key = '${classId}__$subjectId';
+    // Key format: "{date}__{classId}__{subjectId}"
+    final date = _computeScheduleDate();
+    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final key = '${dateStr}__${classId}__$subjectId';
     final s = summaries[key];
     return s is Map<String, dynamic> ? s : null;
   }
 
-  /// Whether this schedule's day matches today's weekday.
-  bool _isScheduleToday() {
-    final dayId = (schedule['day_id'] ?? schedule['hari_id'])?.toString();
-    if (dayId == null) return false;
-    final entry = dayIdMap.entries.firstWhere(
-      (e) => e.value.toString() == dayId,
-      orElse: () => const MapEntry('', ''),
-    );
-    if (entry.key.isEmpty) return false;
-    const dayWeekdays = {'Senin': 1, 'Selasa': 2, 'Rabu': 3, 'Kamis': 4, 'Jumat': 5, 'Sabtu': 6, 'Minggu': 7};
-    final name = entry.key;
-    final normalized = _kDayNames.keys.firstWhere(
-      (k) => name.toLowerCase().contains(k.toLowerCase()),
-      orElse: () => '',
-    );
-    return dayWeekdays[normalized] == DateTime.now().weekday;
-  }
+
 
   bool _hasAttendance(Map<String, dynamic>? summary) =>
       summary != null && summary['attendance']?['filled'] == true;
@@ -145,6 +131,8 @@ class ScheduleCardItem extends StatelessWidget {
       summary != null && (summary['material_progress']?['checked'] ?? 0) > 0;
 
   /// Computes the next calendar date this schedule occurs.
+  /// Returns the most recent occurrence of the schedule's day (today or earlier).
+  /// For attendance input, the date must be <= today.
   DateTime _computeScheduleDate() {
     final now = DateTime.now();
     final scheduleDay = dayIdMap.entries
@@ -155,9 +143,9 @@ class ScheduleCardItem extends StatelessWidget {
         .key;
     final scheduleDayIndex = dayOptions.indexOf(scheduleDay);
     final todayIndex = now.weekday;
-    int daysUntil = scheduleDayIndex - todayIndex;
-    if (daysUntil < 0) daysUntil += 7;
-    return now.add(Duration(days: daysUntil));
+    int daysSince = todayIndex - scheduleDayIndex;
+    if (daysSince < 0) daysSince += 7;
+    return DateTime(now.year, now.month, now.day).subtract(Duration(days: daysSince));
   }
 
   // ---------------------------------------------------------------------------
@@ -260,16 +248,56 @@ class ScheduleCardItem extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              schedule['mata_pelajaran_nama'] ?? languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'}),
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textColor),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    schedule['mata_pelajaran_nama'] ??
+                                        languageProvider.getTranslatedText(
+                                          {'en': 'Subject', 'id': 'Mata Pelajaran'},
+                                        ),
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: textColor,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Kelas: ${schedule['kelas_nama'] ?? '-'}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: accentColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Kelas: ${schedule['kelas_nama'] ?? '-'}',
-                              style: TextStyle(fontSize: 12, color: subTextColor, fontWeight: FontWeight.w500),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                // Clock Range Pill
+                                ScheduleInfoTag(
+                                  icon: Icons.access_time_rounded,
+                                  label:
+                                      '${_formatTime(schedule["jam_mulai"])} – ${_formatTime(schedule["jam_selesai"])}',
+                                  color: accentColor,
+                                ),
+                                // Academic Year & Semester Pill
+                                if (schedule['semester_nama'] != null)
+                                  ScheduleInfoTag(
+                                    icon: Icons.calendar_month_rounded,
+                                    label:
+                                        '$selectedAcademicYear • ${schedule['semester_nama']}',
+                                    color: subTextColor,
+                                  ),
+                              ],
                             ),
                           ],
                         ),
@@ -278,31 +306,6 @@ class ScheduleCardItem extends StatelessWidget {
                   ),
 
                   const SizedBox(height: AppSpacing.sm),
-
-                  // ── Info tags: time, jam ke, semester ──────────────────
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      ScheduleInfoTag(
-                        icon: Icons.access_time_rounded,
-                        label:
-                            '${_formatTime(schedule["jam_mulai"])} – ${_formatTime(schedule["jam_selesai"])}',
-                        color: isPast ? ColorUtils.slate400 : accentColor,
-                      ),
-                      ScheduleInfoTag(
-                        icon: Icons.format_list_numbered_rounded,
-                        label: 'Jam ke-${schedule["jam_ke"] ?? "-"}',
-                        color: isPast ? ColorUtils.slate400 : accentColor,
-                      ),
-                      if (schedule['semester_nama'] != null)
-                        ScheduleInfoTag(
-                          icon: Icons.calendar_month_rounded,
-                          label: schedule['semester_nama'],
-                          color: subTextColor,
-                        ),
-                    ],
-                  ),
 
                   const SizedBox(height: AppSpacing.md),
 
@@ -387,22 +390,33 @@ class ScheduleCardItem extends StatelessWidget {
   }
 
   void _showAttendanceDialog(BuildContext context, int tabIndex) {
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black54,
-      pageBuilder: (_, __, ___) => AttendancePage(
-        teacher: {'id': teacherId, 'nama': teacherNama},
-        initialDate: _computeScheduleDate(),
-        initialSubjectId: _subjectId,
-        initialSubjectName: _subjectName,
-        initialclassId: _classId,
-        initialClassName: _className,
-        initialLessonHourNumber: int.tryParse(schedule['jam_ke']?.toString() ?? ''),
-        initialTabIndex: tabIndex,
-        embedded: true,
-      ),
-    );
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.96,
+          expand: false,
+          builder: (context, scrollController) {
+            return AttendancePage(
+              teacher: {'id': teacherId, 'nama': teacherNama},
+              initialDate: _computeScheduleDate(),
+              initialSubjectId: _subjectId,
+              initialSubjectName: _subjectName,
+              initialclassId: _classId,
+              initialClassName: _className,
+              initialLessonHourNumber: int.tryParse(schedule['jam_ke']?.toString() ?? ''),
+              initialTabIndex: tabIndex,
+              embedded: true,
+              scrollController: scrollController,
+            );
+          },
+        );
+      },
+    ).then((_) => onRefresh?.call());
   }
 
   void _openMaterial(BuildContext context) {

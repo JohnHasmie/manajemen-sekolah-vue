@@ -81,84 +81,43 @@ class AttendanceInputForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (embedded) {
-      final dateStr = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(selectedDate);
+      final dateStr = DateFormat('EEE, dd MMM', 'id_ID').format(selectedDate);
 
       return Container(
-        margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: ColorUtils.slate200),
+          color: primaryColor.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
         ),
-        child: Column(
+        child: Row(
           children: [
-            // Info row
-            Row(
-              children: [
-                // Subject + class
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(Icons.menu_book_rounded, size: 16, color: primaryColor),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              initialSubjectName ?? '-',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ColorUtils.slate800),
-                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              'Kelas: ${initialClassName ?? '-'} · Jam ke-${initialLessonHourNumber ?? '-'}',
-                              style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Date
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: ColorUtils.slate50,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: ColorUtils.slate200),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.calendar_today_rounded, size: 12, color: ColorUtils.slate500),
-                      const SizedBox(width: 4),
-                      Text(
-                        dateStr,
-                        style: TextStyle(fontSize: 11, color: ColorUtils.slate600, fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            Icon(Icons.menu_book_rounded, size: 14, color: primaryColor),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '${initialSubjectName ?? '-'} · ${initialClassName ?? '-'} · Jam ke-${initialLessonHourNumber ?? '-'}',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate700),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(width: 8),
+            Icon(Icons.calendar_today_rounded, size: 11, color: ColorUtils.slate400),
+            const SizedBox(width: 4),
+            Text(
+              dateStr,
+              style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500),
+            ),
           ],
         ),
       );
     }
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(16)),
@@ -423,9 +382,6 @@ class AttendanceInputForm extends StatelessWidget {
               ),
             ),
 
-          const SizedBox(height: AppSpacing.md),
-
-          const SizedBox(height: AppSpacing.sm),
         ],
       ),
     );

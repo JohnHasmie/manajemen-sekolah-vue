@@ -60,6 +60,7 @@ class AttendancePage extends ConsumerStatefulWidget {
   final int? initialLessonHourNumber;
   final String? initialStartTime;
   final int initialTabIndex;
+  final ScrollController? scrollController;
 
   final bool embedded;
 
@@ -75,6 +76,7 @@ class AttendancePage extends ConsumerStatefulWidget {
     this.initialStartTime,
     this.initialTabIndex = 0,
     this.embedded = false,
+    this.scrollController,
   });
 
   @override
@@ -225,16 +227,17 @@ class AttendancePageState extends ConsumerState<AttendancePage>
       final teacherId = widget.teacher['id']?.toString() ?? '';
 
       // ─── Fast path for embedded mode (opened from schedule card) ───
-      // Skip class list, subject list, and schedule auto-detection.
-      // Only load students and lesson hours (needed for the input form).
+      // Load only students for the specific class (not all school students)
+      // and lesson hours.
       if (widget.embedded &&
           widget.initialclassId != null &&
           widget.initialSubjectId != null) {
         final [studentList, lessonHours] = await Future.wait([
           _loadWithCache(
-            cacheKey: 'school_student_data_$academicYearId',
+            cacheKey: 'class_student_data_${widget.initialclassId}_$academicYearId',
             ttl: const Duration(hours: 6),
-            apiFetcher: () => getIt<ApiStudentService>().getStudent(
+            apiFetcher: () => getIt<ApiStudentService>().getStudentByClass(
+              widget.initialclassId!,
               academicYearId: academicYearId,
             ),
             useCache: useCache,
@@ -251,13 +254,13 @@ class AttendancePageState extends ConsumerState<AttendancePage>
 
         setState(() {
           _studentList = studentList.map((s) => Student.fromJson(s)).toList();
+          _filteredStudentList = _studentList;
           final seen = <String>{};
           _lessonHours = lessonHours.where((lh) {
             final key =
                 '${lh['hour_number'] ?? lh['name']}_${lh['start_time']}_${lh['end_time']}';
             return seen.add(key);
           }).toList();
-          _filteredStudentList = _studentList;
           for (var student in _studentList) {
             _attendanceStatus[student.id] = 'hadir';
           }
@@ -784,16 +787,6 @@ class AttendancePageState extends ConsumerState<AttendancePage>
         _attendanceStatus[student.id] = status;
       }
     });
-
-    SnackBarUtils.showInfo(
-      context,
-      languageProvider.getTranslatedText({
-        'en':
-            'All students set to ${_getStatusText(status, languageProvider).toLowerCase()}',
-        'id':
-            'Semua siswa diatur menjadi ${_getStatusText(status, languageProvider).toLowerCase()}',
-      }),
-    );
   }
 
   // ========== FILTER FOR INPUT MODE ==========
@@ -861,6 +854,7 @@ class AttendancePageState extends ConsumerState<AttendancePage>
       onClearAllFilters: _clearAllFilters,
       onNavigateToDetail: _navigateToAttendanceDetail,
       onDelete: (summary) => _deleteAttendance(summary, languageProvider),
+      scrollController: widget.scrollController,
     );
   }
 
@@ -1144,6 +1138,7 @@ class AttendancePageState extends ConsumerState<AttendancePage>
         });
       },
       onSubmit: _submitAttendance,
+      scrollController: widget.scrollController,
     );
   }
 
@@ -1202,75 +1197,69 @@ class AttendancePageState extends ConsumerState<AttendancePage>
     });
 
     try {
-      int successCount = 0;
-      int errorCount = 0;
-      final List<String> errorMessages = [];
-
       final date = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
-      for (var student in _filteredStudentList) {
-        try {
-          final status = _attendanceStatus[student.id] ?? 'hadir';
+      // Build bulk payload — single API call instead of per-student
+      final attendances = _filteredStudentList.map((student) {
+        final status = _attendanceStatus[student.id] ?? 'hadir';
+        return {
+          'student_id': student.id,
+          'status': _mapStatusToBackend(status),
+          'notes': '',
+        };
+      }).toList();
 
-          await AttendanceService.createAttendance({
-            'student_id': student.id,
-            'teacher_id': teacherId,
-            'subject_id': _selectedSubjectId,
-            'class_id': student.classId,
-            'date': date,
-            'status': _mapStatusToBackend(status),
-            'notes': '',
-            'lesson_hour_id': _selectedLessonHourId,
-          });
-
-          successCount++;
-          await Future.delayed(const Duration(milliseconds: 50));
-        } catch (e) {
-          errorCount++;
-          // Debug logging for developer
-          AppLogger.error(
-            'attendance',
-            'Attendance save error for ${student.name}: $e',
-          );
-
-          // User-friendly message instead of technical DioException
-          final String friendlyMessage = ErrorUtils.getFriendlyMessage(e);
-          errorMessages.add('${student.name}: $friendlyMessage');
-        }
-      }
+      final result = await AttendanceService.createBulkAttendance(
+        teacherId: teacherId.toString(),
+        subjectId: _selectedSubjectId!,
+        classId: _filteredStudentList.first.classId ?? _selectedClassId ?? '',
+        date: date,
+        lessonHourId: _selectedLessonHourId,
+        attendances: attendances,
+      );
 
       if (!mounted) return;
 
-      // Tampilkan hasil
-      if (errorCount == 0) {
+      final successCount = result['success'] ?? 0;
+      final failedCount = result['failed'] ?? 0;
+      final errors = (result['errors'] as List?) ?? [];
+
+      if (failedCount == 0) {
         SnackBarUtils.showSuccess(
           context,
           languageProvider.getTranslatedText({
-            'en': 'Attendance successfully saved for $successCount students',
-            'id': 'Absensi berhasil disimpan untuk $successCount siswa',
+            'en': 'Attendance saved for $successCount students',
+            'id': 'Absensi disimpan untuk $successCount siswa',
           }),
         );
 
-        // Reset form setelah berhasil
-        _resetForm();
+        if (widget.embedded) {
+          // Close the embedded dialog — results tab has no class data in embedded mode
+          if (mounted) Navigator.of(context).pop();
+          return;
+        }
 
-        // Pindah ke tab Hasil (index 0)
+        _resetForm();
         _tabController.animateTo(0);
       } else {
         SnackBarUtils.showWarning(
           context,
           languageProvider.getTranslatedText({
-            'en': '$successCount successful, $errorCount failed',
-            'id': '$successCount berhasil, $errorCount gagal',
+            'en': '$successCount saved, $failedCount failed',
+            'id': '$successCount berhasil, $failedCount gagal',
           }),
         );
-        _showErrorDetails(errorMessages, languageProvider);
+        final errorMessages = errors
+            .map((e) => e['message']?.toString() ?? 'Unknown error')
+            .toList();
+        _showErrorDetails(errorMessages.cast<String>(), languageProvider);
       }
     } catch (e) {
       if (!mounted) return;
+      AppLogger.error('attendance', 'Bulk save error: $e');
       SnackBarUtils.showError(
         context,
-        '${languageProvider.getTranslatedText({'en': 'Error:', 'id': 'Error:'})} $e',
+        ErrorUtils.getFriendlyMessage(e),
       );
     } finally {
       if (mounted) {
@@ -1465,24 +1454,105 @@ class AttendancePageState extends ConsumerState<AttendancePage>
     if (widget.embedded) {
       return GestureDetector(
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: Scaffold(
-          backgroundColor: ColorUtils.slate50,
-          appBar: AppBar(
-            backgroundColor: _getPrimaryColor(),
-            foregroundColor: Colors.white,
-            leading: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => Navigator.of(context).pop(),
+        child: Container(
+          decoration: BoxDecoration(
+            color: ColorUtils.slate50,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
-            title: Text(
-              '${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Presensi'})} — ${widget.initialSubjectName ?? ''} ${widget.initialClassName ?? ''}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            elevation: 0,
           ),
-          body: _tabController.index == 0
-              ? _buildResultsMode()
-              : _buildInputMode(),
+          child: Column(
+            children: [
+              // ── Drag Handle ──
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              // ── Custom Header for Bottom Sheet ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 12, 12),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _getPrimaryColor().withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.fact_check_rounded,
+                        color: _getPrimaryColor(),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            languageProvider.getTranslatedText(
+                              {'en': 'Attendance', 'id': 'Presensi'},
+                            ),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: ColorUtils.slate800,
+                            ),
+                          ),
+                          if (widget.initialSubjectName != null ||
+                              widget.initialClassName != null)
+                            Text(
+                              '${widget.initialSubjectName ?? ""} — ${widget.initialClassName ?? ""}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: ColorUtils.slate500,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: ColorUtils.slate100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: ColorUtils.slate600,
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+
+              Divider(height: 1, thickness: 1, color: ColorUtils.slate100),
+
+              // ── Input Mode Content ──
+              Expanded(
+                child: _tabController.index == 0
+                    ? _buildResultsMode()
+                    : _buildInputMode(),
+              ),
+            ],
+          ),
         ),
       );
     }

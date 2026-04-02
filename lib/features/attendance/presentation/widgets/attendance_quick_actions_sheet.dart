@@ -1,30 +1,10 @@
-// Bottom sheet widget for bulk-setting all students to a single attendance status.
-// Extracted from TeacherAttendanceScreen._showQuickActionsSheet.
-//
-// Think of this like a Vue <AttendanceQuickActions> component that emits
-// an event when the teacher picks a status to apply to everyone.
+// Bottom sheet for bulk-setting all students to a single attendance status.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
-/// Callback signature: receives the raw status string
-/// (e.g. 'hadir', 'terlambat', 'izin', 'sakit', 'alpha').
 typedef OnStatusSelected = void Function(String status);
 
-/// Content widget shown inside a modal bottom sheet.
-/// Displays five attendance statuses the teacher can tap to apply to all students.
-///
-/// Usage:
-/// ```dart
-/// showModalBottomSheet(
-///   context: context,
-///   backgroundColor: Colors.transparent,
-///   builder: (_) => AttendanceQuickActionsSheet(
-///     languageProvider: languageProvider,
-///     onStatusSelected: (status) { ... },
-///   ),
-/// );
-/// ```
 class AttendanceQuickActionsSheet extends StatelessWidget {
   final LanguageProvider languageProvider;
   final OnStatusSelected onStatusSelected;
@@ -35,99 +15,174 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
     required this.onStatusSelected,
   });
 
+  String _tr(Map<String, String> map) =>
+      languageProvider.getTranslatedText(map);
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
       ),
-      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            languageProvider.getTranslatedText({
-              'en': 'Set All Students To',
-              'id': 'Atur Semua Siswa Menjadi',
-            }),
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          // Drag handle
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: ColorUtils.slate300,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          _buildOption(context, 'hadir'),
-          _buildOption(context, 'terlambat'),
-          _buildOption(context, 'izin'),
-          _buildOption(context, 'sakit'),
-          _buildOption(context, 'alpha'),
+          const SizedBox(height: 16),
+          // Title
+          Text(
+            _tr({
+              'en': 'Mark All Students As',
+              'id': 'Tandai Semua Siswa Sebagai',
+            }),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _tr({
+              'en': 'Tap a status to apply to all students',
+              'id': 'Ketuk status untuk diterapkan ke semua siswa',
+            }),
+            style: TextStyle(
+              fontSize: 12,
+              color: ColorUtils.slate400,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Status options
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                _StatusOption(
+                  status: 'hadir',
+                  label: _tr({'en': 'Present', 'id': 'Hadir'}),
+                  icon: Icons.check_circle_outline,
+                  color: ColorUtils.success600,
+                  onTap: () => _select(context, 'hadir'),
+                ),
+                const SizedBox(width: 8),
+                _StatusOption(
+                  status: 'terlambat',
+                  label: _tr({'en': 'Late', 'id': 'Terlambat'}),
+                  icon: Icons.watch_later_outlined,
+                  color: ColorUtils.violet700,
+                  onTap: () => _select(context, 'terlambat'),
+                ),
+                const SizedBox(width: 8),
+                _StatusOption(
+                  status: 'sakit',
+                  label: _tr({'en': 'Sick', 'id': 'Sakit'}),
+                  icon: Icons.local_hospital_outlined,
+                  color: ColorUtils.warning600,
+                  onTap: () => _select(context, 'sakit'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                _StatusOption(
+                  status: 'izin',
+                  label: _tr({'en': 'Permission', 'id': 'Izin'}),
+                  icon: Icons.assignment_turned_in_outlined,
+                  color: ColorUtils.info600,
+                  onTap: () => _select(context, 'izin'),
+                ),
+                const SizedBox(width: 8),
+                _StatusOption(
+                  status: 'alpha',
+                  label: _tr({'en': 'Absent', 'id': 'Alpha'}),
+                  icon: Icons.cancel_outlined,
+                  color: ColorUtils.error600,
+                  onTap: () => _select(context, 'alpha'),
+                ),
+                const SizedBox(width: 8),
+                // Empty spacer to keep 3-column grid
+                const Expanded(child: SizedBox()),
+              ],
+            ),
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
         ],
       ),
     );
   }
 
-  Widget _buildOption(BuildContext context, String status) {
-    return ListTile(
-      leading: Icon(_getStatusIcon(status), color: _getStatusColor(status)),
-      title: Text(_getStatusText(status)),
-      onTap: () {
-        onStatusSelected(status);
-        Navigator.of(context).pop();
-      },
+  void _select(BuildContext context, String status) {
+    onStatusSelected(status);
+    Navigator.of(context).pop();
+  }
+}
+
+/// Card-style status option with icon, label, and tap animation.
+class _StatusOption extends StatelessWidget {
+  final String status;
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _StatusOption({
+    required this.status,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              children: [
+                Icon(icon, color: color, size: 24),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
-  }
-
-  // ---- Status helpers (duplicated from the screen so the widget is self-contained) ----
-
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'hadir':
-        return Icons.check_circle;
-      case 'terlambat':
-        return Icons.watch_later;
-      case 'izin':
-        return Icons.assignment_turned_in;
-      case 'sakit':
-        return Icons.local_hospital;
-      case 'alpha':
-        return Icons.cancel;
-      default:
-        return Icons.help;
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'hadir':
-        return Colors.green;
-      case 'sakit':
-        return Colors.orange;
-      case 'izin':
-        return Colors.blue;
-      case 'alpha':
-        return Colors.red;
-      case 'terlambat':
-        return Colors.purple;
-      default:
-        return Colors.green;
-    }
-  }
-
-  String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'hadir':
-        return languageProvider.getTranslatedText({'en': 'Present', 'id': 'Hadir'});
-      case 'sakit':
-        return languageProvider.getTranslatedText({'en': 'Sick', 'id': 'Sakit'});
-      case 'izin':
-        return languageProvider.getTranslatedText({'en': 'Permission', 'id': 'Izin'});
-      case 'alpha':
-        return languageProvider.getTranslatedText({'en': 'Absent', 'id': 'Alpha'});
-      case 'terlambat':
-        return languageProvider.getTranslatedText({'en': 'Late', 'id': 'Terlambat'});
-      default:
-        return languageProvider.getTranslatedText({'en': 'Present', 'id': 'Hadir'});
-    }
   }
 }
