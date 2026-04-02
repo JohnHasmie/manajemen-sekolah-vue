@@ -31,6 +31,7 @@ class TeacherScheduleCardView extends StatefulWidget {
   final GlobalKey firstScheduleKey;
   final GlobalKey actionButtonsKey;
   final Map<String, dynamic>? dailySummary;
+  final VoidCallback? onRefresh;
 
   const TeacherScheduleCardView({
     super.key,
@@ -45,6 +46,7 @@ class TeacherScheduleCardView extends StatefulWidget {
     required this.firstScheduleKey,
     required this.actionButtonsKey,
     this.dailySummary,
+    this.onRefresh,
   });
 
   @override
@@ -347,6 +349,7 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView> {
         isCurrent: isScrollTarget && scrollTarget.isCurrent,
         isNext: isScrollTarget && !scrollTarget.isCurrent,
         dailySummary: widget.dailySummary,
+        onRefresh: widget.onRefresh,
       );
 
       return Padding(

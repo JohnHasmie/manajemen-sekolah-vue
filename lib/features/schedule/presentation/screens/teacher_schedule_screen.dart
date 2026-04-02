@@ -462,15 +462,42 @@ class TeachingScheduleScreenState
     _loadDailySummary();
   }
 
+  /// Loads daily summary for each weekday from Monday up to today,
+  /// so past days' cards also show filled/unfilled status.
+  /// Summaries are stored keyed by "{date}__{classId}__{subjectId}".
   Future<void> _loadDailySummary() async {
     if (_teacherId.isEmpty) return;
     try {
       final service = getIt<ApiScheduleService>();
-      AppLogger.debug('schedule', 'Loading daily summary for teacherId=$_teacherId');
-      final result = await service.getDailySummary(teacherId: _teacherId);
-      AppLogger.debug('schedule', 'Daily summary result: ${result.keys.toList()}, summaries=${result['summaries']}');
+      final now = DateTime.now();
+      final monday = now.subtract(Duration(days: now.weekday - 1));
+
+      // Generate dates from Monday to today
+      final dates = <String>[];
+      for (var d = monday; !d.isAfter(now); d = d.add(const Duration(days: 1))) {
+        dates.add('${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}');
+      }
+
+      // Fetch all days in parallel
+      final results = await Future.wait(
+        dates.map((date) => service.getDailySummary(teacherId: _teacherId, date: date)),
+      );
+
+      // Merge into a single map keyed by "{date}__{classId}__{subjectId}"
+      final mergedSummaries = <String, dynamic>{};
+      for (var i = 0; i < dates.length; i++) {
+        final date = dates[i];
+        final summaries = results[i]['summaries'];
+        if (summaries is Map) {
+          for (final entry in summaries.entries) {
+            // Original key is "classId__subjectId", prefix with date
+            mergedSummaries['${date}__${entry.key}'] = entry.value;
+          }
+        }
+      }
+
       if (mounted) {
-        setState(() => _dailySummary = result);
+        setState(() => _dailySummary = {'summaries': mergedSummaries});
       }
     } catch (e) {
       AppLogger.error('schedule', 'Error loading daily summary: $e');
@@ -1087,6 +1114,7 @@ class TeachingScheduleScreenState
                                           firstScheduleKey: _firstScheduleKey,
                                           actionButtonsKey: _actionButtonsKey,
                                           dailySummary: _dailySummary,
+                                          onRefresh: _loadDailySummary,
                                         ),
                                       ),
           ),

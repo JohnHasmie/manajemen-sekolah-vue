@@ -1,30 +1,19 @@
-// Extracted from teacher_attendance_screen.dart (_buildStudentItem +
-// _buildQuickStatusButton). Like a Vue `<StudentAttendanceRow>` component --
-// renders one student row with avatar, NIS, current status badge, and five
-// quick-select status buttons (H / T / S / I / A).
-//
-// Stateless: all mutable data flows in via parameters, changes flow out via
-// [onStatusChanged]. The parent's setState is invoked through the callback,
-// keeping this widget fully pure -- like a controlled component in Vue.
+// Student row for attendance input with two display modes:
+// - compact:     single row  [# avatar name ── H T S I A]
+// - descriptive: two rows    [# avatar name ── badge]
+//                            [Hadir] [Terlambat] [Sakit] [Izin] [Alpha]
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
-/// One student row in the attendance input list.
-///
-/// Parameters (like Vue props):
-/// - [student]          -- the Student model to display
-/// - [currentStatus]    -- the current attendance status string (e.g. 'hadir')
-/// - [onStatusChanged]  -- callback when the user taps a quick-status button;
-///                         receives the [studentId] and new [status]
-/// - [languageProvider] -- for translating status labels
 class AttendanceStudentItem extends StatelessWidget {
   final Student student;
   final String currentStatus;
   final void Function(String studentId, String status) onStatusChanged;
   final LanguageProvider languageProvider;
+  final int index;
+  final bool compactMode;
 
   const AttendanceStudentItem({
     super.key,
@@ -32,169 +21,262 @@ class AttendanceStudentItem extends StatelessWidget {
     required this.currentStatus,
     required this.onStatusChanged,
     required this.languageProvider,
+    this.index = 0,
+    this.compactMode = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final Color statusColor = attendanceStatusColor(currentStatus);
-    final String statusText =
-        attendanceStatusText(currentStatus, languageProvider);
+    return compactMode ? _buildCompact(context) : _buildDescriptive();
+  }
+
+  // ── Compact: single row ──────────────────────────────────────────────────
+
+  Widget _buildCompact(BuildContext context) {
     final avatarColor = _avatarColor(student.name);
+    final lowerStatus = currentStatus.toLowerCase();
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        border: Border.all(color: ColorUtils.slate200),
-        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: ColorUtils.slate100),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // Avatar with first-letter initial
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: avatarColor.withValues(alpha: 0.15),
-                  child: Text(
-                    student.name.isNotEmpty
-                        ? student.name[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: avatarColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                // Name + NIS
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        student.name,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'NIS: ${student.studentNumber}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Current status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: const BorderRadius.all(Radius.circular(8)),
-                    border: Border.all(
-                      color: statusColor.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            // Quick-select status button row
-            Container(
-              decoration: BoxDecoration(
-                color: ColorUtils.slate50,
-                borderRadius: const BorderRadius.all(Radius.circular(12)),
-                border: Border.all(color: ColorUtils.slate200),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _QuickStatusButton(
-                    status: 'hadir',
-                    label: 'H',
-                    color: ColorUtils.success600,
-                    isSelected: currentStatus.toLowerCase() == 'hadir',
-                    onTap: () => onStatusChanged(student.id, 'hadir'),
-                  ),
-                  _QuickStatusButton(
-                    status: 'terlambat',
-                    label: 'T',
-                    color: ColorUtils.violet700,
-                    isSelected: currentStatus.toLowerCase() == 'terlambat',
-                    onTap: () => onStatusChanged(student.id, 'terlambat'),
-                  ),
-                  _QuickStatusButton(
-                    status: 'sakit',
-                    label: 'S',
-                    color: ColorUtils.warning600,
-                    isSelected: currentStatus.toLowerCase() == 'sakit',
-                    onTap: () => onStatusChanged(student.id, 'sakit'),
-                  ),
-                  _QuickStatusButton(
-                    status: 'izin',
-                    label: 'I',
-                    color: ColorUtils.info600,
-                    isSelected: currentStatus.toLowerCase() == 'izin',
-                    onTap: () => onStatusChanged(student.id, 'izin'),
-                  ),
-                  _QuickStatusButton(
-                    status: 'alpha',
-                    label: 'A',
-                    color: ColorUtils.error600,
-                    isSelected: currentStatus.toLowerCase() == 'alpha',
-                    onTap: () => onStatusChanged(student.id, 'alpha'),
-                  ),
-                ],
+      child: Row(
+        children: [
+          SizedBox(
+            width: 22,
+            child: Text(
+              '${index + 1}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: ColorUtils.slate400,
               ),
             ),
-          ],
+          ),
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: avatarColor.withValues(alpha: 0.15),
+            child: Text(
+              student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
+              style: TextStyle(
+                color: avatarColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Tap name to show full name + NIS in a SnackBar
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      '${student.name} — NIS: ${student.studentNumber}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                );
+              },
+              child: Text(
+                student.name,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: ColorUtils.slate800,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          // Inline letter buttons
+          _CompactButton(label: 'H', color: ColorUtils.success600, isSelected: lowerStatus == 'hadir', tooltip: attendanceStatusText('hadir', languageProvider), onTap: () => onStatusChanged(student.id, 'hadir')),
+          const SizedBox(width: 4),
+          _CompactButton(label: 'T', color: ColorUtils.violet700, isSelected: lowerStatus == 'terlambat', tooltip: attendanceStatusText('terlambat', languageProvider), onTap: () => onStatusChanged(student.id, 'terlambat')),
+          const SizedBox(width: 4),
+          _CompactButton(label: 'S', color: ColorUtils.warning600, isSelected: lowerStatus == 'sakit', tooltip: attendanceStatusText('sakit', languageProvider), onTap: () => onStatusChanged(student.id, 'sakit')),
+          const SizedBox(width: 4),
+          _CompactButton(label: 'I', color: ColorUtils.info600, isSelected: lowerStatus == 'izin', tooltip: attendanceStatusText('izin', languageProvider), onTap: () => onStatusChanged(student.id, 'izin')),
+          const SizedBox(width: 4),
+          _CompactButton(label: 'A', color: ColorUtils.error600, isSelected: lowerStatus == 'alpha', tooltip: attendanceStatusText('alpha', languageProvider), onTap: () => onStatusChanged(student.id, 'alpha')),
+        ],
+      ),
+    );
+  }
+
+  // ── Descriptive: two rows with full labels ───────────────────────────────
+
+  Widget _buildDescriptive() {
+    final avatarColor = _avatarColor(student.name);
+    final statusColor = attendanceStatusColor(currentStatus);
+    final statusLabel = attendanceStatusText(currentStatus, languageProvider);
+    final lowerStatus = currentStatus.toLowerCase();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Column(
+        children: [
+          // Row 1: Number + Avatar + Name + Status badge
+          Row(
+            children: [
+              SizedBox(
+                width: 22,
+                child: Text(
+                  '${index + 1}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: ColorUtils.slate400,
+                  ),
+                ),
+              ),
+              CircleAvatar(
+                radius: 15,
+                backgroundColor: avatarColor.withValues(alpha: 0.15),
+                child: Text(
+                  student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
+                  style: TextStyle(
+                    color: avatarColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  student.name,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: ColorUtils.slate800,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Row 2: Full-width labeled buttons
+          Row(
+            children: [
+              _LabeledButton(label: attendanceStatusText('hadir', languageProvider), color: ColorUtils.success600, isSelected: lowerStatus == 'hadir', onTap: () => onStatusChanged(student.id, 'hadir')),
+              const SizedBox(width: 5),
+              _LabeledButton(label: attendanceStatusText('terlambat', languageProvider), color: ColorUtils.violet700, isSelected: lowerStatus == 'terlambat', onTap: () => onStatusChanged(student.id, 'terlambat')),
+              const SizedBox(width: 5),
+              _LabeledButton(label: attendanceStatusText('sakit', languageProvider), color: ColorUtils.warning600, isSelected: lowerStatus == 'sakit', onTap: () => onStatusChanged(student.id, 'sakit')),
+              const SizedBox(width: 5),
+              _LabeledButton(label: attendanceStatusText('izin', languageProvider), color: ColorUtils.info600, isSelected: lowerStatus == 'izin', onTap: () => onStatusChanged(student.id, 'izin')),
+              const SizedBox(width: 5),
+              _LabeledButton(label: attendanceStatusText('alpha', languageProvider), color: ColorUtils.error600, isSelected: lowerStatus == 'alpha', onTap: () => onStatusChanged(student.id, 'alpha')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Compact button: 36px square with letter, 44px touch target ───────────
+
+class _CompactButton extends StatelessWidget {
+  final String label;
+  final String tooltip;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CompactButton({
+    required this.label,
+    required this.tooltip,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      preferBelow: false,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: isSelected ? color : color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isSelected ? color : color.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : color,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// Private helpers
-// ---------------------------------------------------------------------------
+// ── Labeled button: Expanded, shows full text like "Hadir" ───────────────
 
-/// A single circular status button (H / T / S / I / A).
-/// Extracted from the original `_buildQuickStatusButton`. Pure stateless --
-/// selection state is passed in from the parent rather than held locally.
-class _QuickStatusButton extends StatelessWidget {
-  final String status;
+class _LabeledButton extends StatelessWidget {
   final String label;
   final Color color;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _QuickStatusButton({
-    required this.status,
+  const _LabeledButton({
     required this.label,
     required this.color,
     required this.isSelected,
@@ -203,23 +285,31 @@ class _QuickStatusButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: isSelected ? color : color.withValues(alpha: 0.1),
-          shape: BoxShape.circle,
-          border: Border.all(color: color, width: 1.5),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : color,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          height: 38,
+          decoration: BoxDecoration(
+            color: isSelected ? color : color.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? color : color.withValues(alpha: 0.25),
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : color,
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ),
@@ -229,12 +319,9 @@ class _QuickStatusButton extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Pure helper functions (no Flutter state dependency).
-// Used by both this widget file and kept in sync with the parent screen.
+// Pure helper functions
 // ---------------------------------------------------------------------------
 
-/// Returns the display color for an attendance status string.
-/// Like a Vue computed property that maps a status value to a Tailwind color.
 Color attendanceStatusColor(String status) {
   switch (status.toLowerCase()) {
     case 'hadir':
@@ -252,7 +339,6 @@ Color attendanceStatusColor(String status) {
   }
 }
 
-/// Returns the translated display label for an attendance status string.
 String attendanceStatusText(
   String status,
   LanguageProvider languageProvider,
@@ -291,7 +377,6 @@ String attendanceStatusText(
   }
 }
 
-/// Picks a deterministic avatar background color from the student's name.
 Color _avatarColor(String name) {
   final index = name.isNotEmpty ? name.codeUnitAt(0) % 6 : 0;
   return ColorUtils.getColorForIndex(index);

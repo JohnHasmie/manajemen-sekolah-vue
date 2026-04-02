@@ -41,6 +41,7 @@ class AttendanceResultsMode extends ConsumerWidget {
   final VoidCallback onClearAllFilters;
   final void Function(AttendanceSummaryItem) onNavigateToDetail;
   final void Function(AttendanceSummaryItem) onDelete;
+  final ScrollController? scrollController;
 
   const AttendanceResultsMode({
     super.key,
@@ -56,6 +57,7 @@ class AttendanceResultsMode extends ConsumerWidget {
     required this.onClearAllFilters,
     required this.onNavigateToDetail,
     required this.onDelete,
+    this.scrollController,
   });
 
   @override
@@ -187,6 +189,7 @@ class AttendanceResultsMode extends ConsumerWidget {
                   icon: Icons.list_alt,
                 )
               : ListView.builder(
+                  controller: scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   itemCount: filteredSummaries.length,
                   itemBuilder: (context, index) {

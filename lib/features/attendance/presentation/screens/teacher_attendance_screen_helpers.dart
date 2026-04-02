@@ -137,41 +137,6 @@ bool _isSameDay(DateTime date1, DateTime date2) {
 // STATUS HELPERS
 // ──────────────────────────────────────────────────────────────────────────────
 
-String _getStatusText(String status, LanguageProvider languageProvider) {
-  switch (status.toLowerCase()) {
-    case 'hadir':
-      return languageProvider.getTranslatedText({
-        'en': 'Present',
-        'id': 'Hadir',
-      });
-    case 'sakit':
-      return languageProvider.getTranslatedText({
-        'en': 'Sick',
-        'id': 'Sakit',
-      });
-    case 'izin':
-      return languageProvider.getTranslatedText({
-        'en': 'Permission',
-        'id': 'Izin',
-      });
-    case 'alpha':
-      return languageProvider.getTranslatedText({
-        'en': 'Absent',
-        'id': 'Alpha',
-      });
-    case 'terlambat':
-      return languageProvider.getTranslatedText({
-        'en': 'Late',
-        'id': 'Terlambat',
-      });
-    default:
-      return languageProvider.getTranslatedText({
-        'en': 'Present',
-        'id': 'Hadir',
-      });
-  }
-}
-
 String _mapStatusToBackend(String status) {
   switch (status.toLowerCase()) {
     case 'hadir':

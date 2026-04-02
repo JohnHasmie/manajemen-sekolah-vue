@@ -250,6 +250,31 @@ class AttendanceService {
     return response.data;
   }
 
+  /// Bulk create/update attendance for multiple students in a single request.
+  static Future<Map<String, dynamic>> createBulkAttendance({
+    required String teacherId,
+    required String subjectId,
+    required String classId,
+    required String date,
+    String? lessonHourId,
+    required List<Map<String, dynamic>> attendances,
+  }) async {
+    final response = await dioClient.post(
+      ApiEndpoints.attendanceBulk,
+      data: {
+        'teacher_id': teacherId,
+        'subject_id': subjectId,
+        'class_id': classId,
+        'date': date,
+        'lesson_hour_id': lessonHourId,
+        'attendances': attendances,
+      },
+    );
+    final result = response.data;
+    if (result is Map<String, dynamic>) return result;
+    return {'success': 0, 'failed': 0, 'errors': []};
+  }
+
   static Future<dynamic> deleteAttendance({
     required String subjectId,
     required String classId,
