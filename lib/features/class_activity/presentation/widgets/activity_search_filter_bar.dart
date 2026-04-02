@@ -1,38 +1,18 @@
-// ActivitySearchFilterBar — search field + filter icon button for Step 2.
-//
-// Extracted from `ClassActivityScreenState._buildSearchAndFilter`.
-// Think of this like a Vue `<SearchFilterBar @search="..." @filter="..." />`
-// component. It is purely presentational: all state (controller, active-filter
-// flag, callbacks) is owned by the parent screen.
-
+// ActivitySearchFilterBar — search field + filter icon button.
+// Matches the "Jadwal Mengajar" search bar style: 48px height, white bg,
+// border-radius 12, filter button with badge dot.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
-/// Search text field + filter toggle button row shown above the activity list.
-///
-/// Props (constructor params — like Vue props):
-/// - [searchController]   — the TextEditingController owned by the parent State
-/// - [searchFilterKey]    — GlobalKey used by the onboarding tour highlight
-/// - [primaryColor]       — theme colour passed from the screen
-/// - [hasActiveFilter]    — when true the filter icon button turns filled/coloured
-/// - [languageProvider]   — translation helper (read-only)
-/// - [onSearchSubmitted]  — called when the user submits the search field or taps
-///                          the search icon button; parent resets pagination
-/// - [onFilterPressed]    — called when the filter icon button is tapped;
-///                          parent opens the filter bottom sheet
 class ActivitySearchFilterBar extends StatelessWidget {
   final TextEditingController searchController;
   final GlobalKey searchFilterKey;
   final Color primaryColor;
   final bool hasActiveFilter;
   final LanguageProvider languageProvider;
-
-  /// Called when the user submits the text field or taps the search icon.
   final VoidCallback onSearchSubmitted;
-
-  /// Called when the filter icon button is tapped.
   final VoidCallback onFilterPressed;
 
   const ActivitySearchFilterBar({
@@ -49,48 +29,50 @@ class ActivitySearchFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         key: searchFilterKey,
         children: [
-          // ── Search text field ─────────────────────────────────────────
+          // Search field — matching schedule screen style
           Expanded(
             child: Container(
+              height: 48,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.all(Radius.circular(12)),
-                border: Border.all(color: ColorUtils.slate300),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: ColorUtils.slate200),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: searchController,
-                      style: TextStyle(color: ColorUtils.slate900),
+                      textAlignVertical: TextAlignVertical.center,
+                      style: TextStyle(color: ColorUtils.slate800, fontSize: 13),
                       decoration: InputDecoration(
+                        isDense: true,
                         hintText: languageProvider.getTranslatedText({
                           'en': 'Search activities...',
                           'id': 'Cari kegiatan...',
                         }),
-                        hintStyle: TextStyle(color: ColorUtils.slate400),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: ColorUtils.slate400,
-                        ),
+                        hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                       ),
-                      onSubmitted: (_) => onSearchSubmitted(),
+                      onSubmitted: (_) {
+                        onSearchSubmitted();
+                        FocusScope.of(context).unfocus();
+                      },
                     ),
                   ),
                   Container(
                     margin: const EdgeInsets.only(right: 4),
                     child: IconButton(
-                      icon: Icon(Icons.search, color: primaryColor),
-                      onPressed: onSearchSubmitted,
+                      icon: Icon(Icons.search, color: primaryColor, size: 20),
+                      onPressed: () {
+                        onSearchSubmitted();
+                        FocusScope.of(context).unfocus();
+                      },
                     ),
                   ),
                 ],
@@ -99,25 +81,48 @@ class ActivitySearchFilterBar extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
 
-          // ── Filter icon button (filled when a filter is active) ───────
+          // Filter button with badge dot
           Container(
+            height: 48,
+            width: 48,
             decoration: BoxDecoration(
-              color: hasActiveFilter ? primaryColor : Colors.white,
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              color: hasActiveFilter ? primaryColor.withValues(alpha: 0.12) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: hasActiveFilter ? primaryColor : ColorUtils.slate300,
+                color: hasActiveFilter ? primaryColor : ColorUtils.slate200,
+                width: hasActiveFilter ? 1.5 : 1,
               ),
             ),
-            child: IconButton(
-              onPressed: onFilterPressed,
-              icon: Icon(
-                Icons.tune,
-                color: hasActiveFilter ? Colors.white : ColorUtils.slate700,
-              ),
-              tooltip: languageProvider.getTranslatedText({
-                'en': 'Filter',
-                'id': 'Filter',
-              }),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  onPressed: onFilterPressed,
+                  icon: Icon(
+                    Icons.tune,
+                    color: hasActiveFilter ? primaryColor : ColorUtils.slate600,
+                    size: 20,
+                  ),
+                  tooltip: languageProvider.getTranslatedText({
+                    'en': 'Filter',
+                    'id': 'Filter',
+                  }),
+                ),
+                if (hasActiveFilter)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: ColorUtils.error600,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
