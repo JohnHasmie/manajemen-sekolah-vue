@@ -83,6 +83,7 @@ class ApiEndpoints {
 
   // ── Class Activity ──
   static const classActivity = '/class-activity';
+  static const classActivityTeacherSummary = '/class-activities/teacher-summary';
 
   // ── Report Cards ──
   static const reportCards = '/raport';

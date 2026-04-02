@@ -132,6 +132,49 @@ class ApiClassActivityService {
     return response;
   }
 
+  /// Fetches activities grouped by class+subject with pagination.
+  /// Returns {'data': [...], 'pagination': {...}} or {'data': [], 'pagination': null}.
+  Future<Map<String, dynamic>> getTeacherActivitySummary({
+    String? teacherId,
+    String? academicYearId,
+    String? classId,
+    String? subjectId,
+    String? search,
+    String? dateFilter,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'page': page,
+        'per_page': perPage,
+      };
+      if (teacherId != null) params['teacher_id'] = teacherId;
+      if (academicYearId != null) params['academic_year_id'] = academicYearId;
+      if (classId != null) params['class_id'] = classId;
+      if (subjectId != null) params['subject_id'] = subjectId;
+      if (search != null && search.isNotEmpty) params['search'] = search;
+      if (dateFilter != null) params['date_filter'] = dateFilter;
+
+      final response = await dioClient.get(
+        '/class-activities/teacher-summary',
+        queryParameters: params,
+      );
+
+      final result = response.data;
+      if (result is Map<String, dynamic>) {
+        return {
+          'data': (result['data'] as List?) ?? [],
+          'pagination': result['pagination'],
+        };
+      }
+      return {'data': [], 'pagination': null};
+    } catch (e) {
+      AppLogger.error('class_activity', 'Error getting teacher activity summary: $e');
+      return {'data': [], 'pagination': null};
+    }
+  }
+
   /// Fetches activities created by a specific teacher.
   /// Like `ClassActivity::where('teacher_id', $teacherId)->get()` in Laravel.
   /// [teacherId] - The teacher's UUID.

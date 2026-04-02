@@ -4,7 +4,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_card.dart';
@@ -119,8 +120,8 @@ class ActivityListView extends ConsumerWidget {
           });
 
     final datePrefix = languageProvider.getTranslatedText({
-      'en': 'Date',
-      'id': 'Tanggal',
+      'en': 'Time Range',
+      'id': 'Rentang Waktu',
     });
 
     final chips = _filterChips(dateLabel, datePrefix);
@@ -147,33 +148,27 @@ class ActivityListView extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               children: chips.map((filter) {
-                return Container(
-                  margin: const EdgeInsets.only(right: 6),
-                  child: Chip(
-                    label: Text(
-                      filter['label'] as String,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
+                return GestureDetector(
+                  onTap: filter['onRemove'] as VoidCallback,
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
                     ),
-                    deleteIcon: const Icon(
-                      Icons.close,
-                      size: 16,
-                      color: Colors.white,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          filter['label'] as String,
+                          style: TextStyle(fontSize: 12, color: primaryColor, fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.close, size: 14, color: primaryColor),
+                      ],
                     ),
-                    onDeleted: filter['onRemove'] as VoidCallback,
-                    backgroundColor: primaryColor.withValues(alpha: 0.7),
-                    side: BorderSide.none,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    labelPadding: const EdgeInsets.only(left: 4),
                   ),
                 );
               }).toList(),
@@ -202,39 +197,124 @@ class ActivityListView extends ConsumerWidget {
                         }),
                   icon: Icons.event_note,
                 )
-              : ListView.builder(
-                  controller: scrollController,
-                  padding: const EdgeInsets.only(top: 8, bottom: 16),
-                  itemCount:
-                      activityList.length + (isLoadingMore ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    // Loading indicator at the bottom during pagination
-                    if (index == activityList.length) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: CircularProgressIndicator(
-                            color: primaryColor,
-                          ),
-                        ),
-                      );
-                    }
-                    final activity = activityList[index];
-                    return ActivityCard(
-                      activity: activity,
-                      primaryColor: primaryColor,
-                      languageProvider: languageProvider,
-                      canEdit: canEdit,
-                      onTap: () => onActivityTap(activity),
-                      onEdit: () => onActivityEdit(activity),
-                      onDelete: () => onActivityDelete(activity),
-                      selectedSubjectName: selectedSubjectName,
-                      selectedClassName: selectedClassName,
-                    );
-                  },
-                ),
+              : _buildDateGroupedList(languageProvider),
         ),
       ],
+    );
+  }
+
+  /// Groups activities by date and renders with date headers.
+  Widget _buildDateGroupedList(LanguageProvider languageProvider) {
+    // Build flat list of items: date headers + activity cards
+    final items = <_ListItem>[];
+    String? lastDate;
+
+    for (final activity in activityList) {
+      final rawDate = (activity['date'] ?? '').toString();
+      final dateKey = rawDate.length >= 10 ? rawDate.substring(0, 10) : rawDate;
+
+      if (dateKey != lastDate && dateKey.isNotEmpty) {
+        items.add(_ListItem(isHeader: true, dateKey: dateKey));
+        lastDate = dateKey;
+      }
+      items.add(_ListItem(isHeader: false, activity: activity));
+    }
+
+    return ListView.builder(
+      controller: scrollController,
+      padding: const EdgeInsets.only(top: 4, bottom: 16),
+      itemCount: items.length + (isLoadingMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == items.length) {
+          return Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Center(child: CircularProgressIndicator(color: primaryColor)),
+          );
+        }
+
+        final item = items[index];
+        if (item.isHeader) {
+          return _DateGroupHeader(dateKey: item.dateKey!, primaryColor: primaryColor);
+        }
+
+        final activity = item.activity!;
+        return ActivityCard(
+          activity: activity,
+          primaryColor: primaryColor,
+          languageProvider: languageProvider,
+          canEdit: canEdit,
+          onTap: () => onActivityTap(activity),
+          onEdit: () => onActivityEdit(activity),
+          onDelete: () => onActivityDelete(activity),
+          selectedSubjectName: selectedSubjectName,
+          selectedClassName: selectedClassName,
+        );
+      },
+    );
+  }
+}
+
+/// Item type for the flat date-grouped list.
+class _ListItem {
+  final bool isHeader;
+  final String? dateKey;
+  final dynamic activity;
+
+  _ListItem({required this.isHeader, this.dateKey, this.activity});
+}
+
+/// Date group header shown between activity cards.
+class _DateGroupHeader extends StatelessWidget {
+  final String dateKey;
+  final Color primaryColor;
+
+  const _DateGroupHeader({required this.dateKey, required this.primaryColor});
+
+  String _formatDateHeader(String dateStr) {
+    final dt = DateTime.tryParse(dateStr);
+    if (dt == null) return dateStr;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final dateOnly = DateTime(dt.year, dt.month, dt.day);
+
+    const dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+    if (dateOnly == today) return 'Hari Ini';
+    if (dateOnly == yesterday) return 'Kemarin';
+
+    final dayName = dayNames[dt.weekday - 1];
+    final monthName = monthNames[dt.month - 1];
+    return '$dayName, ${dt.day} $monthName ${dt.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 18,
+            decoration: BoxDecoration(
+              color: primaryColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            _formatDateHeader(dateKey),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
