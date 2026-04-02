@@ -42,6 +42,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_router.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/constants/api_endpoints.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -52,6 +53,7 @@ import 'package:manajemensekolah/core/services/performance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:upgrader/upgrader.dart';
+import 'package:version/version.dart';
 
 /// Global navigator key that enables navigation from anywhere without a BuildContext.
 /// Like a global `$router` reference in Vue, or using `app()->make('redirect')` in Laravel.
@@ -322,8 +324,17 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
       supportedLocales: const [Locale('en', 'US'), Locale('id', 'ID')],
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
+        final appcastUrl = '${ApiService.baseUrl.replaceAll('/api', '')}${ApiEndpoints.appcast}';
+        UpgraderAppcastStore appcastStore() => UpgraderAppcastStore(
+              appcastURL: appcastUrl,
+              osVersion: Version.parse('0.0.0'),
+            );
         return UpgradeAlert(
           upgrader: Upgrader(
+            storeController: UpgraderStoreController(
+              onAndroid: appcastStore,
+              oniOS: appcastStore,
+            ),
             languageCode: isIndonesian ? 'id' : 'en',
           ),
           child: child ?? const SizedBox.shrink(),
