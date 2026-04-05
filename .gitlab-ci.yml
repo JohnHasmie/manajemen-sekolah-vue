@@ -1,11 +1,15 @@
 # GitLab CI/CD for KamilEdu Flutter App
 #
 # Pipeline flow:
-#   Every push:      analyze (auto) → test (skippable) → detect_changes
-#   Manual buttons:  deploy_playstore | shorebird_release | shorebird_patch
+#   Every push to any branch:  analyze → test
+#   On main branch:            detect_changes (recommends release vs patch)
 #
-# Version code uses CI_PIPELINE_IID (auto-incrementing per project).
-# No git push needed — no CI_GIT_PUSH_TOKEN required.
+# Manual deploy buttons (main branch only):
+#   release     →  Shorebird release + Play Store upload (for new versions)
+#   patch       →  OTA patch to latest release (for Dart-only hotfixes)
+#
+# IMPORTANT: Always use "release" for new versions. The "patch" button
+# only works if users have a Shorebird-enabled build installed.
 #
 # Required CI/CD Variables:
 #   API_BASE_URL           - API endpoint URL
@@ -34,8 +38,6 @@ variables:
     - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$PATH"
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
-    # Remove integration_test from GeneratedPluginRegistrant (dev-only, breaks release builds)
-    # Use portable sed syntax that works on both macOS and Linux
     - |
       REGISTRANT="android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java"
       if [ -f "$REGISTRANT" ]; then
@@ -52,7 +54,6 @@ variables:
       fi
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
-    # Remove integration_test (portable sed)
     - |
       REGISTRANT="android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java"
       if [ -f "$REGISTRANT" ]; then
@@ -67,18 +68,8 @@ variables:
       storeFile=upload-keystore.jks
       EOF
 
-.setup_keystore: &setup_keystore
-  - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
-  - |
-    cat > android/key.properties << EOF
-    storePassword=${STORE_PASSWORD}
-    keyPassword=${KEY_PASSWORD}
-    keyAlias=${KEY_ALIAS}
-    storeFile=upload-keystore.jks
-    EOF
-
 # ---------------------------------------------------------------------------
-# Stage 1: Analyze (auto — must pass)
+# Stage 1: Analyze
 # ---------------------------------------------------------------------------
 analyze:
   <<: *flutter_setup
@@ -90,7 +81,7 @@ analyze:
     - if: $CI_COMMIT_BRANCH
 
 # ---------------------------------------------------------------------------
-# Stage 2: Test (auto but skippable)
+# Stage 2: Test
 # ---------------------------------------------------------------------------
 test:
   <<: *flutter_setup
@@ -109,7 +100,6 @@ test:
 detect_changes:
   stage: detect
   script:
-    - echo "Detecting changes..."
     - |
       NATIVE_PATTERNS="android/ ios/ macos/ linux/ windows/ web/ pubspec.yaml pubspec.lock shorebird.yaml"
     - |
@@ -130,32 +120,42 @@ detect_changes:
       done
     - |
       echo ""
-      echo "Pipeline IID: ${CI_PIPELINE_IID} (used as build number)"
+      echo "Pipeline IID: ${CI_PIPELINE_IID}"
       echo ""
       if [ "$NEEDS_RELEASE" = "true" ]; then
-        echo "🚀 RELEASE REQUIRED — native/plugin changes detected"
-        echo "   → Click: shorebird_release, then deploy_playstore"
+        echo "🚀 RELEASE needed — native/plugin changes detected"
+        echo "   → Click: release (builds + uploads to Play Store)"
       else
         echo "⚡ PATCH OK — Dart-only changes"
-        echo "   → Click: shorebird_patch (instant OTA)"
+        echo "   → Click: patch (instant OTA to existing users)"
       fi
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 # ---------------------------------------------------------------------------
-# Deploy to Play Store (manual)
-# Uses CI_PIPELINE_IID as build number — always unique, always increasing
+# Release (manual) — Shorebird release + Play Store upload in one job
+#
+# This is the ONLY way to publish a new version. It:
+# 1. Creates a Shorebird-enabled release build (with OTA engine)
+# 2. Uploads the AAB to Google Play Store (alpha track)
+#
+# Users who install this version can receive future OTA patches.
 # ---------------------------------------------------------------------------
-deploy_playstore:
-  <<: *flutter_setup
+release:
+  <<: *shorebird_setup
   stage: deploy
   script:
-    - *setup_keystore
+    - export PATH="$HOME/.shorebird/bin:$PATH"
+    # 1. Build version string
     - |
       VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
       BUILD_NUMBER=${CI_PIPELINE_IID}
-      echo "Building ${VERSION_NAME}+${BUILD_NUMBER}"
-    - flutter build appbundle --release --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL}
+      echo "═══════════════════════════════════════════"
+      echo "  Release: ${VERSION_NAME}+${BUILD_NUMBER}"
+      echo "═══════════════════════════════════════════"
+    # 2. Shorebird release (builds AAB with OTA engine)
+    - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub --no-tree-shake-icons
+    # 3. Upload to Play Store
     - command -v fastlane &>/dev/null || gem install fastlane --no-document
     - echo "${PLAY_STORE_JSON_BASE64}" | base64 -d > play-store-key.json
     - |
@@ -168,28 +168,11 @@ deploy_playstore:
         --skip_upload_images \
         --skip_upload_screenshots
     - rm -f play-store-key.json
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
-      allow_failure: false
-
-# ---------------------------------------------------------------------------
-# Shorebird Release (manual)
-# Creates Shorebird-enabled release. MUST use the same Flutter version
-# for both release and patch — otherwise engine hash mismatch causes
-# patches to silently fail on the device.
-# ---------------------------------------------------------------------------
-shorebird_release:
-  <<: *shorebird_setup
-  stage: deploy
-  script:
-    - export PATH="$HOME/.shorebird/bin:$PATH"
     - |
-      VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
-      BUILD_NUMBER=${CI_PIPELINE_IID}
-      RELEASE_VERSION="${VERSION_NAME}+${BUILD_NUMBER}"
-      echo "Shorebird release ${RELEASE_VERSION}"
-    - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub --no-tree-shake-icons
+      echo ""
+      echo "✅ Released ${VERSION_NAME}+${BUILD_NUMBER}"
+      echo "   Shorebird: registered for OTA patches"
+      echo "   Play Store: uploaded to alpha track"
   artifacts:
     paths:
       - build/app/outputs/bundle/release/app-release.aab
@@ -200,19 +183,24 @@ shorebird_release:
       allow_failure: false
 
 # ---------------------------------------------------------------------------
-# Shorebird Patch (manual)
-# Patches the latest Shorebird release via OTA.
+# Patch (manual) — OTA update to latest release
 #
-# Shorebird automatically uses the same Flutter version as the original
-# release — no --flutter-version flag needed (or supported) for patch.
+# Pushes a Dart-only patch to all users who have the latest Shorebird
+# release installed. No Play Store review needed — applies on next
+# app restart.
+#
+# Only works if the latest release was created with the "release" job
+# above (which includes the Shorebird engine).
 # ---------------------------------------------------------------------------
-shorebird_patch:
+patch:
   <<: *shorebird_setup
   stage: deploy
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
     - |
-      echo "Patching latest release..."
+      echo "═══════════════════════════════════════════"
+      echo "  Patching latest release..."
+      echo "═══════════════════════════════════════════"
     - shorebird patch android --release-version=latest --allow-asset-diffs --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
