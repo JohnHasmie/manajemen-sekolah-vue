@@ -189,7 +189,7 @@ shorebird_release:
       BUILD_NUMBER=${CI_PIPELINE_IID}
       RELEASE_VERSION="${VERSION_NAME}+${BUILD_NUMBER}"
       echo "Shorebird release ${RELEASE_VERSION}"
-    - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+    - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub --no-tree-shake-icons
   artifacts:
     paths:
       - build/app/outputs/bundle/release/app-release.aab
@@ -213,7 +213,7 @@ shorebird_patch:
     - export PATH="$HOME/.shorebird/bin:$PATH"
     - |
       echo "Patching latest release..."
-    - shorebird patch android --release-version=latest --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+    - shorebird patch android --release-version=latest --allow-asset-diffs --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
