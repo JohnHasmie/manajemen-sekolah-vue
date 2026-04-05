@@ -151,6 +151,38 @@ class AttendanceService {
     }
   }
 
+  /// Fetches attendance grouped by class+subject for the teacher overview.
+  /// Mirrors [ApiClassActivityService.getTeacherActivitySummary].
+  static Future<Map<String, dynamic>> getTeacherAttendanceSummary({
+    String? teacherId,
+    String? academicYearId,
+    String? classId,
+    String? subjectId,
+    String? search,
+    String? dateFilter,
+    int page = 1,
+    int perPage = 50,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page.toString(),
+      'per_page': perPage.toString(),
+    };
+    if (teacherId != null) params['teacher_id'] = teacherId;
+    if (academicYearId != null) params['academic_year_id'] = academicYearId;
+    if (classId != null) params['class_id'] = classId;
+    if (subjectId != null) params['subject_id'] = subjectId;
+    if (search != null && search.isNotEmpty) params['search'] = search;
+    if (dateFilter != null) params['date_filter'] = dateFilter;
+
+    final response = await dioClient.get(
+      ApiEndpoints.attendanceTeacherSummary,
+      queryParameters: params,
+    );
+    final result = response.data;
+    if (result is Map<String, dynamic>) return result;
+    return {'data': result is List ? result : [], 'pagination': {}};
+  }
+
   static Future<List<dynamic>> getAttendanceSummary({
     String? teacherId,
     String? date,

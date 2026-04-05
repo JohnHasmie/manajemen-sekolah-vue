@@ -22,6 +22,7 @@ class AttendanceInputMode extends ConsumerStatefulWidget {
   final void Function(String studentId, String status) onStatusChanged;
   final VoidCallback onSubmit;
   final ScrollController? scrollController;
+  final bool compactMode;
 
   const AttendanceInputMode({
     super.key,
@@ -38,6 +39,7 @@ class AttendanceInputMode extends ConsumerStatefulWidget {
     required this.onStatusChanged,
     required this.onSubmit,
     this.scrollController,
+    this.compactMode = false,
   });
 
   @override
@@ -46,7 +48,6 @@ class AttendanceInputMode extends ConsumerStatefulWidget {
 }
 
 class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode> {
-  bool _compactMode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +121,7 @@ class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode> {
                     languageProvider: languageProvider,
                     onStatusChanged: widget.onStatusChanged,
                     index: index,
-                    compactMode: _compactMode,
+                    compactMode: widget.compactMode,
                   ),
                 ),
         ),
@@ -245,31 +246,6 @@ class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode> {
                       ),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Toggle view button
-              Container(
-                height: 48,
-                width: 48,
-                decoration: BoxDecoration(
-                  color: _compactMode ? primary.withValues(alpha: 0.12) : Colors.white,
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  border: Border.all(
-                    color: _compactMode ? primary : ColorUtils.slate200,
-                    width: _compactMode ? 1.5 : 1,
-                  ),
-                ),
-                child: IconButton(
-                  onPressed: () => setState(() => _compactMode = !_compactMode),
-                  icon: Icon(
-                    _compactMode ? Icons.density_small : Icons.view_agenda_outlined,
-                    color: _compactMode ? primary : ColorUtils.slate600,
-                    size: 20,
-                  ),
-                  tooltip: _compactMode
-                      ? tr({'en': 'Descriptive view', 'id': 'Tampilan deskriptif'})
-                      : tr({'en': 'Compact view', 'id': 'Tampilan ringkas'}),
                 ),
               ),
               const SizedBox(width: 8),

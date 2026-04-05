@@ -33,82 +33,47 @@ class AttendanceStudentItem extends StatelessWidget {
   // ── Compact: single row ──────────────────────────────────────────────────
 
   Widget _buildCompact(BuildContext context) {
-    final avatarColor = _avatarColor(student.name);
     final lowerStatus = currentStatus.toLowerCase();
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: ColorUtils.slate100),
       ),
       child: Row(
         children: [
+          // Small index number
           SizedBox(
-            width: 22,
+            width: 18,
             child: Text(
               '${index + 1}',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: ColorUtils.slate400,
-              ),
-            ),
-          ),
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: avatarColor.withValues(alpha: 0.15),
-            child: Text(
-              student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
-              style: TextStyle(
-                color: avatarColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Tap name to show full name + NIS in a SnackBar
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${student.name} — NIS: ${student.studentNumber}',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    duration: const Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                );
-              },
-              child: Text(
-                student.name,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: ColorUtils.slate800,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: ColorUtils.slate400),
+              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(width: 6),
+          // Full name (no avatar)
+          Expanded(
+            child: Text(
+              student.name,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate800),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 4),
           // Inline letter buttons
           _CompactButton(label: 'H', color: ColorUtils.success600, isSelected: lowerStatus == 'hadir', tooltip: attendanceStatusText('hadir', languageProvider), onTap: () => onStatusChanged(student.id, 'hadir')),
-          const SizedBox(width: 4),
+          const SizedBox(width: 3),
           _CompactButton(label: 'T', color: ColorUtils.violet700, isSelected: lowerStatus == 'terlambat', tooltip: attendanceStatusText('terlambat', languageProvider), onTap: () => onStatusChanged(student.id, 'terlambat')),
-          const SizedBox(width: 4),
+          const SizedBox(width: 3),
           _CompactButton(label: 'S', color: ColorUtils.warning600, isSelected: lowerStatus == 'sakit', tooltip: attendanceStatusText('sakit', languageProvider), onTap: () => onStatusChanged(student.id, 'sakit')),
-          const SizedBox(width: 4),
+          const SizedBox(width: 3),
           _CompactButton(label: 'I', color: ColorUtils.info600, isSelected: lowerStatus == 'izin', tooltip: attendanceStatusText('izin', languageProvider), onTap: () => onStatusChanged(student.id, 'izin')),
-          const SizedBox(width: 4),
+          const SizedBox(width: 3),
           _CompactButton(label: 'A', color: ColorUtils.error600, isSelected: lowerStatus == 'alpha', tooltip: attendanceStatusText('alpha', languageProvider), onTap: () => onStatusChanged(student.id, 'alpha')),
         ],
       ),

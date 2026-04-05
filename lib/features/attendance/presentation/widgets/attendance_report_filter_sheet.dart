@@ -151,8 +151,8 @@ void showAttendanceReportFilterSheet({
                     _buildSectionHeader(
                       icon: Icons.date_range,
                       label: languageProvider.getTranslatedText({
-                        'en': 'Date Range',
-                        'id': 'Rentang Tanggal',
+                        'en': 'Time Range',
+                        'id': 'Rentang Waktu',
                       }),
                     ),
                     const SizedBox(height: AppSpacing.md),
