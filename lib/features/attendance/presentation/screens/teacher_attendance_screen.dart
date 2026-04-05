@@ -1,22 +1,15 @@
-// Teacher presence (attendance) management screen.
-// Like `pages/teacher/Attendance.vue` in a Vue app.
-//
-// The largest screen in the app (~5600 lines). Provides two modes via tabs:
-// 1. "Results" mode -- view attendance summaries with search/filter
-// 2. "Input" mode -- take attendance for a class/subject/date
-//
-// Supports auto-detection of current lesson hour, class-based filtering,
-// bulk status setting, and multi-layer caching. In Laravel terms, this
-// combines AttendanceController@index, @store, and @summary.
+// Teacher attendance management screen — redesigned to match the
+// "Kegiatan Kelas" pattern: flat page with grouped cards, role toggle,
+// and bottom sheets for detail/input flows.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
+
 
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
+
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
@@ -26,30 +19,25 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_quick_actions_sheet.dart';
-import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_filter_sheet.dart';
+
 import 'package:manajemensekolah/features/attendance/data/attendance_summary_item.dart';
 
-import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_teacher_class_list.dart';
-import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_teacher_header.dart';
-import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_search_filter_bar.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_summary_card.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_input_form.dart';
-import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_results_mode.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_input_mode.dart';
+import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+
+import 'package:manajemensekolah/core/network/dio_client.dart';
 
 part 'teacher_attendance_screen_helpers.dart';
 
-/// Teacher attendance management page with two modes: view results and input.
-///
-/// This is a StatefulWidget with complex local state. Props (like Vue props):
-/// - [teacher] -- current teacher info
-/// - [initialDate] / [initialSubjectId] / etc. -- optional deep-link params
 class AttendancePage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final DateTime? initialDate;
@@ -61,7 +49,6 @@ class AttendancePage extends ConsumerStatefulWidget {
   final String? initialStartTime;
   final int initialTabIndex;
   final ScrollController? scrollController;
-
   final bool embedded;
 
   const AttendancePage({
@@ -83,1004 +70,1074 @@ class AttendancePage extends ConsumerStatefulWidget {
   AttendancePageState createState() => AttendancePageState();
 }
 
-/// State for [AttendancePage].
-///
-/// Like a Vue page component with `data() { return {...} }`.
-/// Uses `TickerProviderStateMixin` for the tab animation controller.
-///
-/// Key state variables:
-/// - Tab 0 ("Results"): [_attendanceSummaryList], filters, search
-/// - Tab 1 ("Input"): [_studentList], [_attendanceStatus] map, selected date/subject/class
-/// - [_lessonHours] / [_selectedLessonHourId] -- lesson period selection
-/// - Various filter states for both modes
-///
-/// `setState()` is like Vue's reactivity -- triggers a re-render when data changes.
-class AttendancePageState extends ConsumerState<AttendancePage>
-    with TickerProviderStateMixin {
-  // Tab Controller for TabSwitcher
-  late TabController _tabController;
+class AttendancePageState extends ConsumerState<AttendancePage> {
+  // ── Grouped summary (main screen) ──
+  List<dynamic> _groupedAttendance = [];
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  int _currentPage = 1;
+  bool _hasMoreData = true;
 
-  // Data for View Results mode
-  List<AttendanceSummaryItem> _attendanceSummaryList = [];
-  bool _isLoadingSummary = false;
+  // ── Role toggle ──
+  bool _isHomeroomView = false;
+  List<dynamic> _homeroomClassesList = [];
+  Map<String, dynamic>? _selectedHomeroomClass;
 
-  // Data for Attendance Input mode
+  // ── Teacher / class data ──
+  String _teacherId = '';
+  String _teacherNama = '';
+  List<dynamic> _classList = [];
+  List<dynamic> _subjectTeacher = [];
+
+  // ── View toggle ──
+  bool _isTimelineView = false;
+
+  // ── Timeline data ──
+  List<dynamic> _timelineAttendance = [];
+  bool _timelineHasMore = true;
+  bool _timelineLoadingMore = false;
+  final ScrollController _timelineScrollController = ScrollController();
+
+  // ── Filters ──
+  final TextEditingController _searchController = TextEditingController();
+  String? _filterClassId;
+  String? _filterSubjectId;
+  String? _filterDateOption;
+  List<dynamic> _filterSubjectList = [];
+  bool get _hasActiveFilter => _filterClassId != null || _filterSubjectId != null || _filterDateOption != null;
+
+  // ── Input mode state (reused for embedded + input sheet) ──
   DateTime _selectedDate = DateTime.now();
   String? _selectedSubjectId;
   String? _selectedClassId;
-  List<dynamic> _subjectTeacher = [];
-  List<dynamic> _classList = [];
   List<Student> _studentList = [];
   List<Student> _filteredStudentList = [];
   final Map<String, String> _attendanceStatus = {};
   bool _isLoadingInput = true;
   bool _isSubmitting = false;
-  bool _hasActiveFilter = false;
-
-  // Lesson Hour State
   List<dynamic> _lessonHours = [];
   String? _selectedLessonHourId;
-
-  // Filter for Results Mode
-  final TextEditingController _searchController = TextEditingController();
-  String? _selectedDateFilter;
-  List<String> _selectedSubjectIds = [];
-  List<String> _selectedDayIds = [];
-  List<String> _selectedLessonHourIds = [];
-
-  // Filter for Input Mode
   final TextEditingController _searchControllerInput = TextEditingController();
   String? _selectedStatusFilter;
+  bool _compactMode = false;
 
-  // Tour properties
+  // ── Scroll ──
+  final ScrollController _scrollController = ScrollController();
+
+  // ── Tour ──
   final GlobalKey _searchFilterKey = GlobalKey();
-  final GlobalKey _tabSwitcherKey = GlobalKey();
 
-  /// Like Vue's `mounted()` lifecycle hook. Sets up tab controller, applies
-  /// initial params (deep linking), and loads all initial data (subjects,
-  /// classes, schedules, lesson hours). The multi-step initialization
-  /// detects the current schedule to auto-select subject/class.
+  Color get _primaryColor => _getPrimaryColor();
+
   @override
   void initState() {
     super.initState();
+    if (widget.initialDate != null) _selectedDate = widget.initialDate!;
+    if (widget.initialSubjectId != null) _selectedSubjectId = widget.initialSubjectId;
+    if (widget.initialclassId != null) _selectedClassId = widget.initialclassId;
 
-    // Initialize with data from teaching_schedule if provided
-    if (widget.initialDate != null) {
-      _selectedDate = widget.initialDate!;
-    }
-    if (widget.initialSubjectId != null) {
-      _selectedSubjectId = widget.initialSubjectId;
-    }
-    if (widget.initialclassId != null) {
-      _selectedClassId = widget.initialclassId;
-    }
-
-    _tabController = TabController(
-      length: 2,
-      vsync: this,
-      initialIndex: widget.initialTabIndex,
-    );
-    _tabController.addListener(() {
-      // TabController listener fires twice (animation start + end).
-      // Only react once — after the animation settles.
-      if (_tabController.indexIsChanging) return;
-      if (!mounted) return;
-      setState(() {
-        // Trigger rebuild when tab changes
-        if (_tabController.index == 0) {
-          _loadAttendanceSummary();
-        }
-      });
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+        if (!_isLoadingMore && _hasMoreData) _loadMoreGroupedAttendance();
+      }
+    });
+    _timelineScrollController.addListener(() {
+      if (_timelineScrollController.position.pixels >= _timelineScrollController.position.maxScrollExtent - 200) {
+        if (!_timelineLoadingMore && _timelineHasMore) _loadMoreTimeline();
+      }
     });
 
-    _loadInitialData();
+    if (widget.embedded) {
+      _teacherId = widget.teacher['id']?.toString() ?? '';
+      _teacherNama = widget.teacher['nama']?.toString() ?? widget.teacher['name']?.toString() ?? '';
+      _loadEmbeddedData();
+    } else {
+      _loadUserData();
+    }
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     _searchController.dispose();
     _searchControllerInput.dispose();
+    _scrollController.dispose();
+    _timelineScrollController.dispose();
     super.dispose();
   }
 
-  String? _buildPresenceCacheKey() {
-    final teacherId = widget.teacher['id']?.toString() ?? '';
-    if (teacherId.isEmpty) return null;
-    final academicYearId = ref
-        .read(academicYearRiverpod)
-        .selectedAcademicYear?['id']
-        ?.toString();
-    return 'presence_initial_${teacherId}_$academicYearId';
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DATA LOADING
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Future<void> _loadUserData() async {
+    final teacherProvider = ref.read(teacherRiverpod);
+    String teacherId = '';
+    String teacherNama = '';
+
+    // 1. Try teacher prop
+    teacherId = widget.teacher['id']?.toString() ?? '';
+    teacherNama = widget.teacher['nama']?.toString() ?? widget.teacher['name']?.toString() ?? '';
+
+    // 2. Try TeacherProvider
+    if (teacherId.isEmpty && teacherProvider.isLoaded) {
+      teacherId = teacherProvider.teacherId ?? '';
+      teacherNama = teacherProvider.teacherName ?? '';
+    }
+
+    // 3. Try API lookup by user
+    if (teacherId.isEmpty) {
+      try {
+        final prefs = await getIt<ApiTeacherService>().getTeacherByUserId(teacherId);
+        teacherId = prefs?['id']?.toString() ?? '';
+        teacherNama = prefs?['nama']?.toString() ?? prefs?['name']?.toString() ?? '';
+      } catch (_) {}
+    }
+
+    if (teacherId.isEmpty) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    _teacherId = teacherId;
+    _teacherNama = teacherNama;
+
+    await _loadInitialData(teacherId);
   }
 
-  String? _buildSummaryCacheKey() {
-    final teacherId = widget.teacher['id']?.toString() ?? '';
-    if (teacherId.isEmpty) return null;
-    final academicYearId = ref
-        .read(academicYearRiverpod)
-        .selectedAcademicYear?['id']
-        ?.toString();
-    return 'presence_summary_${teacherId}_$academicYearId';
+  Future<void> _loadInitialData(String teacherId) async {
+    setState(() => _isLoading = true);
+    try {
+      final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+
+      final results = await Future.wait([
+        getIt<ApiTeacherService>().getTeacherClasses(teacherId, academicYearId: academicYearId),
+        _loadWithCache(
+          cacheKey: 'school_lesson_hour_data',
+          ttl: const Duration(hours: 24),
+          apiFetcher: () => getIt<ApiScheduleService>().getJamPelajaran(),
+        ),
+      ]);
+
+      if (!mounted) return;
+
+      final classList = results[0];
+      final lessonHours = results[1];
+
+      // Detect homeroom classes (same logic as kegiatan kelas)
+      final homeroomClasses = classList.where((c) => c['is_homeroom'] == true).toList();
+
+      setState(() {
+        _classList = classList;
+        _lessonHours = lessonHours;
+        _homeroomClassesList = homeroomClasses;
+        if (homeroomClasses.isNotEmpty) {
+          _selectedHomeroomClass = homeroomClasses.first as Map<String, dynamic>;
+        }
+      });
+
+      await _refreshGroupedAttendance();
+    } catch (e) {
+      AppLogger.error('attendance', 'Error loading initial data: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadEmbeddedData() async {
+    try {
+      final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+
+      final [studentList, lessonHours] = await Future.wait([
+        _loadWithCache(
+          cacheKey: 'class_student_data_${widget.initialclassId}_$academicYearId',
+          ttl: const Duration(hours: 6),
+          apiFetcher: () => getIt<ApiStudentService>().getStudentByClass(
+            widget.initialclassId!,
+            academicYearId: academicYearId,
+          ),
+        ),
+        _loadWithCache(
+          cacheKey: 'school_lesson_hour_data',
+          ttl: const Duration(hours: 24),
+          apiFetcher: () => getIt<ApiScheduleService>().getJamPelajaran(),
+        ),
+      ]);
+
+      if (!mounted) return;
+
+      setState(() {
+        _studentList = studentList.map((s) => Student.fromJson(s)).toList();
+        _filteredStudentList = _studentList;
+        final seen = <String>{};
+        _lessonHours = lessonHours.where((lh) {
+          final key = '${lh['hour_number'] ?? lh['name']}_${lh['start_time']}_${lh['end_time']}';
+          return seen.add(key);
+        }).toList();
+        for (var student in _studentList) {
+          _attendanceStatus[student.id] = 'hadir';
+        }
+        _isLoadingInput = false;
+      });
+
+      _detectCurrentLessonHour();
+    } catch (e) {
+      AppLogger.error('attendance', 'Error loading embedded data: $e');
+      if (mounted) setState(() => _isLoadingInput = false);
+    }
+  }
+
+  // ── Grouped attendance fetch ──
+
+  Future<void> _refreshGroupedAttendance() async {
+    setState(() { _currentPage = 1; _hasMoreData = true; _groupedAttendance.clear(); _isLoading = true; });
+    await _fetchGroupedAttendance();
+  }
+
+  Future<void> _loadMoreGroupedAttendance() async {
+    if (_isLoadingMore || !_hasMoreData) return;
+    setState(() { _currentPage++; _isLoadingMore = true; });
+    await _fetchGroupedAttendance();
+  }
+
+  Future<void> _fetchGroupedAttendance() async {
+    final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+    try {
+      final homeroomClassId = _selectedHomeroomClass?['id']?.toString();
+      final result = await AttendanceService.getTeacherAttendanceSummary(
+        teacherId: _isHomeroomView ? null : _teacherId,
+        classId: _isHomeroomView ? homeroomClassId : _filterClassId,
+        academicYearId: academicYearId,
+        subjectId: _filterSubjectId,
+        search: _searchController.text.isNotEmpty ? _searchController.text : null,
+        dateFilter: _filterDateOption,
+        page: _currentPage,
+        perPage: 20,
+      );
+      if (!mounted) return;
+      final data = (result['data'] as List?) ?? [];
+      final pagination = result['pagination'];
+      setState(() {
+        if (_currentPage == 1) {
+          _groupedAttendance = data;
+        } else {
+          final existingKeys = _groupedAttendance.map((g) => '${g['class_id']}__${g['subject_id']}').toSet();
+          for (final g in data) {
+            final key = '${g['class_id']}__${g['subject_id']}';
+            if (!existingKeys.contains(key)) _groupedAttendance.add(g);
+          }
+        }
+        _hasMoreData = pagination?['has_next_page'] == true;
+        _isLoading = false;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      AppLogger.error('attendance', 'Error fetching grouped attendance: $e');
+      if (mounted) setState(() { _isLoading = false; _isLoadingMore = false; });
+    }
   }
 
   Future<void> _forceRefresh() async {
     await LocalCacheService.clearStartingWith('presence_');
-    setState(() {
-      _isLoadingInput = true;
-      _isLoadingSummary = true;
-    });
-    _loadInitialData(useCache: false);
+    if (_isTimelineView) {
+      _refreshTimeline();
+    } else {
+      _refreshGroupedAttendance();
+    }
   }
 
-  /// Loads all initial data: subjects, classes, students, and optionally
-  /// detects the current lesson schedule. Like a Vue `mounted()` that
-  /// calls multiple `axios.get()` in sequence.
-  Future<void> _loadInitialData({bool useCache = true}) async {
+  // ── Timeline fetch ──
+
+  Future<void> _refreshTimeline() async {
+    setState(() { _timelineHasMore = false; _timelineAttendance.clear(); _isLoading = true; });
+    await _fetchTimeline();
+  }
+
+  Future<void> _loadMoreTimeline() async {
+    // Summary endpoint is not paginated — no-op
+  }
+
+  Future<void> _fetchTimeline() async {
+    final academicYearId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
     try {
-      final academicYearId = ref
-          .read(academicYearRiverpod)
-          .selectedAcademicYear?['id']
-          ?.toString();
+      final homeroomClassId = _selectedHomeroomClass?['id']?.toString();
+      final result = await AttendanceService.getAttendanceSummary(
+        teacherId: _isHomeroomView ? null : _teacherId,
+        classId: _isHomeroomView ? homeroomClassId : _filterClassId,
+        subjectId: _filterSubjectId,
+        academicYearId: academicYearId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _timelineAttendance = result;
+        _timelineHasMore = false; // summary endpoint is not paginated
+        _isLoading = false;
+        _timelineLoadingMore = false;
+      });
+    } catch (e) {
+      AppLogger.error('attendance', 'Error fetching timeline: $e');
+      if (mounted) setState(() { _isLoading = false; _timelineLoadingMore = false; });
+    }
+  }
 
-      final cacheKey = _buildPresenceCacheKey();
-      final teacherId = widget.teacher['id']?.toString() ?? '';
+  void _toggleView() {
+    setState(() => _isTimelineView = !_isTimelineView);
+    if (_isTimelineView && _timelineAttendance.isEmpty) {
+      _refreshTimeline();
+    }
+  }
 
-      // ─── Fast path for embedded mode (opened from schedule card) ───
-      // Load only students for the specific class (not all school students)
-      // and lesson hours.
-      if (widget.embedded &&
-          widget.initialclassId != null &&
-          widget.initialSubjectId != null) {
-        final [studentList, lessonHours] = await Future.wait([
-          _loadWithCache(
-            cacheKey: 'class_student_data_${widget.initialclassId}_$academicYearId',
-            ttl: const Duration(hours: 6),
-            apiFetcher: () => getIt<ApiStudentService>().getStudentByClass(
-              widget.initialclassId!,
-              academicYearId: academicYearId,
-            ),
-            useCache: useCache,
-          ),
-          _loadWithCache(
-            cacheKey: 'school_lesson_hour_data',
-            ttl: const Duration(hours: 24),
-            apiFetcher: () => getIt<ApiScheduleService>().getJamPelajaran(),
-            useCache: useCache,
-          ),
-        ]);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NAVIGATION & DIALOGS
+  // ═══════════════════════════════════════════════════════════════════════════
 
-        if (!mounted) return;
-
-        setState(() {
-          _studentList = studentList.map((s) => Student.fromJson(s)).toList();
-          _filteredStudentList = _studentList;
-          final seen = <String>{};
-          _lessonHours = lessonHours.where((lh) {
-            final key =
-                '${lh['hour_number'] ?? lh['name']}_${lh['start_time']}_${lh['end_time']}';
-            return seen.add(key);
-          }).toList();
-          for (var student in _studentList) {
-            _attendanceStatus[student.id] = 'hadir';
-          }
-          _isLoadingInput = false;
-        });
-
-        _detectCurrentLessonHour();
-        return;
-      }
-
-      // ─── Step 1: Try TeacherProvider for classList (populated by Dashboard) ───
-      final teacherProvider = ref.read(teacherRiverpod);
-
-      List<dynamic>? providerClassList;
-      if (teacherProvider.isLoaded && teacherProvider.allClasses.isNotEmpty) {
-        providerClassList = teacherProvider.allClasses;
-        AppLogger.debug(
-          'attendance',
-          'Using TeacherProvider classList (${providerClassList.length} classes)',
-        );
-      }
-
-      // Step 2: Try composite local cache for instant display
-      if (useCache && _classList.isEmpty && cacheKey != null) {
-        try {
-          final cached = await LocalCacheService.load(
-            cacheKey,
-            ttl: const Duration(hours: 3),
-          );
-          if (cached != null && mounted) {
-            final cachedData = Map<String, dynamic>.from(cached);
-            setState(() {
-              _classList = List<dynamic>.from(cachedData['classList'] ?? []);
-              _subjectTeacher = List<dynamic>.from(
-                cachedData['subjects'] ?? [],
-              );
-              _lessonHours = List<dynamic>.from(
-                cachedData['lessonHours'] ?? [],
-              );
-              final studentRaw = List<dynamic>.from(
-                cachedData['studentList'] ?? [],
-              );
-              _studentList = studentRaw
-                  .map((s) => Student.fromJson(Map<String, dynamic>.from(s)))
-                  .toList();
-              _filteredStudentList = _studentList;
-              for (var student in _studentList) {
-                _attendanceStatus[student.id] = 'hadir';
-              }
-              if (_classList.isNotEmpty) _isLoadingInput = false;
-            });
-            AppLogger.info('attendance', 'Loaded presence composite cache');
-          }
-        } catch (e) {
-          AppLogger.error('attendance', 'Presence cache load error: $e');
-        }
-      }
-
-      // If provider has classes, use them immediately for display
-      if (_classList.isEmpty && providerClassList != null && mounted) {
-        setState(() {
-          _classList = providerClassList!;
-          if (_classList.isNotEmpty) _isLoadingInput = false;
-        });
-      }
-
-      // Step 3: Show loading only if still empty
-      if (_classList.isEmpty && mounted) {
-        setState(() => _isLoadingInput = true);
-      }
-
-      // Step 4: Fetch data — each source uses its own cache
-      final classListFuture = providerClassList != null
-          ? Future.value(providerClassList)
-          : _loadWithCache(
-              cacheKey: 'presence_classes_${teacherId}_$academicYearId',
-              ttl: const Duration(hours: 6),
-              apiFetcher: () => getIt<ApiTeacherService>().getTeacherClasses(
-                teacherId,
-                academicYearId: academicYearId,
-              ),
-              useCache: useCache,
-            );
-
-      final studentFuture = _loadWithCache(
-        cacheKey: 'school_student_data_$academicYearId',
-        ttl: const Duration(hours: 6),
-        apiFetcher: () => getIt<ApiStudentService>().getStudent(
-          academicYearId: academicYearId,
+  void _openAttendanceDetail({
+    required String classId,
+    required String className,
+    required String subjectId,
+    required String subjectName,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.96,
+        expand: false,
+        builder: (context, sc) => _AttendanceDetailSheet(
+          teacherId: _teacherId,
+          teacherNama: _teacherNama,
+          classId: classId,
+          className: className,
+          subjectId: subjectId,
+          subjectName: subjectName,
+          lessonHours: _lessonHours,
+          classList: _classList,
+          primaryColor: _primaryColor,
+          languageProvider: ref.read(languageRiverpod),
+          canEdit: !_isHomeroomView,
         ),
-        useCache: useCache,
-      );
-
-      final lessonHourFuture = _loadWithCache(
-        cacheKey: 'school_lesson_hour_data',
-        ttl: const Duration(hours: 24),
-        apiFetcher: () => getIt<ApiScheduleService>().getJamPelajaran(),
-        useCache: useCache,
-      );
-
-      final subjectFuture = _loadWithCache(
-        cacheKey: 'presence_subjects_${teacherId}_${_selectedClassId ?? 'all'}',
-        ttl: const Duration(hours: 3),
-        apiFetcher: () =>
-            _getSubjectByTeacher(teacherId, classId: _selectedClassId),
-        useCache: useCache,
-      );
-
-      final [classList, studentList, lessonHours, subjects] = await Future.wait(
-        [classListFuture, studentFuture, lessonHourFuture, subjectFuture],
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        _subjectTeacher = subjects;
-        _classList = classList;
-        _studentList = studentList.map((s) => Student.fromJson(s)).toList();
-        // Deduplicate lesson hours (API returns per-day, causing repeats)
-        final seen = <String>{};
-        _lessonHours = lessonHours.where((lh) {
-          final key =
-              '${lh['hour_number'] ?? lh['name']}_${lh['start_time']}_${lh['end_time']}';
-          return seen.add(key);
-        }).toList();
-        _filteredStudentList = _studentList;
-
-        for (var student in _studentList) {
-          _attendanceStatus[student.id] = 'hadir';
-        }
-
-        _isLoadingInput = false;
-      });
-
-      // Save composite cache for early loading next time
-      if (cacheKey != null) {
-        await LocalCacheService.save(cacheKey, {
-          'classList': classList,
-          'subjects': subjects,
-          'lessonHours': lessonHours,
-          'studentList': studentList,
-        });
-      }
-
-      // Auto-detect current schedule if not initialized from teaching_schedule
-      if (widget.initialSubjectId == null) {
-        await _detectCurrentSchedule();
-      }
-
-      _detectCurrentLessonHour();
-
-      // Load summary data for view mode
-      _loadAttendanceSummary();
-    } catch (e) {
-      AppLogger.error('attendance', 'AttendancePage initial data error: $e');
-      if (!mounted) return;
-
-      // Only show error if no cached data
-      if (_classList.isEmpty) {
-        SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _checkAndShowTour();
-          }
-        });
-      }
-    }
+      ),
+    ).then((_) => _refreshGroupedAttendance());
   }
 
-  Future<void> _loadSubjectsByClass(String? classId) async {
-    setState(() {
-      _isLoadingInput = true;
-    });
-
-    try {
-      final result = await _getSubjectByTeacher(
-        widget.teacher['id'],
-        classId: classId,
-      );
-
-      setState(() {
-        _subjectTeacher = result;
-        _isLoadingInput = false;
-
-        // Reset subject selection if it's no longer in the list
-        if (_selectedSubjectId != null &&
-            !_subjectTeacher.any((s) => s['id'] == _selectedSubjectId)) {
-          _selectedSubjectId = null;
-        }
-      });
-    } catch (e) {
-      AppLogger.error('attendance', 'Error loading subjects by class: $e');
-      setState(() {
-        _isLoadingInput = false;
-      });
-    }
+  Widget _buildSheetSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: _primaryColor.withValues(alpha: 0.1),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
+            ),
+            child: Icon(icon, size: 16, color: _primaryColor),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            title,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate900),
+          ),
+        ],
+      ),
+    );
   }
 
-  /// Auto-detects the current lesson hour based on the device time,
-  /// or uses the initial lesson hour from schedule navigation.
+  Widget _buildSheetChip(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? _primaryColor.withValues(alpha: 0.1) : ColorUtils.slate50,
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
+          border: Border.all(
+            color: isSelected ? _primaryColor : ColorUtils.slate200,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? _primaryColor : ColorUtils.slate600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAddAttendanceFlow(LanguageProvider lp) {
+    String? pickClassId;
+    String? pickClassName;
+    String? pickSubjectId;
+    String? pickSubjectName;
+    List<dynamic> pickSubjectList = [];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSS) => Container(
+          height: MediaQuery.of(ctx).size.height * 0.65,
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          child: Column(children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [_primaryColor, _primaryColor.withValues(alpha: 0.85)]),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(children: [
+                Container(
+                  width: 40, height: 4, margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)),
+                ),
+                Row(children: [
+                  Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.add_circle_rounded, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(lp.getTranslatedText({'en': 'Take Attendance', 'id': 'Ambil Presensi'}), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                  const Spacer(),
+                  IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close, color: Colors.white)),
+                ]),
+              ]),
+            ),
+            
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _buildSheetSectionHeader(lp.getTranslatedText({'en': 'Select Class', 'id': 'Pilih Kelas'}), Icons.class_outlined),
+                  Wrap(spacing: 8, runSpacing: 8, children: _classList.map((c) {
+                    final isSelected = pickClassId == c['id']?.toString();
+                    return _buildSheetChip(c['name'] ?? c['nama'] ?? '-', isSelected, () async {
+                      setSS(() { pickClassId = isSelected ? null : c['id']?.toString(); pickClassName = isSelected ? null : c['name']?.toString(); pickSubjectId = null; pickSubjectName = null; pickSubjectList = []; });
+                      if (pickClassId != null) { try { final r = await dioClient.get('/class/$pickClassId/subjects'); setSS(() => pickSubjectList = r.data is List ? r.data as List : []); } catch (_) {} }
+                    });
+                  }).toList()),
+                  const SizedBox(height: 24),
+                  
+                  if (pickClassId != null) ...[
+                    _buildSheetSectionHeader(lp.getTranslatedText({'en': 'Select Subject', 'id': 'Pilih Mapel'}), Icons.book_outlined),
+                    if (pickSubjectList.isEmpty)
+                       Text(lp.getTranslatedText({'en': 'Loading subjects...', 'id': 'Memuat mapel...'}), style: TextStyle(color: ColorUtils.slate500, fontSize: 13))
+                    else
+                       Wrap(spacing: 8, runSpacing: 8, children: pickSubjectList.map((s) {
+                         final isSelected = pickSubjectId == s['id']?.toString();
+                         return _buildSheetChip(s['name'] ?? s['nama'] ?? '-', isSelected, () => setSS(() { pickSubjectId = isSelected ? null : s['id']?.toString(); pickSubjectName = isSelected ? null : s['name']?.toString(); }));
+                       }).toList()),
+                     const SizedBox(height: 24),
+                   ],
+                ]),
+              ),
+            ),
+
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                boxShadow: [BoxShadow(color: ColorUtils.slate900.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, -2))],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Row(children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => AppNavigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: ColorUtils.slate300),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(lp.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}), style: TextStyle(fontWeight: FontWeight.w600, color: ColorUtils.slate700)),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: pickClassId != null && pickSubjectId != null ? () {
+                        Navigator.pop(ctx);
+                        _openInputSheet(classId: pickClassId!, className: pickClassName ?? '', subjectId: pickSubjectId!, subjectName: pickSubjectName ?? '');
+                      } : null,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: _primaryColor, foregroundColor: Colors.white, elevation: 0,
+                        disabledBackgroundColor: ColorUtils.slate200,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(lp.getTranslatedText({'en': 'Continue', 'id': 'Lanjutkan'}), style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ]),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  void _openInputSheet({required String classId, required String className, required String subjectId, required String subjectName}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.8,
+        minChildSize: 0.5,
+        maxChildSize: 0.96,
+        expand: false,
+        builder: (context, scrollController) => AttendancePage(
+          teacher: {'id': _teacherId, 'nama': _teacherNama},
+          initialDate: DateTime.now(),
+          initialSubjectId: subjectId,
+          initialSubjectName: subjectName,
+          initialclassId: classId,
+          initialClassName: className,
+          initialTabIndex: 1,
+          embedded: true,
+          scrollController: scrollController,
+        ),
+      ),
+    ).then((_) => _refreshGroupedAttendance());
+  }
+
+  // ── Filter dialog ──
+
+  void _showFilterDialog(LanguageProvider lp) {
+    String? tClassId = _filterClassId;
+    String? tSubjectId = _filterSubjectId;
+    String? tDateOption = _filterDateOption;
+    List<dynamic> tSubjectList = List.from(_filterSubjectList);
+
+    showModalBottomSheet(
+      context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSS) => Container(
+          height: MediaQuery.of(ctx).size.height * 0.7,
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          child: Column(children: [
+            // Header with gradient
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [_primaryColor, _primaryColor.withValues(alpha: 0.85)]),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(children: [
+                Container(
+                  width: 40, height: 4, margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)),
+                ),
+                Row(children: [
+                  Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(lp.getTranslatedText({'en': 'Filter Attendance', 'id': 'Filter Presensi'}), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                  ),
+                  TextButton(
+                    onPressed: () => setSS(() { tClassId = null; tSubjectId = null; tDateOption = null; tSubjectList = []; }),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: Text(lp.getTranslatedText({'en': 'Reset', 'id': 'Reset'}), style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                  ),
+                ]),
+              ]),
+            ),
+            
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  // Class list
+                  _buildSheetSectionHeader(lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}), Icons.class_outlined),
+                  Wrap(spacing: 8, runSpacing: 8, children: _classList.map((c) {
+                    final isSelected = tClassId == c['id']?.toString();
+                    return _buildSheetChip(c['name'] ?? c['nama'] ?? '-', isSelected, () async {
+                      setSS(() { tClassId = isSelected ? null : c['id']?.toString(); tSubjectId = null; tSubjectList = []; });
+                      if (tClassId != null) { try { final r = await dioClient.get('/class/$tClassId/subjects'); setSS(() => tSubjectList = r.data is List ? r.data as List : []); } catch (_) {} }
+                    });
+                  }).toList()),
+                  const SizedBox(height: 24),
+                  
+                  // Subject list
+                  if (tSubjectList.isNotEmpty || tClassId != null) ...[
+                    _buildSheetSectionHeader(lp.getTranslatedText({'en': 'Subject', 'id': 'Mapel'}), Icons.book_outlined),
+                    if (tSubjectList.isEmpty)
+                       Text(lp.getTranslatedText({'en': 'Loading subjects...', 'id': 'Memuat mapel...'}), style: TextStyle(color: ColorUtils.slate500, fontSize: 13))
+                    else
+                      Wrap(spacing: 8, runSpacing: 8, children: tSubjectList.map((s) {
+                        final isSelected = tSubjectId == s['id']?.toString();
+                        return _buildSheetChip(s['name'] ?? s['nama'] ?? '-', isSelected, () => setSS(() => tSubjectId = isSelected ? null : s['id']?.toString()));
+                      }).toList()),
+                    const SizedBox(height: 24),
+                  ],
+                  
+                  // Date filter chips
+                  _buildSheetSectionHeader(lp.getTranslatedText({'en': 'Time Range', 'id': 'Rentang Waktu'}), Icons.calendar_today_rounded),
+                  Wrap(spacing: 8, runSpacing: 8, children: [
+                    _buildSheetChip(lp.getTranslatedText({'en': 'Today', 'id': 'Hari Ini'}), tDateOption == 'today', () => setSS(() => tDateOption = tDateOption == 'today' ? null : 'today')),
+                    _buildSheetChip(lp.getTranslatedText({'en': 'This Week', 'id': 'Minggu Ini'}), tDateOption == 'week', () => setSS(() => tDateOption = tDateOption == 'week' ? null : 'week')),
+                    _buildSheetChip(lp.getTranslatedText({'en': 'This Month', 'id': 'Bulan Ini'}), tDateOption == 'month', () => setSS(() => tDateOption = tDateOption == 'month' ? null : 'month')),
+                  ]),
+                  const SizedBox(height: 20),
+                ]),
+              ),
+            ),
+
+            // Apply button (Sticky footer)
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                boxShadow: [BoxShadow(color: ColorUtils.slate900.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, -2))],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Row(children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => AppNavigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: ColorUtils.slate300),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(lp.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}), style: TextStyle(fontWeight: FontWeight.w600, color: ColorUtils.slate700)),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() { _filterClassId = tClassId; _filterSubjectId = tSubjectId; _filterDateOption = tDateOption; _filterSubjectList = tSubjectList; });
+                        Navigator.pop(ctx);
+                        _forceRefresh();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: _primaryColor, foregroundColor: Colors.white, elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(lp.getTranslatedText({'en': 'Apply Filter', 'id': 'Terapkan Filter'}), style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ]),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INPUT MODE HELPERS (reused by embedded mode)
+  // ═══════════════════════════════════════════════════════════════════════════
+
   void _detectCurrentLessonHour() {
-    if (_lessonHours.isEmpty) return;
-
-    // Priority 1: Match by initialLessonHourNumber from schedule navigation
     if (widget.initialLessonHourNumber != null) {
       for (var lh in _lessonHours) {
-        final hourNum = int.tryParse(lh['hour_number']?.toString() ?? '');
-        if (hourNum == widget.initialLessonHourNumber) {
+        final hourNum = lh['hour_number'] ?? lh['jam_ke'];
+        if (hourNum?.toString() == widget.initialLessonHourNumber.toString()) {
           setState(() => _selectedLessonHourId = lh['id']?.toString());
           return;
         }
       }
-      // Fallback: match by start_time if hour_number didn't match
-      if (widget.initialStartTime != null) {
-        for (var lh in _lessonHours) {
-          final lhStart = lh['start_time']?.toString() ?? '';
-          if (lhStart.isNotEmpty &&
-              widget.initialStartTime!.startsWith(lhStart.split('.')[0])) {
-            setState(() => _selectedLessonHourId = lh['id']?.toString());
-            return;
-          }
-        }
-      }
     }
-
-    // Priority 2: Auto-detect based on current time
+    // Auto-detect by current time
     for (var lh in _lessonHours) {
-      final startTime = lh['start_time']?.toString() ?? '';
-      final endTime = lh['end_time']?.toString() ?? '';
-
+      final startTime = (lh['start_time'] ?? lh['jam_mulai'])?.toString() ?? '';
+      final endTime = (lh['end_time'] ?? lh['jam_selesai'])?.toString() ?? '';
       if (_isWithinScheduleTime(startTime, endTime)) {
-        setState(() {
-          _selectedLessonHourId = lh['id']?.toString();
-        });
-        break;
+        setState(() => _selectedLessonHourId = lh['id']?.toString());
+        return;
       }
     }
   }
 
-  // Load today's schedules and detect current one.
-  // Uses cached schedule from teaching_schedule screen if available — NO extra API call.
-  /// Auto-detects the current subject/class based on today's schedule and time.
-  /// Like a smart default selector that pre-fills the form fields.
-  Future<void> _detectCurrentSchedule() async {
-    try {
-      final teacherId = widget.teacher['id']?.toString() ?? '';
-      final dayId = _getCurrentDayId();
-
-      // ─── Try teaching_schedule's cached data first (already fetched by that screen) ───
-      List<dynamic>? todaySchedules;
-
-      // Search for any matching teaching_schedule cache
-      final possibleCacheKeys = <String>[];
-      // Teaching schedule caches with pattern: schedule_teacher_{id}_{semester}_{year}
-      final semester = _getCurrentTerm();
-      final academicYear = _getCurrentAcademicYear();
-      possibleCacheKeys.add(
-        'schedule_teacher_${teacherId}_${semester}_$academicYear',
-      );
-
-      for (final key in possibleCacheKeys) {
-        try {
-          final cached = await LocalCacheService.load(
-            key,
-            ttl: const Duration(hours: 3),
-          );
-          if (cached != null) {
-            final cachedData = Map<String, dynamic>.from(cached);
-            final allSchedules = List<dynamic>.from(cachedData['schedules'] ?? []);
-
-            if (allSchedules.isNotEmpty) {
-              // Filter locally by today's day ID
-              todaySchedules = allSchedules.where((s) {
-                final sDayId = (s['day_id'] ?? s['hari_id'] ?? '').toString();
-                // Also check days_ids array
-                final daysIds = s['days_ids'];
-                if (sDayId == dayId) return true;
-                if (daysIds is List) {
-                  return daysIds.any((id) => id.toString() == dayId);
-                }
-                if (daysIds is String) {
-                  return daysIds.contains(dayId);
-                }
-                return false;
-              }).toList();
-
-              AppLogger.debug(
-                'attendance',
-                'Detected today schedule from teaching_schedule cache (${todaySchedules.length} items)',
-              );
-              break;
-            }
-          }
-        } catch (e) {
-          AppLogger.error('attendance', 'Cache read error ($key): $e');
-        }
-      }
-
-      // ─── Fallback: fetch from API only if no cache available ───
-      if (todaySchedules == null) {
-        AppLogger.debug('attendance', 'No schedule cache, fetching from API');
-        todaySchedules = await getIt<ApiScheduleService>().getSchedule(
-          teacherId: teacherId,
-          dayId: dayId,
-          semesterId: semester,
-          academicYear: academicYear,
-        );
-      }
-
-      setState(() {
-        if (todaySchedules != null && todaySchedules.isNotEmpty) {
-          // Find current schedule based on time
-          Map<String, dynamic>? currentSchedule;
-          for (var schedule in todaySchedules) {
-            final startTime =
-                (schedule['jam_mulai'] ?? schedule['start_time'] ?? '')
-                    .toString();
-            final endTime =
-                (schedule['jam_selesai'] ?? schedule['end_time'] ?? '')
-                    .toString();
-
-            if (_isWithinScheduleTime(startTime, endTime)) {
-              currentSchedule = schedule;
-              break;
-            }
-          }
-
-          if (currentSchedule != null) {
-            _selectedSubjectId =
-                (currentSchedule['mata_pelajaran_id'] ??
-                        currentSchedule['subject_id'])
-                    ?.toString();
-            _selectedClassId =
-                (currentSchedule['kelas_id'] ?? currentSchedule['class_id'])
-                    ?.toString();
-            _filterStudentsByClass(_selectedClassId);
-          }
-        }
-      });
-    } catch (e) {
-      AppLogger.error('attendance', 'Error detecting current schedule: $e');
-    }
+  void _detectCurrentSchedule() {
+    // Stub — auto-detect is handled by embedded params
   }
 
-  /// Loads attendance summary data for the "Results" tab.
-  /// Fetches all attendance records, groups them by subject+date+class,
-  /// and calculates present/absent counts. Like a Laravel query with
-  /// `groupBy()` and `count()` aggregation.
-  Future<void> _loadAttendanceSummary({bool useCache = true}) async {
-    if (!mounted) return;
-
-    final summaryCacheKey = _buildSummaryCacheKey();
-
-    // Step 1: Try cache for instant display
-    if (useCache && _attendanceSummaryList.isEmpty && summaryCacheKey != null) {
-      try {
-        final cached = await LocalCacheService.load(
-          summaryCacheKey,
-          ttl: const Duration(hours: 1),
-        );
-        if (cached != null && mounted) {
-          final cachedList = List<dynamic>.from(cached);
-          setState(() {
-            _attendanceSummaryList = cachedList.map((item) {
-              final m = Map<String, dynamic>.from(item);
-              return AttendanceSummaryItem(
-                subjectId: m['subjectId'] ?? '',
-                subjectName: m['subjectName'] ?? '',
-                date: DateTime.tryParse(m['date'] ?? '') ?? DateTime.now(),
-                totalStudent: m['totalStudent'] ?? 0,
-                present: m['present'] ?? 0,
-                absent: m['absent'] ?? 0,
-                classId: m['classId'],
-                className: m['className'],
-                lessonHourId: m['lessonHourId'],
-                lessonHourName: m['lessonHourName'],
-              );
-            }).toList();
-            _isLoadingSummary = false;
-          });
-          AppLogger.info(
-            'attendance',
-            'Loaded ${_attendanceSummaryList.length} summaries from cache',
-          );
-        }
-      } catch (e) {
-        AppLogger.error('attendance', 'Summary cache load error: $e');
-      }
-    }
-
-    // Step 2: Show loading only if still empty
-    if (_attendanceSummaryList.isEmpty && mounted) {
-      setState(() => _isLoadingSummary = true);
-    }
-
-    // Step 3: Fetch fresh from API
-    try {
-      final academicYearId = ref
-          .read(academicYearRiverpod)
-          .selectedAcademicYear?['id']
-          ?.toString();
-
-      final attendanceData = await AttendanceService.getAttendanceSummary(
-        teacherId: widget.teacher['id'],
-        academicYearId: academicYearId,
-      );
-
-      final Map<String, AttendanceSummaryItem> summaryMap = {};
-
-      for (var record in attendanceData) {
-        final subjectId = (record['subject_id'] ?? '').toString();
-        final subjectName = record['subject_name'] ?? 'Unknown';
-        final className = record['class_name'] ?? 'Unknown';
-        final classId = (record['class_id'] ?? '').toString();
-        final lessonHourId = (record['lesson_hour_id'] ?? '').toString();
-        final lessonHourName = record['lesson_hour_name'] ?? '';
-        final dateStr = record['date']?.toString() ?? '';
-        final date = _parseLocalDate(dateStr);
-
-        final summary = AttendanceSummaryItem(
-          subjectId: subjectId,
-          subjectName: subjectName,
-          date: date,
-          totalStudent:
-              int.tryParse(record['total_students']?.toString() ?? '0') ?? 0,
-          present: int.tryParse(record['present']?.toString() ?? '0') ?? 0,
-          absent: int.tryParse(record['absent']?.toString() ?? '0') ?? 0,
-          classId: classId,
-          className: className,
-          lessonHourId: lessonHourId,
-          lessonHourName: lessonHourName,
-        );
-
-        summaryMap[summary.key] = summary;
-      }
-
-      if (!mounted) return;
-
-      final sortedList = summaryMap.values.toList()
-        ..sort((a, b) => b.date.compareTo(a.date));
-
-      setState(() {
-        _attendanceSummaryList = sortedList;
-        _isLoadingSummary = false;
-      });
-
-      // Save to cache
-      if (summaryCacheKey != null) {
-        final cacheData = sortedList
-            .map(
-              (s) => {
-                'subjectId': s.subjectId,
-                'subjectName': s.subjectName,
-                'date': s.date.toIso8601String(),
-                'totalStudent': s.totalStudent,
-                'present': s.present,
-                'absent': s.absent,
-                'classId': s.classId,
-                'className': s.className,
-                'lessonHourId': s.lessonHourId,
-                'lessonHourName': s.lessonHourName,
-              },
-            )
-            .toList();
-        await LocalCacheService.save(summaryCacheKey, cacheData);
-      }
-
-      AppLogger.info(
-        'attendance',
-        'Loaded ${_attendanceSummaryList.length} absensi summaries',
-      );
-    } catch (e) {
-      AppLogger.error('attendance', 'Error loading absensi summary: $e');
-      if (mounted) {
-        if (_attendanceSummaryList.isEmpty) {
-          setState(() => _isLoadingSummary = false);
-        }
-      }
-    }
+  void _filterStudentsByClass(String? classId) {
+    setState(() { _selectedClassId = classId; _filterStudents(); });
   }
 
-  void _checkActiveFilter() {
+  void _filterStudents() {
+    final searchTerm = _searchControllerInput.text.toLowerCase();
     setState(() {
-      _hasActiveFilter =
-          _selectedDateFilter != null ||
-          _selectedSubjectIds.isNotEmpty ||
-          _selectedDayIds.isNotEmpty ||
-          _selectedLessonHourIds.isNotEmpty;
+      _filteredStudentList = _studentList.where((student) {
+        final matchesSearch = searchTerm.isEmpty || student.name.toLowerCase().contains(searchTerm) || student.studentNumber.toLowerCase().contains(searchTerm);
+        final matchesStatus = _selectedStatusFilter == null || (_attendanceStatus[student.id] ?? 'hadir') == _selectedStatusFilter;
+        final matchesClass = _selectedClassId == null || student.classId == _selectedClassId;
+        return matchesSearch && matchesStatus && matchesClass;
+      }).toList();
     });
   }
 
-  void _clearAllFilters() {
-    setState(() {
-      _selectedDateFilter = null;
-      _selectedSubjectIds.clear();
-      _selectedDayIds.clear();
-      _selectedLessonHourIds.clear();
-      _hasActiveFilter = false;
-    });
+  Future<void> _loadSubjectsByClass(String? classId) async {
+    if (classId == null) return;
+    try {
+      final subjects = await _getSubjectByTeacher(_teacherId, classId: classId);
+      if (mounted) setState(() => _subjectTeacher = subjects);
+    } catch (_) {}
   }
 
-  // ========== SHOW QUICK ACTIONS SHEET ==========
   void _showQuickActionsSheet(LanguageProvider languageProvider) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => AttendanceQuickActionsSheet(
         languageProvider: languageProvider,
-        onStatusSelected: (status) => _setAllStatus(status, languageProvider),
+        onStatusSelected: (status) {
+          setState(() { for (var student in _filteredStudentList) { _attendanceStatus[student.id] = status; } });
+        },
       ),
     );
   }
 
-  void _setAllStatus(String status, LanguageProvider languageProvider) {
-    setState(() {
-      for (var student in _filteredStudentList) {
-        _attendanceStatus[student.id] = status;
-      }
-    });
-  }
-
-  // ========== FILTER FOR INPUT MODE ==========
-  void _filterStudents() {
-    final searchTerm = _searchControllerInput.text.toLowerCase();
-
-    setState(() {
-      _filteredStudentList = _studentList.where((student) {
-        // Search filter
-        final matchesSearch =
-            searchTerm.isEmpty ||
-            student.name.toLowerCase().contains(searchTerm) ||
-            student.studentNumber.toLowerCase().contains(searchTerm);
-
-        // Status filter
-        final matchesStatus =
-            _selectedStatusFilter == null ||
-            (_attendanceStatus[student.id] ?? 'hadir') == _selectedStatusFilter;
-
-        // Class filter
-        final matchesClass =
-            _selectedClassId == null || student.classId == _selectedClassId;
-
-        return matchesSearch && matchesStatus && matchesClass;
-      }).toList();
-    });
-  }
-
-  // ========== MODE SWITCHER ==========
-  // _buildModeSwitcher was inlined into AttendanceTeacherHeader -- removed.
-
-  // ========== CLASS LIST VIEW ==========
-  Widget _buildInlineClassList(LanguageProvider languageProvider) {
-    // Delegated to AttendanceTeacherClassList widget.
-    return AttendanceTeacherClassList(
-      classList: _classList,
-      primaryColor: _getPrimaryColor(),
-      languageProvider: languageProvider,
-      onClassSelected: (classData) {
-        setState(() {
-          _selectedClassId = classData['id'];
-        });
-        _loadSubjectsByClass(classData['id']);
-        if (_tabController.index == 0) {
-          _loadAttendanceSummary();
-        }
-      },
-    );
-  }
-
-  // ========== MODE 0: VIEW RESULTS ==========
-  /// Builds the "View Results" tab UI. Delegated to [AttendanceResultsMode].
-  Widget _buildResultsMode() {
-    final languageProvider = ref.watch(languageRiverpod);
-    return AttendanceResultsMode(
-      selectedClassId: _selectedClassId,
-      isLoadingSummary: _isLoadingSummary,
-      filteredSummaries: _getFilteredSummaries(),
-      searchController: _searchController,
-      hasActiveFilter: _hasActiveFilter,
-      filterChips: _buildFilterChips(languageProvider),
-      primaryColor: _getPrimaryColor(),
-      classListWidget: _buildInlineClassList(languageProvider),
-      searchFilterBarWidget: _buildSearchAndFilter(languageProvider),
-      onClearAllFilters: _clearAllFilters,
-      onNavigateToDetail: _navigateToAttendanceDetail,
-      onDelete: (summary) => _deleteAttendance(summary, languageProvider),
-      scrollController: widget.scrollController,
-    );
-  }
-
-  List<AttendanceSummaryItem> _getFilteredSummaries() {
-    final searchTerm = _searchController.text.toLowerCase();
-    final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final endOfWeek = startOfWeek.add(Duration(days: 6));
-    final startOfMonth = DateTime(now.year, now.month, 1);
-    final endOfMonth = DateTime(now.year, now.month + 1, 0);
-
-    return _attendanceSummaryList.where((summary) {
-      // Class filter (Fix: Ensure results match selected class)
-      if (_selectedClassId != null &&
-          _selectedClassId!.isNotEmpty &&
-          summary.classId != _selectedClassId) {
-        return false;
-      }
-
-      // Search filter
-      final matchesSearch =
-          searchTerm.isEmpty ||
-          summary.subjectName.toLowerCase().contains(searchTerm);
-
-      // Date filter
-      bool matchesDateFilter = true;
-      if (_selectedDateFilter != null) {
-        if (_selectedDateFilter == 'today') {
-          matchesDateFilter = _isSameDay(summary.date, now);
-        } else if (_selectedDateFilter == 'week') {
-          matchesDateFilter =
-              summary.date.isAfter(startOfWeek.subtract(Duration(days: 1))) &&
-              summary.date.isBefore(endOfWeek.add(Duration(days: 1)));
-        } else if (_selectedDateFilter == 'month') {
-          matchesDateFilter =
-              summary.date.isAfter(startOfMonth.subtract(Duration(days: 1))) &&
-              summary.date.isBefore(endOfMonth.add(Duration(days: 1)));
-        }
-      }
-
-      // Subject filter
-      final matchesSubject =
-          _selectedSubjectIds.isEmpty ||
-          _selectedSubjectIds.contains(summary.subjectId);
-
-      // Day filter
-      final matchesDay =
-          _selectedDayIds.isEmpty ||
-          _selectedDayIds.contains(summary.date.weekday.toString());
-
-      // Lesson Hour filter
-      final matchesLessonHour =
-          _selectedLessonHourIds.isEmpty ||
-          _selectedLessonHourIds.contains(summary.lessonHourId);
-
-      return matchesSearch &&
-          matchesDateFilter &&
-          matchesSubject &&
-          matchesDay &&
-          matchesLessonHour;
-    }).toList();
-  }
-
-  // ========== HEADER BARU SEPERTI ADMIN PRESENCE ==========
-  Widget _buildHeader(LanguageProvider languageProvider) {
-    // Delegated to AttendanceTeacherHeader widget.
-    return AttendanceTeacherHeader(
-      tabController: _tabController,
-      tabSwitcherKey: _tabSwitcherKey,
-      primaryColor: _getPrimaryColor(),
-      gradient: _getCardGradient(),
-      currentTabIndex: _tabController.index,
-      hasClassSelected: _selectedClassId != null,
-      languageProvider: languageProvider,
-      onBack: () {
-        if (_selectedClassId != null) {
-          setState(() {
-            _selectedClassId = null;
-            _studentList = [];
-          });
-        } else {
-          AppNavigator.pop(context);
-        }
-      },
-      onRefresh: _forceRefresh,
-    );
-  }
-
-  // ========== SEARCH BAR WITH FILTER LIKE ADMIN ==========
-  Widget _buildSearchAndFilter(LanguageProvider languageProvider) {
-    // Delegated to AttendanceSearchFilterBar widget.
-    return AttendanceSearchFilterBar(
-      searchController: _searchController,
-      searchFilterKey: _searchFilterKey,
-      hasActiveFilter: _hasActiveFilter,
-      primaryColor: _getPrimaryColor(),
-      showFilterButton: _tabController.index == 0,
-      languageProvider: languageProvider,
-      onSearchChanged: () => setState(() {}),
-      onFilterTap: _showFilterSheet,
-    );
-  }
-
-  // ========== FILTER SHEET SEPERTI ADMIN ==========
-  void _showFilterSheet() {
+  Future<void> _submitAttendance() async {
     final languageProvider = ref.read(languageRiverpod);
+    final teacherId = widget.teacher['id'];
+    if (teacherId == null) {
+      SnackBarUtils.showError(context, languageProvider.getTranslatedText({'en': 'Invalid teacher data. Please login again.', 'id': 'Data guru tidak valid. Silakan login ulang.'}));
+      return;
+    }
+    if (_selectedSubjectId == null) {
+      SnackBarUtils.showError(context, languageProvider.getTranslatedText({'en': 'Please select a subject first', 'id': 'Pilih mata pelajaran terlebih dahulu'}));
+      return;
+    }
+    if (_filteredStudentList.isEmpty) {
+      SnackBarUtils.showError(context, languageProvider.getTranslatedText({'en': 'No students to save', 'id': 'Tidak ada siswa untuk disimpan'}));
+      return;
+    }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => AttendanceFilterSheet(
-        languageProvider: languageProvider,
-        primaryColor: _getPrimaryColor(),
-        initialDateFilter: _selectedDateFilter,
-        initialSubjectIds: _selectedSubjectIds,
-        initialDayIds: _selectedDayIds,
-        initialLessonHourIds: _selectedLessonHourIds,
-        subjects: _subjectTeacher,
-        lessonHours: _lessonHours,
-        onApply: (result) {
-          setState(() {
-            _selectedDateFilter = result.dateFilter;
-            _selectedSubjectIds = result.subjectIds;
-            _selectedDayIds = result.dayIds;
-            _selectedLessonHourIds = result.lessonHourIds;
-            _checkActiveFilter();
-          });
-        },
+    setState(() => _isSubmitting = true);
+    try {
+      final date = DateFormat('yyyy-MM-dd').format(_selectedDate);
+      final attendances = _filteredStudentList.map((student) {
+        final status = _attendanceStatus[student.id] ?? 'hadir';
+        return {'student_id': student.id, 'status': _mapStatusToBackend(status), 'notes': ''};
+      }).toList();
+
+      final result = await AttendanceService.createBulkAttendance(
+        teacherId: teacherId.toString(), subjectId: _selectedSubjectId!,
+        classId: _filteredStudentList.first.classId ?? _selectedClassId ?? '',
+        date: date, lessonHourId: _selectedLessonHourId, attendances: attendances,
+      );
+
+      if (!mounted) return;
+      final successCount = result['success'] ?? 0;
+      final failedCount = result['failed'] ?? 0;
+
+      if (failedCount == 0) {
+        SnackBarUtils.showSuccess(context, languageProvider.getTranslatedText({'en': 'Attendance saved for $successCount students', 'id': 'Absensi disimpan untuk $successCount siswa'}));
+        if (widget.embedded) { if (mounted) Navigator.of(context).pop(); return; }
+      } else {
+        SnackBarUtils.showWarning(context, languageProvider.getTranslatedText({'en': '$successCount saved, $failedCount failed', 'id': '$successCount berhasil, $failedCount gagal'}));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILD
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @override
+  Widget build(BuildContext context) {
+    final languageProvider = ref.watch(languageRiverpod);
+
+    // ── Embedded mode (opened from schedule card) ──
+    if (widget.embedded) {
+      return GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Container(
+          decoration: BoxDecoration(
+            color: ColorUtils.slate50,
+            borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+          ),
+          child: Column(children: [
+            // Gradient header
+            Container(
+              decoration: BoxDecoration(
+                gradient: _getCardGradient(),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(children: [
+                Container(margin: const EdgeInsets.only(top: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 8, 14),
+                  child: Row(children: [
+                    Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.fact_check_outlined, color: Colors.white, size: 18)),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(
+                      languageProvider.getTranslatedText({'en': 'Take Attendance', 'id': 'Ambil Presensi'}),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    )),
+                    // Compact/descriptive toggle
+                    GestureDetector(
+                      onTap: () => setState(() => _compactMode = !_compactMode),
+                      child: Container(
+                        width: 32, height: 32,
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                        child: Icon(_compactMode ? Icons.view_agenda_outlined : Icons.density_small_rounded, color: Colors.white, size: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.close, color: Colors.white, size: 18)),
+                    ),
+                  ]),
+                ),
+              ]),
+            ),
+            Expanded(child: _buildInputMode()),
+          ]),
+        ),
+      );
+    }
+
+    // ── Main screen ──
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Scaffold(
+        backgroundColor: ColorUtils.slate50,
+        body: Column(children: [
+          _buildHeader(languageProvider),
+          Expanded(child: _isTimelineView ? _buildTimelineBody(languageProvider) : _buildBody(languageProvider)),
+        ]),
+        floatingActionButton: _isHomeroomView ? null : FloatingActionButton(
+          onPressed: () => _showAddAttendanceFlow(languageProvider),
+          backgroundColor: _primaryColor,
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
       ),
     );
   }
 
-  // ========== FILTER CHIPS SEPERTI ADMIN ==========
-  List<Map<String, dynamic>> _buildFilterChips(
-    LanguageProvider languageProvider,
-  ) {
-    final List<Map<String, dynamic>> filterChips = [];
-
-    if (_selectedDateFilter != null) {
-      final label = _selectedDateFilter == 'today'
-          ? languageProvider.getTranslatedText({
-              'en': 'Today',
-              'id': 'Hari Ini',
-            })
-          : _selectedDateFilter == 'week'
-          ? languageProvider.getTranslatedText({
-              'en': 'This Week',
-              'id': 'Minggu Ini',
-            })
-          : languageProvider.getTranslatedText({
-              'en': 'This Month',
-              'id': 'Bulan Ini',
-            });
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Date', 'id': 'Tanggal'})}: $label',
-        'onRemove': () {
-          setState(() {
-            _selectedDateFilter = null;
-            _checkActiveFilter();
-          });
-        },
-      });
-    }
-
-    if (_selectedSubjectIds.isNotEmpty) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})}: ${_selectedSubjectIds.length}',
-        'onRemove': () {
-          setState(() {
-            _selectedSubjectIds.clear();
-            _checkActiveFilter();
-          });
-        },
-      });
-    }
-
-    if (_selectedDayIds.isNotEmpty) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'})}: ${_selectedDayIds.length}',
-        'onRemove': () {
-          setState(() {
-            _selectedDayIds.clear();
-            _checkActiveFilter();
-          });
-        },
-      });
-    }
-
-    if (_selectedLessonHourIds.isNotEmpty) {
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Hour', 'id': 'Jam'})}: ${_selectedLessonHourIds.length}',
-        'onRemove': () {
-          setState(() {
-            _selectedLessonHourIds.clear();
-            _checkActiveFilter();
-          });
-        },
-      });
-    }
-
-    return filterChips;
-  }
-
-  void _navigateToAttendanceDetail(AttendanceSummaryItem summary) {
-    AppNavigator.push(
-      context,
-      TeacherAttendanceDetailPage(
-        subjectId: summary.subjectId,
-        subjectName: summary.subjectName,
-        date: summary.date,
-        classId: summary.classId ?? '',
-        className: summary.className ?? 'Unknown Class',
-        teacher: widget.teacher,
-        lessonHourId: summary.lessonHourId,
-        lessonHourName: summary.lessonHourName,
-      ),
+  Widget _buildHeader(LanguageProvider lp) {
+    final p = _primaryColor;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + AppSpacing.lg, left: AppSpacing.lg, right: AppSpacing.lg, bottom: AppSpacing.lg),
+      decoration: BoxDecoration(gradient: _getCardGradient()),
+      child: Column(children: [
+        // Top row: back + title + toggle view
+        Row(children: [
+          GestureDetector(
+            onTap: () => AppNavigator.pop(context),
+            child: Container(width: 40, height: 40, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.arrow_back, color: Colors.white, size: 20)),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(lp.getTranslatedText({'en': 'Attendance', 'id': 'Presensi'}), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 2),
+            Text(
+              _isHomeroomView && _selectedHomeroomClass != null
+                  ? lp.getTranslatedText({'en': 'Homeroom class attendance overview', 'id': 'Rekap presensi kelas perwalian'})
+                  : lp.getTranslatedText({'en': 'Track and manage student attendance', 'id': 'Pantau dan kelola presensi siswa'}),
+              style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9)),
+            ),
+          ])),
+          // Timeline toggle
+          GestureDetector(
+            onTap: _toggleView,
+            child: Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+              child: Icon(_isTimelineView ? Icons.grid_view_rounded : Icons.view_list_rounded, color: Colors.white, size: 18)),
+          ),
+        ]),
+        // Role toggle — only show when teacher has homeroom classes
+        if (_homeroomClassesList.isNotEmpty) ...[const SizedBox(height: AppSpacing.md), _buildRoleToggle(lp)],
+        const SizedBox(height: AppSpacing.md),
+        // Search + filter row
+        Row(children: [
+          Expanded(child: Container(
+            height: 48,
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.95), borderRadius: BorderRadius.circular(12)),
+            child: Row(children: [
+              Expanded(child: TextField(
+                key: _searchFilterKey,
+                controller: _searchController, textAlignVertical: TextAlignVertical.center,
+                style: TextStyle(color: ColorUtils.slate800, fontSize: 13),
+                decoration: InputDecoration(isDense: true, hintText: lp.getTranslatedText({'en': 'Search class or subject...', 'id': 'Cari kelas atau mapel...'}), hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13), border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(horizontal: 16)),
+                onSubmitted: (_) { _refreshGroupedAttendance(); FocusScope.of(context).unfocus(); },
+              )),
+              Container(margin: const EdgeInsets.only(right: 4), child: IconButton(icon: Icon(Icons.search, color: p, size: 20), onPressed: () { _refreshGroupedAttendance(); FocusScope.of(context).unfocus(); })),
+            ]),
+          )),
+          const SizedBox(width: AppSpacing.sm),
+          Container(
+            height: 48, width: 48,
+            decoration: BoxDecoration(color: _hasActiveFilter ? Colors.white : Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withValues(alpha: 0.3))),
+            child: Stack(alignment: Alignment.center, children: [
+              IconButton(onPressed: () => _showFilterDialog(lp), icon: Icon(Icons.tune, color: _hasActiveFilter ? p : Colors.white, size: 20)),
+              if (_hasActiveFilter) Positioned(right: 8, top: 8, child: Container(width: 8, height: 8, decoration: BoxDecoration(color: ColorUtils.error600, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)))),
+            ]),
+          ),
+        ]),
+        // Filter chips inside header
+        if (_hasActiveFilter) ...[
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            height: 32,
+            child: Row(
+              children: [
+                Expanded(
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      if (_filterClassId != null) ...[
+                        _buildChip(_classList.firstWhere((c) => c['id']?.toString() == _filterClassId, orElse: () => {'name': '-'})['name'] ?? '-', () { setState(() { _filterClassId = null; _filterSubjectId = null; _filterSubjectList = []; }); _refreshGroupedAttendance(); }),
+                        const SizedBox(width: 6),
+                      ],
+                      if (_filterSubjectId != null) ...[
+                        _buildChip(_filterSubjectList.firstWhere((s) => s['id']?.toString() == _filterSubjectId, orElse: () => {'name': '-'})['name'] ?? '-', () { setState(() { _filterSubjectId = null; }); _refreshGroupedAttendance(); }),
+                        const SizedBox(width: 6),
+                      ],
+                      if (_filterDateOption != null) ...[
+                        _buildChip(
+                          _filterDateOption == 'today' ? lp.getTranslatedText({'en': 'Today', 'id': 'Hari ini'}) : _filterDateOption == 'week' ? lp.getTranslatedText({'en': 'This Week', 'id': 'Minggu ini'}) : lp.getTranslatedText({'en': 'This Month', 'id': 'Bulan ini'}),
+                          () { setState(() { _filterDateOption = null; }); _refreshGroupedAttendance(); }),
+                        const SizedBox(width: 6),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                InkWell(
+                  onTap: () { setState(() { _filterClassId = null; _filterSubjectId = null; _filterDateOption = null; _filterSubjectList = []; }); _refreshGroupedAttendance(); },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.2),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      lp.getTranslatedText({'en': 'Clear All', 'id': 'Hapus Semua'}),
+                      style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ]),
     );
   }
 
-  // ========== MODE 2: INPUT ABSENSI (REDESIGNED) ==========
-  /// Builds the "Input Attendance" tab UI. Delegated to [AttendanceInputMode].
+  Widget _buildRoleToggle(LanguageProvider lp) {
+    final p = _primaryColor;
+    return Container(
+      height: 46, padding: const EdgeInsets.all(AppSpacing.xs),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withValues(alpha: 0.1))),
+      child: Stack(alignment: Alignment.center, children: [
+        AnimatedAlign(duration: const Duration(milliseconds: 250), curve: Curves.easeInOut, alignment: _isHomeroomView ? Alignment.centerRight : Alignment.centerLeft, child: FractionallySizedBox(widthFactor: 0.5, child: Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))])))),
+        Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () { if (_isHomeroomView) { setState(() { _isHomeroomView = false; _isLoading = true; }); _forceRefresh(); } },
+            child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(Icons.person_outline_rounded, size: 16, color: !_isHomeroomView ? p : Colors.white.withValues(alpha: 0.9)),
+              const SizedBox(width: AppSpacing.xs),
+              Text(lp.getTranslatedText({'en': 'Teaching', 'id': 'Mengajar'}), style: TextStyle(fontSize: 12, fontWeight: !_isHomeroomView ? FontWeight.w700 : FontWeight.w500, color: !_isHomeroomView ? p : Colors.white.withValues(alpha: 0.9))),
+            ])))),
+          Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () { if (!_isHomeroomView) { setState(() { _isHomeroomView = true; _isLoading = true; }); _forceRefresh(); } },
+            child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(Icons.class_outlined, size: 16, color: _isHomeroomView ? p : Colors.white.withValues(alpha: 0.9)),
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(child: Text(
+                _isHomeroomView && _selectedHomeroomClass != null ? 'Kelas ${_selectedHomeroomClass!['name'] ?? _selectedHomeroomClass!['nama'] ?? ''}' : lp.getTranslatedText({'en': 'Homeroom', 'id': 'Wali Kelas'}),
+                style: TextStyle(fontSize: 12, fontWeight: _isHomeroomView ? FontWeight.w700 : FontWeight.w500, color: _isHomeroomView ? p : Colors.white.withValues(alpha: 0.9)), maxLines: 1, overflow: TextOverflow.ellipsis,
+              )),
+            ])))),
+        ]),
+      ]),
+    );
+  }
+
+
+  Widget _buildChip(String label, VoidCallback onRemove) {
+    return GestureDetector(onTap: onRemove, child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
+        const SizedBox(width: 4),
+        const Icon(Icons.close, size: 14, color: Colors.white),
+      ]),
+    ));
+  }
+
+  Widget _buildBody(LanguageProvider lp) {
+    if (_isLoading) return SkeletonListLoading(itemCount: 4, infoTagCount: 2);
+
+    return RefreshIndicator(
+      onRefresh: _forceRefresh,
+      color: _primaryColor,
+      child: _groupedAttendance.isEmpty
+          ? ListView(physics: const AlwaysScrollableScrollPhysics(), children: [
+              SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+              Center(child: Column(children: [
+                Icon(Icons.fact_check_outlined, size: 56, color: ColorUtils.slate300),
+                const SizedBox(height: 16),
+                Text(
+                  _searchController.text.isNotEmpty || _hasActiveFilter
+                      ? lp.getTranslatedText({'en': 'No attendance matches your filter', 'id': 'Tidak ada presensi sesuai filter'})
+                      : lp.getTranslatedText({'en': 'No attendance yet', 'id': 'Belum ada presensi'}),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: ColorUtils.slate600), textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(lp.getTranslatedText({'en': 'Pull down to refresh', 'id': 'Tarik ke bawah untuk memuat ulang'}), style: TextStyle(fontSize: 12, color: ColorUtils.slate400)),
+              ])),
+            ])
+          : ListView.builder(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+              itemCount: _groupedAttendance.length + (_isLoadingMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == _groupedAttendance.length) {
+                  return Padding(padding: const EdgeInsets.all(16), child: Center(child: CircularProgressIndicator(color: _primaryColor)));
+                }
+                final g = _groupedAttendance[index];
+                return _AttendanceGroupCard(group: g, primaryColor: _primaryColor, languageProvider: lp, onTap: () => _openAttendanceDetail(
+                  classId: g['class_id']?.toString() ?? '', className: g['class_name']?.toString() ?? '',
+                  subjectId: g['subject_id']?.toString() ?? '', subjectName: g['subject_name']?.toString() ?? '',
+                ));
+              },
+            ),
+    );
+  }
+
   Widget _buildInputMode() {
     final languageProvider = ref.watch(languageRiverpod);
     return AttendanceInputMode(
@@ -1093,546 +1150,413 @@ class AttendancePageState extends ConsumerState<AttendancePage>
         classList: _classList,
         selectedSubjectId: _selectedSubjectId,
         subjectTeacher: _subjectTeacher,
-        primaryColor: _getPrimaryColor(),
+        primaryColor: _primaryColor,
         languageProvider: languageProvider,
         embedded: widget.embedded,
         initialClassName: widget.initialClassName,
         initialSubjectName: widget.initialSubjectName,
         initialLessonHourNumber: widget.initialLessonHourNumber,
-        onDatePicked: (picked) {
-          setState(() {
-            _selectedDate = picked;
-            _detectCurrentSchedule();
-          });
-        },
-        onLessonHourChanged: (value) {
-          setState(() {
-            _selectedLessonHourId = value;
-          });
-        },
-        onClassChanged: (value) {
-          setState(() {
-            _selectedClassId = value;
-            _filterStudentsByClass(value);
-          });
-          _loadSubjectsByClass(value);
-        },
-        onSubjectChanged: (value) {
-          setState(() {
-            _selectedSubjectId = value;
-          });
-        },
+        onDatePicked: (picked) { setState(() { _selectedDate = picked; _detectCurrentSchedule(); }); },
+        onLessonHourChanged: (value) { setState(() => _selectedLessonHourId = value); },
+        onClassChanged: (value) { setState(() { _selectedClassId = value; _filterStudentsByClass(value); }); _loadSubjectsByClass(value); },
+        onSubjectChanged: (value) { setState(() => _selectedSubjectId = value); },
         onQuickActionsPressed: () => _showQuickActionsSheet(languageProvider),
       ),
       selectedSubjectId: _selectedSubjectId,
       filteredStudentList: _filteredStudentList,
       attendanceStatus: _attendanceStatus,
       isSubmitting: _isSubmitting,
-      primaryColor: _getPrimaryColor(),
+      primaryColor: _primaryColor,
       searchController: _searchControllerInput,
       onSearchChanged: _filterStudents,
       onQuickActionsPressed: () => _showQuickActionsSheet(languageProvider),
-      onStatusChanged: (studentId, status) {
-        setState(() {
-          _attendanceStatus[studentId] = status;
-        });
-      },
+      onStatusChanged: (studentId, status) { setState(() => _attendanceStatus[studentId] = status); },
       onSubmit: _submitAttendance,
       scrollController: widget.scrollController,
+      compactMode: _compactMode,
     );
   }
 
-  // ========== HELPER FUNCTIONS ==========
-  void _filterStudentsByClass(String? classId) {
-    setState(() {
-      _selectedClassId = classId;
-      _filterStudents();
-    });
+  Widget _buildTimelineBody(LanguageProvider lp) {
+    if (_isLoading) return SkeletonListLoading(itemCount: 5, infoTagCount: 1);
+
+    return RefreshIndicator(
+      onRefresh: _forceRefresh,
+      color: _primaryColor,
+      child: _timelineAttendance.isEmpty
+          ? ListView(physics: const AlwaysScrollableScrollPhysics(), children: [
+              SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+              Center(child: Column(children: [
+                Icon(Icons.fact_check_outlined, size: 56, color: ColorUtils.slate300),
+                const SizedBox(height: 16),
+                Text(lp.getTranslatedText({'en': 'No attendance records', 'id': 'Belum ada data presensi'}), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: ColorUtils.slate600)),
+              ])),
+            ])
+          : ListView.builder(
+              controller: _timelineScrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+              itemCount: _timelineAttendance.length + (_timelineLoadingMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == _timelineAttendance.length) {
+                  return Padding(padding: const EdgeInsets.all(16), child: Center(child: CircularProgressIndicator(color: _primaryColor)));
+                }
+                final r = _timelineAttendance[index];
+                return _AttendanceTimelineCard(record: r, primaryColor: _primaryColor, languageProvider: lp, onTap: () => _openAttendanceDetail(
+                  classId: (r['class_id'] ?? '').toString(), className: (r['class_name'] ?? r['subject_name'] ?? '').toString(),
+                  subjectId: (r['subject_id'] ?? '').toString(), subjectName: (r['subject_name'] ?? '').toString(),
+                ));
+              },
+            ),
+    );
   }
+}
 
-  /// Submits attendance records for all students to the API.
-  /// Like a Vue `methods.submitForm()` calling `axios.post('/api/attendance')`
-  /// for each student. Shows progress, handles errors, and displays
-  /// success/failure summary. In Laravel: `AttendanceController@store`.
-  Future<void> _submitAttendance() async {
-    final languageProvider = ref.read(languageRiverpod);
+// ═══════════════════════════════════════════════════════════════════════════════
+// SHARED DATE FORMATTER
+// ═══════════════════════════════════════════════════════════════════════════════
 
-    // Validate teacher_id
-    final teacherId = widget.teacher['id'];
-    if (teacherId == null) {
-      SnackBarUtils.showError(
-        context,
-        languageProvider.getTranslatedText({
-          'en': 'Invalid teacher data. Please login again.',
-          'id': 'Data guru tidak valid. Silakan login ulang.',
-        }),
-      );
-      return;
-    }
+String _fmtFullDate(String? d) {
+  if (d == null) return '-';
+  final dt = DateTime.tryParse(d);
+  if (dt == null) return d;
+  return DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(dt);
+}
 
-    if (_selectedSubjectId == null) {
-      SnackBarUtils.showError(
-        context,
-        languageProvider.getTranslatedText({
-          'en': 'Please select a subject first',
-          'id': 'Pilih mata pelajaran terlebih dahulu',
-        }),
-      );
-      return;
-    }
+// ═══════════════════════════════════════════════════════════════════════════════
+// GROUP CARD
+// ═══════════════════════════════════════════════════════════════════════════════
 
-    if (_filteredStudentList.isEmpty) {
-      SnackBarUtils.showError(
-        context,
-        languageProvider.getTranslatedText({
-          'en': 'No students to save',
-          'id': 'Tidak ada siswa untuk disimpan',
-        }),
-      );
-      return;
-    }
+class _AttendanceGroupCard extends StatelessWidget {
+  final dynamic group;
+  final Color primaryColor;
+  final LanguageProvider languageProvider;
+  final VoidCallback onTap;
 
-    setState(() {
-      _isSubmitting = true;
-    });
+  const _AttendanceGroupCard({required this.group, required this.primaryColor, required this.languageProvider, required this.onTap});
 
-    try {
-      final date = DateFormat('yyyy-MM-dd').format(_selectedDate);
+  @override
+  Widget build(BuildContext context) {
+    final cn = group['class_name']?.toString() ?? '-';
+    final sn = group['subject_name']?.toString() ?? '-';
+    final totalSessions = group['total_sessions'] ?? 0;
+    final avgPct = (group['avg_present_pct'] ?? 0).toDouble();
+    final latest = (group['latest_records'] as List?) ?? [];
+    final pctColor = avgPct >= 80 ? ColorUtils.success600 : (avgPct >= 60 ? ColorUtils.warning600 : ColorUtils.error600);
 
-      // Build bulk payload — single API call instead of per-student
-      final attendances = _filteredStudentList.map((student) {
-        final status = _attendanceStatus[student.id] ?? 'hadir';
-        return {
-          'student_id': student.id,
-          'status': _mapStatusToBackend(status),
-          'notes': '',
-        };
-      }).toList();
-
-      final result = await AttendanceService.createBulkAttendance(
-        teacherId: teacherId.toString(),
-        subjectId: _selectedSubjectId!,
-        classId: _filteredStudentList.first.classId ?? _selectedClassId ?? '',
-        date: date,
-        lessonHourId: _selectedLessonHourId,
-        attendances: attendances,
-      );
-
-      if (!mounted) return;
-
-      final successCount = result['success'] ?? 0;
-      final failedCount = result['failed'] ?? 0;
-      final errors = (result['errors'] as List?) ?? [];
-
-      if (failedCount == 0) {
-        SnackBarUtils.showSuccess(
-          context,
-          languageProvider.getTranslatedText({
-            'en': 'Attendance saved for $successCount students',
-            'id': 'Absensi disimpan untuk $successCount siswa',
-          }),
-        );
-
-        if (widget.embedded) {
-          // Close the embedded dialog — results tab has no class data in embedded mode
-          if (mounted) Navigator.of(context).pop();
-          return;
-        }
-
-        _resetForm();
-        _tabController.animateTo(0);
-      } else {
-        SnackBarUtils.showWarning(
-          context,
-          languageProvider.getTranslatedText({
-            'en': '$successCount saved, $failedCount failed',
-            'id': '$successCount berhasil, $failedCount gagal',
-          }),
-        );
-        final errorMessages = errors
-            .map((e) => e['message']?.toString() ?? 'Unknown error')
-            .toList();
-        _showErrorDetails(errorMessages.cast<String>(), languageProvider);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      AppLogger.error('attendance', 'Bulk save error: $e');
-      SnackBarUtils.showError(
-        context,
-        ErrorUtils.getFriendlyMessage(e),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-      }
-    }
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Material(color: Colors.transparent, child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(14), child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: ColorUtils.slate200), boxShadow: ColorUtils.corporateShadow(elevation: 1.0)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Header row: icon + class/subject + percentage ring + count
+          Row(children: [
+            // Circular percentage indicator
+            SizedBox(
+              width: 44, height: 44,
+              child: Stack(alignment: Alignment.center, children: [
+                SizedBox(width: 44, height: 44, child: CircularProgressIndicator(
+                  value: avgPct / 100, strokeWidth: 4, backgroundColor: ColorUtils.slate100,
+                  color: pctColor,
+                )),
+                Text('${avgPct.toStringAsFixed(0)}%', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: pctColor)),
+              ]),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Kelas: $cn', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ColorUtils.slate900), maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 2),
+              Text(sn, style: TextStyle(fontSize: 12, color: primaryColor, fontWeight: FontWeight.w600)),
+            ])),
+            const SizedBox(width: 8),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text('$totalSessions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: primaryColor)),
+              Text(languageProvider.getTranslatedText({'en': 'meets', 'id': 'pertemuan'}), style: TextStyle(fontSize: 8, color: primaryColor, fontWeight: FontWeight.w500)),
+            ])),
+          ]),
+          // Latest sessions preview
+          if (latest.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: ColorUtils.slate50, borderRadius: BorderRadius.circular(10)), child: Column(children: latest.asMap().entries.map((e) {
+              final r = e.value;
+              final present = r['present'] ?? 0;
+              final total = r['total'] ?? 0;
+              return Padding(padding: EdgeInsets.only(top: e.key > 0 ? 6 : 0), child: Row(children: [
+                Icon(Icons.calendar_today_rounded, size: 12, color: ColorUtils.slate400),
+                const SizedBox(width: 6),
+                Expanded(child: Text(_fmtFullDate(r['date']?.toString()), style: TextStyle(fontSize: 11, color: ColorUtils.slate600, fontWeight: FontWeight.w500))),
+                const SizedBox(width: 8),
+                Text('$present/$total', style: TextStyle(fontSize: 12, color: present == total ? ColorUtils.success600 : ColorUtils.warning600, fontWeight: FontWeight.w600)),
+                const SizedBox(width: 4),
+                Text(languageProvider.getTranslatedText({'en': 'present', 'id': 'hadir'}), style: TextStyle(fontSize: 10, color: ColorUtils.slate400)),
+              ]));
+            }).toList())),
+          ],
+          const SizedBox(height: 8),
+          Row(children: [
+            Icon(Icons.update_rounded, size: 14, color: ColorUtils.slate400),
+            const SizedBox(width: 4),
+            Expanded(child: Text('${languageProvider.getTranslatedText({'en': 'Latest', 'id': 'Terbaru'})}: ${_fmtFullDate(group['latest_date']?.toString())}', style: TextStyle(fontSize: 11, color: ColorUtils.slate400), maxLines: 1, overflow: TextOverflow.ellipsis)),
+            const SizedBox(width: 8),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)), child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text(languageProvider.getTranslatedText({'en': 'View All', 'id': 'Lihat Semua'}), style: TextStyle(fontSize: 11, color: primaryColor, fontWeight: FontWeight.w600)),
+              const SizedBox(width: 2),
+              Icon(Icons.chevron_right, size: 14, color: primaryColor),
+            ])),
+          ]),
+        ]),
+      ))),
+    );
   }
+}
 
-  void _showErrorDetails(
-    List<String> errors,
-    LanguageProvider languageProvider,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Error Details',
-            'id': 'Detail Error',
-          }),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                languageProvider.getTranslatedText({
-                  'en': 'Some attendance failed to save due to following reasons:',
-                  'id': 'Beberapa absensi gagal disimpan karena:',
-                }),
-                style: const TextStyle(fontWeight: FontWeight.bold),
+// ═══════════════════════════════════════════════════════════════════════════════
+// TIMELINE CARD
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _AttendanceTimelineCard extends StatelessWidget {
+  final dynamic record;
+  final Color primaryColor;
+  final LanguageProvider languageProvider;
+  final VoidCallback onTap;
+
+  const _AttendanceTimelineCard({required this.record, required this.primaryColor, required this.languageProvider, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final cn = record['class_name']?.toString() ?? '-';
+    final sn = record['subject_name']?.toString() ?? record['mata_pelajaran_nama']?.toString() ?? '-';
+    final dateStr = _fmtFullDate(record['date']?.toString());
+    final present = int.tryParse(record['present']?.toString() ?? record['present_count']?.toString() ?? '0') ?? 0;
+    final total = int.tryParse(record['total_students']?.toString() ?? '0') ?? 0;
+    final lhName = record['lesson_hour_name']?.toString();
+    final pctColor = total > 0 && present / total >= 0.8 ? ColorUtils.success600 : (total > 0 && present / total >= 0.6 ? ColorUtils.warning600 : ColorUtils.error600);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Material(color: Colors.transparent, child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(12), child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: ColorUtils.slate200)),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          // Percentage ring
+          SizedBox(
+            width: 40, height: 40,
+            child: Stack(alignment: Alignment.center, children: [
+              SizedBox(width: 40, height: 40, child: CircularProgressIndicator(
+                value: total > 0 ? present / total : 0, strokeWidth: 3.5, backgroundColor: ColorUtils.slate100, color: pctColor,
+              )),
+              Text(total > 0 ? '${(present / total * 100).toStringAsFixed(0)}%' : '-', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: pctColor)),
+            ]),
+          ),
+          const SizedBox(width: 12),
+          // Content
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(child: Text(dateStr, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ColorUtils.slate800), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Text('$present/$total', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: pctColor)),
+            ]),
+            const SizedBox(height: 3),
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(4)),
+                child: Text('$cn · $sn', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: primaryColor), maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
-              const SizedBox(height: AppSpacing.md),
-              ..._formatErrorMessages(errors).map(
-                (error) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text('• $error', style: const TextStyle(fontSize: 13)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => AppNavigator.pop(context),
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Close',
-                'id': 'Tutup',
-              }),
-            ),
-          ),
-        ],
-      ),
+              if (lhName != null && lhName.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Icon(Icons.access_time_rounded, size: 10, color: ColorUtils.slate400),
+                const SizedBox(width: 2),
+                Text(lhName, style: TextStyle(fontSize: 10, color: ColorUtils.slate500)),
+              ],
+            ]),
+          ])),
+        ]),
+      ))),
     );
   }
+}
 
-  /// Groups multiple error messages sharing the same content to reduce redundancy.
-  /// Example: ["John: Date error", "Jane: Date error"] -> ["Date error: John, Jane"]
-  List<String> _formatErrorMessages(List<String> errors) {
-    if (errors.isEmpty) return [];
+// ═══════════════════════════════════════════════════════════════════════════════
+// DETAIL SHEET (session list for a class+subject)
+// ═══════════════════════════════════════════════════════════════════════════════
 
-    // Map to group student names by their common error message
-    final Map<String, List<String>> groupedErrors = {};
+class _AttendanceDetailSheet extends StatefulWidget {
+  final String teacherId;
+  final String teacherNama;
+  final String classId;
+  final String className;
+  final String subjectId;
+  final String subjectName;
+  final List<dynamic> lessonHours;
+  final List<dynamic> classList;
+  final Color primaryColor;
+  final bool canEdit;
+  final LanguageProvider languageProvider;
 
-    for (final error in errors) {
-      final parts = error.split(': ');
-      if (parts.length >= 2) {
-        final name = parts[0];
-        final message = parts.sublist(1).join(': ');
-        groupedErrors.putIfAbsent(message, () => []).add(name);
-      } else {
-        groupedErrors.putIfAbsent(error, () => []).add('');
-      }
-    }
+  const _AttendanceDetailSheet({
+    required this.teacherId, required this.teacherNama,
+    required this.classId, required this.className,
+    required this.subjectId, required this.subjectName,
+    required this.lessonHours, required this.classList,
+    required this.primaryColor, required this.languageProvider,
+    this.canEdit = true,
+  });
 
-    final List<String> formatted = [];
-    groupedErrors.forEach((message, names) {
-      if (names.length > 3) {
-        formatted.add('$message (${names.length} siswa)');
-      } else if (names.isNotEmpty && names[0].isNotEmpty) {
-        formatted.add('$message: ${names.join(", ")}');
-      } else {
-        formatted.add(message);
-      }
-    });
+  @override
+  State<_AttendanceDetailSheet> createState() => _AttendanceDetailSheetState();
+}
 
-    return formatted;
+class _AttendanceDetailSheetState extends State<_AttendanceDetailSheet> {
+  List<AttendanceSummaryItem> _sessions = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSessions();
   }
 
-  void _resetForm() {
-    setState(() {
-      // Reset status absensi ke default
-      for (var student in _studentList) {
-        _attendanceStatus[student.id] = 'hadir';
-      }
-      // Reset filter kelas
-      _selectedClassId = null;
-      _selectedStatusFilter = null;
-      _searchControllerInput.clear();
-      _filterStudents();
-    });
-
-    // Re-detect current schedule after reset
-    _detectCurrentSchedule();
-  }
-
-  Future<void> _deleteAttendance(
-    AttendanceSummaryItem summary,
-    LanguageProvider languageProvider,
-  ) async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Delete Attendance',
-            'id': 'Hapus Absensi',
-          }),
-        ),
-        content: Text(
-          languageProvider.getTranslatedText({
-            'en':
-                'Are you sure you want to delete attendance for ${summary.subjectName} on ${DateFormat('dd MMMM yyyy', 'id_ID').format(summary.date)}?',
-            'id':
-                'Apakah Anda yakin ingin menghapus absensi ${summary.subjectName} pada ${DateFormat('dd MMMM yyyy', 'id_ID').format(summary.date)}?',
-          }),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => AppNavigator.pop(context, false),
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Cancel',
-                'id': 'Batal',
-              }),
-            ),
-          ),
-          TextButton(
-            onPressed: () => AppNavigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Delete',
-                'id': 'Hapus',
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
+  Future<void> _loadSessions() async {
     try {
-      await AttendanceService.deleteAttendanceSummary(
-        teacherId: widget.teacher['id'],
-        subjectId: summary.subjectId,
-        date: DateFormat('yyyy-MM-dd').format(summary.date),
-        classId: summary.classId,
-        lessonHourId: summary.lessonHourId,
+      final data = await AttendanceService.getAttendanceSummary(
+        teacherId: widget.teacherId,
+        classId: widget.classId,
+        subjectId: widget.subjectId,
       );
-
       if (!mounted) return;
-
-      SnackBarUtils.showSuccess(
-        context,
-        languageProvider.getTranslatedText({
-          'en': 'Attendance deleted successfully',
-          'id': 'Absensi berhasil dihapus',
-        }),
-      );
-
-      // Reload summary data
-      _loadAttendanceSummary();
+      final sessions = data.map((record) {
+        return AttendanceSummaryItem(
+          subjectId: (record['subject_id'] ?? '').toString(),
+          subjectName: record['subject_name'] ?? widget.subjectName,
+          date: AppDateUtils.parseApiDate(record['date']?.toString() ?? '') ?? DateTime.now(),
+          totalStudent: int.tryParse(record['total_students']?.toString() ?? '0') ?? 0,
+          present: int.tryParse(record['present']?.toString() ?? '0') ?? 0,
+          absent: int.tryParse(record['absent']?.toString() ?? '0') ?? 0,
+          classId: (record['class_id'] ?? '').toString(),
+          className: record['class_name'] ?? widget.className,
+          lessonHourId: (record['lesson_hour_id'] ?? '').toString(),
+          lessonHourName: record['lesson_hour_name'] ?? '',
+        );
+      }).toList()..sort((a, b) => b.date.compareTo(a.date));
+      setState(() { _sessions = sessions; _isLoading = false; });
     } catch (e) {
-      AppLogger.error('attendance', 'Delete attendance error: $e');
-      if (mounted) {
-        SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
-      }
+      AppLogger.error('attendance', 'Error loading sessions: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = ref.watch(languageRiverpod);
-
-    if (widget.embedded) {
-      return GestureDetector(
-        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: Container(
+    return Container(
+      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      child: Column(children: [
+        // Header
+        Container(
           decoration: BoxDecoration(
-            color: ColorUtils.slate50,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
+            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [widget.primaryColor, widget.primaryColor.withValues(alpha: 0.85)]),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: Column(
-            children: [
-              // ── Drag Handle ──
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: ColorUtils.slate300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+          child: Column(children: [
+            Container(margin: const EdgeInsets.only(top: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 14),
+              child: Row(children: [
+                Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.fact_check_outlined, color: Colors.white, size: 18)),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Kelas: ${widget.className}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(widget.subjectName, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
+                ])),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.close, color: Colors.white, size: 18)),
+                ),
+              ]),
+            ),
+          ]),
+        ),
+        // Session list
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _sessions.isEmpty
+                  ? Center(child: Text('No attendance records', style: TextStyle(color: ColorUtils.slate400)))
+                  : RefreshIndicator(
+                      onRefresh: _loadSessions,
+                      color: widget.primaryColor,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+                        itemCount: _sessions.length,
+                        itemBuilder: (context, index) {
+                          final s = _sessions[index];
+                          return AttendanceSummaryCard(
+                            summary: s,
+                            primaryColor: widget.primaryColor,
+                            languageProvider: widget.languageProvider,
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TeacherAttendanceDetailPage(
+                              subjectId: s.subjectId, subjectName: s.subjectName,
+                              date: s.date, classId: s.classId ?? '', className: s.className ?? '',
+                              teacher: {'id': widget.teacherId, 'nama': widget.teacherNama},
+                              lessonHourId: s.lessonHourId, lessonHourName: s.lessonHourName,
+                            ))),
+                            onDelete: () async {
+                              if (!widget.canEdit) return;
+                              try {
+                                await AttendanceService.deleteAttendanceSummary(
+                                  teacherId: widget.teacherId, subjectId: s.subjectId,
+                                  date: DateFormat('yyyy-MM-dd').format(s.date),
+                                  classId: s.classId, lessonHourId: s.lessonHourId,
+                                );
+                                _loadSessions();
+                              } catch (e) {
+                                if (context.mounted) SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ),
+        ),
+        // FAB-like button for taking attendance
+        if (widget.canEdit)
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (ctx) => DraggableScrollableSheet(
+                        initialChildSize: 0.8, minChildSize: 0.5, maxChildSize: 0.96, expand: false,
+                        builder: (ctx, sc) => AttendancePage(
+                          teacher: {'id': widget.teacherId, 'nama': widget.teacherNama},
+                          initialDate: DateTime.now(),
+                          initialSubjectId: widget.subjectId,
+                          initialSubjectName: widget.subjectName,
+                          initialclassId: widget.classId,
+                          initialClassName: widget.className,
+                          initialTabIndex: 1,
+                          embedded: true,
+                          scrollController: sc,
+                        ),
+                      ),
+                    ).then((_) => _loadSessions());
+                  },
+                  icon: const Icon(Icons.add_rounded, size: 20),
+                  label: const Text('Ambil Presensi', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  style: ElevatedButton.styleFrom(backgroundColor: widget.primaryColor, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
                 ),
               ),
-
-              // ── Custom Header for Bottom Sheet ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 12, 12),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: _getPrimaryColor().withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.fact_check_rounded,
-                        color: _getPrimaryColor(),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            languageProvider.getTranslatedText(
-                              {'en': 'Attendance', 'id': 'Presensi'},
-                            ),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: ColorUtils.slate800,
-                            ),
-                          ),
-                          if (widget.initialSubjectName != null ||
-                              widget.initialClassName != null)
-                            Text(
-                              '${widget.initialSubjectName ?? ""} — ${widget.initialClassName ?? ""}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: ColorUtils.slate500,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: ColorUtils.slate100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.close,
-                          size: 18,
-                          color: ColorUtils.slate600,
-                        ),
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-              ),
-
-              Divider(height: 1, thickness: 1, color: ColorUtils.slate100),
-
-              // ── Input Mode Content ──
-              Expanded(
-                child: _tabController.index == 0
-                    ? _buildResultsMode()
-                    : _buildInputMode(),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return GestureDetector(
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      child: Scaffold(
-        backgroundColor: ColorUtils.slate50,
-        body: Column(
-          children: [
-            _buildHeader(languageProvider),
-            Expanded(
-              child: _tabController.index == 0
-                  ? _buildResultsMode()
-                  : _buildInputMode(),
             ),
-          ],
-        ),
-      ),
+          ),
+      ]),
     );
   }
-
-  Future<void> _checkAndShowTour() async {
-    try {
-      final tourCacheKey = CacheKeyBuilder.tourStatus(
-        'presence_teacher_screen',
-        'guru',
-      );
-      final cached = await LocalCacheService.load(
-        tourCacheKey,
-        ttl: const Duration(hours: 24),
-      );
-      if (cached != null && cached is Map) {
-        if (cached['should_show'] == true) {
-          if (mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _showTour();
-            });
-          }
-        }
-      }
-    } catch (e) {
-      AppLogger.error('attendance', 'Error checking tour status: $e');
-    }
-  }
-
-  void _showTour() {
-    final List<TargetFocus> targets = _createTourTargets(_tabSwitcherKey, _searchFilterKey);
-    if (targets.isEmpty) return;
-
-    TutorialCoachMark(
-      targets: targets,
-      colorShadow: Colors.black,
-      textSkip: "LEWATI",
-      paddingFocus: 10,
-      opacityShadow: 0.8,
-      onFinish: () {
-        getIt<ApiTourService>().completeTour(
-          name: 'presence_teacher_tour',
-          role: 'guru',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('presence_teacher_screen', 'guru'),
-          {'should_show': false},
-        );
-      },
-      onSkip: () {
-        getIt<ApiTourService>().completeTour(
-          name: 'presence_teacher_tour',
-          role: 'guru',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('presence_teacher_screen', 'guru'),
-          {'should_show': false},
-        );
-        return true;
-      },
-    ).show(context: context);
-  }
-
 }

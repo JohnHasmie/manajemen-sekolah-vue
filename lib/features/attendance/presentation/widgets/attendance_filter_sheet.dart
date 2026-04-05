@@ -132,7 +132,7 @@ class _AttendanceFilterSheetState extends State<AttendanceFilterSheet> {
                 children: [
                   // Date Range section
                   _buildSectionHeader(
-                    _lang.getTranslatedText({'en': 'Date Range', 'id': 'Rentang Tanggal'}),
+                    _lang.getTranslatedText({'en': 'Time Range', 'id': 'Rentang Waktu'}),
                     Icons.calendar_today_outlined,
                   ),
                   const SizedBox(height: AppSpacing.md),

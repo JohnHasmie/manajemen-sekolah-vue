@@ -136,7 +136,7 @@ class TeacherScheduleFilterSheetState
   /// Small icon + label row used as a section heading in the filter list.
   Widget _buildSectionHeader(String title, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Container(
@@ -146,7 +146,7 @@ class TeacherScheduleFilterSheetState
               color: widget.primaryColor.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
-            child: Icon(icon, size: 15, color: widget.primaryColor),
+            child: Icon(icon, size: 16, color: widget.primaryColor),
           ),
           const SizedBox(width: 10),
           Text(
@@ -168,14 +168,14 @@ class TeacherScheduleFilterSheetState
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: selected
-              ? widget.primaryColor.withValues(alpha: 0.12)
-              : Colors.white,
+              ? widget.primaryColor.withValues(alpha: 0.1)
+              : ColorUtils.slate50,
           borderRadius: const BorderRadius.all(Radius.circular(10)),
           border: Border.all(
-            color: selected ? widget.primaryColor : ColorUtils.slate300,
+            color: selected ? widget.primaryColor : ColorUtils.slate200,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -184,7 +184,7 @@ class TeacherScheduleFilterSheetState
           style: TextStyle(
             fontSize: 13,
             color: selected ? widget.primaryColor : ColorUtils.slate600,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
           ),
         ),
       ),
@@ -256,7 +256,7 @@ class TeacherScheduleFilterSheetState
                 child: const Icon(
                   Icons.tune_rounded,
                   color: Colors.white,
-                  size: 18,
+                  size: 20,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -267,8 +267,8 @@ class TeacherScheduleFilterSheetState
                     'id': 'Filter Jadwal',
                   }),
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                 ),
@@ -288,7 +288,7 @@ class TeacherScheduleFilterSheetState
                 ),
                 child: const Text(
                   'Reset',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
