@@ -35,10 +35,11 @@ variables:
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
     # Remove integration_test from GeneratedPluginRegistrant (dev-only, breaks release builds)
+    # Use portable sed syntax that works on both macOS and Linux
     - |
       REGISTRANT="android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java"
       if [ -f "$REGISTRANT" ]; then
-        sed -i '' '/integration_test/d' "$REGISTRANT"
+        sed -i.bak '/integration_test/d' "$REGISTRANT" && rm -f "${REGISTRANT}.bak"
       fi
 
 .shorebird_setup: &shorebird_setup
@@ -47,14 +48,15 @@ variables:
     - |
       if ! command -v shorebird &>/dev/null; then
         curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+        export PATH="$HOME/.shorebird/bin:$PATH"
       fi
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
-    # Remove integration_test from GeneratedPluginRegistrant (dev-only, breaks release builds)
+    # Remove integration_test (portable sed)
     - |
       REGISTRANT="android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java"
       if [ -f "$REGISTRANT" ]; then
-        sed -i '' '/integration_test/d' "$REGISTRANT"
+        sed -i.bak '/integration_test/d' "$REGISTRANT" && rm -f "${REGISTRANT}.bak"
       fi
     - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/upload-keystore.jks
     - |
@@ -173,7 +175,9 @@ deploy_playstore:
 
 # ---------------------------------------------------------------------------
 # Shorebird Release (manual)
-# Creates Shorebird-enabled release with CI_PIPELINE_IID as build number
+# Creates Shorebird-enabled release. MUST use the same Flutter version
+# for both release and patch — otherwise engine hash mismatch causes
+# patches to silently fail on the device.
 # ---------------------------------------------------------------------------
 shorebird_release:
   <<: *shorebird_setup
@@ -183,11 +187,15 @@ shorebird_release:
     - |
       VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
       BUILD_NUMBER=${CI_PIPELINE_IID}
-      echo "Shorebird release ${VERSION_NAME}+${BUILD_NUMBER}"
+      RELEASE_VERSION="${VERSION_NAME}+${BUILD_NUMBER}"
+      echo "Shorebird release ${RELEASE_VERSION}"
     - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+    - echo "RELEASE_VERSION=${RELEASE_VERSION}" >> release.env
   artifacts:
     paths:
       - build/app/outputs/bundle/release/app-release.aab
+    reports:
+      dotenv: release.env
     expire_in: 30 days
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -196,14 +204,31 @@ shorebird_release:
 
 # ---------------------------------------------------------------------------
 # Shorebird Patch (manual)
-# NO version change — patches the latest release via OTA
+# Patches the latest Shorebird release via OTA.
+#
+# CRITICAL: Must use the SAME --flutter-version as the release.
+# Without this, Shorebird uses its bundled Flutter which may have a
+# different engine revision, causing the patch to build successfully
+# but never apply on the device (engine hash mismatch).
 # ---------------------------------------------------------------------------
 shorebird_patch:
   <<: *shorebird_setup
   stage: deploy
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
-    - shorebird patch android --release-version=latest --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+    # Resolve the exact release version to patch against
+    - |
+      if [ -n "${RELEASE_VERSION}" ]; then
+        TARGET_VERSION="${RELEASE_VERSION}"
+      else
+        # Extract from pubspec and use the last known build number
+        VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+        # Use 'latest' as fallback — Shorebird resolves it to the most recent release
+        TARGET_VERSION="latest"
+        echo "No RELEASE_VERSION artifact found, using: ${TARGET_VERSION}"
+      fi
+      echo "Patching release: ${TARGET_VERSION}"
+    - shorebird patch android --release-version=${TARGET_VERSION} --flutter-version=${FLUTTER_VERSION} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
