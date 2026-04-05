@@ -315,7 +315,7 @@ class EmbeddedActivityListScreenState
         onChapterSelected: _loadSubChapterContent,
         onActivityAdded: _onActivityChanged,
         initialTarget: activity['target_role'] ?? 'umum',
-        activityType: activity['jenis'] ?? 'tugas',
+        activityType: _resolveActivityType(activity),
         isEditMode: true,
         activityData: activity,
         initialDate: activity['date'] != null
@@ -601,6 +601,15 @@ class EmbeddedActivityListScreenState
 
   Color get _primaryColor => ColorUtils.getRoleColor('guru');
 
+  /// Maps API `type` field (material/assignment) back to the Indonesian
+  /// value the add/edit dialog expects (materi/tugas).
+  String _resolveActivityType(dynamic activity) {
+    final type = activity['type']?.toString() ?? activity['jenis']?.toString();
+    if (type == 'assignment' || type == 'tugas') return 'tugas';
+    if (type == 'material' || type == 'materi') return 'materi';
+    return 'tugas';
+  }
+
   // ── Public API for parent (ClassActivityScreen) ──
 
   /// The tab switcher widget that the parent's header can display.
@@ -715,13 +724,13 @@ class EmbeddedActivityListScreenState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.subjectName,
+                                'Kelas: ${widget.className}',
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
-                                'Kelas: ${widget.className}',
+                                widget.subjectName,
                                 style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9)),
                               ),
                             ],

@@ -868,9 +868,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   Widget build(BuildContext context) {
     final languageProvider = ref.read(languageRiverpod);
     final isAssignment = widget.activityType == 'tugas';
-    final primaryColor = isAssignment
-        ? ColorUtils.warning600
-        : ColorUtils.corporateBlue600;
+    final primaryColor = ColorUtils.getRoleColor('guru');
 
     return Container(
       decoration: BoxDecoration(

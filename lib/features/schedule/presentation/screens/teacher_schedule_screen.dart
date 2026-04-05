@@ -1051,6 +1051,8 @@ class TeachingScheduleScreenState
                   _isHomeroomView = true;
                   _selectedHomeroomClass = value as Map<String, dynamic>;
                 }
+                _scheduleList = [];
+                _isLoading = true;
               });
               _loadSchedule();
             },
