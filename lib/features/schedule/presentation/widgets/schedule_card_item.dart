@@ -12,7 +12,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/embedded_activity_list_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_info_tag.dart';
+
 
 /// Formats a raw time string like "07.30.00" or "07:30:00" → "07:30".
 String _formatTimeStr(String? time) {
@@ -278,25 +278,32 @@ class ScheduleCardItem extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
+                            Row(
                               children: [
-                                // Clock Range Pill
-                                ScheduleInfoTag(
-                                  icon: Icons.access_time_rounded,
-                                  label:
-                                      '${_formatTime(schedule["jam_mulai"])} – ${_formatTime(schedule["jam_selesai"])}',
-                                  color: accentColor,
+                                // Clock Range
+                                Icon(Icons.access_time_rounded, size: 11, color: accentColor),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${_formatTime(schedule["jam_mulai"])}–${_formatTime(schedule["jam_selesai"])}',
+                                  style: TextStyle(fontSize: 11, color: accentColor, fontWeight: FontWeight.w500),
                                 ),
-                                // Academic Year & Semester Pill
-                                if (schedule['semester_nama'] != null)
-                                  ScheduleInfoTag(
-                                    icon: Icons.calendar_month_rounded,
-                                    label:
-                                        '$selectedAcademicYear • ${schedule['semester_nama']}',
-                                    color: subTextColor,
+                                // Academic Year & Semester
+                                if (schedule['semester_nama'] != null) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                                    child: Text('·', style: TextStyle(fontSize: 11, color: subTextColor, fontWeight: FontWeight.w700)),
                                   ),
+                                  Icon(Icons.calendar_month_rounded, size: 10, color: subTextColor),
+                                  const SizedBox(width: 3),
+                                  Flexible(
+                                    child: Text(
+                                      '$selectedAcademicYear ${schedule['semester_nama']}',
+                                      style: TextStyle(fontSize: 10, color: subTextColor, fontWeight: FontWeight.w500),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ],
@@ -304,8 +311,6 @@ class ScheduleCardItem extends StatelessWidget {
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: AppSpacing.sm),
 
                   const SizedBox(height: AppSpacing.md),
 

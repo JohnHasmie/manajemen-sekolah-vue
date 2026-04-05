@@ -665,14 +665,14 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: isPast ? ColorUtils.slate400 : ColorUtils.slate700,
+                    color: isPast ? ColorUtils.slate400 : (isCurrent || isNext ? primary : ColorUtils.slate700),
                   ),
                 ),
                 Text(
                   endTime,
                   style: TextStyle(
                     fontSize: 9,
-                    color: isPast ? ColorUtils.slate300 : ColorUtils.slate400,
+                    color: isPast ? ColorUtils.slate300 : (isCurrent || isNext ? primary.withValues(alpha: 0.7) : ColorUtils.slate400),
                   ),
                 ),
               ],
@@ -715,12 +715,23 @@ class _TeacherScheduleTableViewState extends State<TeacherScheduleTableView>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      'Kelas: $className',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isPast ? ColorUtils.slate400 : primary,
+                    Container(
+                      padding: isCurrent || isNext
+                          ? const EdgeInsets.symmetric(horizontal: 6, vertical: 2)
+                          : EdgeInsets.zero,
+                      decoration: isCurrent || isNext
+                          ? BoxDecoration(
+                              color: primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            )
+                          : null,
+                      child: Text(
+                        'Kelas: $className',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isPast ? ColorUtils.slate400 : primary,
+                        ),
                       ),
                     ),
                   ],

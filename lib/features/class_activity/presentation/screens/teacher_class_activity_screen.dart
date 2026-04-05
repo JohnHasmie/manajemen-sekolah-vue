@@ -593,13 +593,13 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
       child: Stack(alignment: Alignment.center, children: [
         AnimatedAlign(duration: const Duration(milliseconds: 250), curve: Curves.easeInOut, alignment: _isHomeroomView ? Alignment.centerRight : Alignment.centerLeft, child: FractionallySizedBox(widthFactor: 0.5, child: Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))])))),
         Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () { setState(() => _isHomeroomView = false); _refreshGroupedActivities(); },
+          Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () { if (_isHomeroomView) { setState(() { _isHomeroomView = false; _isLoading = true; }); _refreshGroupedActivities().then((_) { if (mounted) setState(() => _isLoading = false); }); } },
             child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(Icons.person_outline_rounded, size: 16, color: !_isHomeroomView ? p : Colors.white.withValues(alpha: 0.9)),
               const SizedBox(width: AppSpacing.xs),
               Text(lp.getTranslatedText({'en': 'Teaching', 'id': 'Mengajar'}), style: TextStyle(fontSize: 12, fontWeight: !_isHomeroomView ? FontWeight.w700 : FontWeight.w500, color: !_isHomeroomView ? p : Colors.white.withValues(alpha: 0.9))),
             ])))),
-          Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () { setState(() => _isHomeroomView = true); _refreshGroupedActivities(); },
+          Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () { if (!_isHomeroomView) { setState(() { _isHomeroomView = true; _isLoading = true; }); _refreshGroupedActivities().then((_) { if (mounted) setState(() => _isLoading = false); }); } },
             child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(Icons.class_outlined, size: 16, color: _isHomeroomView ? p : Colors.white.withValues(alpha: 0.9)),
               const SizedBox(width: AppSpacing.xs),
@@ -735,9 +735,9 @@ class _ActivityGroupCard extends StatelessWidget {
             Container(width: 40, height: 40, decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(Icons.school_outlined, color: primaryColor, size: 20)),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(sn, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ColorUtils.slate900), maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text('Kelas: $cn', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ColorUtils.slate900), maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 2),
-              Text('Kelas: $cn', style: TextStyle(fontSize: 12, color: primaryColor, fontWeight: FontWeight.w600)),
+              Text(sn, style: TextStyle(fontSize: 12, color: primaryColor, fontWeight: FontWeight.w600)),
             ])),
             const SizedBox(width: 8),
             Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Row(mainAxisSize: MainAxisSize.min, children: [
