@@ -190,12 +190,9 @@ shorebird_release:
       RELEASE_VERSION="${VERSION_NAME}+${BUILD_NUMBER}"
       echo "Shorebird release ${RELEASE_VERSION}"
     - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
-    - echo "RELEASE_VERSION=${RELEASE_VERSION}" >> release.env
   artifacts:
     paths:
       - build/app/outputs/bundle/release/app-release.aab
-    reports:
-      dotenv: release.env
     expire_in: 30 days
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -206,29 +203,17 @@ shorebird_release:
 # Shorebird Patch (manual)
 # Patches the latest Shorebird release via OTA.
 #
-# CRITICAL: Must use the SAME --flutter-version as the release.
-# Without this, Shorebird uses its bundled Flutter which may have a
-# different engine revision, causing the patch to build successfully
-# but never apply on the device (engine hash mismatch).
+# Shorebird automatically uses the same Flutter version as the original
+# release — no --flutter-version flag needed (or supported) for patch.
 # ---------------------------------------------------------------------------
 shorebird_patch:
   <<: *shorebird_setup
   stage: deploy
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
-    # Resolve the exact release version to patch against
     - |
-      if [ -n "${RELEASE_VERSION}" ]; then
-        TARGET_VERSION="${RELEASE_VERSION}"
-      else
-        # Extract from pubspec and use the last known build number
-        VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
-        # Use 'latest' as fallback — Shorebird resolves it to the most recent release
-        TARGET_VERSION="latest"
-        echo "No RELEASE_VERSION artifact found, using: ${TARGET_VERSION}"
-      fi
-      echo "Patching release: ${TARGET_VERSION}"
-    - shorebird patch android --release-version=${TARGET_VERSION} --flutter-version=${FLUTTER_VERSION} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+      echo "Patching latest release..."
+    - shorebird patch android --release-version=latest --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
