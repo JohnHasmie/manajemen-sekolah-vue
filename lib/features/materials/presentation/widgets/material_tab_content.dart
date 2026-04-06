@@ -48,7 +48,7 @@ class MaterialTabContent extends StatelessWidget {
           if (parsedContent!['ringkasan'] != null)
             SectionCard(
               icon: Icons.summarize_rounded,
-              iconColor: ColorUtils.violet500,
+              iconColor: ColorUtils.info600,
               title: 'Ringkasan',
               child: Text(
                 parsedContent!['ringkasan'] ?? '',
@@ -155,51 +155,7 @@ class MaterialTabContent extends StatelessWidget {
           ),
         ],
 
-        // ── AI Info Badge ────────────────────────────────────────────────
-        if (aiGeneratedData != null) ...[
-          const SizedBox(height: AppSpacing.md),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: 0.04),
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
-              border: Border.all(
-                color: primaryColor.withValues(alpha: 0.12),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.auto_awesome,
-                  size: 16,
-                  color: primaryColor.withValues(alpha: 0.6),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    'Dibuat oleh AI  •  ${aiGeneratedData!['ai_model_used'] ?? 'Claude'}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: ColorUtils.slate500,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: onRegenerateTap,
-                  child: Text(
-                    'Regenerate',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: primaryColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+
 
         // ── Manual Content from backend ──────────────────────────────────
         if (contentList.isNotEmpty) ...[
@@ -214,14 +170,14 @@ class MaterialTabContent extends StatelessWidget {
                   borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
                 child: Icon(
-                  Icons.article_rounded,
+                  Icons.attach_file_rounded,
                   color: ColorUtils.slate600,
                   size: 16,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                'Konten Manual',
+                'Lampiran (Manual)',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -240,65 +196,63 @@ class MaterialTabContent extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.all(Radius.circular(14)),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate200),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+                boxShadow: [
+                  BoxShadow(color: ColorUtils.slate200.withValues(alpha: 0.4), blurRadius: 4, offset: const Offset(0, 2)),
+                ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: cardColor.withValues(alpha: 0.12),
-                        borderRadius: const BorderRadius.all(Radius.circular(9)),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${index + 1}',
-                          style: TextStyle(
-                            color: cardColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  onTap: () {
+                    // Tap attachment detail placeholder
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: cardColor.withValues(alpha: 0.1),
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          ),
+                          child: Center(
+                            child: Icon(Icons.description_rounded, color: cardColor, size: 22),
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            content['judul_konten'] ??
-                                content['title'] ??
-                                'Judul Konten',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              color: ColorUtils.slate900,
-                            ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                content['judul_konten'] ?? content['title'] ?? 'Lampiran',
+                                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: ColorUtils.slate800),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if ((content['isi_konten'] ?? content['description'] ?? '').isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  content['isi_konten'] ?? content['description'] ?? '',
+                                  style: TextStyle(color: ColorUtils.slate500, fontSize: 12, height: 1.4),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
                           ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            content['isi_konten'] ??
-                                content['description'] ??
-                                '',
-                            style: TextStyle(
-                              color: ColorUtils.slate600,
-                              fontSize: 13,
-                              height: 1.5,
-                            ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.chevron_right_rounded, color: ColorUtils.slate400, size: 20),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             );

@@ -120,6 +120,9 @@ class ApiEndpoints {
   static const fcmToken = '/fcm-token';
   static const fcmTokenEndpoint = '/fcm/token';
 
+  // ── Material Progress ──
+  static const materialProgressTeacherSummary = '/material-progress/teacher-summary';
+
   // ── Days / Semesters ──
   static const days = '/day';
   static const semesters = '/semester';

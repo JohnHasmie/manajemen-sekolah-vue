@@ -13,7 +13,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
+import 'package:manajemensekolah/core/router/app_router.dart';
+import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -429,8 +432,19 @@ class ApiSubjectService {
   // - validateStatus: (_) => true — so callers can inspect non-2xx status
   //   codes without Dio throwing (matching the old http package behavior).
 
-  /// Base URL for the AI microservice. Separate from the main Laravel API.
-  final String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
+  /// Base URL for the AI microservice. Resolution order:
+  /// 1. --dart-define=AI_API_BASE_URL=... (compile-time, CI/CD)
+  /// 2. .env file AI_API_BASE_URL (development)
+  /// 3. Fallback to production URL
+  late final String _aiBaseUrl = () {
+    const defineUrl = String.fromEnvironment('AI_API_BASE_URL');
+    if (defineUrl.isNotEmpty) return defineUrl;
+    try {
+      final envUrl = dotenv.env['AI_API_BASE_URL'];
+      if (envUrl != null && envUrl.isNotEmpty) return envUrl;
+    } catch (_) {}
+    return 'https://edu-ai-api.kamillabs.com/api';
+  }();
 
   /// Lazy-initialized Dio instance for KamillLabs AI API calls.
   /// Like a second Axios instance in Vue pointing to a different base URL.
@@ -455,12 +469,23 @@ class ApiSubjectService {
           ..interceptors.add(
             InterceptorsWrapper(
               onRequest: (options, handler) async {
-                final prefs = PreferencesService();
-                final token = prefs.getString('token');
+                final secureStorage = SecureStorageService();
+                final token = await secureStorage.getToken();
                 if (token != null) {
                   options.headers['Authorization'] = 'Bearer $token';
                 }
                 handler.next(options);
+              },
+              onResponse: (response, handler) async {
+                if (response.statusCode == 401) {
+                  AppLogger.error('ai', 'AI API returned 401. Forcing logout.');
+                  try {
+                    await SecureStorageService().clearAll();
+                    await PreferencesService().clear();
+                    appRouter.go('/login');
+                  } catch (_) {}
+                }
+                handler.next(response);
               },
             ),
           );
@@ -542,14 +567,27 @@ class ApiSubjectService {
     return response;
   }
 
-  /// Get generated material by ID from KamillLabs Edu AI
-  Future<dynamic> getGeneratedMaterial(String materialId) async {
+  /// Get generated material by ID from KamillLabs Edu AI.
+  /// Pass [classId] to get class-specific quiz variants.
+  Future<dynamic> getGeneratedMaterial(String materialId, {String? classId}) async {
     AppLogger.debug(
       'subject',
-      'Getting material: $_aiBaseUrl/generated-materials/$materialId',
+      'Getting material: $_aiBaseUrl/generated-materials/$materialId (classId=$classId)',
     );
-    final response = await _aiDio.get('/generated-materials/$materialId');
+    final params = <String, dynamic>{};
+    if (classId != null) params['class_id'] = classId;
+    final response = await _aiDio.get('/generated-materials/$materialId', queryParameters: params);
     AppLogger.debug('subject', 'Get material response: ${response.statusCode}');
+    return _handleAiResponse(response);
+  }
+
+  /// Clone shared quizzes to a specific class.
+  /// POST /generated-materials/{id}/clone-quiz
+  Future<dynamic> cloneQuizForClass(String materialId, String classId) async {
+    final response = await _aiDio.post(
+      '/generated-materials/$materialId/clone-quiz',
+      data: {'class_id': classId},
+    );
     return _handleAiResponse(response);
   }
 
@@ -599,20 +637,22 @@ class ApiSubjectService {
     return _handleAiResponse(response);
   }
 
-  /// Regenerate quiz for generated material
-  Future<dynamic> regenerateQuiz(String materialId) async {
+  /// Regenerate ONLY material content (keeps quiz + references intact).
+  Future<dynamic> regenerateMaterialContent(String materialId) async {
     final response = await _aiDio.post(
-      '/generated-materials/$materialId/regenerate-quiz',
+      '/generated-materials/$materialId/regenerate-material',
     );
     return _handleAiResponse(response);
   }
 
-  /// Regenerate references for generated material
-  Future<dynamic> regenerateReferences(String materialId) async {
-    final response = await _aiDio.post(
-      '/generated-materials/$materialId/regenerate-reference',
-    );
-    return _handleAiResponse(response);
+  /// Regenerate quiz for generated material. Returns raw Response for 202 handling.
+  Future<Response<dynamic>> regenerateQuizRaw(String materialId) async {
+    return await _aiDio.post('/generated-materials/$materialId/regenerate-quiz');
+  }
+
+  /// Regenerate references for generated material. Returns raw Response for 202 handling.
+  Future<Response<dynamic>> regenerateReferencesRaw(String materialId) async {
+    return await _aiDio.post('/generated-materials/$materialId/regenerate-reference');
   }
 
   // ==================== RPP REGENERATION METHODS ====================
@@ -691,6 +731,19 @@ class ApiSubjectService {
   // ==================== MATERI PROGRESS METHODS ====================
   // These methods track which chapters/sub-chapters a teacher has covered
   // and which ones have been AI-generated. Like a todo/checklist system.
+
+  /// Fetches material progress grouped by class+subject for the overview screen.
+  Future<List<dynamic>> getMaterialTeacherSummary({
+    required String teacherId,
+    String? academicYearId,
+  }) async {
+    final params = <String, dynamic>{'teacher_id': teacherId};
+    if (academicYearId != null) params['academic_year_id'] = academicYearId;
+    final response = await dioClient.get('/material-progress/teacher-summary', queryParameters: params);
+    final result = response.data;
+    if (result is Map && result['data'] is List) return result['data'];
+    return result is List ? result : [];
+  }
 
   /// Fetches material progress (checked/generated state) for a teacher + subject combo.
   /// Like `MaterialProgress::where('teacher_id', ...)->where('subject_id', ...)->get()`.

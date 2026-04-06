@@ -82,7 +82,7 @@ class EmptyTabState extends StatelessWidget {
                     Icon(Icons.auto_awesome, size: 16, color: Colors.white),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
-                      'Generate AI',
+                      'Generate',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,

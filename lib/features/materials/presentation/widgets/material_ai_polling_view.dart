@@ -1,21 +1,10 @@
-// Polling / loading view shown while the AI job is being processed.
-// Displayed in the centre of the screen with a spinner and status message.
-// Like a Vue `<AiPollingView :status="pollingStatus" />` skeleton component.
-
+// Loading view shown while content is being generated.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
-/// Full-screen polling indicator shown while waiting for the AI to finish.
-///
-/// Renders a centred spinner, a bold status line ([pollingStatus]), and a
-/// subtitle asking the user to wait.  No interaction — purely presentational.
 class MaterialAiPollingView extends StatelessWidget {
-  /// Live status text received from the polling loop,
-  /// e.g. "AI sedang memproses materi (percobaan 3)..."
   final String pollingStatus;
-
-  /// Accent colour for the circular progress indicator.
   final Color primaryColor;
 
   const MaterialAiPollingView({
@@ -28,35 +17,114 @@ class MaterialAiPollingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xxxl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 60,
-              height: 60,
-              child: CircularProgressIndicator(
-                color: primaryColor,
-                strokeWidth: 3,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.xxl),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: ColorUtils.slate300.withValues(alpha: 0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
+            ],
+            border: Border.all(
+              color: primaryColor.withValues(alpha: 0.1),
+              width: 1,
             ),
-            const SizedBox(height: AppSpacing.xxl),
-            Text(
-              pollingStatus,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: ColorUtils.slate700,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 72,
+                    height: 72,
+                    child: CircularProgressIndicator(
+                      color: primaryColor.withValues(alpha: 0.15),
+                      strokeWidth: 4,
+                      value: 1.0, 
+                    ),
+                  ),
+                  SizedBox(
+                    width: 72,
+                    height: 72,
+                    child: CircularProgressIndicator(
+                      color: primaryColor,
+                      strokeWidth: 4,
+                      strokeCap: StrokeCap.round,
+                    ),
+                  ),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome_rounded,
+                      color: primaryColor,
+                      size: 24,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Mohon tunggu, proses ini membutuhkan waktu beberapa saat...',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.xl),
+              Text(
+                'AI Sedang Bekerja',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: ColorUtils.slate800,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                pollingStatus.isNotEmpty 
+                  ? pollingStatus 
+                  : 'Merangkum materi, menyusun kuis, dan mencari referensi terbaik...',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: ColorUtils.slate500,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.timer_outlined,
+                      size: 16,
+                      color: Colors.orange[700],
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Bisa memakan waktu ±1 menit',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.orange[800],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
