@@ -52,6 +52,7 @@ import 'package:manajemensekolah/core/services/log_service.dart';
 import 'package:manajemensekolah/core/services/performance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:flutter/services.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:version/version.dart';
 
@@ -74,6 +75,13 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // Set system navigation bar to match app background (prevents black bar
+    // on Samsung/Android devices with software navigation buttons).
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      systemNavigationBarColor: Color(0xFFF8FAFC), // ColorUtils.slate50
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ));
 
     // Load environment variables
     try {
