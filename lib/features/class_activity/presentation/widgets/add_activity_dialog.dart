@@ -14,7 +14,7 @@ import 'package:manajemensekolah/features/class_activity/presentation/widgets/ad
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_header.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_material_selector.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_student_selector.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_target_info_box.dart';
+
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 
 class AddActivityDialog extends ConsumerStatefulWidget {
@@ -898,135 +898,32 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Info Box
-                    AddActivityTargetInfoBox(
-                      initialTarget: widget.initialTarget,
-                      primaryColor: primaryColor,
-                      languageProvider: languageProvider,
-                    ),
-
-                    // Mata Pelajaran — show read-only chip when pre-selected with empty list
-                    if (widget.initialSubjectId != null && widget.subjectList.isEmpty && widget.initialSubjectName != null)
+                    // Context bar — compact subject + class + target info
+                    if (widget.initialSubjectName != null || widget.initialClassName != null)
                       Container(
                         margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
-                        ),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: ColorUtils.slate50, borderRadius: BorderRadius.circular(12)),
                         child: Row(children: [
-                          Icon(Icons.book, size: 20, color: primaryColor),
-                          const SizedBox(width: 12),
-                          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'}), style: TextStyle(fontSize: 11, color: ColorUtils.slate500)),
-                            Text(widget.initialSubjectName!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ColorUtils.slate800)),
-                          ]),
+                          if (widget.initialClassName != null) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                              child: Text(widget.initialClassName!, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: primaryColor)),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          if (widget.initialSubjectName != null)
+                            Expanded(child: Text(widget.initialSubjectName!, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ColorUtils.slate700), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(color: widget.initialTarget == 'khusus' ? ColorUtils.violet500.withValues(alpha: 0.1) : ColorUtils.info600.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
+                            child: Text(widget.initialTarget == 'khusus' ? 'Khusus' : 'Umum', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: widget.initialTarget == 'khusus' ? ColorUtils.violet500 : ColorUtils.info600)),
+                          ),
                         ]),
                       )
-                    else
-                    Builder(
-                      builder: (context) {
-                        final Map<String, DropdownMenuItem<String>>
-                        uniqueSubjectItems = {};
-                        for (var subject in widget.subjectList) {
-                          final id = subject['id']?.toString();
-                          if (id != null &&
-                              !uniqueSubjectItems.containsKey(id)) {
-                            uniqueSubjectItems[id] = DropdownMenuItem<String>(
-                              value: id,
-                              child: Text(
-                                subject['name'] ?? subject['nama'] ?? 'Unknown',
-                              ),
-                            );
-                          }
-                        }
-                        final List<DropdownMenuItem<String>> subjectItems =
-                            uniqueSubjectItems.values.toList();
-
-                        return DropdownButtonFormField<String>(
-                          key: ValueKey(
-                            'subject_${_selectedSubjectId}_${subjectItems.length}',
-                          ),
-                          decoration: InputDecoration(
-                            labelText:
-                                '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})} *',
-                            prefixIcon: Icon(Icons.book),
-                            border: OutlineInputBorder(),
-                          ),
-                          initialValue:
-                              (subjectItems.any(
-                                (item) => item.value == _selectedSubjectId,
-                              ))
-                              ? _selectedSubjectId
-                              : null,
-                          isExpanded: true,
-                          items: subjectItems.isEmpty ? null : subjectItems,
-                          onChanged: subjectItems.isEmpty
-                              ? null
-                              : (value) {
-                                  setState(() {
-                                    _selectedSubjectId = value;
-                                    _selectedClassId = null;
-                                  });
-                                  if (value != null) {
-                                    widget.onSubjectSelected(value);
-                                    _loadChapterContent(value);
-                                  }
-                                },
-                          validator: (value) => value == null
-                              ? languageProvider.getTranslatedText({
-                                  'en': 'Required',
-                                  'id': 'Wajib diisi',
-                                })
-                              : null,
-                          hint: Text(
-                            subjectItems.isEmpty
-                                ? languageProvider.getTranslatedText({
-                                    'en': 'No subjects available',
-                                    'id': 'Tidak ada mata pelajaran',
-                                  })
-                                : languageProvider.getTranslatedText({
-                                    'en': 'Select Subject',
-                                    'id': 'Pilih Mata Pelajaran',
-                                  }),
-                          ),
-                        );
-                      },
-                    ),
-                    if (widget.subjectList.isEmpty && widget.initialSubjectId == null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4, left: 12),
-                        child: Text(
-                          AppLocalizations.noTeachingSubjects.tr,
-                          style: TextStyle(
-                            color: ColorUtils.error600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Kelas — show read-only chip when pre-selected
-                    if (widget.initialClassId != null && widget.initialClassName != null && _getUniqueClassItems().isEmpty)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
-                        ),
-                        child: Row(children: [
-                          Icon(Icons.class_, size: 20, color: primaryColor),
-                          const SizedBox(width: 12),
-                          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'}), style: TextStyle(fontSize: 11, color: ColorUtils.slate500)),
-                            Text(widget.initialClassName!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ColorUtils.slate800)),
-                          ]),
-                        ]),
-                      )
-                    else
+                    else ...[
+                      // Full dropdowns when no pre-selection
                     Builder(
                       builder: (context) {
                         final List<DropdownMenuItem<String>> classItems =
@@ -1104,6 +1001,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                           ),
                         ),
                       ),
+                    ], // end of else (full dropdowns)
                     const SizedBox(height: AppSpacing.md),
 
                     // Toggle + Chapter + Sub-chapter selector
