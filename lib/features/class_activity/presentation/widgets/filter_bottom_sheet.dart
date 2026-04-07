@@ -62,7 +62,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   Widget _buildSectionHeader(String title, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 12),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Container(
@@ -225,8 +225,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 children: [
                   _buildSectionHeader(
                     languageProvider.getTranslatedText({
-                      'en': 'Date Range',
-                      'id': 'Rentang Tanggal',
+                      'en': 'Time Range',
+                      'id': 'Rentang Waktu',
                     }),
                     Icons.calendar_today_rounded,
                   ),

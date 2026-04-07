@@ -1,30 +1,9 @@
 // ActivityCard — displays one teaching-journal entry in the activity list.
-//
-// Extracted from `ClassActivityScreenState._buildActivityCard`.
-// Think of this like a Vue `<ActivityCard :activity="item" />` component.
-// It is a pure presentational widget: all business logic (delete, edit,
-// detail dialog) is delegated back to the parent via callbacks.
-//
-// StatelessWidget is sufficient because the card holds no mutable state of
-// its own — it's just a "view" of a data map.
-
+// Refined single-row layout: type indicator + title/meta + overflow menu.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
-/// A single row card showing one class activity (material or task).
-///
-/// Parameters are the equivalent of Vue props:
-/// - [activity]           — the raw API map for this entry
-/// - [primaryColor]       — theme colour passed from the screen
-/// - [languageProvider]   — translation helper (read-only; no need for ref)
-/// - [canEdit]            — whether the current user can edit/delete
-/// - [onTap]              — called when the whole card is tapped (opens detail)
-/// - [onEdit]             — called when the edit button is pressed
-/// - [onDelete]           — called when the delete button is pressed
-/// - [selectedSubjectName] / [selectedClassName] — fallback labels when the
-///   activity map doesn't carry its own subject/class names
 class ActivityCard extends StatelessWidget {
   final dynamic activity;
   final Color primaryColor;
@@ -49,10 +28,6 @@ class ActivityCard extends StatelessWidget {
     this.selectedClassName,
   });
 
-  // ---------------------------------------------------------------------------
-  // Helper: format a date value to dd/mm/yyyy.
-  // Mirrors `ClassActivityScreenState._formatDate`.
-  // ---------------------------------------------------------------------------
   String _formatDate(dynamic date) {
     if (date == null) return '-';
     DateTime? dt;
@@ -65,67 +40,6 @@ class ActivityCard extends StatelessWidget {
     return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
   }
 
-  // ---------------------------------------------------------------------------
-  // Small coloured tag used in the Wrap below the title.
-  // Like a Vue `<InfoTag :icon="..." :label="..." />` sub-component.
-  // ---------------------------------------------------------------------------
-  Widget _buildInfoTag(IconData icon, String label, {Color? tagColor}) {
-    final c = tagColor ?? ColorUtils.slate600;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: tagColor != null
-            ? tagColor.withValues(alpha: 0.08)
-            : ColorUtils.slate50,
-        borderRadius: const BorderRadius.all(Radius.circular(6)),
-        border: Border.all(
-          color: tagColor != null
-              ? tagColor.withValues(alpha: 0.3)
-              : ColorUtils.slate200,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: c),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: c,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Small circular icon button (edit / delete).
-  // Like a Vue `<CircleActionButton :icon="..." :color="..." />`.
-  // ---------------------------------------------------------------------------
-  Widget _buildCircleActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
-        ),
-        child: Icon(icon, size: 18, color: color),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isAssignment =
@@ -135,173 +49,164 @@ class ActivityCard extends StatelessWidget {
     final isSpecificTarget = activity['target_role'] == 'khusus';
     final accentColor =
         isAssignment ? ColorUtils.warning600 : ColorUtils.success600;
+    final typeLabel = isAssignment
+        ? languageProvider.getTranslatedText({'en': 'Task', 'id': 'Tugas'})
+        : languageProvider.getTranslatedText({'en': 'Material', 'id': 'Materi'});
+
+    final description = (activity['deskripsi'] ?? activity['description'])?.toString();
+    final hasDescription = description != null && description.isNotEmpty;
+    final dateStr = '${activity['day'] ?? '-'}, ${_formatDate(activity['date'])}';
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.all(Radius.circular(14)),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: ColorUtils.slate200),
             ),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left icon badge
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.1),
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    border: Border.all(
-                      color: accentColor.withValues(alpha: 0.25),
+                // Row 1: Type badge + Title + overflow menu
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Type indicator (thin left accent)
+                    Container(
+                      width: 4,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: accentColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                  ),
-                  child: Icon(
-                    isAssignment
-                        ? Icons.assignment_outlined
-                        : Icons.menu_book_outlined,
-                    color: accentColor,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                // Body: title, subject/class, info tags, description
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        activity['title'] ?? 'Judul Kegiatan',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${activity['subject_name'] ?? selectedSubjectName ?? ''} • ${activity['class_name'] ?? selectedClassName ?? ''}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: 5,
-                        runSpacing: 4,
+                    const SizedBox(width: 12),
+                    // Title + meta
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildInfoTag(
-                            Icons.calendar_today_outlined,
-                            '${activity['day'] ?? '-'}, ${_formatDate(activity['date'])}',
-                          ),
-                          if (activity['class_name'] != null || activity['kelas_nama'] != null)
-                            _buildInfoTag(
-                              Icons.class_rounded,
-                              'Kelas: ${activity['class_name'] ?? activity['kelas_nama'] ?? '-'}',
+                          Text(
+                            activity['title'] ?? 'Judul Kegiatan',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: ColorUtils.slate900,
                             ),
-                          _buildInfoTag(
-                            isAssignment
-                                ? Icons.assignment_outlined
-                                : Icons.menu_book_outlined,
-                            isAssignment
-                                ? languageProvider.getTranslatedText({
-                                    'en': 'Task',
-                                    'id': 'Tugas',
-                                  })
-                                : languageProvider.getTranslatedText({
-                                    'en': 'Material',
-                                    'id': 'Materi',
-                                  }),
-                            tagColor: accentColor,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          _buildInfoTag(
-                            isSpecificTarget
-                                ? Icons.person_outline
-                                : Icons.group_outlined,
-                            isSpecificTarget
-                                ? languageProvider.getTranslatedText({
-                                    'en': 'Specific',
-                                    'id': 'Khusus',
-                                  })
-                                : languageProvider.getTranslatedText({
-                                    'en': 'All',
-                                    'id': 'Semua',
-                                  }),
-                            tagColor: isSpecificTarget
-                                ? ColorUtils.violet700
-                                : ColorUtils.success600,
+                          const SizedBox(height: 4),
+                          // Meta row: date + type + target
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_today_rounded, size: 12, color: ColorUtils.slate400),
+                              const SizedBox(width: 4),
+                              Text(dateStr, style: TextStyle(fontSize: 11, color: ColorUtils.slate500)),
+                              const SizedBox(width: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: accentColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(typeLabel, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: accentColor)),
+                              ),
+                              if (isSpecificTarget) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: ColorUtils.violet700.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    languageProvider.getTranslatedText({'en': 'Specific', 'id': 'Khusus'}),
+                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: ColorUtils.violet700),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                          if (isAssignment &&
-                              activity['batas_waktu'] != null)
-                            _buildInfoTag(
-                              Icons.access_time_outlined,
-                              _formatDate(activity['batas_waktu']),
-                              tagColor: ColorUtils.error600,
-                            ),
                         ],
                       ),
-                      if (activity['deskripsi'] != null &&
-                          activity['deskripsi'].toString().isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          activity['deskripsi'].toString(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorUtils.slate500,
-                            height: 1.4,
+                    ),
+                    // Overflow menu (edit/delete) or chevron
+                    if (canEdit)
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'edit') onEdit();
+                          if (value == 'delete') onDelete();
+                        },
+                        icon: Icon(Icons.more_vert, size: 20, color: ColorUtils.slate400),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Row(children: [
+                              Icon(Icons.edit_outlined, size: 18, color: primaryColor),
+                              const SizedBox(width: 8),
+                              Text(languageProvider.getTranslatedText({'en': 'Edit', 'id': 'Edit'})),
+                            ]),
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(children: [
+                              Icon(Icons.delete_outline, size: 18, color: ColorUtils.error600),
+                              const SizedBox(width: 8),
+                              Text(languageProvider.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}), style: TextStyle(color: ColorUtils.error600)),
+                            ]),
+                          ),
+                        ],
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Icon(Icons.chevron_right, size: 20, color: ColorUtils.slate400),
+                      ),
+                  ],
+                ),
+
+                // Description preview (if any)
+                if (hasDescription) ...[
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: Text(
+                      description,
+                      style: TextStyle(fontSize: 12, color: ColorUtils.slate500, height: 1.4),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+
+                // Deadline row (assignments only)
+                if (isAssignment && activity['batas_waktu'] != null) ...[
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: Row(
+                      children: [
+                        Icon(Icons.access_time_rounded, size: 12, color: ColorUtils.error600),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${languageProvider.getTranslatedText({'en': 'Deadline', 'id': 'Batas waktu'})}: ${_formatDate(activity['batas_waktu'])}',
+                          style: TextStyle(fontSize: 11, color: ColorUtils.error600, fontWeight: FontWeight.w500),
                         ),
                       ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                // Right side: edit/delete buttons or chevron
-                if (canEdit)
-                  Column(
-                    children: [
-                      _buildCircleActionButton(
-                        icon: Icons.edit_outlined,
-                        color: primaryColor,
-                        onPressed: onEdit,
-                      ),
-                      const SizedBox(height: 6),
-                      _buildCircleActionButton(
-                        icon: Icons.delete_outline,
-                        color: ColorUtils.error600,
-                        onPressed: onDelete,
-                      ),
-                    ],
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: ColorUtils.slate100,
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                    ),
-                    child: Icon(
-                      Icons.chevron_right,
-                      color: ColorUtils.slate500,
-                      size: 18,
                     ),
                   ),
+                ],
               ],
             ),
           ),

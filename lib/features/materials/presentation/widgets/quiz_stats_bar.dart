@@ -29,37 +29,77 @@ class QuizStatsBar extends StatelessWidget {
         quizzes.where((q) => q['question_type'] == 'essay').length;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            primaryColor.withValues(alpha: 0.08),
-            primaryColor.withValues(alpha: 0.03),
-          ],
-        ),
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        children: [
-          _StatItem(label: 'Total', value: '${quizzes.length}', color: primaryColor),
-          _StatDivider(),
-          _StatItem(label: 'PG', value: '$mc', color: ColorUtils.corporateBlue600),
-          _StatDivider(),
-          _StatItem(label: 'Essay', value: '$essay', color: ColorUtils.violet500),
-          _StatDivider(),
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _DiffDot(color: Colors.green, count: easy),
-                const SizedBox(width: 6),
-                _DiffDot(color: Colors.orange, count: medium),
-                const SizedBox(width: 6),
-                _DiffDot(color: Colors.red, count: hard),
-              ],
-            ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate200.withValues(alpha: 0.6),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
+        ],
+        border: Border.all(color: ColorUtils.slate200.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _StatItemPremium(
+                icon: Icons.functions_rounded,
+                label: 'Total Kuis',
+                value: '${quizzes.length}',
+                color: primaryColor,
+              ),
+              const _StatDivider(),
+              _StatItemPremium(
+                icon: Icons.check_circle_outline_rounded,
+                label: 'Pilihan Ganda',
+                value: '$mc',
+                color: ColorUtils.corporateBlue600,
+              ),
+              const _StatDivider(),
+              _StatItemPremium(
+                icon: Icons.edit_note_rounded,
+                label: 'Essay',
+                value: '$essay',
+                color: ColorUtils.info600,
+              ),
+            ],
+          ),
+          if (easy > 0 || medium > 0 || hard > 0) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Divider(height: 1, color: ColorUtils.slate100),
+            ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bar_chart_rounded, size: 14, color: ColorUtils.slate400),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Tingkat Kesulitan:',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: ColorUtils.slate500,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  _DiffBadge(label: 'Mudah', count: easy, color: Colors.green),
+                  if (medium > 0) const SizedBox(width: 8),
+                  _DiffBadge(label: 'Sedang', count: medium, color: Colors.orange),
+                  if (hard > 0) const SizedBox(width: 8),
+                  _DiffBadge(label: 'Sulit', count: hard, color: Colors.red),
+                ],
+              ),
+            ),
+          ]
         ],
       ),
     );
@@ -67,15 +107,17 @@ class QuizStatsBar extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Private sub-widgets (file-local, not exported)
+// Private sub-widgets
 // ---------------------------------------------------------------------------
 
-class _StatItem extends StatelessWidget {
+class _StatItemPremium extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
   final Color color;
 
-  const _StatItem({
+  const _StatItemPremium({
+    required this.icon,
     required this.label,
     required this.value,
     required this.color,
@@ -86,20 +128,30 @@ class _StatItem extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: color,
+              color: ColorUtils.slate800,
+              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
               color: ColorUtils.slate500,
             ),
           ),
@@ -114,36 +166,55 @@ class _StatDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 30, color: ColorUtils.slate200);
+    return Container(
+      width: 1,
+      height: 40,
+      color: ColorUtils.slate200,
+    );
   }
 }
 
-class _DiffDot extends StatelessWidget {
-  final Color color;
+class _DiffBadge extends StatelessWidget {
+  final String label;
   final int count;
+  final Color color;
 
-  const _DiffDot({required this.color, required this.count});
+  const _DiffBadge({
+    required this.label,
+    required this.count,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 3),
-        Text(
-          '$count',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: ColorUtils.slate600,
+    if (count == 0) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-        ),
-      ],
+          const SizedBox(width: 6),
+          Text(
+            '$count $label',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: color.withValues(alpha: 0.9),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

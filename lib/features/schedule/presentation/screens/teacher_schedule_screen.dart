@@ -1051,6 +1051,8 @@ class TeachingScheduleScreenState
                   _isHomeroomView = true;
                   _selectedHomeroomClass = value as Map<String, dynamic>;
                 }
+                _scheduleList = [];
+                _isLoading = true;
               });
               _loadSchedule();
             },
@@ -1235,6 +1237,24 @@ class _TeacherScheduleHeader extends StatelessWidget {
                   ],
                 ),
               ),
+              // View toggle (card ↔ table)
+              GestureDetector(
+                key: toggleViewKey,
+                onTap: onToggleView,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  ),
+                  child: Icon(
+                    isTableView ? Icons.view_agenda_outlined : Icons.calendar_view_day_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -1322,25 +1342,6 @@ class _TeacherScheduleHeader extends StatelessWidget {
                         ),
                       ),
                   ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                key: toggleViewKey,
-                onTap: onToggleView,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                  ),
-                  child: Icon(
-                    isTableView ? Icons.grid_view : Icons.list,
-                    color: Colors.white,
-                    size: 20,
-                  ),
                 ),
               ),
             ],

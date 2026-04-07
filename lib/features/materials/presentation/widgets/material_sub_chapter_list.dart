@@ -93,29 +93,51 @@ class MaterialSubChapterList extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: Text(
-                      subChapter['judul_sub_bab'] ?? 'Judul Sub Bab',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: ColorUtils.slate800,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          subChapter['judul_sub_bab'] ?? 'Judul Sub Bab',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: ColorUtils.slate800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Content indicator badges
+                        Row(children: [
+                          _infoBadge(Icons.menu_book_outlined, 'Materi', ColorUtils.success600),
+                          const SizedBox(width: 6),
+                          _infoBadge(Icons.quiz_outlined, 'Kuis', ColorUtils.warning600),
+                          const SizedBox(width: 6),
+                          _infoBadge(Icons.bookmark_outline, 'Ref', ColorUtils.info600),
+                        ]),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => onSubChapterCheck(subChapterIdStr, chapter['id'].toString(), !(checkedSubChapter[subChapterIdStr] ?? false)),
+                    child: Container(
+                      width: 28, height: 28,
+                      decoration: BoxDecoration(
+                        color: (checkedSubChapter[subChapterIdStr] ?? false)
+                            ? getCheckboxColor(subChapterIdStr, isSubChapter: true).withValues(alpha: 0.15)
+                            : ColorUtils.slate50,
+                        borderRadius: BorderRadius.circular(7),
+                        border: Border.all(
+                          color: (checkedSubChapter[subChapterIdStr] ?? false)
+                              ? getCheckboxColor(subChapterIdStr, isSubChapter: true)
+                              : ColorUtils.slate300,
+                          width: (checkedSubChapter[subChapterIdStr] ?? false) ? 1.5 : 1,
+                        ),
                       ),
+                      child: (checkedSubChapter[subChapterIdStr] ?? false)
+                          ? Icon(Icons.check_rounded, size: 16, color: getCheckboxColor(subChapterIdStr, isSubChapter: true))
+                          : null,
                     ),
                   ),
-                  Checkbox(
-                    value: checkedSubChapter[subChapterIdStr] ?? false,
-                    onChanged: (value) {
-                      onSubChapterCheck(
-                        subChapterIdStr,
-                        chapter['id'].toString(),
-                        value,
-                      );
-                    },
-                    activeColor: getCheckboxColor(
-                      subChapterIdStr,
-                      isSubChapter: true,
-                    ),
-                  ),
+                  const SizedBox(width: 8),
                   Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 14,
@@ -127,6 +149,21 @@ class MaterialSubChapterList extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _infoBadge(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 10, color: color),
+        const SizedBox(width: 3),
+        Text(label, style: TextStyle(fontSize: 9, color: color, fontWeight: FontWeight.w500)),
+      ]),
     );
   }
 }

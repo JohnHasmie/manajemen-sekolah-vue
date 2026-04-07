@@ -90,16 +90,22 @@ class ActivityTypeBottomSheet extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Select Activity Type',
-                        'id': 'Pilih Jenis Kegiatan',
-                      }),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                    Expanded(
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en': 'Select Activity Type',
+                          'id': 'Pilih Jenis Kegiatan',
+                        }),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
+                    ),
+                    IconButton(
+                      onPressed: () => AppNavigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white),
                     ),
                   ],
                 ),

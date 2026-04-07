@@ -59,6 +59,7 @@ class ApiEndpoints {
   // ── Attendance ──
   static const attendance = '/attendance';
   static const attendanceBulk = '/attendance/bulk';
+  static const attendanceTeacherSummary = '/attendance/teacher-summary';
   static const attendanceSummary = '/attendance/summary';
   static const attendanceStats = '/attendance/stats';
   static const attendanceMarkRead = '/attendance/mark-read';
@@ -83,6 +84,7 @@ class ApiEndpoints {
 
   // ── Class Activity ──
   static const classActivity = '/class-activity';
+  static const classActivityTeacherSummary = '/class-activities/teacher-summary';
 
   // ── Report Cards ──
   static const reportCards = '/raport';
@@ -118,7 +120,13 @@ class ApiEndpoints {
   static const fcmToken = '/fcm-token';
   static const fcmTokenEndpoint = '/fcm/token';
 
+  // ── Material Progress ──
+  static const materialProgressTeacherSummary = '/material-progress/teacher-summary';
+
   // ── Days / Semesters ──
   static const days = '/day';
   static const semesters = '/semester';
+
+  // ── Mobile (web routes, not under /api) ──
+  static const appcast = '/mobile/appcast.xml';
 }

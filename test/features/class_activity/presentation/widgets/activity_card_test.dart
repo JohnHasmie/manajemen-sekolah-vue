@@ -1,7 +1,4 @@
-// Tests for ActivityCard — a list row card for one class activity entry.
-// Uses LanguageProvider (ChangeNotifier, not WidgetRef) so setUp initialises
-// PreferencesService with mock SharedPreferences before each test.
-
+// Tests for ActivityCard — refined card with type indicator + overflow menu.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,7 +12,6 @@ void main() {
     await PreferencesService().init();
   });
 
-  // Returns a minimal activity map for a "material" entry.
   Map<String, dynamic> materialActivity() => {
         'title': 'Matematika Bab 3',
         'subject_name': 'Matematika',
@@ -27,7 +23,6 @@ void main() {
         'target_role': 'semua',
       };
 
-  // Returns a minimal activity map for a "tugas" (assignment) entry.
   Map<String, dynamic> assignmentActivity() => {
         'title': 'PR Fisika',
         'subject_name': 'Fisika',
@@ -67,59 +62,53 @@ void main() {
   group('ActivityCard', () {
     testWidgets('shows activity title', (tester) async {
       await tester.pumpWidget(buildSubject(activity: materialActivity()));
-
       expect(find.text('Matematika Bab 3'), findsOneWidget);
     });
 
-    testWidgets('shows subject and class name row', (tester) async {
+    testWidgets('shows date in meta row', (tester) async {
       await tester.pumpWidget(buildSubject(activity: materialActivity()));
-
-      // The combined "Matematika • 10A" text should be visible.
-      expect(find.textContaining('Matematika'), findsWidgets);
-      expect(find.textContaining('10A'), findsWidgets);
+      expect(find.textContaining('09/06/2025'), findsOneWidget);
     });
 
-    testWidgets('shows edit and delete buttons when canEdit is true',
-        (tester) async {
+    testWidgets('shows type label for material', (tester) async {
+      await tester.pumpWidget(buildSubject(activity: materialActivity()));
+      expect(find.text('Materi'), findsOneWidget);
+    });
+
+    testWidgets('shows overflow menu when canEdit is true', (tester) async {
       await tester.pumpWidget(
         buildSubject(activity: materialActivity(), canEdit: true),
       );
-
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+      // Overflow menu icon is more_vert
+      expect(find.byIcon(Icons.more_vert), findsOneWidget);
     });
 
-    testWidgets('shows chevron (read-only) when canEdit is false',
-        (tester) async {
+    testWidgets('shows chevron when canEdit is false', (tester) async {
       await tester.pumpWidget(
         buildSubject(activity: materialActivity(), canEdit: false),
       );
-
       expect(find.byIcon(Icons.chevron_right), findsOneWidget);
-      expect(find.byIcon(Icons.edit_outlined), findsNothing);
+      expect(find.byIcon(Icons.more_vert), findsNothing);
     });
 
     testWidgets('fires onTap when card is tapped', (tester) async {
       var tapped = false;
       await tester.pumpWidget(
-        buildSubject(
-          activity: materialActivity(),
-          onTap: () => tapped = true,
-        ),
+        buildSubject(activity: materialActivity(), onTap: () => tapped = true),
       );
-
       await tester.tap(find.byType(InkWell).first);
       await tester.pump();
-
       expect(tapped, isTrue);
     });
 
-    testWidgets('assignment activity renders deadline tag when batas_waktu set',
-        (tester) async {
+    testWidgets('assignment shows deadline', (tester) async {
       await tester.pumpWidget(buildSubject(activity: assignmentActivity()));
-
-      // The deadline date should appear as a formatted tag (17/06/2025).
       expect(find.textContaining('17/06/2025'), findsOneWidget);
+    });
+
+    testWidgets('shows description text when present', (tester) async {
+      await tester.pumpWidget(buildSubject(activity: materialActivity()));
+      expect(find.text('Belajar integral dasar'), findsOneWidget);
     });
   });
 }
