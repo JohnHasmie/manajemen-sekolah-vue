@@ -2,7 +2,6 @@
 // Extracted from teacher_class_activity_screen.dart to reduce file size.
 // Like a Vue child component that emits an event when the user picks a type.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';

@@ -5,7 +5,6 @@
 // Think of this like a Vue `<ActivityTypeOption :icon :title :description :color @tap />`.
 
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// A tappable card that represents one activity type (e.g. "Tugas" or "Materi").
