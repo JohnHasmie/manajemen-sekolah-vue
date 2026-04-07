@@ -31,7 +31,9 @@ class AddActivityDialog extends ConsumerStatefulWidget {
   final String activityType;
   final DateTime? initialDate;
   final String? initialSubjectId;
+  final String? initialSubjectName;
   final String? initialClassId;
+  final String? initialClassName;
   final String? initialChapterId;
   final String? initialSubChapterId;
   final bool isEditMode;
@@ -52,7 +54,9 @@ class AddActivityDialog extends ConsumerStatefulWidget {
     required this.activityType,
     this.initialDate,
     this.initialSubjectId,
+    this.initialSubjectName,
     this.initialClassId,
+    this.initialClassName,
     this.initialChapterId,
     this.initialSubChapterId,
     this.initialAdditionalMaterials,
@@ -868,9 +872,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   Widget build(BuildContext context) {
     final languageProvider = ref.read(languageRiverpod);
     final isAssignment = widget.activityType == 'tugas';
-    final primaryColor = isAssignment
-        ? ColorUtils.warning600
-        : ColorUtils.corporateBlue600;
+    final primaryColor = ColorUtils.getRoleColor('guru');
 
     return Container(
       decoration: BoxDecoration(
@@ -903,7 +905,26 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       languageProvider: languageProvider,
                     ),
 
-                    // Mata Pelajaran
+                    // Mata Pelajaran — show read-only chip when pre-selected with empty list
+                    if (widget.initialSubjectId != null && widget.subjectList.isEmpty && widget.initialSubjectName != null)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(children: [
+                          Icon(Icons.book, size: 20, color: primaryColor),
+                          const SizedBox(width: 12),
+                          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'}), style: TextStyle(fontSize: 11, color: ColorUtils.slate500)),
+                            Text(widget.initialSubjectName!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ColorUtils.slate800)),
+                          ]),
+                        ]),
+                      )
+                    else
                     Builder(
                       builder: (context) {
                         final Map<String, DropdownMenuItem<String>>
@@ -973,7 +994,7 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                         );
                       },
                     ),
-                    if (widget.subjectList.isEmpty)
+                    if (widget.subjectList.isEmpty && widget.initialSubjectId == null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4, left: 12),
                         child: Text(
@@ -986,7 +1007,26 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // Kelas
+                    // Kelas — show read-only chip when pre-selected
+                    if (widget.initialClassId != null && widget.initialClassName != null && _getUniqueClassItems().isEmpty)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(children: [
+                          Icon(Icons.class_, size: 20, color: primaryColor),
+                          const SizedBox(width: 12),
+                          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'}), style: TextStyle(fontSize: 11, color: ColorUtils.slate500)),
+                            Text(widget.initialClassName!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ColorUtils.slate800)),
+                          ]),
+                        ]),
+                      )
+                    else
                     Builder(
                       builder: (context) {
                         final List<DropdownMenuItem<String>> classItems =
