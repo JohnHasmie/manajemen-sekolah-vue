@@ -10,10 +10,10 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_controller.dart';
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_state.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart'; // For AttendancePage
 
 // ========== TEACHER ABSENSI DETAIL PAGE ==========
 class TeacherAttendanceDetailPage extends ConsumerStatefulWidget {
@@ -61,47 +61,51 @@ class _TeacherAttendanceDetailPageState
     // Inisialisasi otomatis via AsyncNotifier build()
   }
 
-  Future<void> exportDetail() async {
-    // Legacy export logic remains mostly unchanged for now, but should use state
-  }
-
-
-  Future<void> _saveChanges() async {
-    final success = await ref
-        .read(teacherAttendanceProvider(_controllerParams).notifier)
-        .saveChanges();
-    
-    if (success && mounted) {
-      final languageProvider = ref.read(languageRiverpod);
-      SnackBarUtils.showSuccess(
-        context,
-        languageProvider.getTranslatedText({
-          'en': 'Attendance updated successfully',
-          'id': 'Absensi berhasil diperbarui',
-        }),
-      );
-    } else if (!success && mounted) {
-      final languageProvider = ref.read(languageRiverpod);
-      SnackBarUtils.showError(
-        context,
-        languageProvider.getTranslatedText({
-          'en': 'Failed to update attendance',
-          'id': 'Gagal memperbarui absensi',
-        }),
-      );
+  void _openEditSheet() {
+    // Extract lesson hour number if possible
+    int? lessonHourNum;
+    if (widget.lessonHourName != null) {
+      final match = RegExp(r'\d+').firstMatch(widget.lessonHourName!);
+      if (match != null) {
+        lessonHourNum = int.tryParse(match.group(0)!);
+      }
     }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.96,
+          expand: false,
+          builder: (context, scrollController) {
+            return AttendancePage(
+              teacher: widget.teacher,
+              initialDate: widget.date,
+              initialSubjectId: widget.subjectId,
+              initialSubjectName: widget.subjectName,
+              initialclassId: widget.classId,
+              initialClassName: widget.className,
+              initialLessonHourNumber: lessonHourNum,
+              initialTabIndex: 1, // Start on input tab
+              embedded: true,
+              scrollController: scrollController,
+            );
+          },
+        );
+      },
+    ).then((_) {
+      // Refresh data after edit sheet is closed
+      ref.invalidate(teacherAttendanceProvider(_controllerParams));
+    });
   }
+
 
   Color _getPrimaryColor() {
     return ColorUtils.getRoleColor('guru');
-  }
-
-  LinearGradient _getCardGradient() {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.8)],
-    );
   }
 
   // Method to get student's attendance status
@@ -121,135 +125,137 @@ class _TeacherAttendanceDetailPageState
     final avatarColor = ColorUtils.getColorForIndex(index);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(14)),
-        border: Border.all(color: ColorUtils.slate200),
-        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: avatarColor.withValues(alpha: 0.15),
-                  child: Text(
-                    student.name.isNotEmpty
-                        ? student.name[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: avatarColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              Container(
+                width: 3.5,
+                color: statusColor.withValues(alpha: 0.8),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  child: Row(
                     children: [
-                      Text(
-                        student.name,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: avatarColor.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        child: Center(
+                          child: Text(
+                            student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
+                            style: TextStyle(
+                              color: avatarColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'NIS: ${student.studentNumber}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate600,
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              student.name,
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w700,
+                                color: ColorUtils.slate900,
+                                letterSpacing: -0.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              'NIS: ${student.studentNumber}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: ColorUtils.slate500,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.08),
+                          borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _getStatusIcon(status),
+                              size: 10,
+                              color: statusColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              statusText,
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: const BorderRadius.all(Radius.circular(8)),
-                    border: Border.all(
-                      color: statusColor.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (state.isEditing) ...[
-              const SizedBox(height: AppSpacing.md),
-              Container(
-                decoration: BoxDecoration(
-                  color: ColorUtils.slate50,
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  border: Border.all(color: ColorUtils.slate200),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildQuickStatusButton(
-                      'hadir',
-                      'H',
-                      ColorUtils.success600,
-                      student.id,
-                      state,
-                    ),
-                    _buildQuickStatusButton(
-                      'terlambat',
-                      'T',
-                      ColorUtils.violet700,
-                      student.id,
-                      state,
-                    ),
-                    _buildQuickStatusButton(
-                      'sakit',
-                      'S',
-                      ColorUtils.warning600,
-                      student.id,
-                      state,
-                    ),
-                    _buildQuickStatusButton(
-                      'izin',
-                      'I',
-                      ColorUtils.info600,
-                      student.id,
-                      state,
-                    ),
-                    _buildQuickStatusButton(
-                      'alpha',
-                      'A',
-                      ColorUtils.error600,
-                      student.id,
-                      state,
-                    ),
-                  ],
-                ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'hadir':
+      case 'present':
+        return Icons.check_circle_rounded;
+      case 'terlambat':
+      case 'late':
+        return Icons.access_time_filled_rounded;
+      case 'sakit':
+      case 'sick':
+        return Icons.medication_rounded;
+      case 'izin':
+      case 'excused':
+      case 'permission':
+        return Icons.assignment_turned_in_rounded;
+      case 'alpha':
+      case 'absent':
+        return Icons.cancel_rounded;
+      default:
+        return Icons.help_rounded;
+    }
   }
 
   // Helper functions
@@ -317,89 +323,250 @@ class _TeacherAttendanceDetailPageState
     }
   }
 
-  Widget _buildQuickStatusButton(
-    String status,
-    String label,
-    Color color,
-    String studentId,
-    TeacherAttendanceState state,
+
+  Widget _buildOverviewCard(
+    LanguageProvider languageProvider,
+    Map<String, int> stats,
+    int totalStudents,
   ) {
-    final isSelected = state.editedStatus[studentId]?.toLowerCase() == status;
-    return GestureDetector(
-      onTap: () {
-        ref
-            .read(teacherAttendanceProvider(_controllerParams).notifier)
-            .updateStatus(studentId, status);
-      },
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: isSelected ? color : color.withValues(alpha: 0.1),
-          shape: BoxShape.circle,
-          border: Border.all(color: color, width: 1.5),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : color,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+    final presentCount = stats['hadir'] ?? 0;
+    final lateCount = stats['terlambat'] ?? 0;
+    final sickCount = stats['sakit'] ?? 0;
+    final permitCount = stats['izin'] ?? 0;
+    final absentCount = stats['alpha'] ?? 0;
+    
+    final attendanceRate = totalStudents > 0 
+        ? ((presentCount + lateCount) / totalStudents * 100).round()
+        : 0;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: ColorUtils.corporateCard(),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  // === LEFT: Sophisticated Donut ===
+                  SizedBox(
+                    width: 78,
+                    height: 78,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CustomPaint(
+                          size: const Size(78, 78),
+                          painter: AttendanceDonutPainter(
+                            present: presentCount,
+                            late: lateCount,
+                            sick: sickCount,
+                            permit: permitCount,
+                            absent: absentCount,
+                            total: totalStudents,
+                          ),
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '$attendanceRate%',
+                              style: TextStyle(
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w900,
+                                color: ColorUtils.slate900,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            Text(
+                              'Rate',
+                              style: TextStyle(
+                                fontSize: 7,
+                                fontWeight: FontWeight.w800,
+                                color: ColorUtils.slate400,
+                                height: 0.8,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Glass Divider 1
+                  _buildVerticalDivider(),
+
+                  // === MIDDLE: Legend & Rate Label ===
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          languageProvider.getTranslatedText({
+                            'en': 'Status Summary',
+                            'id': 'Ringkasan Status',
+                          }),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: ColorUtils.slate500,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            _buildLegendItem('Hadir', ColorUtils.success600),
+                            const SizedBox(width: 8),
+                            _buildLegendItem('Telat', Colors.orange),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            _buildLegendItem('Skt/Izn', ColorUtils.warning600),
+                            const SizedBox(width: 8),
+                            _buildLegendItem('Alpha', ColorUtils.error600),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Glass Divider 2
+                  _buildVerticalDivider(),
+
+                  // === RIGHT: Total Box (Condensed) ===
+                  Container(
+                    width: 54,
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$totalStudents',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: ColorUtils.slate800,
+                          ),
+                        ),
+                        Text(
+                          languageProvider.getTranslatedText({ 'en': 'Students', 'id': 'Siswa' }),
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w600,
+                            color: ColorUtils.slate400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+
+          // Integrated Metrics Bar (Thinner)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: ColorUtils.slate50.withValues(alpha: 0.5),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildCompactMetric('Hadir', presentCount, ColorUtils.success600),
+                _buildSeparator(),
+                _buildCompactMetric('Telat', lateCount, Colors.orange),
+                _buildSeparator(),
+                _buildCompactMetric('Izin', permitCount + sickCount, ColorUtils.warning600),
+                _buildSeparator(),
+                _buildCompactMetric('Alpha', absentCount, ColorUtils.error600),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerticalDivider() {
+    return Container(
+      width: 1,
+      height: 48,
+      margin: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            ColorUtils.slate100.withValues(alpha: 0),
+            ColorUtils.slate200,
+            ColorUtils.slate100.withValues(alpha: 0),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildStatCard(String label, int count, Color color, IconData icon) {
+  Widget _buildSeparator() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      child: Container(
-        width: 90,
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+      width: 1,
+      height: 12,
+      color: ColorUtils.slate200.withValues(alpha: 0.5),
+    );
+  }
+
+  Widget _buildCompactMetric(String label, int count, Color color) {
+    return Row(
+      children: [
+        Text(
+          '$count',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            color: color,
+          ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withValues(alpha: 0.8),
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+        const SizedBox(width: 4),
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 8,
+            fontWeight: FontWeight.w700,
+            color: ColorUtils.slate400,
+            letterSpacing: 0.2,
+          ),
         ),
-      ),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9.5,
+            fontWeight: FontWeight.w600,
+            color: ColorUtils.slate600,
+          ),
+        ),
+      ],
     );
   }
 
@@ -414,7 +581,7 @@ class _TeacherAttendanceDetailPageState
         backgroundColor: ColorUtils.slate50,
         body: Column(
           children: [
-            _buildLegacyHeader(context, languageProvider, isLoading: true),
+            _buildHeader(context, languageProvider, isLoading: true),
             Expanded(child: SkeletonListLoading(itemCount: 5, infoTagCount: 2)),
           ],
         ),
@@ -437,7 +604,7 @@ class _TeacherAttendanceDetailPageState
       body: Column(
         children: [
           // === HEADER ===
-          _buildLegacyHeader(context, languageProvider, state: state),
+          _buildHeader(context, languageProvider, state: state),
 
           // === BODY ===
           state.isSaving
@@ -467,110 +634,50 @@ class _TeacherAttendanceDetailPageState
               : Expanded(
                   child: Column(
                     children: [
-                      // Statistics Row
-                      const SizedBox(height: AppSpacing.lg),
-                      SizedBox(
-                        height: 120,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          children: [
-                            _buildStatCard(
-                              languageProvider.getTranslatedText({
-                                'en': 'Present',
-                                'id': 'Hadir',
-                              }),
-                              stats['hadir']!,
-                              ColorUtils.success600,
-                              Icons.check_circle,
-                            ),
-                            _buildStatCard(
-                              languageProvider.getTranslatedText({
-                                'en': 'Late',
-                                'id': 'Terlambat',
-                              }),
-                              stats['terlambat']!,
-                              ColorUtils.warning600,
-                              Icons.access_time,
-                            ),
-                            _buildStatCard(
-                              languageProvider.getTranslatedText({
-                                'en': 'Absent',
-                                'id': 'Tidak Hadir',
-                              }),
-                              stats['alpha']! +
-                                  stats['izin']! +
-                                  stats['sakit']!,
-                              ColorUtils.error600,
-                              Icons.cancel,
-                            ),
-                            if (stats['izin']! > 0)
-                              _buildStatCard(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Permission',
-                                  'id': 'Izin',
-                                }),
-                                stats['izin']!,
-                                ColorUtils.info600,
-                                Icons.event_note,
-                              ),
-                            if (stats['sakit']! > 0)
-                              _buildStatCard(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Sick',
-                                  'id': 'Sakit',
-                                }),
-                                stats['sakit']!,
-                                ColorUtils.violet700,
-                                Icons.medical_services,
-                              ),
-                          ],
-                        ),
-                      ),
+                      // Modern Integrated Statistics
+                      const SizedBox(height: 8),
+                      _buildOverviewCard(languageProvider, stats, state.students.length),
+                      const SizedBox(height: 12),
 
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // Student List Header
+                      // Student List Header (More Prominent)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Row(
                           children: [
                             Container(
-                              width: 4,
+                              width: 3.5,
                               height: 16,
                               decoration: BoxDecoration(
                                 color: _getPrimaryColor(),
-                                borderRadius: const BorderRadius.all(Radius.circular(2)),
+                                borderRadius: BorderRadius.circular(2),
                               ),
                             ),
-                            const SizedBox(width: AppSpacing.sm),
+                            const SizedBox(width: 10),
                             Text(
                               languageProvider.getTranslatedText({
-                                'en': 'Student List',
-                                'id': 'Daftar Siswa',
+                                'en': 'Attendance List',
+                                'id': 'Daftar Peserta Didik',
                               }),
                               style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
                                 color: ColorUtils.slate900,
+                                letterSpacing: -0.5,
                               ),
                             ),
-                            Spacer(),
+                            const Spacer(),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: ColorUtils.slate100,
-                                borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                color: _getPrimaryColor().withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                '${state.students.length} ${AppLocalizations.students.tr}',
+                                '${state.students.length} Total',
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  color: ColorUtils.slate600,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: 11,
+                                  color: _getPrimaryColor(),
+                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
                             ),
@@ -588,7 +695,7 @@ class _TeacherAttendanceDetailPageState
                                     Icon(
                                       Icons.people_outline,
                                       size: 64,
-                                      color: ColorUtils.slate300,
+                                      color: ColorUtils.slate200,
                                     ),
                                     const SizedBox(height: AppSpacing.md),
                                     Text(
@@ -597,15 +704,16 @@ class _TeacherAttendanceDetailPageState
                                         'id': 'Tidak ada data siswa',
                                       }),
                                       style: TextStyle(
-                                        color: ColorUtils.slate500,
+                                        color: ColorUtils.slate400,
                                         fontSize: 14,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],
                                 ),
                               )
                             : ListView.builder(
-                                padding: const EdgeInsets.only(bottom: 16),
+                                padding: const EdgeInsets.only(bottom: 80), // Extra space for FAB
                                 itemCount: state.students.length,
                                 itemBuilder: (context, index) =>
                                     _buildStudentCard(
@@ -621,180 +729,250 @@ class _TeacherAttendanceDetailPageState
                 ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openEditSheet,
+        backgroundColor: _getPrimaryColor(),
+        elevation: 3,
+        highlightElevation: 6,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        icon: const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
+        label: Text(
+          languageProvider.getTranslatedText({
+            'en': 'Edit Attendance',
+            'id': 'Update Kehadiran',
+          }),
+          style: const TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildLegacyHeader(
+  Widget _buildHeader(
     BuildContext context,
     LanguageProvider languageProvider, {
     TeacherAttendanceState? state,
     bool isLoading = false,
   }) {
-    final isEditing = state?.isEditing ?? false;
-    final isSaving = state?.isSaving ?? false;
-
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 12,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
       decoration: BoxDecoration(
-        gradient: _getCardGradient(),
+        gradient: ColorUtils.heroGradient(primaryColor: _getPrimaryColor()),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
         boxShadow: [
           BoxShadow(
             color: _getPrimaryColor().withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              // Back/Close button
-              GestureDetector(
-                onTap: () {
-                  if (isEditing) {
-                    ref
-                        .read(teacherAttendanceProvider(_controllerParams).notifier)
-                        .toggleEdit();
-                  } else {
-                    AppNavigator.pop(context);
-                  }
-                },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  ),
-                  child: Icon(
-                    isEditing ? Icons.close : Icons.arrow_back,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-
-              // Title
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 12,
+              left: 20,
+              right: 20,
+              bottom: 24,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      isEditing
-                          ? languageProvider.getTranslatedText({
-                              'en': 'Edit Attendance',
-                              'id': 'Edit Absensi',
-                            })
-                          : languageProvider.getTranslatedText({
-                              'en': 'Attendance Details',
-                              'id': 'Detail Absensi',
-                            }),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    // Back button with Glass Effect
+                    GestureDetector(
+                      onTap: () => AppNavigator.pop(context),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: ColorUtils.glassMorphism(opacity: 0.2, blur: 8),
+                        child: const Icon(
+                          Icons.chevron_left_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ),
                     ),
-                    Text(
-                      widget.subjectName,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.9),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            languageProvider.getTranslatedText({
+                              'en': 'Session Detail',
+                              'id': 'Detail Sesi',
+                            }),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          Text(
+                            widget.subjectName,
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: -0.4,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
-              ),
-
-              // Edit/Save button
-              if (!isLoading)
-                GestureDetector(
-                  onTap: () {
-                    if (isEditing) {
-                      _saveChanges();
-                    } else {
-                      ref
-                          .read(teacherAttendanceProvider(_controllerParams).notifier)
-                          .toggleEdit();
-                    }
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: isSaving
-                        ? Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                const SizedBox(height: 24),
+                
+                // Info Section
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: ColorUtils.glassMorphism(opacity: 0.15, blur: 10),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today_rounded,
+                              size: 14,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                DateFormat('EEEE, dd MMM yyyy', 'id_ID').format(widget.date),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          )
-                        : Icon(
-                            isEditing ? Icons.check : Icons.edit,
-                            color: Colors.white,
-                            size: 20,
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    if (widget.lessonHourName != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          widget.lessonHourName!,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: _getPrimaryColor(),
+                            fontWeight: FontWeight.w800,
                           ),
-                  ),
+                        ),
+                      ),
+                  ],
                 ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Icon(
-                Icons.calendar_today,
-                size: 14,
-                color: Colors.white.withValues(alpha: 0.8),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                DateFormat(
-                  'EEEE, dd MMMM yyyy',
-                  'id_ID',
-                ).format(widget.date),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
-              ),
-              if (widget.lessonHourName != null &&
-                  widget.lessonHourName!.isNotEmpty) ...[
-                Text(
-                  ' • ',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                ),
-                Text(
-                  widget.lessonHourName!,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontWeight: FontWeight.w600,
+                
+                // Class breadcrumb
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.school_rounded, size: 12, color: Colors.white.withValues(alpha: 0.6)),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${widget.className} Class Session',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.6),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ],
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+// === CUSTOM PAINTER FOR DONUT CHART ===
+class AttendanceDonutPainter extends CustomPainter {
+  final int present;
+  final int late;
+  final int sick;
+  final int permit;
+  final int absent;
+  final int total;
+
+  AttendanceDonutPainter({
+    required this.present,
+    required this.late,
+    required this.sick,
+    required this.permit,
+    required this.absent,
+    required this.total,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (total == 0) return;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final strokeWidth = size.width * 0.14; // Thinner stroke for larger hole
+    final rect = Rect.fromCircle(center: center, radius: radius - (strokeWidth / 2));
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.butt;
+
+    double startAngle = -3.14159 / 2; // Start from top
+
+    // Slices
+    _drawSlice(canvas, rect, paint, startAngle, present / total, ColorUtils.success600);
+    startAngle += (present / total) * 2 * 3.14159;
+
+    _drawSlice(canvas, rect, paint, startAngle, late / total, Colors.orange);
+    startAngle += (late / total) * 2 * 3.14159;
+
+    _drawSlice(canvas, rect, paint, startAngle, (sick + permit) / total, ColorUtils.warning600);
+    startAngle += ((sick + permit) / total) * 2 * 3.14159;
+
+    _drawSlice(canvas, rect, paint, startAngle, absent / total, ColorUtils.error600);
+  }
+
+  void _drawSlice(Canvas canvas, Rect rect, Paint paint, double startAngle, double sweepFactor, Color color) {
+    if (sweepFactor <= 0) return;
+    paint.color = color;
+    canvas.drawArc(rect, startAngle, sweepFactor * 2 * 3.14159, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

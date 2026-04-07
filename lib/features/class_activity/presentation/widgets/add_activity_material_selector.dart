@@ -28,6 +28,7 @@ class AddActivityMaterialSelector extends StatelessWidget {
   final VoidCallback onSubChapterTap;
   final String Function(dynamic) getChapterName;
   final String Function(dynamic) getSubChapterName;
+  final bool hideToggle;
 
   const AddActivityMaterialSelector({
     super.key,
@@ -45,6 +46,7 @@ class AddActivityMaterialSelector extends StatelessWidget {
     required this.onSubChapterTap,
     required this.getChapterName,
     required this.getSubChapterName,
+    this.hideToggle = false,
   });
 
   @override
@@ -53,26 +55,28 @@ class AddActivityMaterialSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Toggle row
-        Row(
-          children: [
-            Icon(Icons.title, size: 20, color: ColorUtils.slate600),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              languageProvider.getTranslatedText({
-                'en': 'Choose from material',
-                'id': 'Pilih dari materi',
-              }),
-              style: TextStyle(fontSize: 14),
-            ),
-            Spacer(),
-            Switch(
-              value: useMaterialTitle,
-              onChanged: selectedSubjectId == null ? null : onToggleMaterialTitle,
-              activeThumbColor: primaryColor,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
+        if (!hideToggle) ...[
+          Row(
+            children: [
+              Icon(Icons.title, size: 20, color: ColorUtils.slate600),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Choose from material',
+                  'id': 'Pilih dari materi',
+                }),
+                style: TextStyle(fontSize: 14),
+              ),
+              Spacer(),
+              Switch(
+                value: useMaterialTitle,
+                onChanged: selectedSubjectId == null ? null : onToggleMaterialTitle,
+                activeThumbColor: primaryColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
 
         // Chapter dropdown (only when toggle is ON)
         if (useMaterialTitle) ...[
