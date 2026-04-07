@@ -2,14 +2,15 @@
 #
 # Pipeline flow:
 #   Every push to any branch:  analyze → test
-#   On main branch:            detect_changes (recommends release vs patch)
+#   On main branch:            detect → auto-patch (if Dart-only) or manual release
 #
-# Manual deploy buttons (main branch only):
-#   release     →  Shorebird release + Play Store upload (for new versions)
-#   patch       →  OTA patch to latest release (for Dart-only hotfixes)
+# Auto-patch (Dart-only changes on main):
+#   Automatically pushes OTA update via Shorebird to all users with the
+#   latest release installed. No Play Store review needed.
 #
-# IMPORTANT: Always use "release" for new versions. The "patch" button
-# only works if users have a Shorebird-enabled build installed.
+# Manual release (native/plugin changes on main):
+#   Click "release" button to create a new Shorebird release + upload
+#   to Play Store. Required when native code, plugins, or assets change.
 #
 # Required CI/CD Variables:
 #   API_BASE_URL           - API endpoint URL
@@ -95,7 +96,7 @@ test:
     - if: $CI_COMMIT_BRANCH
 
 # ---------------------------------------------------------------------------
-# Stage 3: Detect changes (patch vs release recommendation)
+# Stage 3: Detect changes → sets NEEDS_RELEASE variable for deploy stage
 # ---------------------------------------------------------------------------
 detect_changes:
   stage: detect
@@ -110,6 +111,7 @@ detect_changes:
       fi
     - |
       CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$CI_COMMIT_SHA" 2>/dev/null || git diff --name-only HEAD~1 HEAD)
+      echo "Changed files:"
       echo "$CHANGED_FILES"
     - |
       NEEDS_RELEASE=false
@@ -121,41 +123,43 @@ detect_changes:
     - |
       echo ""
       echo "Pipeline IID: ${CI_PIPELINE_IID}"
+      echo "NEEDS_RELEASE: ${NEEDS_RELEASE}"
       echo ""
+      # Write to dotenv artifact so downstream jobs can read the variable
+      echo "NEEDS_RELEASE=${NEEDS_RELEASE}" > deploy.env
+    - |
       if [ "$NEEDS_RELEASE" = "true" ]; then
         echo "🚀 RELEASE needed — native/plugin changes detected"
         echo "   → Click: release (builds + uploads to Play Store)"
       else
-        echo "⚡ PATCH OK — Dart-only changes"
-        echo "   → Click: patch (instant OTA to existing users)"
+        echo "⚡ AUTO-PATCH — Dart-only changes detected"
+        echo "   → Patch will run automatically"
       fi
+  artifacts:
+    reports:
+      dotenv: deploy.env
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 # ---------------------------------------------------------------------------
-# Release (manual) — Shorebird release + Play Store upload in one job
+# Release (manual) — Shorebird release + Play Store upload
 #
-# This is the ONLY way to publish a new version. It:
-# 1. Creates a Shorebird-enabled release build (with OTA engine)
-# 2. Uploads the AAB to Google Play Store (alpha track)
-#
-# Users who install this version can receive future OTA patches.
+# Creates a new Shorebird-enabled build with OTA engine and uploads
+# to Google Play Store (alpha track). Required when native code changes.
 # ---------------------------------------------------------------------------
 release:
   <<: *shorebird_setup
   stage: deploy
+  needs: ["detect_changes"]
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
-    # 1. Build version string
     - |
       VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
       BUILD_NUMBER=${CI_PIPELINE_IID}
       echo "═══════════════════════════════════════════"
       echo "  Release: ${VERSION_NAME}+${BUILD_NUMBER}"
       echo "═══════════════════════════════════════════"
-    # 2. Shorebird release (builds AAB with OTA engine)
     - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub --no-tree-shake-icons
-    # 3. Upload to Play Store
     - command -v fastlane &>/dev/null || gem install fastlane --no-document
     - echo "${PLAY_STORE_JSON_BASE64}" | base64 -d > play-store-key.json
     - |
@@ -183,26 +187,36 @@ release:
       allow_failure: false
 
 # ---------------------------------------------------------------------------
-# Patch (manual) — OTA update to latest release
+# Patch (automatic) — OTA update to latest release
 #
-# Pushes a Dart-only patch to all users who have the latest Shorebird
-# release installed. No Play Store review needed — applies on next
-# app restart.
+# Runs automatically on main when only Dart/asset changes are detected.
+# Pushes an instant OTA patch via Shorebird — no Play Store review needed.
+# Users get the update on next app restart.
 #
-# Only works if the latest release was created with the "release" job
-# above (which includes the Shorebird engine).
+# Can also be triggered manually (e.g. after a release, or to force-patch).
+# Set SKIP_AUTO_PATCH=true in CI variables to disable auto-patching.
 # ---------------------------------------------------------------------------
 patch:
   <<: *shorebird_setup
   stage: deploy
+  needs: ["detect_changes"]
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
     - |
       echo "═══════════════════════════════════════════"
-      echo "  Patching latest release..."
+      echo "  Patching latest release (OTA)..."
+      echo "  NEEDS_RELEASE: ${NEEDS_RELEASE:-unknown}"
       echo "═══════════════════════════════════════════"
     - shorebird patch android --release-version=latest --allow-asset-diffs --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+    - |
+      echo ""
+      echo "✅ Patch pushed — users will receive it on next app restart"
   rules:
+    # Auto-patch: runs automatically when Dart-only changes on main
+    # (NEEDS_RELEASE=false from detect_changes job)
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $NEEDS_RELEASE == "false" && $SKIP_AUTO_PATCH != "true"
+      when: on_success
+    # Manual fallback: always available as a manual button on main
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
-      allow_failure: false
+      allow_failure: true
