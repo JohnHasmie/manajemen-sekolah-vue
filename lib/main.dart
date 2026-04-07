@@ -337,6 +337,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
               appcastURL: appcastUrl,
               osVersion: Version.parse('0.0.0'),
             );
+        final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+        final content = child ?? const SizedBox.shrink();
         return UpgradeAlert(
           upgrader: Upgrader(
             storeController: UpgraderStoreController(
@@ -345,7 +347,20 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
             ),
             languageCode: isIndonesian ? 'id' : 'en',
           ),
-          child: child ?? const SizedBox.shrink(),
+          // Wrap in a Column that fills the bottom system nav bar area
+          // with the app background color — prevents content from being
+          // hidden behind Samsung/Android software navigation buttons.
+          child: bottomInset > 0
+              ? Column(
+                  children: [
+                    Expanded(child: content),
+                    Container(
+                      height: bottomInset,
+                      color: const Color(0xFFF8FAFC), // ColorUtils.slate50
+                    ),
+                  ],
+                )
+              : content,
         );
       },
     );

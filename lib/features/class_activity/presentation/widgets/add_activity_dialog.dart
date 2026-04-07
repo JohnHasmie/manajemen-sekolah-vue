@@ -1,7 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
+
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -10,11 +11,9 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/class_activity/data/class_activity_service.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_action_bar.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_header.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_material_selector.dart';
+
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_student_selector.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_target_info_box.dart';
+
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 
 class AddActivityDialog extends ConsumerStatefulWidget {
@@ -31,7 +30,9 @@ class AddActivityDialog extends ConsumerStatefulWidget {
   final String activityType;
   final DateTime? initialDate;
   final String? initialSubjectId;
+  final String? initialSubjectName;
   final String? initialClassId;
+  final String? initialClassName;
   final String? initialChapterId;
   final String? initialSubChapterId;
   final bool isEditMode;
@@ -52,7 +53,9 @@ class AddActivityDialog extends ConsumerStatefulWidget {
     required this.activityType,
     this.initialDate,
     this.initialSubjectId,
+    this.initialSubjectName,
     this.initialClassId,
+    this.initialClassName,
     this.initialChapterId,
     this.initialSubChapterId,
     this.initialAdditionalMaterials,
@@ -461,131 +464,6 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
     }
   }
 
-  List<DropdownMenuItem<String>> _getUniqueClassItems() {
-    final Map<String, Map<String, dynamic>> uniqueClasses = {};
-    final now = DateTime.now();
-    // Use _selectedDay if available, otherwise fallback to current day
-    final String targetDay =
-        _selectedDay ??
-        [
-          'Senin',
-          'Selasa',
-          'Rabu',
-          'Kamis',
-          'Jumat',
-          'Sabtu',
-          'Minggu',
-        ][now.weekday - 1];
-
-    // Filter schedules by selected subject and deduplicate by class_id
-    for (var schedule in widget.scheduleList) {
-      final scheduleSubjectId =
-          (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
-
-      AppLogger.debug(
-        'class_activity',
-        'Checking schedule: ${schedule['id']} - Subject: $scheduleSubjectId vs Selected: $_selectedSubjectId',
-      );
-
-      if (scheduleSubjectId == _selectedSubjectId) {
-        final classId = (schedule['class_id'] ?? schedule['kelas_id'])
-            .toString();
-
-        // For SPECIFIC target: no time filter, all schedules can be selected
-        if (widget.initialTarget == 'khusus') {
-          if (!uniqueClasses.containsKey(classId)) {
-            uniqueClasses[classId] = {
-              'id': classId,
-              'name': schedule['kelas_nama'] ?? 'Unknown',
-            };
-          }
-        }
-        // For GENERAL target
-        else {
-          // If initialClassId exists (from teaching schedule), always include that class
-          if (widget.initialClassId != null &&
-              classId == widget.initialClassId) {
-            if (!uniqueClasses.containsKey(classId)) {
-              uniqueClasses[classId] = {
-                'id': classId,
-                'name': schedule['kelas_nama'] ?? 'Unknown',
-              };
-              AppLogger.debug(
-                'class_activity',
-                'Added class from initialClassId: ${schedule['kelas_nama']}',
-              );
-            }
-          }
-          // Filter by time for other classes
-          else {
-            var scheduleDay =
-                schedule['hari_nama']?.toString() ??
-                schedule['day_name']?.toString() ??
-                '';
-
-            // Map English days to Indonesian if needed
-            final dayMap = {
-              'Monday': 'Senin',
-              'Tuesday': 'Selasa',
-              'Wednesday': 'Rabu',
-              'Thursday': 'Kamis',
-              'Friday': 'Jumat',
-              'Saturday': 'Sabtu',
-              'Sunday': 'Minggu',
-            };
-
-            if (dayMap.containsKey(scheduleDay)) {
-              scheduleDay = dayMap[scheduleDay]!;
-            }
-
-            AppLogger.debug(
-              'class_activity',
-              'Schedule: ${schedule['kelas_nama']}, Day: $scheduleDay vs Target: $targetDay',
-            );
-
-            // Check if schedule is on the selected day
-            if (scheduleDay == targetDay) {
-              // Time validation removed to ensure classes always appear for the day
-              // Original logic checked start_time + 23h, but this was too strict/buggy
-              if (!uniqueClasses.containsKey(classId)) {
-                uniqueClasses[classId] = {
-                  'id': classId,
-                  'name': schedule['kelas_nama'] ?? 'Unknown',
-                };
-              } else {
-                AppLogger.debug(
-                  'class_activity',
-                  'Class already added: $classId',
-                );
-              }
-            } else {
-              AppLogger.debug(
-                'class_activity',
-                'Day mismatch: $scheduleDay != $targetDay',
-              );
-            }
-          }
-        }
-      }
-    }
-
-    // Convert to dropdown items safely
-    try {
-      return uniqueClasses.values.map((classItem) {
-        return DropdownMenuItem<String>(
-          value: classItem['id'].toString(),
-          child: Text(classItem['name'] ?? 'Unknown'),
-        );
-      }).toList();
-    } catch (e) {
-      AppLogger.error(
-        'class_activity',
-        'Error generating class dropdown items: $e',
-      );
-      return [];
-    }
-  }
-
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -868,395 +746,697 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
   Widget build(BuildContext context) {
     final languageProvider = ref.read(languageRiverpod);
     final isAssignment = widget.activityType == 'tugas';
-    final primaryColor = ColorUtils.getRoleColor('guru');
+    final p = ColorUtils.getRoleColor('guru');
+
+    // Build unique chapter map for material section
+    final Map<String, dynamic> uniqueChapters = {};
+    for (var ch in _chapterMaterialList) {
+      final id = ch['id']?.toString();
+      if (id != null && !uniqueChapters.containsKey(id)) uniqueChapters[id] = ch;
+    }
+    final chapters = uniqueChapters.values.toList();
 
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      height: MediaQuery.of(context).size.height * 0.85,
-      child: Column(
-        children: [
-          // Gradient Header
-          AddActivityHeader(
-            activityType: widget.activityType,
-            isEditMode: widget.isEditMode,
-            primaryColor: primaryColor,
-            languageProvider: languageProvider,
+      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      height: MediaQuery.of(context).size.height * 0.88,
+      child: Column(children: [
+        // ── Header ──
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [p, p.withValues(alpha: 0.85)]),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Info Box
-                    AddActivityTargetInfoBox(
-                      initialTarget: widget.initialTarget,
-                      primaryColor: primaryColor,
-                      languageProvider: languageProvider,
-                    ),
+          child: Column(children: [
+            Container(margin: const EdgeInsets.only(top: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 12, 16),
+              child: Row(children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                  child: Icon(isAssignment ? Icons.assignment_rounded : Icons.menu_book_rounded, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(
+                    widget.isEditMode
+                        ? (isAssignment ? 'Edit Tugas' : 'Edit Materi')
+                        : (isAssignment ? 'Tambah Tugas' : 'Tambah Materi'),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  if (widget.initialClassName != null || widget.initialSubjectName != null)
+                    Row(children: [
+                      if (widget.initialClassName != null) Text('${widget.initialClassName}', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
+                      if (widget.initialClassName != null && widget.initialSubjectName != null) Text(' · ', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+                      if (widget.initialSubjectName != null) Flexible(child: Text(widget.initialSubjectName!, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9)), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    ]),
+                ])),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Container(
+                    width: 32, height: 32,
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                    child: const Icon(Icons.close, color: Colors.white, size: 18),
+                  ),
+                ),
+              ]),
+            ),
+          ]),
+        ),
 
-                    // Mata Pelajaran
-                    Builder(
-                      builder: (context) {
-                        final Map<String, DropdownMenuItem<String>>
-                        uniqueSubjectItems = {};
-                        for (var subject in widget.subjectList) {
-                          final id = subject['id']?.toString();
-                          if (id != null &&
-                              !uniqueSubjectItems.containsKey(id)) {
-                            uniqueSubjectItems[id] = DropdownMenuItem<String>(
-                              value: id,
-                              child: Text(
-                                subject['name'] ?? subject['nama'] ?? 'Unknown',
-                              ),
-                            );
-                          }
-                        }
-                        final List<DropdownMenuItem<String>> subjectItems =
-                            uniqueSubjectItems.values.toList();
+        // ── Form body ──
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const SizedBox(height: 4),
 
-                        return DropdownButtonFormField<String>(
-                          key: ValueKey(
-                            'subject_${_selectedSubjectId}_${subjectItems.length}',
-                          ),
-                          decoration: InputDecoration(
-                            labelText:
-                                '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mata Pelajaran'})} *',
-                            prefixIcon: Icon(Icons.book),
-                            border: OutlineInputBorder(),
-                          ),
-                          initialValue:
-                              (subjectItems.any(
-                                (item) => item.value == _selectedSubjectId,
-                              ))
-                              ? _selectedSubjectId
-                              : null,
-                          isExpanded: true,
-                          items: subjectItems.isEmpty ? null : subjectItems,
-                          onChanged: subjectItems.isEmpty
-                              ? null
-                              : (value) {
-                                  setState(() {
-                                    _selectedSubjectId = value;
-                                    _selectedClassId = null;
-                                  });
-                                  if (value != null) {
-                                    widget.onSubjectSelected(value);
-                                    _loadChapterContent(value);
-                                  }
-                                },
-                          validator: (value) => value == null
-                              ? languageProvider.getTranslatedText({
-                                  'en': 'Required',
-                                  'id': 'Wajib diisi',
-                                })
-                              : null,
-                          hint: Text(
-                            subjectItems.isEmpty
-                                ? languageProvider.getTranslatedText({
-                                    'en': 'No subjects available',
-                                    'id': 'Tidak ada mata pelajaran',
-                                  })
-                                : languageProvider.getTranslatedText({
-                                    'en': 'Select Subject',
-                                    'id': 'Pilih Mata Pelajaran',
-                                  }),
-                          ),
-                        );
-                      },
-                    ),
-                    if (widget.subjectList.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4, left: 12),
-                        child: Text(
-                          AppLocalizations.noTeachingSubjects.tr,
-                          style: TextStyle(
-                            color: ColorUtils.error600,
-                            fontSize: 12,
-                          ),
-                        ),
+                // ═══ SECTION 1: Material Source ═══
+                _buildSectionLabel(icon: Icons.auto_stories_rounded, label: 'Sumber Judul', color: p),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<bool>(
+                    segments: [
+                      ButtonSegment<bool>(
+                        value: false,
+                        label: const Text('Tulis Manual'),
+                        icon: const Icon(Icons.edit_note_rounded, size: 16),
                       ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Kelas
-                    Builder(
-                      builder: (context) {
-                        final List<DropdownMenuItem<String>> classItems =
-                            _selectedSubjectId == null
-                            ? []
-                            : _getUniqueClassItems();
-
-                        return DropdownButtonFormField<String>(
-                          key: ValueKey(
-                            'class_${_selectedClassId}_${classItems.length}',
-                          ),
-                          decoration: InputDecoration(
-                            labelText:
-                                '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})} *',
-                            prefixIcon: Icon(Icons.class_),
-                            border: OutlineInputBorder(),
-                          ),
-                          initialValue:
-                              (_selectedClassId != null &&
-                                  classItems.any(
-                                    (item) => item.value == _selectedClassId,
-                                  ))
-                              ? _selectedClassId
-                              : null,
-                          isExpanded: true,
-                          items: classItems.isEmpty ? null : classItems,
-                          onChanged: _selectedSubjectId == null
-                              ? null
-                              : (value) {
-                                  setState(() {
-                                    _selectedClassId = value;
-                                  });
-
-                                  // Defer loading students to let the dropdown update complete
-                                  if (widget.initialTarget == 'khusus') {
-                                    Future.delayed(
-                                      Duration(milliseconds: 100),
-                                      () {
-                                        if (mounted) _loadStudents();
-                                      },
-                                    );
-                                  }
-                                },
-                          validator: (value) => value == null
-                              ? languageProvider.getTranslatedText({
-                                  'en': 'Required',
-                                  'id': 'Wajib diisi',
-                                })
-                              : null,
-                          hint: Text(
-                            _selectedSubjectId == null
-                                ? languageProvider.getTranslatedText({
-                                    'en': 'Select subject first',
-                                    'id': 'Pilih mata pelajaran dulu',
-                                  })
-                                : languageProvider.getTranslatedText({
-                                    'en': 'Select Class',
-                                    'id': 'Pilih Kelas',
-                                  }),
-                          ),
-                        );
-                      },
-                    ),
-                    if (_selectedSubjectId != null &&
-                        _getUniqueClassItems().isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4, left: 12),
-                        child: Text(
-                          widget.initialTarget == 'khusus'
-                              ? AppLocalizations.noClassesForSubject.tr
-                              : AppLocalizations.noActiveClasses.tr,
-                          style: TextStyle(
-                            color: ColorUtils.warning600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Toggle + Chapter + Sub-chapter selector
-                    AddActivityMaterialSelector(
-                      useMaterialTitle: _useMaterialTitle,
-                      isLoadingChapters: _isLoadingChapters,
-                      selectedSubjectId: _selectedSubjectId,
-                      selectedChapterId: _selectedChapterId,
-                      selectedSubChapterIds: _selectedSubChapterIds,
-                      chapterMaterialList: _chapterMaterialList,
-                      subChapterMaterialList: _subChapterMaterialList,
-                      primaryColor: primaryColor,
-                      languageProvider: languageProvider,
-                      onToggleMaterialTitle: (value) {
-                        setState(() {
-                          _useMaterialTitle = value;
-                          if (!value) {
-                            _selectedChapterId = null;
-                            _selectedSubChapterId = null;
-                          }
-                        });
-                      },
-                      onChapterChanged: (value) {
-                        setState(() {
-                          _selectedChapterId = value;
-                          _selectedSubChapterId = null;
-                        });
-                        if (value != null) {
-                          _loadSubChapterContent(value);
-                          _updateTitleFromMaterial();
-                        }
-                      },
-                      onSubChapterTap: () =>
-                          _openMultiSelectSubBabDialog(languageProvider),
-                      getChapterName: _getChapterName,
-                      getSubChapterName: _getSubChapterName,
-                    ),
-
-                    // Judul Field
-                    TextFormField(
-                      controller: _titleController,
-                      decoration: InputDecoration(
-                        labelText:
-                            '${languageProvider.getTranslatedText({'en': 'Title', 'id': 'Judul'})} *',
-                        prefixIcon: Icon(Icons.title),
-                        border: OutlineInputBorder(),
-                        helperText: _useMaterialTitle
-                            ? languageProvider.getTranslatedText({
-                                'en': 'Auto-filled from chapter/sub-chapter',
-                                'id': 'Otomatis dari bab/sub bab',
-                              })
-                            : languageProvider.getTranslatedText({
-                                'en': 'Enter title manually',
-                                'id': 'Tulis judul manual',
-                              }),
-                      ),
-                      readOnly:
-                          _useMaterialTitle &&
-                          (_selectedChapterId != null ||
-                              _selectedSubChapterId != null),
-                      validator: (value) => value == null || value.isEmpty
-                          ? languageProvider.getTranslatedText({
-                              'en': 'Required',
-                              'id': 'Wajib diisi',
-                            })
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Deskripsi
-                    TextFormField(
-                      controller: _descriptionController,
-                      decoration: InputDecoration(
-                        labelText: languageProvider.getTranslatedText({
-                          'en': 'Description',
-                          'id': 'Deskripsi',
-                        }),
-                        prefixIcon: Icon(Icons.description),
-                      ),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Tanggal
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.calendar_today),
-                      title: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Date',
-                          'id': 'Tanggal',
-                        }),
-                      ),
-                      subtitle: Text(
-                        _selectedDate != null
-                            ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-                            : 'Pilih tanggal',
-                      ),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: _selectedDate ?? DateTime.now(),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(Duration(days: 365)),
-                        );
-                        if (date != null) {
-                          setState(() {
-                            _selectedDate = date;
-                            _selectedDay = _days[date.weekday - 1];
-                          });
-                        }
-                      },
-                    ),
-
-                    // Deadline (only for Assignments)
-                    if (isAssignment) ...[
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: Icon(Icons.alarm),
-                        title: Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Deadline',
-                            'id': 'Batas Waktu',
-                          }),
-                        ),
-                        subtitle: Text(
-                          _deadline != null
-                              ? '${_deadline!.day}/${_deadline!.month}/${_deadline!.year} ${_deadline!.hour}:${_deadline!.minute.toString().padLeft(2, '0')}'
-                              : 'Pilih batas waktu (opsional)',
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _deadline ?? DateTime.now(),
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(Duration(days: 365)),
-                          );
-                          if (date != null) {
-                            if (!mounted) return;
-                            final time = await showTimePicker(
-                              // ignore: use_build_context_synchronously
-                              context: context,
-                              initialTime: TimeOfDay.now(),
-                            );
-                            if (time != null) {
-                              setState(() {
-                                _deadline = DateTime(
-                                  date.year,
-                                  date.month,
-                                  date.day,
-                                  time.hour,
-                                  time.minute,
-                                );
-                              });
-                            }
-                          }
-                        },
+                      ButtonSegment<bool>(
+                        value: true,
+                        label: const Text('Dari Materi'),
+                        icon: const Icon(Icons.menu_book_rounded, size: 16),
+                        enabled: _selectedSubjectId != null,
                       ),
                     ],
+                    selected: {_useMaterialTitle},
+                    onSelectionChanged: (sel) => setState(() {
+                      _useMaterialTitle = sel.first;
+                      if (!_useMaterialTitle) {
+                        _selectedChapterId = null;
+                        _selectedSubChapterId = null;
+                        _selectedSubChapterIds.clear();
+                      }
+                    }),
+                    showSelectedIcon: false,
+                    style: SegmentedButton.styleFrom(
+                      selectedBackgroundColor: p.withValues(alpha: 0.1),
+                      selectedForegroundColor: p,
+                      foregroundColor: ColorUtils.slate500,
+                      textStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500),
+                      minimumSize: const Size(0, 40),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      side: BorderSide(color: ColorUtils.slate200),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
 
-                    // Select Students (only for specific target)
-                    if (widget.initialTarget == 'khusus' &&
-                        _selectedClassId != null)
-                      AddActivityStudentSelector(
-                        studentList: _studentList,
-                        selectedStudents: _selectedStudents,
-                        isLoading: _isLoadingStudents,
-                        initialTarget: widget.initialTarget,
-                        onRefresh: _loadStudents,
-                        onToggleStudent: (studentId, selected) {
+                // Chapter chips (when "Dari Materi" active)
+                if (_useMaterialTitle) ...[
+                  const SizedBox(height: 14),
+                  _buildSectionLabel(icon: Icons.menu_book_rounded, label: 'Bab Materi', color: p),
+                  const SizedBox(height: 8),
+                  if (_isLoadingChapters)
+                    Row(children: List.generate(3, (_) => Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      width: 72, height: 32,
+                      decoration: BoxDecoration(color: ColorUtils.slate100, borderRadius: BorderRadius.circular(16)),
+                    )))
+                  else if (chapters.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                      decoration: BoxDecoration(color: ColorUtils.slate50, borderRadius: BorderRadius.circular(12)),
+                      child: Row(children: [
+                        Icon(Icons.info_outline_rounded, size: 16, color: ColorUtils.slate400),
+                        const SizedBox(width: 8),
+                        Text('Tidak ada bab tersedia', style: TextStyle(fontSize: 13, color: ColorUtils.slate500)),
+                      ]),
+                    )
+                  else
+                    Wrap(spacing: 6, runSpacing: 6, children: chapters.map((ch) {
+                      final id = ch['id'].toString();
+                      final isSelected = id == _selectedChapterId;
+                      return ChoiceChip(
+                        label: Text(_getChapterName(ch)),
+                        selected: isSelected,
+                        onSelected: (_) {
                           setState(() {
-                            if (selected) {
-                              _selectedStudents.add(studentId);
-                            } else {
-                              _selectedStudents.remove(studentId);
-                            }
+                            _selectedChapterId = id;
+                            _selectedSubChapterId = null;
+                            _selectedSubChapterIds.clear();
+                          });
+                          _loadSubChapterContent(id);
+                          _updateTitleFromMaterial();
+                        },
+                        showCheckmark: false,
+                        selectedColor: p.withValues(alpha: 0.12),
+                        labelStyle: TextStyle(
+                          fontSize: 12,
+                          color: isSelected ? p : ColorUtils.slate600,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                        side: BorderSide(color: isSelected ? p.withValues(alpha: 0.3) : ColorUtils.slate200),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                      );
+                    }).toList()),
+
+                  // Sub-chapter filter chips
+                  if (_selectedChapterId != null && _subChapterMaterialList.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    _buildSectionLabel(
+                      icon: Icons.article_outlined, label: 'Sub Bab', color: p,
+                      trailing: _subChapterMaterialList.length > 7
+                          ? GestureDetector(
+                              onTap: () => _openMultiSelectSubBabDialog(languageProvider),
+                              child: Text('Lihat Semua', style: TextStyle(fontSize: 12, color: p, fontWeight: FontWeight.w600)),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(spacing: 6, runSpacing: 6, children: _subChapterMaterialList.take(7).map((sub) {
+                      final subId = sub['id'].toString();
+                      final isSelected = _selectedSubChapterIds.contains(subId);
+                      return FilterChip(
+                        label: Text(_getSubChapterName(sub)),
+                        selected: isSelected,
+                        onSelected: (val) {
+                          setState(() {
+                            if (val) { _selectedSubChapterIds.add(subId); }
+                            else { _selectedSubChapterIds.remove(subId); }
+                            _selectedSubChapterId = _selectedSubChapterIds.isNotEmpty ? _selectedSubChapterIds.first : null;
+                          });
+                          _updateTitleFromMaterial();
+                        },
+                        selectedColor: p.withValues(alpha: 0.08),
+                        checkmarkColor: p,
+                        labelStyle: TextStyle(
+                          fontSize: 11.5,
+                          color: isSelected ? p : ColorUtils.slate600,
+                          fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+                        ),
+                        side: BorderSide(color: isSelected ? p.withValues(alpha: 0.25) : ColorUtils.slate200),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      );
+                    }).toList()),
+                  ],
+                ],
+
+                // ═══ DIVIDER ═══
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(color: ColorUtils.slate100, height: 1),
+                ),
+
+                // ═══ SECTION 2: Title ═══
+                TextFormField(
+                  controller: _titleController,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  decoration: InputDecoration(
+                    hintText: isAssignment ? 'Judul tugas...' : 'Judul materi...',
+                    hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 14, fontWeight: FontWeight.w400),
+                    filled: true, fillColor: ColorUtils.slate50,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: p, width: 1.5)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    suffixIcon: _useMaterialTitle && _selectedChapterId != null
+                        ? Padding(padding: const EdgeInsets.only(right: 10), child: Icon(Icons.lock_outline_rounded, size: 16, color: ColorUtils.slate400))
+                        : null,
+                  ),
+                  readOnly: _useMaterialTitle && (_selectedChapterId != null || _selectedSubChapterId != null),
+                  validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
+                ),
+                const SizedBox(height: 10),
+
+                // ═══ SECTION 3: Description ═══
+                TextFormField(
+                  controller: _descriptionController,
+                  style: const TextStyle(fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Tambahkan catatan atau instruksi...',
+                    hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
+                    filled: true, fillColor: ColorUtils.slate50,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: p, width: 1.5)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    alignLabelWithHint: true,
+                  ),
+                  maxLines: 3, minLines: 2,
+                ),
+
+                // ═══ DIVIDER ═══
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(color: ColorUtils.slate100, height: 1),
+                ),
+
+                // ═══ SECTION 4: Date & Deadline ═══
+                _buildDateCard(
+                  icon: Icons.calendar_today_rounded,
+                  iconColor: p,
+                  label: 'Tanggal Kegiatan',
+                  value: _selectedDate != null ? _formatDate(_selectedDate!) : null,
+                  placeholder: 'Pilih tanggal',
+                  onTap: () {
+                    _showModernDatePicker(
+                      initialDate: _selectedDate ?? DateTime.now(),
+                      title: 'Pilih Tanggal Kegiatan',
+                      onDateSelected: (date) {
+                        setState(() {
+                          _selectedDate = date;
+                          _selectedDay = _days[date.weekday - 1];
+                        });
+                      },
+                    );
+                  },
+                ),
+                if (isAssignment) ...[
+                  const SizedBox(height: 10),
+                  _buildDateCard(
+                    icon: Icons.access_time_rounded,
+                    iconColor: ColorUtils.warning600,
+                    label: 'Batas Waktu',
+                    value: _deadline != null ? _formatDateTime(_deadline!) : null,
+                    placeholder: 'Belum ditentukan (opsional)',
+                    onTap: () {
+                      _showModernDateTimePicker(
+                        initialDateTime: _deadline ?? DateTime.now(),
+                        title: 'Pilih Batas Waktu',
+                        onDateTimeSelected: (dateTime) {
+                          setState(() {
+                            _deadline = dateTime;
                           });
                         },
-                        languageProvider: languageProvider,
-                      ),
-                  ],
-                ),
+                      );
+                    },
+                    onClear: _deadline != null ? () => setState(() => _deadline = null) : null,
+                  ),
+                ],
+
+                // ═══ SECTION 5: Students (specific target only) ═══
+                if (widget.initialTarget == 'khusus' && _selectedClassId != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Divider(color: ColorUtils.slate200, height: 1),
+                  ),
+                  AddActivityStudentSelector(
+                    studentList: _studentList, selectedStudents: _selectedStudents,
+                    isLoading: _isLoadingStudents, initialTarget: widget.initialTarget,
+                    onRefresh: _loadStudents,
+                    onToggleStudent: (id, sel) { setState(() { if (sel) { _selectedStudents.add(id); } else { _selectedStudents.remove(id); } }); },
+                    languageProvider: languageProvider,
+                  ),
+                ],
+
+                const SizedBox(height: 24),
+              ]),
+            ),
+          ),
+        ),
+
+        // ── Bottom bar ──
+        SafeArea(
+          top: false,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: ColorUtils.slate100)),
+            ),
+            child: SizedBox(
+              width: double.infinity, height: 46,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submitForm,
+                style: ElevatedButton.styleFrom(backgroundColor: p, foregroundColor: Colors.white, elevation: 0, disabledBackgroundColor: ColorUtils.slate300, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: _isSubmitting
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(widget.isEditMode ? 'Simpan Perubahan' : (isAssignment ? 'Tambah Tugas' : 'Tambah Materi'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ),
             ),
           ),
-          AddActivityActionBar(
-            isSubmitting: _isSubmitting,
-            isEditMode: widget.isEditMode,
-            primaryColor: primaryColor,
-            languageProvider: languageProvider,
-            onSubmit: _submitForm,
+        ),
+      ]),
+    );
+  }
+
+  // ── Helper: Section label with icon ──
+  Widget _buildSectionLabel({required IconData icon, required String label, required Color color, Widget? trailing}) {
+    return Row(children: [
+      Icon(icon, size: 14, color: color.withValues(alpha: 0.6)),
+      const SizedBox(width: 6),
+      Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600)),
+      if (trailing != null) ...[const Spacer(), trailing],
+    ]);
+  }
+
+  // ── Helper: Full-width date card ──
+  Widget _buildDateCard({required IconData icon, required Color iconColor, required String label, String? value, String? placeholder, required VoidCallback onTap, VoidCallback? onClear}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(color: ColorUtils.slate50, borderRadius: BorderRadius.circular(12)),
+        child: Row(children: [
+          Container(
+            width: 34, height: 34,
+            decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+            child: Icon(icon, size: 17, color: iconColor),
           ),
-        ],
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(label, style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 1),
+            Text(value ?? placeholder ?? '-', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: value != null ? ColorUtils.slate800 : ColorUtils.slate400)),
+          ])),
+          if (onClear != null)
+            GestureDetector(onTap: onClear, child: Icon(Icons.close_rounded, size: 16, color: ColorUtils.slate400))
+          else
+            Icon(Icons.chevron_right_rounded, size: 18, color: ColorUtils.slate300),
+        ]),
+      ),
+    );
+  }
+
+  // ── Helper: Format date ──
+  String _formatDate(DateTime d) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    return '${days[d.weekday - 1]}, ${d.day} ${months[d.month - 1]} ${d.year}';
+  }
+
+  // ── Helper: Format date+time ──
+  String _formatDateTime(DateTime d) {
+    return '${_formatDate(d)}, ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  // ── Helper: Modern Date Picker Sheet ──
+  void _showModernDatePicker({
+    required DateTime initialDate,
+    required String title,
+    required Function(DateTime) onDateSelected,
+  }) {
+    final p = ColorUtils.getRoleColor('guru');
+    DateTime tempDate = initialDate;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [p, p.withValues(alpha: 0.85)],
+                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                  ),
+                ],
+              ),
+            ),
+            // Calendar
+            SizedBox(
+              height: 340,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  datePickerTheme: DatePickerThemeData(
+                    headerBackgroundColor: p,
+                    headerForegroundColor: Colors.white,
+                    dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) return Colors.white;
+                      return ColorUtils.slate800;
+                    }),
+                    dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) return p;
+                      return Colors.transparent;
+                    }),
+                    todayForegroundColor: WidgetStateProperty.all(p),
+                    todayBackgroundColor: WidgetStateProperty.all(p.withValues(alpha: 0.1)),
+                  ),
+                ),
+                child: CalendarDatePicker(
+                  initialDate: tempDate,
+                  firstDate: DateTime(2024),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                  onDateChanged: (date) {
+                    tempDate = date;
+                  },
+                ),
+              ),
+            ),
+            // Footer
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    onDateSelected(tempDate);
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: p,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Pilih Tanggal', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Helper: Modern Date Time Picker Sheet (For Assignments) ──
+  void _showModernDateTimePicker({
+    required DateTime initialDateTime,
+    required String title,
+    required Function(DateTime) onDateTimeSelected,
+  }) {
+    final p = ColorUtils.getRoleColor('guru');
+    DateTime tempDate = initialDateTime;
+    TimeOfDay tempTime = TimeOfDay.fromDateTime(initialDateTime);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [p, p.withValues(alpha: 0.85)],
+                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.access_time_rounded, color: Colors.white, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+              // Body
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 330,
+                        child: Theme(
+                          data: Theme.of(context).copyWith(
+                            datePickerTheme: DatePickerThemeData(
+                              headerBackgroundColor: p,
+                              headerForegroundColor: Colors.white,
+                              dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+                                if (states.contains(WidgetState.selected)) return Colors.white;
+                                return ColorUtils.slate800;
+                              }),
+                              dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                                if (states.contains(WidgetState.selected)) return p;
+                                return Colors.transparent;
+                              }),
+                              todayForegroundColor: WidgetStateProperty.all(p),
+                              todayBackgroundColor: WidgetStateProperty.all(p.withValues(alpha: 0.1)),
+                            ),
+                          ),
+                          child: CalendarDatePicker(
+                            initialDate: tempDate,
+                            firstDate: DateTime(2024),
+                            lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+                            onDateChanged: (date) {
+                              tempDate = date;
+                            },
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.access_time_rounded, size: 18, color: ColorUtils.slate400),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Set Waktu (Jam : Menit)',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ColorUtils.slate700),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              height: 120,
+                              margin: const EdgeInsets.symmetric(horizontal: 40),
+                              decoration: BoxDecoration(
+                                color: ColorUtils.slate50,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: ColorUtils.slate200),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Hours
+                                  Expanded(
+                                    child: CupertinoPicker(
+                                      scrollController: FixedExtentScrollController(initialItem: tempTime.hour),
+                                      itemExtent: 40,
+                                      selectionOverlay: CupertinoPickerDefaultSelectionOverlay(capStartEdge: true, capEndEdge: false),
+                                      onSelectedItemChanged: (int value) {
+                                        setSheetState(() => tempTime = TimeOfDay(hour: value, minute: tempTime.minute));
+                                      },
+                                      children: List.generate(24, (index) => Center(
+                                        child: Text(
+                                          index.toString().padLeft(2, '0'),
+                                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: p),
+                                        ),
+                                      )),
+                                    ),
+                                  ),
+                                  Text(':', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: ColorUtils.slate400)),
+                                  // Minutes
+                                  Expanded(
+                                    child: CupertinoPicker(
+                                      scrollController: FixedExtentScrollController(initialItem: tempTime.minute),
+                                      itemExtent: 40,
+                                      selectionOverlay: CupertinoPickerDefaultSelectionOverlay(capStartEdge: false, capEndEdge: true),
+                                      onSelectedItemChanged: (int value) {
+                                        setSheetState(() => tempTime = TimeOfDay(hour: tempTime.hour, minute: value));
+                                      },
+                                      children: List.generate(60, (index) => Center(
+                                        child: Text(
+                                          index.toString().padLeft(2, '0'),
+                                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: p),
+                                        ),
+                                      )),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Footer
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final finalDateTime = DateTime(
+                        tempDate.year,
+                        tempDate.month,
+                        tempDate.day,
+                        tempTime.hour,
+                        tempTime.minute,
+                      );
+                      onDateTimeSelected(finalDateTime);
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: p,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Simpan Batas Waktu', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

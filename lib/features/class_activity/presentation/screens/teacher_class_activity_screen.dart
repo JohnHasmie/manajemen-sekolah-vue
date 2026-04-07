@@ -545,7 +545,9 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
             initialTarget: 'umum',
             activityType: type,
             initialSubjectId: subjectId,
+            initialSubjectName: subjectName,
             initialClassId: classId,
+            initialClassName: className,
           ),
         );
       },

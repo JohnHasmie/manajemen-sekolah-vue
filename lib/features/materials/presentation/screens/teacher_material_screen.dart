@@ -1115,36 +1115,41 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
 
   // Handle checkbox change on chapter
   void _handleChapterCheck(String chapterId, bool? value) {
-    // Prevent unchecking if already generated (Purple) or Used (Blue)
-    if ((_generatedChapter[chapterId] == true ||
-            _usedChapter[chapterId] == true) &&
-        value == false) {
+    final subs = _subChapterMaterialList.where((sc) => sc['bab_id'].toString() == chapterId).toList();
+
+    if (subs.isEmpty) {
+      // No sub-chapters: toggle chapter directly
+      if ((_generatedChapter[chapterId] == true || _usedChapter[chapterId] == true) && value == false) return;
+      setState(() => _checkedChapter[chapterId] = value ?? false);
+      _saveChapterAndSubChaptersProgress(chapterId, value ?? false);
       return;
     }
 
-    setState(() {
-      _checkedChapter[chapterId] = value ?? false;
+    // Has sub-chapters: find next unchecked sub-chapter and check it
+    final uncheckedSubs = subs.where((sc) {
+      final scId = sc['id'].toString();
+      return _checkedSubChapter[scId] != true;
+    }).toList();
 
-      // Update sub-chapters logic:
-      // If checking chapter (True): Check all sub-chapters.
-      // If unchecking chapter (False): Uncheck all sub-chapters EXCEPT those that are Generated (Purple).
-      for (var subChapter in _subChapterMaterialList.where(
-        (sc) => sc['bab_id'] == chapterId,
-      )) {
-        if (value == true) {
-          _checkedSubChapter[subChapter['id']] = true;
-        } else {
-          // If unchecking, only uncheck if NOT generated and NOT used
-          if (_generatedSubChapter[subChapter['id']] != true &&
-              _usedSubChapter[subChapter['id']] != true) {
-            _checkedSubChapter[subChapter['id']] = false;
+    if (uncheckedSubs.isNotEmpty) {
+      // Check the next unchecked sub-chapter
+      final nextSub = uncheckedSubs.first;
+      final nextSubId = nextSub['id'].toString();
+      _handleSubChapterCheck(nextSubId, chapterId, true);
+    } else {
+      // All sub-chapters are checked — uncheck all (except generated/used)
+      if (_generatedChapter[chapterId] == true || _usedChapter[chapterId] == true) return;
+      setState(() {
+        _checkedChapter[chapterId] = false;
+        for (var sc in subs) {
+          final scId = sc['id'].toString();
+          if (_generatedSubChapter[scId] != true && _usedSubChapter[scId] != true) {
+            _checkedSubChapter[scId] = false;
           }
         }
-      }
-    });
-
-    // Save to database (chapter and all its sub-chapters)
-    _saveChapterAndSubChaptersProgress(chapterId, value ?? false);
+      });
+      _saveChapterAndSubChaptersProgress(chapterId, false);
+    }
   }
 
   // Load materi progress from database, cache the result for instant re-render
@@ -1757,15 +1762,37 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
                 Text(chapter['judul_bab'] ?? chapter['title'] ?? '-', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: ColorUtils.slate900), maxLines: 2, overflow: TextOverflow.ellipsis),
                 if (subs.isNotEmpty) Text('${subs.length} sub-bab', style: TextStyle(color: ColorUtils.slate500, fontSize: 12)),
               ])),
-              // Chapter checkbox
-              GestureDetector(
-                onTap: () => _handleChapterCheck(chId, !isChChecked),
-                child: Container(width: 28, height: 28, decoration: BoxDecoration(
-                  color: isChChecked ? ColorUtils.success600.withValues(alpha: 0.15) : ColorUtils.slate50,
-                  borderRadius: BorderRadius.circular(7),
-                  border: Border.all(color: isChChecked ? ColorUtils.success600 : ColorUtils.slate300, width: isChChecked ? 1.5 : 1),
-                ), child: isChChecked ? Icon(Icons.check_rounded, size: 16, color: ColorUtils.success600) : null),
-              ),
+              // Chapter checkbox (indeterminate when partial)
+              Builder(builder: (_) {
+                final checkedCount = subs.where((sc) => _checkedSubChapter[sc['id'].toString()] == true).length;
+                final isAllChecked = subs.isNotEmpty ? checkedCount == subs.length : isChChecked;
+                final isPartial = subs.isNotEmpty && checkedCount > 0 && checkedCount < subs.length;
+
+                Color bgColor = ColorUtils.slate50;
+                Color borderColor = ColorUtils.slate300;
+                double borderWidth = 1;
+                Widget? icon;
+
+                if (isAllChecked) {
+                  bgColor = ColorUtils.success600;
+                  borderColor = ColorUtils.success600;
+                  borderWidth = 1.5;
+                  icon = const Icon(Icons.check_rounded, size: 16, color: Colors.white);
+                } else if (isPartial) {
+                  bgColor = ColorUtils.slate500;
+                  borderColor = ColorUtils.slate500;
+                  borderWidth = 1.5;
+                  icon = const Icon(Icons.remove_rounded, size: 16, color: Colors.white);
+                }
+
+                return GestureDetector(
+                  onTap: () => _handleChapterCheck(chId, !isAllChecked),
+                  child: Container(width: 28, height: 28, decoration: BoxDecoration(
+                    color: bgColor, borderRadius: BorderRadius.circular(7),
+                    border: Border.all(color: borderColor, width: borderWidth),
+                  ), child: icon),
+                );
+              }),
             ]),
           ),
           // Sub-chapters as timeline items
@@ -1820,10 +1847,10 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
                         GestureDetector(
                           onTap: () => _handleSubChapterCheck(scId, chId, !isScChecked),
                           child: Container(width: 26, height: 26, decoration: BoxDecoration(
-                            color: isScChecked ? ColorUtils.success600.withValues(alpha: 0.15) : ColorUtils.slate50,
+                            color: isScChecked ? ColorUtils.success600 : ColorUtils.slate50,
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(color: isScChecked ? ColorUtils.success600 : ColorUtils.slate300, width: isScChecked ? 1.5 : 1),
-                          ), child: isScChecked ? Icon(Icons.check_rounded, size: 16, color: ColorUtils.success600) : null),
+                          ), child: isScChecked ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null),
                         ),
                         const SizedBox(width: 6),
                         Icon(Icons.chevron_right, size: 18, color: p),
@@ -1929,20 +1956,24 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     );
   }
 
-  /// Opens a self-contained chapter sheet with its own state.
+  /// Opens the embedded material screen as a detail sheet.
   void _openChapterSheet(String classId, String cn, String subjectId, String sn, LanguageProvider lp) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.92, minChildSize: 0.5, maxChildSize: 0.96, expand: false,
-        builder: (ctx, sc) => _ChapterFullSheet(
-          teacherId: _teacherProfileId ?? widget.teacher['id']?.toString() ?? '',
-          classId: classId, className: cn,
-          subjectId: subjectId, subjectName: sn,
-          primaryColor: _getPrimaryColor(),
-          languageProvider: lp,
+      builder: (_) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.9,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: TeacherMaterialScreen(
+            teacher: widget.teacher,
+            initialClassId: classId,
+            initialClassName: cn,
+            initialSubjectId: subjectId,
+            initialSubjectName: sn,
+            embedded: true,
+          ),
         ),
       ),
     );
@@ -2120,363 +2151,3 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
   Future<void> _checkAndShowTour() => _tourHelper.checkAndShow(context);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Chapter Full Sheet — self-contained with own state, flat sub-chapter list
-// ═══════════════════════════════════════════════════════════════════════════════
-
-class _ChapterFullSheet extends StatefulWidget {
-  final String teacherId;
-  final String classId, className, subjectId, subjectName;
-  final Color primaryColor;
-  final LanguageProvider languageProvider;
-
-  const _ChapterFullSheet({
-    required this.teacherId,
-    required this.classId, required this.className,
-    required this.subjectId, required this.subjectName,
-    required this.primaryColor, required this.languageProvider,
-  });
-
-  @override
-  State<_ChapterFullSheet> createState() => _ChapterFullSheetState();
-}
-
-class _ChapterFullSheetState extends State<_ChapterFullSheet> {
-  List<dynamic> _chapters = [];
-  List<dynamic> _subChapters = [];
-  bool _isLoading = true;
-  final Map<String, bool> _checkedChapter = {};
-  final Map<String, bool> _checkedSub = {};
-  final Map<String, bool> _generatedSub = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    try {
-      final svc = getIt<ApiSubjectService>();
-      final results = await Future.wait([
-        svc.getChapterMaterials(subjectId: widget.subjectId),
-        svc.getMaterialProgress(teacherId: widget.teacherId, subjectId: widget.subjectId, classId: widget.classId),
-      ]);
-      final chapters = results[0];
-      final progress = results[1];
-      // Load all sub-chapters in parallel
-      final subFutures = chapters.map((ch) => svc.getSubChapterMaterials(chapterId: ch['id'].toString()));
-      final subResults = await Future.wait(subFutures);
-      final allSubs = subResults.expand((l) => l).toList();
-      // Apply progress
-      for (final p in progress) {
-        final subId = (p['sub_bab_id'] ?? p['sub_chapter_id'])?.toString();
-        final chapId = (p['bab_id'] ?? p['chapter_id'])?.toString();
-        final isChecked = p['is_checked'] == true || p['is_checked'] == 1;
-        final isGenerated = p['is_generated'] == true || p['is_generated'] == 1;
-        if (subId != null && subId != 'null') {
-          _checkedSub[subId] = isChecked;
-          _generatedSub[subId] = isGenerated;
-        } else if (chapId != null) {
-          _checkedChapter[chapId] = isChecked;
-        }
-      }
-      // Derive chapter checked state from sub-chapters
-      for (final ch in chapters) {
-        final chId = ch['id'].toString();
-        final subs = allSubs.where((s) => s['bab_id'].toString() == chId);
-        if (subs.isNotEmpty) {
-          _checkedChapter[chId] = subs.every((s) => _checkedSub[s['id'].toString()] == true);
-        }
-      }
-      if (mounted) setState(() { _chapters = chapters; _subChapters = allSubs; _isLoading = false; });
-    } catch (e) {
-      AppLogger.error('material', 'Chapter sheet load error: $e');
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _toggleChapter(String chId) {
-    final subs = _subChapters.where((s) => s['bab_id'].toString() == chId).toList();
-    bool newVal;
-    
-    if (subs.isEmpty) {
-      newVal = !(_checkedChapter[chId] ?? false);
-    } else {
-      final int checkedCount = subs.where((s) => _checkedSub[s['id'].toString()] == true).length;
-      newVal = checkedCount < subs.length; 
-    }
-
-    setState(() {
-      _checkedChapter[chId] = newVal;
-      // Toggle all sub-chapters under this chapter
-      for (final sc in subs) {
-        final scId = sc['id'].toString();
-        if (!(_generatedSub[scId] == true)) { // Don't uncheck generated items
-          _checkedSub[scId] = newVal;
-        }
-      }
-    });
-    // Save in background
-    final items = subs.map((s) => {'bab_id': chId, 'sub_bab_id': s['id'], 'is_checked': newVal ? 1 : 0}).toList();
-    if (items.isEmpty) items.add({'bab_id': chId, 'sub_bab_id': null, 'is_checked': newVal ? 1 : 0});
-    getIt<ApiSubjectService>().batchSaveMateriProgress({
-      'guru_id': widget.teacherId, 'mata_pelajaran_id': widget.subjectId, 'class_id': widget.classId, 'progress_items': items,
-    }).catchError((e) => AppLogger.error('material', 'Batch save error: $e'));
-  }
-
-  void _toggleSub(String scId, String chId) {
-    final newVal = !(_checkedSub[scId] ?? false);
-    setState(() {
-      _checkedSub[scId] = newVal;
-      // Recalculate chapter state
-      final subs = _subChapters.where((s) => s['bab_id'].toString() == chId);
-      _checkedChapter[chId] = subs.every((s) => _checkedSub[s['id'].toString()] == true);
-    });
-    getIt<ApiSubjectService>().saveMateriProgress({
-      'teacher_id': widget.teacherId, 'subject_id': widget.subjectId, 'class_id': widget.classId,
-      'chapter_id': chId, 'sub_chapter_id': scId, 'is_checked': newVal ? 1 : 0,
-    }).catchError((e) => AppLogger.error('material', 'Save error: $e'));
-  }
-
-  void _openSubDetail(Map<String, dynamic> sub, Map<String, dynamic> ch) {
-    showModalBottomSheet(
-      context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.92, minChildSize: 0.5, maxChildSize: 0.96, expand: false,
-        builder: (ctx, sc) => ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            child: SubBabDetailPage(
-              teacherId: widget.teacherId, subjectId: widget.subjectId,
-              classId: widget.classId, className: widget.className,
-              subChapter: sub, chapter: ch,
-              checked: _checkedSub[sub['id'].toString()] ?? false,
-              onCheckChanged: (val) { 
-                if (val != null) {
-                  setState(() {
-                    _checkedSub[sub['id'].toString()] = val;
-                    final chId = ch['id'].toString();
-                    final subs = _subChapters.where((s) => s['bab_id'].toString() == chId);
-                    _checkedChapter[chId] = subs.every((s) => _checkedSub[s['id'].toString()] == true);
-                  });
-                  getIt<ApiSubjectService>().saveMateriProgress({
-                    'teacher_id': widget.teacherId, 'subject_id': widget.subjectId, 'class_id': widget.classId,
-                    'chapter_id': ch['id'].toString(), 'sub_chapter_id': sub['id'].toString(), 'is_checked': val ? 1 : 0,
-                  }).catchError((e) => AppLogger.error('material', 'Save error: $e'));
-                }
-              },
-              onGenerated: () {
-                if (mounted) {
-                  setState(() {
-                    _generatedSub[sub['id'].toString()] = true;
-                  });
-                }
-              },
-            ),
-          ),
-        ),
-      );
-    }
-  
-
-  
-    Color _getCheckColor(String id, {bool isSub = false}) {
-      // Green for all checked items. Purple distinction removed for simplicity —
-      // the progress summary card on the overview already shows generated count.
-      return ColorUtils.success600;
-    }
-
-    /// Returns: 0 (unchecked), 1 (partial - indeterminate), 2 (fully checked)
-    int _getChapterCheckState(String chId, List<dynamic> subs) {
-      if (subs.isEmpty) return (_checkedChapter[chId] == true) ? 2 : 0;
-      
-      final int checkedCount = subs.where((s) => _checkedSub[s['id'].toString()] == true).length;
-      if (checkedCount == 0) return 0;
-      if (checkedCount == subs.length) return 2;
-      return 1;
-    }
-
-    Widget _infoBadge(IconData icon, String label, Color color) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 11, color: color),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
-        ]),
-      );
-    }
-
-    @override
-  Widget build(BuildContext context) {
-    final p = widget.primaryColor;
-    final lp = widget.languageProvider;
-
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: BoxDecoration(color: ColorUtils.slate50, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
-        child: Column(children: [
-          // Gradient header
-          Container(
-            decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [p, p.withValues(alpha: 0.85)]), borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
-            child: Column(children: [
-              Container(margin: const EdgeInsets.only(top: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 8, 14),
-                child: Row(children: [
-                  Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.menu_book_outlined, color: Colors.white, size: 18)),
-                  const SizedBox(width: 12),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Kelas: ${widget.className}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    Text(widget.subjectName, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
-                  ])),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.close, color: Colors.white, size: 18)),
-                  ),
-                ]),
-              ),
-            ]),
-          ),
-          // Content
-          Expanded(
-            child: _isLoading
-              ? SkeletonListLoading(padding: const EdgeInsets.only(top: 8, bottom: 80), showActions: false)
-              : _chapters.isEmpty
-                  ? Center(child: Text(lp.getTranslatedText({'en': 'No chapters', 'id': 'Belum ada bab'}), style: TextStyle(color: ColorUtils.slate400)))
-                  : ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-                      children: _chapters.asMap().entries.map((entry) {
-                        final idx = entry.key;
-                        final ch = entry.value;
-                        final chId = ch['id'].toString();
-                        final chColor = ColorUtils.getColorForIndex(idx);
-                        final checkColor = _getCheckColor(chId);
-                        final subs = _subChapters.where((s) => s['bab_id'].toString() == chId).toList();
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white, borderRadius: BorderRadius.circular(16),
-                            boxShadow: ColorUtils.corporateShadow(elevation: 1.2),
-                          ),
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            // Chapter header
-                            Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(children: [
-                                Container(width: 40, height: 40, decoration: BoxDecoration(color: chColor.withValues(alpha: 0.15), shape: BoxShape.circle),
-                                  child: Center(child: Text('${ch['urutan'] ?? idx + 1}', style: TextStyle(color: chColor, fontWeight: FontWeight.w700, fontSize: 16)))),
-                                const SizedBox(width: 14),
-                                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text(ch['judul_bab'] ?? '-', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: ColorUtils.slate900), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                  if (subs.isNotEmpty) ...[
-                                    const SizedBox(height: 2),
-                                    Text('${subs.length} sub-bab', style: TextStyle(color: ColorUtils.slate500, fontSize: 12, fontWeight: FontWeight.w500)),
-                                  ],
-                                ])),
-                                // Chapter checkbox
-                                Builder(
-                                  builder: (context) {
-                                    final checkState = _getChapterCheckState(chId, subs);
-                                    
-                                    Color boxColor = Colors.transparent;
-                                    Color borderColor = ColorUtils.slate300;
-                                    
-                                    if (checkState == 2) {
-                                      boxColor = checkColor;
-                                      borderColor = checkColor;
-                                    } else if (checkState == 1) {
-                                      boxColor = ColorUtils.slate500;
-                                      borderColor = ColorUtils.slate500;
-                                    }
-
-                                    return GestureDetector(
-                                      onTap: subs.isEmpty ? () => _toggleChapter(chId) : null,
-                                      child: Container(
-                                        width: 28, height: 28, 
-                                        margin: const EdgeInsets.all(2), 
-                                        decoration: BoxDecoration(
-                                          color: boxColor,
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: borderColor, width: 2)
-                                        ),
-                                        child: checkState == 2 
-                                            ? const Icon(Icons.check, size: 20, color: Colors.white)
-                                            : checkState == 1
-                                                ? const Icon(Icons.remove, size: 20, color: Colors.white)
-                                                : null,
-                                      ),
-                                    );
-                                  }
-                                ),
-                              ]),
-                            ),
-                            // Sub-chapters (timeline style)
-                            if (subs.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 36, right: 16, bottom: 16),
-                                child: Container(
-                                  decoration: BoxDecoration(border: Border(left: BorderSide(color: ColorUtils.slate200, width: 2))),
-                                  padding: const EdgeInsets.only(left: 16, top: 4),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: subs.map((sc) {
-                                      final scId = sc['id'].toString();
-                                      final isScChecked = _checkedSub[scId] ?? false;
-                                      final scCheckColor = _getCheckColor(scId, isSub: true);
-
-                                      return Padding(
-                                        padding: const EdgeInsets.only(bottom: 16),
-                                        child: Material(color: Colors.transparent, child: InkWell(
-                                          onTap: () => _openSubDetail(Map<String, dynamic>.from(sc), Map<String, dynamic>.from(ch)),
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                              Text(sc['judul_sub_bab'] ?? '-', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: ColorUtils.slate800)),
-                                              const SizedBox(height: 8),
-                                              // Display materi, quiz, ref badges
-                                              Wrap(spacing: 6, runSpacing: 6, children: [
-                                                _infoBadge(Icons.menu_book_outlined, 'Materi', ColorUtils.success600),
-                                                _infoBadge(Icons.quiz_outlined, 'Kuis', ColorUtils.warning600),
-                                                _infoBadge(Icons.bookmark_outline, 'Ref', ColorUtils.info600),
-                                              ]),
-                                            ])),
-                                            const SizedBox(width: 12),
-                                            GestureDetector(
-                                              onTap: () => _toggleSub(scId, chId),
-                                              child: Container(
-                                                width: 26, height: 26, 
-                                                margin: const EdgeInsets.all(2), 
-                                                decoration: BoxDecoration(
-                                                  color: isScChecked ? scCheckColor : Colors.transparent,
-                                                  borderRadius: BorderRadius.circular(8), 
-                                                  border: Border.all(color: isScChecked ? scCheckColor : ColorUtils.slate300, width: 2)
-                                                ), 
-                                                child: isScChecked ? const Icon(Icons.check, size: 18, color: Colors.white) : null
-                                              ),
-                                            ),
-                                          ]),
-                                        )),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                          ]),
-                        );
-                      }).toList(),
-                    ),
-          ),
-        ]),
-      ),
-    );
-  }
-}
