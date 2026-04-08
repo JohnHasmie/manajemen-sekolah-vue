@@ -1,500 +1,444 @@
-// GradeTableWidget -- the frozen-left-column spreadsheet table for grade display.
-//
-// Like a Vue `<GradeTable>` component. Extracted from
-// GradeBookPageState._buildGradeTable so the table layout lives in its own
-// file and can be tested independently.
-//
-// Layout:
-//   [ Fixed name column (120 px) | Horizontally scrollable grade columns ]
-//
-// The name column never scrolls; only the grade columns scroll horizontally.
-// This is the "read mode" table. Edit mode uses a separate widget (EditTable).
-//
-// Props (like Vue props):
-// - [filteredStudentList]        -- students to display (already filtered by search)
-// - [filteredGradeTypeList]      -- which grade types are visible ('uh', 'tugas', ...)
-// - [assessmentHeaders]          -- { type -> [{id, date, title}] } from the API
-// - [gradeList]                  -- flat list of all grade records for cell lookup
-// - [horizontalScrollController] -- shared controller for header/row sync
-// - [canEdit]                    -- whether the logged-in user can edit grades
-// - [isReadOnly]                 -- whether the academic year is locked
-// - [primaryColor]               -- role-based accent color
-// - [languageProvider]           -- for translated strings
-// - [onColumnTap]                -- tapped an assessment header cell (shows detail)
-// - [onCellTap]                  -- tapped a grade cell (opens input form)
-// - [onAddAssessment]            -- tapped the + button at the end of a column group
-
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:flutter/services.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
-/// The grade spreadsheet table used in [GradeBookPage] view (non-edit) mode.
-///
-/// Stateless -- all data and action callbacks are passed via constructor,
-/// identical to how a Vue component receives props and emits events.
-class GradeTableWidget extends StatelessWidget {
+class GradeTableWidget extends StatefulWidget {
   final List<Student> filteredStudentList;
   final List<String> filteredGradeTypeList;
   final Map<String, List<Map<String, dynamic>>> assessmentHeaders;
-
-  /// Flat list of all resolved grade records -- same as the state's [_gradeList].
-  /// Used by [_getGradeForStudentAndHeader] to look up scores for each cell.
   final List<Map<String, dynamic>> gradeList;
-
   final ScrollController horizontalScrollController;
   final bool canEdit;
   final bool isReadOnly;
   final Color primaryColor;
   final LanguageProvider languageProvider;
-
-  /// Called when the user taps an assessment column header.
-  /// Args: (gradeType, header)
   final void Function(String type, Map<String, dynamic> header) onColumnTap;
-
-  /// Called when the user taps a grade cell (to open the input form).
-  /// Args: (student, gradeType, header)
-  final void Function(
-    Student student,
-    String type,
-    Map<String, dynamic> header,
-  ) onCellTap;
-
-  /// Called when the user taps the "+" add-assessment button for a grade type.
-  /// Args: (gradeType)
+  final void Function(Student student, String type, Map<String, dynamic> header) onCellTap;
   final void Function(String type) onAddAssessment;
+
+  /// Called when user finishes inline editing a cell. Returns error message or null on success.
+  final Future<String?> Function(Student student, String type, Map<String, dynamic> header, String value)? onInlineSave;
 
   const GradeTableWidget({
     super.key,
-    required this.filteredStudentList,
-    required this.filteredGradeTypeList,
-    required this.assessmentHeaders,
-    required this.gradeList,
+    required this.filteredStudentList, required this.filteredGradeTypeList,
+    required this.assessmentHeaders, required this.gradeList,
     required this.horizontalScrollController,
-    required this.canEdit,
-    required this.isReadOnly,
-    required this.primaryColor,
-    required this.languageProvider,
-    required this.onColumnTap,
-    required this.onCellTap,
-    required this.onAddAssessment,
+    required this.canEdit, required this.isReadOnly,
+    required this.primaryColor, required this.languageProvider,
+    required this.onColumnTap, required this.onCellTap, required this.onAddAssessment,
+    this.onInlineSave,
   });
 
-  // ---------------------------------------------------------------------------
-  // Grade lookup helpers (mirrors GradeBookPageState logic, no side effects)
-  // ---------------------------------------------------------------------------
+  @override
+  State<GradeTableWidget> createState() => _GradeTableWidgetState();
+}
 
-  /// Finds the grade record for [student] + [type] + [header] in [gradeList].
-  ///
-  /// Mirrors GradeBookPageState._getGradeForStudentAndHeader exactly --
-  /// pure lookup, no setState, no API calls.
-  Map<String, dynamic>? _getGradeForStudentAndHeader(
-    Student student,
-    String type,
-    Map<String, dynamic> header,
-  ) {
+class _GradeTableWidgetState extends State<GradeTableWidget> {
+  // Active editing cell
+  String? _editingKey;
+  int _editingStudentIdx = -1;
+  int _editingColIdx = -1;
+  final _editController = TextEditingController();
+  final _editFocus = FocusNode();
+  String? _errorMessage;
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _editController.dispose();
+    _editFocus.dispose();
+    super.dispose();
+  }
+
+  // ── Constants ──
+  static const double _nameW = 120;
+  static const double _cellW = 54;
+  static const double _headerH = 48;
+  static const double _rowH = 42;
+
+  // ── Helpers ──
+  String _short(String type) {
+    const m = {'uh': 'UH', 'tugas': 'Tgs', 'uts': 'UTS', 'uas': 'UAS', 'pts': 'PTS', 'pas': 'PAS'};
+    return m[type] ?? type.toUpperCase();
+  }
+
+  Color _scoreColor(double s) {
+    if (s >= 80) return ColorUtils.success600;
+    if (s >= 60) return ColorUtils.warning600;
+    return ColorUtils.error600;
+  }
+
+  Map<String, dynamic>? _getGrade(Student student, String type, Map<String, dynamic> header) {
     try {
-      final studentId = student.id.toString();
-      final studentClassId = student.studentClassId?.toString();
-
-      final result = gradeList.firstWhere((gradeItem) {
-        final gradeStudentId = gradeItem['siswa_id']?.toString();
-        final gradeStudentClassId = gradeItem['student_class_id']?.toString();
-
-        bool studentMatch = gradeStudentId == studentId;
-        if (!studentMatch &&
-            (studentClassId != null || gradeStudentClassId != null)) {
-          studentMatch =
-              gradeStudentClassId == studentClassId ||
-              gradeStudentId == studentClassId;
+      final sid = student.id.toString();
+      final scid = student.studentClassId?.toString();
+      final result = widget.gradeList.firstWhere((g) {
+        final gSid = g['siswa_id']?.toString();
+        final gScid = g['student_class_id']?.toString();
+        bool match = gSid == sid;
+        if (!match && (scid != null || gScid != null)) {
+          match = gScid == scid || gSid == scid;
         }
-        if (!studentMatch) return false;
-
-        final headerId = header['id']?.toString();
-        final currentAssessmentId = gradeItem['assessment_id']?.toString();
-
-        if (headerId != null && currentAssessmentId != null) {
-          if (headerId != currentAssessmentId) return false;
-        } else if (headerId != null || currentAssessmentId != null) {
+        if (!match) return false;
+        final hId = header['id']?.toString();
+        final aId = g['assessment_id']?.toString();
+        if (hId != null && aId != null) {
+          if (hId != aId) return false;
+        } else if (hId != null || aId != null) {
           return false;
         }
-
-        final gradeDate = gradeItem['tanggal']?.toString().split('T')[0];
-        final gradeType = gradeItem['jenis']?.toString().toLowerCase();
-        final nTitle = (gradeItem['title'] ?? '').toString().trim();
-        final hTitle = (header['title'] ?? '').toString().trim();
-
-        return gradeType == type.toLowerCase() &&
-            gradeDate == header['date'] &&
-            nTitle == hTitle;
+        return (g['jenis']?.toString().toLowerCase() == type.toLowerCase()) &&
+               (g['tanggal']?.toString().split('T')[0] == header['date']) &&
+               ((g['title'] ?? '').toString().trim() == (header['title'] ?? '').toString().trim());
       }, orElse: () => <String, dynamic>{});
-
       return result.isEmpty ? null : result;
-    } catch (_) {
-      return null;
+    } catch (_) { return null; }
+  }
+
+  String _fmt(dynamic v) {
+    if (v == null) return '';
+    final d = double.tryParse(v.toString());
+    if (d == null) return v.toString();
+    return d % 1 == 0 ? d.toInt().toString() : d.toStringAsFixed(1);
+  }
+
+  String _cellKey(Student s, String type, int idx) => '${s.id}__${type}__$idx';
+
+  List<_ColDef> _buildColumns(double availableWidth) {
+    final cols = <_ColDef>[];
+
+    // 1. Add all real data columns
+    for (final type in widget.filteredGradeTypeList) {
+      final headers = widget.assessmentHeaders[type] ?? [];
+      for (int i = 0; i < headers.length; i++) {
+        cols.add(_ColDef(type: type, index: i, header: headers[i], isPlaceholder: false));
+      }
+    }
+
+    // 2. Add placeholder columns for empty types (so table looks complete)
+    for (final type in widget.filteredGradeTypeList) {
+      final headers = widget.assessmentHeaders[type] ?? [];
+      if (headers.isEmpty) {
+        cols.add(_ColDef(type: type, index: 0, header: const {}, isPlaceholder: true));
+      }
+    }
+
+    // 3. Fill remaining screen width with empty spacer columns
+    final usedWidth = cols.length * _cellW;
+    final remaining = availableWidth - usedWidth;
+    if (remaining > _cellW) {
+      final extraCols = (remaining / _cellW).floor();
+      for (int i = 0; i < extraCols; i++) {
+        cols.add(_ColDef(type: '', index: i, header: const {}, isPlaceholder: true));
+      }
+    }
+
+    return cols;
+  }
+
+  void _startEditingAt(int studentIdx, int colIdx, List<_ColDef> cols) {
+    if (!widget.canEdit || widget.isReadOnly) return;
+    if (studentIdx < 0 || studentIdx >= widget.filteredStudentList.length) return;
+    if (colIdx < 0 || colIdx >= cols.length) return;
+
+    final col = cols[colIdx];
+    if (col.isPlaceholder) return;
+
+    final student = widget.filteredStudentList[studentIdx];
+
+    if (widget.onInlineSave == null) {
+      widget.onCellTap(student, col.type, col.header);
+      return;
+    }
+
+    final rec = _getGrade(student, col.type, col.header);
+    final currentValue = rec?.isNotEmpty == true ? _fmt(rec!['score']) : '';
+
+    setState(() {
+      _editingKey = _cellKey(student, col.type, col.index);
+      _editingStudentIdx = studentIdx;
+      _editingColIdx = colIdx;
+      _editController.text = currentValue;
+      _errorMessage = null;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _editFocus.requestFocus();
+      _editController.selection = TextSelection(baseOffset: 0, extentOffset: _editController.text.length);
+    });
+  }
+
+  void _startEditing(Student student, _ColDef col, List<_ColDef> cols) {
+    final studentIdx = widget.filteredStudentList.indexOf(student);
+    final colIdx = cols.indexOf(col);
+    _startEditingAt(studentIdx, colIdx, cols);
+  }
+
+  Future<void> _finishAndMove(int nextStudentIdx, int nextColIdx, List<_ColDef> cols) async {
+    if (_isSaving) return;
+    final value = _editController.text.trim();
+    final studentIdx = _editingStudentIdx;
+    final colIdx = _editingColIdx;
+
+    if (studentIdx < 0 || colIdx < 0) return;
+
+    final student = widget.filteredStudentList[studentIdx];
+    final col = cols[colIdx];
+
+    setState(() => _isSaving = true);
+
+    if (widget.onInlineSave != null && value.isNotEmpty) {
+      final error = await widget.onInlineSave!(student, col.type, col.header, value);
+      if (!mounted) return;
+      if (error != null) {
+        setState(() { _errorMessage = error; _isSaving = false; });
+        _editFocus.requestFocus();
+        return;
+      }
+    }
+
+    setState(() { _isSaving = false; _errorMessage = null; _editingKey = null; });
+
+    // Move to next cell
+    if (nextStudentIdx >= 0 && nextColIdx >= 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _startEditingAt(nextStudentIdx, nextColIdx, cols);
+      });
     }
   }
 
-  /// Formats a raw grade value for display (e.g. 85.0 -> "85").
-  String _formatGradeValue(dynamic value) {
-    if (value == null) return '-';
-    final d = double.tryParse(value.toString());
-    if (d == null) return value.toString();
-    return d % 1 == 0 ? d.toInt().toString() : d.toString();
+  void _cancelEditing() {
+    setState(() { _editingKey = null; _errorMessage = null; _editingStudentIdx = -1; _editingColIdx = -1; });
   }
 
-  // ---------------------------------------------------------------------------
-  // Label helper
-  // ---------------------------------------------------------------------------
-
-  /// Human-readable label for each grade type key.
-  /// Mirrors GradeBookPageState._getGradeTypeLabel.
-  String _getGradeTypeLabel(String type) {
-    switch (type) {
-      case 'uh':
-        return languageProvider.getTranslatedText({
-          'en': 'Daily/Quiz',
-          'id': 'UH/Ulangan',
-        });
-      case 'tugas':
-        return languageProvider.getTranslatedText({
-          'en': 'Assignment',
-          'id': 'Tugas',
-        });
-      case 'uts':
-        return languageProvider.getTranslatedText({
-          'en': 'Midterm',
-          'id': 'UTS',
-        });
-      case 'uas':
-        return languageProvider.getTranslatedText({
-          'en': 'Final',
-          'id': 'UAS',
-        });
-      case 'pts':
-        return languageProvider.getTranslatedText({
-          'en': 'Midterm Exam',
-          'id': 'PTS',
-        });
-      case 'pas':
-        return languageProvider.getTranslatedText({
-          'en': 'Final Exam',
-          'id': 'PAS',
-        });
-      default:
-        return type.toUpperCase();
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Build helpers
-  // ---------------------------------------------------------------------------
-
-  /// Fixed left column: student names.
-  Widget _buildLeftColumn() {
-    return Container(
-      width: 120,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(right: BorderSide(color: ColorUtils.slate200, width: 2)),
-      ),
-      child: Column(
-        children: [
-          // Header cell
-          Container(
-            height: 70,
-            width: 120,
-            padding: const EdgeInsets.all(AppSpacing.md),
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-              color: primaryColor,
-              border: Border(
-                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-              ),
-            ),
-            child: Text(
-              languageProvider.getTranslatedText({'en': 'Name', 'id': 'Nama'}),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          // Student name rows
-          ...filteredStudentList.map(_buildNameCell),
-        ],
-      ),
-    );
-  }
-
-  /// One name cell in the fixed left column.
-  Widget _buildNameCell(Student student) {
-    return Container(
-      height: 60,
-      width: 120,
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
-        color: Colors.white,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            student.name,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 11,
-              color: ColorUtils.slate800,
-            ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-          Text(
-            '${languageProvider.getTranslatedText({'en': 'NIS', 'id': 'NIS'})}: ${student.studentNumber}',
-            style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Horizontally scrollable right section: assessment headers + grade cells.
-  Widget _buildRightSection() {
-    double rightSideWidth = 0;
-    for (final type in filteredGradeTypeList) {
-      final headers = assessmentHeaders[type] ?? [];
-      rightSideWidth +=
-          (headers.length * 90.0) + (canEdit && !isReadOnly ? 65.0 : 0.0);
-    }
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      controller: horizontalScrollController,
-      child: SizedBox(
-        width: rightSideWidth,
-        child: Column(
-          children: [
-            _buildHeaderRow(),
-            // Tearoff: _buildStudentRow is a named method so no closure needed
-            ...filteredStudentList.map(_buildStudentRow),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// The header row with assessment date/title cells and "add" buttons.
-  Widget _buildHeaderRow() {
-    return Container(
-      height: 70,
-      decoration: BoxDecoration(
-        color: primaryColor,
-        border: Border(
-          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-        ),
-      ),
-      child: Row(
-        children: filteredGradeTypeList.expand(_buildHeaderCells).toList(),
-      ),
-    );
-  }
-
-  /// Column header cells (assessment columns + optional add-button) for [type].
-  Iterable<Widget> _buildHeaderCells(String type) {
-    final headers = assessmentHeaders[type] ?? [];
-    final List<Widget> widgets = [];
-
-    for (final header in headers) {
-      final String date = header['date'] as String;
-      final String? title = header['title'] as String?;
-      final parts = date.split('-');
-      final displayDate = parts.length == 3 ? "${parts[2]}/${parts[1]}" : date;
-
-      widgets.add(
-        InkWell(
-          onTap: () => onColumnTap(type, header),
-          child: Container(
-            width: 90,
-            padding: const EdgeInsets.all(AppSpacing.xs),
-            decoration: BoxDecoration(
-              border: Border(right: BorderSide(color: ColorUtils.slate200)),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  title != null && title.isNotEmpty
-                      ? title
-                      : _getGradeTypeLabel(type),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  displayDate,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (canEdit && !isReadOnly) {
-      widgets.add(
-        Container(
-          width: 65,
-          padding: const EdgeInsets.all(AppSpacing.xs),
-          decoration: BoxDecoration(
-            border: Border(
-              right: BorderSide(color: ColorUtils.slate300, width: 1),
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _getGradeTypeLabel(type),
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 2),
-              InkWell(
-                onTap: () => onAddAssessment(type),
-                child: Icon(
-                  Icons.add_circle_outline,
-                  size: 20,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return widgets;
-  }
-
-  /// A single student's grade row across all visible columns.
-  Widget _buildStudentRow(Student student) {
-    return Container(
-      height: 60,
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
-      ),
-      child: Row(
-        children: filteredGradeTypeList
-            .expand((type) => _buildGradeCells(student, type))
-            .toList(),
-      ),
-    );
-  }
-
-  /// Grade cells (and optional spacer) for [student] in column group [type].
-  Iterable<Widget> _buildGradeCells(Student student, String type) {
-    final headers = assessmentHeaders[type] ?? [];
-    final List<Widget> widgets = [];
-
-    for (final header in headers) {
-      final gradeRecord = _getGradeForStudentAndHeader(student, type, header);
-      final scoreText = gradeRecord?.isNotEmpty == true
-          ? _formatGradeValue(gradeRecord!['score'])
-          : '-';
-      final hasValue = gradeRecord?.isNotEmpty == true;
-
-      widgets.add(
-        Container(
-          width: 90,
-          padding: const EdgeInsets.all(AppSpacing.xs),
-          decoration: BoxDecoration(
-            border: Border(right: BorderSide(color: ColorUtils.slate100)),
-          ),
-          child: GestureDetector(
-            onTap: (canEdit && !isReadOnly)
-                ? () => onCellTap(student, type, header)
-                : null,
-            child: Container(
-              height: 40,
-              decoration: BoxDecoration(
-                color: hasValue
-                    ? ColorUtils.success600.withValues(alpha: 0.08)
-                    : ColorUtils.slate50,
-                borderRadius: const BorderRadius.all(Radius.circular(4)),
-                border: Border.all(
-                  color: hasValue
-                      ? ColorUtils.success600.withValues(alpha: 0.3)
-                      : ColorUtils.slate200,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  scoreText,
-                  style: TextStyle(
-                    fontWeight:
-                        hasValue ? FontWeight.bold : FontWeight.normal,
-                    color: hasValue
-                        ? ColorUtils.success600
-                        : ColorUtils.slate500,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (canEdit && !isReadOnly) {
-      widgets.add(
-        Container(
-          width: 65,
-          decoration: BoxDecoration(
-            border: Border(right: BorderSide(color: ColorUtils.slate200)),
-            color: ColorUtils.slate50.withValues(alpha: 0.3),
-          ),
-        ),
-      );
-    }
-
-    return widgets;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Build
-  // ---------------------------------------------------------------------------
+  // ══════════════════════════════════════════════════════════════
+  // BUILD
+  // ══════════════════════════════════════════════════════════════
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildLeftColumn(),
-          Expanded(child: _buildRightSection()),
-        ],
-      ),
+    return LayoutBuilder(builder: (context, constraints) {
+      final availableWidth = constraints.maxWidth - _nameW;
+      final cols = _buildColumns(availableWidth);
+      final totalWidth = cols.length * _cellW;
+      // Use max of calculated width or available width so table fills the screen
+      final contentWidth = totalWidth < availableWidth ? availableWidth : totalWidth;
+
+      return GestureDetector(
+        onTap: _cancelEditing,
+        child: IntrinsicHeight(
+          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            _nameColumn(),
+            Expanded(child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              controller: widget.horizontalScrollController,
+              child: SizedBox(
+                width: contentWidth,
+                child: Column(children: [
+                  _headerRow(cols, contentWidth),
+                  ...widget.filteredStudentList.asMap().entries.map((e) => _dataRow(e.key, e.value, cols, contentWidth)),
+                ]),
+              ),
+            )),
+          ]),
+        ),
+      );
+    });
+  }
+
+  // ── Name column ──
+
+  Widget _nameColumn() {
+    return Container(
+      width: _nameW,
+      decoration: BoxDecoration(color: Colors.white, border: Border(right: BorderSide(color: ColorUtils.slate200))),
+      child: Column(children: [
+        Container(
+          height: _headerH, width: _nameW,
+          padding: const EdgeInsets.only(left: 10),
+          alignment: Alignment.centerLeft,
+          color: widget.primaryColor,
+          child: const Text('Siswa', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+        ),
+        ...widget.filteredStudentList.asMap().entries.map((e) {
+          final i = e.key;
+          return Container(
+            height: _rowH, width: _nameW,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: i.isEven ? Colors.white : ColorUtils.slate50,
+              border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
+            ),
+            child: Row(children: [
+              SizedBox(width: 18, child: Text('${i + 1}', style: TextStyle(fontSize: 10, color: ColorUtils.slate400, fontWeight: FontWeight.w600))),
+              Expanded(child: Text(e.value.name, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: ColorUtils.slate800), maxLines: 1, overflow: TextOverflow.ellipsis)),
+            ]),
+          );
+        }),
+      ]),
     );
   }
+
+  // ── Header row ──
+
+  Widget _headerRow(List<_ColDef> cols, double contentWidth) {
+    return Container(
+      height: _headerH,
+      color: widget.primaryColor,
+      child: Row(children: cols.map((c) {
+        if (c.isPlaceholder) {
+          // Empty placeholder header
+          final label = c.type.isNotEmpty ? _short(c.type) : '';
+          return Container(
+            width: _cellW,
+            decoration: BoxDecoration(border: Border(right: BorderSide(color: Colors.white.withValues(alpha: 0.06)))),
+            child: label.isNotEmpty
+                ? Center(child: Text(label, style: TextStyle(fontSize: 9, color: Colors.white.withValues(alpha: 0.3)), textAlign: TextAlign.center))
+                : null,
+          );
+        }
+
+        final date = c.header['date'] as String;
+        final parts = date.split('-');
+        final dFmt = parts.length == 3 ? '${parts[2]}/${parts[1]}' : date;
+        final label = '${_short(c.type)} ${c.index + 1}';
+
+        return InkWell(
+          onTap: () => widget.onColumnTap(c.type, c.header),
+          child: Container(
+            width: _cellW,
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+            decoration: BoxDecoration(border: Border(right: BorderSide(color: Colors.white.withValues(alpha: 0.12)))),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white), textAlign: TextAlign.center, maxLines: 1),
+              const SizedBox(height: 1),
+              Text(dFmt, style: TextStyle(fontSize: 8, color: Colors.white.withValues(alpha: 0.6)), textAlign: TextAlign.center),
+            ]),
+          ),
+        );
+      }).toList()),
+    );
+  }
+
+  // ── Data row with inline edit ──
+
+  Widget _dataRow(int index, Student student, List<_ColDef> cols, double contentWidth) {
+    return Container(
+      height: _rowH,
+      decoration: BoxDecoration(
+        color: index.isEven ? Colors.white : ColorUtils.slate50,
+        border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
+      ),
+      child: Row(children: cols.map((c) {
+        if (c.isPlaceholder) {
+          return Container(
+            width: _cellW,
+            decoration: BoxDecoration(
+              color: ColorUtils.slate50.withValues(alpha: 0.3),
+              border: Border(right: BorderSide(color: ColorUtils.slate100.withValues(alpha: 0.3))),
+            ),
+          );
+        }
+
+        final key = _cellKey(student, c.type, c.index);
+        final isEditing = _editingKey == key;
+
+        if (isEditing) {
+          return _editCell(cols);
+        }
+
+        final rec = _getGrade(student, c.type, c.header);
+        final hasVal = rec?.isNotEmpty == true;
+        final score = hasVal ? (rec!['score'] as num?)?.toDouble() : null;
+        final txt = hasVal ? _fmt(rec!['score']) : '-';
+
+        return GestureDetector(
+          onTap: () => _startEditing(student, c, cols),
+          child: Container(
+            width: _cellW,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(border: Border(right: BorderSide(color: ColorUtils.slate100.withValues(alpha: 0.5)))),
+            child: Text(txt, style: TextStyle(
+              fontSize: hasVal ? 13 : 10,
+              fontWeight: hasVal ? FontWeight.w700 : FontWeight.w400,
+              color: score != null ? _scoreColor(score) : ColorUtils.slate300,
+            )),
+          ),
+        );
+      }).toList()),
+    );
+  }
+
+  // ── Inline edit cell with keyboard navigation ──
+
+  Widget _editCell(List<_ColDef> cols) {
+    final hasError = _errorMessage != null;
+    final borderColor = hasError ? ColorUtils.error600 : widget.primaryColor;
+
+    return Container(
+      width: _cellW,
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
+      decoration: BoxDecoration(
+        color: hasError ? ColorUtils.error600.withValues(alpha: 0.06) : widget.primaryColor.withValues(alpha: 0.06),
+        border: Border.all(color: borderColor, width: 2),
+      ),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        SizedBox(
+          height: hasError ? 22 : 30,
+          child: KeyboardListener(
+            focusNode: FocusNode(),
+            onKeyEvent: (event) {
+              if (event is! KeyDownEvent) return;
+              final key = event.logicalKey;
+              if (key == LogicalKeyboardKey.arrowDown || key == LogicalKeyboardKey.tab) {
+                // Move down (next student, same column)
+                _finishAndMove(_editingStudentIdx + 1, _editingColIdx, cols);
+              } else if (key == LogicalKeyboardKey.arrowUp) {
+                // Move up (prev student, same column)
+                _finishAndMove(_editingStudentIdx - 1, _editingColIdx, cols);
+              } else if (key == LogicalKeyboardKey.arrowRight) {
+                // Move right (same student, next column)
+                final nextCol = cols.indexWhere((c) => !c.isPlaceholder, _editingColIdx + 1);
+                if (nextCol >= 0) _finishAndMove(_editingStudentIdx, nextCol, cols);
+              } else if (key == LogicalKeyboardKey.arrowLeft) {
+                // Move left (same student, prev column)
+                for (int i = _editingColIdx - 1; i >= 0; i--) {
+                  if (!cols[i].isPlaceholder) { _finishAndMove(_editingStudentIdx, i, cols); break; }
+                }
+              } else if (key == LogicalKeyboardKey.escape) {
+                _cancelEditing();
+              }
+            },
+            child: TextField(
+              controller: _editController,
+              focusNode: _editFocus,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: hasError ? ColorUtils.error600 : widget.primaryColor),
+              decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 4), border: InputBorder.none),
+              onSubmitted: (_) => _finishAndMove(_editingStudentIdx + 1, _editingColIdx, cols),
+              onTapOutside: (_) => _finishAndMove(-1, -1, cols),
+            ),
+          ),
+        ),
+        if (hasError)
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Text(_errorMessage!, style: TextStyle(fontSize: 6, color: ColorUtils.error600, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+      ]),
+    );
+  }
+}
+
+class _ColDef {
+  final String type;
+  final int index;
+  final Map<String, dynamic> header;
+  final bool isPlaceholder;
+  const _ColDef({required this.type, required this.index, required this.header, this.isPlaceholder = false});
 }

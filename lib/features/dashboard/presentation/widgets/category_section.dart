@@ -1,61 +1,37 @@
-// Expandable category section for organizing dashboard navigation items.
-//
-// Like a Vue `<CollapsibleSection>` component or a Bootstrap accordion panel
-// in a Laravel dashboard sidebar. Groups related menu items under a collapsible
-// header with an animated expand/collapse transition. Each item renders as a
-// MenuItemCard (like a `<router-link>` card in Vue).
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/dashboard_typography.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
-/// Data class for a single menu item in a [CategorySection].
-/// Like a route definition object `{ title, icon, path }` in a Vue router config.
+/// Data class for a single menu item.
 class MenuItem {
   final String title;
+  final String? subtitle;
   final dynamic icon;
   final VoidCallback onTap;
   final int? badgeCount;
+  final Color? iconColor;
 
   MenuItem({
     required this.title,
     required this.icon,
     required this.onTap,
+    this.subtitle,
     this.badgeCount,
+    this.iconColor,
   });
 }
 
-/// Expandable category section for organized dashboard navigation.
-///
-/// Like a Vue `<CollapsePanel>` or Bootstrap `<b-collapse>` component.
-/// Groups menu items into collapsible categories with an animated
-/// expand/collapse transition. Each category has a colored header with
-/// icon and title, and expands to show a list of [MenuItemCard] widgets.
-///
-/// Uses `AnimationController` for smooth rotation of the arrow icon and
-/// `AnimatedSize` for the expand/collapse content area (like Vue's `<transition>`).
-class CategorySection extends StatefulWidget {
-  /// Title of the category
+/// Menu section with a label + grouped list rows.
+class CategorySection extends StatelessWidget {
   final String title;
-
-  /// Icon for the category
   final IconData icon;
-
-  /// Accent color for the category
   final Color accentColor;
-
-  /// List of menu items in this category
   final List<MenuItem> items;
-
-  /// Whether category starts expanded
-  final bool initiallyExpanded;
-
-  /// Key for persisting expansion state
-  final String? persistenceKey;
-
-  /// Primary color for menu item cards
   final Color? primaryColor;
+
+  // Kept for API compat but ignored
+  final bool initiallyExpanded;
+  final String? persistenceKey;
 
   const CategorySection({
     super.key,
@@ -69,147 +45,69 @@ class CategorySection extends StatefulWidget {
   });
 
   @override
-  State<CategorySection> createState() => _CategorySectionState();
-}
-
-class _CategorySectionState extends State<CategorySection>
-    with SingleTickerProviderStateMixin {
-  late bool _isExpanded;
-  late AnimationController _animationController;
-  late Animation<double> _iconRotation;
-
-  @override
-  void initState() {
-    super.initState();
-    _isExpanded = widget.initiallyExpanded;
-
-    _animationController = AnimationController(
-      duration: Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _iconRotation = Tween<double>(begin: 0.0, end: 0.5).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-
-    if (_isExpanded) {
-      _animationController.value = 1.0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  /// Toggles the expanded/collapsed state with animation.
-  /// Like Vue's `this.isExpanded = !this.isExpanded` triggering a `<transition>`.
-  void _toggleExpansion() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-      if (_isExpanded) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Category header
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: _toggleExpansion,
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: ColorUtils.categoryHeaderDecoration(
-                  accentColor: widget.accentColor,
-                  isExpanded: _isExpanded,
-                ),
-                child: Row(
-                  children: [
-                    Icon(widget.icon, size: 18, color: widget.accentColor),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        widget.title,
-                        style: DashboardTypography.categoryTitle(
-                          color: widget.accentColor,
-                        ),
-                      ),
-                    ),
-                    RotationTransition(
-                      turns: _iconRotation,
-                      child: Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 18,
-                        color: widget.accentColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+    final p = primaryColor ?? ColorUtils.corporateBlue600;
+
+    // Strip emoji prefix from title
+    final cleanTitle = title.replaceAll(RegExp(r'^[^\w]*\s*'), '');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section label
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: 10, top: 2),
+          child: Text(
+            cleanTitle,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate400,
+              letterSpacing: 0.8,
             ),
           ),
-
-          // Expandable content
-          AnimatedSize(
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            child: _isExpanded ? _buildGrid() : SizedBox.shrink(),
+        ),
+        // Grouped card with list rows
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: ColorUtils.slate100),
+            boxShadow: [
+              BoxShadow(
+                color: ColorUtils.slate900.withValues(alpha: 0.03),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGrid() {
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: widget.items.length,
-      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
-      itemBuilder: (context, index) {
-        final item = widget.items[index];
-        return _buildAnimatedCard(item, index);
-      },
-    );
-  }
-
-  Widget _buildAnimatedCard(MenuItem item, int index) {
-    // Staggered animation for cards
-    final delay = index * 50;
-
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 300 + delay),
-      tween: Tween(begin: 0.0, end: 1.0),
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 20 * (1 - value)),
-            child: child,
+          child: Column(
+            children: List.generate(items.length, (i) {
+              final item = items[i];
+              final isLast = i == items.length - 1;
+              return Column(
+                children: [
+                  MenuItemCard(
+                    title: item.title,
+                    subtitle: item.subtitle,
+                    icon: item.icon,
+                    onTap: item.onTap,
+                    badgeCount: item.badgeCount,
+                    primaryColor: p,
+                    iconColor: item.iconColor,
+                  ),
+                  if (!isLast)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 56),
+                      child: Divider(height: 1, color: ColorUtils.slate100),
+                    ),
+                ],
+              );
+            }),
           ),
-        );
-      },
-      child: MenuItemCard(
-        title: item.title,
-        icon: item.icon,
-        onTap: item.onTap,
-        badgeCount: item.badgeCount,
-        primaryColor: widget.primaryColor,
-      ),
+        ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 }

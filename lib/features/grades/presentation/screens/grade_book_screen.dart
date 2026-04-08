@@ -82,6 +82,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   final List<String> _allGradeTypeList = GradeConstants.allTypes;
   List<String> _filteredGradeTypeList = [];
   bool _isLoading = true;
+  bool _isCardView = true; // Default to mobile-friendly card view
+  final Set<String> _expandedStudents = {}; // Track expanded student cards
   final TextEditingController _searchController = TextEditingController();
 
   // Filter state — all types visible by default
@@ -566,6 +568,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
             filterKey: _filterKey,
             activeFilterCount: activeFilterCount,
             totalGradeTypes: _allGradeTypeList.length,
+            isCardView: _isCardView,
             onBack: () {
               if (widget.onBack != null) {
                 widget.onBack!();
@@ -576,6 +579,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
             onExport: () => _exportGrades(languageProvider),
             onFilter: () => _showFilterDialog(languageProvider),
             onRefresh: _loadData,
+            onToggleView: () => setState(() => _isCardView = !_isCardView),
           ),
 
           // Body
@@ -644,183 +648,76 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                   )
                 : Column(
                     children: [
-                      // Info bar (Pattern from spec)
+                      // Search bar
                       Container(
-                        margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
-                          border: Border.all(color: ColorUtils.slate200),
-                          boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: _getPrimaryColor().withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+                        color: ColorUtils.slate50,
+                        child: Column(children: [
+                          Container(
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: ColorUtils.slate200)),
+                            child: TextField(
+                              controller: _searchController,
+                              style: TextStyle(color: ColorUtils.slate900, fontSize: 13),
+                              decoration: InputDecoration(
+                                hintText: languageProvider.getTranslatedText({'en': 'Search students...', 'id': 'Cari siswa...'}),
+                                hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
+                                prefixIcon: Icon(Icons.search, color: ColorUtils.slate400, size: 18),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                isDense: true,
                               ),
-                              child: Icon(
-                                Icons.book_outlined,
-                                color: _getPrimaryColor(),
-                                size: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.subject['name'] ??
-                                        widget.subject['nama'] ??
-                                        '-',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: ColorUtils.slate900,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${languageProvider.getTranslatedText({'en': 'Types', 'id': 'Jenis'})}: ${_filteredGradeTypeList.map((j) => _getGradeTypeLabel(j, languageProvider)).join(', ')}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: ColorUtils.slate600,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Search Bar
-                      Container(
-                        margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
-                          border: Border.all(color: ColorUtils.slate200),
-                          boxShadow: ColorUtils.corporateShadow(elevation: 0.5),
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          style: TextStyle(color: ColorUtils.slate900),
-                          decoration: InputDecoration(
-                            hintText: languageProvider.getTranslatedText({
-                              'en': 'Search students...',
-                              'id': 'Cari siswa...',
-                            }),
-                            hintStyle: TextStyle(color: ColorUtils.slate400),
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: ColorUtils.slate400,
-                              size: 20,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
+                              onSubmitted: (_) => FocusScope.of(context).unfocus(),
                             ),
                           ),
-                          onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                        ),
+                          const SizedBox(height: 6),
+                          Row(children: [
+                            Text('${_filteredStudentList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}', style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500)),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(_filteredGradeTypeList.map((j) => _getGradeTypeLabel(j, languageProvider)).join(' · '), style: TextStyle(fontSize: 11, color: ColorUtils.slate400), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          ]),
+                        ]),
                       ),
-
-                      if (_filteredStudentList.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                          child: Row(
-                            children: [
-                              Text(
-                                '${_filteredStudentList.length} ${languageProvider.getTranslatedText({'en': 'students found', 'id': 'siswa ditemukan'})}',
-                                style: TextStyle(
-                                  color: ColorUtils.slate500,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              Spacer(),
-                              Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Tap cells to edit',
-                                  'id': 'Klik sel untuk mengedit',
-                                }),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: ColorUtils.slate400,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // Tabel Nilai
+                      // Content: card view or table view
                       Expanded(
                         child: _filteredStudentList.isEmpty
                             ? EmptyState(
-                                title: languageProvider.getTranslatedText({
-                                  'en': 'No students found',
-                                  'id': 'Tidak ada siswa',
-                                }),
+                                title: languageProvider.getTranslatedText({'en': 'No students found', 'id': 'Tidak ada siswa'}),
                                 subtitle: _searchController.text.isEmpty
-                                    ? languageProvider.getTranslatedText({
-                                        'en': 'No students in this class',
-                                        'id': 'Tidak ada siswa di kelas ini',
-                                      })
-                                    : languageProvider.getTranslatedText({
-                                        'en': 'No search results found',
-                                        'id': 'Tidak ditemukan hasil pencarian',
-                                      }),
+                                    ? languageProvider.getTranslatedText({'en': 'No students in this class', 'id': 'Tidak ada siswa di kelas ini'})
+                                    : languageProvider.getTranslatedText({'en': 'No search results found', 'id': 'Tidak ditemukan hasil pencarian'}),
                                 icon: Icons.people_outline,
                               )
-                            : Container(
-                                margin: const EdgeInsets.fromLTRB(
-                                  16,
-                                  0,
-                                  16,
-                                  16,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: const BorderRadius.all(Radius.circular(16)),
-                                  border: Border.all(
-                                    color: ColorUtils.slate200,
+                            : _isCardView
+                                ? _buildStudentCardList(languageProvider)
+                                : Container(
+                                    margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: ColorUtils.slate200)),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.vertical,
+                                      child: GradeTableWidget(
+                                        filteredStudentList: _filteredStudentList,
+                                        filteredGradeTypeList: _filteredGradeTypeList,
+                                        assessmentHeaders: _assessmentHeaders,
+                                        gradeList: _gradeList,
+                                        horizontalScrollController: _horizontalScrollController,
+                                        canEdit: _canEdit,
+                                        isReadOnly: _isReadOnly,
+                                        primaryColor: _getPrimaryColor(),
+                                        languageProvider: languageProvider,
+                                        onColumnTap: (type, header) => _showColumnOptions(type, header, languageProvider),
+                                        onCellTap: (student, type, header) => _openInputForm(student, type, languageProvider, header: header),
+                                        onAddAssessment: _addNewAssessment,
+                                        onInlineSave: (student, type, header, value) async {
+                                          final error = await ref.read(gradeBookControllerProvider).saveInlineGrade(
+                                            student, type, header, 'score', value, _gradeList, widget.teacher, widget.subject,
+                                          );
+                                          if (error == null) { _loadData(showLoading: false, useCache: false); }
+                                          return error;
+                                        },
+                                      ),
+                                    ),
                                   ),
-                                  boxShadow: ColorUtils.corporateShadow(
-                                    elevation: 1.0,
-                                  ),
-                                ),
-                                clipBehavior: Clip.antiAlias,
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.vertical,
-                                  child: GradeTableWidget(
-                                    filteredStudentList: _filteredStudentList,
-                                    filteredGradeTypeList: _filteredGradeTypeList,
-                                    assessmentHeaders: _assessmentHeaders,
-                                    gradeList: _gradeList,
-                                    horizontalScrollController: _horizontalScrollController,
-                                    canEdit: _canEdit,
-                                    isReadOnly: _isReadOnly,
-                                    primaryColor: _getPrimaryColor(),
-                                    languageProvider: languageProvider,
-                                    onColumnTap: (type, header) => _showColumnOptions(type, header, languageProvider),
-                                    onCellTap: (student, type, header) => _openInputForm(student, type, languageProvider, header: header),
-                                    onAddAssessment: _addNewAssessment,
-                                  ),
-                                ),
-                              ),
                       ),
                     ],
                   ),
@@ -838,6 +735,193 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
               child: Icon(Icons.add),
             ),
     );
+  }
+
+  // ── Student card list (mobile-friendly grade view) ──
+
+  Widget _buildStudentCardList(LanguageProvider lp) {
+    final p = _getPrimaryColor();
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 80),
+      itemCount: _filteredStudentList.length,
+      itemBuilder: (context, index) {
+        final student = _filteredStudentList[index];
+        final isExpanded = _expandedStudents.contains(student.id);
+
+        // Gather all grades for this student
+        final studentGrades = _gradeList.where((g) {
+          final gStudentId = (g['siswa_id'] ?? g['student_id'] ?? g['student_class_id'])?.toString();
+          return gStudentId == student.id || gStudentId == student.studentClassId;
+        }).toList();
+
+        // Calculate average
+        final scores = studentGrades.map((g) => g['score']).whereType<num>().toList();
+        final avg = scores.isNotEmpty ? scores.reduce((a, b) => a + b) / scores.length : null;
+
+        // Group by type for expanded view
+        final byType = <String, List<Map<String, dynamic>>>{};
+        for (final g in studentGrades) {
+          final type = (g['jenis'] ?? g['type'] ?? '').toString();
+          byType.putIfAbsent(type, () => []).add(g);
+        }
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: isExpanded ? p.withValues(alpha: 0.2) : ColorUtils.slate100),
+          ),
+          child: Column(children: [
+            // Student header — always visible
+            InkWell(
+              onTap: () => setState(() {
+                if (isExpanded) { _expandedStudents.remove(student.id); }
+                else { _expandedStudents.add(student.id); }
+              }),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                child: Row(children: [
+                  // Index
+                  Container(
+                    width: 28, height: 28,
+                    decoration: BoxDecoration(color: ColorUtils.slate100, borderRadius: BorderRadius.circular(7)),
+                    child: Center(child: Text('${index + 1}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: ColorUtils.slate600))),
+                  ),
+                  const SizedBox(width: 10),
+                  // Name
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(student.name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ColorUtils.slate800), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    if (student.studentNumber.isNotEmpty)
+                      Text(student.studentNumber, style: TextStyle(fontSize: 10, color: ColorUtils.slate400)),
+                  ])),
+                  // Average score
+                  if (avg != null) ...[
+                    Text(avg.toStringAsFixed(1), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _scoreColor(avg.toDouble()))),
+                    const SizedBox(width: 6),
+                  ],
+                  Icon(isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, size: 20, color: ColorUtils.slate400),
+                ]),
+              ),
+            ),
+
+            // Grade chips (collapsed preview)
+            if (!isExpanded && studentGrades.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(52, 0, 14, 10),
+                child: SizedBox(
+                  height: 26,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: studentGrades.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 4),
+                    itemBuilder: (_, i) {
+                      final g = studentGrades[i];
+                      final score = g['score'];
+                      final type = _shortTypeLabel((g['jenis'] ?? g['type'] ?? '').toString());
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: score != null ? _scoreColor((score as num).toDouble()).withValues(alpha: 0.08) : ColorUtils.slate50,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: score != null ? _scoreColor(score.toDouble()).withValues(alpha: 0.2) : ColorUtils.slate200),
+                        ),
+                        child: Text(
+                          score != null ? '$type ${_formatScore(score)}' : '$type -',
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: score != null ? _scoreColor(score.toDouble()) : ColorUtils.slate400),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+            // Expanded: full breakdown by type
+            if (isExpanded) ...[
+              Divider(height: 1, color: ColorUtils.slate100),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  ...byType.entries.map((entry) {
+                    final typeLabel = _getGradeTypeLabel(entry.key, lp);
+                    final grades = entry.value;
+                    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6, bottom: 4),
+                        child: Text(typeLabel, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: p, letterSpacing: 0.3)),
+                      ),
+                      ...grades.map((g) {
+                        final score = g['score'];
+                        final title = g['title']?.toString() ?? '';
+                        final date = g['tanggal']?.toString().split('T').first ?? '';
+                        final dateFormatted = date.length >= 10 ? '${date.substring(8, 10)}/${date.substring(5, 7)}' : date;
+
+                        return InkWell(
+                          onTap: () {
+                            // Find matching assessment header
+                            final assessmentId = g['assessment_id']?.toString();
+                            final type = (g['jenis'] ?? g['type'] ?? '').toString();
+                            final headers = _assessmentHeaders[type] ?? [];
+                            final header = headers.firstWhere(
+                              (h) => h['id']?.toString() == assessmentId,
+                              orElse: () => {'id': assessmentId, 'date': date, 'title': title},
+                            );
+                            _openInputForm(student, type, lp, header: header);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            child: Row(children: [
+                              const SizedBox(width: 8),
+                              Expanded(child: Row(children: [
+                                Text(title.isNotEmpty ? title : typeLabel, style: TextStyle(fontSize: 12, color: ColorUtils.slate700)),
+                                if (dateFormatted.isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  Text('($dateFormatted)', style: TextStyle(fontSize: 10, color: ColorUtils.slate400)),
+                                ],
+                              ])),
+                              Text(
+                                score != null ? _formatScore(score) : '-',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: score != null ? _scoreColor((score as num).toDouble()) : ColorUtils.slate400),
+                              ),
+                              if (_canEdit && !_isReadOnly) ...[
+                                const SizedBox(width: 4),
+                                Icon(Icons.edit_outlined, size: 12, color: ColorUtils.slate300),
+                              ],
+                            ]),
+                          ),
+                        );
+                      }),
+                    ]);
+                  }),
+                  if (studentGrades.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(lp.getTranslatedText({'en': 'No grades yet', 'id': 'Belum ada nilai'}), style: TextStyle(fontSize: 12, color: ColorUtils.slate400)),
+                    ),
+                ]),
+              ),
+            ],
+          ]),
+        );
+      },
+    );
+  }
+
+  Color _scoreColor(double score) {
+    if (score >= 80) return ColorUtils.success600;
+    if (score >= 60) return ColorUtils.warning600;
+    return ColorUtils.error600;
+  }
+
+  String _shortTypeLabel(String type) {
+    const labels = {'uh': 'UH', 'tugas': 'Tgs', 'uts': 'UTS', 'uas': 'UAS', 'pts': 'PTS', 'pas': 'PAS'};
+    return labels[type] ?? type.toUpperCase();
+  }
+
+  String _formatScore(dynamic score) {
+    if (score == null) return '-';
+    final d = (score is num) ? score.toDouble() : double.tryParse(score.toString()) ?? 0;
+    return d == d.truncateToDouble() ? d.toInt().toString() : d.toStringAsFixed(1);
   }
 
   Future<void> _checkAndShowTour() async {
@@ -1009,10 +1093,12 @@ class _GradeBookHeader extends StatelessWidget {
   final GlobalKey filterKey;
   final int activeFilterCount;
   final int totalGradeTypes;
+  final bool isCardView;
   final VoidCallback onBack;
   final VoidCallback onExport;
   final VoidCallback onFilter;
   final VoidCallback onRefresh;
+  final VoidCallback onToggleView;
 
   const _GradeBookHeader({
     required this.primaryColor,
@@ -1021,10 +1107,12 @@ class _GradeBookHeader extends StatelessWidget {
     required this.filterKey,
     required this.activeFilterCount,
     required this.totalGradeTypes,
+    required this.isCardView,
     required this.onBack,
     required this.onExport,
     required this.onFilter,
     required this.onRefresh,
+    required this.onToggleView,
   });
 
   @override
@@ -1090,17 +1178,23 @@ class _GradeBookHeader extends StatelessWidget {
               ],
             ),
           ),
+          // View toggle
+          GestureDetector(
+            onTap: onToggleView,
+            child: Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: const BorderRadius.all(Radius.circular(10))),
+              child: Icon(isCardView ? Icons.table_chart_rounded : Icons.view_agenda_rounded, color: Colors.white, size: 18),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
           // Export button
           GestureDetector(
             onTap: onExport,
             child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: const Icon(Icons.download, color: Colors.white, size: 20),
+              width: 36, height: 36,
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: const BorderRadius.all(Radius.circular(10))),
+              child: const Icon(Icons.download_rounded, color: Colors.white, size: 18),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),

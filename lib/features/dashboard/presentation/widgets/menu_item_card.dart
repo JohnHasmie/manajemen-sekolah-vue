@@ -1,155 +1,98 @@
-// Professional menu item card for dashboard navigation.
-//
-// Like a Vue `<MenuItemCard>` or a `<router-link>` styled as a card in a
-// Laravel admin panel sidebar/dashboard. Each card has an icon, title,
-// optional badge count, and a right-arrow indicator. Similar to a Blade
-// component `<x-menu-card :title="..." :icon="..." :href="..." />`.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
-/// A professional dashboard navigation card with icon, title, badge, and arrow.
-///
-/// Like a Vue `<MenuItemCard>` / `<router-link>` card with props:
-/// - [title] - menu item label
-/// - [icon] - can be `IconData` or emoji `String` (like a Vue dynamic component)
-/// - [onTap] - navigation callback (like `@click` / `$router.push`)
-/// - [badgeCount] - optional notification count badge (like a Vue `<v-badge>`)
-/// - [primaryColor] - accent color for the icon container
-///
-/// Replaces the old `buildDashboardCard` function with improved styling.
+/// Full-width list row menu item — icon, title, subtitle, badge, chevron.
 class MenuItemCard extends StatelessWidget {
-  /// Title of the menu item
   final String title;
-
-  /// Icon to display (can be IconData or String for emoji)
+  final String? subtitle;
   final dynamic icon;
-
-  /// Callback when card is tapped
   final VoidCallback onTap;
-
-  /// Optional badge count for notifications
   final int? badgeCount;
-
-  /// Primary color for the card accent
   final Color? primaryColor;
+  final Color? iconColor;
 
   const MenuItemCard({
     super.key,
     required this.title,
     required this.icon,
     required this.onTap,
+    this.subtitle,
     this.badgeCount,
     this.primaryColor,
+    this.iconColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final effectivePrimaryColor = primaryColor ?? ColorUtils.corporateBlue600;
+    final p = iconColor ?? primaryColor ?? ColorUtils.corporateBlue600;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        child: Container(
-          height: 66,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.all(Radius.circular(14)),
-            border: Border.all(color: ColorUtils.slate200, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: effectivePrimaryColor.withValues(alpha: 0.08),
-                blurRadius: 12,
-                offset: Offset(0, 3),
-              ),
-              BoxShadow(
-                color: ColorUtils.slate900.withValues(alpha: 0.06),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              // Icon container with border
+              // Icon
               Container(
-                width: 44,
-                height: 44,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: effectivePrimaryColor.withValues(alpha: 0.12),
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  border: Border.all(
-                    color: effectivePrimaryColor.withValues(alpha: 0.15),
-                    width: 1,
-                  ),
+                  color: p.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: _buildIconWidget(icon, effectivePrimaryColor),
+                child: _buildIconWidget(icon, p),
               ),
-              const SizedBox(width: AppSpacing.md),
-
-              // Title and badge
+              const SizedBox(width: 14),
+              // Title + subtitle
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: ColorUtils.slate900,
-                              letterSpacing: -0.1,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        // Notification badge
-                        if (badgeCount != null && badgeCount! > 0)
-                          Container(
-                            margin: const EdgeInsets.only(left: 8),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: ColorUtils.error600,
-                              borderRadius: const BorderRadius.all(Radius.circular(12)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: ColorUtils.error600.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                  blurRadius: 4,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              badgeCount! > 99 ? '99+' : badgeCount.toString(),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                height: 1,
-                              ),
-                            ),
-                          ),
-                      ],
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: ColorUtils.slate800,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 1),
+                      Text(
+                        subtitle!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorUtils.slate400,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                 ),
               ),
-
-              // Arrow indicator
-              Icon(Icons.chevron_right, size: 20, color: ColorUtils.slate400),
+              // Badge
+              if (badgeCount != null && badgeCount! > 0) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: ColorUtils.error600,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    badgeCount! > 99 ? '99+' : badgeCount.toString(),
+                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700, height: 1.1),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              // Chevron
+              Icon(Icons.chevron_right_rounded, size: 20, color: ColorUtils.slate300),
             ],
           ),
         ),
@@ -159,11 +102,10 @@ class MenuItemCard extends StatelessWidget {
 
   Widget _buildIconWidget(dynamic iconData, Color color) {
     if (iconData is IconData) {
-      return Icon(iconData, size: 24, color: color);
+      return Icon(iconData, size: 20, color: color);
     } else if (iconData is String) {
-      // Handle emoji
-      return Center(child: Text(iconData, style: TextStyle(fontSize: 24)));
+      return Center(child: Text(iconData, style: const TextStyle(fontSize: 18)));
     }
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 }
