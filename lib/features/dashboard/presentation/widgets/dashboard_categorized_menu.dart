@@ -22,7 +22,7 @@ import 'package:manajemensekolah/features/class_activity/presentation/screens/pa
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/category_section.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
+
 import 'package:manajemensekolah/features/finance/presentation/screens/admin_finance_screen.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/parent_billing_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
@@ -119,23 +119,16 @@ class DashboardCategorizedMenu extends ConsumerWidget {
         ],
       );
     } else if (effectiveRole == 'wali') {
-      // Parent role: simple list without categories
-      final items = _getParentMenuItems(context, ref);
       return Column(
-        children: items
-            .map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: MenuItemCard(
-                  title: item.title,
-                  icon: item.icon,
-                  onTap: item.onTap,
-                  badgeCount: item.badgeCount,
-                  primaryColor: primaryColor,
-                ),
-              ),
-            )
-            .toList(),
+        children: [
+          CategorySection(
+            title: '🏠 MENU',
+            icon: Icons.family_restroom,
+            accentColor: ColorUtils.slate700,
+            primaryColor: primaryColor,
+            items: _getParentMenuItems(context, ref),
+          ),
+        ],
       );
     }
 
