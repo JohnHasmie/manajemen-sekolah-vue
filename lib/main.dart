@@ -320,8 +320,21 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
         'id': 'Manajemen Sekolah',
       }),
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF16A34A), brightness: Brightness.light),
+        datePickerTheme: DatePickerThemeData(
+          headerBackgroundColor: const Color(0xFF16A34A),
+          headerForegroundColor: Colors.white,
+          dayOverlayColor: WidgetStatePropertyAll(const Color(0xFF16A34A).withValues(alpha: 0.1)),
+          todayBorder: const BorderSide(color: Color(0xFF16A34A)),
+          todayForegroundColor: const WidgetStatePropertyAll(Color(0xFF16A34A)),
+        ),
+        timePickerTheme: TimePickerThemeData(
+          dialHandColor: const Color(0xFF16A34A),
+          hourMinuteColor: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF16A34A).withValues(alpha: 0.1) : Colors.grey.shade200),
+          hourMinuteTextColor: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF16A34A) : Colors.black87),
+        ),
       ),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

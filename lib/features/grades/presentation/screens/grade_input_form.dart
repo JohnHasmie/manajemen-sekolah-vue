@@ -8,6 +8,7 @@
 // Contains:
 // - [GradeInputForm] -- individual grade input/edit dialog
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -101,11 +102,10 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showModernDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      title: 'Pilih Tanggal Nilai',
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {

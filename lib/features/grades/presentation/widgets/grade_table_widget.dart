@@ -388,41 +388,17 @@ class _GradeTableWidgetState extends State<GradeTableWidget> {
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         SizedBox(
           height: hasError ? 22 : 30,
-          child: KeyboardListener(
-            focusNode: FocusNode(),
-            onKeyEvent: (event) {
-              if (event is! KeyDownEvent) return;
-              final key = event.logicalKey;
-              if (key == LogicalKeyboardKey.arrowDown || key == LogicalKeyboardKey.tab) {
-                // Move down (next student, same column)
-                _finishAndMove(_editingStudentIdx + 1, _editingColIdx, cols);
-              } else if (key == LogicalKeyboardKey.arrowUp) {
-                // Move up (prev student, same column)
-                _finishAndMove(_editingStudentIdx - 1, _editingColIdx, cols);
-              } else if (key == LogicalKeyboardKey.arrowRight) {
-                // Move right (same student, next column)
-                final nextCol = cols.indexWhere((c) => !c.isPlaceholder, _editingColIdx + 1);
-                if (nextCol >= 0) _finishAndMove(_editingStudentIdx, nextCol, cols);
-              } else if (key == LogicalKeyboardKey.arrowLeft) {
-                // Move left (same student, prev column)
-                for (int i = _editingColIdx - 1; i >= 0; i--) {
-                  if (!cols[i].isPlaceholder) { _finishAndMove(_editingStudentIdx, i, cols); break; }
-                }
-              } else if (key == LogicalKeyboardKey.escape) {
-                _cancelEditing();
-              }
-            },
-            child: TextField(
-              controller: _editController,
-              focusNode: _editFocus,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: hasError ? ColorUtils.error600 : widget.primaryColor),
-              decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 4), border: InputBorder.none),
-              onSubmitted: (_) => _finishAndMove(_editingStudentIdx + 1, _editingColIdx, cols),
-              onTapOutside: (_) => _finishAndMove(-1, -1, cols),
-            ),
+          child: TextField(
+            controller: _editController,
+            focusNode: _editFocus,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: hasError ? ColorUtils.error600 : widget.primaryColor),
+            decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 4), border: InputBorder.none),
+            onSubmitted: (_) => _finishAndMove(_editingStudentIdx + 1, _editingColIdx, cols),
+            onTapOutside: (_) => _finishAndMove(-1, -1, cols),
           ),
         ),
         if (hasError)

@@ -101,7 +101,7 @@ class TeacherSelectionSheet extends ConsumerWidget {
           // Like a v-for loop rendering one <TeacherCard> per teacher.
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, MediaQuery.of(context).padding.bottom + AppSpacing.lg),
               itemCount: teacherList.length,
               itemBuilder: (context, index) {
                 final teacher =

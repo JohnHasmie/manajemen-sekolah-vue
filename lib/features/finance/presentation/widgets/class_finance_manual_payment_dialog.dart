@@ -6,6 +6,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -217,10 +218,10 @@ class ClassFinanceManualPaymentDialog extends StatelessWidget {
                         icon: Icons.calendar_today,
                         primaryColor: primaryColor,
                         onTap: () async {
-                          final date = await showDatePicker(
+                          final date = await showModernDatePicker(
                             context: context,
                             initialDate: DateTime.now(),
-                            firstDate: DateTime(2020),
+                            title: 'Pilih Tanggal Bayar',
                             lastDate: DateTime.now(),
                           );
                           if (date != null) {

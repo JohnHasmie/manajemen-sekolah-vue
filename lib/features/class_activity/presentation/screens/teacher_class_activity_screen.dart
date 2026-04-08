@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
+import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -102,7 +103,15 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _timelineScrollController.addListener(_onTimelineScroll);
+    _loadViewPref();
     _loadUserData();
+  }
+
+  Future<void> _loadViewPref() async {
+    try {
+      final c = await LocalCacheService.load('kegiatan_view_preference');
+      if (c is Map && mounted) setState(() => _isTimelineView = c['is_timeline'] ?? false);
+    } catch (_) {}
   }
 
   @override
@@ -348,6 +357,7 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
 
   void _toggleView() {
     setState(() => _isTimelineView = !_isTimelineView);
+    LocalCacheService.save('kegiatan_view_preference', {'is_timeline': _isTimelineView});
     if (_isTimelineView && _timelineActivities.isEmpty) {
       _refreshTimeline();
     }

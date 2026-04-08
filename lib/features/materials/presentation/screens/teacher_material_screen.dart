@@ -319,9 +319,17 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
     AppLogger.debug('material', 'Teacher data received: ${widget.teacher}');
     AppLogger.debug('material', 'Teacher ID: ${widget.teacher['id']}');
 
+    _loadViewPref();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
+  }
+
+  Future<void> _loadViewPref() async {
+    try {
+      final c = await LocalCacheService.load('materi_view_preference');
+      if (c is Map && mounted) setState(() => _isListView = c['is_list_view'] ?? false);
+    } catch (_) {}
   }
 
   @override
@@ -1482,7 +1490,7 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
           ])),
           // Toggle view button (card ↔ list)
           if (!_hasActiveFilter) GestureDetector(
-            onTap: () => setState(() => _isListView = !_isListView),
+            onTap: () { setState(() => _isListView = !_isListView); LocalCacheService.save('materi_view_preference', {'is_list_view': _isListView}); },
             child: Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
               child: Icon(_isListView ? Icons.grid_view_rounded : Icons.view_list_rounded, color: Colors.white, size: 18)),
           ),

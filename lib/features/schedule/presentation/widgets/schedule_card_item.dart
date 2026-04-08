@@ -623,7 +623,7 @@ class _ScheduleQuickSummary extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -683,6 +683,7 @@ class _ScheduleQuickSummary extends StatelessWidget {
                 : languageProvider.getTranslatedText({'en': 'No material data', 'id': 'Belum ada data materi'}),
             onTap: onMaterialTap,
           ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],
       ),
     );
@@ -878,7 +879,7 @@ class _AttendanceDetailSheet extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
         ],
       ),
     );
