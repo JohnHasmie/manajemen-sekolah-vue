@@ -72,7 +72,7 @@ class _DashboardAccountSheetState
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(AppSpacing.xl),
+      margin: EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, MediaQuery.of(context).padding.bottom + AppSpacing.xl),
       child: Wrap(
         children: [
           Container(

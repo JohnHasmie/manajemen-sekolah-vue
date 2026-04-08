@@ -7,6 +7,7 @@
 // interaction fires a callback so the parent (AttendancePage) keeps the
 // single source of truth.  In Laravel terms this is a Blade partial.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -134,11 +135,10 @@ class AttendanceInputForm extends StatelessWidget {
               Expanded(
                 child: InkWell(
                   onTap: () async {
-                    final picked = await showDatePicker(
+                    final picked = await showModernDatePicker(
                       context: context,
                       initialDate: selectedDate,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
+                      title: 'Pilih Tanggal Presensi',
                     );
                     if (picked != null) onDatePicked(picked);
                   },

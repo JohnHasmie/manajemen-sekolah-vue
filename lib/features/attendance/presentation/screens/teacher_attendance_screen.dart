@@ -147,6 +147,7 @@ class AttendancePageState extends ConsumerState<AttendancePage> {
       }
     });
 
+    _loadViewPref();
     if (widget.embedded) {
       _teacherId = widget.teacher['id']?.toString() ?? '';
       _teacherNama = widget.teacher['nama']?.toString() ?? widget.teacher['name']?.toString() ?? '';
@@ -154,6 +155,13 @@ class AttendancePageState extends ConsumerState<AttendancePage> {
     } else {
       _loadUserData();
     }
+  }
+
+  Future<void> _loadViewPref() async {
+    try {
+      final c = await LocalCacheService.load('absensi_view_preference');
+      if (c is Map && mounted) setState(() => _isTimelineView = c['is_timeline'] ?? false);
+    } catch (_) {}
   }
 
   @override
@@ -380,6 +388,7 @@ class AttendancePageState extends ConsumerState<AttendancePage> {
 
   void _toggleView() {
     setState(() => _isTimelineView = !_isTimelineView);
+    LocalCacheService.save('absensi_view_preference', {'is_timeline': _isTimelineView});
     if (_isTimelineView && _timelineAttendance.isEmpty) {
       _refreshTimeline();
     }

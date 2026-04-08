@@ -8,6 +8,7 @@
 // (or pass null) to add a new one.
 
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -463,21 +464,12 @@ class _StudentAddEditSheetContentState
                                   ? DateTime.parse(
                                       s['date_of_birth'].toString())
                                   : DateTime.now();
-                          final DateTime? picked = await showDatePicker(
+                          final DateTime? picked = await showModernDatePicker(
                             context: context,
                             initialDate: initialDate,
+                            title: 'Pilih Tanggal Lahir',
                             firstDate: DateTime(1900),
                             lastDate: DateTime.now(),
-                            builder: (ctx, child) => Theme(
-                              data: Theme.of(ctx).copyWith(
-                                colorScheme: ColorScheme.light(
-                                  primary: widget.primaryColor,
-                                  onPrimary: Colors.white,
-                                  onSurface: Colors.black,
-                                ),
-                              ),
-                              child: child!,
-                            ),
                           );
                           if (picked != null) {
                             setState(() {

@@ -17,11 +17,14 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
+import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/grades/presentation/controllers/grade_book_controller.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/grade_input_form.dart';
-import 'package:manajemensekolah/features/grades/presentation/screens/grade_input_form_new.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -33,7 +36,7 @@ import 'package:manajemensekolah/features/grades/presentation/widgets/grade_asse
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_column_options_sheet.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_confirm_delete_dialog.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_edit_table_widget.dart';
-import 'package:manajemensekolah/features/grades/presentation/widgets/grade_filter_dialog.dart';
+
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_table_widget.dart';
 
 /// The grade book table page (Step 2) -- displays and edits student grades
@@ -115,16 +118,23 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   // Tour properties
-  final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _addGradeKey = GlobalKey();
 
   /// Like Vue's `mounted()` -- loads grade data and sets up search listener.
   @override
   void initState() {
     super.initState();
+    _loadViewPref();
     _loadData();
     _updateFilteredGradeTypes();
     _searchController.addListener(_filterStudents);
+  }
+
+  Future<void> _loadViewPref() async {
+    try {
+      final c = await LocalCacheService.load('buku_nilai_view_preference');
+      if (c is Map && mounted) setState(() => _isCardView = c['is_card_view'] ?? true);
+    } catch (_) {}
   }
 
   /// Like Vue's `beforeUnmount()` -- disposes all controllers and focus nodes.
@@ -220,24 +230,6 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
           .read(gradeBookControllerProvider)
           .computeFilteredGradeTypes(_allGradeTypeList, _gradeTypeFilter);
     });
-  }
-
-  void _showFilterDialog(LanguageProvider languageProvider) {
-    showGradeFilterSheet(
-      context: context,
-      allGradeTypes: _allGradeTypeList,
-      gradeTypeFilter: _gradeTypeFilter,
-      primaryColor: _getPrimaryColor(),
-      getLabel: (type) => _getGradeTypeLabel(type, languageProvider),
-      onFilterChanged: (updated) {
-        setState(() {
-          for (final entry in updated.entries) {
-            _gradeTypeFilter[entry.key] = entry.value;
-          }
-          _updateFilteredGradeTypes();
-        });
-      },
-    );
   }
 
   Map<String, dynamic>? _getGradeForStudentAndHeader(
@@ -494,11 +486,10 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
     // Screen owns the date-picker dialog (UI concern); controller owns the
     // data manipulation. Like Vue: component handles the modal, composable
     // updates the reactive list.
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showModernDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      title: 'Pilih Tanggal Penilaian',
     );
 
     final updated = ref
@@ -531,55 +522,38 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   }
 
   void _openNewInputForm(LanguageProvider languageProvider) {
-    AppNavigator.push(
-      context,
-      GradeInputFormNew(
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _GradeInputDialog(
         teacher: widget.teacher,
         subject: widget.subject,
-        studentList: _studentList,
+        studentList: _filteredStudentList,
+        primaryColor: _getPrimaryColor(),
+        languageProvider: languageProvider,
+        onSaved: () => _loadData(useCache: false),
       ),
-    ).then((_) {
-      _loadData(useCache: false);
-    });
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
-    final activeFilterCount = _gradeTypeFilter.values.where((v) => v).length;
-
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: GestureDetector(
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Column(
           children: [
-          // Pattern #7 Gradient Header — extracted to _GradeBookHeader
           _GradeBookHeader(
             primaryColor: _getPrimaryColor(),
-            title: languageProvider.getTranslatedText({
-              'en': 'Grade Book',
-              'id': 'Buku Nilai',
-            }),
-            subtitle:
-                '${widget.subject['name'] ?? widget.subject['nama'] ?? ''}'
-                ' - '
-                '${widget.classData['name'] ?? widget.classData['nama'] ?? ''}',
-            filterKey: _filterKey,
-            activeFilterCount: activeFilterCount,
-            totalGradeTypes: _allGradeTypeList.length,
+            title: languageProvider.getTranslatedText({'en': 'Grade Book', 'id': 'Buku Nilai'}),
+            subtitle: '${widget.subject['name'] ?? widget.subject['nama'] ?? ''} - ${widget.classData['name'] ?? widget.classData['nama'] ?? ''}',
             isCardView: _isCardView,
-            onBack: () {
-              if (widget.onBack != null) {
-                widget.onBack!();
-              } else {
-                AppNavigator.pop(context);
-              }
-            },
+            onBack: () { if (widget.onBack != null) { widget.onBack!(); } else { AppNavigator.pop(context); } },
             onExport: () => _exportGrades(languageProvider),
-            onFilter: () => _showFilterDialog(languageProvider),
-            onRefresh: _loadData,
-            onToggleView: () => setState(() => _isCardView = !_isCardView),
+            onToggleView: () { setState(() => _isCardView = !_isCardView); LocalCacheService.save('buku_nilai_view_preference', {'is_card_view': _isCardView}); },
           ),
 
           // Body
@@ -669,55 +643,88 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                               onSubmitted: (_) => FocusScope.of(context).unfocus(),
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 8),
+                          // Filter chips + student count
                           Row(children: [
-                            Text('${_filteredStudentList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}', style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500)),
+                            Text('${_filteredStudentList.length} siswa', style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500)),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(_filteredGradeTypeList.map((j) => _getGradeTypeLabel(j, languageProvider)).join(' · '), style: TextStyle(fontSize: 11, color: ColorUtils.slate400), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                          ]),
-                        ]),
-                      ),
-                      // Content: card view or table view
-                      Expanded(
-                        child: _filteredStudentList.isEmpty
-                            ? EmptyState(
-                                title: languageProvider.getTranslatedText({'en': 'No students found', 'id': 'Tidak ada siswa'}),
-                                subtitle: _searchController.text.isEmpty
-                                    ? languageProvider.getTranslatedText({'en': 'No students in this class', 'id': 'Tidak ada siswa di kelas ini'})
-                                    : languageProvider.getTranslatedText({'en': 'No search results found', 'id': 'Tidak ditemukan hasil pencarian'}),
-                                icon: Icons.people_outline,
-                              )
-                            : _isCardView
-                                ? _buildStudentCardList(languageProvider)
-                                : Container(
-                                    margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: ColorUtils.slate200)),
-                                    clipBehavior: Clip.antiAlias,
-                                    child: SingleChildScrollView(
-                                      scrollDirection: Axis.vertical,
-                                      child: GradeTableWidget(
-                                        filteredStudentList: _filteredStudentList,
-                                        filteredGradeTypeList: _filteredGradeTypeList,
-                                        assessmentHeaders: _assessmentHeaders,
-                                        gradeList: _gradeList,
-                                        horizontalScrollController: _horizontalScrollController,
-                                        canEdit: _canEdit,
-                                        isReadOnly: _isReadOnly,
-                                        primaryColor: _getPrimaryColor(),
-                                        languageProvider: languageProvider,
-                                        onColumnTap: (type, header) => _showColumnOptions(type, header, languageProvider),
-                                        onCellTap: (student, type, header) => _openInputForm(student, type, languageProvider, header: header),
-                                        onAddAssessment: _addNewAssessment,
-                                        onInlineSave: (student, type, header, value) async {
-                                          final error = await ref.read(gradeBookControllerProvider).saveInlineGrade(
-                                            student, type, header, 'score', value, _gradeList, widget.teacher, widget.subject,
-                                          );
-                                          if (error == null) { _loadData(showLoading: false, useCache: false); }
-                                          return error;
-                                        },
+                            Expanded(child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(children: _allGradeTypeList.map((type) {
+                                final isActive = _gradeTypeFilter[type] ?? true;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: GestureDetector(
+                                    onTap: () => setState(() {
+                                      _gradeTypeFilter[type] = !isActive;
+                                      _updateFilteredGradeTypes();
+                                    }),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: isActive ? _getPrimaryColor().withValues(alpha: 0.1) : Colors.white,
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(color: isActive ? _getPrimaryColor().withValues(alpha: 0.3) : ColorUtils.slate200),
+                                      ),
+                                      child: Text(
+                                        _getGradeTypeLabel(type, languageProvider),
+                                        style: TextStyle(fontSize: 10, fontWeight: isActive ? FontWeight.w600 : FontWeight.w400, color: isActive ? _getPrimaryColor() : ColorUtils.slate400),
                                       ),
                                     ),
                                   ),
+                                );
+                              }).toList()),
+                            )),
+                          ]),
+                        ]),
+                      ),
+                      // Content with pull-to-refresh
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: () => _loadData(useCache: false),
+                          color: _getPrimaryColor(),
+                          child: _filteredStudentList.isEmpty
+                              ? ListView(children: [
+                                  const SizedBox(height: 100),
+                                  EmptyState(
+                                    title: languageProvider.getTranslatedText({'en': 'No students found', 'id': 'Tidak ada siswa'}),
+                                    subtitle: _searchController.text.isEmpty
+                                        ? languageProvider.getTranslatedText({'en': 'No students in this class', 'id': 'Tidak ada siswa di kelas ini'})
+                                        : languageProvider.getTranslatedText({'en': 'No search results found', 'id': 'Tidak ditemukan hasil pencarian'}),
+                                    icon: Icons.people_outline,
+                                  ),
+                                ])
+                              : _isCardView
+                                  ? _buildStudentCardList(languageProvider)
+                                  : ListView(children: [
+                                      Container(
+                                        margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: ColorUtils.slate200)),
+                                        clipBehavior: Clip.antiAlias,
+                                        child: GradeTableWidget(
+                                          filteredStudentList: _filteredStudentList,
+                                          filteredGradeTypeList: _filteredGradeTypeList,
+                                          assessmentHeaders: _assessmentHeaders,
+                                          gradeList: _gradeList,
+                                          horizontalScrollController: _horizontalScrollController,
+                                          canEdit: _canEdit,
+                                          isReadOnly: _isReadOnly,
+                                          primaryColor: _getPrimaryColor(),
+                                          languageProvider: languageProvider,
+                                          onColumnTap: (type, header) => _showColumnOptions(type, header, languageProvider),
+                                          onCellTap: (student, type, header) => _openInputForm(student, type, languageProvider, header: header),
+                                          onAddAssessment: _addNewAssessment,
+                                          onInlineSave: (student, type, header, value) async {
+                                            final error = await ref.read(gradeBookControllerProvider).saveInlineGrade(
+                                              student, type, header, 'score', value, _gradeList, widget.teacher, widget.subject,
+                                            );
+                                            if (error == null) { _loadData(showLoading: false, useCache: false); }
+                                            return error;
+                                          },
+                                        ),
+                                      ),
+                                    ]),
+                        ),
                       ),
                     ],
                   ),
@@ -989,44 +996,6 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
   List<TargetFocus> _createTourTargets() {
     final List<TargetFocus> targets = [];
 
-    targets.add(
-      TargetFocus(
-        identify: "FilterGrades",
-        keyTarget: _filterKey,
-        alignSkip: Alignment.bottomRight,
-        shape: ShapeLightFocus.RRect,
-        radius: 12,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Filter Jenis Nilai",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20.0,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Text(
-                      "Gunakan tombol ini untuk menyaring kolom penilaian berdasarkan jenis (misal: hanya tampilkan UTS & UAS saja).",
-                      style: TextStyle(color: Colors.white, fontSize: 14),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
     if (_canEdit && !_isReadOnly) {
       targets.add(
         TargetFocus(
@@ -1090,28 +1059,18 @@ class _GradeBookHeader extends StatelessWidget {
   final Color primaryColor;
   final String title;
   final String subtitle;
-  final GlobalKey filterKey;
-  final int activeFilterCount;
-  final int totalGradeTypes;
   final bool isCardView;
   final VoidCallback onBack;
   final VoidCallback onExport;
-  final VoidCallback onFilter;
-  final VoidCallback onRefresh;
   final VoidCallback onToggleView;
 
   const _GradeBookHeader({
     required this.primaryColor,
     required this.title,
     required this.subtitle,
-    required this.filterKey,
-    required this.activeFilterCount,
-    required this.totalGradeTypes,
     required this.isCardView,
     required this.onBack,
     required this.onExport,
-    required this.onFilter,
-    required this.onRefresh,
     required this.onToggleView,
   });
 
@@ -1197,66 +1156,279 @@ class _GradeBookHeader extends StatelessWidget {
               child: const Icon(Icons.download_rounded, color: Colors.white, size: 18),
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          // Filter button with badge
-          Stack(
-            key: filterKey,
-            children: [
-              GestureDetector(
-                onTap: onFilter,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Grade Input Dialog — DraggableScrollableSheet for adding new grades
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _GradeInputDialog extends StatefulWidget {
+  final Map<String, dynamic> teacher;
+  final Map<String, dynamic> subject;
+  final List<Student> studentList;
+  final Color primaryColor;
+  final LanguageProvider languageProvider;
+  final VoidCallback onSaved;
+
+  const _GradeInputDialog({
+    required this.teacher, required this.subject, required this.studentList,
+    required this.primaryColor, required this.languageProvider, required this.onSaved,
+  });
+
+  @override
+  State<_GradeInputDialog> createState() => _GradeInputDialogState();
+}
+
+class _GradeInputDialogState extends State<_GradeInputDialog> {
+  String _selectedType = 'uh';
+  DateTime _selectedDate = DateTime.now();
+  final _titleController = TextEditingController();
+  final Map<String, TextEditingController> _scoreControllers = {};
+  final Map<String, FocusNode> _scoreFocusNodes = {};
+  bool _isSaving = false;
+
+  final _types = ['uh', 'tugas', 'uts', 'uas', 'pts', 'pas'];
+  final _typeLabels = {'uh': 'UH', 'tugas': 'Tugas', 'uts': 'UTS', 'uas': 'UAS', 'pts': 'PTS', 'pas': 'PAS'};
+  static const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  static const _days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+
+  @override
+  void initState() {
+    super.initState();
+    for (final s in widget.studentList) {
+      _scoreControllers[s.id] = TextEditingController();
+      _scoreFocusNodes[s.id] = FocusNode();
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    for (final c in _scoreControllers.values) { c.dispose(); }
+    for (final f in _scoreFocusNodes.values) { f.dispose(); }
+    super.dispose();
+  }
+
+  String _formatDate(DateTime d) => '${_days[d.weekday - 1]}, ${d.day} ${_months[d.month - 1]} ${d.year}';
+
+  Future<void> _submit() async {
+    final entries = _scoreControllers.entries.where((e) => e.value.text.trim().isNotEmpty).toList();
+    if (entries.isEmpty) return;
+
+    setState(() => _isSaving = true);
+    try {
+      int saved = 0;
+      final dateStr = '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
+
+      for (final entry in entries) {
+        final student = widget.studentList.firstWhere((s) => s.id == entry.key);
+        final score = int.tryParse(entry.value.text.trim());
+        if (score == null) continue;
+
+        await dioClient.post('/grades', data: {
+          'student_id': student.id,
+          'student_class_id': student.studentClassId ?? student.id,
+          'teacher_id': widget.teacher['id'],
+          'subject_id': widget.subject['id'],
+          'type': _selectedType,
+          'score': score,
+          'date': dateStr,
+          'title': _titleController.text.isNotEmpty ? _titleController.text : null,
+        });
+        saved++;
+      }
+
+      if (mounted) {
+        Navigator.pop(context);
+        widget.onSaved();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$saved nilai berhasil disimpan'), backgroundColor: ColorUtils.success600));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorUtils.getFriendlyMessage(e)), backgroundColor: ColorUtils.error600));
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _focusStudent(int index) {
+    if (index >= 0 && index < widget.studentList.length) {
+      _scoreFocusNodes[widget.studentList[index].id]?.requestFocus();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.primaryColor;
+    final subjectName = widget.subject['name'] ?? widget.subject['nama'] ?? '-';
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.8,
+      minChildSize: 0.5,
+      maxChildSize: 0.96,
+      expand: false,
+      builder: (context, scrollController) => Container(
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        child: Column(children: [
+          // ── Header ──
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [p, p.withValues(alpha: 0.85)]),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(children: [
+              Container(margin: const EdgeInsets.only(top: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 12, 16),
+                child: Row(children: [
+                  Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.add_chart_rounded, color: Colors.white, size: 18)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('Input Nilai Baru', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text(subjectName, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
+                  ])),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                      child: const Icon(Icons.close, color: Colors.white, size: 18)),
                   ),
-                  child: const Icon(
-                    Icons.filter_list_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
+                ]),
               ),
-              if (activeFilterCount < totalGradeTypes)
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: ColorUtils.error600,
-                      borderRadius: const BorderRadius.all(Radius.circular(6)),
-                    ),
-                    constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
-                    child: Text(
-                      '${totalGradeTypes - activeFilterCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-            ],
+            ]),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          // Refresh button
-          GestureDetector(
-            onTap: onRefresh,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
+
+          // ── Form body ──
+          Expanded(child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Type selector chips
+              Text('Jenis Penilaian', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600)),
+              const SizedBox(height: 8),
+              Wrap(spacing: 6, runSpacing: 6, children: _types.map((t) {
+                final selected = t == _selectedType;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedType = t),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: selected ? p.withValues(alpha: 0.1) : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: selected ? p.withValues(alpha: 0.3) : ColorUtils.slate200),
+                    ),
+                    child: Text(_typeLabels[t] ?? t.toUpperCase(), style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.w400, color: selected ? p : ColorUtils.slate500)),
+                  ),
+                );
+              }).toList()),
+
+              const SizedBox(height: 16),
+              // Date card (matching Tanggal Kegiatan pattern)
+              GestureDetector(
+                onTap: () async {
+                  final d = await showModernDatePicker(context: context, initialDate: _selectedDate, title: 'Pilih Tanggal Penilaian');
+                  if (d != null) setState(() => _selectedDate = d);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(color: ColorUtils.slate50, borderRadius: BorderRadius.circular(12)),
+                  child: Row(children: [
+                    Container(width: 34, height: 34, decoration: BoxDecoration(color: p.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                      child: Icon(Icons.calendar_today_rounded, size: 17, color: p)),
+                    const SizedBox(width: 10),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('Tanggal', style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 1),
+                      Text(_formatDate(_selectedDate), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: ColorUtils.slate800)),
+                    ])),
+                    Icon(Icons.chevron_right_rounded, size: 18, color: ColorUtils.slate300),
+                  ]),
+                ),
               ),
-              child: const Icon(Icons.refresh, color: Colors.white, size: 20),
+              const SizedBox(height: 10),
+              // Title
+              TextField(
+                controller: _titleController,
+                style: const TextStyle(fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: 'Judul penilaian (opsional)',
+                  hintStyle: TextStyle(fontSize: 12, color: ColorUtils.slate400),
+                  filled: true, fillColor: ColorUtils.slate50,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+
+              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(color: ColorUtils.slate100, height: 1)),
+
+              // Student score inputs
+              Text('Masukkan Nilai (0-100)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600)),
+              const SizedBox(height: 10),
+
+              ...widget.studentList.asMap().entries.map((e) {
+                final i = e.key;
+                final student = e.value;
+                final ctrl = _scoreControllers[student.id]!;
+                final focusNode = _scoreFocusNodes[student.id]!;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(color: i.isEven ? Colors.white : ColorUtils.slate50, borderRadius: BorderRadius.circular(8)),
+                  child: Row(children: [
+                    SizedBox(width: 22, child: Text('${i + 1}', style: TextStyle(fontSize: 10, color: ColorUtils.slate400, fontWeight: FontWeight.w600))),
+                    Expanded(child: Text(student.name, style: TextStyle(fontSize: 13, color: ColorUtils.slate800), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    SizedBox(
+                      width: 64,
+                      child: TextField(
+                        controller: ctrl,
+                        focusNode: focusNode,
+                        keyboardType: TextInputType.number,
+                        textInputAction: i < widget.studentList.length - 1 ? TextInputAction.next : TextInputAction.done,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: p),
+                        decoration: InputDecoration(
+                          hintText: '-',
+                          hintStyle: TextStyle(color: ColorUtils.slate300, fontWeight: FontWeight.w400),
+                          filled: true, fillColor: Colors.white,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ColorUtils.slate200)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ColorUtils.slate200)),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: p, width: 1.5)),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                          isDense: true,
+                        ),
+                        onSubmitted: (_) => _focusStudent(i + 1),
+                      ),
+                    ),
+                  ]),
+                );
+              }),
+
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+            ],
+          )),
+
+          // ── Bottom bar ──
+          Container(
+            padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
+            decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: ColorUtils.slate100))),
+            child: SizedBox(
+              width: double.infinity, height: 46,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _submit,
+                style: ElevatedButton.styleFrom(backgroundColor: p, foregroundColor: Colors.white, elevation: 0, disabledBackgroundColor: ColorUtils.slate300, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: _isSaving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Simpan Nilai', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              ),
             ),
           ),
-        ],
+        ]),
       ),
     );
   }

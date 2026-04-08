@@ -10,6 +10,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -677,11 +678,10 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet> {
     bool isStartDate,
     Function(DateTime) onDateSelected,
   ) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showModernDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      title: isStartDate ? 'Pilih Tanggal Mulai' : 'Pilih Tanggal Selesai',
     );
 
     if (picked != null) {

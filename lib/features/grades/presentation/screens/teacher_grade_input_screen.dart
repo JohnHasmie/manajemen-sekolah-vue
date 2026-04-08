@@ -9,6 +9,8 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/grades/data/grade_service.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/grade_book_screen.dart';
 
@@ -36,9 +38,22 @@ class GradePageState extends ConsumerState<GradePage> {
   Color get _p => ColorUtils.getRoleColor('guru');
 
   @override
-  void initState() { super.initState(); _loadData(); }
+  void initState() { super.initState(); _loadViewPreference(); _loadData(); }
   @override
   void dispose() { _searchController.dispose(); super.dispose(); }
+
+  Future<void> _loadViewPreference() async {
+    try {
+      final cached = await LocalCacheService.load('nilai_view_preference');
+      if (cached is Map && mounted) {
+        setState(() => _isTableView = cached['is_table_view'] ?? false);
+      }
+    } catch (e) { AppLogger.error('grades', 'Error loading view pref: $e'); }
+  }
+
+  void _saveViewPreference() {
+    LocalCacheService.save('nilai_view_preference', {'is_table_view': _isTableView});
+  }
 
   Future<void> _loadData() async {
     try {
@@ -140,7 +155,7 @@ class GradePageState extends ConsumerState<GradePage> {
             Text(lp.getTranslatedText({'en': 'Manage student grades', 'id': 'Kelola nilai siswa'}), style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9))),
           ])),
           GestureDetector(
-            onTap: () => setState(() => _isTableView = !_isTableView),
+            onTap: () { setState(() => _isTableView = !_isTableView); _saveViewPreference(); },
             child: Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
               child: Icon(_isTableView ? Icons.view_agenda_rounded : Icons.table_chart_rounded, color: Colors.white, size: 18)),
           ),
@@ -328,7 +343,13 @@ class GradePageState extends ConsumerState<GradePage> {
     return RefreshIndicator(onRefresh: _refresh, color: _p, child: _isTableView ? _buildTableView(data) : ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
       itemCount: data.length,
-      itemBuilder: (_, i) => _classCard(data[i]),
+      itemBuilder: (_, i) => TweenAnimationBuilder<double>(
+        duration: Duration(milliseconds: 300 + (i * 60)),
+        tween: Tween(begin: 0.0, end: 1.0),
+        curve: Curves.easeOut,
+        builder: (_, v, child) => Opacity(opacity: v, child: Transform.translate(offset: Offset(0, 16 * (1 - v)), child: child)),
+        child: _classCard(data[i]),
+      ),
     ));
   }
 
@@ -339,18 +360,27 @@ class GradePageState extends ConsumerState<GradePage> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: ColorUtils.slate100)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+      ),
       child: Column(children: [
         // Class header
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.all(14),
           child: Row(children: [
-            Text(cn, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ColorUtils.slate900)),
+            Text('Kelas: $cn', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ColorUtils.slate900)),
             const Spacer(),
-            Text('$studentCount siswa', style: TextStyle(fontSize: 11, color: ColorUtils.slate400)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: _p.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: Text('$studentCount siswa', style: TextStyle(fontSize: 10, color: _p, fontWeight: FontWeight.w600)),
+            ),
           ]),
         ),
-        Divider(height: 1, color: ColorUtils.slate100),
+        Divider(height: 1, color: ColorUtils.slate200),
         ...subjects.asMap().entries.map((e) {
           final sub = e.value;
           final isLast = e.key == subjects.length - 1;
@@ -421,11 +451,25 @@ class GradePageState extends ConsumerState<GradePage> {
                     ]),
                   );
                 }),
-                if (minScore != null && maxScore != null)
-                  Text('${minScore.toStringAsFixed(0)}–${maxScore.toStringAsFixed(0)}', style: TextStyle(fontSize: 9, color: ColorUtils.slate400)),
               ]),
 
-              // Row 3: Distribution bar
+              // Row 3: Terendah / Tertinggi
+              if (minScore != null && maxScore != null) ...[
+                const SizedBox(height: 6),
+                Row(children: [
+                  Icon(Icons.arrow_downward_rounded, size: 10, color: ColorUtils.error600),
+                  const SizedBox(width: 2),
+                  Text('Terendah ', style: TextStyle(fontSize: 9, color: ColorUtils.slate400)),
+                  Text(minScore.toStringAsFixed(0), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: ColorUtils.error600)),
+                  const SizedBox(width: 12),
+                  Icon(Icons.arrow_upward_rounded, size: 10, color: ColorUtils.success600),
+                  const SizedBox(width: 2),
+                  Text('Tertinggi ', style: TextStyle(fontSize: 9, color: ColorUtils.slate400)),
+                  Text(maxScore.toStringAsFixed(0), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: ColorUtils.success600)),
+                ]),
+              ],
+
+              // Row 4: Distribution bar
               if (distTotal > 0) ...[
                 const SizedBox(height: 6),
                 ClipRRect(

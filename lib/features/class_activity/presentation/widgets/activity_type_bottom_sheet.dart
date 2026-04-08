@@ -205,7 +205,7 @@ class ActivityTypeBottomSheet extends StatelessWidget {
               ],
             ),
           ),
-          const SafeArea(top: false, child: SizedBox(height: 12)),
+          SafeArea(top: false, child: SizedBox(height: MediaQuery.of(context).padding.bottom > 0 ? 0 : 12)),
         ],
       ),
     );

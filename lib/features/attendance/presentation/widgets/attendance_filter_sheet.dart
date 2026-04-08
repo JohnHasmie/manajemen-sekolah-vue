@@ -409,7 +409,7 @@ class _AttendanceFilterSheetState extends State<AttendanceFilterSheet> {
 
   Widget _buildFooter() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: ColorUtils.slate200)),
