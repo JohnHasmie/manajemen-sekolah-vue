@@ -209,11 +209,12 @@ class _CompactTextField extends StatelessWidget {
         labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 12),
         isDense: true,
         filled: true,
-        fillColor: ColorUtils.slate50,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: ColorUtils.slate200)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: ColorUtils.slate200)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: p, width: 1.5)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+
       ),
       onChanged: onChanged,
     );

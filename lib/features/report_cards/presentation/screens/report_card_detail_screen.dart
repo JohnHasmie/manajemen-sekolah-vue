@@ -707,13 +707,14 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
           decoration: InputDecoration(
             isDense: true,
             filled: true,
-            fillColor: ColorUtils.slate50,
+            fillColor: Colors.white,
             hintText: hint,
             hintStyle: TextStyle(fontSize: 12, color: ColorUtils.slate400),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: ColorUtils.slate200)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: ColorUtils.slate200)),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: p, width: 1.5)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+
           ),
         ),
       ],
