@@ -20,7 +20,7 @@ class ReportCardGradeTab extends StatefulWidget {
 class _ReportCardGradeTabState extends State<ReportCardGradeTab> {
   final ScrollController _scrollController = ScrollController();
   final Map<int, GlobalKey> _subjectKeys = {};
-  int? _activeFilterIndex; // null = show all, int = show only that subject
+  int? _activeFilterIndex;
 
   @override
   void initState() {
@@ -33,7 +33,6 @@ class _ReportCardGradeTabState extends State<ReportCardGradeTab> {
   @override
   void didUpdateWidget(covariant ReportCardGradeTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Add keys for any new subjects
     for (int i = 0; i < widget.subjects.length; i++) {
       _subjectKeys.putIfAbsent(i, GlobalKey.new);
     }
@@ -48,11 +47,9 @@ class _ReportCardGradeTabState extends State<ReportCardGradeTab> {
   void _onChipTap(int index) {
     setState(() {
       if (_activeFilterIndex == index) {
-        // Deselect → show all, scroll to subject
         _activeFilterIndex = null;
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSubject(index));
       } else {
-        // Select → filter to just this subject
         _activeFilterIndex = index;
       }
     });
@@ -67,14 +64,33 @@ class _ReportCardGradeTabState extends State<ReportCardGradeTab> {
 
   bool _hasScore(Map<String, dynamic> subject) {
     final score = subject['knowledge_score']?.toString() ?? '';
-    return score.isNotEmpty && score != '0' && score != '';
+    return score.isNotEmpty && score != '0';
+  }
+
+  /// Auto-fill nilai from recap_final_score and mark unsaved
+  void _applyRecapSuggestion(int index) {
+    final subject = widget.subjects[index];
+    final recapFinal = _parseNum(subject['recap_final_score']);
+    if (recapFinal != null) {
+      final scoreStr = recapFinal == recapFinal.roundToDouble()
+          ? recapFinal.toInt().toString()
+          : recapFinal.toStringAsFixed(1);
+      widget.onSubjectChanged(index, 'knowledge_score', scoreStr);
+      widget.onMarkUnsaved();
+      setState(() {});
+    }
+  }
+
+  double? _parseNum(dynamic value) {
+    if (value == null) return null;
+    final d = double.tryParse(value.toString());
+    return (d == null || d == 0) ? null : d;
   }
 
   @override
   Widget build(BuildContext context) {
     final p = ColorUtils.getRoleColor('guru');
 
-    // Determine visible subjects
     final List<int> visibleIndices;
     if (_activeFilterIndex != null && _activeFilterIndex! < widget.subjects.length) {
       visibleIndices = [_activeFilterIndex!];
@@ -178,6 +194,7 @@ class _ReportCardGradeTabState extends State<ReportCardGradeTab> {
               widget.onSubjectChanged(index, field, value);
               widget.onMarkUnsaved();
             },
+            onApplyRecap: () => _applyRecapSuggestion(index),
           );
         },
       )),
@@ -186,29 +203,34 @@ class _ReportCardGradeTabState extends State<ReportCardGradeTab> {
 }
 
 // ---------------------------------------------------------------------------
-// Subject card with recap summary + input fields
+// Subject card with recap reference + input fields
 // ---------------------------------------------------------------------------
 
 class _SubjectCard extends StatelessWidget {
   final Map<String, dynamic> subject;
   final Color roleColor;
   final void Function(String field, String value) onScoreChanged;
+  final VoidCallback onApplyRecap;
 
   const _SubjectCard({
     super.key,
     required this.subject,
     required this.roleColor,
     required this.onScoreChanged,
+    required this.onApplyRecap,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Recap data
     final recapFinal = _numStr(subject['recap_final_score']);
     final recapUhAvg = _numStr(subject['recap_uh_avg']);
     final recapUts = _numStr(subject['recap_uts']);
     final recapUas = _numStr(subject['recap_uas']);
     final hasRecapData = recapFinal != null || recapUhAvg != null || recapUts != null || recapUas != null;
+
+    // Check if knowledge_score is empty (can be auto-filled)
+    final currentScore = subject['knowledge_score']?.toString() ?? '';
+    final scoreEmpty = currentScore.isEmpty || currentScore == '0';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -234,22 +256,46 @@ class _SubjectCard extends StatelessWidget {
           ]),
         ),
 
-        // Recap summary row (UH avg, UTS, UAS)
+        // Recap reference section — shows grade breakdown from rekap nilai
         if (hasRecapData)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
             decoration: BoxDecoration(
-              color: ColorUtils.slate50,
+              color: ColorUtils.info600.withValues(alpha: 0.03),
               border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
             ),
-            child: Row(children: [
-              Icon(Icons.analytics_outlined, size: 13, color: ColorUtils.slate400),
-              const SizedBox(width: 6),
-              Text('Rekap:', style: TextStyle(fontSize: 10, color: ColorUtils.slate400, fontWeight: FontWeight.w500)),
-              const SizedBox(width: 8),
-              if (recapUhAvg != null) _RecapChip(label: 'Rata UH', value: recapUhAvg),
-              if (recapUts != null) _RecapChip(label: 'UTS', value: recapUts),
-              if (recapUas != null) _RecapChip(label: 'UAS', value: recapUas),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Icon(Icons.auto_awesome, size: 13, color: ColorUtils.info600),
+                const SizedBox(width: 5),
+                Text('Referensi Nilai dari Rekap', style: TextStyle(fontSize: 10, color: ColorUtils.info600, fontWeight: FontWeight.w600)),
+                const Spacer(),
+                // "Gunakan" button to auto-fill
+                if (scoreEmpty && recapFinal != null)
+                  GestureDetector(
+                    onTap: onApplyRecap,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: roleColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(Icons.arrow_downward, size: 10, color: roleColor),
+                        const SizedBox(width: 3),
+                        Text('Gunakan', style: TextStyle(fontSize: 10, color: roleColor, fontWeight: FontWeight.w600)),
+                      ]),
+                    ),
+                  ),
+              ]),
+              const SizedBox(height: 8),
+              // Score breakdown grid
+              Row(children: [
+                if (recapUhAvg != null) Expanded(child: _RecapRefItem(label: 'Rata-rata UH', value: recapUhAvg, color: ColorUtils.info600)),
+                if (recapUts != null) Expanded(child: _RecapRefItem(label: 'UTS', value: recapUts, color: ColorUtils.warning600)),
+                if (recapUas != null) Expanded(child: _RecapRefItem(label: 'UAS', value: recapUas, color: ColorUtils.error600)),
+                if (recapFinal != null) Expanded(child: _RecapRefItem(label: 'Nilai Akhir', value: recapFinal, color: ColorUtils.success600)),
+              ]),
             ]),
           ),
 
@@ -293,28 +339,29 @@ class _SubjectCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Recap summary chip
+// Recap reference item — single score with label
 // ---------------------------------------------------------------------------
 
-class _RecapChip extends StatelessWidget {
+class _RecapRefItem extends StatelessWidget {
   final String label;
   final String value;
+  final Color color;
 
-  const _RecapChip({required this.label, required this.value});
+  const _RecapRefItem({required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: ColorUtils.slate200),
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text('$label ', style: TextStyle(fontSize: 9, color: ColorUtils.slate400, fontWeight: FontWeight.w500)),
-        Text(value, style: TextStyle(fontSize: 10, color: ColorUtils.slate700, fontWeight: FontWeight.w700)),
+      child: Column(children: [
+        Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(fontSize: 9, color: color.withValues(alpha: 0.7), fontWeight: FontWeight.w500)),
       ]),
     );
   }
@@ -354,13 +401,15 @@ class _AspectRow extends StatelessWidget {
         Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ColorUtils.slate500)),
       ]),
       const SizedBox(height: 8),
+      // Score + Predicate row
       Row(children: [
-        SizedBox(width: 70, child: _CompactTextField(label: 'Nilai', initialValue: scoreValue, isNumber: true, onChanged: onScoreChanged)),
+        SizedBox(width: 80, child: _CompactTextField(label: 'Nilai', initialValue: scoreValue, isNumber: true, onChanged: onScoreChanged)),
         const SizedBox(width: 8),
-        SizedBox(width: 70, child: _CompactTextField(label: 'Predikat', initialValue: predicateValue, onChanged: onPredicateChanged)),
-        const SizedBox(width: 8),
-        Expanded(child: _CompactTextField(label: 'Deskripsi', initialValue: descriptionValue, onChanged: onDescChanged)),
+        SizedBox(width: 80, child: _CompactTextField(label: 'Predikat', initialValue: predicateValue, onChanged: onPredicateChanged)),
       ]),
+      const SizedBox(height: 8),
+      // Description full width
+      _CompactTextField(label: 'Deskripsi', initialValue: descriptionValue, onChanged: onDescChanged),
     ]);
   }
 }
