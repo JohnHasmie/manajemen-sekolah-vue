@@ -60,6 +60,30 @@ class GradeService {
     return [];
   }
 
+  /// Fetches classes grouped with subjects + recap completion stats.
+  static Future<List<dynamic>> getTeacherRecapSummary({
+    required String teacherId,
+    String? academicYearId,
+    String view = 'mengajar',
+    String? classId,
+    String? subjectId,
+  }) async {
+    final queryParams = <String, dynamic>{'teacher_id': teacherId, 'view': view};
+    if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
+    if (classId != null) queryParams['class_id'] = classId;
+    if (subjectId != null) queryParams['subject_id'] = subjectId;
+
+    final response = await dioClient.get(
+      ApiEndpoints.gradeRecapsTeacherSummary,
+      queryParameters: queryParams,
+    );
+
+    final result = response.data;
+    if (result is Map && result['data'] is List) return result['data'];
+    if (result is List) return result;
+    return [];
+  }
+
   /// Fetches grades filtered by subject, with optional academic year and limit.
   static Future<List<dynamic>> getGradesBySubject(
     String subjectId, {

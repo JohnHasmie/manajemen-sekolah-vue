@@ -1673,41 +1673,41 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen> {
   }
 
   Widget _buildFilterChips(LanguageProvider lp) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
-        if (_selectedClassId != null) ...[
-          _buildChip('Kelas: ${_selectedClassName ?? '-'}', () {
+    final p = _getPrimaryColor();
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(children: [
+        Icon(Icons.filter_alt_outlined, size: 14, color: p),
+        const SizedBox(width: 6),
+        Expanded(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
+          if (_selectedClassId != null) _buildFilterTag(_selectedClassName ?? '-', () {
             setState(() { _selectedClassId = null; _selectedClassName = null; _selectedSubject = null; _subjectList = []; _chapterMaterialList = []; _subChapterMaterialList = []; });
           }),
-          const SizedBox(width: 6),
-        ],
-        if (_selectedSubject != null) ...[
-          _buildChip(_getSelectedSubjectName(), () {
+          if (_selectedSubject != null) _buildFilterTag(_getSelectedSubjectName(), () {
             setState(() { _selectedSubject = null; _chapterMaterialList = []; _subChapterMaterialList = []; });
           }),
-          const SizedBox(width: 6),
-        ],
-        if (_hasActiveFilter)
-          GestureDetector(
-            onTap: () { setState(() { _selectedClassId = null; _selectedClassName = null; _selectedSubject = null; _subjectList = []; _chapterMaterialList = []; _subChapterMaterialList = []; }); },
-            child: Text(lp.getTranslatedText({'en': 'Clear All', 'id': 'Hapus Semua'}), style: TextStyle(fontSize: 12, color: ColorUtils.error600, fontWeight: FontWeight.w600)),
-          ),
-      ])),
+        ]))),
+        GestureDetector(
+          onTap: () { setState(() { _selectedClassId = null; _selectedClassName = null; _selectedSubject = null; _subjectList = []; _chapterMaterialList = []; _subChapterMaterialList = []; }); },
+          child: Text(lp.getTranslatedText({'en': 'Clear', 'id': 'Hapus'}), style: TextStyle(fontSize: 11, color: ColorUtils.error600, fontWeight: FontWeight.w600)),
+        ),
+      ]),
     );
   }
 
-  Widget _buildChip(String label, VoidCallback onRemove) {
+  Widget _buildFilterTag(String label, VoidCallback onRemove) {
     final p = _getPrimaryColor();
-    return GestureDetector(onTap: onRemove, child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: p.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: p.withValues(alpha: 0.3))),
+    return Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: p.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(label, style: TextStyle(fontSize: 12, color: p, fontWeight: FontWeight.w500)),
+        Text(label, style: TextStyle(fontSize: 11, color: p, fontWeight: FontWeight.w600)),
         const SizedBox(width: 4),
-        Icon(Icons.close, size: 14, color: p),
+        GestureDetector(onTap: onRemove, child: Icon(Icons.close, size: 12, color: p)),
       ]),
-    ));
+    );
   }
 
   Widget _buildContent(LanguageProvider languageProvider) {

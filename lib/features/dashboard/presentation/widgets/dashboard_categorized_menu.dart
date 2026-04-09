@@ -27,7 +27,7 @@ import 'package:manajemensekolah/features/finance/presentation/screens/admin_fin
 import 'package:manajemensekolah/features/finance/presentation/screens/parent_billing_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
-import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_recap_screen.dart';
+import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_recap_overview.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teacher_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
@@ -324,7 +324,7 @@ class DashboardCategorizedMenu extends ConsumerWidget {
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, GradeRecapPage(teacher: teacherData));
+          AppNavigator.push(context, GradeRecapOverviewPage(teacher: teacherData));
         },
       ),
       MenuItem(

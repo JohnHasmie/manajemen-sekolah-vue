@@ -3,7 +3,7 @@
 // mutations (resize, add/delete chapter, open dialogs) flow through callbacks.
 
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
+
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 
@@ -106,212 +106,100 @@ class GradeRecapTableView extends StatelessWidget {
 
   // ── Constants ──────────────────────────────────────────────────────────────
 
-  static const double _gradeCellWidth = 110;
-  static const double _finalScoreWidth = 80;
-  static const double _predikatWidth = 80;
-  static const double _deskripsiWidth = 280;
+  static const double _gradeCellWidth = 90;
+  static const double _finalScoreWidth = 60;
+  static const double _predikatWidth = 56;
+  static const double _deskripsiWidth = 160;
+
+  Color _scoreColor(double s) {
+    if (s >= 80) return ColorUtils.success600;
+    if (s >= 60) return ColorUtils.warning600;
+    return ColorUtils.error600;
+  }
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const SkeletonListLoading(
-        itemCount: 5,
-        infoTagCount: 3,
-        showActions: false,
-      );
+      return const SkeletonListLoading(itemCount: 5, infoTagCount: 3, showActions: false);
     }
 
     final int numChapters = chapters.isNotEmpty ? chapters.length : 1;
-    final double leftWidth = studentInfoWidth;
+    final double leftWidth = 120;
 
     final double rightSideWidth =
         (numChapters * _gradeCellWidth) +
-        (_gradeCellWidth * 2) + // UTS + UAS
-        (_finalScoreWidth * 2) + // Final + Skill
+        (_gradeCellWidth * 2) +
+        (_finalScoreWidth * 2) +
         _predikatWidth +
-        _deskripsiWidth +
-        60; // extra safety margin
+        _deskripsiWidth;
 
-    final leftSide = _buildLeftColumn(leftWidth);
-    final rightSide = _buildRightSide(rightSideWidth, numChapters);
-
-    return Column(
-      children: [
-        _buildActionBar(),
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.all(Radius.circular(16)),
-                boxShadow: ColorUtils.corporateShadow(),
-                border: Border.all(color: ColorUtils.slate200),
-              ),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.all(Radius.circular(16)),
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      leftSide,
-                      Expanded(child: rightSide),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Action bar (top: "Grade Data" label + "Add Bab" button) ───────────────
-
-  Widget _buildActionBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Colors.white,
-      child: Row(
-        children: [
-          Text(
-            labels['gradeData'] ?? 'Grade Data',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: ColorUtils.slate700,
-            ),
-          ),
+    return Column(children: [
+      // Action bar
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        color: Colors.white,
+        child: Row(children: [
+          Text(labels['gradeData'] ?? 'Data Nilai', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ColorUtils.slate700)),
           const Spacer(),
-          OutlinedButton.icon(
+          GestureDetector(
             key: addChapterKey,
-            onPressed: onAddChapter,
-            icon: const Icon(Icons.add, size: 16),
-            label: Text(
-              labels['addBab'] ?? 'Add Bab',
-              style: const TextStyle(fontSize: 12),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: primaryColor,
-              side: BorderSide(color: primaryColor),
-              shape: RoundedRectangleBorder(
-                borderRadius: const BorderRadius.all(Radius.circular(8)),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+            onTap: onAddChapter,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.add, size: 14, color: primaryColor),
+                const SizedBox(width: 4),
+                Text(labels['addBab'] ?? 'Tambah Bab', style: TextStyle(fontSize: 11, color: primaryColor, fontWeight: FontWeight.w600)),
+              ]),
             ),
           ),
-        ],
+        ]),
       ),
-    );
+      // Table
+      Expanded(child: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          _buildLeftColumn(leftWidth),
+          Expanded(child: _buildRightSide(rightSideWidth, numChapters)),
+        ])),
+      )),
+    ]);
   }
 
-  // ── Frozen left column (student name + NIS) ────────────────────────────────
+  // ── Frozen left column ──
 
   Widget _buildLeftColumn(double leftWidth) {
     return Container(
       width: leftWidth,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          right: BorderSide(color: ColorUtils.slate200, width: 2),
+      decoration: BoxDecoration(color: Colors.white, border: Border(right: BorderSide(color: ColorUtils.slate200))),
+      child: Column(children: [
+        // Header
+        Container(
+          height: 52, width: leftWidth,
+          padding: const EdgeInsets.only(left: 10),
+          alignment: Alignment.centerLeft,
+          color: primaryColor,
+          child: const Text('Siswa', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Colors.white)),
         ),
-      ),
-      child: Column(
-        children: [
-          // Header with drag-to-resize handle
-          Stack(
-            children: [
-              Container(
-                height: 60,
-                width: leftWidth,
-                padding: const EdgeInsets.only(left: 16, right: 8),
-                alignment: Alignment.centerLeft,
-                decoration: BoxDecoration(
-                  color: ColorUtils.slate50,
-                  border: Border(
-                    bottom: BorderSide(color: ColorUtils.slate200),
-                  ),
-                ),
-                child: Text(
-                  labels['studentInfo'] ?? 'STUDENT INFO',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: ColorUtils.slate700,
-                    fontSize: 12,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // Drag handle — parent rebuilds with new width via onWidthChanged
-              Positioned(
-                right: 0,
-                top: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onHorizontalDragUpdate: (details) =>
-                      onWidthChanged(leftWidth + details.delta.dx),
-                  child: Container(
-                    width: 10,
-                    color: Colors.transparent,
-                    child: Center(
-                      child: Container(
-                        width: 2,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: ColorUtils.slate300,
-                          borderRadius: const BorderRadius.all(Radius.circular(1)),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          // Student rows (frozen, only name + NIS visible here)
-          ...tableData.map(
-            (row) => Container(
-              height: 75,
-              width: leftWidth,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.centerLeft,
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: ColorUtils.slate200),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    row['nama'] ?? '-',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: ColorUtils.slate800,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'NIS: ${row['nis'] ?? '-'}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: ColorUtils.slate500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+        // Student rows
+        ...tableData.asMap().entries.map((e) {
+          final i = e.key;
+          final row = e.value;
+          return Container(
+            height: 44, width: leftWidth,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: i.isEven ? Colors.white : ColorUtils.slate50,
+              border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
             ),
-          ),
-        ],
-      ),
+            child: Row(children: [
+              SizedBox(width: 18, child: Text('${i + 1}', style: TextStyle(fontSize: 10, color: ColorUtils.slate400, fontWeight: FontWeight.w600))),
+              Expanded(child: Text(row['nama'] ?? '-', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: ColorUtils.slate800), maxLines: 1, overflow: TextOverflow.ellipsis)),
+            ]),
+          );
+        }),
+      ]),
     );
   }
 
@@ -332,287 +220,117 @@ class GradeRecapTableView extends StatelessWidget {
     );
   }
 
-  // ── Header row ─────────────────────────────────────────────────────────────
+  // ── Header row (green, matching Buku Nilai) ──
 
   Widget _buildHeaderRow(int numChapters) {
     return Container(
-      height: 60,
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
-      ),
-      child: Row(
-        children: [
-          // Dynamic Bab column headers
-          for (int i = 0; i < numChapters; i++)
-            _buildBabHeader(i),
+      height: 52,
+      color: primaryColor,
+      child: Row(children: [
+        for (int i = 0; i < numChapters; i++) _buildBabHeader(i),
+        _buildColHeader('UTS', _gradeCellWidth, onTap: () => onBulkSelect('uts', null)),
+        _buildColHeader('UAS', _gradeCellWidth, onTap: () => onBulkSelect('uas', null)),
+        _buildColHeader(labels['finalLabel'] ?? 'Final', _finalScoreWidth),
+        _buildColHeader(labels['skillLabel'] ?? 'Skill', _finalScoreWidth),
+        _buildColHeader(labels['gradeLabel'] ?? 'Nilai', _predikatWidth),
+        _buildColHeader(labels['descLabel'] ?? 'Desk.', _deskripsiWidth),
+      ]),
+    );
+  }
 
-          // PTS/UTS header
-          _buildFixedHeader(
-            label: 'PTS/UTS',
-            onTap: () => onBulkSelect('uts', null),
-          ),
-
-          // PAS/UAS header
-          _buildFixedHeader(
-            label: 'PAS/UAS',
-            onTap: () => onBulkSelect('uas', null),
-          ),
-
-          // Final score (read-only label)
-          _buildLabelHeader(labels['finalLabel'] ?? 'Final', _finalScoreWidth),
-
-          // Skill score (read-only label)
-          _buildLabelHeader(
-            labels['skillLabel'] ?? 'Skill',
-            _finalScoreWidth,
-          ),
-
-          // Predikat (read-only label)
-          _buildLabelHeader(
-            labels['gradeLabel'] ?? 'Grade',
-            _predikatWidth,
-          ),
-
-          // Deskripsi (read-only label, left-aligned)
-          Container(
-            width: _deskripsiWidth,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            alignment: Alignment.centerLeft,
-            child: Text(
-              labels['descLabel'] ?? 'Description',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: ColorUtils.slate700,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
+  Widget _buildColHeader(String label, double width, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: width,
+        decoration: BoxDecoration(border: Border(right: BorderSide(color: Colors.white.withValues(alpha: 0.12)))),
+        child: Center(child: Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis)),
       ),
     );
   }
 
   Widget _buildBabHeader(int i) {
-    final chapterTitle = chapters.length > i
-        ? (chapters[i]['judul_bab'] ??
-              chapters[i]['judul'] ??
-              chapters[i]['title'] ??
-              'Bab ${i + 1}')
-        : 'Bab ${i + 1}';
-
-    return Container(
-      width: _gradeCellWidth,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      alignment: Alignment.center,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            child: InkWell(
-              onTap: () => onBulkSelect('bab', i),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: Text(
-                      chapterTitle,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: ColorUtils.slate700,
-                        fontSize: 11,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Icon(
-                    Icons.edit_outlined,
-                    size: 12,
-                    color: ColorUtils.slate400,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          InkWell(
-            onTap: () => onDeleteChapter(i),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 4.0),
-              child: Icon(
-                Icons.close,
-                size: 14,
-                color: Colors.red.withValues(alpha: 0.7),
-              ),
-            ),
-          ),
-        ],
+    final title = chapters.length > i ? (chapters[i]['judul_bab'] ?? chapters[i]['judul'] ?? chapters[i]['title'] ?? 'Bab ${i + 1}') : 'Bab ${i + 1}';
+    return InkWell(
+      onTap: () => onBulkSelect('bab', i),
+      child: Container(
+        width: _gradeCellWidth,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(border: Border(right: BorderSide(color: Colors.white.withValues(alpha: 0.12)))),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Row(children: [
+            Expanded(child: Text(title, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis)),
+            GestureDetector(onTap: () => onDeleteChapter(i), child: Icon(Icons.close, size: 12, color: Colors.white.withValues(alpha: 0.5))),
+          ]),
+        ]),
       ),
     );
   }
 
-  Widget _buildFixedHeader({
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      width: _gradeCellWidth,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      alignment: Alignment.center,
-      child: InkWell(
-        onTap: onTap,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: ColorUtils.slate700,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Icon(Icons.edit_outlined, size: 12, color: ColorUtils.slate400),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLabelHeader(String label, double width) {
-    return Container(
-      width: width,
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: ColorUtils.slate700,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
-
-  // ── Data rows ──────────────────────────────────────────────────────────────
+  // ── Data rows (compact, matching Buku Nilai) ──
 
   List<Widget> _buildDataRows(int numChapters) {
-    return tableData.map((row) {
+    return tableData.asMap().entries.map((e) {
+      final i = e.key;
+      final row = e.value;
       final String studentClassId = row['student_class_id'] as String;
+      final finalScore = (row['final_score'] as num?)?.toDouble();
+
       return Container(
-        height: 75,
+        height: 44,
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
+          color: i.isEven ? Colors.white : ColorUtils.slate50,
+          border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
         ),
-        child: Row(
-          children: [
-            // Bab score cells
-            for (int i = 0; i < numChapters; i++)
-              Container(
-                width: _gradeCellWidth,
-                alignment: Alignment.center,
-                child: cellBuilder(studentClassId, 'bab', i),
+        child: Row(children: [
+          // Bab cells
+          for (int j = 0; j < numChapters; j++)
+            SizedBox(width: _gradeCellWidth, child: cellBuilder(studentClassId, 'bab', j)),
+          // UTS
+          SizedBox(width: _gradeCellWidth, child: cellBuilder(studentClassId, 'uts', null)),
+          // UAS
+          SizedBox(width: _gradeCellWidth, child: cellBuilder(studentClassId, 'uas', null)),
+          // Final (read-only)
+          Container(
+            width: _finalScoreWidth, alignment: Alignment.center,
+            child: Text(
+              finalScore != null ? finalScore.toStringAsFixed(0) : '-',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: finalScore != null ? _scoreColor(finalScore) : ColorUtils.slate300),
+            ),
+          ),
+          // Skill
+          SizedBox(width: _finalScoreWidth, child: cellBuilder(studentClassId, 'skill_score', null)),
+          // Predikat
+          Container(
+            width: _predikatWidth, alignment: Alignment.center,
+            child: SizedBox(width: 48, child: TextField(
+              controller: predikatControllers[studentClassId],
+              style: const TextStyle(fontSize: 11), textAlign: TextAlign.center,
+              decoration: InputDecoration(isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 6),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: ColorUtils.slate200)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: ColorUtils.slate200)),
               ),
-
-            // UTS cell
-            Container(
-              width: _gradeCellWidth,
-              alignment: Alignment.center,
-              child: cellBuilder(studentClassId, 'uts', null),
-            ),
-
-            // UAS cell
-            Container(
-              width: _gradeCellWidth,
-              alignment: Alignment.center,
-              child: cellBuilder(studentClassId, 'uas', null),
-            ),
-
-            // Final score (read-only display)
-            Container(
-              width: _finalScoreWidth,
-              alignment: Alignment.center,
-              child: Text(
-                row['final_score']?.toStringAsFixed(1) ?? '0.0',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                  fontSize: 14,
+            )),
+          ),
+          // Deskripsi
+          GestureDetector(
+            onTap: () => onDeskripsiTap(studentClassId, row['nama']?.toString() ?? 'Siswa'),
+            child: Tooltip(
+              message: descriptionControllers[studentClassId]?.text ?? '',
+              preferBelow: true,
+              triggerMode: TooltipTriggerMode.longPress,
+              child: Container(
+                width: _deskripsiWidth, padding: const EdgeInsets.symmetric(horizontal: 8),
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  descriptionControllers[studentClassId]?.text.isNotEmpty == true ? descriptionControllers[studentClassId]!.text : 'Ketuk untuk edit...',
+                  style: TextStyle(fontSize: 10, color: descriptionControllers[studentClassId]?.text.isNotEmpty == true ? ColorUtils.slate700 : ColorUtils.slate400),
+                  maxLines: 2, overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
-
-            // Skill score cell
-            Container(
-              width: _finalScoreWidth,
-              alignment: Alignment.center,
-              child: cellBuilder(studentClassId, 'skill_score', null),
-            ),
-
-            // Predikat (editable text field)
-            Container(
-              width: _predikatWidth,
-              alignment: Alignment.center,
-              child: SizedBox(
-                width: 60,
-                child: TextField(
-                  controller: predikatControllers[studentClassId],
-                  style: const TextStyle(fontSize: 13),
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 10,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                      borderSide: BorderSide(color: ColorUtils.slate200),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                      borderSide: BorderSide(color: ColorUtils.slate200),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Deskripsi (read-only, opens full-editor dialog on tap)
-            Container(
-              width: _deskripsiWidth,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.centerLeft,
-              child: TextField(
-                controller: descriptionControllers[studentClassId],
-                maxLines: 2,
-                style: const TextStyle(fontSize: 12),
-                readOnly: true,
-                onTap: () => onDeskripsiTap(
-                  studentClassId,
-                  row['nama']?.toString() ?? 'Siswa',
-                ),
-                decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding: const EdgeInsets.all(10),
-                  border: OutlineInputBorder(
-                    borderRadius: const BorderRadius.all(Radius.circular(8)),
-                    borderSide: BorderSide(color: ColorUtils.slate200),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: const BorderRadius.all(Radius.circular(8)),
-                    borderSide: BorderSide(color: ColorUtils.slate200),
-                  ),
-                  fillColor: ColorUtils.slate50,
-                  filled: true,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ]),
       );
     }).toList();
   }

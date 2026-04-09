@@ -938,6 +938,7 @@ class AttendancePageState extends ConsumerState<AttendancePage> {
         backgroundColor: ColorUtils.slate50,
         body: Column(children: [
           _buildHeader(languageProvider),
+          _buildActiveFilterBar(languageProvider),
           Expanded(child: _isTimelineView ? _buildTimelineBody(languageProvider) : _buildBody(languageProvider)),
         ]),
         floatingActionButton: _isHomeroomView ? null : FloatingActionButton(
@@ -1010,56 +1011,47 @@ class AttendancePageState extends ConsumerState<AttendancePage> {
           ),
         ]),
         // Filter chips inside header
-        if (_hasActiveFilter) ...[
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            height: 32,
-            child: Row(
-              children: [
-                Expanded(
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      if (_filterClassId != null) ...[
-                        _buildChip(_classList.firstWhere((c) => c['id']?.toString() == _filterClassId, orElse: () => {'name': '-'})['name'] ?? '-', () { setState(() { _filterClassId = null; _filterSubjectId = null; _filterSubjectList = []; }); _refreshGroupedAttendance(); }),
-                        const SizedBox(width: 6),
-                      ],
-                      if (_filterSubjectId != null) ...[
-                        _buildChip(_filterSubjectList.firstWhere((s) => s['id']?.toString() == _filterSubjectId, orElse: () => {'name': '-'})['name'] ?? '-', () { setState(() { _filterSubjectId = null; }); _refreshGroupedAttendance(); }),
-                        const SizedBox(width: 6),
-                      ],
-                      if (_filterDateOption != null) ...[
-                        _buildChip(
-                          _filterDateOption == 'today' ? lp.getTranslatedText({'en': 'Today', 'id': 'Hari ini'}) : _filterDateOption == 'week' ? lp.getTranslatedText({'en': 'This Week', 'id': 'Minggu ini'}) : lp.getTranslatedText({'en': 'This Month', 'id': 'Bulan ini'}),
-                          () { setState(() { _filterDateOption = null; }); _refreshGroupedAttendance(); }),
-                        const SizedBox(width: 6),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                InkWell(
-                  onTap: () { setState(() { _filterClassId = null; _filterSubjectId = null; _filterDateOption = null; _filterSubjectList = []; }); _refreshGroupedAttendance(); },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                    ),
-                    child: Text(
-                      lp.getTranslatedText({'en': 'Clear All', 'id': 'Hapus Semua'}),
-                      style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+
       ]),
     );
   }
+
+  Widget _buildActiveFilterBar(LanguageProvider lp) {
+    if (!_hasActiveFilter) return const SizedBox.shrink();
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(children: [
+        Icon(Icons.filter_alt_outlined, size: 14, color: _primaryColor),
+        const SizedBox(width: 6),
+        Expanded(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
+          if (_filterClassId != null) _buildFilterTag(_classList.firstWhere((c) => c['id']?.toString() == _filterClassId, orElse: () => {'name': '-'})['name'] ?? '-', () { setState(() { _filterClassId = null; _filterSubjectId = null; _filterSubjectList = []; }); _refreshGroupedAttendance(); }),
+          if (_filterSubjectId != null) _buildFilterTag(_filterSubjectList.firstWhere((s) => s['id']?.toString() == _filterSubjectId, orElse: () => {'name': '-'})['name'] ?? '-', () { setState(() { _filterSubjectId = null; }); _refreshGroupedAttendance(); }),
+          if (_filterDateOption != null) _buildFilterTag(
+            _filterDateOption == 'today' ? lp.getTranslatedText({'en': 'Today', 'id': 'Hari ini'}) : _filterDateOption == 'week' ? lp.getTranslatedText({'en': 'This Week', 'id': 'Minggu ini'}) : lp.getTranslatedText({'en': 'This Month', 'id': 'Bulan ini'}),
+            () { setState(() { _filterDateOption = null; }); _refreshGroupedAttendance(); }),
+        ]))),
+        GestureDetector(
+          onTap: () { setState(() { _filterClassId = null; _filterSubjectId = null; _filterDateOption = null; _filterSubjectList = []; }); _refreshGroupedAttendance(); },
+          child: Text(lp.getTranslatedText({'en': 'Clear', 'id': 'Hapus'}), style: TextStyle(fontSize: 11, color: ColorUtils.error600, fontWeight: FontWeight.w600)),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildFilterTag(String label, VoidCallback onRemove) {
+    return Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: _primaryColor.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Text(label, style: TextStyle(fontSize: 11, color: _primaryColor, fontWeight: FontWeight.w600)),
+        const SizedBox(width: 4),
+        GestureDetector(onTap: onRemove, child: Icon(Icons.close, size: 12, color: _primaryColor)),
+      ]),
+    );
+  }
+
 
   Widget _buildRoleToggle(LanguageProvider lp) {
     final p = _primaryColor;
@@ -1089,22 +1081,6 @@ class AttendancePageState extends ConsumerState<AttendancePage> {
     );
   }
 
-
-  Widget _buildChip(String label, VoidCallback onRemove) {
-    return GestureDetector(onTap: onRemove, child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-      ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
-        const SizedBox(width: 4),
-        const Icon(Icons.close, size: 14, color: Colors.white),
-      ]),
-    ));
-  }
 
   Widget _buildBody(LanguageProvider lp) {
     if (_isLoading) return SkeletonListLoading(itemCount: 4, infoTagCount: 2);

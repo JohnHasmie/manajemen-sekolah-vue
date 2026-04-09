@@ -9,6 +9,7 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/grades/data/grade_service.dart';
@@ -96,17 +97,6 @@ class GradePageState extends ConsumerState<GradePage> {
     }).map((g) => {'id': g['class_id']?.toString() ?? '', 'name': g['class_name']?.toString() ?? '-'}).toList();
   }
 
-  List<Map<String, String>> get _availableSubjects {
-    final seen = <String>{};
-    final list = <Map<String, String>>[];
-    for (final g in _groupedData) {
-      for (final s in (g['subjects'] as List? ?? [])) {
-        final id = s['id']?.toString() ?? '';
-        if (!seen.contains(id)) { seen.add(id); list.add({'id': id, 'name': s['name']?.toString() ?? '-'}); }
-      }
-    }
-    return list;
-  }
 
   void _openGradeBook(dynamic classData, dynamic subject) {
     showModalBottomSheet(
@@ -300,19 +290,28 @@ class GradePageState extends ConsumerState<GradePage> {
   }
 
   void _showFilterDialog(LanguageProvider lp) {
-    String? tempClassId = _filterClassId;
-    String? tempClassName = _filterClassName;
-    String? tempSubjectId = _filterSubjectId;
-    String? tempSubjectName = _filterSubjectName;
+    String? tClassId = _filterClassId;
+    String? tClassName = _filterClassName;
+    String? tSubjectId = _filterSubjectId;
+    String? tSubjectName = _filterSubjectName;
+    List<dynamic> tSubjectList = [];
+
+    // Pre-load subjects if class already selected
+    if (tClassId != null) {
+      dioClient.get('/class/$tClassId/subjects').then((r) {
+        // Will be available on next setSS
+        tSubjectList = r.data is List ? r.data as List : [];
+      }).catchError((_) {});
+    }
 
     showModalBottomSheet(
       context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(builder: (ctx, setSS) {
         return Container(
-          height: MediaQuery.of(ctx).size.height * 0.6,
+          height: MediaQuery.of(ctx).size.height * 0.7,
           decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
           child: Column(children: [
-            // Header
+            // Header (matching presensi)
             Container(
               padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
               decoration: BoxDecoration(
@@ -325,9 +324,12 @@ class GradePageState extends ConsumerState<GradePage> {
                   Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
                     child: const Icon(Icons.tune_rounded, color: Colors.white, size: 20)),
                   const SizedBox(width: 12),
-                  Text(lp.getTranslatedText({'en': 'Filter', 'id': 'Filter'}), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
-                  const Spacer(),
-                  IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close, color: Colors.white)),
+                  Expanded(child: Text(lp.getTranslatedText({'en': 'Filter Grades', 'id': 'Filter Nilai'}), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white))),
+                  TextButton(
+                    onPressed: () => setSS(() { tClassId = null; tClassName = null; tSubjectId = null; tSubjectName = null; tSubjectList = []; }),
+                    style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), backgroundColor: Colors.white.withValues(alpha: 0.2), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                    child: Text('Reset', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                  ),
                 ]),
               ]),
             ),
@@ -336,36 +338,52 @@ class GradePageState extends ConsumerState<GradePage> {
             Expanded(child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                _filterSectionHeader(lp.getTranslatedText({'en': 'Class', 'id': 'Pilih Kelas'}), Icons.class_outlined),
+                // Class
+                _filterSectionHeader(lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}), Icons.class_outlined),
                 Wrap(spacing: 8, runSpacing: 8, children: _availableClasses.map((c) {
-                  final selected = c['id'] == tempClassId;
-                  return _filterChip(c['name']!, selected, () => setSS(() { tempClassId = selected ? null : c['id']; tempClassName = selected ? null : c['name']; }));
+                  final selected = c['id'] == tClassId;
+                  return _filterChip(c['name']!, selected, () async {
+                    setSS(() { tClassId = selected ? null : c['id']; tClassName = selected ? null : c['name']; tSubjectId = null; tSubjectName = null; tSubjectList = []; });
+                    if (tClassId != null) {
+                      try { final r = await dioClient.get('/class/$tClassId/subjects'); setSS(() => tSubjectList = r.data is List ? r.data as List : []); } catch (_) {}
+                    }
+                  });
                 }).toList()),
                 const SizedBox(height: 24),
-                _filterSectionHeader(lp.getTranslatedText({'en': 'Subject', 'id': 'Pilih Mapel'}), Icons.book_outlined),
-                Wrap(spacing: 8, runSpacing: 8, children: _availableSubjects.map((s) {
-                  final selected = s['id'] == tempSubjectId;
-                  return _filterChip(s['name']!, selected, () => setSS(() { tempSubjectId = selected ? null : s['id']; tempSubjectName = selected ? null : s['name']; }));
-                }).toList()),
+
+                // Subject (only when class selected)
+                if (tSubjectList.isNotEmpty || tClassId != null) ...[
+                  _filterSectionHeader(lp.getTranslatedText({'en': 'Subject', 'id': 'Mapel'}), Icons.book_outlined),
+                  if (tSubjectList.isEmpty)
+                    Text(lp.getTranslatedText({'en': 'Loading subjects...', 'id': 'Memuat mapel...'}), style: TextStyle(color: ColorUtils.slate500, fontSize: 13))
+                  else
+                    Wrap(spacing: 8, runSpacing: 8, children: tSubjectList.map((s) {
+                      final sid = s['id']?.toString();
+                      final sname = (s['name'] ?? s['nama'] ?? '-').toString();
+                      final selected = tSubjectId == sid;
+                      return _filterChip(sname, selected, () => setSS(() { tSubjectId = selected ? null : sid; tSubjectName = selected ? null : sname; }));
+                    }).toList()),
+                  const SizedBox(height: 24),
+                ],
               ]),
             )),
 
-            // Footer
+            // Footer (matching presensi)
             Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
               decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: ColorUtils.slate200)),
                 boxShadow: [BoxShadow(color: ColorUtils.slate900.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, -2))]),
               child: SafeArea(top: false, child: Row(children: [
                 Expanded(child: OutlinedButton(
-                  onPressed: () { setSS(() { tempClassId = null; tempClassName = null; tempSubjectId = null; tempSubjectName = null; }); },
+                  onPressed: () => Navigator.pop(ctx),
                   style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), side: BorderSide(color: ColorUtils.slate300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  child: Text('Reset', style: TextStyle(color: ColorUtils.slate600, fontWeight: FontWeight.w600)),
+                  child: Text(lp.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}), style: TextStyle(color: ColorUtils.slate600, fontWeight: FontWeight.w600)),
                 )),
                 const SizedBox(width: 12),
-                Expanded(flex: 2, child: ElevatedButton(
+                Expanded(child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(ctx);
-                    setState(() { _filterClassId = tempClassId; _filterClassName = tempClassName; _filterSubjectId = tempSubjectId; _filterSubjectName = tempSubjectName; });
+                    setState(() { _filterClassId = tClassId; _filterClassName = tClassName; _filterSubjectId = tSubjectId; _filterSubjectName = tSubjectName; });
                     _loadData();
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: _p, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
