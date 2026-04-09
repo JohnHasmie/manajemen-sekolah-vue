@@ -90,6 +90,7 @@ class ApiEndpoints {
 
   // ── Report Cards ──
   static const reportCards = '/raport';
+  static const raportsTeacherSummary = '/raports/teacher-summary';
 
   // ── Finance / Billing ──
   static const bills = '/bills';

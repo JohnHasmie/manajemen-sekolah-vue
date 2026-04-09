@@ -35,8 +35,9 @@ import 'package:manajemensekolah/features/report_cards/presentation/widgets/repo
 /// Navigates to [ReportCardDetailScreen] when a student is tapped.
 class ReportCardScreen extends ConsumerStatefulWidget {
   final Map<String, String> teacher;
+  final String? initialClassId;
 
-  const ReportCardScreen({super.key, required this.teacher});
+  const ReportCardScreen({super.key, required this.teacher, this.initialClassId});
 
   @override
   ReportCardScreenState createState() => ReportCardScreenState();
