@@ -2,7 +2,7 @@
 // Contains editable lists of extracurricular activities and achievements,
 // each with add/delete actions. All mutations are surfaced through callbacks.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
+
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
@@ -60,223 +60,124 @@ class ReportCardExtrasTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = ColorUtils.getRoleColor('guru');
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(16),
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _SectionTitle(title: 'Ekstrakurikuler'),
-            TextButton.icon(
-              onPressed: () {
-                onAddExtra();
-                onMarkUnsaved();
-              },
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(AppLocalizations.add.tr),
+        // Ekstrakurikuler section
+        Row(children: [
+          Container(width: 28, height: 28, decoration: BoxDecoration(color: p.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+            child: Icon(Icons.sports_soccer_rounded, size: 16, color: p)),
+          const SizedBox(width: 10),
+          Text('Ekstrakurikuler', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate900)),
+          const Spacer(),
+          GestureDetector(
+            onTap: () { onAddExtra(); onMarkUnsaved(); },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: p.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.add, size: 14, color: p),
+                const SizedBox(width: 4),
+                Text('Tambah', style: TextStyle(fontSize: 11, color: p, fontWeight: FontWeight.w600)),
+              ]),
             ),
-          ],
-        ),
-        ...List.generate(extras.length, (index) => _ExtraItem(
-          extra: extras[index],
-          onChanged: (field, value) {
-            onExtraChanged(index, field, value);
-            onMarkUnsaved();
-          },
-          onDelete: () {
-            onDeleteExtra(index);
-            onMarkUnsaved();
-          },
-        )),
+          ),
+        ]),
+        if (extras.isEmpty)
+          Padding(padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Text('Belum ada ekstrakurikuler', style: TextStyle(fontSize: 12, color: ColorUtils.slate400, fontStyle: FontStyle.italic), textAlign: TextAlign.center))
+        else
+          ...List.generate(extras.length, (i) => _ExtraItem(extra: extras[i],
+            onChanged: (f, v) { onExtraChanged(i, f, v); onMarkUnsaved(); },
+            onDelete: () { onDeleteExtra(i); onMarkUnsaved(); })),
 
-        const SizedBox(height: AppSpacing.xxl),
-        const Divider(),
-        const SizedBox(height: AppSpacing.lg),
+        Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(height: 1, color: ColorUtils.slate100)),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _SectionTitle(title: AppLocalizations.achievements.tr),
-            TextButton.icon(
-              onPressed: () {
-                onAddAchievement();
-                onMarkUnsaved();
-              },
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(AppLocalizations.add.tr),
+        // Prestasi section
+        Row(children: [
+          Container(width: 28, height: 28, decoration: BoxDecoration(color: ColorUtils.warning600.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+            child: Icon(Icons.emoji_events_rounded, size: 16, color: ColorUtils.warning600)),
+          const SizedBox(width: 10),
+          Text(AppLocalizations.achievements.tr, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate900)),
+          const Spacer(),
+          GestureDetector(
+            onTap: () { onAddAchievement(); onMarkUnsaved(); },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: p.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.add, size: 14, color: p),
+                const SizedBox(width: 4),
+                Text('Tambah', style: TextStyle(fontSize: 11, color: p, fontWeight: FontWeight.w600)),
+              ]),
             ),
-          ],
-        ),
-        ...List.generate(achievements.length, (index) => _AchievementItem(
-          achievement: achievements[index],
-          onChanged: (field, value) {
-            onAchievementChanged(index, field, value);
-            onMarkUnsaved();
-          },
-          onDelete: () {
-            onDeleteAchievement(index);
-            onMarkUnsaved();
-          },
-        )),
+          ),
+        ]),
+        if (achievements.isEmpty)
+          Padding(padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Text('Belum ada prestasi', style: TextStyle(fontSize: 12, color: ColorUtils.slate400, fontStyle: FontStyle.italic), textAlign: TextAlign.center))
+        else
+          ...List.generate(achievements.length, (i) => _AchievementItem(achievement: achievements[i],
+            onChanged: (f, v) { onAchievementChanged(i, f, v); onMarkUnsaved(); },
+            onDelete: () { onDeleteAchievement(i); onMarkUnsaved(); })),
       ],
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Private sub-widgets used only within this file
-// ---------------------------------------------------------------------------
 
-/// Section heading label — like a reusable `<h3>` in Vue templates.
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: ColorUtils.slate700,
-        ),
-      ),
-    );
-  }
-}
-
-/// Card for a single extracurricular activity with name, score, and description.
 class _ExtraItem extends StatelessWidget {
   final Map<String, dynamic> extra;
   final void Function(String field, String value) onChanged;
   final VoidCallback onDelete;
 
-  const _ExtraItem({
-    required this.extra,
-    required this.onChanged,
-    required this.onDelete,
-  });
+  const _ExtraItem({required this.extra, required this.onChanged, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        border: Border.all(
-          color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
-        ),
-        boxShadow: [...ColorUtils.corporateShadow()],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _CompactTextField(
-                    label: 'Nama Ekstrakurikuler',
-                    initialValue: extra['name'] ?? '',
-                    onChanged: (v) => onChanged('name', v),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  flex: 1,
-                  child: _CompactTextField(
-                    label: 'Nilai',
-                    initialValue: extra['score'] ?? '',
-                    onChanged: (v) => onChanged('score', v),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: onDelete,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _CompactTextField(
-              label: 'Keterangan',
-              initialValue: extra['description'] ?? '',
-              onChanged: (v) => onChanged('description', v),
-            ),
-          ],
-        ),
-      ),
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: ColorUtils.slate100)),
+      child: Column(children: [
+        Row(children: [
+          Expanded(flex: 2, child: _CompactTextField(label: 'Nama', initialValue: extra['name'] ?? '', onChanged: (v) => onChanged('name', v))),
+          const SizedBox(width: 8),
+          SizedBox(width: 60, child: _CompactTextField(label: 'Nilai', initialValue: extra['score'] ?? '', onChanged: (v) => onChanged('score', v))),
+          GestureDetector(onTap: onDelete, child: Padding(padding: const EdgeInsets.only(left: 4), child: Icon(Icons.close, size: 16, color: ColorUtils.error600))),
+        ]),
+        const SizedBox(height: 6),
+        _CompactTextField(label: 'Keterangan', initialValue: extra['description'] ?? '', onChanged: (v) => onChanged('description', v)),
+      ]),
     );
   }
 }
 
-/// Card for a single achievement entry with name, type, and description.
 class _AchievementItem extends StatelessWidget {
   final Map<String, dynamic> achievement;
   final void Function(String field, String value) onChanged;
   final VoidCallback onDelete;
 
-  const _AchievementItem({
-    required this.achievement,
-    required this.onChanged,
-    required this.onDelete,
-  });
+  const _AchievementItem({required this.achievement, required this.onChanged, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        border: Border.all(
-          color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.3),
-        ),
-        boxShadow: [...ColorUtils.corporateShadow()],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _CompactTextField(
-                    label: 'Nama Prestasi',
-                    initialValue: achievement['name'] ?? '',
-                    onChanged: (v) => onChanged('name', v),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  flex: 1,
-                  child: _CompactTextField(
-                    label: 'Jenis (Opsional)',
-                    initialValue: achievement['type'] ?? '',
-                    onChanged: (v) => onChanged('type', v),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: onDelete,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _CompactTextField(
-              label: 'Keterangan',
-              initialValue: achievement['description'] ?? '',
-              onChanged: (v) => onChanged('description', v),
-            ),
-          ],
-        ),
-      ),
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: ColorUtils.slate100)),
+      child: Column(children: [
+        Row(children: [
+          Expanded(flex: 2, child: _CompactTextField(label: 'Nama Prestasi', initialValue: achievement['name'] ?? '', onChanged: (v) => onChanged('name', v))),
+          const SizedBox(width: 8),
+          SizedBox(width: 60, child: _CompactTextField(label: 'Jenis', initialValue: achievement['type'] ?? '', onChanged: (v) => onChanged('type', v))),
+          GestureDetector(onTap: onDelete, child: Padding(padding: const EdgeInsets.only(left: 4), child: Icon(Icons.close, size: 16, color: ColorUtils.error600))),
+        ]),
+        const SizedBox(height: 6),
+        _CompactTextField(label: 'Keterangan', initialValue: achievement['description'] ?? '', onChanged: (v) => onChanged('description', v)),
+      ]),
     );
   }
 }
@@ -298,35 +199,22 @@ class _CompactTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = ColorUtils.getRoleColor('guru');
     return TextFormField(
       initialValue: initialValue,
       keyboardType: TextInputType.text,
+      style: const TextStyle(fontSize: 13),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+        labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 12),
         isDense: true,
         filled: true,
-        fillColor: Colors.grey.shade50,
-        border: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(
-            color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(
-            color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: ColorUtils.getRoleColor('guru')),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: ColorUtils.slate200)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: ColorUtils.slate200)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: p, width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+
       ),
       onChanged: onChanged,
     );

@@ -34,7 +34,7 @@ import 'package:manajemensekolah/features/materials/presentation/screens/teacher
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/parent_report_card_screen.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_screen.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_overview.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/admin_schedule_management_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
@@ -345,7 +345,7 @@ class DashboardCategorizedMenu extends ConsumerWidget {
             return;
           }
           if (!context.mounted) return;
-          AppNavigator.push(context, ReportCardScreen(teacher: teacherData));
+          AppNavigator.push(context, ReportCardOverviewPage(teacher: teacherData));
         },
       ),
       MenuItem(

@@ -11,6 +11,23 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 /// Like a Laravel Resource Controller with show, store, and custom initial-data actions.
 /// In Vue terms, this is a store module that handles all raport-related API state.
 class ApiReportCardService {
+  /// Fetches homeroom classes with raport completion stats.
+  static Future<List<dynamic>> getTeacherRaportSummary({
+    required String teacherId,
+    String? academicYearId,
+    String? semesterId,
+  }) async {
+    final params = <String, dynamic>{'teacher_id': teacherId};
+    if (academicYearId != null) params['academic_year_id'] = academicYearId;
+    if (semesterId != null) params['semester_id'] = semesterId;
+
+    final response = await dioClient.get('/raports/teacher-summary', queryParameters: params);
+    final result = response.data;
+    if (result is Map && result['data'] is List) return result['data'];
+    if (result is List) return result;
+    return [];
+  }
+
   /// Fetches a list of raports filtered by class, academic year, and semester.
   /// Like `Raport::where(...)->get()` in Laravel.
   /// Returns the 'data' array, or empty list if unsuccessful.

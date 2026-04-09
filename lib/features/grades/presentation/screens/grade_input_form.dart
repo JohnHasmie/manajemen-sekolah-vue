@@ -417,7 +417,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                     // Input Title - Pattern #9 styled field
                     Container(
                       decoration: BoxDecoration(
-                        color: ColorUtils.slate50,
+                        color: Colors.white,
                         borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
@@ -463,7 +463,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                     // Input Nilai - Pattern #9 styled field
                     Container(
                       decoration: BoxDecoration(
-                        color: ColorUtils.slate50,
+                        color: Colors.white,
                         borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
@@ -524,7 +524,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                     // Input Deskripsi - Pattern #9 styled field
                     Container(
                       decoration: BoxDecoration(
-                        color: ColorUtils.slate50,
+                        color: Colors.white,
                         borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
@@ -567,7 +567,7 @@ class GradeInputFormState extends ConsumerState<GradeInputForm> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: ColorUtils.slate50,
+                        color: Colors.white,
                         borderRadius: const BorderRadius.all(Radius.circular(12)),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
