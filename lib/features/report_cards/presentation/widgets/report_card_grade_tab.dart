@@ -257,47 +257,52 @@ class _SubjectCard extends StatelessWidget {
         ),
 
         // Recap reference section — shows grade breakdown from rekap nilai
-        if (hasRecapData)
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-            decoration: BoxDecoration(
-              color: ColorUtils.info600.withValues(alpha: 0.03),
-              border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
-            ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Icon(Icons.auto_awesome, size: 13, color: ColorUtils.info600),
-                const SizedBox(width: 5),
-                Text('Referensi Nilai dari Rekap', style: TextStyle(fontSize: 10, color: ColorUtils.info600, fontWeight: FontWeight.w600)),
-                const Spacer(),
-                // "Gunakan" button to auto-fill
-                if (scoreEmpty && recapFinal != null)
-                  GestureDetector(
-                    onTap: onApplyRecap,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: roleColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.arrow_downward, size: 10, color: roleColor),
-                        const SizedBox(width: 3),
-                        Text('Gunakan', style: TextStyle(fontSize: 10, color: roleColor, fontWeight: FontWeight.w600)),
-                      ]),
+        Container(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+          decoration: BoxDecoration(
+            color: ColorUtils.info600.withValues(alpha: 0.03),
+            border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Icon(Icons.auto_awesome, size: 13, color: ColorUtils.info600),
+              const SizedBox(width: 5),
+              Text('Referensi Nilai dari Rekap', style: TextStyle(fontSize: 10, color: ColorUtils.info600, fontWeight: FontWeight.w600)),
+              const Spacer(),
+              // "Gunakan" button to auto-fill
+              if (scoreEmpty && recapFinal != null)
+                GestureDetector(
+                  onTap: onApplyRecap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: roleColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
                     ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.arrow_downward, size: 10, color: roleColor),
+                      const SizedBox(width: 3),
+                      Text('Gunakan', style: TextStyle(fontSize: 10, color: roleColor, fontWeight: FontWeight.w600)),
+                    ]),
                   ),
-              ]),
-              const SizedBox(height: 8),
+                ),
+            ]),
+            const SizedBox(height: 8),
+            if (hasRecapData)
               // Score breakdown grid
               Row(children: [
                 if (recapUhAvg != null) Expanded(child: _RecapRefItem(label: 'Rata-rata UH', value: recapUhAvg, color: ColorUtils.info600)),
                 if (recapUts != null) Expanded(child: _RecapRefItem(label: 'UTS', value: recapUts, color: ColorUtils.warning600)),
                 if (recapUas != null) Expanded(child: _RecapRefItem(label: 'UAS', value: recapUas, color: ColorUtils.error600)),
                 if (recapFinal != null) Expanded(child: _RecapRefItem(label: 'Nilai Akhir', value: recapFinal, color: ColorUtils.success600)),
-              ]),
-            ]),
-          ),
+              ])
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text('Belum ada data rekap nilai', style: TextStyle(fontSize: 11, color: ColorUtils.slate400, fontStyle: FontStyle.italic)),
+              ),
+          ]),
+        ),
 
         Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Pengetahuan
