@@ -77,7 +77,7 @@ void showGradeSelectionDialog({
                   final scoreVal = double.tryParse(score) ?? 0;
 
                   return GestureDetector(
-                    onTap: () => setSS(() { if (isSelected) selected.remove(g); else selected.add(g); }),
+                    onTap: () => setSS(() { if (isSelected) { selected.remove(g); } else { selected.add(g); } }),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
                       color: isSelected ? p.withValues(alpha: 0.05) : Colors.transparent,
