@@ -790,6 +790,7 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
       backgroundColor: ColorUtils.slate50,
       body: Column(children: [
         _buildHeader(lp),
+        _buildActiveFilterBar(lp),
         Expanded(child: _isTimelineView ? _buildTimelineBody(lp) : _buildBody(lp)),
       ]),
       floatingActionButton: !_isHomeroomView ? FloatingActionButton(
@@ -856,51 +857,40 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
           ),
         ]),
         // Filter chips inside header
-        if (_hasActiveFilter) ...[
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            height: 32,
-            child: Row(
-              children: [
-                Expanded(
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      if (_filterClassId != null) ...[
-                        _buildChip(_classList.firstWhere((c) => c['id']?.toString() == _filterClassId, orElse: () => {'name': '-'})['name'] ?? '-', () { setState(() { _filterClassId = null; _filterSubjectId = null; _filterSubjectList = []; }); _forceRefresh(); }),
-                        const SizedBox(width: 6),
-                      ],
-                      if (_filterSubjectId != null) ...[
-                        _buildChip(_filterSubjectList.firstWhere((s) => s['id']?.toString() == _filterSubjectId, orElse: () => {'name': '-'})['name'] ?? '-', () { setState(() => _filterSubjectId = null); _forceRefresh(); }),
-                        const SizedBox(width: 6),
-                      ],
-                      if (_filterDateOption != null) ...[
-                        _buildChip(_dateFilterLabel(lp), () { setState(() => _filterDateOption = null); _forceRefresh(); }),
-                        const SizedBox(width: 6),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                InkWell(
-                  onTap: () { setState(() { _filterClassId = null; _filterSubjectId = null; _filterDateOption = null; _filterSubjectList = []; }); _forceRefresh(); },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                    ),
-                    child: Text(
-                      lp.getTranslatedText({'en': 'Clear All', 'id': 'Hapus Semua'}),
-                      style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      ]),
+    );
+  }
+
+  Widget _buildActiveFilterBar(LanguageProvider lp) {
+    if (!_hasActiveFilter) return const SizedBox.shrink();
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(children: [
+        Icon(Icons.filter_alt_outlined, size: 14, color: _primaryColor),
+        const SizedBox(width: 6),
+        Expanded(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
+          if (_filterClassId != null) _buildFilterTag(_classList.firstWhere((c) => c['id']?.toString() == _filterClassId, orElse: () => {'name': '-'})['name'] ?? '-', () { setState(() { _filterClassId = null; _filterSubjectId = null; _filterSubjectList = []; }); _forceRefresh(); }),
+          if (_filterSubjectId != null) _buildFilterTag(_filterSubjectList.firstWhere((s) => s['id']?.toString() == _filterSubjectId, orElse: () => {'name': '-'})['name'] ?? '-', () { setState(() => _filterSubjectId = null); _forceRefresh(); }),
+          if (_filterDateOption != null) _buildFilterTag(_dateFilterLabel(lp), () { setState(() => _filterDateOption = null); _forceRefresh(); }),
+        ]))),
+        GestureDetector(
+          onTap: () { setState(() { _filterClassId = null; _filterSubjectId = null; _filterDateOption = null; _filterSubjectList = []; }); _forceRefresh(); },
+          child: Text(lp.getTranslatedText({'en': 'Clear', 'id': 'Hapus'}), style: TextStyle(fontSize: 11, color: ColorUtils.error600, fontWeight: FontWeight.w600)),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildFilterTag(String label, VoidCallback onRemove) {
+    return Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: _primaryColor.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Text(label, style: TextStyle(fontSize: 11, color: _primaryColor, fontWeight: FontWeight.w600)),
+        const SizedBox(width: 4),
+        GestureDetector(onTap: onRemove, child: Icon(Icons.close, size: 12, color: _primaryColor)),
       ]),
     );
   }
@@ -933,22 +923,6 @@ class ClassActivityScreenState extends ConsumerState<ClassActivityScreen> {
     );
   }
 
-
-  Widget _buildChip(String label, VoidCallback onRemove) {
-    return GestureDetector(onTap: onRemove, child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-      ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
-        const SizedBox(width: 4),
-        const Icon(Icons.close, size: 14, color: Colors.white),
-      ]),
-    ));
-  }
 
   Widget _buildBody(LanguageProvider lp) {
     if (_isLoading) return SkeletonListLoading(itemCount: 4, infoTagCount: 2);

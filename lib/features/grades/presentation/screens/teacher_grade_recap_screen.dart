@@ -47,8 +47,10 @@ import 'package:manajemensekolah/features/grades/presentation/widgets/grade_reca
 /// Props (like Vue props): [teacher] -- current teacher info.
 class GradeRecapPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
+  final Map<String, dynamic>? initialClass;
+  final Map<String, dynamic>? initialSubject;
 
-  const GradeRecapPage({super.key, required this.teacher});
+  const GradeRecapPage({super.key, required this.teacher, this.initialClass, this.initialSubject});
 
   @override
   ConsumerState<GradeRecapPage> createState() => _GradeRecapPageState();
@@ -116,10 +118,19 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _searchController.addListener(_onSearchChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _loadTodaySchedules();
-      _loadClasses();
-    });
+
+    // If opened with pre-selected class+subject, skip to table directly
+    if (widget.initialClass != null && widget.initialSubject != null) {
+      _selectedClass = widget.initialClass;
+      _selectedSubject = widget.initialSubject;
+      _currentStep = 2;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadRecapData());
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _loadTodaySchedules();
+        _loadClasses();
+      });
+    }
   }
 
   @override
