@@ -409,148 +409,67 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
     }
   }
 
+  bool get _isDialogMode => widget.initialClassId != null;
+
   @override
   Widget build(BuildContext context) {
+    final p = _getPrimaryColor();
+    final className = _selectedClass?['nama'] ?? _selectedClass?['name'] ?? '';
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          // Pattern #7 Gradient Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              bottom: 20,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _getPrimaryColor(),
-                  _getPrimaryColor().withValues(alpha: 0.8),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _getPrimaryColor().withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => AppNavigator.pop(context),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _languageProvider.getTranslatedText({
-                          'en': 'Report Cards',
-                          'id': 'Raport Siswa',
-                        }),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        _languageProvider.getTranslatedText({
-                          'en': 'Manage student report cards',
-                          'id': 'Kelola nilai raport siswa',
-                        }),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'refresh') _forceRefresh();
-                    if (value == 'export_excel' && !_isExporting) {
-                      _exportToExcel();
-                    }
-                  },
-                  icon: Container(
-                    key: _exportKey,
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: const Icon(
-                      Icons.more_vert,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  itemBuilder: (BuildContext context) => [
-                    PopupMenuItem<String>(
-                      value: 'refresh',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.refresh,
-                            size: 20,
-                            color: ColorUtils.info600,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(AppLocalizations.updateData.tr),
-                        ],
-                      ),
-                    ),
-                    if (_selectedClass != null && !_isLoading)
-                      PopupMenuItem<String>(
-                        value: 'export_excel',
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.file_download,
-                              size: 20,
-                              color: Colors.green,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            const Text('Export Excel'),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
+      body: Column(children: [
+        // Header
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [p, p.withValues(alpha: 0.85)]),
+            borderRadius: _isDialogMode ? const BorderRadius.vertical(top: Radius.circular(20)) : null,
           ),
+          child: Column(children: [
+            if (_isDialogMode)
+              Container(margin: const EdgeInsets.only(top: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)))
+            else
+              SizedBox(height: MediaQuery.of(context).padding.top),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 14),
+              child: Row(children: [
+                if (!_isDialogMode) ...[
+                  GestureDetector(onTap: () => AppNavigator.pop(context),
+                    child: Container(width: 40, height: 40, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                      child: const Icon(Icons.arrow_back, color: Colors.white, size: 20))),
+                  const SizedBox(width: 12),
+                ] else ...[
+                  Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.assignment_outlined, color: Colors.white, size: 18)),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(_languageProvider.getTranslatedText({'en': 'Report Cards', 'id': 'Raport Siswa'}), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  if (className.isNotEmpty) Text('Kelas $className', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
+                ])),
+                // Export
+                if (_selectedClass != null && !_isLoading)
+                  GestureDetector(
+                    key: _exportKey,
+                    onTap: _isExporting ? null : _exportToExcel,
+                    child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                      child: const Icon(Icons.download_rounded, color: Colors.white, size: 16)),
+                  ),
+                const SizedBox(width: 6),
+                // Close/Back
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                    child: Icon(_isDialogMode ? Icons.close : Icons.more_vert, color: Colors.white, size: 18)),
+                ),
+              ]),
+            ),
+          ]),
+        ),
 
-          // Body Content
-          Expanded(child: _buildBody()),
-        ],
-      ),
+        // Body
+        Expanded(child: _buildBody()),
+      ]),
     );
   }
 
@@ -590,11 +509,15 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen> {
 
     return Column(
       children: [
-        _buildClassSelector(),
+        if (!_isDialogMode) _buildClassSelector(),
         Expanded(
           child: _isLoadingStudents
               ? const SkeletonListLoading()
-              : _buildStudentList(),
+              : RefreshIndicator(
+                  onRefresh: _forceRefresh,
+                  color: _getPrimaryColor(),
+                  child: _buildStudentList(),
+                ),
         ),
       ],
     );

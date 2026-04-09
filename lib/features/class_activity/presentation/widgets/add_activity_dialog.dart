@@ -1195,29 +1195,44 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
             SizedBox(
               height: 340,
               child: Theme(
-                data: Theme.of(context).copyWith(
+                data: ThemeData(
+                  useMaterial3: true,
+                  primaryColor: p,
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: p,
+                    primary: p,
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: ColorUtils.slate800,
+                    secondary: p,
+                  ),
                   datePickerTheme: DatePickerThemeData(
                     headerBackgroundColor: p,
                     headerForegroundColor: Colors.white,
+                    backgroundColor: Colors.white,
+                    elevation: 0,
                     dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) return Colors.white;
+                      if (states.any((s) => s == WidgetState.selected || s == WidgetState.pressed)) return Colors.white;
                       return ColorUtils.slate800;
                     }),
                     dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) return p;
+                      if (states.any((s) => s == WidgetState.selected || s == WidgetState.pressed)) return p;
                       return Colors.transparent;
                     }),
                     todayForegroundColor: WidgetStateProperty.all(p),
                     todayBackgroundColor: WidgetStateProperty.all(p.withValues(alpha: 0.1)),
                   ),
                 ),
-                child: CalendarDatePicker(
-                  initialDate: tempDate,
-                  firstDate: DateTime(2024),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                  onDateChanged: (date) {
-                    tempDate = date;
-                  },
+                child: Material(
+                  color: Colors.transparent,
+                  child: CalendarDatePicker(
+                    initialDate: tempDate,
+                    firstDate: DateTime(2024),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                    onDateChanged: (date) {
+                      tempDate = date;
+                    },
+                  ),
                 ),
               ),
             ),
@@ -1307,29 +1322,44 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog> {
                       SizedBox(
                         height: 330,
                         child: Theme(
-                          data: Theme.of(context).copyWith(
+                          data: ThemeData(
+                            useMaterial3: true,
+                            primaryColor: p,
+                            colorScheme: ColorScheme.fromSeed(
+                              seedColor: p,
+                              primary: p,
+                              onPrimary: Colors.white,
+                              surface: Colors.white,
+                              onSurface: ColorUtils.slate800,
+                              secondary: p,
+                            ),
                             datePickerTheme: DatePickerThemeData(
                               headerBackgroundColor: p,
                               headerForegroundColor: Colors.white,
+                              backgroundColor: Colors.white,
+                              elevation: 0,
                               dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-                                if (states.contains(WidgetState.selected)) return Colors.white;
+                                if (states.any((s) => s == WidgetState.selected || s == WidgetState.pressed)) return Colors.white;
                                 return ColorUtils.slate800;
                               }),
                               dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
-                                if (states.contains(WidgetState.selected)) return p;
+                                if (states.any((s) => s == WidgetState.selected || s == WidgetState.pressed)) return p;
                                 return Colors.transparent;
                               }),
                               todayForegroundColor: WidgetStateProperty.all(p),
                               todayBackgroundColor: WidgetStateProperty.all(p.withValues(alpha: 0.1)),
                             ),
                           ),
-                          child: CalendarDatePicker(
-                            initialDate: tempDate,
-                            firstDate: DateTime(2024),
-                            lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
-                            onDateChanged: (date) {
-                              tempDate = date;
-                            },
+                          child: Material(
+                            color: Colors.transparent,
+                            child: CalendarDatePicker(
+                              initialDate: tempDate,
+                              firstDate: DateTime(2024),
+                              lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+                              onDateChanged: (date) {
+                                tempDate = date;
+                              },
+                            ),
                           ),
                         ),
                       ),

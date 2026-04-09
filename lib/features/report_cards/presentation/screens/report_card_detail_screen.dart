@@ -132,12 +132,6 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
     return 'raport_detail_${widget.studentClassId}_$academicYearId';
   }
 
-  Future<void> _forceRefresh() async {
-    await LocalCacheService.clearStartingWith(
-      'raport_detail_${widget.studentClassId}',
-    );
-    _loadData(useCache: false);
-  }
 
   @override
   void dispose() {
@@ -492,341 +486,139 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
+    final p = ColorUtils.getRoleColor('guru');
+    final status = _existingRaport?['status']?.toString();
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-
         final canLeave = await _onWillPop();
-        if (canLeave && context.mounted) {
-          AppNavigator.pop(context, result);
-        }
+        if (canLeave && context.mounted) AppNavigator.pop(context, result);
       },
       child: Scaffold(
         backgroundColor: ColorUtils.slate50,
-        body: Column(
-          children: [
-            // Pattern #7 Gradient Header
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 16,
-                left: 16,
-                right: 16,
-                bottom: 20,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    ColorUtils.getRoleColor('guru'),
-                    ColorUtils.getRoleColor('guru').withValues(alpha: 0.8),
+        body: Column(children: [
+          // Header
+          Container(
+            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 12, left: 16, right: 8, bottom: 12),
+            decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [p, p.withValues(alpha: 0.85)])),
+            child: Row(children: [
+              GestureDetector(onTap: _handleBackButton,
+                child: Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.arrow_back, color: Colors.white, size: 18))),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Isi Raport', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                Row(children: [
+                  Flexible(child: Text('${widget.studentName} · ${widget.className}', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9)), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                  if (status != null) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: status == 'published' ? ColorUtils.success600.withValues(alpha: 0.3) : (status == 'final' ? ColorUtils.info600.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.2)),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(status == 'published' ? 'Terbit' : (status == 'final' ? 'Final' : 'Draft'), style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w700)),
+                    ),
                   ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: ColorUtils.getRoleColor(
-                      'guru',
-                    ).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: _handleBackButton,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Isi Raport',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          '${widget.studentName} - ${widget.className}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (_existingRaport != null &&
-                      _existingRaport!['status'] == 'final')
-                    GestureDetector(
-                      onTap: () {
-                        if (_existingRaport != null) {
-                          AppNavigator.push(
-                            context,
-                            ReportCardPrintScreen(
-                              reportCardData: _existingRaport!,
-                              studentName: widget.studentName,
-                              className: widget.className,
-                            ),
-                          );
-                        }
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: const BorderRadius.all(Radius.circular(10)),
-                        ),
-                        child: const Icon(
-                          Icons.print,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'refresh') _forceRefresh();
-                    },
-                    icon: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      ),
-                      child: const Icon(
-                        Icons.more_vert,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    itemBuilder: (BuildContext context) => [
-                      PopupMenuItem<String>(
-                        value: 'refresh',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.refresh,
-                              size: 20,
-                              color: ColorUtils.info600,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Text(AppLocalizations.updateData.tr),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+                ]),
+              ])),
+              if (status == 'final')
+                GestureDetector(onTap: () { if (_existingRaport != null) AppNavigator.push(context, ReportCardPrintScreen(reportCardData: _existingRaport!, studentName: widget.studentName, className: widget.className)); },
+                  child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                    child: const Icon(Icons.print_rounded, color: Colors.white, size: 16))),
+              const SizedBox(width: 4),
+              GestureDetector(onTap: _handleBackButton,
+                child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.close, color: Colors.white, size: 18))),
+            ]),
+          ),
 
-            // TabBar Container
-            Container(
-              key: _tabKey,
-              color: Colors.white,
-              child: TabBar(
-                controller: _tabController,
-                labelColor: ColorUtils.corporateBlue600,
-                unselectedLabelColor: ColorUtils.slate500,
-                indicatorColor: ColorUtils.corporateBlue600,
-                indicatorWeight: 3,
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 13,
-                ),
-                isScrollable: true,
-                tabs: const [
-                  Tab(text: 'Sikap'),
-                  Tab(text: 'Nilai Akademik'),
-                  Tab(text: 'Tambahan'),
-                  Tab(text: 'Info & Keputusan'),
-                ],
-              ),
+          // Tab bar (themed green)
+          Container(
+            key: _tabKey,
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: p,
+              unselectedLabelColor: ColorUtils.slate500,
+              indicatorColor: p,
+              indicatorWeight: 2,
+              labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              tabs: const [Tab(text: 'Sikap'), Tab(text: 'Nilai Akademik'), Tab(text: 'Tambahan'), Tab(text: 'Info & Keputusan')],
             ),
+          ),
 
-            // Body Content
-            Expanded(
-              child: _isLoading
-                  ? const SkeletonListLoading()
-                  : _errorMessage.isNotEmpty
-                  ? Center(
-                      child: Text(
-                        _errorMessage,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    )
-                  : TabBarView(
-                      controller: _tabController,
-                      children: [
+          // Body
+          Expanded(
+            child: _isLoading
+                ? const SkeletonListLoading()
+                : _errorMessage.isNotEmpty
+                    ? Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
+                    : TabBarView(controller: _tabController, children: [
                         _buildSikapTab(),
-                        ReportCardGradeTab(
-                          subjects: _subjects,
-                          onSubjectChanged: (index, field, value) {
-                            setState(() => _subjects[index][field] = value);
-                          },
-                          onMarkUnsaved: _markUnsaved,
-                        ),
+                        ReportCardGradeTab(subjects: _subjects, onSubjectChanged: (i, f, v) => setState(() => _subjects[i][f] = v), onMarkUnsaved: _markUnsaved),
                         ReportCardExtrasTab(
-                          extras: _extras,
-                          achievements: _achievements,
-                          onAddExtra: () => setState(
-                            () => _extras.add(
-                              {'name': '', 'score': '', 'description': ''},
-                            ),
-                          ),
-                          onAddAchievement: () => setState(
-                            () => _achievements.add(
-                              {'name': '', 'type': '', 'description': ''},
-                            ),
-                          ),
-                          onExtraChanged: (index, field, value) {
-                            setState(() => _extras[index][field] = value);
-                          },
-                          onDeleteExtra: (index) {
-                            setState(() => _extras.removeAt(index));
-                          },
-                          onAchievementChanged: (index, field, value) {
-                            setState(
-                              () => _achievements[index][field] = value,
-                            );
-                          },
-                          onDeleteAchievement: (index) {
-                            setState(() => _achievements.removeAt(index));
-                          },
+                          extras: _extras, achievements: _achievements,
+                          onAddExtra: () => setState(() => _extras.add({'name': '', 'score': '', 'description': ''})),
+                          onAddAchievement: () => setState(() => _achievements.add({'name': '', 'type': '', 'description': ''})),
+                          onExtraChanged: (i, f, v) => setState(() => _extras[i][f] = v),
+                          onDeleteExtra: (i) => setState(() => _extras.removeAt(i)),
+                          onAchievementChanged: (i, f, v) => setState(() => _achievements[i][f] = v),
+                          onDeleteAchievement: (i) => setState(() => _achievements.removeAt(i)),
                           onMarkUnsaved: _markUnsaved,
                         ),
-                        ReportCardInfoTab(
-                          sickCtrl: _sickCtrl,
-                          permitCtrl: _permitCtrl,
-                          absentCtrl: _absentCtrl,
-                          notesCtrl: _notesCtrl,
-                          promotionDecision: _promotionDecision,
-                          decisions: _decisions,
-                          onPromotionChanged: (v) {
-                            setState(() => _promotionDecision = v!);
-                            _markUnsaved();
-                          },
-                        ),
-                      ],
-                    ),
-            ),
-          ],
-        ),
+                        ReportCardInfoTab(sickCtrl: _sickCtrl, permitCtrl: _permitCtrl, absentCtrl: _absentCtrl, notesCtrl: _notesCtrl,
+                          promotionDecision: _promotionDecision, decisions: _decisions,
+                          onPromotionChanged: (v) { setState(() => _promotionDecision = v!); _markUnsaved(); }),
+                      ]),
+          ),
+        ]),
+
+        // Footer
         bottomNavigationBar: SafeArea(
           child: Container(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: ColorUtils.slate100)),
+              boxShadow: [BoxShadow(color: ColorUtils.slate900.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, -2))]),
+            child: Row(children: [
+              Expanded(
+                key: _saveDraftKey,
+                child: OutlinedButton(
+                  onPressed: _isSaving ? null : () => _saveReportCard(status: 'draft'),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), side: BorderSide(color: ColorUtils.slate300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  child: _isSaving ? SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: p))
+                      : Text('Simpan Draft', style: TextStyle(color: ColorUtils.slate600, fontWeight: FontWeight.w600)),
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    key: _saveDraftKey,
-                    onPressed: _isSaving
-                        ? null
-                        : () => _saveReportCard(status: 'draft'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(color: ColorUtils.corporateBlue600),
-                    ),
-                    child: _isSaving
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            'Simpan Draft',
-                            style: TextStyle(
-                              color: ColorUtils.corporateBlue600,
-                            ),
-                          ),
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                key: _finalizeKey,
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : () {
+                    showDialog(context: context, builder: (ctx) => AlertDialog(
+                      title: Text(AppLocalizations.finalizeReportCard.tr),
+                      content: Text(AppLocalizations.finalizeReportCardConfirm.tr),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.cancel.tr)),
+                        ElevatedButton(onPressed: () { Navigator.pop(ctx); _saveReportCard(status: 'final'); },
+                          style: ElevatedButton.styleFrom(backgroundColor: p, foregroundColor: Colors.white),
+                          child: Text(AppLocalizations.yesFinalize.tr)),
+                      ],
+                    ));
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: p, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  child: const Text('Selesaikan', style: TextStyle(fontWeight: FontWeight.w600)),
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: ElevatedButton(
-                    key: _finalizeKey,
-                    onPressed: _isSaving
-                        ? null
-                        : () {
-                            // Confirmation dialog before final save
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text(
-                                  AppLocalizations.finalizeReportCard.tr,
-                                ),
-                                content: Text(
-                                  AppLocalizations.finalizeReportCardConfirm.tr,
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => AppNavigator.pop(context),
-                                    child: Text(AppLocalizations.cancel.tr),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      AppNavigator.pop(context);
-                                      _saveReportCard(status: 'final');
-                                    },
-                                    child: Text(
-                                      AppLocalizations.yesFinalize.tr,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: ColorUtils.corporateBlue600,
-                    ),
-                    child: const Text(
-                      'Selesaikan',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ]),
           ),
         ),
       ),
@@ -838,41 +630,38 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
-        _buildSectionTitle('Sikap Spiritual'),
+        _buildSectionTitle('Sikap Spiritual', Icons.self_improvement_rounded),
         _buildDropdown('Predikat', _spiritualPredicate, _predicates, (v) {
           setState(() => _spiritualPredicate = v!);
           _markUnsaved();
         }),
         const SizedBox(height: AppSpacing.md),
-        _buildTextField('Deskripsi', _spiritualDescCtrl, maxLines: 4),
+        _buildTextField('Deskripsi', _spiritualDescCtrl, maxLines: 3, hint: 'Deskripsi sikap spiritual...'),
 
-        const SizedBox(height: AppSpacing.xxl),
-        const Divider(),
-        const SizedBox(height: AppSpacing.lg),
+        Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(color: ColorUtils.slate100, height: 1)),
 
-        _buildSectionTitle('Sikap Sosial'),
+        _buildSectionTitle('Sikap Sosial', Icons.people_outline_rounded),
         _buildDropdown('Predikat', _socialPredicate, _predicates, (v) {
           setState(() => _socialPredicate = v!);
           _markUnsaved();
         }),
         const SizedBox(height: AppSpacing.md),
-        _buildTextField('Deskripsi', _socialDescCtrl, maxLines: 4),
+        _buildTextField('Deskripsi', _socialDescCtrl, maxLines: 3, hint: 'Deskripsi sikap sosial...'),
       ],
     );
   }
 
-  // --- WIDGET BUILDERS ---
-  Widget _buildSectionTitle(String title) {
+  // --- WIDGET BUILDERS (modern pattern) ---
+  Widget _buildSectionTitle(String title, IconData icon) {
+    final p = ColorUtils.getRoleColor('guru');
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: ColorUtils.slate700,
-        ),
-      ),
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(children: [
+        Container(width: 28, height: 28, decoration: BoxDecoration(color: p.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, size: 16, color: p)),
+        const SizedBox(width: 10),
+        Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate900)),
+      ]),
     );
   }
 
@@ -881,83 +670,77 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
     TextEditingController controller, {
     int maxLines = 1,
     bool isNumber = false,
+    String? hint,
   }) {
+    final p = ColorUtils.getRoleColor('guru');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-        const SizedBox(height: AppSpacing.xs),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: ColorUtils.slate600)),
+        const SizedBox(height: 6),
         TextField(
           controller: controller,
           maxLines: maxLines,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+          style: const TextStyle(fontSize: 13),
           decoration: InputDecoration(
             isDense: true,
             filled: true,
-            fillColor: Colors.grey.shade50,
-            border: OutlineInputBorder(
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide(
-                color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide(
-                color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide(color: ColorUtils.getRoleColor('guru')),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
+            fillColor: ColorUtils.slate50,
+            hintText: hint,
+            hintStyle: TextStyle(fontSize: 12, color: ColorUtils.slate400),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: p, width: 1.5)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           ),
         ),
       ],
     );
   }
 
+  Widget _buildChipSelector(
+    String label,
+    String value,
+    List<String> items,
+    Function(String?) onChanged,
+  ) {
+    final p = ColorUtils.getRoleColor('guru');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: ColorUtils.slate600)),
+        const SizedBox(height: 6),
+        Wrap(spacing: 6, runSpacing: 6, children: items.map((item) {
+          final selected = item == value;
+          return GestureDetector(
+            onTap: () => onChanged(item),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: selected ? p.withValues(alpha: 0.1) : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: selected ? p.withValues(alpha: 0.3) : ColorUtils.slate200, width: selected ? 1.5 : 1),
+              ),
+              child: Text(item, style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.w400, color: selected ? p : ColorUtils.slate500)),
+            ),
+          );
+        }).toList()),
+      ],
+    );
+  }
+
+  // Keep old _buildDropdown for backward compat but redirect to chips
   Widget _buildDropdown(
     String label,
     String value,
     List<String> items,
     Function(String?) onChanged,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-        const SizedBox(height: AppSpacing.xs),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: ColorUtils.getRoleColor('guru').withValues(alpha: 0.5),
-            ),
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
-            color: Colors.grey.shade50,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
-              isExpanded: true,
-              items: items
-                  .map(
-                    (item) => DropdownMenuItem(value: item, child: Text(item)),
-                  )
-                  .toList(),
-              onChanged: onChanged,
-            ),
-          ),
-        ),
-      ],
-    );
+    return _buildChipSelector(label, value, items, onChanged);
   }
 
+  // Old dropdown code removed — replaced with _buildChipSelector above
   Future<void> _checkAndShowTour() async {
     try {
       // Cache-only: tour status pre-fetched from dashboard
