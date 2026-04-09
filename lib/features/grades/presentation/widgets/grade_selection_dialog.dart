@@ -1,25 +1,8 @@
-// Dialog for selecting one or more grade items (from history) and computing
-// their average.  Extracted from `_showGradeSelectionDialog` in
-// `teacher_grade_recap_screen.dart`.
-//
-// Think of it like a Vue child component that receives props (`rawGrades`,
-// `studentClassId`, `type`) and emits an event (`onAverageSelected`) with
-// the computed average value.
-
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 
-/// Shows a dialog that lets the user pick grade items and returns the average.
-///
-/// [rawGrades] -- full list of raw grade records (from the API).
-/// [studentClassId] -- which student-class row we are editing.
-/// [type] -- column type: 'bab', 'uts', 'uas', 'skill_score', etc.
-/// [chapterIndex] -- only needed when [type] == 'bab'.
-/// [onAverageSelected] -- called with the computed average when the user
-///   confirms.  The caller is responsible for writing the value into its own
-///   state (like `_updateTableValue`).
+/// Bottom sheet for selecting grade items and computing their average.
 void showGradeSelectionDialog({
   required BuildContext context,
   required List<dynamic> rawGrades,
@@ -28,139 +11,124 @@ void showGradeSelectionDialog({
   int? chapterIndex,
   required void Function(double average) onAverageSelected,
 }) {
-  // ---------- Filter grades that belong to this student + type ----------
+  final p = ColorUtils.getRoleColor('guru');
+
   final studentGrades = rawGrades.where((g) {
-    final gStudentClassId =
-        (g['student_class_id'] ?? g['siswa_kelas_id'])?.toString();
-    return gStudentClassId == studentClassId;
+    final gId = (g['student_class_id'] ?? g['siswa_kelas_id'])?.toString();
+    return gId == studentClassId;
   }).toList();
 
   List<dynamic> options = [];
   if (type == 'bab') {
     options = studentGrades.where((g) {
-      final typeStr =
-          (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
-      return [
-        'uh',
-        'tugas',
-        'praktek',
-        'formatif',
-        'sumatif',
-      ].contains(typeStr);
+      final t = (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
+      return ['uh', 'tugas', 'praktek', 'formatif', 'sumatif'].contains(t);
     }).toList();
   } else {
     options = studentGrades.where((g) {
-      final typeStr =
-          (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
-      if (type.toLowerCase() == 'uts') {
-        return typeStr == 'uts' || typeStr == 'pts';
-      } else if (type.toLowerCase() == 'uas') {
-        return typeStr == 'uas' || typeStr == 'pas';
-      }
-      return typeStr == type.toLowerCase();
+      final t = (g['type'] ?? g['jenis'])?.toString().toLowerCase() ?? '';
+      if (type.toLowerCase() == 'uts') return t == 'uts' || t == 'pts';
+      if (type.toLowerCase() == 'uas') return t == 'uas' || t == 'pas';
+      return t == type.toLowerCase();
     }).toList();
   }
 
-  // ---------- Show the dialog ----------
-  showDialog(
-    context: context,
-    builder: (context) {
-      final List<dynamic> selectedItems = [];
-      return StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: Text(
-              type == 'bab'
-                  ? 'Pilih Nilai Harian/UH'
-                  : 'Pilih Nilai ${type.toUpperCase()}',
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: options.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(AppLocalizations.noGradeDataFound.tr),
-                    )
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            'Pilih satu atau lebih nilai untuk dirata-ratakan.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: ColorUtils.slate500,
-                            ),
-                          ),
-                        ),
-                        Flexible(
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: options.length,
-                            itemBuilder: (context, index) {
-                              final g = options[index];
-                              final score =
-                                  (g['score'] ?? g['nilai'] ?? '0').toString();
-                              final title =
-                                  g['assessment']?['title'] ??
-                                  g['title'] ??
-                                  g['judul'] ??
-                                  'Nilai';
-                              final date =
-                                  g['assessment']?['date'] ??
-                                  g['date'] ??
-                                  g['tanggal'] ??
-                                  '';
-                              final isSelected = selectedItems.contains(g);
+  showModalBottomSheet(
+    context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+    builder: (ctx) {
+      final selected = <dynamic>[];
+      return StatefulBuilder(builder: (ctx, setSS) => Container(
+        height: MediaQuery.of(ctx).size.height * 0.6,
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        child: Column(children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
+            decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [p, p.withValues(alpha: 0.85)]),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
+            child: Column(children: [
+              Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 12), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+              Row(children: [
+                Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.checklist_rounded, color: Colors.white, size: 20)),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(type == 'bab' ? 'Pilih Nilai Harian/UH' : 'Pilih Nilai ${type.toUpperCase()}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                  Text('Pilih untuk dirata-ratakan', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                ])),
+                IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close, color: Colors.white)),
+              ]),
+            ]),
+          ),
+          // List
+          Expanded(child: options.isEmpty
+            ? Center(child: Text(AppLocalizations.noGradeDataFound.tr, style: TextStyle(color: ColorUtils.slate400)))
+            : ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                itemCount: options.length,
+                separatorBuilder: (_, __) => Divider(height: 1, color: ColorUtils.slate100),
+                itemBuilder: (_, i) {
+                  final g = options[i];
+                  final score = (g['score'] ?? g['nilai'] ?? '0').toString();
+                  final title = g['assessment']?['title'] ?? g['title'] ?? g['judul'] ?? 'Nilai';
+                  final date = (g['assessment']?['date'] ?? g['date'] ?? g['tanggal'] ?? '').toString();
+                  final dFmt = date.length >= 10 ? '${date.substring(8, 10)}/${date.substring(5, 7)}/${date.substring(0, 4)}' : date;
+                  final isSelected = selected.contains(g);
+                  final scoreVal = double.tryParse(score) ?? 0;
 
-                              return CheckboxListTile(
-                                title: Text('$title ($score)'),
-                                subtitle: Text(date),
-                                value: isSelected,
-                                activeColor: ColorUtils.primary,
-                                onChanged: (val) {
-                                  setDialogState(() {
-                                    if (val == true) {
-                                      selectedItems.add(g);
-                                    } else {
-                                      selectedItems.remove(g);
-                                    }
-                                  });
-                                },
-                              );
-                            },
+                  return GestureDetector(
+                    onTap: () => setSS(() { if (isSelected) selected.remove(g); else selected.add(g); }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                      color: isSelected ? p.withValues(alpha: 0.05) : Colors.transparent,
+                      child: Row(children: [
+                        Container(
+                          width: 24, height: 24,
+                          decoration: BoxDecoration(
+                            color: isSelected ? p : Colors.transparent,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: isSelected ? p : ColorUtils.slate300, width: 1.5),
                           ),
+                          child: isSelected ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
                         ),
-                      ],
+                        const SizedBox(width: 12),
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ColorUtils.slate800)),
+                          Text(dFmt, style: TextStyle(fontSize: 11, color: ColorUtils.slate400)),
+                        ])),
+                        Text(score, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: scoreVal >= 80 ? ColorUtils.success600 : (scoreVal >= 60 ? ColorUtils.warning600 : ColorUtils.error600))),
+                      ]),
                     ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => AppNavigator.pop(context),
-                child: Text(AppLocalizations.cancel.tr),
+                  );
+                },
               ),
-              ElevatedButton(
-                onPressed: selectedItems.isEmpty
-                    ? null
-                    : () {
-                        double sum = 0;
-                        for (var item in selectedItems) {
-                          final s =
-                              (item['score'] ?? item['nilai'] ?? '0')
-                                  .toString();
-                          sum += double.tryParse(s) ?? 0;
-                        }
-                        final average = sum / selectedItems.length;
-                        onAverageSelected(average);
-                        AppNavigator.pop(context);
-                      },
-                child: Text('Gunakan Rata-rata'),
-              ),
-            ],
-          );
-        },
-      );
+          ),
+          // Footer
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+            decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: ColorUtils.slate200)),
+              boxShadow: [BoxShadow(color: ColorUtils.slate900.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, -2))]),
+            child: SafeArea(top: false, child: Row(children: [
+              Expanded(child: OutlinedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), side: BorderSide(color: ColorUtils.slate300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: Text('Batal', style: TextStyle(color: ColorUtils.slate600, fontWeight: FontWeight.w600)),
+              )),
+              const SizedBox(width: 12),
+              Expanded(child: ElevatedButton(
+                onPressed: selected.isEmpty ? null : () {
+                  double sum = 0;
+                  for (final item in selected) { sum += double.tryParse((item['score'] ?? item['nilai'] ?? '0').toString()) ?? 0; }
+                  onAverageSelected(sum / selected.length);
+                  Navigator.pop(ctx);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: p, foregroundColor: Colors.white, elevation: 0, disabledBackgroundColor: ColorUtils.slate200, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: Text(selected.isEmpty ? 'Gunakan Rata-rata' : 'Gunakan Rata-rata (${selected.length})', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+              )),
+            ])),
+          ),
+        ]),
+      ));
     },
   );
 }

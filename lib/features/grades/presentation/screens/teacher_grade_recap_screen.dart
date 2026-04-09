@@ -1229,57 +1229,98 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage> {
         backgroundColor: ColorUtils.slate50,
         body: Column(
           children: [
-            // Pattern #7 Gradient Header — extracted to GradeRecapAppBar
-            GradeRecapAppBar(
-              currentStep: _currentStep,
-              primaryColor: _getPrimaryColor(),
-              title: languageProvider.getTranslatedText({
-                'en': 'Grade Recap',
-                'id': 'Rekap Nilai',
-              }),
-              selectClassLabel: languageProvider.getTranslatedText({
-                'en': 'Select Class',
-                'id': 'Pilih Kelas',
-              }),
-              selectedClassName:
-                  _selectedClass?['nama'] ?? _selectedClass?['name'] ?? '',
-              selectedSubjectName:
-                  _selectedSubject?['nama'] ?? _selectedSubject?['name'] ?? '',
-              updateDataLabel: AppLocalizations.updateData.tr,
-              saveKey: _saveKey,
-              exportKey: _exportKey,
-              isSaving: _isSaving,
-              onBack: _handleBackButton,
-              onSave: _saveRecaps,
-              onRefresh: _forceRefresh,
-              onExportExcel: () {
-                if (!_isExporting) _exportToExcel();
-              },
-            ),
+            // Dialog-style header (matching Buku Nilai)
+            if (widget.initialClass != null && widget.initialSubject != null)
+              _buildDialogHeader(languageProvider)
+            else
+              GradeRecapAppBar(
+                currentStep: _currentStep,
+                primaryColor: _getPrimaryColor(),
+                title: languageProvider.getTranslatedText({'en': 'Grade Recap', 'id': 'Rekap Nilai'}),
+                selectClassLabel: languageProvider.getTranslatedText({'en': 'Select Class', 'id': 'Pilih Kelas'}),
+                selectedClassName: _selectedClass?['nama'] ?? _selectedClass?['name'] ?? '',
+                selectedSubjectName: _selectedSubject?['nama'] ?? _selectedSubject?['name'] ?? '',
+                updateDataLabel: AppLocalizations.updateData.tr,
+                saveKey: _saveKey,
+                exportKey: _exportKey,
+                isSaving: _isSaving,
+                onBack: _handleBackButton,
+                onSave: _saveRecaps,
+                onRefresh: _forceRefresh,
+                onExportExcel: () { if (!_isExporting) _exportToExcel(); },
+              ),
 
-            // Step indicator or search bar
-            if (_currentStep < 2)
+            // Search bar (wizard mode only)
+            if (_currentStep < 2 && widget.initialClass == null)
               GradeRecapSearchBar(
                 controller: _searchController,
                 hintText: languageProvider.getTranslatedText({
-                  'en': _currentStep == 0
-                      ? 'Search classes...'
-                      : 'Search subjects...',
-                  'id': _currentStep == 0
-                      ? 'Cari kelas...'
-                      : 'Cari mata pelajaran...',
+                  'en': _currentStep == 0 ? 'Search classes...' : 'Search subjects...',
+                  'id': _currentStep == 0 ? 'Cari kelas...' : 'Cari mata pelajaran...',
                 }),
                 onChanged: (_) => setState(() {}),
-                onClear: () {
-                  _searchController.clear();
-                  setState(() {});
-                },
+                onClear: () { _searchController.clear(); setState(() {}); },
               ),
 
             Expanded(child: _buildBody(languageProvider)),
           ],
         ),
       ),
+    );
+  }
+
+  /// Dialog-style header matching Buku Nilai pattern
+  Widget _buildDialogHeader(LanguageProvider lp) {
+    final p = _getPrimaryColor();
+    final subjectName = _selectedSubject?['nama'] ?? _selectedSubject?['name'] ?? '';
+    final className = _selectedClass?['nama'] ?? _selectedClass?['name'] ?? '';
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [p, p.withValues(alpha: 0.85)]),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(children: [
+        // Drag handle
+        Container(margin: const EdgeInsets.only(top: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+        // Title row
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 14),
+          child: Row(children: [
+            Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.assessment_outlined, color: Colors.white, size: 18)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(lp.getTranslatedText({'en': 'Grade Recap', 'id': 'Rekap Nilai'}), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text('$subjectName - $className', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9)), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ])),
+            // Save
+            GestureDetector(
+              key: _saveKey,
+              onTap: _isSaving ? null : _saveRecaps,
+              child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                child: _isSaving
+                    ? const Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.save_rounded, color: Colors.white, size: 16)),
+            ),
+            const SizedBox(width: 6),
+            // Export
+            GestureDetector(
+              key: _exportKey,
+              onTap: _isExporting ? null : _exportToExcel,
+              child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                child: const Icon(Icons.download_rounded, color: Colors.white, size: 16)),
+            ),
+            const SizedBox(width: 6),
+            // Close
+            GestureDetector(
+              onTap: () async { final canLeave = await _onWillPop(); if (canLeave && mounted) Navigator.pop(context); },
+              child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+                child: const Icon(Icons.close, color: Colors.white, size: 18)),
+            ),
+          ]),
+        ),
+      ]),
     );
   }
 
