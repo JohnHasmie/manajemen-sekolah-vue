@@ -349,6 +349,13 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
             'skill_score': x['skill_score']?.toString() ?? '0',
             'skill_predicate': x['skill_predicate'] ?? '',
             'skill_description': x['skill_description'] ?? '',
+            // Recap summary for display
+            'recap_uh_avg': x['recap_uh_avg'],
+            'recap_uts': x['recap_uts'],
+            'recap_uas': x['recap_uas'],
+            'recap_final_score': x['recap_final_score'],
+            'recap_bab_scores': x['recap_bab_scores'] ?? [],
+            'recap_bab_names': x['recap_bab_names'] ?? [],
           },
         ),
       );
@@ -356,12 +363,12 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
   }
 
   void _syncSubjectsWithRecap(List<dynamic> initialGrades) {
-    // Add missing subjects from recap
+    // Add missing subjects and merge recap summary into existing ones
     for (var recapItem in initialGrades) {
-      final bool exists = _subjects.any(
+      final existingIndex = _subjects.indexWhere(
         (s) => s['subject_id'] == recapItem['subject_id'],
       );
-      if (!exists) {
+      if (existingIndex == -1) {
         _subjects.add({
           'subject_id': recapItem['subject_id'],
           'subject_name': recapItem['subject_name'] ?? 'Mapel',
@@ -371,7 +378,21 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
           'skill_score': recapItem['skill_score']?.toString() ?? '0',
           'skill_predicate': recapItem['skill_predicate'] ?? '',
           'skill_description': recapItem['skill_description'] ?? '',
+          'recap_uh_avg': recapItem['recap_uh_avg'],
+          'recap_uts': recapItem['recap_uts'],
+          'recap_uas': recapItem['recap_uas'],
+          'recap_final_score': recapItem['recap_final_score'],
+          'recap_bab_scores': recapItem['recap_bab_scores'] ?? [],
+          'recap_bab_names': recapItem['recap_bab_names'] ?? [],
         });
+      } else {
+        // Merge recap summary into existing subject
+        _subjects[existingIndex]['recap_uh_avg'] = recapItem['recap_uh_avg'];
+        _subjects[existingIndex]['recap_uts'] = recapItem['recap_uts'];
+        _subjects[existingIndex]['recap_uas'] = recapItem['recap_uas'];
+        _subjects[existingIndex]['recap_final_score'] = recapItem['recap_final_score'];
+        _subjects[existingIndex]['recap_bab_scores'] = recapItem['recap_bab_scores'] ?? [];
+        _subjects[existingIndex]['recap_bab_names'] = recapItem['recap_bab_names'] ?? [];
       }
     }
   }
