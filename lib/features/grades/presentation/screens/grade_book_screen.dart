@@ -31,7 +31,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
+
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_assessment_detail_dialog.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_column_options_sheet.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_confirm_delete_dialog.dart';
@@ -628,17 +628,19 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                         color: ColorUtils.slate50,
                         child: Column(children: [
                           Container(
+                            height: 40,
                             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: ColorUtils.slate200)),
                             child: TextField(
                               controller: _searchController,
                               style: TextStyle(color: ColorUtils.slate900, fontSize: 13),
+                              textAlignVertical: TextAlignVertical.center,
                               decoration: InputDecoration(
                                 hintText: languageProvider.getTranslatedText({'en': 'Search students...', 'id': 'Cari siswa...'}),
                                 hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
                                 prefixIcon: Icon(Icons.search, color: ColorUtils.slate400, size: 18),
                                 border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                                isCollapsed: true,
                               ),
                               onSubmitted: (_) => FocusScope.of(context).unfocus(),
                             ),
@@ -696,12 +698,8 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                 ])
                               : _isCardView
                                   ? _buildStudentCardList(languageProvider)
-                                  : ListView(children: [
-                                      Container(
-                                        margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: ColorUtils.slate200)),
-                                        clipBehavior: Clip.antiAlias,
-                                        child: GradeTableWidget(
+                                  : ListView(padding: EdgeInsets.zero, children: [
+                                      GradeTableWidget(
                                           filteredStudentList: _filteredStudentList,
                                           filteredGradeTypeList: _filteredGradeTypeList,
                                           assessmentHeaders: _assessmentHeaders,
@@ -722,7 +720,6 @@ class GradeBookPageState extends ConsumerState<GradeBookPage> {
                                             return error;
                                           },
                                         ),
-                                      ),
                                     ]),
                         ),
                       ),
@@ -1077,87 +1074,38 @@ class _GradeBookHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [primaryColor, primaryColor.withValues(alpha: 0.85)]),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(children: [
+        // Drag handle
+        Container(margin: const EdgeInsets.only(top: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+        // Title row
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 14),
+          child: Row(children: [
+            Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.menu_book_outlined, color: Colors.white, size: 18)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9)), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ])),
+            // View toggle
+            GestureDetector(onTap: onToggleView, child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+              child: Icon(isCardView ? Icons.table_chart_rounded : Icons.view_agenda_rounded, color: Colors.white, size: 16))),
+            const SizedBox(width: 6),
+            // Export
+            GestureDetector(onTap: onExport, child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+              child: const Icon(Icons.download_rounded, color: Colors.white, size: 16))),
+            const SizedBox(width: 6),
+            // Close
+            GestureDetector(onTap: onBack, child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+              child: const Icon(Icons.close, color: Colors.white, size: 18))),
+          ]),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: onBack,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          // View toggle
-          GestureDetector(
-            onTap: onToggleView,
-            child: Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: const BorderRadius.all(Radius.circular(10))),
-              child: Icon(isCardView ? Icons.table_chart_rounded : Icons.view_agenda_rounded, color: Colors.white, size: 18),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          // Export button
-          GestureDetector(
-            onTap: onExport,
-            child: Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: const BorderRadius.all(Radius.circular(10))),
-              child: const Icon(Icons.download_rounded, color: Colors.white, size: 18),
-            ),
-          ),
-        ],
-      ),
+      ]),
     );
   }
 }
@@ -1193,8 +1141,6 @@ class _GradeInputDialogState extends State<_GradeInputDialog> {
 
   final _types = ['uh', 'tugas', 'uts', 'uas', 'pts', 'pas'];
   final _typeLabels = {'uh': 'UH', 'tugas': 'Tugas', 'uts': 'UTS', 'uas': 'UAS', 'pts': 'PTS', 'pas': 'PAS'};
-  static const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-  static const _days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 
   @override
   void initState() {
@@ -1212,8 +1158,6 @@ class _GradeInputDialogState extends State<_GradeInputDialog> {
     for (final f in _scoreFocusNodes.values) { f.dispose(); }
     super.dispose();
   }
-
-  String _formatDate(DateTime d) => '${_days[d.weekday - 1]}, ${d.day} ${_months[d.month - 1]} ${d.year}';
 
   Future<void> _submit() async {
     final entries = _scoreControllers.entries.where((e) => e.value.text.trim().isNotEmpty).toList();
@@ -1262,13 +1206,19 @@ class _GradeInputDialogState extends State<_GradeInputDialog> {
     }
   }
 
+  String _fmtDate(DateTime d) {
+    const m = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return '${d.day} ${m[d.month - 1]} ${d.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = widget.primaryColor;
     final subjectName = widget.subject['name'] ?? widget.subject['nama'] ?? '-';
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.8,
+      initialChildSize: 0.85,
       minChildSize: 0.5,
       maxChildSize: 0.96,
       expand: false,
@@ -1284,7 +1234,7 @@ class _GradeInputDialogState extends State<_GradeInputDialog> {
             child: Column(children: [
               Container(margin: const EdgeInsets.only(top: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 12, 16),
+                padding: const EdgeInsets.fromLTRB(20, 12, 12, 14),
                 child: Row(children: [
                   Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
                     child: const Icon(Icons.add_chart_rounded, color: Colors.white, size: 18)),
@@ -1303,131 +1253,127 @@ class _GradeInputDialogState extends State<_GradeInputDialog> {
             ]),
           ),
 
-          // ── Form body ──
-          Expanded(child: ListView(
-            controller: scrollController,
-            padding: const EdgeInsets.all(16),
-            children: [
-              // Type selector chips
-              Text('Jenis Penilaian', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600)),
-              const SizedBox(height: 8),
-              Wrap(spacing: 6, runSpacing: 6, children: _types.map((t) {
+          // ── Sticky config: type + date + title ──
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              // Type chips
+              SizedBox(height: 32, child: ListView(scrollDirection: Axis.horizontal, children: _types.map((t) {
                 final selected = t == _selectedType;
-                return GestureDetector(
+                return Padding(padding: const EdgeInsets.only(right: 6), child: GestureDetector(
                   onTap: () => setState(() => _selectedType = t),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: selected ? p.withValues(alpha: 0.1) : Colors.white,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: selected ? p.withValues(alpha: 0.3) : ColorUtils.slate200),
                     ),
-                    child: Text(_typeLabels[t] ?? t.toUpperCase(), style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.w400, color: selected ? p : ColorUtils.slate500)),
+                    child: Text(_typeLabels[t] ?? t.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: selected ? FontWeight.w600 : FontWeight.w400, color: selected ? p : ColorUtils.slate500)),
                   ),
-                );
-              }).toList()),
-
-              const SizedBox(height: 16),
-              // Date card (matching Tanggal Kegiatan pattern)
-              GestureDetector(
-                onTap: () async {
-                  final d = await showModernDatePicker(context: context, initialDate: _selectedDate, title: 'Pilih Tanggal Penilaian');
-                  if (d != null) setState(() => _selectedDate = d);
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(color: ColorUtils.slate50, borderRadius: BorderRadius.circular(12)),
-                  child: Row(children: [
-                    Container(width: 34, height: 34, decoration: BoxDecoration(color: p.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                      child: Icon(Icons.calendar_today_rounded, size: 17, color: p)),
-                    const SizedBox(width: 10),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Tanggal', style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 1),
-                      Text(_formatDate(_selectedDate), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: ColorUtils.slate800)),
-                    ])),
-                    Icon(Icons.chevron_right_rounded, size: 18, color: ColorUtils.slate300),
-                  ]),
+                ));
+              }).toList())),
+              const SizedBox(height: 8),
+              // Date + Title row
+              Row(children: [
+                GestureDetector(
+                  onTap: () async {
+                    final d = await showModernDatePicker(context: context, initialDate: _selectedDate, title: 'Pilih Tanggal Penilaian');
+                    if (d != null) setState(() => _selectedDate = d);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(color: ColorUtils.slate50, borderRadius: BorderRadius.circular(8)),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.calendar_today_rounded, size: 13, color: p),
+                      const SizedBox(width: 6),
+                      Text(_fmtDate(_selectedDate), style: TextStyle(fontSize: 11, color: ColorUtils.slate700, fontWeight: FontWeight.w500)),
+                    ]),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              // Title
-              TextField(
-                controller: _titleController,
-                style: const TextStyle(fontSize: 13),
-                decoration: InputDecoration(
-                  hintText: 'Judul penilaian (opsional)',
-                  hintStyle: TextStyle(fontSize: 12, color: ColorUtils.slate400),
-                  filled: true, fillColor: ColorUtils.slate50,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(
+                  controller: _titleController,
+                  style: const TextStyle(fontSize: 12),
+                  decoration: InputDecoration(
+                    hintText: 'Judul (opsional)',
+                    hintStyle: TextStyle(fontSize: 11, color: ColorUtils.slate400),
+                    filled: true, fillColor: ColorUtils.slate50,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    isDense: true,
+                  ),
+                )),
+              ]),
+            ]),
+          ),
+          Divider(height: 1, color: ColorUtils.slate100),
+
+          // ── Student list (scrollable, keyboard-aware) ──
+          Expanded(child: ListView.builder(
+            controller: scrollController,
+            padding: EdgeInsets.only(bottom: bottomInset > 0 ? bottomInset : MediaQuery.of(context).padding.bottom + 60),
+            itemCount: widget.studentList.length,
+            itemBuilder: (ctx, i) {
+              final student = widget.studentList[i];
+              final ctrl = _scoreControllers[student.id]!;
+              final focusNode = _scoreFocusNodes[student.id]!;
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: i.isEven ? Colors.white : ColorUtils.slate50,
+                  border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
                 ),
-              ),
-
-              Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(color: ColorUtils.slate100, height: 1)),
-
-              // Student score inputs
-              Text('Masukkan Nilai (0-100)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600)),
-              const SizedBox(height: 10),
-
-              ...widget.studentList.asMap().entries.map((e) {
-                final i = e.key;
-                final student = e.value;
-                final ctrl = _scoreControllers[student.id]!;
-                final focusNode = _scoreFocusNodes[student.id]!;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(color: i.isEven ? Colors.white : ColorUtils.slate50, borderRadius: BorderRadius.circular(8)),
-                  child: Row(children: [
-                    SizedBox(width: 22, child: Text('${i + 1}', style: TextStyle(fontSize: 10, color: ColorUtils.slate400, fontWeight: FontWeight.w600))),
-                    Expanded(child: Text(student.name, style: TextStyle(fontSize: 13, color: ColorUtils.slate800), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                    SizedBox(
-                      width: 64,
-                      child: TextField(
-                        controller: ctrl,
-                        focusNode: focusNode,
-                        keyboardType: TextInputType.number,
-                        textInputAction: i < widget.studentList.length - 1 ? TextInputAction.next : TextInputAction.done,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: p),
-                        decoration: InputDecoration(
-                          hintText: '-',
-                          hintStyle: TextStyle(color: ColorUtils.slate300, fontWeight: FontWeight.w400),
-                          filled: true, fillColor: Colors.white,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ColorUtils.slate200)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ColorUtils.slate200)),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: p, width: 1.5)),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                          isDense: true,
-                        ),
-                        onSubmitted: (_) => _focusStudent(i + 1),
+                child: Row(children: [
+                  SizedBox(width: 24, child: Text('${i + 1}', style: TextStyle(fontSize: 10, color: ColorUtils.slate400, fontWeight: FontWeight.w600))),
+                  Expanded(child: Text(student.name, style: TextStyle(fontSize: 13, color: ColorUtils.slate800), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                  SizedBox(
+                    width: 64,
+                    child: TextField(
+                      controller: ctrl,
+                      focusNode: focusNode,
+                      keyboardType: TextInputType.number,
+                      textInputAction: i < widget.studentList.length - 1 ? TextInputAction.next : TextInputAction.done,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: p),
+                      decoration: InputDecoration(
+                        hintText: '-',
+                        hintStyle: TextStyle(color: ColorUtils.slate300, fontWeight: FontWeight.w400),
+                        filled: true, fillColor: Colors.white,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ColorUtils.slate200)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: ColorUtils.slate200)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: p, width: 1.5)),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                        isDense: true,
                       ),
+                      onSubmitted: (_) => _focusStudent(i + 1),
                     ),
-                  ]),
-                );
-              }),
-
-              SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-            ],
+                  ),
+                ]),
+              );
+            },
           )),
 
           // ── Bottom bar ──
-          Container(
-            padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
-            decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: ColorUtils.slate100))),
-            child: SizedBox(
-              width: double.infinity, height: 46,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _submit,
-                style: ElevatedButton.styleFrom(backgroundColor: p, foregroundColor: Colors.white, elevation: 0, disabledBackgroundColor: ColorUtils.slate300, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: _isSaving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Simpan Nilai', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          if (bottomInset == 0)
+            SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: ColorUtils.slate100))),
+                child: SizedBox(
+                  width: double.infinity, height: 46,
+                  child: ElevatedButton(
+                    onPressed: _isSaving ? null : _submit,
+                    style: ElevatedButton.styleFrom(backgroundColor: p, foregroundColor: Colors.white, elevation: 0, disabledBackgroundColor: ColorUtils.slate300, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    child: _isSaving
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('Simpan Nilai', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  ),
+                ),
               ),
             ),
-          ),
         ]),
       ),
     );

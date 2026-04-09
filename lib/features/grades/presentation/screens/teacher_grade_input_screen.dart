@@ -109,11 +109,22 @@ class GradePageState extends ConsumerState<GradePage> {
   }
 
   void _openGradeBook(dynamic classData, dynamic subject) {
-    AppNavigator.push(context, GradeBookPage(
-      teacher: widget.teacher,
-      subject: {'id': subject['id'], 'nama': subject['name'], 'name': subject['name'], 'kode': subject['code'], 'code': subject['code']},
-      classData: {'id': classData['class_id'], 'nama': classData['class_name'], 'name': classData['class_name'], 'grade_level': classData['grade_level']},
-    ));
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.95,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: GradeBookPage(
+            teacher: widget.teacher,
+            subject: {'id': subject['id'], 'nama': subject['name'], 'name': subject['name'], 'kode': subject['code'], 'code': subject['code']},
+            classData: {'id': classData['class_id'], 'nama': classData['class_name'], 'name': classData['class_name'], 'grade_level': classData['grade_level']},
+          ),
+        ),
+      ),
+    ).then((_) => _loadData());
   }
 
   Map<String, dynamic> _safeMap(dynamic raw) {
@@ -260,6 +271,34 @@ class GradePageState extends ConsumerState<GradePage> {
 
   // ── Filter dialog ──
 
+  Widget _filterSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(children: [
+        Container(width: 28, height: 28, decoration: BoxDecoration(color: _p.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, size: 16, color: _p)),
+        const SizedBox(width: 10),
+        Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate900)),
+      ]),
+    );
+  }
+
+  Widget _filterChip(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? _p.withValues(alpha: 0.1) : ColorUtils.slate50,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: isSelected ? _p : ColorUtils.slate200, width: isSelected ? 1.5 : 1),
+        ),
+        child: Text(label, style: TextStyle(fontSize: 13, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500, color: isSelected ? _p : ColorUtils.slate600)),
+      ),
+    );
+  }
+
   void _showFilterDialog(LanguageProvider lp) {
     String? tempClassId = _filterClassId;
     String? tempClassName = _filterClassName;
@@ -270,58 +309,70 @@ class GradePageState extends ConsumerState<GradePage> {
       context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(builder: (ctx, setSS) {
         return Container(
-          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: ColorUtils.slate300, borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 16),
-            Row(children: [
-              Text('Filter', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ColorUtils.slate900)),
-              const Spacer(),
-              GestureDetector(onTap: () { setSS(() { tempClassId = null; tempClassName = null; tempSubjectId = null; tempSubjectName = null; }); },
-                child: Text('Reset', style: TextStyle(fontSize: 13, color: ColorUtils.error600, fontWeight: FontWeight.w600))),
-            ]),
-            const SizedBox(height: 16),
-            // Class filter
-            Align(alignment: Alignment.centerLeft, child: Text('Kelas', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600))),
-            const SizedBox(height: 8),
-            Wrap(spacing: 6, runSpacing: 6, children: _availableClasses.map((c) {
-              final selected = c['id'] == tempClassId;
-              return ChoiceChip(
-                label: Text(c['name']!), selected: selected, showCheckmark: false,
-                labelStyle: TextStyle(fontSize: 12, color: selected ? _p : ColorUtils.slate600, fontWeight: selected ? FontWeight.w600 : FontWeight.w400),
-                selectedColor: _p.withValues(alpha: 0.12), side: BorderSide(color: selected ? _p.withValues(alpha: 0.3) : ColorUtils.slate200),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                visualDensity: VisualDensity.compact, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                onSelected: (_) => setSS(() { tempClassId = selected ? null : c['id']; tempClassName = selected ? null : c['name']; }),
-              );
-            }).toList()),
-            const SizedBox(height: 16),
-            // Subject filter
-            Align(alignment: Alignment.centerLeft, child: Text('Mata Pelajaran', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate600))),
-            const SizedBox(height: 8),
-            Wrap(spacing: 6, runSpacing: 6, children: _availableSubjects.map((s) {
-              final selected = s['id'] == tempSubjectId;
-              return ChoiceChip(
-                label: Text(s['name']!), selected: selected, showCheckmark: false,
-                labelStyle: TextStyle(fontSize: 12, color: selected ? _p : ColorUtils.slate600, fontWeight: selected ? FontWeight.w600 : FontWeight.w400),
-                selectedColor: _p.withValues(alpha: 0.12), side: BorderSide(color: selected ? _p.withValues(alpha: 0.3) : ColorUtils.slate200),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                visualDensity: VisualDensity.compact, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                onSelected: (_) => setSS(() { tempSubjectId = selected ? null : s['id']; tempSubjectName = selected ? null : s['name']; }),
-              );
-            }).toList()),
-            const SizedBox(height: 20),
-            SizedBox(width: double.infinity, height: 46, child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                setState(() { _filterClassId = tempClassId; _filterClassName = tempClassName; _filterSubjectId = tempSubjectId; _filterSubjectName = tempSubjectName; });
-                _loadData();
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: _p, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: Text('Terapkan', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          height: MediaQuery.of(ctx).size.height * 0.6,
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          child: Column(children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [_p, _p.withValues(alpha: 0.85)]),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(children: [
+                Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 12), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+                Row(children: [
+                  Container(width: 36, height: 36, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.tune_rounded, color: Colors.white, size: 20)),
+                  const SizedBox(width: 12),
+                  Text(lp.getTranslatedText({'en': 'Filter', 'id': 'Filter'}), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                  const Spacer(),
+                  IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close, color: Colors.white)),
+                ]),
+              ]),
+            ),
+
+            // Content
+            Expanded(child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                _filterSectionHeader(lp.getTranslatedText({'en': 'Class', 'id': 'Pilih Kelas'}), Icons.class_outlined),
+                Wrap(spacing: 8, runSpacing: 8, children: _availableClasses.map((c) {
+                  final selected = c['id'] == tempClassId;
+                  return _filterChip(c['name']!, selected, () => setSS(() { tempClassId = selected ? null : c['id']; tempClassName = selected ? null : c['name']; }));
+                }).toList()),
+                const SizedBox(height: 24),
+                _filterSectionHeader(lp.getTranslatedText({'en': 'Subject', 'id': 'Pilih Mapel'}), Icons.book_outlined),
+                Wrap(spacing: 8, runSpacing: 8, children: _availableSubjects.map((s) {
+                  final selected = s['id'] == tempSubjectId;
+                  return _filterChip(s['name']!, selected, () => setSS(() { tempSubjectId = selected ? null : s['id']; tempSubjectName = selected ? null : s['name']; }));
+                }).toList()),
+              ]),
             )),
-            SizedBox(height: MediaQuery.of(ctx).padding.bottom),
+
+            // Footer
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: ColorUtils.slate200)),
+                boxShadow: [BoxShadow(color: ColorUtils.slate900.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, -2))]),
+              child: SafeArea(top: false, child: Row(children: [
+                Expanded(child: OutlinedButton(
+                  onPressed: () { setSS(() { tempClassId = null; tempClassName = null; tempSubjectId = null; tempSubjectName = null; }); },
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), side: BorderSide(color: ColorUtils.slate300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  child: Text('Reset', style: TextStyle(color: ColorUtils.slate600, fontWeight: FontWeight.w600)),
+                )),
+                const SizedBox(width: 12),
+                Expanded(flex: 2, child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    setState(() { _filterClassId = tempClassId; _filterClassName = tempClassName; _filterSubjectId = tempSubjectId; _filterSubjectName = tempSubjectName; });
+                    _loadData();
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: _p, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  child: Text(lp.getTranslatedText({'en': 'Apply Filter', 'id': 'Terapkan Filter'}), style: const TextStyle(fontWeight: FontWeight.w600)),
+                )),
+              ])),
+            ),
           ]),
         );
       }),
