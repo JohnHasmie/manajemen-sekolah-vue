@@ -33,8 +33,9 @@ Future<void> _goBack(WidgetTester tester) async {
     if (backBtn.evaluate().isNotEmpty) {
       await tester.tap(backBtn.first);
     } else {
-      final navigator =
-          tester.state<NavigatorState>(find.byType(Navigator).last);
+      final navigator = tester.state<NavigatorState>(
+        find.byType(Navigator).last,
+      );
       navigator.pop();
     }
   }

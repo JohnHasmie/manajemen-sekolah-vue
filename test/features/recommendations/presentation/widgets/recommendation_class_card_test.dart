@@ -36,32 +36,31 @@ Widget _build({
   VoidCallback? onToggleExpand,
   VoidCallback? onGenerate,
   void Function(Map<String, dynamic>)? onHistoryItemTap,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: RecommendationClassCard(
-              className: className,
-              classId: classId,
-              classData: {'id': classId, 'name': className},
-              summary: summary,
-              primaryColor: primaryColor,
-              isLoading: isLoading,
-              isGenerating: isGenerating,
-              schedulesLoaded: schedulesLoaded,
-              history: history,
-              isLoadingHistory: isLoadingHistory,
-              isExpanded: isExpanded,
-              onToggleExpand: onToggleExpand ?? () {},
-              onGenerate: onGenerate ?? () {},
-              onHistoryItemTap: onHistoryItemTap ?? (_) {},
-            ),
-          ),
+}) => MaterialApp(
+  home: Scaffold(
+    body: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: RecommendationClassCard(
+          className: className,
+          classId: classId,
+          classData: {'id': classId, 'name': className},
+          summary: summary,
+          primaryColor: primaryColor,
+          isLoading: isLoading,
+          isGenerating: isGenerating,
+          schedulesLoaded: schedulesLoaded,
+          history: history,
+          isLoadingHistory: isLoadingHistory,
+          isExpanded: isExpanded,
+          onToggleExpand: onToggleExpand ?? () {},
+          onGenerate: onGenerate ?? () {},
+          onHistoryItemTap: onHistoryItemTap ?? (_) {},
         ),
       ),
-    );
+    ),
+  ),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -91,21 +90,25 @@ void main() {
       expect(find.text('Memuat...'), findsOneWidget);
     });
 
-    testWidgets('shows "Belum ada rekomendasi" when totalRec=0 and !isLoading',
-        (tester) async {
-      await tester.pumpWidget(_build(isLoading: false, summary: null));
-      expect(find.text('Belum ada rekomendasi'), findsOneWidget);
-    });
+    testWidgets(
+      'shows "Belum ada rekomendasi" when totalRec=0 and !isLoading',
+      (tester) async {
+        await tester.pumpWidget(_build(isLoading: false, summary: null));
+        expect(find.text('Belum ada rekomendasi'), findsOneWidget);
+      },
+    );
 
     testWidgets('shows count text when totalRec > 0', (tester) async {
-      await tester.pumpWidget(_build(
-        summary: {
-          'by_status': {'pending': 3, 'completed': 2}
-        },
-        history: [
-          {'date': '2025-03-01', 'count': 5, 'trigger_source': 'on_demand'},
-        ],
-      ));
+      await tester.pumpWidget(
+        _build(
+          summary: {
+            'by_status': {'pending': 3, 'completed': 2},
+          },
+          history: [
+            {'date': '2025-03-01', 'count': 5, 'trigger_source': 'on_demand'},
+          ],
+        ),
+      );
       // totalRec = 3+2 = 5, history.length = 1
       expect(find.textContaining('5 rekomendasi'), findsOneWidget);
       expect(find.textContaining('1 sesi'), findsOneWidget);
@@ -119,8 +122,7 @@ void main() {
     });
 
     testWidgets('no generate button when collapsed', (tester) async {
-      await tester.pumpWidget(
-          _build(isExpanded: false, schedulesLoaded: true));
+      await tester.pumpWidget(_build(isExpanded: false, schedulesLoaded: true));
       expect(find.text('Generate Rekomendasi AI'), findsNothing);
     });
   });
@@ -131,73 +133,67 @@ void main() {
       expect(find.byType(Divider), findsOneWidget);
     });
 
-    testWidgets('shows "Belum ada riwayat rekomendasi" when history empty',
-        (tester) async {
-      await tester.pumpWidget(_build(
-        isExpanded: true,
-        history: [],
-        isLoadingHistory: false,
-      ));
+    testWidgets('shows "Belum ada riwayat rekomendasi" when history empty', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(isExpanded: true, history: [], isLoadingHistory: false),
+      );
       expect(find.text('Belum ada riwayat rekomendasi'), findsOneWidget);
     });
 
-    testWidgets('shows CircularProgressIndicator when isLoadingHistory=true',
-        (tester) async {
-      await tester.pumpWidget(_build(
-        isExpanded: true,
-        isLoadingHistory: true,
-      ));
+    testWidgets('shows CircularProgressIndicator when isLoadingHistory=true', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_build(isExpanded: true, isLoadingHistory: true));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('no history empty label when isLoadingHistory=true',
-        (tester) async {
-      await tester.pumpWidget(_build(
-        isExpanded: true,
-        isLoadingHistory: true,
-      ));
+    testWidgets('no history empty label when isLoadingHistory=true', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_build(isExpanded: true, isLoadingHistory: true));
       expect(find.text('Belum ada riwayat rekomendasi'), findsNothing);
     });
   });
 
   group('RecommendationClassCard — generate button', () {
-    testWidgets('shows generate button when expanded + schedulesLoaded',
-        (tester) async {
-      await tester.pumpWidget(_build(
-        isExpanded: true,
-        schedulesLoaded: true,
-        isGenerating: false,
-      ));
+    testWidgets('shows generate button when expanded + schedulesLoaded', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(isExpanded: true, schedulesLoaded: true, isGenerating: false),
+      );
       expect(find.text('Generate Rekomendasi AI'), findsOneWidget);
     });
 
-    testWidgets('no generate button when schedulesLoaded=false', (tester) async {
-      await tester.pumpWidget(_build(
-        isExpanded: true,
-        schedulesLoaded: false,
-      ));
+    testWidgets('no generate button when schedulesLoaded=false', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_build(isExpanded: true, schedulesLoaded: false));
       expect(find.text('Generate Rekomendasi AI'), findsNothing);
     });
 
     testWidgets('shows "Memproses..." when isGenerating=true', (tester) async {
-      await tester.pumpWidget(_build(
-        isExpanded: true,
-        schedulesLoaded: true,
-        isGenerating: true,
-      ));
+      await tester.pumpWidget(
+        _build(isExpanded: true, schedulesLoaded: true, isGenerating: true),
+      );
       expect(find.text('Memproses...'), findsOneWidget);
       expect(find.text('Generate Rekomendasi AI'), findsNothing);
     });
 
-    testWidgets('fires onGenerate when button tapped (not generating)',
-        (tester) async {
+    testWidgets('fires onGenerate when button tapped (not generating)', (
+      tester,
+    ) async {
       bool called = false;
-      await tester.pumpWidget(_build(
-        isExpanded: true,
-        schedulesLoaded: true,
-        isGenerating: false,
-        onGenerate: () => called = true,
-      ));
+      await tester.pumpWidget(
+        _build(
+          isExpanded: true,
+          schedulesLoaded: true,
+          isGenerating: false,
+          onGenerate: () => called = true,
+        ),
+      );
       await tester.tap(find.text('Generate Rekomendasi AI'));
       expect(called, isTrue);
     });
@@ -206,9 +202,7 @@ void main() {
   group('RecommendationClassCard — callbacks', () {
     testWidgets('fires onToggleExpand when header tapped', (tester) async {
       bool toggled = false;
-      await tester.pumpWidget(
-        _build(onToggleExpand: () => toggled = true),
-      );
+      await tester.pumpWidget(_build(onToggleExpand: () => toggled = true));
       await tester.tap(find.byType(InkWell).first);
       expect(toggled, isTrue);
     });

@@ -1,20 +1,11 @@
-// Reusable option tile for the "Pilih Cakupan Siswa" bottom sheet.
-// Like a Vue component for a single selectable row with an icon, title, and subtitle.
-// Tapping the tile pops the sheet and returns the [value] (bool) to the caller.
+// Reusable option tile for the scope picker bottom sheet.
+// Redesigned with a modern card style: gradient icon, filled background
+// on hover, and a clear visual hierarchy.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// A single tappable row used inside the scope-picker bottom sheet.
-///
-/// Constructor params replace all references to parent state:
-/// - [ctx] -- the BuildContext of the bottom sheet (used to pop with a value)
-/// - [value] -- the bool value to return when this tile is tapped
-/// - [icon] -- leading icon
-/// - [title] -- main label
-/// - [subtitle] -- description text
-/// - [color] -- accent color for icon background and border
 class ScopeOptionTile extends StatelessWidget {
   final BuildContext ctx;
   final bool value;
@@ -36,31 +27,41 @@ class ScopeOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => AppNavigator.pop(ctx, value),
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              border: Border.all(color: ColorUtils.slate200),
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              color: color.withValues(alpha: 0.04),
+              border: Border.all(color: color.withValues(alpha: 0.15)),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
             ),
             child: Row(
               children: [
+                // Icon with gradient background
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    border: Border.all(color: color.withValues(alpha: 0.2)),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        color.withValues(alpha: 0.18),
+                        color.withValues(alpha: 0.08),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
-                  child: Icon(icon, size: 20, color: color),
+                  child: Icon(icon, size: 22, color: color),
                 ),
-                const SizedBox(width: AppSpacing.md),
+                const SizedBox(width: 14),
+
+                // Text content
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,26 +69,38 @@ class ScopeOptionTile extends StatelessWidget {
                       Text(
                         title,
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
                           color: ColorUtils.slate800,
+                          letterSpacing: -0.2,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         subtitle,
                         style: TextStyle(
                           fontSize: 12,
                           color: ColorUtils.slate500,
+                          height: 1.3,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: ColorUtils.slate400,
+
+                // Arrow
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: color,
+                  ),
                 ),
               ],
             ),
