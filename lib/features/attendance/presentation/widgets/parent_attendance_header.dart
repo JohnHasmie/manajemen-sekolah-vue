@@ -101,9 +101,9 @@ class ParentAttendanceHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      AppLocalizations.childPresence.tr,
-                      style: const TextStyle(
+                    const Text(
+                      'Kehadiran Anak',
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -132,7 +132,11 @@ class ParentAttendanceHeader extends StatelessWidget {
                     value: 'refresh',
                     child: Row(
                       children: [
-                        Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
+                        Icon(
+                          Icons.refresh,
+                          size: 20,
+                          color: ColorUtils.info600,
+                        ),
                         const SizedBox(width: AppSpacing.sm),
                         Text(AppLocalizations.updateData.tr),
                       ],
@@ -193,9 +197,7 @@ class ParentAttendanceHeader extends StatelessWidget {
                       Center(
                         child: Icon(
                           Icons.tune_rounded,
-                          color: hasActiveFilter
-                              ? primaryColor
-                              : Colors.white,
+                          color: hasActiveFilter ? primaryColor : Colors.white,
                           size: 22,
                         ),
                       ),
@@ -231,7 +233,9 @@ class ParentAttendanceHeader extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 8),
                       child: InkWell(
                         onTap: chip['onRemove'] as VoidCallback,
-                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(10),
+                        ),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -239,7 +243,9 @@ class ParentAttendanceHeader extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: const BorderRadius.all(Radius.circular(10)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(10),
+                            ),
                             border: Border.all(
                               color: Colors.white.withValues(alpha: 0.5),
                             ),

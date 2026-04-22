@@ -5,27 +5,21 @@
 // focused on the list/table overview. This page is navigated to when an admin
 // taps a specific attendance summary row.
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/widgets/empty_state.dart';
-import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/students/domain/models/student.dart';
-import 'package:manajemensekolah/features/students/data/student_service.dart';
-import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
-import 'package:manajemensekolah/features/attendance/exports/attendance_export_service.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/error_utils.dart';
-import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_stat_card.dart';
-import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_student_card.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
+import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
+import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_detail_data_mixin.dart';
+import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_detail_export_mixin.dart';
+import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_detail_save_mixin.dart';
+import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_detail_status_mixin.dart';
+import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_detail_style_mixin.dart';
+import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_detail_ui_mixin.dart';
+import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_detail_ui_list_mixin.dart';
+import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_detail_ui_stats_mixin.dart';
 
-// ========== ADMIN ABSENSI DETAIL PAGE ==========
 class AdminAttendanceDetailPage extends ConsumerStatefulWidget {
   final String subjectId;
   final String classId;
@@ -54,7 +48,16 @@ class AdminAttendanceDetailPage extends ConsumerStatefulWidget {
 }
 
 class _AdminAttendanceDetailPageState
-    extends ConsumerState<AdminAttendanceDetailPage> {
+    extends ConsumerState<AdminAttendanceDetailPage>
+    with
+        admin_detail_data_mixin,
+        admin_detail_status_mixin,
+        admin_detail_save_mixin,
+        admin_detail_export_mixin,
+        admin_detail_style_mixin,
+        admin_detail_ui_mixin,
+        admin_detail_ui_list_mixin,
+        admin_detail_ui_stats_mixin {
   List<Attendance> _attendanceData = [];
   List<Student> _studentList = [];
   bool _isLoading = true;
@@ -62,10 +65,39 @@ class _AdminAttendanceDetailPageState
   final Map<String, String> _tempAttendanceStatus = {};
   bool _isSaving = false;
 
+  // Implement mixin abstract properties
+  @override
+  List<Attendance> get attendanceData => _attendanceData;
+  @override
+  set attendanceData(List<Attendance> value) => _attendanceData = value;
+
+  @override
+  List<Student> get studentList => _studentList;
+  @override
+  set studentList(List<Student> value) => _studentList = value;
+
+  @override
+  bool get isLoading => _isLoading;
+  @override
+  set isLoading(bool value) => _isLoading = value;
+
+  @override
+  Map<String, String> get tempAttendanceStatus => _tempAttendanceStatus;
+
+  @override
+  bool get isSaving => _isSaving;
+  @override
+  set isSaving(bool value) => _isSaving = value;
+
+  @override
+  bool get isEditing => _isEditing;
+  @override
+  set isEditing(bool value) => _isEditing = value;
+
   @override
   void initState() {
     super.initState();
-    _loadData();
+    loadData();
   }
 
   @override
@@ -73,126 +105,23 @@ class _AdminAttendanceDetailPageState
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    try {
-      // 1. Load attendance data
-      final attendanceData = await AttendanceService.getAttendance(
-        subjectId: widget.subjectId,
-        date: DateFormat('yyyy-MM-dd').format(widget.date),
-        classId: widget.classId,
-        lessonHourId: widget.lessonHourId,
-        academicYearId: widget.academicYearId,
-      );
-
-      // 2. Load students by class ID (from widget parameter)
-      List<dynamic> studentData;
-      if (widget.classId.isNotEmpty) {
-        studentData = await getIt<ApiStudentService>().getStudentByClass(
-          widget.classId,
-          academicYearId: widget.academicYearId,
-        );
-        AppLogger.info(
-          'attendance',
-          'Loaded ${studentData.length} students for class: ${widget.classId} in year: ${widget.academicYearId}',
-        );
-      } else {
-        // Fallback: if no classId provided, try to get from attendance data
-        if (attendanceData.isNotEmpty) {
-          final classIdFromData = attendanceData.first.classId;
-          if (classIdFromData != null && classIdFromData.isNotEmpty) {
-            studentData = await getIt<ApiStudentService>().getStudentByClass(
-              classIdFromData,
-              academicYearId: widget.academicYearId,
-            );
-            AppLogger.info(
-              'attendance',
-              'Loaded ${studentData.length} students for class: $classIdFromData (from attendance data)',
-            );
-          } else {
-            studentData = await getIt<ApiStudentService>().getStudent();
-            AppLogger.info(
-              'attendance',
-              'Loaded all students (no class ID available)',
-            );
-          }
-        } else {
-          studentData = await getIt<ApiStudentService>().getStudent();
-          AppLogger.info(
-            'attendance',
-            'Loaded all students (no attendance data)',
-          );
-        }
-      }
-
-      AppLogger.info(
-        'attendance',
-        'Loaded ${attendanceData.length} attendance records',
-      );
-
-      setState(() {
-        _studentList = studentData.map((s) => Student.fromJson(s)).toList();
-        _attendanceData = attendanceData;
-
-        // Initialize temp status
-        _tempAttendanceStatus.clear();
-        for (var s in _studentList) {
-          _tempAttendanceStatus[s.id] = _getStudentStatus(s.id);
-        }
-
-        _isLoading = false;
-      });
-    } catch (e) {
-      AppLogger.error(
-        'attendance',
-        'Error loading absensi detail for admin: $e',
-      );
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> exportDetail() async {
-    if (_attendanceData.isEmpty) {
-      SnackBarUtils.showWarning(
-        context,
-        AppLocalizations.noDataToExport.tr,
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await ExcelPresenceService.exportPresenceToExcel(
-        presenceData: _attendanceData,
-        context: context,
-      );
-    } catch (e) {
-      AppLogger.error('attendance', 'Error exporting activities: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Color _getPrimaryColor() {
+  // Implement mixin abstract methods for admin_detail_ui_mixin
+  @override
+  Color getPrimaryColor() {
     return ColorUtils.getRoleColor('admin');
   }
 
-  LinearGradient _getCardGradient() {
+  @override
+  LinearGradient getCardGradient() {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [_getPrimaryColor(), _getPrimaryColor().withValues(alpha: 0.85)],
+      colors: [getPrimaryColor(), getPrimaryColor().withValues(alpha: 0.85)],
     );
   }
 
-  // Method to get student's attendance status
-  String _getStudentStatus(String studentId) {
+  @override
+  String getStudentStatusFromData(String studentId) {
     try {
       final attendanceRecord = _attendanceData.firstWhere(
         (a) => a.studentId.toString() == studentId.toString(),
@@ -203,603 +132,77 @@ class _AdminAttendanceDetailPageState
           status: 'alpha',
         ),
       );
-      return (attendanceRecord.status).toLowerCase();
+      return attendanceRecord.status.toLowerCase();
     } catch (e) {
       return 'alpha';
     }
   }
 
-  String _mapStatusToBackend(String status) {
-    switch (status.toLowerCase()) {
-      case 'hadir':
-        return 'present';
-      case 'terlambat':
-        return 'late';
-      case 'izin':
-        return 'excused';
-      case 'sakit':
-        return 'sick';
-      case 'alpha':
-      case 'absent':
-        return 'absent';
-      default:
-        return 'present';
-    }
-  }
-
-  Future<void> _saveChanges() async {
-    final languageProvider = ref.read(languageRiverpod);
-
-    setState(() => _isSaving = true);
-
-    String? teacherId;
-    if (_attendanceData.isNotEmpty) {
-      teacherId = _attendanceData.first.teacherId;
-    }
-
-    if (teacherId == null) {
-      setState(() => _isSaving = false);
-      SnackBarUtils.showError(context, 'Error: Guru ID tidak ditemukan');
-      return;
-    }
-
-    int successCount = 0;
-    String lastError = '';
-
-    try {
-      final dateStr = DateFormat('yyyy-MM-dd').format(widget.date);
-
-      for (var student in _studentList) {
-        try {
-          final status = _tempAttendanceStatus[student.id] ?? 'alpha';
-
-          await AttendanceService.createAttendance({
-            'student_id': student.id,
-            'teacher_id': teacherId,
-            'subject_id': widget.subjectId,
-            'class_id': widget.classId,
-            'date': dateStr,
-            'status': _mapStatusToBackend(status),
-            'lesson_hour_id': widget.lessonHourId,
-            'notes': '',
-          });
-          successCount++;
-        } catch (e) {
-          lastError = e.toString();
-          AppLogger.error(
-            'attendance',
-            'Error saving for student ${student.name}: $e',
-          );
-        }
-      }
-
-      if (successCount > 0) {
-        if (!mounted) return;
-        SnackBarUtils.showInfo(
-          context,
-          languageProvider.getTranslatedText({
-            'en': 'Attendance updated successfully ($successCount students)',
-            'id': 'Absensi berhasil diperbarui ($successCount siswa)',
-          }),
-        );
-
-        setState(() {
-          _isEditing = false;
-          _isSaving = false;
-        });
-        _loadData(); // Reload to get fresh data from server
-      } else {
-        throw Exception('${AppLocalizations.failedToSave.tr}: $lastError');
-      }
-    } catch (e) {
-      setState(() => _isSaving = false);
-      if (!mounted) return;
-      SnackBarUtils.showError(
-        context,
-        '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
-      );
-    }
-  }
-
-  // Helper functions
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'hadir':
-      case 'present':
-        return ColorUtils.success600;
-      case 'izin':
-      case 'excused':
-      case 'permission':
-        return ColorUtils.info600;
-      case 'sakit':
-      case 'sick':
-        return ColorUtils.warning600;
-      case 'alpha':
-      case 'absent':
-        return ColorUtils.error600;
-      case 'terlambat':
-      case 'late':
-        return ColorUtils.violet700;
-      default:
-        return ColorUtils.slate400;
-    }
-  }
-
-  String _getStatusText(String status, LanguageProvider languageProvider) {
-    switch (status.toLowerCase()) {
-      case 'hadir':
-      case 'present':
-        return languageProvider.getTranslatedText({
-          'en': 'Present',
-          'id': 'Hadir',
-        });
-      case 'izin':
-      case 'excused':
-      case 'permission':
-        return languageProvider.getTranslatedText({
-          'en': 'Permission',
-          'id': 'Izin',
-        });
-      case 'sakit':
-      case 'sick':
-        return languageProvider.getTranslatedText({
-          'en': 'Sick',
-          'id': 'Sakit',
-        });
-      case 'alpha':
-      case 'absent':
-        return languageProvider.getTranslatedText({
-          'en': 'Absent',
-          'id': 'Alpha',
-        });
-      case 'terlambat':
-      case 'late':
-        return languageProvider.getTranslatedText({
-          'en': 'Late',
-          'id': 'Terlambat',
-        });
-      default:
-        return languageProvider.getTranslatedText({
-          'en': 'Unknown',
-          'id': 'Tidak Diketahui',
-        });
-    }
-  }
-
-  // Method to calculate statistics
-  Map<String, int> _calculateStatistics() {
-    int hadir = 0;
-    int terlambat = 0;
-    int izin = 0;
-    int sakit = 0;
-    int alpha = 0;
-
-    for (var student in _studentList) {
-      final status = _getStudentStatus(student.id);
-      switch (status.toLowerCase()) {
-        case 'hadir':
-        case 'present':
-          hadir++;
-          break;
-        case 'terlambat':
-        case 'late':
-          terlambat++;
-          break;
-        case 'izin':
-        case 'excused':
-        case 'permission':
-          izin++;
-          break;
-        case 'sakit':
-        case 'sick':
-          sakit++;
-          break;
-        case 'alpha':
-        case 'absent':
-          alpha++;
-          break;
-      }
-    }
-
-    return {
-      'hadir': hadir,
-      'terlambat': terlambat,
-      'izin': izin,
-      'sakit': sakit,
-      'alpha': alpha,
-      'total': _studentList.length,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
-    final stats = _calculateStatistics();
-    final totalAbsent = stats['alpha']!;
+    final stats = calculateStatistics();
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       bottomNavigationBar: _isEditing
-          ? SafeArea(
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: ColorUtils.slate900.withValues(alpha: 0.12),
-                      blurRadius: 10,
-                      offset: Offset(0, -4),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : _saveChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _getPrimaryColor(),
-                    minimumSize: Size(double.infinity, 50),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                  ),
-                  child: _isSaving
-                      ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Save Changes',
-                            'id': 'Simpan Perubahan',
-                          }),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                ),
-              ),
-            )
+          ? _buildSaveButton(languageProvider)
           : null,
       body: Column(
         children: [
-          // Pattern #7 Inline Gradient Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 12,
-              left: 16,
-              right: 16,
-              bottom: 16,
-            ),
-            decoration: BoxDecoration(
-              gradient: _getCardGradient(),
-              boxShadow: [
-                BoxShadow(
-                  color: _getPrimaryColor().withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        if (_isEditing) {
-                          setState(() {
-                            _isEditing = false;
-                            for (var s in _studentList) {
-                              _tempAttendanceStatus[s.id] = _getStudentStatus(
-                                s.id,
-                              );
-                            }
-                          });
-                        } else {
-                          AppNavigator.pop(context);
-                        }
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: const BorderRadius.all(Radius.circular(10)),
-                        ),
-                        child: Icon(
-                          _isEditing ? Icons.close : Icons.arrow_back,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _isEditing
-                                ? languageProvider.getTranslatedText({
-                                    'en': 'Edit Attendance',
-                                    'id': 'Edit Absensi',
-                                  })
-                                : languageProvider.getTranslatedText({
-                                    'en': 'Attendance Details',
-                                    'id': 'Detail Absensi',
-                                  }),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            widget.subjectName,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        if (_isEditing) {
-                          _saveChanges();
-                        } else {
-                          setState(() => _isEditing = true);
-                        }
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: const BorderRadius.all(Radius.circular(10)),
-                        ),
-                        child: Icon(
-                          _isEditing ? Icons.check : Icons.edit,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    if (!_isEditing)
-                      PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'refresh') _loadData();
-                          if (value == 'export') exportDetail();
-                        },
-                        icon: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: const BorderRadius.all(Radius.circular(10)),
-                          ),
-                          child: Icon(
-                            Icons.more_vert,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'export',
-                            child: Row(
-                              children: [
-                                Icon(Icons.file_download, size: 20),
-                                const SizedBox(width: AppSpacing.sm),
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Export to Excel',
-                                    'id': 'Export ke Excel',
-                                  }),
-                                ),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'refresh',
-                            child: Row(
-                              children: [
-                                Icon(Icons.refresh, size: 20),
-                                const SizedBox(width: AppSpacing.sm),
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Refresh',
-                                    'id': 'Refresh',
-                                  }),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                      color: Colors.white.withValues(alpha: 0.8),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      DateFormat(
-                        'EEEE, dd MMMM yyyy',
-                        'id_ID',
-                      ).format(widget.date),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                    if (widget.lessonHourName != null &&
-                        widget.lessonHourName!.isNotEmpty) ...[
-                      Text(
-                        ' • ',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                      ),
-                      Text(
-                        widget.lessonHourName!,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Statistics Cards
-          const SizedBox(height: AppSpacing.lg),
-          SizedBox(
-            height: 120,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                AttendanceStatCard(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'Present',
-                    'id': 'Hadir',
-                  }),
-                  count: stats['hadir']!,
-                  color: ColorUtils.success600,
-                  icon: Icons.check_circle,
-                ),
-                AttendanceStatCard(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'Late',
-                    'id': 'Terlambat',
-                  }),
-                  count: stats['terlambat']!,
-                  color: ColorUtils.warning600,
-                  icon: Icons.access_time,
-                ),
-                AttendanceStatCard(
-                  label: languageProvider.getTranslatedText({
-                    'en': 'Absent',
-                    'id': 'Tidak Hadir',
-                  }),
-                  count: totalAbsent,
-                  color: ColorUtils.error600,
-                  icon: Icons.cancel,
-                ),
-                if (stats['izin']! > 0)
-                  AttendanceStatCard(
-                    label: languageProvider.getTranslatedText({
-                      'en': 'Permission',
-                      'id': 'Izin',
-                    }),
-                    count: stats['izin']!,
-                    color: ColorUtils.info600,
-                    icon: Icons.event_note,
-                  ),
-                if (stats['sakit']! > 0)
-                  AttendanceStatCard(
-                    label: languageProvider.getTranslatedText({
-                      'en': 'Sick',
-                      'id': 'Sakit',
-                    }),
-                    count: stats['sakit']!,
-                    color: ColorUtils.violet700,
-                    icon: Icons.medical_services,
-                  ),
-              ],
-            ),
-          ),
-
-          // Student List Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Row(
-              children: [
-                Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Student List',
-                    'id': 'Daftar Siswa',
-                  }),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: ColorUtils.slate600,
-                  ),
-                ),
-                Spacer(),
-                Text(
-                  '${_studentList.length} ${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
-                  style: TextStyle(fontSize: 12, color: ColorUtils.slate600),
-                ),
-              ],
-            ),
-          ),
-
-          // Student List
-          Expanded(
-            child: _isLoading
-                ? SkeletonListLoading(
-                    itemCount: 8,
-                    infoTagCount: 1,
-                    showActions: false,
-                  )
-                : _studentList.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 40),
-                    child: EmptyState(
-                      title: languageProvider.getTranslatedText({
-                        'en': 'No Students Found',
-                        'id': 'Siswa Tidak Ditemukan',
-                      }),
-                      subtitle: AppLocalizations.noStudentsFoundForCriteria.tr,
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    itemCount: _studentList.length,
-                    itemBuilder: (context, index) {
-                      final student = _studentList[index];
-                      final status = _getStudentStatus(student.id);
-                      return AttendanceStudentCard(
-                        student: student,
-                        index: index,
-                        currentStatus: status,
-                        statusText: _getStatusText(status, languageProvider),
-                        statusColor: _getStatusColor(status),
-                        isEditing: _isEditing,
-                        tempStatus: _tempAttendanceStatus[student.id],
-                        onStatusChanged: (newStatus) {
-                          setState(() {
-                            _tempAttendanceStatus[student.id] = newStatus;
-                          });
-                        },
-                      );
-                    },
-                  ),
-          ),
+          buildHeader(context, languageProvider),
+          buildStatsCards(languageProvider, stats),
+          buildStudentListHeader(languageProvider),
+          buildStudentList(languageProvider),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSaveButton(LanguageProvider languageProvider) {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: ColorUtils.slate900.withValues(alpha: 0.12),
+              blurRadius: 10,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: _isSaving ? null : saveChanges,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: getPrimaryColor(),
+            minimumSize: const Size(double.infinity, 50),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+          ),
+          child: _isSaving
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Save Changes',
+                    'id': 'Simpan Perubahan',
+                  }),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+        ),
       ),
     );
   }

@@ -55,8 +55,9 @@ void main() {
       expect(find.text('0'), findsOneWidget);
     });
 
-    testWidgets('color is applied to the icon widget',
-        (WidgetTester tester) async {
+    testWidgets('color is applied to the icon widget', (
+      WidgetTester tester,
+    ) async {
       const testColor = Colors.red;
       await tester.pumpWidget(buildWidget(color: testColor, icon: Icons.close));
       final iconWidget = tester.widget<Icon>(

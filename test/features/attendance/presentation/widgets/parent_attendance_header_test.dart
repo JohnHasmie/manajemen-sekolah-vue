@@ -31,9 +31,7 @@ void main() {
       home: Scaffold(
         body: SingleChildScrollView(
           child: ParentAttendanceHeader(
-            gradient: const LinearGradient(
-              colors: [Colors.teal, Colors.green],
-            ),
+            gradient: const LinearGradient(colors: [Colors.teal, Colors.green]),
             primaryColor: Colors.teal,
             studentName: studentName,
             hasActiveFilter: hasActiveFilter,
@@ -56,12 +54,16 @@ void main() {
       expect(find.byType(ParentAttendanceHeader), findsOneWidget);
     });
 
-    testWidgets('shows student name when provided', (WidgetTester tester) async {
+    testWidgets('shows student name when provided', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildWidget(studentName: 'Siti Rahayu'));
       expect(find.text('Siti Rahayu'), findsOneWidget);
     });
 
-    testWidgets('student name is absent when null', (WidgetTester tester) async {
+    testWidgets('student name is absent when null', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildWidget(studentName: null));
       expect(find.text('Siti Rahayu'), findsNothing);
     });
@@ -80,8 +82,9 @@ void main() {
       expect(filterTapped, isTrue);
     });
 
-    testWidgets('search field fires onSearchChanged on text input',
-        (WidgetTester tester) async {
+    testWidgets('search field fires onSearchChanged on text input', (
+      WidgetTester tester,
+    ) async {
       bool changed = false;
       await tester.pumpWidget(
         buildWidget(onSearchChanged: () => changed = true),
@@ -90,8 +93,9 @@ void main() {
       expect(changed, isTrue);
     });
 
-    testWidgets('filter chip label is shown when hasActiveFilter is true',
-        (WidgetTester tester) async {
+    testWidgets('filter chip label is shown when hasActiveFilter is true', (
+      WidgetTester tester,
+    ) async {
       final chips = [
         {'label': 'Hadir', 'onRemove': () {}},
       ];

@@ -60,10 +60,7 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
               'en': 'Tap a status to apply to all students',
               'id': 'Ketuk status untuk diterapkan ke semua siswa',
             }),
-            style: TextStyle(
-              fontSize: 12,
-              color: ColorUtils.slate400,
-            ),
+            style: TextStyle(fontSize: 12, color: ColorUtils.slate400),
           ),
           const SizedBox(height: 16),
           // Status options

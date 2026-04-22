@@ -39,7 +39,9 @@ void main() {
       expect(find.text('Terlambat'), findsOneWidget);
     });
 
-    testWidgets('count text uses the provided color', (WidgetTester tester) async {
+    testWidgets('count text uses the provided color', (
+      WidgetTester tester,
+    ) async {
       const testColor = Colors.orange;
       await tester.pumpWidget(buildWidget(color: testColor, count: 3));
       final countText = tester.widget<Text>(find.text('3'));

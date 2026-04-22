@@ -53,9 +53,7 @@ class _HeaderWrapperState extends State<_HeaderWrapper>
       tabController: _tabController,
       tabSwitcherKey: GlobalKey(),
       primaryColor: Colors.blue,
-      gradient: const LinearGradient(
-        colors: [Colors.blue, Colors.blueAccent],
-      ),
+      gradient: const LinearGradient(colors: [Colors.blue, Colors.blueAccent]),
       currentTabIndex: widget.currentTabIndex,
       hasClassSelected: widget.hasClassSelected,
       languageProvider: widget.languageProvider,
@@ -99,21 +97,24 @@ void main() {
       expect(find.byType(AttendanceTeacherHeader), findsOneWidget);
     });
 
-    testWidgets('shows "Hasil Absensi" title when tab index is 0',
-        (WidgetTester tester) async {
+    testWidgets('shows "Hasil Absensi" title when tab index is 0', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildWidget(currentTabIndex: 0));
       // Default language is Indonesian — check for Indonesian title text.
       expect(find.text('Hasil Absensi'), findsWidgets);
     });
 
-    testWidgets('shows "Tambah Absensi" title when tab index is 1',
-        (WidgetTester tester) async {
+    testWidgets('shows "Tambah Absensi" title when tab index is 1', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildWidget(currentTabIndex: 1));
       expect(find.text('Tambah Absensi'), findsWidgets);
     });
 
-    testWidgets('back button fires onBack callback',
-        (WidgetTester tester) async {
+    testWidgets('back button fires onBack callback', (
+      WidgetTester tester,
+    ) async {
       bool backCalled = false;
       await tester.pumpWidget(buildWidget(onBack: () => backCalled = true));
 
@@ -135,8 +136,9 @@ void main() {
       expect(moreIcon, findsOneWidget);
     });
 
-    testWidgets('tab switcher contains both tab labels',
-        (WidgetTester tester) async {
+    testWidgets('tab switcher contains both tab labels', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildWidget());
       // Both tab items should be rendered inside the TabSwitcher.
       expect(find.text('Hasil Absensi'), findsWidgets);

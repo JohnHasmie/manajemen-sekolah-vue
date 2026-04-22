@@ -6,10 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/attendance/domain/models/attendance_summary.dart';
 
 Map<String, dynamic> _base({Map<String, dynamic>? overrides}) => {
-      'id': 'as-1',
-      'date': '2025-03-10',
-      ...?overrides,
-    };
+  'id': 'as-1',
+  'date': '2025-03-10',
+  ...?overrides,
+};
 
 void main() {
   // ---------------------------------------------------------------------------
@@ -92,7 +92,9 @@ void main() {
     });
 
     test('falls back to "tidak_hadir"', () {
-      final s = AttendanceSummary.fromJson(_base(overrides: {'tidak_hadir': 8}));
+      final s = AttendanceSummary.fromJson(
+        _base(overrides: {'tidak_hadir': 8}),
+      );
       expect(s.absent, 8);
     });
 
@@ -114,12 +116,16 @@ void main() {
   // ---------------------------------------------------------------------------
   group('AttendanceSummary.fromJson — totalStudents field', () {
     test('reads "total_students" directly', () {
-      final s = AttendanceSummary.fromJson(_base(overrides: {'total_students': 30}));
+      final s = AttendanceSummary.fromJson(
+        _base(overrides: {'total_students': 30}),
+      );
       expect(s.totalStudents, 30);
     });
 
     test('falls back to "total_siswa"', () {
-      final s = AttendanceSummary.fromJson(_base(overrides: {'total_siswa': 32}));
+      final s = AttendanceSummary.fromJson(
+        _base(overrides: {'total_siswa': 32}),
+      );
       expect(s.totalStudents, 32);
     });
 
@@ -134,7 +140,9 @@ void main() {
   // ---------------------------------------------------------------------------
   group('AttendanceSummary.fromJson — subjectName field', () {
     test('reads "subject_name" directly', () {
-      final s = AttendanceSummary.fromJson(_base(overrides: {'subject_name': 'Biologi'}));
+      final s = AttendanceSummary.fromJson(
+        _base(overrides: {'subject_name': 'Biologi'}),
+      );
       expect(s.subjectName, 'Biologi');
     });
 
@@ -156,7 +164,9 @@ void main() {
   // ---------------------------------------------------------------------------
   group('AttendanceSummary.fromJson — subjectId field', () {
     test('reads "subject_id" directly', () {
-      final s = AttendanceSummary.fromJson(_base(overrides: {'subject_id': 'sub-7'}));
+      final s = AttendanceSummary.fromJson(
+        _base(overrides: {'subject_id': 'sub-7'}),
+      );
       expect(s.subjectId, 'sub-7');
     });
 
@@ -175,7 +185,9 @@ void main() {
     });
 
     test('numeric subject_id coerced to String', () {
-      final s = AttendanceSummary.fromJson(_base(overrides: {'subject_id': 15}));
+      final s = AttendanceSummary.fromJson(
+        _base(overrides: {'subject_id': 15}),
+      );
       expect(s.subjectId, '15');
     });
   });

@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/status_badge.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_report_screen.dart';
 
 /// A card widget that displays a single [AttendanceSummary] in the admin
@@ -191,35 +192,37 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
               // Attendance info row
               Row(
                 children: [
-                  _AdminAttendanceInfoTag(
-                    icon: Icons.check_circle_outline,
+                  StatusBadge(
                     label: '${summary.present} Hadir',
-                    tagColor: ColorUtils.success600,
+                    color: ColorUtils.success600,
+                    icon: Icons.check_circle_outline,
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  _AdminAttendanceInfoTag(
-                    icon: Icons.cancel_outlined,
+                  StatusBadge(
                     label: '${summary.absent} Absen',
-                    tagColor: ColorUtils.error600,
+                    color: ColorUtils.error600,
+                    icon: Icons.cancel_outlined,
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  _AdminAttendanceInfoTag(
-                    icon: Icons.people_outline,
+                  StatusBadge(
                     label: '${summary.totalStudents} Siswa',
-                    tagColor: primaryColor,
+                    color: primaryColor,
+                    icon: Icons.people_outline,
                   ),
-                  Spacer(),
+                  const Spacer(),
                   // Detail button
                   GestureDetector(
                     onTap: onTap,
                     child: Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.08),
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                         border: Border.all(
                           color: primaryColor.withValues(alpha: 0.2),
                         ),
@@ -275,52 +278,3 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Private helper widget — replaces the _buildInfoTag method.
-// ---------------------------------------------------------------------------
-
-/// A small pill-shaped tag with an icon and a label.
-/// Like a Vue `<InfoTag>` component — purely presentational with no state.
-class _AdminAttendanceInfoTag extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color? tagColor;
-
-  const _AdminAttendanceInfoTag({
-    required this.icon,
-    required this.label,
-    this.tagColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = tagColor ?? ColorUtils.slate600;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: const BorderRadius.all(Radius.circular(6)),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: color),
-          const SizedBox(width: AppSpacing.xs),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

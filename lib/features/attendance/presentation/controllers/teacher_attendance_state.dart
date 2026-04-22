@@ -42,7 +42,7 @@ class TeacherAttendanceState {
     int sakit = 0;
     int alpha = 0;
 
-    for (var student in students) {
+    for (final student in students) {
       final status = editedStatus[student.id]?.toLowerCase() ?? 'absent';
       switch (status) {
         case 'present':

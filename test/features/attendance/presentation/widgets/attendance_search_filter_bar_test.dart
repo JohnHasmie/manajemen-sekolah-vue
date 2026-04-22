@@ -51,8 +51,9 @@ void main() {
       expect(find.text('Cari absensi...'), findsOneWidget);
     });
 
-    testWidgets('filter button is visible when showFilterButton is true',
-        (WidgetTester tester) async {
+    testWidgets('filter button is visible when showFilterButton is true', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildWidget(showFilterButton: true));
       final tuneIcon = find.byWidgetPredicate(
         (w) => w is Icon && w.icon == Icons.tune,
@@ -60,8 +61,9 @@ void main() {
       expect(tuneIcon, findsOneWidget);
     });
 
-    testWidgets('filter button is hidden when showFilterButton is false',
-        (WidgetTester tester) async {
+    testWidgets('filter button is hidden when showFilterButton is false', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildWidget(showFilterButton: false));
       final tuneIcon = find.byWidgetPredicate(
         (w) => w is Icon && w.icon == Icons.tune,
@@ -69,22 +71,21 @@ void main() {
       expect(tuneIcon, findsNothing);
     });
 
-    testWidgets('onFilterTap fires when filter button is tapped',
-        (WidgetTester tester) async {
+    testWidgets('onFilterTap fires when filter button is tapped', (
+      WidgetTester tester,
+    ) async {
       bool tapped = false;
       await tester.pumpWidget(
-        buildWidget(
-          showFilterButton: true,
-          onFilterTap: () => tapped = true,
-        ),
+        buildWidget(showFilterButton: true, onFilterTap: () => tapped = true),
       );
       await tester.tap(find.byType(IconButton));
       await tester.pump();
       expect(tapped, isTrue);
     });
 
-    testWidgets('onSearchChanged fires when text is typed',
-        (WidgetTester tester) async {
+    testWidgets('onSearchChanged fires when text is typed', (
+      WidgetTester tester,
+    ) async {
       bool changed = false;
       await tester.pumpWidget(
         buildWidget(onSearchChanged: () => changed = true),

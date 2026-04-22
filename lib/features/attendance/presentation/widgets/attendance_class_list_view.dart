@@ -8,6 +8,7 @@
 // partial that reads data from a passed-in collection variable and
 // fires events back to the parent.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -48,7 +49,7 @@ class AttendanceClassListView extends StatelessWidget {
   Widget build(BuildContext context) {
     // Show skeleton while the class list is loading from the API.
     if (isLoading) {
-      return SkeletonListLoading(
+      return const SkeletonListLoading(
         itemCount: 8,
         infoTagCount: 1,
         showActions: false,
@@ -85,6 +86,7 @@ class AttendanceClassListView extends StatelessWidget {
         itemCount: filteredClasses.length,
         itemBuilder: (context, index) {
           final classItem = filteredClasses[index] as Map<String, dynamic>;
+          final classModel = Classroom.fromJson(classItem);
           return Material(
             color: Colors.transparent,
             child: InkWell(
@@ -92,7 +94,10 @@ class AttendanceClassListView extends StatelessWidget {
               borderRadius: const BorderRadius.all(Radius.circular(14)),
               child: Container(
                 margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: const BorderRadius.all(Radius.circular(14)),
@@ -106,16 +111,14 @@ class AttendanceClassListView extends StatelessWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(10),
+                        ),
                         border: Border.all(
                           color: primaryColor.withValues(alpha: 0.15),
                         ),
                       ),
-                      child: Icon(
-                        Icons.class_,
-                        color: primaryColor,
-                        size: 22,
-                      ),
+                      child: Icon(Icons.class_, color: primaryColor, size: 22),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -123,7 +126,7 @@ class AttendanceClassListView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            classItem['name'] ?? 'Unknown Class',
+                            classModel.name,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
@@ -132,7 +135,7 @@ class AttendanceClassListView extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${classItem['grade_level'] ?? '-'}',
+                            '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${classModel.gradeLevel ?? '-'}',
                             style: TextStyle(
                               fontSize: 12,
                               color: ColorUtils.slate600,

@@ -5,7 +5,7 @@ part 'attendance_summary.g.dart';
 
 /// Represents a summary of attendance data for a specific date or period.
 @freezed
-class AttendanceSummary with _$AttendanceSummary {
+abstract class AttendanceSummary with _$AttendanceSummary {
   const factory AttendanceSummary({
     @JsonKey(name: 'id') String? id,
     @JsonKey(name: 'date') required DateTime date,
@@ -20,26 +20,36 @@ class AttendanceSummary with _$AttendanceSummary {
 
   /// Custom fromJson to handle various API response shapes by standardizing
   /// them before generation.
-  factory AttendanceSummary.fromJson(Map<String, dynamic> json) => 
+  factory AttendanceSummary.fromJson(Map<String, dynamic> json) =>
       _$AttendanceSummaryFromJson(_standardizeJson(json));
 
   static Map<String, dynamic> _standardizeJson(Map<String, dynamic> json) {
     final Map<String, dynamic> mapped = Map<String, dynamic>.from(json);
-    
+
     // Standardize all variations of Indonesian keys into the backend-expected snake_case English keys
     mapped['date'] ??= mapped['tanggal'];
     mapped['present'] ??= mapped['hadir'];
     mapped['sick'] ??= mapped['sakit'];
     mapped['excused'] ??= mapped['izin'];
-    mapped['absent'] ??= mapped['alpha'] ?? mapped['alpa'] ?? mapped['tidak_hadir'];
+    mapped['absent'] ??=
+        mapped['alpha'] ?? mapped['alpa'] ?? mapped['tidak_hadir'];
     mapped['total_students'] ??= mapped['total_siswa'];
-    mapped['subject_name'] ??= mapped['mata_pelajaran_nama'];
-    mapped['subject_id'] ??= mapped['id_mata_pelajaran'] ?? mapped['mata_pelajaran_id'];
-    
+    // Extract from nested eager-loaded relation or legacy appended field
+    final subjectObj = mapped['subject'];
+    mapped['subject_name'] ??=
+        (subjectObj is Map ? subjectObj['name'] : null) ??
+        mapped['mata_pelajaran_nama'];
+    mapped['subject_id'] ??=
+        (subjectObj is Map ? subjectObj['id']?.toString() : null) ??
+        mapped['id_mata_pelajaran'] ??
+        mapped['mata_pelajaran_id'];
+
     // Force string types for IDs to avoid type cast errors
     if (mapped['id'] != null) mapped['id'] = mapped['id'].toString();
-    if (mapped['subject_id'] != null) mapped['subject_id'] = mapped['subject_id'].toString();
-    
+    if (mapped['subject_id'] != null) {
+      mapped['subject_id'] = mapped['subject_id'].toString();
+    }
+
     return mapped;
   }
 }
