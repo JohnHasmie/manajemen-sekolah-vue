@@ -22,12 +22,10 @@ class AppNavigator {
   }
 
   /// Go back to the previous screen.
+  /// Always uses Navigator.pop to match Navigator.push used by [push].
+  /// This ensures the result is delivered back to the awaiting push call.
   static void pop<T>(BuildContext context, [T? result]) {
-    if (context.canPop()) {
-      context.pop(result);
-    } else {
-      Navigator.pop<T>(context, result);
-    }
+    Navigator.pop<T>(context, result);
   }
 
   /// Replace current screen with a new one (no back button).

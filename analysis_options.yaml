@@ -1,43 +1,102 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
+# ═══════════════════════════════════════════════════════════════════════════════
+# Kamiledu Mobile — Analysis & Code Quality Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
 #
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
+# This file configures two layers of code quality enforcement:
+#
+#   1. Dart Analyzer + Linter — built-in static analysis (errors, warnings, lints)
+#   2. Code quality script    — enforces file/method length limits
+#
+# ─── Code Quality Standards ───────────────────────────────────────────────────
+#
+#   MAX LINE LENGTH:      80 characters (formatter + lint enforced)
+#   MAX FILE LENGTH:      400 lines per widget/class file
+#   MAX METHOD LENGTH:    40 lines per method/function
+#   MAX NESTING DEPTH:    5 levels (if/for/while nested blocks)
+#
+# ─── Why These Limits? ────────────────────────────────────────────────────────
+#
+#   * Files >400 lines  -> widget is doing too much; split into components
+#   * Methods >40 lines -> break into focused helper functions
+#   * 80-char lines     -> readable without horizontal scrolling (Effective Dart)
+#   * For AI-assisted dev, 150-500 line files maintain best context accuracy
+#
+# ─── How to Enforce ──────────────────────────────────────────────────────────
+#
+#   Line length (80 chars):
+#     Enforced automatically by `dart format` and the `lines_longer_than_80_chars`
+#     lint rule below. Shows warnings in IDE and `flutter analyze`.
+#
+#   File length (400 lines) & Method length (40 lines):
+#     Run the code quality check script:
+#
+#       dart run tool/code_quality_check.dart          # scan lib/
+#       dart run tool/code_quality_check.dart --fix     # with fix suggestions
+#       dart run tool/code_quality_check.dart lib/core  # scan specific dir
+#
+#     Returns exit code 1 if violations found — use in CI/pre-commit hooks.
+#
+# ═══════════════════════════════════════════════════════════════════════════════
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+# ─── Dart Analyzer ────────────────────────────────────────────────────────────
 analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+
   errors:
-    # Freezed 2.x generates @JsonKey on constructor params which json_annotation 4.7+
-    # flags as invalid_annotation_target — this is a known false positive.
+    # Freezed 2.x generates @JsonKey on constructor params which
+    # json_annotation 4.7+ flags as invalid_annotation_target.
     invalid_annotation_target: ignore
 
+# ─── Dart Linter ──────────────────────────────────────────────────────────────
 linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
   rules:
-    always_use_package_imports: true # Ensures consistency in how files are imported.
-    avoid_dynamic_calls: false # Helps prevent runtime errors by catching calls on `dynamic` types.
-    prefer_final_locals: true # Encourages immutability for local variables.
-    unnecessary_lambdas: true # Simplifies code by removing redundant lambda functions.
-    unnecessary_string_interpolations: true # Cleans up string creation.
+    # ── Import Hygiene ──
+    always_use_package_imports: true
 
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    # ── Type Safety ──
+    avoid_dynamic_calls: false
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+    # ── Immutability ──
+    prefer_final_locals: true
+    prefer_final_in_for_each: true
+
+    # ── Code Clarity ──
+    unnecessary_lambdas: true
+    unnecessary_string_interpolations: true
+    unnecessary_this: true
+    unnecessary_parenthesis: true
+
+    # ── Line Length (80 chars) ──
+    # Warns on any line exceeding 80 characters.
+    # The formatter also enforces this, but the lint catches manually
+    # formatted code (e.g. long strings, URLs) that the formatter leaves.
+    lines_longer_than_80_chars: true
+
+    # ── Readability ──
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_single_quotes: true
+    sort_child_properties_last: true
+    use_build_context_synchronously: true
+    avoid_unnecessary_containers: true
+    sized_box_for_whitespace: true
+
+    # ── Safety ──
+    always_declare_return_types: true
+    avoid_print: true
+    avoid_relative_lib_imports: true
+    prefer_is_empty: true
+    prefer_is_not_empty: true
+
+    # ── Flutter Best Practices ──
+    prefer_const_literals_to_create_immutables: true
+    use_key_in_widget_constructors: true
+    avoid_function_literals_in_foreach_calls: true
+
+# ─── Formatter ────────────────────────────────────────────────────────────────
+formatter:
+  page_width: 80
