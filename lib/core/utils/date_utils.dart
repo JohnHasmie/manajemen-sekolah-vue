@@ -14,6 +14,40 @@ import 'package:intl/intl.dart';
 /// are parsed as **local time** instead of UTC to prevent the off-by-one-day bug
 /// common in mobile apps. This is similar to how Carbon in Laravel handles
 /// `Carbon::parse('2024-01-15')` in the app's configured timezone.
+/// Maps English day names (from the backend) to Indonesian.
+///
+/// The backend `days` table stores English names (Monday, Tuesday, …).
+/// Use this at the UI layer wherever day names are displayed to users.
+const Map<String, String> _enToIdDayNames = {
+  'Monday': 'Senin',
+  'Tuesday': 'Selasa',
+  'Wednesday': 'Rabu',
+  'Thursday': 'Kamis',
+  'Friday': 'Jumat',
+  'Saturday': 'Sabtu',
+  'Sunday': 'Minggu',
+};
+
+const Map<String, String> _idToEnDayNames = {
+  'Senin': 'Monday',
+  'Selasa': 'Tuesday',
+  'Rabu': 'Wednesday',
+  'Kamis': 'Thursday',
+  'Jumat': 'Friday',
+  'Sabtu': 'Saturday',
+  'Minggu': 'Sunday',
+};
+
+/// Translate an English day name to Indonesian.
+/// Returns the original string if no mapping is found.
+String dayNameToIndonesian(String englishName) =>
+    _enToIdDayNames[englishName] ?? englishName;
+
+/// Translate an Indonesian day name to English.
+/// Returns the original string if no mapping is found.
+String dayNameToEnglish(String indonesianName) =>
+    _idToEnDayNames[indonesianName] ?? indonesianName;
+
 class AppDateUtils {
   /// Parse date string (YYYY-MM-DD) as local date, not UTC
   /// This prevents timezone issues that shift the date back by 1 day

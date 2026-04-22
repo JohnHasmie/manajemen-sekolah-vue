@@ -123,7 +123,9 @@ class ErrorUtils {
     }
 
     // Validation Errors (Laravel)
-    if (errorStr.contains('the date field must be a date before or equal to today')) {
+    if (errorStr.contains(
+      'the date field must be a date before or equal to today',
+    )) {
       return 'Tanggal tidak boleh lebih dari hari ini.';
     }
 
