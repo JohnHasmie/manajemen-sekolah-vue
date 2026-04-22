@@ -24,8 +24,7 @@ Map<String, dynamic> _cls({
   String id = '1',
   String nama = 'Kelas 7A',
   String gradeLevel = '7',
-}) =>
-    {'id': id, 'nama': nama, 'grade_level': gradeLevel};
+}) => {'id': id, 'nama': nama, 'grade_level': gradeLevel};
 
 Widget _build({
   List<dynamic> classList = const [],
@@ -75,13 +74,16 @@ void main() {
   });
 
   group('GradeRecapClassList — empty state', () {
-    testWidgets('shows emptyLabel when list is empty and not loading',
-        (tester) async {
-      await tester.pumpWidget(_build(
-        classList: [],
-        isLoading: false,
-        emptyLabel: 'Kelas tidak ditemukan',
-      ));
+    testWidgets('shows emptyLabel when list is empty and not loading', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(
+          classList: [],
+          isLoading: false,
+          emptyLabel: 'Kelas tidak ditemukan',
+        ),
+      );
       expect(find.text('Kelas tidak ditemukan'), findsOneWidget);
     });
 
@@ -90,91 +92,103 @@ void main() {
       expect(find.byIcon(Icons.search_off), findsOneWidget);
     });
 
-    testWidgets('shows emptyLabel when search yields no results', (tester) async {
-      await tester.pumpWidget(_build(
-        classList: [_cls(nama: 'Kelas 7A')],
-        searchQuery: 'kelas 9',
-        emptyLabel: 'Tidak ada kelas',
-      ));
+    testWidgets('shows emptyLabel when search yields no results', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(
+          classList: [_cls(nama: 'Kelas 7A')],
+          searchQuery: 'kelas 9',
+          emptyLabel: 'Tidak ada kelas',
+        ),
+      );
       expect(find.text('Tidak ada kelas'), findsOneWidget);
     });
   });
 
   group('GradeRecapClassList — item rendering', () {
     testWidgets('renders GradeRecapClassCard for each item', (tester) async {
-      await tester.pumpWidget(_build(
-        classList: [
-          _cls(id: '1', nama: 'Kelas 7A'),
-          _cls(id: '2', nama: 'Kelas 8B'),
-        ],
-      ));
+      await tester.pumpWidget(
+        _build(
+          classList: [
+            _cls(id: '1', nama: 'Kelas 7A'),
+            _cls(id: '2', nama: 'Kelas 8B'),
+          ],
+        ),
+      );
       expect(find.byType(GradeRecapClassCard), findsNWidgets(2));
     });
 
     testWidgets('renders 3 cards for 3 items', (tester) async {
-      await tester.pumpWidget(_build(
-        classList: [
-          _cls(id: '1', nama: 'Kelas 7A'),
-          _cls(id: '2', nama: 'Kelas 8B'),
-          _cls(id: '3', nama: 'Kelas 9C'),
-        ],
-      ));
+      await tester.pumpWidget(
+        _build(
+          classList: [
+            _cls(id: '1', nama: 'Kelas 7A'),
+            _cls(id: '2', nama: 'Kelas 8B'),
+            _cls(id: '3', nama: 'Kelas 9C'),
+          ],
+        ),
+      );
       expect(find.byType(GradeRecapClassCard), findsNWidgets(3));
     });
   });
 
   group('GradeRecapClassList — search filtering', () {
     testWidgets('filters by class name (case-insensitive)', (tester) async {
-      await tester.pumpWidget(_build(
-        classList: [
-          _cls(id: '1', nama: 'Kelas 7A'),
-          _cls(id: '2', nama: 'Kelas 8B'),
-        ],
-        searchQuery: '8b',
-      ));
+      await tester.pumpWidget(
+        _build(
+          classList: [
+            _cls(id: '1', nama: 'Kelas 7A'),
+            _cls(id: '2', nama: 'Kelas 8B'),
+          ],
+          searchQuery: '8b',
+        ),
+      );
       expect(find.byType(GradeRecapClassCard), findsOneWidget);
     });
 
     testWidgets('filters by grade_level', (tester) async {
-      await tester.pumpWidget(_build(
-        classList: [
-          _cls(id: '1', nama: 'Alpha', gradeLevel: '7'),
-          _cls(id: '2', nama: 'Beta', gradeLevel: '8'),
-        ],
-        searchQuery: '8',
-      ));
+      await tester.pumpWidget(
+        _build(
+          classList: [
+            _cls(id: '1', nama: 'Alpha', gradeLevel: '7'),
+            _cls(id: '2', nama: 'Beta', gradeLevel: '8'),
+          ],
+          searchQuery: '8',
+        ),
+      );
       expect(find.byType(GradeRecapClassCard), findsOneWidget);
     });
 
     testWidgets('empty searchQuery shows all items', (tester) async {
-      await tester.pumpWidget(_build(
-        classList: [
-          _cls(id: '1', nama: 'Kelas 7A'),
-          _cls(id: '2', nama: 'Kelas 8B'),
-          _cls(id: '3', nama: 'Kelas 9C'),
-        ],
-        searchQuery: '',
-      ));
+      await tester.pumpWidget(
+        _build(
+          classList: [
+            _cls(id: '1', nama: 'Kelas 7A'),
+            _cls(id: '2', nama: 'Kelas 8B'),
+            _cls(id: '3', nama: 'Kelas 9C'),
+          ],
+          searchQuery: '',
+        ),
+      );
       expect(find.byType(GradeRecapClassCard), findsNWidgets(3));
     });
   });
 
   group('GradeRecapClassList — pagination', () {
-    testWidgets('shows CircularProgressIndicator when isLoadingMore=true',
-        (tester) async {
-      await tester.pumpWidget(_build(
-        classList: [_cls()],
-        isLoadingMore: true,
-      ));
+    testWidgets('shows CircularProgressIndicator when isLoadingMore=true', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_build(classList: [_cls()], isLoadingMore: true));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('no CircularProgressIndicator when isLoadingMore=false',
-        (tester) async {
-      await tester.pumpWidget(_build(
-        classList: [_cls()],
-        isLoadingMore: false,
-      ));
+    testWidgets('no CircularProgressIndicator when isLoadingMore=false', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(classList: [_cls()], isLoadingMore: false),
+      );
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
   });

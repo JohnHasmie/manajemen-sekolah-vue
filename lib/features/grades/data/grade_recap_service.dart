@@ -6,6 +6,7 @@
 library;
 
 import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/services/cache_invalidation_service.dart';
 
 /// Service for grade recap (rekap nilai) API calls.
 /// Like a Laravel controller with index, store, and batch-store actions.
@@ -35,6 +36,7 @@ class ApiGradeRecapService {
   /// Like `GradeRecap::create($data)` in Laravel.
   Future<dynamic> saveGradeRecap(Map<String, dynamic> data) async {
     final response = await dioClient.post('/grade-recaps', data: data);
+    await CacheInvalidationService.onGradeRecapChanged();
     return response.data;
   }
 
@@ -46,6 +48,7 @@ class ApiGradeRecapService {
       '/grade-recaps/batch',
       data: {'recaps': recaps},
     );
+    await CacheInvalidationService.onGradeRecapChanged();
     return response.data;
   }
 }

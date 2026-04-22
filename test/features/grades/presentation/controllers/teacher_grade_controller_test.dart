@@ -38,9 +38,9 @@ class _SeededController extends TeacherGradeController {
 Future<ProviderContainer> _container(TeacherGradeState seed) async {
   final c = ProviderContainer(
     overrides: [
-      teacherGradeProvider(_params).overrideWith(
-        () => _SeededController(_params, seed),
-      ),
+      teacherGradeProvider(
+        _params,
+      ).overrideWith(() => _SeededController(_params, seed)),
     ],
   );
   await c.read(teacherGradeProvider(_params).future);
@@ -126,7 +126,9 @@ void main() {
 
   group('setStep', () {
     test('advances currentStep to 1 (Subject List)', () async {
-      final c = await _container(const TeacherGradeState(currentStep: 0, isLoading: false));
+      final c = await _container(
+        const TeacherGradeState(currentStep: 0, isLoading: false),
+      );
       addTearDown(c.dispose);
 
       await c.read(teacherGradeProvider(_params).notifier).setStep(1);
@@ -135,7 +137,9 @@ void main() {
     });
 
     test('sets currentStep back to 0 (Class List)', () async {
-      final c = await _container(const TeacherGradeState(currentStep: 1, isLoading: false));
+      final c = await _container(
+        const TeacherGradeState(currentStep: 1, isLoading: false),
+      );
       addTearDown(c.dispose);
 
       await c.read(teacherGradeProvider(_params).notifier).setStep(0);
@@ -144,9 +148,11 @@ void main() {
     });
 
     test('preserves other state fields when changing step', () async {
-      final seed = TeacherGradeState(
+      const seed = TeacherGradeState(
         currentStep: 0,
-        classList: [{'id': 'C1'}],
+        classList: [
+          {'id': 'C1'},
+        ],
         searchQuery: 'test',
         isLoading: false,
       );
@@ -167,19 +173,30 @@ void main() {
     final subjectData = {'id': 'S1', 'name': 'Mathematics', 'can_edit': true};
 
     test('sets selectedSubject in state', () async {
-      final c = await _container(const TeacherGradeState(currentStep: 1, isLoading: false));
+      final c = await _container(
+        const TeacherGradeState(currentStep: 1, isLoading: false),
+      );
       addTearDown(c.dispose);
 
-      await c.read(teacherGradeProvider(_params).notifier).selectSubject(subjectData);
+      await c
+          .read(teacherGradeProvider(_params).notifier)
+          .selectSubject(subjectData);
 
-      expect(c.read(teacherGradeProvider(_params)).value?.selectedSubject, subjectData);
+      expect(
+        c.read(teacherGradeProvider(_params)).value?.selectedSubject,
+        subjectData,
+      );
     });
 
     test('does not change currentStep', () async {
-      final c = await _container(const TeacherGradeState(currentStep: 1, isLoading: false));
+      final c = await _container(
+        const TeacherGradeState(currentStep: 1, isLoading: false),
+      );
       addTearDown(c.dispose);
 
-      await c.read(teacherGradeProvider(_params).notifier).selectSubject(subjectData);
+      await c
+          .read(teacherGradeProvider(_params).notifier)
+          .selectSubject(subjectData);
 
       expect(c.read(teacherGradeProvider(_params)).value?.currentStep, 1);
     });
@@ -191,9 +208,14 @@ void main() {
       final c = await _container(seed);
       addTearDown(c.dispose);
 
-      await c.read(teacherGradeProvider(_params).notifier).selectSubject(second);
+      await c
+          .read(teacherGradeProvider(_params).notifier)
+          .selectSubject(second);
 
-      expect(c.read(teacherGradeProvider(_params)).value?.selectedSubject?['id'], 'S2');
+      expect(
+        c.read(teacherGradeProvider(_params)).value?.selectedSubject?['id'],
+        'S2',
+      );
     });
   });
 
@@ -201,7 +223,7 @@ void main() {
 
   group('updateSearch (sync state flip)', () {
     test('searchQuery is updated synchronously before network call', () async {
-      final seed = const TeacherGradeState(
+      const seed = TeacherGradeState(
         currentStep: 1, // Subject step → no _loadClasses call
         isLoading: false,
       );
@@ -209,13 +231,18 @@ void main() {
       addTearDown(c.dispose);
 
       // Step 1 does NOT call _loadClasses, so this is network-free
-      await c.read(teacherGradeProvider(_params).notifier).updateSearch('algebra');
+      await c
+          .read(teacherGradeProvider(_params).notifier)
+          .updateSearch('algebra');
 
-      expect(c.read(teacherGradeProvider(_params)).value?.searchQuery, 'algebra');
+      expect(
+        c.read(teacherGradeProvider(_params)).value?.searchQuery,
+        'algebra',
+      );
     });
 
     test('currentPage resets to 1 on new search', () async {
-      final seed = const TeacherGradeState(
+      const seed = TeacherGradeState(
         currentStep: 1,
         currentPage: 3,
         isLoading: false,
@@ -223,7 +250,9 @@ void main() {
       final c = await _container(seed);
       addTearDown(c.dispose);
 
-      await c.read(teacherGradeProvider(_params).notifier).updateSearch('science');
+      await c
+          .read(teacherGradeProvider(_params).notifier)
+          .updateSearch('science');
 
       expect(c.read(teacherGradeProvider(_params)).value?.currentPage, 1);
     });

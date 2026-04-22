@@ -44,7 +44,7 @@ class ParentGradeHeader extends StatelessWidget {
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.3),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -62,7 +62,11 @@ class ParentGradeHeader extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
-                  child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -72,7 +76,7 @@ class ParentGradeHeader extends StatelessWidget {
                   children: [
                     Text(
                       AppLocalizations.childAcademicGrades.tr,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -90,7 +94,7 @@ class ParentGradeHeader extends StatelessWidget {
                 ),
               ),
               PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.white),
+                icon: const Icon(Icons.more_vert, color: Colors.white),
                 onSelected: (value) {
                   if (value == 'refresh') onRefresh();
                 },

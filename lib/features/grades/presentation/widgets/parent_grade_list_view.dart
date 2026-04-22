@@ -134,9 +134,9 @@ class ParentGradeListView extends StatelessWidget {
         }
         final grade = gradeList[index];
         final type = grade['type']?.toString().toLowerCase() ?? 'tugas';
-        final typeColor = gradeTypeColorMap[type] ?? ColorUtils.corporateBlue600;
-        final score =
-            double.tryParse(grade['score']?.toString() ?? '0') ?? 0;
+        final typeColor =
+            gradeTypeColorMap[type] ?? ColorUtils.corporateBlue600;
+        final score = double.tryParse(grade['score']?.toString() ?? '0') ?? 0;
         final assessmentTitle = grade['title']?.toString();
         final isRead =
             grade['is_read'] == true ||
@@ -172,7 +172,9 @@ class ParentGradeListView extends StatelessWidget {
                           height: 54,
                           decoration: BoxDecoration(
                             color: typeColor.withValues(alpha: 0.1),
-                            borderRadius: const BorderRadius.all(Radius.circular(14)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(14),
+                            ),
                             border: Border.all(
                               color: typeColor.withValues(alpha: 0.25),
                             ),

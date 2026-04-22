@@ -69,12 +69,16 @@ void main() {
     });
 
     test('handles days_ids as a List (already-parsed JSON array)', () {
-      final schedule = {'days_ids': [1, 2, 3]};
+      final schedule = {
+        'days_ids': [1, 2, 3],
+      };
       expect(extractDayIds(schedule), ['1', '2', '3']);
     });
 
     test('handles day_id as a List fallback when days_ids is absent', () {
-      final schedule = {'day_id': [5, 6]};
+      final schedule = {
+        'day_id': [5, 6],
+      };
       expect(extractDayIds(schedule), ['5', '6']);
     });
 
@@ -105,7 +109,10 @@ void main() {
     });
 
     test('prefers days_ids over day_id when both keys are present', () {
-      final schedule = {'days_ids': [1, 2], 'day_id': [9]};
+      final schedule = {
+        'days_ids': [1, 2],
+        'day_id': [9],
+      };
       expect(extractDayIds(schedule), ['1', '2']);
     });
 

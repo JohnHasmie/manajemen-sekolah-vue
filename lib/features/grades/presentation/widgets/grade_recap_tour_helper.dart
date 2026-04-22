@@ -70,7 +70,7 @@ class GradeRecapTourHelper {
     TutorialCoachMark(
       targets: targets,
       colorShadow: Colors.black,
-      textSkip: "LEWATI",
+      textSkip: 'LEWATI',
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
@@ -105,7 +105,7 @@ class GradeRecapTourHelper {
 
     targets.add(
       TargetFocus(
-        identify: "AddBab",
+        identify: 'AddBab',
         keyTarget: addChapterKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
@@ -114,12 +114,12 @@ class GradeRecapTourHelper {
           TargetContent(
             align: ContentAlign.bottom,
             builder: (context, controller) {
-              return Column(
+              return const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    "Tambah Kolom Bab",
+                    'Tambah Kolom Bab',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -127,9 +127,10 @@ class GradeRecapTourHelper {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
+                    padding: EdgeInsets.only(top: 10.0),
                     child: Text(
-                      "Klik tombol ini untuk menambahkan kolom materi atau bab baru di kanan tabel Anda.",
+                      'Klik tombol ini untuk menambahkan kolom materi '
+                      'atau bab baru di kanan tabel Anda.',
                       style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
@@ -143,7 +144,7 @@ class GradeRecapTourHelper {
 
     targets.add(
       TargetFocus(
-        identify: "SaveRekap",
+        identify: 'SaveRekap',
         keyTarget: saveKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
@@ -152,12 +153,12 @@ class GradeRecapTourHelper {
           TargetContent(
             align: ContentAlign.bottom,
             builder: (context, controller) {
-              return Column(
+              return const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    "Simpan Perubahan",
+                    'Simpan Perubahan',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -165,9 +166,11 @@ class GradeRecapTourHelper {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
+                    padding: EdgeInsets.only(top: 10.0),
                     child: Text(
-                      "Kapanpun Anda mengubah judul bab, mengedit nilai, atau mengisi deskripsi. Jangan lupa tekan Simpan agar nilai tersebut dikunci (snapshot) di server.",
+                      'Kapanpun Anda mengubah judul bab, mengedit nilai, '
+                      'atau mengisi deskripsi. Jangan lupa tekan Simpan agar '
+                      'nilai tersebut dikunci (snapshot) di server.',
                       style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
@@ -181,7 +184,7 @@ class GradeRecapTourHelper {
 
     targets.add(
       TargetFocus(
-        identify: "ExportRekap",
+        identify: 'ExportRekap',
         keyTarget: exportKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
@@ -190,12 +193,12 @@ class GradeRecapTourHelper {
           TargetContent(
             align: ContentAlign.bottom,
             builder: (context, controller) {
-              return Column(
+              return const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    "Ekspor ke Excel",
+                    'Ekspor ke Excel',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -203,9 +206,11 @@ class GradeRecapTourHelper {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
+                    padding: EdgeInsets.only(top: 10.0),
                     child: Text(
-                      "Tabel rekap nilai yang telah Anda buat bisa Anda unduh seketika dalam wujud file spreedsheat Excel yang rapi.",
+                      'Tabel rekap nilai yang telah Anda buat bisa Anda '
+                      'unduh seketika dalam wujud file spreedsheat Excel '
+                      'yang rapi.',
                       style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),

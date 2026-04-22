@@ -42,7 +42,9 @@ void main() {
       );
     });
 
-    testWidgets('does not show clear button when text is empty', (tester) async {
+    testWidgets('does not show clear button when text is empty', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build());
       expect(
         find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.clear),
@@ -70,7 +72,9 @@ void main() {
     testWidgets('onClear fires when clear button tapped', (tester) async {
       var cleared = false;
       final ctrl = TextEditingController(text: 'VII-A');
-      await tester.pumpWidget(_build(controller: ctrl, onClear: () => cleared = true));
+      await tester.pumpWidget(
+        _build(controller: ctrl, onClear: () => cleared = true),
+      );
       await tester.pump();
       await tester.tap(find.byIcon(Icons.clear));
       await tester.pump();
@@ -87,7 +91,9 @@ void main() {
       expect(find.text('Search subjects...'), findsOneWidget);
     });
 
-    testWidgets('onChanged reports empty string when field cleared', (tester) async {
+    testWidgets('onChanged reports empty string when field cleared', (
+      tester,
+    ) async {
       final values = <String>[];
       await tester.pumpWidget(_build(onChanged: values.add));
       await tester.enterText(find.byType(TextField), 'ABC');

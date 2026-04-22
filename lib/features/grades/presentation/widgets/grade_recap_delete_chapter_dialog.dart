@@ -3,42 +3,31 @@
 // screen file lean.
 // Like a Vue `<DeleteColumnConfirmModal>` component — purely presentational.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/widgets/app_alert_dialog.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
-/// Shows an [AlertDialog] asking the user to confirm deletion of a bab column.
+/// Shows an [AppAlertDialog] asking the user to confirm deletion of a bab column.
 ///
 /// [onConfirm] is called (after closing the dialog) when the user taps the
 /// delete button.  All actual data-mutation logic lives in the callback, which
 /// stays in the parent [_GradeRecapPageState] so no state is leaked here.
 ///
 /// In Laravel terms: a "confirm destroy" modal before `DELETE /chapters/{id}`.
-void showGradeRecapDeleteChapterDialog({
+Future<void> showGradeRecapDeleteChapterDialog({
   required BuildContext context,
   required VoidCallback onConfirm,
-}) {
-  showDialog(
+}) async {
+  final confirmed = await AppAlertDialog.show(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text(AppLocalizations.deleteMaterial.tr),
-      content: Text(AppLocalizations.deleteColumnConfirm.tr),
-      actions: [
-        TextButton(
-          onPressed: () => AppNavigator.pop(context),
-          child: Text(AppLocalizations.cancel.tr),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-          ),
-          onPressed: () {
-            AppNavigator.pop(context);
-            onConfirm();
-          },
-          child: Text(AppLocalizations.delete.tr),
-        ),
-      ],
-    ),
+    title: AppLocalizations.deleteMaterial.tr,
+    message: AppLocalizations.deleteColumnConfirm.tr,
+    confirmText: AppLocalizations.delete.tr,
+    cancelText: AppLocalizations.cancel.tr,
+    confirmColor: Colors.red,
+    showCancel: true,
   );
+
+  if (confirmed == true) {
+    onConfirm();
+  }
 }

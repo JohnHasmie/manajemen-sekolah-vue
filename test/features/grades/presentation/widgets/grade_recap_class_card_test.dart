@@ -7,13 +7,12 @@ Map<String, dynamic> _makeItem({
   String? nama,
   String? gradeLevel,
   dynamic homeroomTeacher,
-}) =>
-    {
-      'id': '1',
-      'nama': nama ?? 'VII-A',
-      'grade_level': gradeLevel ?? 'VII',
-      if (homeroomTeacher != null) 'homeroom_teacher': homeroomTeacher,
-    };
+}) => {
+  'id': '1',
+  'nama': nama ?? 'VII-A',
+  'grade_level': gradeLevel ?? 'VII',
+  if (homeroomTeacher != null) 'homeroom_teacher': homeroomTeacher,
+};
 
 Widget _build({
   Map<String, dynamic>? item,
@@ -21,18 +20,17 @@ Widget _build({
   bool isToday = false,
   String todayLabel = 'TODAY',
   VoidCallback? onTap,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: GradeRecapClassCard(
-          item: item ?? _makeItem(),
-          primaryColor: primaryColor,
-          isToday: isToday,
-          todayLabel: todayLabel,
-          onTap: onTap ?? () {},
-        ),
-      ),
-    );
+}) => MaterialApp(
+  home: Scaffold(
+    body: GradeRecapClassCard(
+      item: item ?? _makeItem(),
+      primaryColor: primaryColor,
+      isToday: isToday,
+      todayLabel: todayLabel,
+      onTap: onTap ?? () {},
+    ),
+  ),
+);
 
 void main() {
   group('GradeRecapClassCard', () {
@@ -46,12 +44,18 @@ void main() {
       expect(find.text('VIII-B'), findsOneWidget);
     });
 
-    testWidgets('displays class name from "name" key as fallback', (tester) async {
-      await tester.pumpWidget(_build(item: {'id': '1', 'name': 'IX-C', 'grade_level': 'IX'}));
+    testWidgets('displays class name from "name" key as fallback', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(item: {'id': '1', 'name': 'IX-C', 'grade_level': 'IX'}),
+      );
       expect(find.text('IX-C'), findsOneWidget);
     });
 
-    testWidgets('shows "-" when both nama and name are missing', (tester) async {
+    testWidgets('shows "-" when both nama and name are missing', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(item: {'id': '1', 'grade_level': 'VII'}));
       expect(find.text('-'), findsWidgets);
     });
@@ -61,17 +65,25 @@ void main() {
       expect(find.text('VIII'), findsOneWidget);
     });
 
-    testWidgets('displays homeroom teacher when Map with name key', (tester) async {
-      await tester.pumpWidget(_build(
-        item: _makeItem(homeroomTeacher: {'name': 'Pak Ahmad'}),
-      ));
+    testWidgets('displays homeroom teacher when Map with name key', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(item: _makeItem(homeroomTeacher: {'name': 'Pak Ahmad'})),
+      );
       expect(find.text('Pak Ahmad'), findsOneWidget);
     });
 
     testWidgets('displays homeroom teacher when List of Maps', (tester) async {
-      await tester.pumpWidget(_build(
-        item: _makeItem(homeroomTeacher: [{'name': 'Bu Sari'}]),
-      ));
+      await tester.pumpWidget(
+        _build(
+          item: _makeItem(
+            homeroomTeacher: [
+              {'name': 'Bu Sari'},
+            ],
+          ),
+        ),
+      );
       expect(find.text('Bu Sari'), findsOneWidget);
     });
 
@@ -84,7 +96,9 @@ void main() {
     testWidgets('shows class icon', (tester) async {
       await tester.pumpWidget(_build());
       expect(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.class_outlined),
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.class_outlined,
+        ),
         findsOneWidget,
       );
     });
@@ -92,12 +106,16 @@ void main() {
     testWidgets('shows chevron_right icon', (tester) async {
       await tester.pumpWidget(_build());
       expect(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.chevron_right),
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.chevron_right,
+        ),
         findsOneWidget,
       );
     });
 
-    testWidgets('does NOT show TODAY badge when isToday is false', (tester) async {
+    testWidgets('does NOT show TODAY badge when isToday is false', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(isToday: false, todayLabel: 'TODAY'));
       expect(find.text('TODAY'), findsNothing);
     });
@@ -121,12 +139,16 @@ void main() {
     });
 
     testWidgets('handles wali_kelas as a Map with "nama" key', (tester) async {
-      await tester.pumpWidget(_build(item: {
-        'id': '1',
-        'nama': 'VII-A',
-        'grade_level': 'VII',
-        'wali_kelas': {'nama': 'Pak Rudi'},
-      }));
+      await tester.pumpWidget(
+        _build(
+          item: {
+            'id': '1',
+            'nama': 'VII-A',
+            'grade_level': 'VII',
+            'wali_kelas': {'nama': 'Pak Rudi'},
+          },
+        ),
+      );
       expect(find.text('Pak Rudi'), findsOneWidget);
     });
   });

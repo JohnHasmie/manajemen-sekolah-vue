@@ -1,115 +1,350 @@
-// Frozen-column spreadsheet table for the grade recap wizard step 2.
-// Like a Vue <GradeRecapTable> component — purely presentational, all state
-// mutations (resize, add/delete chapter, open dialogs) flow through callbacks.
-
+// Horizontally scrollable recap table with a frozen left column (student
+// names) and a scrollable right section (chapter scores, UTS, UAS, Final,
+// Skill, Predikat, Deskripsi).
+//
+// Renders inside GradeRecapPage detail view when `currentStep == 2`
+// (table mode).
+//
+// Layout is delegated to the shared `FrozenColumnTable` scaffold in
+// `lib/core/widgets/frozen_column_table.dart`. This widget is now only
+// responsible for:
+//   • Composing the chapter + summary columns for the right side
+//   • Building the primary-colored "Siswa" left header and student rows
+//   • Wiring the caller's cell builders (editable score cells) per column
 import 'package:flutter/material.dart';
-
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/core/widgets/frozen_column_table.dart';
 
-/// Spreadsheet-style grade table for the recap screen.
-///
-/// Renders a frozen left column (student info) and a horizontally-scrollable
-/// right side (bab/UTS/UAS/predikat/deskripsi columns).
-/// Like a Vue data-table component: receives [tableData] as rows and emits
-/// callback events back to the parent StatefulWidget for all mutations.
-///
-/// Layout mirrors a Laravel Blade `@foreach` loop over students with
-/// dynamic chapter columns built from [chapters].
 class GradeRecapTableView extends StatelessWidget {
-  // ── Data ──────────────────────────────────────────────────────────────────
-
-  /// Each entry is a student row map: keys include 'student_class_id',
-  /// 'nama', 'nis', 'final_score', 'bab_scores', etc.
   final List<Map<String, dynamic>> tableData;
-
-  /// Active chapter (bab) list. Length determines how many Bab columns appear.
   final List<dynamic> chapters;
-
-  /// Whether the parent is still loading data (shows skeleton when true).
-  final bool isLoading;
-
-  // ── Layout ─────────────────────────────────────────────────────────────────
-
-  /// Current width of the frozen left column, controlled by the parent.
-  final double studentInfoWidth;
-
-  /// Primary brand colour used for action buttons and final score text.
+  final Map<String, TextEditingController> scoreControllers;
+  final Map<String, TextEditingController> predikatControllers;
+  final Map<String, TextEditingController> descriptionControllers;
   final Color primaryColor;
-
-  // ── GlobalKeys (for tour highlighting) ────────────────────────────────────
-
-  /// Key placed on the "Add Bab" button so the onboarding tour can highlight it.
-  final GlobalKey addChapterKey;
-
-  // ── Translations ───────────────────────────────────────────────────────────
-
-  /// Translated label strings keyed by their semantic name.
-  /// Expected keys: 'studentInfo', 'finalLabel', 'skillLabel',
-  /// 'gradeLabel', 'descLabel', 'gradeData', 'addBab'.
   final Map<String, String> labels;
 
-  // ── Controllers (owned by parent) ─────────────────────────────────────────
-
-  /// Map of studentClassId → predikat TextField controller.
-  final Map<String, TextEditingController> predikatControllers;
-
-  /// Map of studentClassId → description TextField controller.
-  final Map<String, TextEditingController> descriptionControllers;
-
-  // ── Cell builder ──────────────────────────────────────────────────────────
-
-  /// Factory that produces the editable score cell widget.
-  /// Signature: (studentClassId, type, chapterIndex) → Widget.
-  /// Kept in the parent because it needs access to the score controller map.
+  /// Builds an editable cell for a given type/chapter.
+  /// Types: 'bab' (chapterIndex required), 'uts', 'uas', 'skill_score'.
   final Widget Function(String studentClassId, String type, int? chapterIndex)
-  cellBuilder;
+      cellBuilder;
 
-  // ── Callbacks ─────────────────────────────────────────────────────────────
-
-  /// Called when the user drags the left-column resize handle.
-  /// Parent should clamp the value (min 100, max 350) and call setState.
-  final ValueChanged<double> onWidthChanged;
-
-  /// Called when the user taps a column header to open the bulk-select dialog.
-  /// [type] is 'bab', 'uts', or 'uas'. [chapterIndex] is non-null only for bab.
+  /// Fires when a bab, UTS, or UAS header is tapped (bulk select).
   final void Function(String type, int? chapterIndex) onBulkSelect;
 
-  /// Called when the user taps the × icon on a bab column header.
+  /// Fires when a chapter delete (×) is tapped.
   final ValueChanged<int> onDeleteChapter;
 
-  /// Called when the user taps "Add Bab" in the action bar.
-  final VoidCallback onAddChapter;
-
-  /// Called when the user taps the description field of a student row.
-  final void Function(String studentClassId, String studentName)
-  onDeskripsiTap;
+  /// Fires when a student's description cell is tapped.
+  final void Function(String studentClassId, String studentName) onDeskripsiTap;
 
   const GradeRecapTableView({
     super.key,
     required this.tableData,
     required this.chapters,
-    required this.isLoading,
-    required this.studentInfoWidth,
-    required this.primaryColor,
-    required this.addChapterKey,
-    required this.labels,
+    required this.scoreControllers,
     required this.predikatControllers,
     required this.descriptionControllers,
+    required this.primaryColor,
+    required this.labels,
     required this.cellBuilder,
-    required this.onWidthChanged,
     required this.onBulkSelect,
     required this.onDeleteChapter,
-    required this.onAddChapter,
     required this.onDeskripsiTap,
   });
 
-  // ── Constants ──────────────────────────────────────────────────────────────
+  // ── Layout constants ──────────────────────────────────────────────────────
+  static const double _leftWidth = 150.0;
+  static const double _headerHeight = 52.0;
+  static const double _rowHeight = 44.0;
 
-  static const double _gradeCellWidth = 90;
-  static const double _finalScoreWidth = 60;
-  static const double _predikatWidth = 56;
-  static const double _deskripsiWidth = 160;
+  static const double _gradeCellWidth = 90.0;
+  static const double _finalScoreWidth = 60.0;
+  static const double _predikatWidth = 56.0;
+  static const double _deskripsiWidth = 160.0;
+
+  // ── Build ─────────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    return FrozenColumnTable(
+      rowCount: tableData.length,
+      leftColumns: [
+        FrozenTableColumn(
+          width: _leftWidth,
+          header: _buildLeftHeader(),
+          cellBuilder: _buildLeftCell,
+        ),
+      ],
+      rightColumns: _buildRightColumns(),
+      headerHeight: _headerHeight,
+      rowHeight: _rowHeight,
+      headerBackgroundColor: primaryColor,
+      showLeftColumnShadow: true,
+    );
+  }
+
+  // ── Left column ──────────────────────────────────────────────────────────
+
+  /// Scaffold paints `headerBackgroundColor` across the entire header row,
+  /// so this widget just contributes alignment + padding + text.
+  Widget _buildLeftHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      alignment: Alignment.centerLeft,
+      child: const Text(
+        'Siswa',
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          color: Colors.white,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeftCell(int index) {
+    final row = tableData[index];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        children: [
+          // Fixed, right-aligned index slot so single/double-digit numbers
+          // line up cleanly.
+          SizedBox(
+            width: 22,
+            child: Text(
+              '${index + 1}',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 10,
+                color: ColorUtils.slate400,
+                fontWeight: FontWeight.w600,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              row['nama'] ?? '-',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: ColorUtils.slate800,
+                height: 1.2,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Right columns ────────────────────────────────────────────────────────
+
+  List<FrozenTableColumn> _buildRightColumns() {
+    final cols = <FrozenTableColumn>[
+      for (int i = 0; i < chapters.length; i++) _babColumn(i),
+      _summaryColumn(
+        label: 'UTS',
+        width: _gradeCellWidth,
+        onHeaderTap: () => onBulkSelect('uts', null),
+        cellType: 'uts',
+      ),
+      _summaryColumn(
+        label: 'UAS',
+        width: _gradeCellWidth,
+        onHeaderTap: () => onBulkSelect('uas', null),
+        cellType: 'uas',
+      ),
+      // Final score — read-only, derived from stored value.
+      FrozenTableColumn(
+        width: _finalScoreWidth,
+        header: _plainHeader(labels['finalLabel'] ?? 'Final'),
+        cellBuilder: _buildFinalScoreCell,
+      ),
+      // Skill score — editable.
+      FrozenTableColumn(
+        width: _finalScoreWidth,
+        header: _plainHeader(labels['skillLabel'] ?? 'Skill'),
+        cellBuilder: (i) => cellBuilder(
+          tableData[i]['student_class_id'] as String,
+          'skill_score',
+          null,
+        ),
+      ),
+      // Predikat — text field.
+      FrozenTableColumn(
+        width: _predikatWidth,
+        header: _plainHeader(labels['gradeLabel'] ?? 'Nilai'),
+        cellBuilder: _buildPredikatCell,
+      ),
+      // Deskripsi — tap-to-edit.
+      FrozenTableColumn(
+        width: _deskripsiWidth,
+        header: _plainHeader(labels['descLabel'] ?? 'Desk.'),
+        cellBuilder: _buildDeskripsiCell,
+      ),
+    ];
+    return cols;
+  }
+
+  FrozenTableColumn _babColumn(int chapterIndex) {
+    return FrozenTableColumn(
+      width: _gradeCellWidth,
+      header: _babHeader(chapterIndex),
+      cellBuilder: (i) => cellBuilder(
+        tableData[i]['student_class_id'] as String,
+        'bab',
+        chapterIndex,
+      ),
+    );
+  }
+
+  FrozenTableColumn _summaryColumn({
+    required String label,
+    required double width,
+    required VoidCallback onHeaderTap,
+    required String cellType,
+  }) {
+    return FrozenTableColumn(
+      width: width,
+      header: _tappableHeader(label, onHeaderTap),
+      cellBuilder: (i) => cellBuilder(
+        tableData[i]['student_class_id'] as String,
+        cellType,
+        null,
+      ),
+    );
+  }
+
+  // ── Right-side header builders ───────────────────────────────────────────
+
+  Widget _plainHeader(String label) {
+    return Container(
+      decoration: _headerBorderDecoration(),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          letterSpacing: 0.2,
+        ),
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  Widget _tappableHeader(String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: _plainHeader(label),
+    );
+  }
+
+  Widget _babHeader(int i) {
+    final title = _chapterTitle(i);
+    final canDelete = chapters.length > 1;
+
+    return InkWell(
+      onTap: () => onBulkSelect('bab', i),
+      child: Container(
+        decoration: _headerBorderDecoration(),
+        child: Stack(
+          children: [
+            Padding(
+              padding: EdgeInsets.only(
+                left: 6,
+                right: canDelete ? 18 : 6,
+                top: 6,
+                bottom: 6,
+              ),
+              child: Center(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            if (canDelete)
+              Positioned(
+                top: 2,
+                right: 2,
+                child: InkResponse(
+                  radius: 14,
+                  onTap: () => onDeleteChapter(i),
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 12,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  BoxDecoration _headerBorderDecoration() {
+    return BoxDecoration(
+      border: Border(
+        right: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+    );
+  }
+
+  String _chapterTitle(int i) {
+    if (chapters.length <= i) {
+      return 'Bab ${i + 1}';
+    }
+    return chapters[i]['judul_bab'] ??
+        chapters[i]['judul'] ??
+        chapters[i]['title'] ??
+        'Bab ${i + 1}';
+  }
+
+  // ── Right-side cell builders ─────────────────────────────────────────────
+
+  Widget _buildFinalScoreCell(int i) {
+    final finalScore = (tableData[i]['final_score'] as num?)?.toDouble();
+    return Container(
+      alignment: Alignment.center,
+      child: Text(
+        finalScore != null ? finalScore.toStringAsFixed(0) : '-',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: finalScore != null
+              ? _scoreColor(finalScore)
+              : ColorUtils.slate300,
+        ),
+      ),
+    );
+  }
 
   Color _scoreColor(double s) {
     if (s >= 80) return ColorUtils.success600;
@@ -117,221 +352,59 @@ class GradeRecapTableView extends StatelessWidget {
     return ColorUtils.error600;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const SkeletonListLoading(itemCount: 5, infoTagCount: 3, showActions: false);
-    }
-
-    final int numChapters = chapters.isNotEmpty ? chapters.length : 1;
-    final double leftWidth = 120;
-
-    final double rightSideWidth =
-        (numChapters * _gradeCellWidth) +
-        (_gradeCellWidth * 2) +
-        (_finalScoreWidth * 2) +
-        _predikatWidth +
-        _deskripsiWidth;
-
-    return Column(children: [
-      // Action bar
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        color: Colors.white,
-        child: Row(children: [
-          Text(labels['gradeData'] ?? 'Data Nilai', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ColorUtils.slate700)),
-          const Spacer(),
-          GestureDetector(
-            key: addChapterKey,
-            onTap: onAddChapter,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.add, size: 14, color: primaryColor),
-                const SizedBox(width: 4),
-                Text(labels['addBab'] ?? 'Tambah Bab', style: TextStyle(fontSize: 11, color: primaryColor, fontWeight: FontWeight.w600)),
-              ]),
-            ),
-          ),
-        ]),
-      ),
-      // Table
-      Expanded(child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          _buildLeftColumn(leftWidth),
-          Expanded(child: _buildRightSide(rightSideWidth, numChapters)),
-        ])),
-      )),
-    ]);
-  }
-
-  // ── Frozen left column ──
-
-  Widget _buildLeftColumn(double leftWidth) {
-    return Container(
-      width: leftWidth,
-      decoration: BoxDecoration(color: Colors.white, border: Border(right: BorderSide(color: ColorUtils.slate200))),
-      child: Column(children: [
-        // Header
-        Container(
-          height: 52, width: leftWidth,
-          padding: const EdgeInsets.only(left: 10),
-          alignment: Alignment.centerLeft,
-          color: primaryColor,
-          child: const Text('Siswa', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Colors.white)),
-        ),
-        // Student rows
-        ...tableData.asMap().entries.map((e) {
-          final i = e.key;
-          final row = e.value;
-          return Container(
-            height: 44, width: leftWidth,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: i.isEven ? Colors.white : ColorUtils.slate50,
-              border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
-            ),
-            child: Row(children: [
-              SizedBox(width: 18, child: Text('${i + 1}', style: TextStyle(fontSize: 10, color: ColorUtils.slate400, fontWeight: FontWeight.w600))),
-              Expanded(child: Text(row['nama'] ?? '-', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: ColorUtils.slate800), maxLines: 1, overflow: TextOverflow.ellipsis)),
-            ]),
-          );
-        }),
-      ]),
+  Widget _buildPredikatCell(int i) {
+    final studentClassId = tableData[i]['student_class_id'] as String;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(6),
+      borderSide: BorderSide(color: ColorUtils.slate200),
     );
-  }
-
-  // ── Scrollable right side (all score columns) ──────────────────────────────
-
-  Widget _buildRightSide(double rightSideWidth, int numChapters) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return Container(
+      alignment: Alignment.center,
       child: SizedBox(
-        width: rightSideWidth,
-        child: Column(
-          children: [
-            _buildHeaderRow(numChapters),
-            ..._buildDataRows(numChapters),
-          ],
+        width: 48,
+        child: TextField(
+          controller: predikatControllers[studentClassId],
+          style: const TextStyle(fontSize: 11),
+          textAlign: TextAlign.center,
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 6),
+            border: border,
+            enabledBorder: border,
+          ),
         ),
       ),
     );
   }
 
-  // ── Header row (green, matching Buku Nilai) ──
+  Widget _buildDeskripsiCell(int i) {
+    final row = tableData[i];
+    final studentClassId = row['student_class_id'] as String;
+    final studentName = row['nama']?.toString() ?? 'Siswa';
+    final controller = descriptionControllers[studentClassId];
+    final text = controller?.text ?? '';
+    final hasText = text.isNotEmpty;
 
-  Widget _buildHeaderRow(int numChapters) {
-    return Container(
-      height: 52,
-      color: primaryColor,
-      child: Row(children: [
-        for (int i = 0; i < numChapters; i++) _buildBabHeader(i),
-        _buildColHeader('UTS', _gradeCellWidth, onTap: () => onBulkSelect('uts', null)),
-        _buildColHeader('UAS', _gradeCellWidth, onTap: () => onBulkSelect('uas', null)),
-        _buildColHeader(labels['finalLabel'] ?? 'Final', _finalScoreWidth),
-        _buildColHeader(labels['skillLabel'] ?? 'Skill', _finalScoreWidth),
-        _buildColHeader(labels['gradeLabel'] ?? 'Nilai', _predikatWidth),
-        _buildColHeader(labels['descLabel'] ?? 'Desk.', _deskripsiWidth),
-      ]),
-    );
-  }
-
-  Widget _buildColHeader(String label, double width, {VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        width: width,
-        decoration: BoxDecoration(border: Border(right: BorderSide(color: Colors.white.withValues(alpha: 0.12)))),
-        child: Center(child: Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis)),
-      ),
-    );
-  }
-
-  Widget _buildBabHeader(int i) {
-    final title = chapters.length > i ? (chapters[i]['judul_bab'] ?? chapters[i]['judul'] ?? chapters[i]['title'] ?? 'Bab ${i + 1}') : 'Bab ${i + 1}';
-    return InkWell(
-      onTap: () => onBulkSelect('bab', i),
-      child: Container(
-        width: _gradeCellWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        decoration: BoxDecoration(border: Border(right: BorderSide(color: Colors.white.withValues(alpha: 0.12)))),
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Row(children: [
-            Expanded(child: Text(title, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis)),
-            GestureDetector(onTap: () => onDeleteChapter(i), child: Icon(Icons.close, size: 12, color: Colors.white.withValues(alpha: 0.5))),
-          ]),
-        ]),
-      ),
-    );
-  }
-
-  // ── Data rows (compact, matching Buku Nilai) ──
-
-  List<Widget> _buildDataRows(int numChapters) {
-    return tableData.asMap().entries.map((e) {
-      final i = e.key;
-      final row = e.value;
-      final String studentClassId = row['student_class_id'] as String;
-      final finalScore = (row['final_score'] as num?)?.toDouble();
-
-      return Container(
-        height: 44,
-        decoration: BoxDecoration(
-          color: i.isEven ? Colors.white : ColorUtils.slate50,
-          border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
+    return GestureDetector(
+      onTap: () => onDeskripsiTap(studentClassId, studentName),
+      child: Tooltip(
+        message: text,
+        preferBelow: true,
+        triggerMode: TooltipTriggerMode.longPress,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          alignment: Alignment.centerLeft,
+          child: Text(
+            hasText ? text : 'Ketuk untuk edit...',
+            style: TextStyle(
+              fontSize: 10,
+              color: hasText ? ColorUtils.slate700 : ColorUtils.slate400,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
-        child: Row(children: [
-          // Bab cells
-          for (int j = 0; j < numChapters; j++)
-            SizedBox(width: _gradeCellWidth, child: cellBuilder(studentClassId, 'bab', j)),
-          // UTS
-          SizedBox(width: _gradeCellWidth, child: cellBuilder(studentClassId, 'uts', null)),
-          // UAS
-          SizedBox(width: _gradeCellWidth, child: cellBuilder(studentClassId, 'uas', null)),
-          // Final (read-only)
-          Container(
-            width: _finalScoreWidth, alignment: Alignment.center,
-            child: Text(
-              finalScore != null ? finalScore.toStringAsFixed(0) : '-',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: finalScore != null ? _scoreColor(finalScore) : ColorUtils.slate300),
-            ),
-          ),
-          // Skill
-          SizedBox(width: _finalScoreWidth, child: cellBuilder(studentClassId, 'skill_score', null)),
-          // Predikat
-          Container(
-            width: _predikatWidth, alignment: Alignment.center,
-            child: SizedBox(width: 48, child: TextField(
-              controller: predikatControllers[studentClassId],
-              style: const TextStyle(fontSize: 11), textAlign: TextAlign.center,
-              decoration: InputDecoration(isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 6),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: ColorUtils.slate200)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: ColorUtils.slate200)),
-              ),
-            )),
-          ),
-          // Deskripsi
-          GestureDetector(
-            onTap: () => onDeskripsiTap(studentClassId, row['nama']?.toString() ?? 'Siswa'),
-            child: Tooltip(
-              message: descriptionControllers[studentClassId]?.text ?? '',
-              preferBelow: true,
-              triggerMode: TooltipTriggerMode.longPress,
-              child: Container(
-                width: _deskripsiWidth, padding: const EdgeInsets.symmetric(horizontal: 8),
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  descriptionControllers[studentClassId]?.text.isNotEmpty == true ? descriptionControllers[studentClassId]!.text : 'Ketuk untuk edit...',
-                  style: TextStyle(fontSize: 10, color: descriptionControllers[studentClassId]?.text.isNotEmpty == true ? ColorUtils.slate700 : ColorUtils.slate400),
-                  maxLines: 2, overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-          ),
-        ]),
-      );
-    }).toList();
+      ),
+    );
   }
 }

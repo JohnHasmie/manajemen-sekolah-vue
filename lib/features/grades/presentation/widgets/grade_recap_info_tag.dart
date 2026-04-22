@@ -18,11 +18,7 @@ class GradeRecapInfoTag extends StatelessWidget {
   /// The text label displayed next to the icon.
   final String text;
 
-  const GradeRecapInfoTag({
-    super.key,
-    required this.icon,
-    required this.text,
-  });
+  const GradeRecapInfoTag({super.key, required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {

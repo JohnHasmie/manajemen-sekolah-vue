@@ -1,9 +1,10 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 
 part 'teacher_grade_state.freezed.dart';
 
 @freezed
-class TeacherGradeState with _$TeacherGradeState {
+abstract class TeacherGradeState with _$TeacherGradeState {
   const factory TeacherGradeState({
     @Default(0) int currentStep, // 0: Class List, 1: Subject List
     @Default([]) List<dynamic> classList,
@@ -27,9 +28,10 @@ class TeacherGradeParams {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is TeacherGradeParams && other.teacher['id'] == teacher['id'];
+    return other is TeacherGradeParams &&
+        Teacher.fromJson(other.teacher).id == Teacher.fromJson(teacher).id;
   }
 
   @override
-  int get hashCode => teacher['id'].hashCode;
+  int get hashCode => Teacher.fromJson(teacher).id.hashCode;
 }

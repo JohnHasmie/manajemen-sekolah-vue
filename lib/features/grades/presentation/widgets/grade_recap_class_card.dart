@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_info_tag.dart';
 
 /// A tappable card that displays classroom info in the grade recap wizard.
@@ -43,28 +44,17 @@ class GradeRecapClassCard extends StatelessWidget {
     required this.onTap,
   });
 
-  /// Resolves the homeroom-teacher display name from the messy polymorphic
-  /// API response (can be a Map, a List<Map>, or a plain string key).
-  String _resolveHomeroomTeacher() {
-    final ht = item['homeroom_teacher'];
-    final wk = item['wali_kelas'];
-
-    if (ht is Map) return ht['name']?.toString() ?? '-';
-    if (ht is List && ht.isNotEmpty && ht[0] is Map) {
-      return ht[0]['name']?.toString() ?? '-';
-    }
-    if (wk is Map) return wk['nama']?.toString() ?? wk['name']?.toString() ?? '-';
-    if (wk is List && wk.isNotEmpty && wk[0] is Map) {
-      return wk[0]['nama']?.toString() ?? wk[0]['name']?.toString() ?? '-';
-    }
-    return item['wali_kelas_name']?.toString() ??
-        item['homeroom_teacher_name']?.toString() ??
-        '-';
+  /// Resolves the homeroom-teacher display name from the normalized
+  /// [Classroom] model.
+  String _resolveHomeroomTeacher(Classroom model) {
+    final name = model.homeroomTeacherName;
+    return (name != null && name.isNotEmpty) ? name : '-';
   }
 
   @override
   Widget build(BuildContext context) {
-    final homeroomTeacher = _resolveHomeroomTeacher();
+    final model = Classroom.fromJson(item);
+    final homeroomTeacher = _resolveHomeroomTeacher(model);
 
     return GestureDetector(
       onTap: onTap,
@@ -114,7 +104,7 @@ class GradeRecapClassCard extends StatelessWidget {
                         ),
                         if (isToday)
                           Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 2,
                             ),
@@ -122,7 +112,9 @@ class GradeRecapClassCard extends StatelessWidget {
                               color: ColorUtils.success600.withValues(
                                 alpha: 0.1,
                               ),
-                              borderRadius: const BorderRadius.all(Radius.circular(4)),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(4),
+                              ),
                             ),
                             child: Text(
                               todayLabel,

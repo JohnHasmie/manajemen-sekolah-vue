@@ -74,35 +74,34 @@ void main() {
 
   group('GradeRecapAppBar — subtitle (step-aware)', () {
     testWidgets('step 0 shows selectClassLabel', (tester) async {
-      await tester.pumpWidget(_build(
-        currentStep: 0,
-        selectClassLabel: 'Pilih Kelas',
-      ));
+      await tester.pumpWidget(
+        _build(currentStep: 0, selectClassLabel: 'Pilih Kelas'),
+      );
       expect(find.text('Pilih Kelas'), findsOneWidget);
     });
 
     testWidgets('step 1 shows selectedClassName', (tester) async {
-      await tester.pumpWidget(_build(
-        currentStep: 1,
-        selectedClassName: 'Kelas 8B',
-      ));
+      await tester.pumpWidget(
+        _build(currentStep: 1, selectedClassName: 'Kelas 8B'),
+      );
       expect(find.text('Kelas 8B'), findsOneWidget);
     });
 
     testWidgets('step 2 shows selectedSubjectName', (tester) async {
-      await tester.pumpWidget(_build(
-        currentStep: 2,
-        selectedSubjectName: 'Fisika',
-      ));
+      await tester.pumpWidget(
+        _build(currentStep: 2, selectedSubjectName: 'Fisika'),
+      );
       expect(find.text('Fisika'), findsOneWidget);
     });
 
     testWidgets('step 1 does NOT show selectClassLabel', (tester) async {
-      await tester.pumpWidget(_build(
-        currentStep: 1,
-        selectClassLabel: 'Pilih Kelas',
-        selectedClassName: 'Kelas 9A',
-      ));
+      await tester.pumpWidget(
+        _build(
+          currentStep: 1,
+          selectClassLabel: 'Pilih Kelas',
+          selectedClassName: 'Kelas 9A',
+        ),
+      );
       expect(find.text('Pilih Kelas'), findsNothing);
     });
   });
@@ -118,13 +117,16 @@ void main() {
       expect(find.byIcon(Icons.save), findsNothing);
     });
 
-    testWidgets('save button IS shown on step 2 when not saving', (tester) async {
+    testWidgets('save button IS shown on step 2 when not saving', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(currentStep: 2, isSaving: false));
       expect(find.byIcon(Icons.save), findsOneWidget);
     });
 
-    testWidgets(
-        'save button shows spinner on step 2 when isSaving=true', (tester) async {
+    testWidgets('save button shows spinner on step 2 when isSaving=true', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(currentStep: 2, isSaving: true));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.byIcon(Icons.save), findsNothing);
@@ -141,23 +143,24 @@ void main() {
 
     testWidgets('onSave fires on step 2 when not saving', (tester) async {
       bool saveCalled = false;
-      await tester.pumpWidget(_build(
-        currentStep: 2,
-        isSaving: false,
-        onSave: () => saveCalled = true,
-      ));
+      await tester.pumpWidget(
+        _build(
+          currentStep: 2,
+          isSaving: false,
+          onSave: () => saveCalled = true,
+        ),
+      );
       await tester.tap(find.byIcon(Icons.save));
       expect(saveCalled, isTrue);
     });
 
-    testWidgets('onSave NOT fired when isSaving=true (tap disabled)',
-        (tester) async {
+    testWidgets('onSave NOT fired when isSaving=true (tap disabled)', (
+      tester,
+    ) async {
       bool saveCalled = false;
-      await tester.pumpWidget(_build(
-        currentStep: 2,
-        isSaving: true,
-        onSave: () => saveCalled = true,
-      ));
+      await tester.pumpWidget(
+        _build(currentStep: 2, isSaving: true, onSave: () => saveCalled = true),
+      );
       // Tap the container that holds the spinner — onTap is null when saving
       await tester.tap(find.byType(CircularProgressIndicator));
       expect(saveCalled, isFalse);
@@ -171,10 +174,9 @@ void main() {
     });
 
     testWidgets('refresh option appears in popup menu', (tester) async {
-      await tester.pumpWidget(_build(
-        currentStep: 0,
-        updateDataLabel: 'Perbarui Data',
-      ));
+      await tester.pumpWidget(
+        _build(currentStep: 0, updateDataLabel: 'Perbarui Data'),
+      );
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
       expect(find.text('Perbarui Data'), findsOneWidget);
@@ -187,22 +189,26 @@ void main() {
       expect(find.text('Export Excel'), findsOneWidget);
     });
 
-    testWidgets('export Excel option NOT shown in popup on step 0',
-        (tester) async {
+    testWidgets('export Excel option NOT shown in popup on step 0', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(currentStep: 0));
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
       expect(find.text('Export Excel'), findsNothing);
     });
 
-    testWidgets('onRefresh fires when refresh popup item selected',
-        (tester) async {
+    testWidgets('onRefresh fires when refresh popup item selected', (
+      tester,
+    ) async {
       bool refreshCalled = false;
-      await tester.pumpWidget(_build(
-        currentStep: 0,
-        updateDataLabel: 'Perbarui Data',
-        onRefresh: () => refreshCalled = true,
-      ));
+      await tester.pumpWidget(
+        _build(
+          currentStep: 0,
+          updateDataLabel: 'Perbarui Data',
+          onRefresh: () => refreshCalled = true,
+        ),
+      );
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Perbarui Data'));
