@@ -46,42 +46,55 @@ void main() {
       expect(find.byType(AddActivityHeader), findsOneWidget);
     });
 
-    testWidgets('shows "Add Assignment" for tugas / add mode in English',
-        (tester) async {
-      await tester.pumpWidget(_buildHeader(
-        activityType: 'tugas',
-        isEditMode: false,
-        language: LanguageProvider.english,
-      ));
+    testWidgets('shows "Add Assignment" for tugas / add mode in English', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHeader(
+          activityType: 'tugas',
+          isEditMode: false,
+          language: LanguageProvider.english,
+        ),
+      );
       expect(find.text('Add Assignment'), findsOneWidget);
     });
 
-    testWidgets('shows "Edit Assignment" for tugas / edit mode in English',
-        (tester) async {
-      await tester.pumpWidget(_buildHeader(
-        activityType: 'tugas',
-        isEditMode: true,
-        language: LanguageProvider.english,
-      ));
+    testWidgets('shows "Edit Assignment" for tugas / edit mode in English', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHeader(
+          activityType: 'tugas',
+          isEditMode: true,
+          language: LanguageProvider.english,
+        ),
+      );
       expect(find.text('Edit Assignment'), findsOneWidget);
     });
 
-    testWidgets('shows "Add Material" for non-tugas activity type',
-        (tester) async {
-      await tester.pumpWidget(_buildHeader(
-        activityType: 'materi',
-        isEditMode: false,
-        language: LanguageProvider.english,
-      ));
+    testWidgets('shows "Add Material" for non-tugas activity type', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHeader(
+          activityType: 'materi',
+          isEditMode: false,
+          language: LanguageProvider.english,
+        ),
+      );
       expect(find.text('Add Material'), findsOneWidget);
     });
 
-    testWidgets('shows "Edit Material" for non-tugas / edit mode', (tester) async {
-      await tester.pumpWidget(_buildHeader(
-        activityType: 'materi',
-        isEditMode: true,
-        language: LanguageProvider.english,
-      ));
+    testWidgets('shows "Edit Material" for non-tugas / edit mode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHeader(
+          activityType: 'materi',
+          isEditMode: true,
+          language: LanguageProvider.english,
+        ),
+      );
       expect(find.text('Edit Material'), findsOneWidget);
     });
 

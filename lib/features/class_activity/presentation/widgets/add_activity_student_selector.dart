@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Student checklist section shown when target is "khusus" and a class is selected.
 ///
@@ -47,7 +48,7 @@ class AddActivityStudentSelector extends StatelessWidget {
                       'en': 'Select Students',
                       'id': 'Pilih Siswa',
                     }),
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   if (kDebugMode)
                     Text(
@@ -61,7 +62,7 @@ class AddActivityStudentSelector extends StatelessWidget {
               ),
             ),
             IconButton(
-              icon: Icon(Icons.refresh, size: 20),
+              icon: const Icon(Icons.refresh, size: 20),
               onPressed: onRefresh,
               tooltip: 'Refresh Students',
             ),
@@ -75,31 +76,30 @@ class AddActivityStudentSelector extends StatelessWidget {
             borderRadius: const BorderRadius.all(Radius.circular(8)),
           ),
           child: isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator())
               : studentList.isEmpty
               ? Center(child: Text(AppLocalizations.noStudentsInClass.tr))
               : SingleChildScrollView(
                   child: Column(
                     children: studentList.map((student) {
-                      final studentId = student['id'].toString();
+                      final model = Student.fromJson(
+                        student as Map<String, dynamic>,
+                      );
+                      final studentId = model.id;
                       final isSelected = selectedStudents.contains(studentId);
                       return ListTile(
-                        contentPadding: EdgeInsets.symmetric(
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 0,
                         ),
                         dense: true,
                         title: Text(
-                          student['name']?.toString() ??
-                              student['nama']?.toString() ??
-                              'Unknown',
-                          style: TextStyle(fontSize: 13),
+                          model.name.isNotEmpty ? model.name : 'Unknown',
+                          style: const TextStyle(fontSize: 13),
                         ),
                         subtitle: Text(
-                          student['student_number']?.toString() ??
-                              student['nis']?.toString() ??
-                              '',
-                          style: TextStyle(fontSize: 11),
+                          model.studentNumber,
+                          style: const TextStyle(fontSize: 11),
                         ),
                         trailing: Checkbox(
                           value: isSelected,

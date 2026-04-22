@@ -58,8 +58,9 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('renders without errors for different accent colours',
-        (tester) async {
+    testWidgets('renders without errors for different accent colours', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject(color: Colors.orange));
 
       expect(find.byType(ActivityTypeOptionTile), findsOneWidget);

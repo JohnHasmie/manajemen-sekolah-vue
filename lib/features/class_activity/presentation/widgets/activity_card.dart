@@ -15,6 +15,11 @@ class ActivityCard extends StatelessWidget {
   final String? selectedSubjectName;
   final String? selectedClassName;
 
+  /// When rendered inside the Wali Kelas tab we show who authored the
+  /// activity, since the homeroom teacher is viewing entries from across
+  /// every teacher who works with the class.
+  final bool isHomeroomView;
+
   const ActivityCard({
     super.key,
     required this.activity,
@@ -26,7 +31,17 @@ class ActivityCard extends StatelessWidget {
     required this.onDelete,
     this.selectedSubjectName,
     this.selectedClassName,
+    this.isHomeroomView = false,
   });
+
+  String? _authorName() {
+    final raw = activity['guru_nama'] ??
+        activity['teacher_name'] ??
+        activity['teacher']?['name'];
+    final str = raw?.toString().trim();
+    if (str == null || str.isEmpty) return null;
+    return str;
+  }
 
   String _formatDate(dynamic date) {
     if (date == null) return '-';
@@ -47,15 +62,22 @@ class ActivityCard extends StatelessWidget {
         activity['jenis'] == 'assignment' ||
         activity['type'] == 'assignment';
     final isSpecificTarget = activity['target_role'] == 'khusus';
-    final accentColor =
-        isAssignment ? ColorUtils.warning600 : ColorUtils.success600;
+    final accentColor = isAssignment
+        ? ColorUtils.warning600
+        : ColorUtils.success600;
     final typeLabel = isAssignment
         ? languageProvider.getTranslatedText({'en': 'Task', 'id': 'Tugas'})
-        : languageProvider.getTranslatedText({'en': 'Material', 'id': 'Materi'});
+        : languageProvider.getTranslatedText({
+            'en': 'Material',
+            'id': 'Materi',
+          });
 
-    final description = (activity['deskripsi'] ?? activity['description'])?.toString();
+    final description = (activity['deskripsi'] ?? activity['description'])
+        ?.toString();
     final hasDescription = description != null && description.isNotEmpty;
-    final dateStr = '${activity['day'] ?? '-'}, ${_formatDate(activity['date'])}';
+    final dateStr =
+        '${activity['day'] ?? '-'}, ${_formatDate(activity['date'])}';
+    final authorName = isHomeroomView ? _authorName() : null;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
@@ -107,29 +129,61 @@ class ActivityCard extends StatelessWidget {
                           // Meta row: date + type + target
                           Row(
                             children: [
-                              Icon(Icons.calendar_today_rounded, size: 12, color: ColorUtils.slate400),
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 12,
+                                color: ColorUtils.slate400,
+                              ),
                               const SizedBox(width: 4),
-                              Text(dateStr, style: TextStyle(fontSize: 11, color: ColorUtils.slate500)),
+                              Text(
+                                dateStr,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: ColorUtils.slate500,
+                                ),
+                              ),
                               const SizedBox(width: 10),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: accentColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: Text(typeLabel, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: accentColor)),
+                                child: Text(
+                                  typeLabel,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: accentColor,
+                                  ),
+                                ),
                               ),
                               if (isSpecificTarget) ...[
                                 const SizedBox(width: 6),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: ColorUtils.violet700.withValues(alpha: 0.1),
+                                    color: ColorUtils.violet700.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
-                                    languageProvider.getTranslatedText({'en': 'Specific', 'id': 'Khusus'}),
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: ColorUtils.violet700),
+                                    languageProvider.getTranslatedText({
+                                      'en': 'Specific',
+                                      'id': 'Khusus',
+                                    }),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: ColorUtils.violet700,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -145,36 +199,105 @@ class ActivityCard extends StatelessWidget {
                           if (value == 'edit') onEdit();
                           if (value == 'delete') onDelete();
                         },
-                        icon: Icon(Icons.more_vert, size: 20, color: ColorUtils.slate400),
+                        icon: Icon(
+                          Icons.more_vert,
+                          size: 20,
+                          color: ColorUtils.slate400,
+                        ),
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         itemBuilder: (_) => [
                           PopupMenuItem(
                             value: 'edit',
-                            child: Row(children: [
-                              Icon(Icons.edit_outlined, size: 18, color: primaryColor),
-                              const SizedBox(width: 8),
-                              Text(languageProvider.getTranslatedText({'en': 'Edit', 'id': 'Edit'})),
-                            ]),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.edit_outlined,
+                                  size: 18,
+                                  color: primaryColor,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Edit',
+                                    'id': 'Edit',
+                                  }),
+                                ),
+                              ],
+                            ),
                           ),
                           PopupMenuItem(
                             value: 'delete',
-                            child: Row(children: [
-                              Icon(Icons.delete_outline, size: 18, color: ColorUtils.error600),
-                              const SizedBox(width: 8),
-                              Text(languageProvider.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}), style: TextStyle(color: ColorUtils.error600)),
-                            ]),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_outline,
+                                  size: 18,
+                                  color: ColorUtils.error600,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  languageProvider.getTranslatedText({
+                                    'en': 'Delete',
+                                    'id': 'Hapus',
+                                  }),
+                                  style: TextStyle(color: ColorUtils.error600),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       )
                     else
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: Icon(Icons.chevron_right, size: 20, color: ColorUtils.slate400),
+                        child: Icon(
+                          Icons.chevron_right,
+                          size: 20,
+                          color: ColorUtils.slate400,
+                        ),
                       ),
                   ],
                 ),
+
+                // Author row (wali kelas tab only) — shows which teacher
+                // recorded the journal entry, since the homeroom view
+                // aggregates across every teacher in the class.
+                if (authorName != null) ...[
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.person_rounded,
+                          size: 13,
+                          color: ColorUtils.slate400,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            authorName,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: ColorUtils.slate500,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.1,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 // Description preview (if any)
                 if (hasDescription) ...[
@@ -183,7 +306,11 @@ class ActivityCard extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 16),
                     child: Text(
                       description,
-                      style: TextStyle(fontSize: 12, color: ColorUtils.slate500, height: 1.4),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ColorUtils.slate500,
+                        height: 1.4,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -197,11 +324,19 @@ class ActivityCard extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 16),
                     child: Row(
                       children: [
-                        Icon(Icons.access_time_rounded, size: 12, color: ColorUtils.error600),
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 12,
+                          color: ColorUtils.error600,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${languageProvider.getTranslatedText({'en': 'Deadline', 'id': 'Batas waktu'})}: ${_formatDate(activity['batas_waktu'])}',
-                          style: TextStyle(fontSize: 11, color: ColorUtils.error600, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: ColorUtils.error600,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),

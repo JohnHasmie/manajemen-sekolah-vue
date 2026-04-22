@@ -47,6 +47,9 @@ class ActivityListView extends ConsumerWidget {
   final String? selectedSubjectName;
   final String? selectedClassName;
 
+  /// Wali-kelas mode — makes each card surface the activity's author name.
+  final bool isHomeroomView;
+
   // ── Callbacks (replaces direct setState / method calls on parent) ─────────
   final VoidCallback onSearchSubmitted;
   final VoidCallback onFilterPressed;
@@ -72,6 +75,7 @@ class ActivityListView extends ConsumerWidget {
     required this.canEdit,
     this.selectedSubjectName,
     this.selectedClassName,
+    this.isHomeroomView = false,
     required this.onSearchSubmitted,
     required this.onFilterPressed,
     required this.onRemoveDateFilter,
@@ -85,16 +89,10 @@ class ActivityListView extends ConsumerWidget {
   /// Returns a list of active filter descriptors so the chip row can be
   /// rendered generically. Like a Vue computed property — derives UI data
   /// from props without mutating state.
-  List<Map<String, dynamic>> _filterChips(
-    String dateLabel,
-    String datePrefix,
-  ) {
+  List<Map<String, dynamic>> _filterChips(String dateLabel, String datePrefix) {
     if (selectedDateFilter == null) return [];
     return [
-      {
-        'label': '$datePrefix: $dateLabel',
-        'onRemove': onRemoveDateFilter,
-      },
+      {'label': '$datePrefix: $dateLabel', 'onRemove': onRemoveDateFilter},
     ];
   }
 
@@ -103,7 +101,7 @@ class ActivityListView extends ConsumerWidget {
     final languageProvider = ref.watch(languageRiverpod);
 
     if (isLoading && activityList.isEmpty) {
-      return SkeletonListLoading(itemCount: 5, infoTagCount: 2);
+      return const SkeletonListLoading(itemCount: 5, infoTagCount: 2);
     }
 
     // ── Translate filter chip label ───────────────────────────────────────
@@ -152,18 +150,27 @@ class ActivityListView extends ConsumerWidget {
                   onTap: filter['onRemove'] as VoidCallback,
                   child: Container(
                     margin: const EdgeInsets.only(right: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: primaryColor.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           filter['label'] as String,
-                          style: TextStyle(fontSize: 12, color: primaryColor, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         const SizedBox(width: 4),
                         Icon(Icons.close, size: 14, color: primaryColor),
@@ -188,8 +195,7 @@ class ActivityListView extends ConsumerWidget {
                   subtitle: searchController.text.isEmpty && !hasActiveFilter
                       ? languageProvider.getTranslatedText({
                           'en': 'No activities found for this subject.',
-                          'id':
-                              'Tidak ada kegiatan untuk mata pelajaran ini.',
+                          'id': 'Tidak ada kegiatan untuk mata pelajaran ini.',
                         })
                       : languageProvider.getTranslatedText({
                           'en': 'No search results found',
@@ -228,13 +234,18 @@ class ActivityListView extends ConsumerWidget {
         if (index == items.length) {
           return Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Center(child: CircularProgressIndicator(color: primaryColor)),
+            child: Center(
+              child: CircularProgressIndicator(color: primaryColor),
+            ),
           );
         }
 
         final item = items[index];
         if (item.isHeader) {
-          return _DateGroupHeader(dateKey: item.dateKey!, primaryColor: primaryColor);
+          return _DateGroupHeader(
+            dateKey: item.dateKey!,
+            primaryColor: primaryColor,
+          );
         }
 
         final activity = item.activity!;
@@ -248,6 +259,7 @@ class ActivityListView extends ConsumerWidget {
           onDelete: () => onActivityDelete(activity),
           selectedSubjectName: selectedSubjectName,
           selectedClassName: selectedClassName,
+          isHomeroomView: isHomeroomView,
         );
       },
     );
@@ -279,8 +291,29 @@ class _DateGroupHeader extends StatelessWidget {
     final yesterday = today.subtract(const Duration(days: 1));
     final dateOnly = DateTime(dt.year, dt.month, dt.day);
 
-    const dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const dayNames = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
+    ];
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
 
     if (dateOnly == today) return 'Hari Ini';
     if (dateOnly == yesterday) return 'Kemarin';

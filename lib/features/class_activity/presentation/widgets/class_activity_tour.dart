@@ -25,7 +25,7 @@ List<TargetFocus> buildClassActivityTourTargets({
 
   targets.add(
     TargetFocus(
-      identify: "TabSwitcher",
+      identify: 'TabSwitcher',
       keyTarget: tabSwitcherKey,
       alignSkip: Alignment.bottomRight,
       shape: ShapeLightFocus.RRect,
@@ -34,12 +34,12 @@ List<TargetFocus> buildClassActivityTourTargets({
         TargetContent(
           align: ContentAlign.bottom,
           builder: (context, controller) {
-            return Column(
+            return const Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  "Mode Tampilan",
+                  'Mode Tampilan',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -47,7 +47,7 @@ List<TargetFocus> buildClassActivityTourTargets({
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 10.0),
+                  padding: EdgeInsets.only(top: 10.0),
                   child: Text(
                     "Pilih 'Semua Siswa' untuk melihat aktivitas umum kelas, atau 'Khusus Siswa' untuk melihat histori aktivitas per murid.",
                     style: TextStyle(color: Colors.white, fontSize: 14),
@@ -63,7 +63,7 @@ List<TargetFocus> buildClassActivityTourTargets({
 
   targets.add(
     TargetFocus(
-      identify: "SearchFilter",
+      identify: 'SearchFilter',
       keyTarget: searchFilterKey,
       alignSkip: Alignment.bottomRight,
       shape: ShapeLightFocus.RRect,
@@ -72,12 +72,12 @@ List<TargetFocus> buildClassActivityTourTargets({
         TargetContent(
           align: ContentAlign.bottom,
           builder: (context, controller) {
-            return Column(
+            return const Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  "Pencarian & Filter",
+                  'Pencarian & Filter',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -85,9 +85,9 @@ List<TargetFocus> buildClassActivityTourTargets({
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 10.0),
+                  padding: EdgeInsets.only(top: 10.0),
                   child: Text(
-                    "Cari aktivitas berdasarkan judul atau gunakan filter untuk mencari rentang waktu tertentu.",
+                    'Cari aktivitas berdasarkan judul atau gunakan filter untuk mencari rentang waktu tertentu.',
                     style: TextStyle(color: Colors.white, fontSize: 14),
                   ),
                 ),
@@ -102,7 +102,7 @@ List<TargetFocus> buildClassActivityTourTargets({
   if (selectedSubjectCanEdit) {
     targets.add(
       TargetFocus(
-        identify: "AddActivity",
+        identify: 'AddActivity',
         keyTarget: fabKey,
         alignSkip: Alignment.topLeft,
         shape: ShapeLightFocus.Circle,
@@ -110,12 +110,12 @@ List<TargetFocus> buildClassActivityTourTargets({
           TargetContent(
             align: ContentAlign.top,
             builder: (context, controller) {
-              return Column(
+              return const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    "Tambah Aktivitas",
+                    'Tambah Aktivitas',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -123,9 +123,9 @@ List<TargetFocus> buildClassActivityTourTargets({
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
+                    padding: EdgeInsets.only(top: 10.0),
                     child: Text(
-                      "Gunakan tombol ini untuk menambahkan aktivitas absensi/jurnal kelas maupun memberikan penugasan (PR / Ujian) kepada siswa.",
+                      'Gunakan tombol ini untuk menambahkan aktivitas absensi/jurnal kelas maupun memberikan penugasan (PR / Ujian) kepada siswa.',
                       style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
@@ -155,7 +155,7 @@ void showClassActivityTour({
   TutorialCoachMark(
     targets: targets,
     colorShadow: Colors.black,
-    textSkip: "LEWATI",
+    textSkip: 'LEWATI',
     paddingFocus: 10,
     opacityShadow: 0.8,
     onFinish: () {

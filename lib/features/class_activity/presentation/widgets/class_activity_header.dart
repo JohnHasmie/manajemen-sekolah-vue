@@ -94,7 +94,7 @@ class ClassActivityHeader extends StatelessWidget {
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.3),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -130,7 +130,7 @@ class ClassActivityHeader extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -190,12 +190,12 @@ class ClassActivityHeader extends StatelessWidget {
                       ],
                     ),
                   ),
-                  PopupMenuItem<String>(
+                  const PopupMenuItem<String>(
                     value: 'help',
                     child: Row(
                       children: [
                         Icon(Icons.help_outline, size: 20),
-                        const SizedBox(width: AppSpacing.sm),
+                        SizedBox(width: AppSpacing.sm),
                         Text('Help'),
                       ],
                     ),

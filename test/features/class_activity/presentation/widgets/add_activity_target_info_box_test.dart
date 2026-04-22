@@ -44,24 +44,27 @@ void main() {
       expect(find.byType(AddActivityTargetInfoBox), findsOneWidget);
     });
 
-    testWidgets('shows SPECIFIC message when target is "khusus" (English)',
-        (tester) async {
-      await tester.pumpWidget(_buildInfoBox(
-        initialTarget: 'khusus',
-        language: LanguageProvider.english,
-      ));
-      expect(
-        find.textContaining('SPECIFIC'),
-        findsOneWidget,
+    testWidgets('shows SPECIFIC message when target is "khusus" (English)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildInfoBox(
+          initialTarget: 'khusus',
+          language: LanguageProvider.english,
+        ),
       );
+      expect(find.textContaining('SPECIFIC'), findsOneWidget);
     });
 
-    testWidgets('shows GENERAL message when target is not "khusus" (English)',
-        (tester) async {
-      await tester.pumpWidget(_buildInfoBox(
-        initialTarget: 'umum',
-        language: LanguageProvider.english,
-      ));
+    testWidgets('shows GENERAL message when target is not "khusus" (English)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildInfoBox(
+          initialTarget: 'umum',
+          language: LanguageProvider.english,
+        ),
+      );
       expect(find.textContaining('GENERAL'), findsOneWidget);
     });
 
@@ -75,8 +78,9 @@ void main() {
       expect(find.byIcon(Icons.schedule), findsOneWidget);
     });
 
-    testWidgets('shows Indonesian KHUSUS text when language is id',
-        (tester) async {
+    testWidgets('shows Indonesian KHUSUS text when language is id', (
+      tester,
+    ) async {
       final lp = LanguageProvider(); // defaults to 'id'
       await tester.pumpWidget(
         MaterialApp(

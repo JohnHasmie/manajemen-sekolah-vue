@@ -34,9 +34,7 @@ void main() {
 
     testWidgets('fires onPressed callback when tapped', (tester) async {
       var pressed = false;
-      await tester.pumpWidget(
-        buildSubject(onPressed: () => pressed = true),
-      );
+      await tester.pumpWidget(buildSubject(onPressed: () => pressed = true));
 
       await tester.tap(find.byType(ClassActivityCircleActionButton));
       await tester.pump();
@@ -45,20 +43,22 @@ void main() {
     });
 
     testWidgets('shows Tooltip when tooltip param is provided', (tester) async {
-      await tester.pumpWidget(
-        buildSubject(tooltip: 'Edit activity'),
-      );
+      await tester.pumpWidget(buildSubject(tooltip: 'Edit activity'));
 
       expect(find.byType(Tooltip), findsOneWidget);
     });
 
-    testWidgets('does NOT wrap in Tooltip when tooltip is null', (tester) async {
+    testWidgets('does NOT wrap in Tooltip when tooltip is null', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject(tooltip: null));
 
       expect(find.byType(Tooltip), findsNothing);
     });
 
-    testWidgets('renders correctly with different accent colours', (tester) async {
+    testWidgets('renders correctly with different accent colours', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject(color: Colors.red));
 
       expect(find.byType(ClassActivityCircleActionButton), findsOneWidget);

@@ -48,8 +48,9 @@ void main() {
       expect(find.byType(AddActivityActionBar), findsOneWidget);
     });
 
-    testWidgets('shows Cancel and Add buttons in add mode (English)',
-        (tester) async {
+    testWidgets('shows Cancel and Add buttons in add mode (English)', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildActionBar(isEditMode: false));
       expect(find.text('Cancel'), findsOneWidget);
       expect(find.text('Add'), findsOneWidget);
@@ -60,18 +61,18 @@ void main() {
       expect(find.text('Update'), findsOneWidget);
     });
 
-    testWidgets('onSubmit callback fires when submit button is tapped',
-        (tester) async {
+    testWidgets('onSubmit callback fires when submit button is tapped', (
+      tester,
+    ) async {
       var tapped = false;
-      await tester.pumpWidget(
-        _buildActionBar(onSubmit: () => tapped = true),
-      );
+      await tester.pumpWidget(_buildActionBar(onSubmit: () => tapped = true));
       await tester.tap(find.text('Add'));
       expect(tapped, isTrue);
     });
 
-    testWidgets('submit button is disabled when isSubmitting is true',
-        (tester) async {
+    testWidgets('submit button is disabled when isSubmitting is true', (
+      tester,
+    ) async {
       var tapped = false;
       await tester.pumpWidget(
         _buildActionBar(isSubmitting: true, onSubmit: () => tapped = true),

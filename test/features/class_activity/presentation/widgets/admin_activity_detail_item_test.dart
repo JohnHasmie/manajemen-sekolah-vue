@@ -40,8 +40,9 @@ void main() {
       expect(find.byIcon(Icons.book_outlined), findsOneWidget);
     });
 
-    testWidgets('renders correctly with different primary colours',
-        (tester) async {
+    testWidgets('renders correctly with different primary colours', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject(primaryColor: Colors.teal));
 
       expect(find.byType(AdminActivityDetailItem), findsOneWidget);

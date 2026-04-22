@@ -12,24 +12,27 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('EmbeddedActivityListScreen parameters', () {
-    test('required parameters: teacherId, teacherName, classId, className, subjectId, subjectName', () {
-      // These are the minimum required params from schedule_card_item.dart
-      const params = {
-        'teacherId': 'teacher-uuid-1',
-        'teacherName': 'Budi',
-        'classId': 'class-uuid-1',
-        'className': '10A',
-        'subjectId': 'subject-uuid-1',
-        'subjectName': 'Matematika',
-      };
+    test(
+      'required parameters: teacherId, teacherName, classId, className, subjectId, subjectName',
+      () {
+        // These are the minimum required params from schedule_card_item.dart
+        const params = {
+          'teacherId': 'teacher-uuid-1',
+          'teacherName': 'Budi',
+          'classId': 'class-uuid-1',
+          'className': '10A',
+          'subjectId': 'subject-uuid-1',
+          'subjectName': 'Matematika',
+        };
 
-      expect(params['teacherId'], isNotEmpty);
-      expect(params['teacherName'], isNotEmpty);
-      expect(params['classId'], isNotEmpty);
-      expect(params['className'], isNotEmpty);
-      expect(params['subjectId'], isNotEmpty);
-      expect(params['subjectName'], isNotEmpty);
-    });
+        expect(params['teacherId'], isNotEmpty);
+        expect(params['teacherName'], isNotEmpty);
+        expect(params['classId'], isNotEmpty);
+        expect(params['className'], isNotEmpty);
+        expect(params['subjectId'], isNotEmpty);
+        expect(params['subjectName'], isNotEmpty);
+      },
+    );
 
     test('optional parameters have sensible defaults', () {
       // These match the constructor defaults in embedded_activity_list_screen.dart
@@ -42,12 +45,15 @@ void main() {
       expect(showScaffold, isTrue);
     });
 
-    test('showScaffold=true renders AppBar with close button (bottom sheet mode)', () {
-      // When opened from schedule card, showScaffold=true (default)
-      // → Scaffold with AppBar showing "Kegiatan Kelas — {subject} {class}"
-      const showScaffold = true;
-      expect(showScaffold, isTrue);
-    });
+    test(
+      'showScaffold=true renders AppBar with close button (bottom sheet mode)',
+      () {
+        // When opened from schedule card, showScaffold=true (default)
+        // → Scaffold with AppBar showing "Kegiatan Kelas — {subject} {class}"
+        const showScaffold = true;
+        expect(showScaffold, isTrue);
+      },
+    );
 
     test('showScaffold=false returns body only (embedded in wizard mode)', () {
       // When used as step 2 inside ClassActivityScreen, showScaffold=false
@@ -62,34 +68,40 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('Separation of concerns', () {
-    test('embedded screen does NOT own: class list, subject list, teacher resolution', () {
-      // These belong to ClassActivityScreen (wizard steps 0-1).
-      // EmbeddedActivityListScreen receives them as pre-resolved params.
-      const ownedByParent = [
-        'classList',
-        'subjectList',
-        'teacherResolution',
-        'scheduleList',
-      ];
-      expect(ownedByParent.length, 4);
-    });
+    test(
+      'embedded screen does NOT own: class list, subject list, teacher resolution',
+      () {
+        // These belong to ClassActivityScreen (wizard steps 0-1).
+        // EmbeddedActivityListScreen receives them as pre-resolved params.
+        const ownedByParent = [
+          'classList',
+          'subjectList',
+          'teacherResolution',
+          'scheduleList',
+        ];
+        expect(ownedByParent.length, 4);
+      },
+    );
 
-    test('embedded screen DOES own: activity list, pagination, search, filter, tabs, CRUD', () {
-      const ownedByEmbedded = [
-        'activityList',
-        'pagination',
-        'searchController',
-        'dateFilter',
-        'tabController (umum/khusus)',
-        'addActivityDialog',
-        'editActivityDialog',
-        'deleteActivity',
-        'activityDetailDialog',
-        'autoUncheckMaterials',
-        'tour',
-      ];
-      expect(ownedByEmbedded.length, 11);
-    });
+    test(
+      'embedded screen DOES own: activity list, pagination, search, filter, tabs, CRUD',
+      () {
+        const ownedByEmbedded = [
+          'activityList',
+          'pagination',
+          'searchController',
+          'dateFilter',
+          'tabController (umum/khusus)',
+          'addActivityDialog',
+          'editActivityDialog',
+          'deleteActivity',
+          'activityDetailDialog',
+          'autoUncheckMaterials',
+          'tour',
+        ];
+        expect(ownedByEmbedded.length, 11);
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -139,10 +151,15 @@ void main() {
         'subject_id': 'subj-xyz',
         'mata_pelajaran_nama': 'B. Arab',
       };
-      final classId = (schedule['class_id'] ?? schedule['kelas_id'])?.toString();
-      final className = (schedule['class_name'] ?? schedule['kelas_nama'])?.toString();
-      final subjectId = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
-      final subjectName = (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'])?.toString();
+      final classId = (schedule['class_id'] ?? schedule['kelas_id'])
+          ?.toString();
+      final className = (schedule['class_name'] ?? schedule['kelas_nama'])
+          ?.toString();
+      final subjectId =
+          (schedule['subject_id'] ?? schedule['mata_pelajaran_id'])?.toString();
+      final subjectName =
+          (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'])
+              ?.toString();
 
       expect(classId, 'class-abc');
       expect(className, '8B');
@@ -154,7 +171,8 @@ void main() {
       // The schedule card computes the next occurrence of the schedule's day
       final now = DateTime.now();
       const scheduleDayIndex = 3; // Kamis (Thursday), 0-indexed in dayOptions
-      final todayIndex = now.weekday;
+      // now.weekday is 1-based (Monday=1), convert to 0-based
+      final todayIndex = now.weekday - 1;
       int daysUntil = scheduleDayIndex - todayIndex;
       if (daysUntil < 0) daysUntil += 7;
       final date = now.add(Duration(days: daysUntil));
