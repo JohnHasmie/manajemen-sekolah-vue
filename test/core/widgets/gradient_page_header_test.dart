@@ -21,22 +21,24 @@ Widget buildWidget({
   Widget? searchBar,
   Widget? filterChips,
 }) {
-  final router = GoRouter(routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => Scaffold(
-        body: GradientPageHeader(
-          title: title,
-          subtitle: subtitle,
-          primaryColor: primaryColor,
-          onBackPressed: onBackPressed,
-          actionMenu: actionMenu,
-          searchBar: searchBar,
-          filterChips: filterChips,
+  final router = GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => Scaffold(
+          body: GradientPageHeader(
+            title: title,
+            subtitle: subtitle,
+            primaryColor: primaryColor,
+            onBackPressed: onBackPressed,
+            actionMenu: actionMenu,
+            searchBar: searchBar,
+            filterChips: filterChips,
+          ),
         ),
       ),
-    ),
-  ]);
+    ],
+  );
   return MaterialApp.router(routerConfig: router);
 }
 
@@ -63,9 +65,7 @@ void main() {
       await tester.pumpWidget(buildWidget(onBackPressed: () {}));
       // GestureDetector wrapping the back arrow container should be present.
       expect(
-        find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Icons.arrow_back,
-        ),
+        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.arrow_back),
         findsOneWidget,
       );
     });

@@ -48,15 +48,15 @@ class _ScreenA extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Screen A')),
-        body: Center(
-          child: ElevatedButton(
-            key: const Key('go_btn'),
-            onPressed: onNavigate,
-            child: const Text('Go to B'),
-          ),
-        ),
-      );
+    appBar: AppBar(title: const Text('Screen A')),
+    body: Center(
+      child: ElevatedButton(
+        key: const Key('go_btn'),
+        onPressed: onNavigate,
+        child: const Text('Go to B'),
+      ),
+    ),
+  );
 }
 
 /// Screen B — the "destination" page. Has a back button.
@@ -65,16 +65,16 @@ class _ScreenB extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Screen B'),
-          leading: IconButton(
-            key: const Key('back_btn'),
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        body: const Center(child: Text('You are on Screen B')),
-      );
+    appBar: AppBar(
+      title: const Text('Screen B'),
+      leading: IconButton(
+        key: const Key('back_btn'),
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pop(context),
+      ),
+    ),
+    body: const Center(child: Text('You are on Screen B')),
+  );
 }
 
 /// Screen C — a third level screen.
@@ -83,9 +83,9 @@ class _ScreenC extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Screen C')),
-        body: const Center(child: Text('Deep Page C')),
-      );
+    appBar: AppBar(title: const Text('Screen C')),
+    body: const Center(child: Text('Deep Page C')),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -98,13 +98,15 @@ void main() {
   // =========================================================================
   group('AppNavigator.push — forward navigation', () {
     testWidgets('navigates to new screen on push', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(
-          builder: (ctx) => _ScreenA(
-            onNavigate: () => AppNavigator.push(ctx, const _ScreenB()),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => _ScreenA(
+              onNavigate: () => AppNavigator.push(ctx, const _ScreenB()),
+            ),
           ),
         ),
-      ));
+      );
 
       expect(find.text('Screen A'), findsOneWidget);
       expect(find.text('You are on Screen B'), findsNothing);
@@ -118,14 +120,16 @@ void main() {
 
     testWidgets('push records a new route in the observer', (tester) async {
       final observer = MockNavigatorObserver();
-      await tester.pumpWidget(MaterialApp(
-        navigatorObservers: [observer],
-        home: Builder(
-          builder: (ctx) => _ScreenA(
-            onNavigate: () => AppNavigator.push(ctx, const _ScreenB()),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorObservers: [observer],
+          home: Builder(
+            builder: (ctx) => _ScreenA(
+              onNavigate: () => AppNavigator.push(ctx, const _ScreenB()),
+            ),
           ),
         ),
-      ));
+      );
 
       final initialPushCount = observer.pushed.length;
       await tester.tap(find.byKey(const Key('go_btn')));
@@ -136,26 +140,32 @@ void main() {
     });
 
     testWidgets('multiple pushes stack screens correctly', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(
-          builder: (ctx) => _ScreenA(
-            onNavigate: () async {
-              await AppNavigator.push(ctx, Builder(
-                builder: (ctx2) => Scaffold(
-                  appBar: AppBar(title: const Text('Screen B')),
-                  body: Center(
-                    child: ElevatedButton(
-                      key: const Key('go_c_btn'),
-                      onPressed: () => AppNavigator.push(ctx2, const _ScreenC()),
-                      child: const Text('Go to C'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => _ScreenA(
+              onNavigate: () async {
+                await AppNavigator.push(
+                  ctx,
+                  Builder(
+                    builder: (ctx2) => Scaffold(
+                      appBar: AppBar(title: const Text('Screen B')),
+                      body: Center(
+                        child: ElevatedButton(
+                          key: const Key('go_c_btn'),
+                          onPressed: () =>
+                              AppNavigator.push(ctx2, const _ScreenC()),
+                          child: const Text('Go to C'),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ));
-            },
+                );
+              },
+            ),
           ),
         ),
-      ));
+      );
 
       // Go to B
       await tester.tap(find.byKey(const Key('go_btn')));
@@ -174,13 +184,15 @@ void main() {
   // =========================================================================
   group('AppNavigator.pop — back navigation', () {
     testWidgets('pop returns to previous screen', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(
-          builder: (ctx) => _ScreenA(
-            onNavigate: () => AppNavigator.push(ctx, const _ScreenB()),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => _ScreenA(
+              onNavigate: () => AppNavigator.push(ctx, const _ScreenB()),
+            ),
           ),
         ),
-      ));
+      );
 
       // Navigate to B
       await tester.tap(find.byKey(const Key('go_btn')));
@@ -194,15 +206,18 @@ void main() {
       expect(find.text('You are on Screen B'), findsNothing);
     });
 
-    testWidgets('system back button (BackButton widget) pops correctly',
-        (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(
-          builder: (ctx) => _ScreenA(
-            onNavigate: () => AppNavigator.push(ctx, const _ScreenB()),
+    testWidgets('system back button (BackButton widget) pops correctly', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => _ScreenA(
+              onNavigate: () => AppNavigator.push(ctx, const _ScreenB()),
+            ),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.byKey(const Key('go_btn')));
       await tester.pumpAndSettle();
@@ -217,30 +232,35 @@ void main() {
     testWidgets('pop with result returns value to caller', (tester) async {
       String? returnedValue;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (ctx) {
-          return Scaffold(
-            body: ElevatedButton(
-              key: const Key('open_btn'),
-              onPressed: () async {
-                returnedValue = await AppNavigator.push<String>(
-                  ctx,
-                  Builder(
-                    builder: (ctx2) => Scaffold(
-                      body: ElevatedButton(
-                        key: const Key('return_btn'),
-                        onPressed: () => Navigator.pop(ctx2, 'result_value'),
-                        child: const Text('Return'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) {
+              return Scaffold(
+                body: ElevatedButton(
+                  key: const Key('open_btn'),
+                  onPressed: () async {
+                    returnedValue = await AppNavigator.push<String>(
+                      ctx,
+                      Builder(
+                        builder: (ctx2) => Scaffold(
+                          body: ElevatedButton(
+                            key: const Key('return_btn'),
+                            onPressed: () =>
+                                Navigator.pop(ctx2, 'result_value'),
+                            child: const Text('Return'),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
-              child: const Text('Open'),
-            ),
-          );
-        }),
-      ));
+                    );
+                  },
+                  child: const Text('Open'),
+                ),
+              );
+            },
+          ),
+        ),
+      );
 
       await tester.tap(find.byKey(const Key('open_btn')));
       await tester.pumpAndSettle();
@@ -250,44 +270,58 @@ void main() {
       expect(returnedValue, 'result_value');
     });
 
-    testWidgets('deep pop (3 levels) — popping from C reaches B', (tester) async {
+    testWidgets('deep pop (3 levels) — popping from C reaches B', (
+      tester,
+    ) async {
       late BuildContext ctxA, ctxB;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (ctx) {
-          ctxA = ctx;
-          return Scaffold(
-            appBar: AppBar(title: const Text('A')),
-            body: ElevatedButton(
-              key: const Key('a_to_b'),
-              onPressed: () => AppNavigator.push(ctxA, Builder(
-                builder: (ctx2) {
-                  ctxB = ctx2;
-                  return Scaffold(
-                    appBar: AppBar(title: const Text('B')),
-                    body: ElevatedButton(
-                      key: const Key('b_to_c'),
-                      onPressed: () => AppNavigator.push(ctxB, Scaffold(
-                        appBar: AppBar(
-                          leading: Builder(builder: (ctx3) => IconButton(
-                            key: const Key('c_back'),
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () => Navigator.pop(ctx3),
-                          )),
-                          title: const Text('C'),
-                        ),
-                        body: const Text('Page C'),
-                      )),
-                      child: const Text('Go C'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) {
+              ctxA = ctx;
+              return Scaffold(
+                appBar: AppBar(title: const Text('A')),
+                body: ElevatedButton(
+                  key: const Key('a_to_b'),
+                  onPressed: () => AppNavigator.push(
+                    ctxA,
+                    Builder(
+                      builder: (ctx2) {
+                        ctxB = ctx2;
+                        return Scaffold(
+                          appBar: AppBar(title: const Text('B')),
+                          body: ElevatedButton(
+                            key: const Key('b_to_c'),
+                            onPressed: () => AppNavigator.push(
+                              ctxB,
+                              Scaffold(
+                                appBar: AppBar(
+                                  leading: Builder(
+                                    builder: (ctx3) => IconButton(
+                                      key: const Key('c_back'),
+                                      icon: const Icon(Icons.arrow_back),
+                                      onPressed: () => Navigator.pop(ctx3),
+                                    ),
+                                  ),
+                                  title: const Text('C'),
+                                ),
+                                body: const Text('Page C'),
+                              ),
+                            ),
+                            child: const Text('Go C'),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              )),
-              child: const Text('Go B'),
-            ),
-          );
-        }),
-      ));
+                  ),
+                  child: const Text('Go B'),
+                ),
+              );
+            },
+          ),
+        ),
+      );
 
       await tester.tap(find.byKey(const Key('a_to_b')));
       await tester.pumpAndSettle();
@@ -310,13 +344,16 @@ void main() {
   // =========================================================================
   group('AppNavigator.pushReplacement — replace navigation', () {
     testWidgets('replace removes current screen from stack', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(
-          builder: (ctx) => _ScreenA(
-            onNavigate: () => AppNavigator.pushReplacement(ctx, const _ScreenB()),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => _ScreenA(
+              onNavigate: () =>
+                  AppNavigator.pushReplacement(ctx, const _ScreenB()),
+            ),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.byKey(const Key('go_btn')));
       await tester.pumpAndSettle();
@@ -328,21 +365,26 @@ void main() {
 
     testWidgets('observer records replace event', (tester) async {
       final observer = MockNavigatorObserver();
-      await tester.pumpWidget(MaterialApp(
-        navigatorObservers: [observer],
-        home: Builder(
-          builder: (ctx) => _ScreenA(
-            onNavigate: () =>
-                AppNavigator.pushReplacement(ctx, const _ScreenB()),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorObservers: [observer],
+          home: Builder(
+            builder: (ctx) => _ScreenA(
+              onNavigate: () =>
+                  AppNavigator.pushReplacement(ctx, const _ScreenB()),
+            ),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.byKey(const Key('go_btn')));
       await tester.pumpAndSettle();
 
       // pushReplacement fires didReplace (or didPush for the new route)
-      expect(observer.replaced.isNotEmpty || observer.pushed.length > 1, isTrue);
+      expect(
+        observer.replaced.isNotEmpty || observer.pushed.length > 1,
+        isTrue,
+      );
     });
   });
 
@@ -351,14 +393,18 @@ void main() {
   // =========================================================================
   group('AppNavigator.pushAndClearStack — clear entire stack', () {
     testWidgets('navigates to new screen and clears history', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(
-          builder: (ctx) => _ScreenA(
-            onNavigate: () => AppNavigator.pushAndClearStack(ctx,
-                const Scaffold(body: Text('Fresh Start'))),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => _ScreenA(
+              onNavigate: () => AppNavigator.pushAndClearStack(
+                ctx,
+                const Scaffold(body: Text('Fresh Start')),
+              ),
+            ),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.byKey(const Key('go_btn')));
       await tester.pumpAndSettle();
@@ -377,19 +423,23 @@ void main() {
       late BuildContext capturedCtx;
       bool? canPopResult;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (ctx) {
-          capturedCtx = ctx;
-          return Scaffold(
-            body: ElevatedButton(
-              onPressed: () {
-                canPopResult = Navigator.of(capturedCtx).canPop();
-              },
-              child: const Text('Check'),
-            ),
-          );
-        }),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) {
+              capturedCtx = ctx;
+              return Scaffold(
+                body: ElevatedButton(
+                  onPressed: () {
+                    canPopResult = Navigator.of(capturedCtx).canPop();
+                  },
+                  child: const Text('Check'),
+                ),
+              );
+            },
+          ),
+        ),
+      );
 
       await tester.tap(find.text('Check'));
       expect(canPopResult, isFalse);
@@ -398,20 +448,27 @@ void main() {
     testWidgets('canPop returns true after push', (tester) async {
       bool? canPopResult;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (ctx) => _ScreenA(
-          onNavigate: () => AppNavigator.push(ctx, Builder(
-            builder: (ctx2) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () {
-                  canPopResult = Navigator.of(ctx2).canPop();
-                },
-                child: const Text('Check can pop'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => _ScreenA(
+              onNavigate: () => AppNavigator.push(
+                ctx,
+                Builder(
+                  builder: (ctx2) => Scaffold(
+                    body: ElevatedButton(
+                      onPressed: () {
+                        canPopResult = Navigator.of(ctx2).canPop();
+                      },
+                      child: const Text('Check can pop'),
+                    ),
+                  ),
+                ),
               ),
             ),
-          )),
-        )),
-      ));
+          ),
+        ),
+      );
 
       await tester.tap(find.byKey(const Key('go_btn')));
       await tester.pumpAndSettle();
@@ -426,13 +483,15 @@ void main() {
   // =========================================================================
   group('Navigation round-trip flows', () {
     testWidgets('push → pop → push again works correctly', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(
-          builder: (ctx) => _ScreenA(
-            onNavigate: () => AppNavigator.push(ctx, const _ScreenB()),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => _ScreenA(
+              onNavigate: () => AppNavigator.push(ctx, const _ScreenB()),
+            ),
           ),
         ),
-      ));
+      );
 
       // First forward
       await tester.tap(find.byKey(const Key('go_btn')));
@@ -450,48 +509,55 @@ void main() {
       expect(find.text('You are on Screen B'), findsOneWidget);
     });
 
-    testWidgets('dialog-style pop with result and return to previous state',
-        (tester) async {
+    testWidgets('dialog-style pop with result and return to previous state', (
+      tester,
+    ) async {
       String? result;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (ctx) {
-          return Scaffold(
-            body: Column(
-              children: [
-                if (result != null) Text('Got: $result'),
-                ElevatedButton(
-                  key: const Key('open_dialog'),
-                  onPressed: () async {
-                    result = await AppNavigator.push<String>(
-                      ctx,
-                      Builder(
-                        builder: (ctx2) => Scaffold(
-                          body: Column(
-                            children: [
-                              ElevatedButton(
-                                key: const Key('confirm_btn'),
-                                onPressed: () => Navigator.pop(ctx2, 'confirmed'),
-                                child: const Text('Confirm'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) {
+              return Scaffold(
+                body: Column(
+                  children: [
+                    if (result != null) Text('Got: $result'),
+                    ElevatedButton(
+                      key: const Key('open_dialog'),
+                      onPressed: () async {
+                        result = await AppNavigator.push<String>(
+                          ctx,
+                          Builder(
+                            builder: (ctx2) => Scaffold(
+                              body: Column(
+                                children: [
+                                  ElevatedButton(
+                                    key: const Key('confirm_btn'),
+                                    onPressed: () =>
+                                        Navigator.pop(ctx2, 'confirmed'),
+                                    child: const Text('Confirm'),
+                                  ),
+                                  ElevatedButton(
+                                    key: const Key('cancel_btn'),
+                                    onPressed: () =>
+                                        Navigator.pop(ctx2, 'cancelled'),
+                                    child: const Text('Cancel'),
+                                  ),
+                                ],
                               ),
-                              ElevatedButton(
-                                key: const Key('cancel_btn'),
-                                onPressed: () => Navigator.pop(ctx2, 'cancelled'),
-                                child: const Text('Cancel'),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text('Open Dialog'),
+                        );
+                      },
+                      child: const Text('Open Dialog'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        }),
-      ));
+              );
+            },
+          ),
+        ),
+      );
 
       // Open dialog-like screen
       await tester.tap(find.byKey(const Key('open_dialog')));

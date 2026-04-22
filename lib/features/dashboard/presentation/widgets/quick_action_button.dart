@@ -56,7 +56,7 @@ class QuickActionButton extends StatelessWidget {
                   BoxShadow(
                     color: ColorUtils.slate900.withValues(alpha: 0.06),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -76,13 +76,13 @@ class QuickActionButton extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                         ),
-                        constraints: BoxConstraints(
+                        constraints: const BoxConstraints(
                           minWidth: 16,
                           minHeight: 16,
                         ),
                         child: Text(
                           badgeCount! > 9 ? '9+' : badgeCount.toString(),
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 7,
                             fontWeight: FontWeight.bold,

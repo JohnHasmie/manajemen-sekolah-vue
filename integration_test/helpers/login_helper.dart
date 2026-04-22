@@ -18,7 +18,15 @@ Future<void> loginAndNavigateToDashboard(
   await secureStorage.delete(key: 'secure_user_data');
   await secureStorage.delete(key: 'secure_force_logout');
   final prefs = await SharedPreferences.getInstance();
-  for (final k in ['token', 'user', 'user_data', 'role', 'school_id', 'current_school_id', 'force_logout']) {
+  for (final k in [
+    'token',
+    'user',
+    'user_data',
+    'role',
+    'school_id',
+    'current_school_id',
+    'force_logout',
+  ]) {
     await prefs.remove(k);
   }
   debugPrint('🧹 Cleared auth tokens (preserved FCM state)');
@@ -32,7 +40,10 @@ Future<void> loginAndNavigateToDashboard(
 
   // Use stable Key-based finders — immune to i18n or copy changes.
   await tester.tap(find.byKey(const Key('email_field')));
-  await tester.enterText(find.byKey(const Key('email_field')), 'yahyahasymi@gmail.com');
+  await tester.enterText(
+    find.byKey(const Key('email_field')),
+    'yahyahasymi@gmail.com',
+  );
   await tester.pump();
 
   await tester.tap(find.byKey(const Key('password_field')));
@@ -72,7 +83,10 @@ Future<void> loginAndNavigateToDashboard(
   await tester.pumpAndSettle();
   debugPrint('✅ Dashboard loaded');
 
-  assert(find.byType(Scaffold).evaluate().isNotEmpty, 'App should show a Scaffold after login');
+  assert(
+    find.byType(Scaffold).evaluate().isNotEmpty,
+    'App should show a Scaffold after login',
+  );
 }
 
 /// Scrolls to and taps a menu item by its [menuText] label.
@@ -84,7 +98,11 @@ Future<bool> tapMenu(WidgetTester tester, String menuText) async {
     // Try scrolling up first (most common layout), then down as fallback.
     for (final direction in [const Offset(0, -300), const Offset(0, 300)]) {
       try {
-        await tester.dragUntilVisible(find.text(menuText), scrollable.first, direction);
+        await tester.dragUntilVisible(
+          find.text(menuText),
+          scrollable.first,
+          direction,
+        );
         break;
       } catch (_) {
         // This direction didn't reveal the target — try the other.

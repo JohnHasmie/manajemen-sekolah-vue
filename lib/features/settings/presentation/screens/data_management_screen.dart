@@ -42,31 +42,38 @@ class AdminDataManagementScreen extends StatelessWidget {
                 MenuItemCard(
                   title: AppLocalizations.manageStudents.tr,
                   icon: Icons.people_alt_outlined,
-                  onTap: () =>
-                      AppNavigator.push(context, StudentManagementScreen()),
+                  onTap: () => AppNavigator.push(
+                    context,
+                    const StudentManagementScreen(),
+                  ),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 MenuItemCard(
                   title: AppLocalizations.manageTeachers.tr,
                   icon: Icons.person_outline,
-                  onTap: () => AppNavigator.push(context, TeacherAdminScreen()),
+                  onTap: () =>
+                      AppNavigator.push(context, const TeacherAdminScreen()),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 MenuItemCard(
                   title: AppLocalizations.manageClasses.tr,
                   icon: Icons.class_outlined,
-                  onTap: () =>
-                      AppNavigator.push(context, AdminClassManagementScreen()),
+                  onTap: () => AppNavigator.push(
+                    context,
+                    const AdminClassManagementScreen(),
+                  ),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 MenuItemCard(
                   title: AppLocalizations.manageSubjects.tr,
                   icon: Icons.book_outlined,
-                  onTap: () =>
-                      AppNavigator.push(context, SubjectManagementScreen()),
+                  onTap: () => AppNavigator.push(
+                    context,
+                    const AdminSubjectManagementScreen(),
+                  ),
                   primaryColor: ColorUtils.corporateBlue600,
                 ),
                 const SizedBox(height: AppSpacing.xxl),
@@ -102,7 +109,7 @@ class AdminDataManagementScreen extends StatelessWidget {
           BoxShadow(
             color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -118,7 +125,11 @@ class AdminDataManagementScreen extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: const BorderRadius.all(Radius.circular(10)),
               ),
-              child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              child: const Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -127,7 +138,7 @@ class AdminDataManagementScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Kelola Data',
                   style: TextStyle(
                     fontSize: 20,

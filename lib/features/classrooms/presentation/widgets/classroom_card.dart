@@ -5,23 +5,19 @@
 // edit/delete action buttons.  Edit/delete buttons are hidden when the
 // academic year is read-only.
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer;
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 
 /// A small pill-shaped tag with an icon and a text label.
 ///
 /// Used inside [ClassroomCard] to show grade-level and homeroom-teacher info.
 /// Stateless — receives [icon] and [text] as constructor params (Vue props).
 class ClassroomInfoTag extends StatelessWidget {
-  const ClassroomInfoTag({
-    super.key,
-    required this.icon,
-    required this.text,
-  });
+  const ClassroomInfoTag({super.key, required this.icon, required this.text});
 
   final IconData icon;
   final String text;
@@ -96,11 +92,12 @@ class ClassroomCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final languageProvider = ref.read(languageRiverpod);
     final avatarColor = ColorUtils.getColorForIndex(index);
-    final className = classData['name'] ?? 'Class';
-    final studentCount = classData['student_count'] ?? 0;
+    final model = Classroom.fromJson(classData);
+    final className = model.name.isNotEmpty ? model.name : 'Class';
+    final studentCount = model.studentCount;
 
-    // Resolve homeroom teacher name from various API response shapes
-    final teacherName = _resolveTeacherName(classData, languageProvider);
+    // Resolve homeroom teacher name from normalized model
+    final teacherName = _resolveTeacherName(model, languageProvider);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
@@ -173,7 +170,7 @@ class ClassroomCard extends ConsumerWidget {
                           academicYearRiverpod,
                         );
                         if (academicYearProvider.isReadOnly) {
-                          return SizedBox.shrink();
+                          return const SizedBox.shrink();
                         }
                         return Column(
                           children: [
@@ -266,24 +263,17 @@ class ClassroomCard extends ConsumerWidget {
     );
   }
 
-  /// Resolves the homeroom teacher display name from the various shapes
-  /// the API can return (flat key, List pivot, Map relation).
+  /// Resolves the homeroom teacher display name from the normalized
+  /// [Classroom] model.
   String _resolveTeacherName(
-    Map<String, dynamic> classData,
+    Classroom model,
     LanguageProvider languageProvider,
   ) {
-    if (classData['homeroom_teacher'] is List &&
-        (classData['homeroom_teacher'] as List).isNotEmpty) {
-      return classData['homeroom_teacher'][0]['name'];
-    }
-    if (classData['homeroom_teacher'] is Map) {
-      return classData['homeroom_teacher']['name'];
-    }
-    return classData['homeroom_teacher_name'] ??
-        classData['wali_kelas_nama'] ??
-        languageProvider.getTranslatedText({
-          'en': 'Not Assigned',
-          'id': 'Belum Ditugaskan',
-        });
+    final resolved = model.homeroomTeacherName;
+    if (resolved != null && resolved.isNotEmpty) return resolved;
+    return languageProvider.getTranslatedText({
+      'en': 'Not Assigned',
+      'id': 'Belum Ditugaskan',
+    });
   }
 }

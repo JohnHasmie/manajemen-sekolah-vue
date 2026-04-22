@@ -8,6 +8,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Modal bottom-sheet that lets the admin pick students for promotion.
 ///
@@ -47,7 +48,7 @@ class _PromotionStudentSelectionSheetState
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
@@ -62,7 +63,7 @@ class _PromotionStudentSelectionSheetState
             padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
             decoration: BoxDecoration(
               gradient: widget.cardGradient,
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(24),
                 topRight: Radius.circular(24),
               ),
@@ -88,12 +89,14 @@ class _PromotionStudentSelectionSheetState
                       height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(12),
+                        ),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.checklist_rounded,
                         color: Colors.white,
                         size: 22,
@@ -109,7 +112,7 @@ class _PromotionStudentSelectionSheetState
                               'en': 'Select Students',
                               'id': 'Pilih Siswa',
                             }),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -135,7 +138,7 @@ class _PromotionStudentSelectionSheetState
                           color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.close_rounded,
                           color: Colors.white,
                           size: 18,
@@ -155,14 +158,14 @@ class _PromotionStudentSelectionSheetState
               itemCount: widget.students.length,
               itemBuilder: (context, index) {
                 final student = widget.students[index];
-                final id = student['id'].toString();
+                final model = Student.fromJson(
+                  student as Map<String, dynamic>,
+                );
+                final id = model.id;
                 final isPromoted = widget.isAlreadyPromoted(student);
                 final isSelected = widget.selectedStudentIds.contains(id);
-                final nameStr = student['name'] ?? 'Unknown';
-                final nameHash = nameStr.codeUnits.fold(
-                  0,
-                  (sum, c) => sum + c,
-                );
+                final nameStr = model.name.isNotEmpty ? model.name : 'Unknown';
+                final nameHash = nameStr.codeUnits.fold(0, (sum, c) => sum + c);
                 final avatarColor = ColorUtils.getColorForIndex(nameHash);
 
                 return Container(
@@ -197,7 +200,7 @@ class _PromotionStudentSelectionSheetState
                               widget.onSelectionChanged();
                             },
                       child: Padding(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 10,
                         ),
@@ -243,9 +246,9 @@ class _PromotionStudentSelectionSheetState
                                     Text(
                                       widget.languageProvider
                                           .getTranslatedText({
-                                        'en': 'Already Promoted',
-                                        'id': 'Sudah Naik Kelas',
-                                      }),
+                                            'en': 'Already Promoted',
+                                            'id': 'Sudah Naik Kelas',
+                                          }),
                                       style: TextStyle(
                                         color: ColorUtils.warning600,
                                         fontSize: 11,
@@ -263,7 +266,9 @@ class _PromotionStudentSelectionSheetState
                                   color: isSelected
                                       ? widget.primaryColor
                                       : Colors.white,
-                                  borderRadius: const BorderRadius.all(Radius.circular(6)),
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(6),
+                                  ),
                                   border: Border.all(
                                     color: isSelected
                                         ? widget.primaryColor
@@ -272,7 +277,7 @@ class _PromotionStudentSelectionSheetState
                                   ),
                                 ),
                                 child: isSelected
-                                    ? Icon(
+                                    ? const Icon(
                                         Icons.check_rounded,
                                         color: Colors.white,
                                         size: 16,
@@ -299,7 +304,7 @@ class _PromotionStudentSelectionSheetState
                 BoxShadow(
                   color: ColorUtils.slate900.withValues(alpha: 0.05),
                   blurRadius: 8,
-                  offset: Offset(0, -2),
+                  offset: const Offset(0, -2),
                 ),
               ],
             ),
@@ -312,8 +317,8 @@ class _PromotionStudentSelectionSheetState
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                     elevation: 0,
                   ),
@@ -322,7 +327,7 @@ class _PromotionStudentSelectionSheetState
                       'en': 'Done',
                       'id': 'Selesai',
                     }),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 15,

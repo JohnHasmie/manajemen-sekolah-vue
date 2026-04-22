@@ -29,30 +29,33 @@ void main() {
       expect(attendance.classId, 'c1');
     });
 
-    test('handles Indonesian aliases (id_siswa, tanggal, mata_pelajaran_id)', () {
-      final json = {
-        'id': 'a2',
-        'id_siswa': 's2',
-        'tanggal': '2026-03-26',
-        'status': 'sick',
-        'isRead': false,
-        'mata_pelajaran_nama': 'Bahasa Indonesia',
-        'id_mata_pelajaran': 'sub2',
-        'id_jam_pelajaran': 'hour2',
-        'kelas_id': 'c2',
-      };
+    test(
+      'handles Indonesian aliases (id_siswa, tanggal, mata_pelajaran_id)',
+      () {
+        final json = {
+          'id': 'a2',
+          'id_siswa': 's2',
+          'tanggal': '2026-03-26',
+          'status': 'sick',
+          'isRead': false,
+          'mata_pelajaran_nama': 'Bahasa Indonesia',
+          'id_mata_pelajaran': 'sub2',
+          'id_jam_pelajaran': 'hour2',
+          'kelas_id': 'c2',
+        };
 
-      final attendance = Attendance.fromJson(json);
+        final attendance = Attendance.fromJson(json);
 
-      expect(attendance.studentId, 's2');
-      expect(attendance.date, DateTime(2026, 3, 26));
-      expect(attendance.status, 'sick');
-      expect(attendance.isRead, false);
-      expect(attendance.subjectName, 'Bahasa Indonesia');
-      expect(attendance.subjectId, 'sub2');
-      expect(attendance.lessonHourId, 'hour2');
-      expect(attendance.classId, 'c2');
-    });
+        expect(attendance.studentId, 's2');
+        expect(attendance.date, DateTime(2026, 3, 26));
+        expect(attendance.status, 'sick');
+        expect(attendance.isRead, false);
+        expect(attendance.subjectName, 'Bahasa Indonesia');
+        expect(attendance.subjectId, 'sub2');
+        expect(attendance.lessonHourId, 'hour2');
+        expect(attendance.classId, 'c2');
+      },
+    );
   });
 
   group('Attendance.toJson', () {

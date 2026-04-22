@@ -47,11 +47,7 @@ void main() {
     testWidgets('renders the provided icon', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          const HeroStatCell(
-            icon: Icons.class_,
-            value: '5',
-            label: 'Classes',
-          ),
+          const HeroStatCell(icon: Icons.class_, value: '5', label: 'Classes'),
         ),
       );
 
@@ -78,11 +74,7 @@ void main() {
     testWidgets('icon is white', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          const HeroStatCell(
-            icon: Icons.school,
-            value: '10',
-            label: 'Schools',
-          ),
+          const HeroStatCell(icon: Icons.school, value: '10', label: 'Schools'),
         ),
       );
 

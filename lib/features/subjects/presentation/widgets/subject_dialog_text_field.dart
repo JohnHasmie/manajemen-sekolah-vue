@@ -53,11 +53,7 @@ class SubjectDialogTextField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(color: ColorUtils.slate500, fontSize: 14),
-          prefixIcon: Icon(
-            icon,
-            color: ColorUtils.corporateBlue600,
-            size: 20,
-          ),
+          prefixIcon: Icon(icon, color: ColorUtils.corporateBlue600, size: 20),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
@@ -68,7 +64,10 @@ class SubjectDialogTextField extends StatelessWidget {
               width: 1.5,
             ),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
         ),
       ),
     );

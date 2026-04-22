@@ -30,9 +30,7 @@ void main() {
     // ── 2. Falls back to a SizedBox when data is empty ────────────────────
     testWidgets('renders a SizedBox when data is empty', (tester) async {
       await tester.pumpWidget(
-        buildTestable(
-          const MiniSparkline(data: [], color: Colors.green),
-        ),
+        buildTestable(const MiniSparkline(data: [], color: Colors.green)),
       );
 
       // When data is empty, MiniSparkline returns a bare SizedBox (no CustomPaint child).
@@ -60,21 +58,22 @@ void main() {
       );
 
       final sizedBox = tester.widget<SizedBox>(
-        find.descendant(
-          of: find.byType(MiniSparkline),
-          matching: find.byType(SizedBox),
-        ).first,
+        find
+            .descendant(
+              of: find.byType(MiniSparkline),
+              matching: find.byType(SizedBox),
+            )
+            .first,
       );
       expect(sizedBox.height, 60.0);
     });
 
     // ── 4. Renders with a single data point without crashing ──────────────
-    testWidgets('renders without crashing for a single data point',
-        (tester) async {
+    testWidgets('renders without crashing for a single data point', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        buildTestable(
-          const MiniSparkline(data: [5.0], color: Colors.purple),
-        ),
+        buildTestable(const MiniSparkline(data: [5.0], color: Colors.purple)),
       );
 
       // Single-point data still gets a CustomPaint container
@@ -99,14 +98,12 @@ void main() {
     });
 
     // ── 6. All-equal data renders without errors ──────────────────────────
-    testWidgets('renders without errors when all data points are equal',
-        (tester) async {
+    testWidgets('renders without errors when all data points are equal', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestable(
-          const MiniSparkline(
-            data: [3.0, 3.0, 3.0, 3.0],
-            color: Colors.amber,
-          ),
+          const MiniSparkline(data: [3.0, 3.0, 3.0, 3.0], color: Colors.amber),
         ),
       );
 

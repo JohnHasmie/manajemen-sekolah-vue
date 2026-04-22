@@ -88,7 +88,9 @@ void main() {
       const e = ValidationException(
         'The given data was invalid.',
         statusCode: 422,
-        errors: {'email': {'0': 'Email is required'}},
+        errors: {
+          'email': {'0': 'Email is required'},
+        },
       );
       expect(e.errors, isNotNull);
       expect(e.errors!['email'], isNotNull);

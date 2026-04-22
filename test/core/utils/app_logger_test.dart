@@ -11,7 +11,10 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 void main() {
   group('AppLogger', () {
     test('debug does not throw', () {
-      expect(() => AppLogger.debug('TestTag', 'debug message'), returnsNormally);
+      expect(
+        () => AppLogger.debug('TestTag', 'debug message'),
+        returnsNormally,
+      );
     });
 
     test('debug with tag only does not throw', () {
@@ -28,7 +31,9 @@ void main() {
 
     test('warning does not throw', () {
       expect(
-          () => AppLogger.warning('TestTag', 'warning message'), returnsNormally);
+        () => AppLogger.warning('TestTag', 'warning message'),
+        returnsNormally,
+      );
     });
 
     test('warning with tag only does not throw', () {
@@ -43,7 +48,10 @@ void main() {
     });
 
     test('error with error only does not throw', () {
-      expect(() => AppLogger.error('TestTag', Exception('boom')), returnsNormally);
+      expect(
+        () => AppLogger.error('TestTag', Exception('boom')),
+        returnsNormally,
+      );
     });
 
     test('error with tag only does not throw', () {
@@ -51,10 +59,7 @@ void main() {
     });
 
     test('network does not throw', () {
-      expect(
-        () => AppLogger.network('GET', '/api/test', 200),
-        returnsNormally,
-      );
+      expect(() => AppLogger.network('GET', '/api/test', 200), returnsNormally);
     });
 
     test('network without status code does not throw', () {

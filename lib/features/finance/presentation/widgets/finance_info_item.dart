@@ -13,11 +13,7 @@ class FinanceInfoItem extends StatelessWidget {
   /// The value to display on the right (expands to fill remaining space).
   final String value;
 
-  const FinanceInfoItem({
-    super.key,
-    required this.label,
-    required this.value,
-  });
+  const FinanceInfoItem({super.key, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {

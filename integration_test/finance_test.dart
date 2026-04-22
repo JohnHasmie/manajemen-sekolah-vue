@@ -34,8 +34,9 @@ Future<void> _goBack(WidgetTester tester) async {
     if (backBtn.evaluate().isNotEmpty) {
       await tester.tap(backBtn.first);
     } else {
-      final navigator =
-          tester.state<NavigatorState>(find.byType(Navigator).last);
+      final navigator = tester.state<NavigatorState>(
+        find.byType(Navigator).last,
+      );
       navigator.pop();
     }
   }
@@ -50,25 +51,28 @@ void main() {
   // =========================================================================
   // TC068-TC073: Original Keuangan test (preserved)
   // =========================================================================
-  testWidgets('TC068-TC073: Keuangan — open, screenshot, back',
-      timeout: const Timeout(Duration(minutes: 5)), (tester) async {
-    await loginAndNavigateToDashboard(tester, role: 'Administrator');
+  testWidgets(
+    'TC068-TC073: Keuangan — open, screenshot, back',
+    timeout: const Timeout(Duration(minutes: 5)),
+    (tester) async {
+      await loginAndNavigateToDashboard(tester, role: 'Administrator');
 
-    await tapMenu(tester, 'Keuangan');
-    debugPrint('✅ TC068 PASSED - Keuangan opened');
+      await tapMenu(tester, 'Keuangan');
+      debugPrint('✅ TC068 PASSED - Keuangan opened');
 
-    await waitFrames(tester, count: 10);
-    expect(find.byType(Scaffold), findsWidgets);
-    debugPrint('✅ TC069 PASSED - Finance screen displayed');
+      await waitFrames(tester, count: 10);
+      expect(find.byType(Scaffold), findsWidgets);
+      debugPrint('✅ TC069 PASSED - Finance screen displayed');
 
-    await binding.takeScreenshot('finance');
-    debugPrint('✅ TC070-TC072 PASSED - Screenshot taken');
+      await binding.takeScreenshot('finance');
+      debugPrint('✅ TC070-TC072 PASSED - Screenshot taken');
 
-    await goBack(tester);
-    debugPrint('✅ TC073 PASSED - Navigated back');
+      await goBack(tester);
+      debugPrint('✅ TC073 PASSED - Navigated back');
 
-    debugPrint('✅ TC068-TC073 ALL PASSED');
-  });
+      debugPrint('✅ TC068-TC073 ALL PASSED');
+    },
+  );
 
   // =========================================================================
   // TC131: Finance — scroll to reveal summary data
@@ -132,7 +136,9 @@ void main() {
         debugPrint('  ✅ Tapped first card — detail screen opened');
         await _goBack(tester);
       } else {
-        debugPrint('  ⚠️ No tappable finance items — verifying screen still up');
+        debugPrint(
+          '  ⚠️ No tappable finance items — verifying screen still up',
+        );
         expect(find.byType(Scaffold), findsWidgets);
       }
 
@@ -205,8 +211,11 @@ void main() {
 
       // Screen should have more than just the AppBar — widgets should be rendered
       final widgetCount = find.byType(Widget).evaluate().length;
-      expect(widgetCount, greaterThan(5),
-          reason: 'Finance screen should have real content from API');
+      expect(
+        widgetCount,
+        greaterThan(5),
+        reason: 'Finance screen should have real content from API',
+      );
 
       // No indefinite loading indicator after settling
       final shimmer = find.byType(CircularProgressIndicator);

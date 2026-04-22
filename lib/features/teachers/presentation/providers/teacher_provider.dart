@@ -51,6 +51,15 @@ class TeacherProvider extends ChangeNotifier {
   bool get isLoaded => _isLoaded;
   bool get isLoading => _isLoading;
 
+  /// Whether the cached teacher currently holds at least one homeroom (wali kelas) class.
+  ///
+  /// Single source of truth for UI that conditionally renders the
+  /// Mengajar / Wali Kelas toggle. Screens should read this via
+  /// `ref.watch(teacherRiverpod).isHomeroomTeacher` so the toggle hides for
+  /// teachers who only teach (no perwalian) — keeping the behavior consistent
+  /// across grades, materials, schedule, activity, attendance, etc.
+  bool get isHomeroomTeacher => _homeroomClasses.isNotEmpty;
+
   /// Sets all teacher data at once (called from the dashboard after it fetches from API).
   /// Like a Vuex mutation that hydrates the entire module state in one go.
   ///
@@ -137,10 +146,8 @@ class TeacherProvider extends ChangeNotifier {
         resolvedTeacherId = userData['teacher_id'].toString();
       } else {
         // Fetch from API
-        final teacherRecord = await getIt<ApiTeacherService>().getTeacherByUserId(
-          id,
-          academicYearId: academicYearId,
-        );
+        final teacherRecord = await getIt<ApiTeacherService>()
+            .getTeacherByUserId(id, academicYearId: academicYearId);
         if (teacherRecord != null && teacherRecord['id'] != null) {
           resolvedTeacherId = teacherRecord['id'].toString();
           _teacherData = Map<String, dynamic>.from(teacherRecord);
@@ -206,6 +213,8 @@ class TeacherProvider extends ChangeNotifier {
 
 /// Riverpod provider for [TeacherProvider].
 /// Usage: `ref.watch(teacherRiverpod)` or `ref.read(teacherRiverpod)`
-final teacherRiverpod = riverpod_legacy.ChangeNotifierProvider<TeacherProvider>((ref) {
-  return TeacherProvider();
-});
+final teacherRiverpod = riverpod_legacy.ChangeNotifierProvider<TeacherProvider>(
+  (ref) {
+    return TeacherProvider();
+  },
+);

@@ -13,8 +13,11 @@ void main() {
   void expectValidEndpoint(String endpoint, String label) {
     test('$label is a valid endpoint path', () {
       expect(endpoint, isNotEmpty, reason: '$label should not be empty');
-      expect(endpoint.startsWith('/'), isTrue,
-          reason: '$label should start with /');
+      expect(
+        endpoint.startsWith('/'),
+        isTrue,
+        reason: '$label should start with /',
+      );
     });
   }
 

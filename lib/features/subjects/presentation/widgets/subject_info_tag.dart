@@ -15,11 +15,7 @@ class SubjectInfoTag extends StatelessWidget {
   /// The label text displayed next to the icon.
   final String text;
 
-  const SubjectInfoTag({
-    super.key,
-    required this.icon,
-    required this.text,
-  });
+  const SubjectInfoTag({super.key, required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {

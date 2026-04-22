@@ -49,7 +49,10 @@ class FinanceDialogTextField extends StatelessWidget {
           hintText: hint,
           prefixIcon: Icon(icon, color: primaryColor, size: 20),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
         ),
       ),
     );

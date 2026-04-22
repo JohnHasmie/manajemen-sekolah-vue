@@ -104,10 +104,13 @@ void main() {
       expect(style.color, override);
     });
 
-    test('trendText without color argument has null color (caller sets it)', () {
-      final style = DashboardTypography.trendText();
-      expect(style.color, isNull);
-    });
+    test(
+      'trendText without color argument has null color (caller sets it)',
+      () {
+        final style = DashboardTypography.trendText();
+        expect(style.color, isNull);
+      },
+    );
 
     test('menuTitle returns 14px semibold', () {
       final style = DashboardTypography.menuTitle();

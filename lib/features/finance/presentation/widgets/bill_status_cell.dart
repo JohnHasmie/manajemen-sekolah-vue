@@ -3,7 +3,7 @@
 // and label from the bill's status and payments list, then fires a tap callback.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/widgets/status_badge.dart';
 
 /// Displays a colored status pill for a single bill cell.
 ///
@@ -16,11 +16,7 @@ class BillStatusCell extends StatelessWidget {
   final dynamic bill;
   final VoidCallback? onTap;
 
-  const BillStatusCell({
-    super.key,
-    required this.bill,
-    this.onTap,
-  });
+  const BillStatusCell({super.key, required this.bill, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +34,7 @@ class BillStatusCell extends StatelessWidget {
       // 2. Check Pending Verification (Menunggu)
       bool hasPendingPayment = false;
       if (bill['payments'] != null && bill['payments'] is List) {
-        for (var p in bill['payments']) {
+        for (final p in bill['payments']) {
           final pStatus = p['status'];
           if (pStatus == 'pending' || pStatus == 'test_status') {
             hasPendingPayment = true;
@@ -60,32 +56,11 @@ class BillStatusCell extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: const BorderRadius.all(Radius.circular(10)),
-      child: Container(
+      child: StatusBadge(
+        label: text,
+        color: color,
+        fontSize: 10,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
-          border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 5,
-              height: 5,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -35,9 +35,9 @@ class QuickActionSkeleton extends StatelessWidget {
           Container(
             width: 65,
             height: 54,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.all(Radius.circular(16)),
+              borderRadius: BorderRadius.all(Radius.circular(16)),
             ),
           ),
           const SizedBox(height: 6),
@@ -45,9 +45,9 @@ class QuickActionSkeleton extends StatelessWidget {
           Container(
             width: 50,
             height: 11,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.all(Radius.circular(4)),
+              borderRadius: BorderRadius.all(Radius.circular(4)),
             ),
           ),
         ],

@@ -38,19 +38,21 @@ void main() {
   // ApiService.getToken()
   // ---------------------------------------------------------------------------
   group('ApiService.getToken()', () {
-    test('returns the stored token when one exists in SharedPreferences',
-        () async {
-      // Arrange — seed the mock storage with a token, similar to how you'd
-      // seed a test database with a factory in Laravel.
-      SharedPreferences.setMockInitialValues({'token': 'test_token'});
-      await PreferencesService().init();
+    test(
+      'returns the stored token when one exists in SharedPreferences',
+      () async {
+        // Arrange — seed the mock storage with a token, similar to how you'd
+        // seed a test database with a factory in Laravel.
+        SharedPreferences.setMockInitialValues({'token': 'test_token'});
+        await PreferencesService().init();
 
-      // Act
-      final token = await ApiService.getToken();
+        // Act
+        final token = await ApiService.getToken();
 
-      // Assert
-      expect(token, equals('test_token'));
-    });
+        // Assert
+        expect(token, equals('test_token'));
+      },
+    );
 
     test('returns null when no token is stored in SharedPreferences', () async {
       // Arrange — empty prefs (set in setUp, nothing extra needed).
@@ -76,41 +78,43 @@ void main() {
       expect(headers['Accept'], equals('application/json'));
     });
 
-    test('includes Authorization: Bearer <token> when a token is stored',
-        () async {
-      // Arrange — simulate a logged-in user by putting a token in storage.
-      SharedPreferences.setMockInitialValues({'token': 'test_token'});
-      await PreferencesService().init();
+    test(
+      'includes Authorization: Bearer <token> when a token is stored',
+      () async {
+        // Arrange — simulate a logged-in user by putting a token in storage.
+        SharedPreferences.setMockInitialValues({'token': 'test_token'});
+        await PreferencesService().init();
 
-      // Act
-      final headers = await ApiService.getHeaders();
+        // Act
+        final headers = await ApiService.getHeaders();
 
-      // Assert — like checking that a middleware attaches the correct
-      // Authorization header after the user authenticates.
-      expect(headers['Authorization'], equals('Bearer test_token'));
-      expect(headers['Content-Type'], equals('application/json'));
-    });
+        // Assert — like checking that a middleware attaches the correct
+        // Authorization header after the user authenticates.
+        expect(headers['Authorization'], equals('Bearer test_token'));
+        expect(headers['Content-Type'], equals('application/json'));
+      },
+    );
 
-    test('does NOT include an Authorization header when no token is stored',
-        () async {
-      // Arrange — empty prefs (set in setUp, no token present).
+    test(
+      'does NOT include an Authorization header when no token is stored',
+      () async {
+        // Arrange — empty prefs (set in setUp, no token present).
 
-      // Act
-      final headers = await ApiService.getHeaders();
+        // Act
+        final headers = await ApiService.getHeaders();
 
-      // Assert — unauthenticated requests must not leak a Bearer header.
-      expect(headers.containsKey('Authorization'), isFalse);
-    });
+        // Assert — unauthenticated requests must not leak a Bearer header.
+        expect(headers.containsKey('Authorization'), isFalse);
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
   // ApiService.init()
   // ---------------------------------------------------------------------------
   group('ApiService.init()', () {
-    test(
-        'can be called safely in a test environment — absorbs dotenv '
-        'NotInitializedError because dotenv is not loaded in unit tests',
-        () async {
+    test('can be called safely in a test environment — absorbs dotenv '
+        'NotInitializedError because dotenv is not loaded in unit tests', () async {
       // In production, dotenv.load() is called in main() before ApiService.init().
       // In unit tests, dotenv is never loaded, so dotenv.env throws
       // NotInitializedError *before* the null-guard inside init() can run.

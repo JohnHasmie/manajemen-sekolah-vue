@@ -16,7 +16,7 @@ void main() {
     testWidgets('shows the value string', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          OverviewCard(
+          const OverviewCard(
             title: 'Classes Today',
             value: '5',
             subtitle: 'Scheduled for today',
@@ -33,7 +33,7 @@ void main() {
     testWidgets('shows the title string', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          OverviewCard(
+          const OverviewCard(
             title: 'Classes Today',
             value: '5',
             subtitle: 'Scheduled for today',
@@ -50,7 +50,7 @@ void main() {
     testWidgets('shows the subtitle string', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          OverviewCard(
+          const OverviewCard(
             title: 'Attendance',
             value: '95%',
             subtitle: 'Average this month',
@@ -67,7 +67,7 @@ void main() {
     testWidgets('renders the provided icon', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          OverviewCard(
+          const OverviewCard(
             title: 'Students',
             value: '120',
             subtitle: 'Enrolled students',

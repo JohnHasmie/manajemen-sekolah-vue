@@ -77,7 +77,9 @@ const _teacher = <String, dynamic>{
 const _homeroomTeacher = <String, dynamic>{
   'name': 'Jane Smith',
   'user': {'email': 'jane@example.com'},
-  'homeroom_class': {'name': 'Class 7A'}, // Map shape → shows "Wali Kelas" badge
+  'homeroom_class': {
+    'name': 'Class 7A',
+  }, // Map shape → shows "Wali Kelas" badge
 };
 
 void main() {
@@ -102,37 +104,43 @@ void main() {
 
     // ── Status badge — conditional on homeroom_class ─────────────────────────
 
-    testWidgets('shows Active badge when teacher has no homeroom class',
-        (tester) async {
+    testWidgets('shows Active badge when teacher has no homeroom class', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildCard(teacher: _teacher));
       // Default language is 'id', so the Indonesian label is rendered.
       expect(find.text('Aktif'), findsOneWidget);
     });
 
-    testWidgets('shows Homeroom badge when teacher has a homeroom class',
-        (tester) async {
+    testWidgets('shows Homeroom badge when teacher has a homeroom class', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildCard(teacher: _homeroomTeacher));
       // Default language is 'id'.
       expect(find.text('Wali Kelas'), findsOneWidget);
     });
 
     testWidgets(
-        'renders homeroom class name tag when teacher has a homeroom class',
-        (tester) async {
-      await tester.pumpWidget(_buildCard(teacher: _homeroomTeacher));
-      expect(find.text('Class 7A'), findsOneWidget);
-    });
+      'renders homeroom class name tag when teacher has a homeroom class',
+      (tester) async {
+        await tester.pumpWidget(_buildCard(teacher: _homeroomTeacher));
+        expect(find.text('Class 7A'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'does NOT render homeroom class name tag for a non-homeroom teacher',
-        (tester) async {
-      await tester.pumpWidget(_buildCard(teacher: _teacher));
-      expect(find.text('Class 7A'), findsNothing);
-    });
+      'does NOT render homeroom class name tag for a non-homeroom teacher',
+      (tester) async {
+        await tester.pumpWidget(_buildCard(teacher: _teacher));
+        expect(find.text('Class 7A'), findsNothing);
+      },
+    );
 
     // ── Edit / delete action icons ────────────────────────────────────────────
 
-    testWidgets('shows edit and delete icons when NOT read-only', (tester) async {
+    testWidgets('shows edit and delete icons when NOT read-only', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildCard(teacher: _teacher, readOnly: false));
       expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
       expect(find.byIcon(Icons.delete_outline), findsOneWidget);
@@ -183,8 +191,9 @@ void main() {
 
     // ── Edge cases ────────────────────────────────────────────────────────────
 
-    testWidgets('falls back to "No Name" when teacher name is null',
-        (tester) async {
+    testWidgets('falls back to "No Name" when teacher name is null', (
+      tester,
+    ) async {
       const noName = <String, dynamic>{'name': null, 'homeroom_class': null};
       await tester.pumpWidget(_buildCard(teacher: noName));
       expect(find.text('No Name'), findsOneWidget);

@@ -10,7 +10,10 @@ import 'package:manajemensekolah/core/constants/grade_constants.dart';
 void main() {
   group('GradeConstants.allTypes', () {
     test('contains all six expected grade types', () {
-      expect(GradeConstants.allTypes, containsAll(['uh', 'tugas', 'uts', 'uas', 'pts', 'pas']));
+      expect(
+        GradeConstants.allTypes,
+        containsAll(['uh', 'tugas', 'uts', 'uas', 'pts', 'pas']),
+      );
     });
 
     test('has exactly six types', () {
@@ -18,7 +21,14 @@ void main() {
     });
 
     test('is in the canonical order', () {
-      expect(GradeConstants.allTypes, ['uh', 'tugas', 'uts', 'uas', 'pts', 'pas']);
+      expect(GradeConstants.allTypes, [
+        'uh',
+        'tugas',
+        'uts',
+        'uas',
+        'pts',
+        'pas',
+      ]);
     });
   });
 
@@ -46,7 +56,11 @@ void main() {
   group('GradeConstants.labelsEn', () {
     test('has a label for every type in allTypes', () {
       for (final type in GradeConstants.allTypes) {
-        expect(GradeConstants.labelsEn.containsKey(type), isTrue, reason: 'missing EN label: $type');
+        expect(
+          GradeConstants.labelsEn.containsKey(type),
+          isTrue,
+          reason: 'missing EN label: $type',
+        );
       }
     });
 
@@ -60,7 +74,11 @@ void main() {
   group('GradeConstants.labelsId', () {
     test('has a label for every type in allTypes', () {
       for (final type in GradeConstants.allTypes) {
-        expect(GradeConstants.labelsId.containsKey(type), isTrue, reason: 'missing ID label: $type');
+        expect(
+          GradeConstants.labelsId.containsKey(type),
+          isTrue,
+          reason: 'missing ID label: $type',
+        );
       }
     });
 

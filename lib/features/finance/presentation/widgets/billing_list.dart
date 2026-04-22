@@ -9,10 +9,7 @@ import 'package:manajemensekolah/features/finance/presentation/widgets/billing_c
 class BillingList extends ConsumerWidget {
   final LanguageProvider languageProvider;
 
-  const BillingList({
-    super.key,
-    required this.languageProvider,
-  });
+  const BillingList({super.key, required this.languageProvider});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,7 +18,9 @@ class BillingList extends ConsumerWidget {
     return financeState.when(
       data: (state) {
         if (state.isLoading && state.billingItems.isEmpty) {
-          return const SkeletonListLoading(padding: EdgeInsets.only(top: 8, bottom: 80));
+          return const SkeletonListLoading(
+            padding: EdgeInsets.only(top: 8, bottom: 80),
+          );
         }
 
         if (state.billingItems.isEmpty) {
@@ -39,20 +38,23 @@ class BillingList extends ConsumerWidget {
         }
 
         return RefreshIndicator(
-          onRefresh: () => ref.read(parentFinanceProvider.notifier).refreshBilling(),
+          onRefresh: () =>
+              ref.read(parentFinanceProvider.notifier).refreshBilling(),
           child: ListView.builder(
-            padding: EdgeInsets.only(top: 8, bottom: 80),
+            padding: const EdgeInsets.only(top: 8, bottom: 80),
             itemCount: state.billingItems.length,
             itemBuilder: (context, index) {
               final billing = state.billingItems[index];
-              final isRead = billing['is_read'] == true || billing['is_read'] == 1 || billing['is_read'] == '1';
+              final isRead =
+                  billing['is_read'] == true ||
+                  billing['is_read'] == 1 ||
+                  billing['is_read'] == '1';
 
               // Mark as read when item is built (visible)
               if (!isRead) {
-                ref.read(parentFinanceProvider.notifier).markItemVisible(
-                  billing['id'].toString(),
-                  isRead,
-                );
+                ref
+                    .read(parentFinanceProvider.notifier)
+                    .markItemVisible(billing['id'].toString(), isRead);
               }
 
               return BillingCard(
@@ -66,8 +68,11 @@ class BillingList extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const SkeletonListLoading(padding: EdgeInsets.only(top: 8, bottom: 80)),
-      error: (error, _) => Center(child: Text('${AppLocalizations.error.tr}: $error')),
+      loading: () => const SkeletonListLoading(
+        padding: EdgeInsets.only(top: 8, bottom: 80),
+      ),
+      error: (error, _) =>
+          Center(child: Text('${AppLocalizations.error.tr}: $error')),
     );
   }
 }

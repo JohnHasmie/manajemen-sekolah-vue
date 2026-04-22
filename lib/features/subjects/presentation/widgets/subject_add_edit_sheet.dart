@@ -3,15 +3,15 @@
 // the isSaving loading flag. Calls onSaved() on success so the screen reloads.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
-import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_dialog_text_field.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/mixins/subject_add_edit_sheet_ui_mixin.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/mixins/subject_add_edit_sheet_header_mixin.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/mixins/subject_add_edit_sheet_buttons_mixin.dart';
 
 /// A modal bottom-sheet for creating or editing a subject.
 ///
@@ -40,7 +40,11 @@ class SubjectAddEditSheet extends ConsumerStatefulWidget {
   SubjectAddEditSheetState createState() => SubjectAddEditSheetState();
 }
 
-class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet> {
+class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet>
+    with
+        SubjectAddEditSheetUiMixin,
+        SubjectAddEditSheetHeaderMixin,
+        SubjectAddEditSheetButtonsMixin {
   // Form controllers – like Vue's reactive `ref()` values
   late final TextEditingController _codeController;
   late final TextEditingController _nameController;
@@ -50,13 +54,37 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet> {
   late bool _isActive;
   bool _isSaving = false;
 
+  // Public getters/setters for mixin access (file-scope privacy workaround)
+  @override
+  TextEditingController get codeController => _codeController;
+  @override
+  TextEditingController get nameController => _nameController;
+  @override
+  TextEditingController get descriptionController => _descriptionController;
+
+  @override
+  int? get selectedMasterSubjectId => _selectedMasterSubjectId;
+  @override
+  set selectedMasterSubjectId(int? value) => _selectedMasterSubjectId = value;
+
+  @override
+  bool get isActive => _isActive;
+  @override
+  set isActive(bool value) => _isActive = value;
+
+  @override
+  bool get isSaving => _isSaving;
+
+  /// Validate, call API create/update, then close and notify parent.
+  /// This method is exposed publicly for mixin access.
+  @override
+  Future<void> save(BuildContext ctx) => _save(ctx);
+
   @override
   void initState() {
     super.initState();
     final s = widget.subject;
-    _codeController = TextEditingController(
-      text: s?['code'] ?? s?['kode'],
-    );
+    _codeController = TextEditingController(text: s?['code'] ?? s?['kode']);
     _nameController = TextEditingController(text: s?['name']);
     _descriptionController = TextEditingController(
       text: s?['description'] ?? s?['deskripsi'],
@@ -126,8 +154,8 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet> {
           SnackBar(
             content: Text(
               lang.getTranslatedText({
-                'en': AppLocalizations.dataSavedSuccessfully.tr,
-                'id': AppLocalizations.dataSavedSuccessfully.tr,
+                'en': 'Data saved successfully',
+                'id': 'Data berhasil disimpan',
               }),
             ),
             backgroundColor: Colors.green.shade400,
@@ -157,11 +185,9 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.watch(languageRiverpod);
     final isEditing = widget.subject != null;
 
     return Padding(
-      // Push sheet up when keyboard appears – like CSS safe-area-inset
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
@@ -177,355 +203,14 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet> {
         child: SafeArea(
           child: Column(
             children: [
-              // ── Gradient header ──────────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      ColorUtils.corporateBlue600,
-                      ColorUtils.corporateBlue600.withValues(alpha: 0.85),
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Icon(
-                        isEditing ? Icons.edit_rounded : Icons.add_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isEditing
-                                ? lang.getTranslatedText({
-                                    'en': 'Edit Subject',
-                                    'id': 'Edit Mata Pelajaran',
-                                  })
-                                : lang.getTranslatedText({
-                                    'en': 'Add Subject',
-                                    'id': 'Tambah Mata Pelajaran',
-                                  }),
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            isEditing
-                                ? lang.getTranslatedText({
-                                    'en': 'Update subject information',
-                                    'id': 'Perbarui informasi mata pelajaran',
-                                  })
-                                : lang.getTranslatedText({
-                                    'en': 'Fill in subject details',
-                                    'id': 'Isi detail mata pelajaran',
-                                  }),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () => AppNavigator.pop(context),
-                      borderRadius: const BorderRadius.all(Radius.circular(16)),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              buildHeader(
+                context,
+                isEditing ? 'edit' : 'add',
+                isEditing ? 'edit' : 'add',
+                isEditing,
               ),
-
-              // ── Form body ────────────────────────────────────────────
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Subject code field
-                      SubjectDialogTextField(
-                        controller: _codeController,
-                        label: lang.getTranslatedText({
-                          'en': 'Code',
-                          'id': 'Kode',
-                        }),
-                        icon: Icons.code,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // Autocomplete to pick from master subject templates
-                      Autocomplete<Map<String, dynamic>>(
-                        initialValue: TextEditingValue(
-                          text: () {
-                            if (_selectedMasterSubjectId != null) {
-                              final master = widget.availableMasterSubjects
-                                  .firstWhere(
-                                    (m) => m['id'] == _selectedMasterSubjectId,
-                                    orElse: () => <String, dynamic>{},
-                                  );
-                              if ((master as Map).isNotEmpty) {
-                                return master['name'] as String;
-                              }
-                            }
-                            return _nameController.text;
-                          }(),
-                        ),
-                        optionsBuilder: (TextEditingValue tv) {
-                          if (tv.text.isEmpty) {
-                            return const Iterable<Map<String, dynamic>>.empty();
-                          }
-                          return widget.availableMasterSubjects
-                              .cast<Map<String, dynamic>>()
-                              .where(
-                                (opt) => opt['name']
-                                    .toString()
-                                    .toLowerCase()
-                                    .contains(tv.text.toLowerCase()),
-                              );
-                        },
-                        displayStringForOption: (opt) => opt['name'],
-                        onSelected: (selection) {
-                          setState(() {
-                            _nameController.text =
-                                '${selection['name']} ${selection['grade']}';
-                            _selectedMasterSubjectId = selection['id'];
-                          });
-                        },
-                        fieldViewBuilder: (
-                          ctx,
-                          fieldController,
-                          fieldFocusNode,
-                          onFieldSubmitted,
-                        ) {
-                          return ValueListenableBuilder<TextEditingValue>(
-                            valueListenable: fieldController,
-                            builder: (ctx, value, _) {
-                              return SubjectDialogTextField(
-                                controller: fieldController,
-                                focusNode: fieldFocusNode,
-                                label: lang.getTranslatedText({
-                                  'en': 'Select Subject',
-                                  'id': 'Pilih Mata Pelajaran',
-                                }),
-                                icon: Icons.search,
-                                suffixIcon: value.text.isNotEmpty
-                                    ? IconButton(
-                                        icon: const Icon(
-                                          Icons.clear,
-                                          size: 18,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            fieldController.clear();
-                                            _selectedMasterSubjectId = null;
-                                          });
-                                        },
-                                      )
-                                    : null,
-                              );
-                            },
-                          );
-                        },
-                        optionsViewBuilder: (ctx, onSelected, options) {
-                          return Align(
-                            alignment: Alignment.topLeft,
-                            child: Material(
-                              elevation: 4.0,
-                              child: SizedBox(
-                                height: 200.0,
-                                width: 300.0,
-                                child: ListView.builder(
-                                  padding: const EdgeInsets.all(8.0),
-                                  itemCount: options.length,
-                                  itemBuilder: (ctx, index) {
-                                    final opt = options.elementAt(index);
-                                    return GestureDetector(
-                                      onTap: () => onSelected(opt),
-                                      child: ListTile(
-                                        title: Text(opt['name']),
-                                        subtitle:
-                                            Text('Kelas ${opt['grade']}'),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // Subject name (free-text override or auto-filled above)
-                      SubjectDialogTextField(
-                        controller: _nameController,
-                        label: lang.getTranslatedText({
-                          'en': 'Subject Name',
-                          'id': 'Nama Mata Pelajaran',
-                        }),
-                        icon: Icons.menu_book,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // Description
-                      SubjectDialogTextField(
-                        controller: _descriptionController,
-                        label: lang.getTranslatedText({
-                          'en': 'Description',
-                          'id': 'Deskripsi',
-                        }),
-                        icon: Icons.description,
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // Active status toggle
-                      Container(
-                        decoration: BoxDecoration(
-                          color: ColorUtils.slate50,
-                          border: Border.all(color: ColorUtils.slate200),
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
-                        ),
-                        child: SwitchListTile(
-                          title: Text(
-                            lang.getTranslatedText({
-                              'en': 'Active Status',
-                              'id': 'Status Aktif',
-                            }),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: ColorUtils.slate700,
-                            ),
-                          ),
-                          value: _isActive,
-                          activeThumbColor: ColorUtils.corporateBlue600,
-                          activeTrackColor: ColorUtils.corporateBlue600
-                              .withValues(alpha: 0.3),
-                          onChanged: (v) => setState(() => _isActive = v),
-                          secondary: Icon(
-                            Icons.check_circle_outline,
-                            color: _isActive
-                                ? ColorUtils.corporateBlue600
-                                : ColorUtils.slate400,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── Footer buttons ───────────────────────────────────────
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    top: BorderSide(color: ColorUtils.slate200),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ColorUtils.slate900.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => AppNavigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: BorderSide(color: ColorUtils.slate300),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: const BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
-                        child: Text(
-                          AppLocalizations.cancel.tr,
-                          style: TextStyle(
-                            color: ColorUtils.slate700,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isSaving ? null : () => _save(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: ColorUtils.corporateBlue600,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: const BorderRadius.all(Radius.circular(12)),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          elevation: 2,
-                        ),
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(
-                                AppLocalizations.save.tr,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              buildFormBody(context),
+              buildFooterButtons(context),
             ],
           ),
         ),

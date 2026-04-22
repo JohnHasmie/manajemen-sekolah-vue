@@ -156,7 +156,7 @@ class DashboardHeroSection extends ConsumerWidget {
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.3),
             blurRadius: 16,
-            offset: Offset(0, 6),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -214,7 +214,10 @@ class DashboardHeroSection extends ConsumerWidget {
                   onTap: onAcademicYearTap,
                   borderRadius: const BorderRadius.all(Radius.circular(12)),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: const BorderRadius.all(Radius.circular(12)),
@@ -245,7 +248,7 @@ class DashboardHeroSection extends ConsumerWidget {
                           children: [
                             Text(
                               academicYear,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
@@ -293,7 +296,7 @@ class DashboardHeroSection extends ConsumerWidget {
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         _getGreetingEmoji(),
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ],
                   ),
@@ -302,7 +305,7 @@ class DashboardHeroSection extends ConsumerWidget {
                   // User name
                   Text(
                     state.userData['name'] ?? state.userData['nama'] ?? 'User',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 21,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
@@ -321,7 +324,7 @@ class DashboardHeroSection extends ConsumerWidget {
                               .toList()
                         : List.generate(
                             4,
-                            (_) => Expanded(child: HeroStatSkeleton()),
+                            (_) => const Expanded(child: HeroStatSkeleton()),
                           ),
                   ),
                 ],

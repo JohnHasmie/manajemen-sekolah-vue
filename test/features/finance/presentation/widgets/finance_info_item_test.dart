@@ -22,13 +22,13 @@ void main() {
       expect(find.text('Rp 500.000'), findsOneWidget);
     });
 
-    testWidgets('label column is constrained to 100px wide via SizedBox', (tester) async {
+    testWidgets('label column is constrained to 100px wide via SizedBox', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(const FinanceInfoItem(label: 'Status', value: 'Lunas')),
       );
-      final sizedBox = tester.widget<SizedBox>(
-        find.byType(SizedBox).first,
-      );
+      final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
       expect(sizedBox.width, 100);
     });
 

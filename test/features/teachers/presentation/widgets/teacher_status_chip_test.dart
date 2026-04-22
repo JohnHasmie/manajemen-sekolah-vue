@@ -10,77 +10,100 @@ void main() {
   group('TeacherStatusChip', () {
     testWidgets('renders label text', (tester) async {
       await tester.pumpWidget(
-        _wrap(TeacherStatusChip(
-          label: 'Semua',
-          value: null,
-          selectedValue: null,
-          onSelected: () {},
-        )),
+        _wrap(
+          TeacherStatusChip(
+            label: 'Semua',
+            value: null,
+            selectedValue: null,
+            onSelected: () {},
+          ),
+        ),
       );
       expect(find.text('Semua'), findsOneWidget);
     });
 
-    testWidgets('chip is selected when value equals selectedValue', (tester) async {
+    testWidgets('chip is selected when value equals selectedValue', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _wrap(TeacherStatusChip(
-          label: 'Aktif',
-          value: 'active',
-          selectedValue: 'active',
-          onSelected: () {},
-        )),
+        _wrap(
+          TeacherStatusChip(
+            label: 'Aktif',
+            value: 'active',
+            selectedValue: 'active',
+            onSelected: () {},
+          ),
+        ),
       );
       final chip = tester.widget<ChoiceChip>(find.byType(ChoiceChip));
       expect(chip.selected, isTrue);
     });
 
-    testWidgets('chip is not selected when value differs from selectedValue', (tester) async {
+    testWidgets('chip is not selected when value differs from selectedValue', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _wrap(TeacherStatusChip(
-          label: 'Aktif',
-          value: 'active',
-          selectedValue: 'inactive',
-          onSelected: () {},
-        )),
+        _wrap(
+          TeacherStatusChip(
+            label: 'Aktif',
+            value: 'active',
+            selectedValue: 'inactive',
+            onSelected: () {},
+          ),
+        ),
       );
       final chip = tester.widget<ChoiceChip>(find.byType(ChoiceChip));
       expect(chip.selected, isFalse);
     });
 
-    testWidgets('"All" chip (null value) is selected when selectedValue is also null', (tester) async {
-      await tester.pumpWidget(
-        _wrap(TeacherStatusChip(
-          label: 'Semua',
-          value: null,
-          selectedValue: null,
-          onSelected: () {},
-        )),
-      );
-      final chip = tester.widget<ChoiceChip>(find.byType(ChoiceChip));
-      expect(chip.selected, isTrue);
-    });
+    testWidgets(
+      '"All" chip (null value) is selected when selectedValue is also null',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            TeacherStatusChip(
+              label: 'Semua',
+              value: null,
+              selectedValue: null,
+              onSelected: () {},
+            ),
+          ),
+        );
+        final chip = tester.widget<ChoiceChip>(find.byType(ChoiceChip));
+        expect(chip.selected, isTrue);
+      },
+    );
 
-    testWidgets('fires onSelected callback when chip is tapped', (tester) async {
+    testWidgets('fires onSelected callback when chip is tapped', (
+      tester,
+    ) async {
       bool fired = false;
       await tester.pumpWidget(
-        _wrap(TeacherStatusChip(
-          label: 'Aktif',
-          value: 'active',
-          selectedValue: null,
-          onSelected: () => fired = true,
-        )),
+        _wrap(
+          TeacherStatusChip(
+            label: 'Aktif',
+            value: 'active',
+            selectedValue: null,
+            onSelected: () => fired = true,
+          ),
+        ),
       );
       await tester.tap(find.byType(ChoiceChip));
       expect(fired, isTrue);
     });
 
-    testWidgets('selected chip has bold font weight in label style', (tester) async {
+    testWidgets('selected chip has bold font weight in label style', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _wrap(TeacherStatusChip(
-          label: 'Aktif',
-          value: 'active',
-          selectedValue: 'active',
-          onSelected: () {},
-        )),
+        _wrap(
+          TeacherStatusChip(
+            label: 'Aktif',
+            value: 'active',
+            selectedValue: 'active',
+            onSelected: () {},
+          ),
+        ),
       );
       final chip = tester.widget<ChoiceChip>(find.byType(ChoiceChip));
       expect(chip.labelStyle?.fontWeight, FontWeight.w600);

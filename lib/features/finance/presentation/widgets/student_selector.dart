@@ -42,18 +42,24 @@ class StudentSelector extends StatelessWidget {
                     height: 48,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isSelected ? ColorUtils.primary : ColorUtils.slate100,
+                      color: isSelected
+                          ? ColorUtils.primary
+                          : ColorUtils.slate100,
                       border: Border.all(
-                        color: isSelected ? ColorUtils.primary : ColorUtils.slate200,
+                        color: isSelected
+                            ? ColorUtils.primary
+                            : ColorUtils.slate200,
                         width: 2,
                       ),
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: ColorUtils.primary.withValues(alpha: 0.3),
+                                color: ColorUtils.primary.withValues(
+                                  alpha: 0.3,
+                                ),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
-                              )
+                              ),
                             ]
                           : null,
                     ),
@@ -70,8 +76,12 @@ class StudentSelector extends StatelessWidget {
                     student.name.split(' ')[0],
                     style: TextStyle(
                       fontSize: 10,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected ? ColorUtils.primary : ColorUtils.slate600,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                      color: isSelected
+                          ? ColorUtils.primary
+                          : ColorUtils.slate600,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

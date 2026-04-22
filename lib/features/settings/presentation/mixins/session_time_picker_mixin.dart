@@ -1,0 +1,122 @@
+import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/settings/presentation/widgets/day_session_management_sheet.dart';
+
+mixin SessionTimePickerMixin on State<DaySessionManagementSheet> {
+  Widget buildTimeFields(
+    TimeOfDay startTime,
+    TimeOfDay endTime,
+    StateSetter setModalState,
+  ) {
+    Future<void> pickTime(bool isStart) async {
+      final picked = await showTimePicker(
+        context: context,
+        initialTime: isStart ? startTime : endTime,
+      );
+      if (picked != null) {
+        setModalState(() {
+          if (isStart) {
+            startTime = picked;
+          } else {
+            endTime = picked;
+          }
+        });
+      }
+    }
+
+    return Row(
+      children: [
+        buildTimeField('Mulai', startTime, true, pickTime),
+        const SizedBox(width: 10),
+        buildTimeField('Selesai', endTime, false, pickTime),
+      ],
+    );
+  }
+
+  Widget buildTimeField(
+    String label,
+    TimeOfDay time,
+    bool isStart,
+    Function(bool) pickTime,
+  ) {
+    return Expanded(
+      child: InkWell(
+        onTap: () => pickTime(isStart),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          decoration: BoxDecoration(
+            color: ColorUtils.slate50,
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
+            border: Border.all(color: ColorUtils.slate200),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.access_time_rounded,
+                size: 16,
+                color: ColorUtils.corporateBlue600,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    time.format(context),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: ColorUtils.slate900,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildHourField(TextEditingController hourController) {
+    return TextField(
+      controller: hourController,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: 'Jam Ke-',
+        prefixIcon: Icon(
+          Icons.tag_rounded,
+          color: ColorUtils.corporateBlue600,
+          size: 20,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: ColorUtils.slate200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: ColorUtils.slate200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(
+            color: ColorUtils.corporateBlue600,
+            width: 1.5,
+          ),
+        ),
+        filled: true,
+        fillColor: ColorUtils.slate50,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+      ),
+    );
+  }
+}

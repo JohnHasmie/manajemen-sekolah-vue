@@ -31,53 +31,53 @@ void main() {
       // Mock FlutterSecureStorage platform channel
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-        (MethodCall methodCall) async {
-          switch (methodCall.method) {
-            case 'write':
-              mockSecureStore[methodCall.arguments['key'] as String] =
-                  methodCall.arguments['value'] as String;
-              return null;
-            case 'read':
-              return mockSecureStore[methodCall.arguments['key'] as String];
-            case 'deleteAll':
-              mockSecureStore.clear();
-              return null;
-            default:
-              return null;
-          }
-        },
-      );
+            const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+            (MethodCall methodCall) async {
+              switch (methodCall.method) {
+                case 'write':
+                  mockSecureStore[methodCall.arguments['key'] as String] =
+                      methodCall.arguments['value'] as String;
+                  return null;
+                case 'read':
+                  return mockSecureStore[methodCall.arguments['key'] as String];
+                case 'deleteAll':
+                  mockSecureStore.clear();
+                  return null;
+                default:
+                  return null;
+              }
+            },
+          );
 
       // Mock SharedPreferences platform channel
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/shared_preferences'),
-        (MethodCall methodCall) async {
-          switch (methodCall.method) {
-            case 'getAll':
-              return mockPrefsStore;
-            case 'clear':
-              mockPrefsStore.clear();
-              return true;
-            default:
-              return null;
-          }
-        },
-      );
+            const MethodChannel('plugins.flutter.io/shared_preferences'),
+            (MethodCall methodCall) async {
+              switch (methodCall.method) {
+                case 'getAll':
+                  return mockPrefsStore;
+                case 'clear':
+                  mockPrefsStore.clear();
+                  return true;
+                default:
+                  return null;
+              }
+            },
+          );
     });
 
     tearDown(() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-        null,
-      );
+            const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+            null,
+          );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/shared_preferences'),
-        null,
-      );
+            const MethodChannel('plugins.flutter.io/shared_preferences'),
+            null,
+          );
     });
 
     test('401 response produces AuthenticationException', () async {
@@ -86,7 +86,10 @@ void main() {
       dio.interceptors.add(interceptor);
 
       // Use a real Dio interceptor chain test
-      dio.httpClientAdapter = _MockAdapter(statusCode: 401, data: {'message': 'Unauthenticated'});
+      dio.httpClientAdapter = _MockAdapter(
+        statusCode: 401,
+        data: {'message': 'Unauthenticated'},
+      );
 
       try {
         await dio.get('/test');
@@ -99,34 +102,36 @@ void main() {
       }
     });
 
-    test('422 response produces ValidationException with first error',
-        () async {
-      final dio = Dio(BaseOptions(baseUrl: 'https://example.com'));
-      dio.interceptors.add(ErrorInterceptor());
+    test(
+      '422 response produces ValidationException with first error',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'https://example.com'));
+        dio.interceptors.add(ErrorInterceptor());
 
-      dio.httpClientAdapter = _MockAdapter(
-        statusCode: 422,
-        data: {
-          'message': 'The given data was invalid.',
-          'errors': {
-            'email': ['Email is required', 'Email must be valid'],
-            'name': ['Name is required'],
+        dio.httpClientAdapter = _MockAdapter(
+          statusCode: 422,
+          data: {
+            'message': 'The given data was invalid.',
+            'errors': {
+              'email': ['Email is required', 'Email must be valid'],
+              'name': ['Name is required'],
+            },
           },
-        },
-      );
+        );
 
-      try {
-        await dio.get('/test');
-        fail('Should have thrown');
-      } on DioException catch (e) {
-        expect(e.error, isA<ValidationException>());
-        final valError = e.error as ValidationException;
-        expect(valError.statusCode, 422);
-        // Should extract the first error from the first field
-        expect(valError.message, 'Email is required');
-        expect(valError.errors, isNotNull);
-      }
-    });
+        try {
+          await dio.get('/test');
+          fail('Should have thrown');
+        } on DioException catch (e) {
+          expect(e.error, isA<ValidationException>());
+          final valError = e.error as ValidationException;
+          expect(valError.statusCode, 422);
+          // Should extract the first error from the first field
+          expect(valError.message, 'Email is required');
+          expect(valError.errors, isNotNull);
+        }
+      },
+    );
 
     test('422 response without errors map uses message field', () async {
       final dio = Dio(BaseOptions(baseUrl: 'https://example.com'));
@@ -205,25 +210,27 @@ void main() {
       }
     });
 
-    test('403 with school access denied message produces SchoolAccessDeniedException',
-        () async {
-      final dio = Dio(BaseOptions(baseUrl: 'https://example.com'));
-      dio.interceptors.add(ErrorInterceptor());
+    test(
+      '403 with school access denied message produces SchoolAccessDeniedException',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'https://example.com'));
+        dio.interceptors.add(ErrorInterceptor());
 
-      dio.httpClientAdapter = _MockAdapter(
-        statusCode: 403,
-        data: {'error': 'Anda tidak memiliki akses ke sekolah ini'},
-      );
+        dio.httpClientAdapter = _MockAdapter(
+          statusCode: 403,
+          data: {'error': 'Anda tidak memiliki akses ke sekolah ini'},
+        );
 
-      try {
-        await dio.get('/test');
-        fail('Should have thrown');
-      } on DioException catch (e) {
-        expect(e.error, isA<SchoolAccessDeniedException>());
-        final schoolError = e.error as SchoolAccessDeniedException;
-        expect(schoolError.statusCode, 403);
-      }
-    });
+        try {
+          await dio.get('/test');
+          fail('Should have thrown');
+        } on DioException catch (e) {
+          expect(e.error, isA<SchoolAccessDeniedException>());
+          final schoolError = e.error as SchoolAccessDeniedException;
+          expect(schoolError.statusCode, 403);
+        }
+      },
+    );
 
     test('403 without school context produces ForbiddenException', () async {
       final dio = Dio(BaseOptions(baseUrl: 'https://example.com'));
@@ -264,9 +271,7 @@ void main() {
 
       dio.httpClientAdapter = _MockAdapter(
         statusCode: 422,
-        data: json.encode({
-          'message': 'Validation failed from string',
-        }),
+        data: json.encode({'message': 'Validation failed from string'}),
         isStringResponse: true,
       );
 
@@ -293,9 +298,9 @@ void main() {
       // Mock FlutterSecureStorage
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-        (MethodCall methodCall) async => null,
-      );
+            const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+            (MethodCall methodCall) async => null,
+          );
 
       dio = createDioClient('https://api.example.com');
     });
@@ -303,9 +308,9 @@ void main() {
     tearDownAll(() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-        null,
-      );
+            const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+            null,
+          );
     });
 
     test('creates Dio instance with correct baseUrl', () {

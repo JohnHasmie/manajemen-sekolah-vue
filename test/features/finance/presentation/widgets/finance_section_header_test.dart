@@ -7,12 +7,11 @@ Widget _build({
   String title = 'Tagihan',
   IconData icon = Icons.receipt_long,
   Color color = Colors.blue,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: FinanceSectionHeader(title: title, icon: icon, color: color),
-      ),
-    );
+}) => MaterialApp(
+  home: Scaffold(
+    body: FinanceSectionHeader(title: title, icon: icon, color: color),
+  ),
+);
 
 void main() {
   group('FinanceSectionHeader', () {
@@ -37,7 +36,9 @@ void main() {
     testWidgets('icon has size 16', (tester) async {
       await tester.pumpWidget(_build(icon: Icons.receipt_long));
       final icon = tester.widget<Icon>(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.receipt_long),
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.receipt_long,
+        ),
       );
       expect(icon.size, 16);
     });
@@ -62,7 +63,7 @@ void main() {
 
     testWidgets('can stack multiple headers without crashing', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [

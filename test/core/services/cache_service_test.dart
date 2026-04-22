@@ -29,7 +29,9 @@ void main() {
   // ─────────────────────────────────────────────────────────────────────────
   group('LocalCacheService.save and load', () {
     test('save then load within default TTL returns same data', () async {
-      await LocalCacheService.save('students', [{'id': 1, 'name': 'Ali'}]);
+      await LocalCacheService.save('students', [
+        {'id': 1, 'name': 'Ali'},
+      ]);
       final result = await LocalCacheService.load('students');
       expect(result, isNotNull);
       expect(result[0]['name'], equals('Ali'));
@@ -122,10 +124,7 @@ void main() {
     });
 
     test('invalidating a non-existent key does not throw', () async {
-      await expectLater(
-        LocalCacheService.invalidate('never_saved'),
-        completes,
-      );
+      await expectLater(LocalCacheService.invalidate('never_saved'), completes);
     });
   });
 
@@ -177,22 +176,28 @@ void main() {
       expect(await LocalCacheService.load('teacher_list'), isNotNull);
     });
 
-    test('clearStartingWith with no matches completes without throwing', () async {
-      await LocalCacheService.save('teacher_list', 'data');
-      await expectLater(
-        LocalCacheService.clearStartingWith('student_'),
-        completes,
-      );
-      // Unrelated keys remain
-      expect(await LocalCacheService.load('teacher_list'), isNotNull);
-    });
+    test(
+      'clearStartingWith with no matches completes without throwing',
+      () async {
+        await LocalCacheService.save('teacher_list', 'data');
+        await expectLater(
+          LocalCacheService.clearStartingWith('student_'),
+          completes,
+        );
+        // Unrelated keys remain
+        expect(await LocalCacheService.load('teacher_list'), isNotNull);
+      },
+    );
 
-    test('clearStartingWith empty subPrefix clears all cache entries', () async {
-      await LocalCacheService.save('a', 'value_a');
-      await LocalCacheService.save('b', 'value_b');
-      await LocalCacheService.clearStartingWith('');
-      expect(await LocalCacheService.load('a'), isNull);
-      expect(await LocalCacheService.load('b'), isNull);
-    });
+    test(
+      'clearStartingWith empty subPrefix clears all cache entries',
+      () async {
+        await LocalCacheService.save('a', 'value_a');
+        await LocalCacheService.save('b', 'value_b');
+        await LocalCacheService.clearStartingWith('');
+        expect(await LocalCacheService.load('a'), isNull);
+        expect(await LocalCacheService.load('b'), isNull);
+      },
+    );
   });
 }

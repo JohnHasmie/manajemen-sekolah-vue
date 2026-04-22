@@ -86,7 +86,9 @@ class _FinanceBarChartCardState extends State<FinanceBarChartCard> {
                             height: 32,
                             decoration: BoxDecoration(
                               color: widget.accentColor.withValues(alpha: 0.1),
-                              borderRadius: const BorderRadius.all(Radius.circular(8)),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(8),
+                              ),
                             ),
                             child: Icon(
                               widget.icon,

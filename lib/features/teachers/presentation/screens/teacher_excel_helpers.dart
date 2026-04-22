@@ -45,9 +45,7 @@ Future<String> downloadTeacherTemplateAPI() async {
 
 /// Helper variant of [importTeachersFromExcelAPI] — identical behaviour,
 /// kept for backwards compatibility.
-Future<Map<String, dynamic>> importTeachersFromExcel(
-  String base64File,
-) async {
+Future<Map<String, dynamic>> importTeachersFromExcel(String base64File) async {
   try {
     if (kDebugMode) {
       debugPrint(

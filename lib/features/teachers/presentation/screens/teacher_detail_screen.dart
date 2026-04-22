@@ -1,25 +1,16 @@
 // Teacher detail view screen - shows full profile info for a single teacher.
-import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer;
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 //
-// Like `pages/admin/teachers/{id}.vue` - a detail/show page that displays
-// all teacher information (personal data, subjects taught, classes, schedule).
-//
-// In Laravel terms, this calls `GET /api/teachers/{id}` (TeacherController@show).
+// Like `pages/admin/teachers/{id}.vue` - displays all teacher information
+// (personal data, subjects taught, classes, schedule).
+// Calls `GET /api/teachers/{id}` (TeacherController@show).
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
-import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/error_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_info_row.dart';
-import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_section_header.dart';
+import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
+import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_detail_card_builders_mixin.dart';
+import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_detail_data_mixin.dart';
+import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_detail_ui_builders_mixin.dart';
+import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_detail_ui_helpers_mixin.dart';
 
 /// Teacher detail screen - displays full profile for a single teacher.
 ///
@@ -36,630 +27,87 @@ class TeacherDetailScreen extends ConsumerStatefulWidget {
 
 /// Mutable state for [TeacherDetailScreen].
 ///
-/// Key state (like Vue `data()`):
+/// Manages teacher profile data fetching and UI rendering.
+/// State properties:
 /// - [_teacherDetail] - full teacher data from API (null until loaded)
 /// - [_subjects] - all subjects for reference/mapping
 /// - [_isLoading] / [_errorMessage] - loading and error states
-class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen> {
-  final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
-  final ApiSubjectService apiSubjectService = getIt<ApiSubjectService>();
-
+class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen>
+    with
+        TeacherDetailDataMixin,
+        TeacherDetailUIHelpersMixin,
+        TeacherDetailUIBuildersMixin,
+        TeacherDetailCardBuildersMixin {
   Map<String, dynamic>? _teacherDetail;
   List<dynamic> _subjects = [];
   bool _isLoading = true;
   String? _errorMessage;
 
-  /// Like Vue's `mounted()` - fetches full teacher details from the API.
+  @override
+  Map<String, dynamic>? get teacherDetail => _teacherDetail;
+  @override
+  set teacherDetail(Map<String, dynamic>? value) => _teacherDetail = value;
+
+  @override
+  List<dynamic> get subjects => _subjects;
+  @override
+  set subjects(List<dynamic> value) => _subjects = value;
+
+  @override
+  bool get isLoading => _isLoading;
+  @override
+  set isLoading(bool value) => _isLoading = value;
+
+  @override
+  String? get errorMessage => _errorMessage;
+  @override
+  set errorMessage(String? value) => _errorMessage = value;
+
+  @override
+  Map<String, dynamic> get widgetTeacher => widget.teacher;
+
+  /// Like Vue's `mounted()` - fetches full teacher details from API.
   @override
   void initState() {
     super.initState();
-    _loadTeacherDetail();
-  }
-
-  /// Fetches full teacher details by ID, including subjects and classes.
-  /// Like calling `GET /api/teachers/{id}?academic_year_id=...` in Vue.
-  Future<void> _loadTeacherDetail() async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      String? academicYearId;
-      if (mounted) {
-        try {
-          final academicYearProvider = ref.read(academicYearRiverpod);
-          academicYearId = academicYearProvider.selectedAcademicYear?['id']
-              ?.toString();
-        } catch (e) {
-          // provider might not be available or other error
-        }
-      }
-
-      // Backend already returns everything including subjects and classes
-      final teacherDetail = await apiTeacherService.getTeacherById(
-        widget.teacher['id'],
-        academicYearId: academicYearId,
-      );
-
-      // Fetch all classes and subjects for mapping
-      final subjects = await apiSubjectService.getSubject();
-
-      setState(() {
-        _teacherDetail = teacherDetail;
-        _subjects = subjects;
-        _isLoading = false;
-      });
-    } catch (e) {
-      AppLogger.error('teacher', e);
-      setState(() {
-        _isLoading = false;
-        _errorMessage = ErrorUtils.getFriendlyMessage(e);
-      });
-      if (!mounted) return;
-      SnackBarUtils.showError(
-        context,
-        '${AppLocalizations.failedToLoadDetail.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
-      );
-    }
+    loadTeacherDetail();
   }
 
   @override
   Widget build(BuildContext context) {
     final teacher = _teacherDetail ?? widget.teacher;
-
-    // Helper to get names from direct objects or IDs
-    List<String> getNames(
-      dynamic objects,
-      dynamic ids,
-      List<dynamic> sourceList,
-    ) {
-      if (objects != null && objects is List && objects.isNotEmpty) {
-        return objects
-            .map((item) => item['name']?.toString() ?? 'Unknown')
-            .toList();
-      }
-      if (ids == null) return [];
-      List<String> idList = [];
-      if (ids is List) {
-        idList = ids.map((e) => e.toString()).toList();
-      } else if (ids is String && ids.isNotEmpty) {
-        idList = ids.split(',').map((e) => e.trim()).toList();
-      }
-      return idList.map((id) {
-        final item = sourceList.firstWhere(
-          (element) => element['id'].toString() == id,
-          orElse: () => {'name': 'Unknown'},
-        );
-        return item['name']?.toString() ?? 'Unknown';
-      }).toList();
-    }
-
-    // Use widget.teacher as fallback for IDs if _teacherDetail doesn't have them
     final effectiveTeacher = _teacherDetail ?? widget.teacher;
 
-    final displaySubjectNames = getNames(
+    final displaySubjectNames = getNamesList(
       effectiveTeacher['subjects'],
-      effectiveTeacher['subject_ids'] ?? widget.teacher['subject_ids'],
+      effectiveTeacher['subject_ids'] ?? Teacher.fromJson(widget.teacher).subjectIds,
       _subjects,
     );
 
-    // 1. Get Teaching Classes from Schedules
-    List<String> teachingClassNames = [];
-    if (effectiveTeacher['teaching_schedules'] != null &&
-        effectiveTeacher['teaching_schedules'] is List) {
-      final schedules = effectiveTeacher['teaching_schedules'] as List;
-      final uniqueClassNames = <String>{};
-      for (var schedule in schedules) {
-        if (schedule['class'] != null && schedule['class']['name'] != null) {
-          uniqueClassNames.add(schedule['class']['name'].toString());
-        }
-      }
-      teachingClassNames = uniqueClassNames.toList()..sort();
-    } else {
-      // Fallback to legacy 'classes' if schedules empty (though user asked for schedules)
-      // actually user explicitly asked "for that class, get the class list from the teaching_schedules table"
-      // so we prioritizing schedules.
-      // If schedules specific logic returns empty, valid result is empty.
-    }
+    final teachingClassNames = extractTeachingClassNames(effectiveTeacher);
+    final homeroomStatus = getHomeroomStatus(effectiveTeacher);
 
-    // Determine Homeroom Status
-    String homeroomStatus = '-';
-    // 1. Check homeroomClasses (plural) from new backend
-    if (effectiveTeacher['homeroom_classes'] != null &&
-        effectiveTeacher['homeroom_classes'] is List &&
-        (effectiveTeacher['homeroom_classes'] as List).isNotEmpty) {
-      final classes = effectiveTeacher['homeroom_classes'] as List;
-      final names = classes
-          .where((c) => c['name'] != null)
-          .map((c) => c['name'].toString())
-          .toList();
-
-      if (names.isNotEmpty) {
-        homeroomStatus = 'Ya, Kelas ${names.join(", ")}';
-      }
-    }
-    // 2. Fallback to legacy single 'homeroom_class' object
-    else if (effectiveTeacher['homeroom_class'] != null) {
-      if (effectiveTeacher['homeroom_class'] is Map) {
-        homeroomStatus =
-            'Ya, Kelas ${effectiveTeacher['homeroom_class']['name']}';
-      }
-    }
-
-    final nameStr = teacher['name'] ?? '';
+    final teacherModel = Teacher.fromJson(teacher);
+    final nameStr = teacherModel.name;
     final nameHash = nameStr.codeUnits.fold(0, (sum, c) => sum + c);
     final avatarColor = ColorUtils.getColorForIndex(nameHash);
-    final initial = nameStr.isNotEmpty ? nameStr[0].toUpperCase() : '?';
-    final nip = teacher['employee_number'] ?? '';
+    final initial = teacherModel.initials;
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          // --- Gradient Header (Pattern #7) ---
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              bottom: 16,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  ColorUtils.corporateBlue600,
-                  ColorUtils.corporateBlue600.withValues(alpha: 0.8),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => AppNavigator.pop(context),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: Icon(
-                      Icons.arrow_back_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Detail Guru',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        nameStr.isNotEmpty ? nameStr : 'Informasi lengkap guru',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.85),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: _loadTeacherDetail,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: Icon(
-                      Icons.refresh_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // --- Body (conditional) ---
+          buildGradientHeader(context, nameStr),
           Expanded(
-            child: _isLoading
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: ColorUtils.corporateBlue600.withValues(
-                              alpha: 0.1,
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              ColorUtils.corporateBlue600,
-                            ),
-                            strokeWidth: 3,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          'Memuat detail guru...',
-                          style: TextStyle(
-                            color: ColorUtils.slate600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : _errorMessage != null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: ColorUtils.error600.withValues(
-                                alpha: 0.08,
-                              ),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: ColorUtils.error600.withValues(
-                                  alpha: 0.2,
-                                ),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.error_outline_rounded,
-                              size: 36,
-                              color: ColorUtils.error600,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          Text(
-                            'Terjadi kesalahan',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: ColorUtils.slate800,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            _errorMessage!,
-                            style: TextStyle(
-                              color: ColorUtils.slate600,
-                              fontSize: 13,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: AppSpacing.xl),
-                          ElevatedButton.icon(
-                            onPressed: _loadTeacherDetail,
-                            icon: Icon(
-                              Icons.refresh_rounded,
-                              size: 18,
-                              color: Colors.white,
-                            ),
-                            label: Text(
-                              'Coba Lagi',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorUtils.corporateBlue600,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: const BorderRadius.all(Radius.circular(12)),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              elevation: 2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // --- Profile Header Card ---
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                ColorUtils.corporateBlue600,
-                                ColorUtils.corporateBlue600.withValues(
-                                  alpha: 0.8,
-                                ),
-                              ],
-                            ),
-                            borderRadius: const BorderRadius.all(Radius.circular(16)),
-                            boxShadow: ColorUtils.corporateShadow(
-                              elevation: 2.0,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 72,
-                                height: 72,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: avatarColor,
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.4),
-                                    width: 3,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.2,
-                                      ),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    initial,
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              Text(
-                                nameStr,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (nip.isNotEmpty)
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius: const BorderRadius.all(Radius.circular(20)),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.badge_outlined,
-                                            size: 12,
-                                            color: Colors.white,
-                                          ),
-                                          const SizedBox(width: AppSpacing.xs),
-                                          Text(
-                                            'NIP: $nip',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  if (homeroomStatus != '-') ...[
-                                    const SizedBox(width: AppSpacing.sm),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius: const BorderRadius.all(Radius.circular(20)),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.groups_outlined,
-                                            size: 12,
-                                            color: Colors.white,
-                                          ),
-                                          const SizedBox(width: AppSpacing.xs),
-                                          Text(
-                                            'Wali Kelas',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // --- Personal Information Card ---
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: const BorderRadius.all(Radius.circular(16)),
-                            border: Border.all(color: ColorUtils.slate200),
-                            boxShadow: ColorUtils.corporateShadow(
-                              elevation: 1.0,
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TeacherSectionHeader(
-                                icon: Icons.person_rounded,
-                                title: 'Informasi Pribadi',
-                              ),
-                              TeacherInfoRow(label: 'Nama', value: teacher['name']),
-                              TeacherInfoRow(
-                                label: 'NIP',
-                                value: teacher['employee_number'] ?? 'Tidak ada',
-                              ),
-                              TeacherInfoRow(
-                                label: 'Email',
-                                value: teacher['user']?['email'] ?? teacher['email'],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-
-                        // --- Teaching Information Card ---
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: const BorderRadius.all(Radius.circular(16)),
-                            border: Border.all(color: ColorUtils.slate200),
-                            boxShadow: ColorUtils.corporateShadow(
-                              elevation: 1.0,
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TeacherSectionHeader(
-                                icon: Icons.school_rounded,
-                                title: 'Informasi Mengajar',
-                              ),
-                              TeacherInfoRow(
-                                label: 'Kelas',
-                                value: teachingClassNames.isNotEmpty
-                                    ? teachingClassNames
-                                    : 'Belum dijadwalkan',
-                                isMultiline: true,
-                              ),
-                              TeacherInfoRow(
-                                label: 'Mata Pelajaran',
-                                value: displaySubjectNames.isNotEmpty
-                                    ? displaySubjectNames
-                                    : 'Belum ditugaskan',
-                                isMultiline: true,
-                              ),
-                              TeacherInfoRow(
-                                label: 'Role',
-                                value: teacher['role']?.toUpperCase() ?? 'GURU',
-                              ),
-                              TeacherInfoRow(
-                                label: 'Status Wali Kelas',
-                                value: homeroomStatus,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xxl),
-
-                        // --- Back Button ---
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => AppNavigator.pop(context),
-                            icon: Icon(
-                              Icons.arrow_back_rounded,
-                              size: 18,
-                              color: ColorUtils.slate700,
-                            ),
-                            label: Text(
-                              'Kembali ke Daftar Guru',
-                              style: TextStyle(
-                                color: ColorUtils.slate700,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 13),
-                              side: BorderSide(color: ColorUtils.slate300),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: const BorderRadius.all(Radius.circular(12)),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                      ],
-                    ),
-                  ),
+            child: buildBody(
+              context,
+              teacher,
+              teachingClassNames,
+              displaySubjectNames,
+              homeroomStatus,
+              avatarColor,
+              initial,
+            ),
           ),
         ],
       ),

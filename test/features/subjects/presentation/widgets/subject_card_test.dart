@@ -23,25 +23,27 @@ Map<String, dynamic> _subject({
   int classCount = 3,
   String? klassNames,
 }) => {
-      'name': name,
-      'code': code,
-      'is_active': isActive,
-      'jumlah_kelas': classCount,
-      if (klassNames != null) 'kelas_names': klassNames,
-    };
+  'name': name,
+  'code': code,
+  'is_active': isActive,
+  'jumlah_kelas': classCount,
+  if (klassNames != null) 'kelas_names': klassNames,
+};
 
 void main() {
   group('SubjectCard', () {
     testWidgets('renders subject name', (tester) async {
       await tester.pumpWidget(
-        _wrap(SubjectCard(
-          subject: _subject(),
-          index: 0,
-          primaryColor: Colors.blue,
-          onTap: () {},
-          onEdit: () {},
-          onDelete: () {},
-        )),
+        _wrap(
+          SubjectCard(
+            subject: _subject(),
+            index: 0,
+            primaryColor: Colors.blue,
+            onTap: () {},
+            onEdit: () {},
+            onDelete: () {},
+          ),
+        ),
       );
       await tester.pump();
       expect(find.text('Matematika'), findsOneWidget);
@@ -49,14 +51,16 @@ void main() {
 
     testWidgets('renders subject code', (tester) async {
       await tester.pumpWidget(
-        _wrap(SubjectCard(
-          subject: _subject(code: 'MTK'),
-          index: 0,
-          primaryColor: Colors.blue,
-          onTap: () {},
-          onEdit: () {},
-          onDelete: () {},
-        )),
+        _wrap(
+          SubjectCard(
+            subject: _subject(code: 'MTK'),
+            index: 0,
+            primaryColor: Colors.blue,
+            onTap: () {},
+            onEdit: () {},
+            onDelete: () {},
+          ),
+        ),
       );
       await tester.pump();
       expect(find.text('MTK'), findsOneWidget);
@@ -65,14 +69,16 @@ void main() {
     testWidgets('fires onTap when card body is tapped', (tester) async {
       bool tapped = false;
       await tester.pumpWidget(
-        _wrap(SubjectCard(
-          subject: _subject(),
-          index: 0,
-          primaryColor: Colors.blue,
-          onTap: () => tapped = true,
-          onEdit: () {},
-          onDelete: () {},
-        )),
+        _wrap(
+          SubjectCard(
+            subject: _subject(),
+            index: 0,
+            primaryColor: Colors.blue,
+            onTap: () => tapped = true,
+            onEdit: () {},
+            onDelete: () {},
+          ),
+        ),
       );
       await tester.pump();
       await tester.tap(find.byType(InkWell).first);
@@ -82,14 +88,16 @@ void main() {
     testWidgets('fires onEdit when pencil button is tapped', (tester) async {
       bool edited = false;
       await tester.pumpWidget(
-        _wrap(SubjectCard(
-          subject: _subject(),
-          index: 0,
-          primaryColor: Colors.blue,
-          onTap: () {},
-          onEdit: () => edited = true,
-          onDelete: () {},
-        )),
+        _wrap(
+          SubjectCard(
+            subject: _subject(),
+            index: 0,
+            primaryColor: Colors.blue,
+            onTap: () {},
+            onEdit: () => edited = true,
+            onDelete: () {},
+          ),
+        ),
       );
       await tester.pump();
       await tester.tap(find.byIcon(Icons.edit_outlined));
@@ -99,14 +107,16 @@ void main() {
     testWidgets('fires onDelete when trash button is tapped', (tester) async {
       bool deleted = false;
       await tester.pumpWidget(
-        _wrap(SubjectCard(
-          subject: _subject(),
-          index: 0,
-          primaryColor: Colors.blue,
-          onTap: () {},
-          onEdit: () {},
-          onDelete: () => deleted = true,
-        )),
+        _wrap(
+          SubjectCard(
+            subject: _subject(),
+            index: 0,
+            primaryColor: Colors.blue,
+            onTap: () {},
+            onEdit: () {},
+            onDelete: () => deleted = true,
+          ),
+        ),
       );
       await tester.pump();
       await tester.tap(find.byIcon(Icons.delete_outline));
@@ -115,14 +125,16 @@ void main() {
 
     testWidgets('avatar shows first letter of subject name', (tester) async {
       await tester.pumpWidget(
-        _wrap(SubjectCard(
-          subject: _subject(name: 'Bahasa Indonesia'),
-          index: 0,
-          primaryColor: Colors.blue,
-          onTap: () {},
-          onEdit: () {},
-          onDelete: () {},
-        )),
+        _wrap(
+          SubjectCard(
+            subject: _subject(name: 'Bahasa Indonesia'),
+            index: 0,
+            primaryColor: Colors.blue,
+            onTap: () {},
+            onEdit: () {},
+            onDelete: () {},
+          ),
+        ),
       );
       await tester.pump();
       expect(find.text('B'), findsOneWidget);
@@ -136,14 +148,16 @@ void main() {
         'jumlah_kelas': 1,
       };
       await tester.pumpWidget(
-        _wrap(SubjectCard(
-          subject: subject,
-          index: 0,
-          primaryColor: Colors.blue,
-          onTap: () {},
-          onEdit: () {},
-          onDelete: () {},
-        )),
+        _wrap(
+          SubjectCard(
+            subject: subject,
+            index: 0,
+            primaryColor: Colors.blue,
+            onTap: () {},
+            onEdit: () {},
+            onDelete: () {},
+          ),
+        ),
       );
       await tester.pump();
       expect(find.text('IPA01'), findsOneWidget);

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Stateless body for the admin report card screen.
 ///
@@ -142,6 +143,9 @@ class AdminReportCardBody extends StatelessWidget {
                   itemCount: students.length,
                   itemBuilder: (context, index) {
                     final student = students[index];
+                    final model = Student.fromJson(
+                      student as Map<String, dynamic>,
+                    );
                     final status = student['raport_status'] ?? 'draft';
 
                     // Map status string → colour/text/icon — like a computed
@@ -168,7 +172,9 @@ class AdminReportCardBody extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(12),
+                        ),
                         border: Border.all(color: Colors.grey[200]!),
                         boxShadow: [
                           BoxShadow(
@@ -179,7 +185,9 @@ class AdminReportCardBody extends StatelessWidget {
                         ],
                       ),
                       child: InkWell(
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(12),
+                        ),
                         onTap: () => onViewDetail(student),
                         child: Padding(
                           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -191,8 +199,7 @@ class AdminReportCardBody extends StatelessWidget {
                                   alpha: 0.1,
                                 ),
                                 child: Text(
-                                  (student['student_name'] ?? '?')[0]
-                                      .toUpperCase(),
+                                  model.initials,
                                   style: TextStyle(
                                     color: primaryColor,
                                     fontWeight: FontWeight.bold,
@@ -205,7 +212,9 @@ class AdminReportCardBody extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      student['student_name'] ?? 'Unknown',
+                                      model.name.isNotEmpty
+                                          ? model.name
+                                          : 'Unknown',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
@@ -213,7 +222,7 @@ class AdminReportCardBody extends StatelessWidget {
                                     ),
                                     const SizedBox(height: AppSpacing.xs),
                                     Text(
-                                      'NIS: ${student['student_number'] ?? '-'}',
+                                      'NIS: ${model.studentNumber.isNotEmpty ? model.studentNumber : '-'}',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey[600],
@@ -230,7 +239,9 @@ class AdminReportCardBody extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: statusColor.withValues(alpha: 0.1),
-                                  borderRadius: const BorderRadius.all(Radius.circular(20)),
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(20),
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,

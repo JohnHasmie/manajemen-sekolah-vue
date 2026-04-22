@@ -1,0 +1,143 @@
+import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_report_screen.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/class_finance_report_filter_sheet.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/finance_report_models.dart';
+
+/// Mixin for UI building methods in class finance report.
+mixin ClassFinanceUIMixin on State<ClassFinanceReportScreen> {
+  /// Builds a filter chip widget.
+  Widget buildFilterChip({
+    required String label,
+    required VoidCallback onDeleted,
+  }) {
+    return Chip(
+      label: Text(
+        label,
+        style: TextStyle(fontSize: 12, color: getPrimaryColor()),
+      ),
+      backgroundColor: getPrimaryColor().withValues(alpha: 0.1),
+      deleteIcon: Icon(Icons.close, size: 16, color: getPrimaryColor()),
+      onDeleted: onDeleted,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        side: BorderSide(color: getPrimaryColor().withValues(alpha: 0.2)),
+      ),
+    );
+  }
+
+  /// Builds a row for detail dialog display.
+  Widget buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: TextStyle(color: ColorUtils.slate600, fontSize: 13),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Shows filter sheet modal.
+  void showFilterSheet(
+    List<MonthGroup> monthGroups,
+    String selectedStatus,
+    String? selectedMonthKey,
+    String? selectedPaymentTypeId,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ClassFinanceReportFilterSheet(
+        primaryColor: getPrimaryColor(),
+        selectedStatus: selectedStatus,
+        selectedMonthKey: selectedMonthKey,
+        selectedPaymentTypeId: selectedPaymentTypeId,
+        monthGroups: monthGroups,
+        onStatusChanged: onStatusFilterChanged,
+        onMonthChanged: onMonthFilterChanged,
+        onPaymentTypeChanged: onPaymentTypeFilterChanged,
+      ),
+    );
+  }
+
+  /// Shows bill detail dialog.
+  void showDetailDialog(dynamic bill) {
+    if (bill == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Detail Tagihan'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: buildDetailRows(bill),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => AppNavigator.pop(context),
+              child: Text(AppLocalizations.close.tr),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> buildDetailRows(dynamic bill) {
+    return [
+      buildDetailRow(
+        'Status',
+        bill['status'] == 'verified' ? 'Lunas' : 'Belum Lunas',
+      ),
+      buildDetailRow(
+        'Jumlah',
+        formatRupiah(
+          bill['amount'] ?? bill['bill_amount'] ?? bill['total_amount'],
+        ),
+      ),
+      buildDetailRow('Tanggal Buat', formatDate(bill['created_at'])),
+      buildDetailRow('Jatuh Tempo', formatDate(bill['due_date'])),
+      buildDetailRow('Keterangan', bill['description'] ?? '-'),
+    ];
+  }
+
+  String formatRupiah(dynamic value) {
+    if (value == null) return 'Rp 0';
+    return 'Rp $value';
+  }
+
+  String formatDate(dynamic date) {
+    return date?.toString().split('T')[0] ?? '-';
+  }
+
+  /// Must be implemented by State to provide primary color.
+  Color getPrimaryColor();
+
+  /// Callback when status filter changes.
+  void onStatusFilterChanged(String status);
+
+  /// Callback when month filter changes.
+  void onMonthFilterChanged(String? month);
+
+  /// Callback when payment type filter changes.
+  void onPaymentTypeFilterChanged(String? paymentTypeId);
+}

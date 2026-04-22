@@ -187,14 +187,26 @@ class AuthService {
     } on DioException catch (e) {
       final responseData = e.response?.data;
       // If role was invalid, retry without role to let the backend decide
-      if (role != null && responseData is Map &&
-          (responseData['error']?.toString().contains('Role tidak valid') == true ||
-           responseData['message']?.toString().contains('Role tidak valid') == true)) {
-        AppLogger.info('auth_api', 'Role invalid for school, retrying without role');
+      if (role != null &&
+          responseData is Map &&
+          (responseData['error']?.toString().contains('Role tidak valid') ==
+                  true ||
+              responseData['message']?.toString().contains(
+                    'Role tidak valid',
+                  ) ==
+                  true)) {
+        AppLogger.info(
+          'auth_api',
+          'Role invalid for school, retrying without role',
+        );
         return switchSchool(schoolId);
       }
       if (responseData is Map) {
-        throw Exception(responseData['error'] ?? responseData['message'] ?? 'Switch school failed');
+        throw Exception(
+          responseData['error'] ??
+              responseData['message'] ??
+              'Switch school failed',
+        );
       }
       rethrow;
     }

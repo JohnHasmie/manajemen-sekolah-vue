@@ -25,40 +25,40 @@ void main() {
     // to communicate with the native platform.
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-      (MethodCall methodCall) async {
-        switch (methodCall.method) {
-          case 'write':
-            final key = methodCall.arguments['key'] as String;
-            final value = methodCall.arguments['value'] as String;
-            mockStore[key] = value;
-            return null;
-          case 'read':
-            final key = methodCall.arguments['key'] as String;
-            return mockStore[key];
-          case 'delete':
-            final key = methodCall.arguments['key'] as String;
-            mockStore.remove(key);
-            return null;
-          case 'deleteAll':
-            mockStore.clear();
-            return null;
-          case 'containsKey':
-            final key = methodCall.arguments['key'] as String;
-            return mockStore.containsKey(key) ? 'true' : 'false';
-          default:
-            return null;
-        }
-      },
-    );
+          const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+          (MethodCall methodCall) async {
+            switch (methodCall.method) {
+              case 'write':
+                final key = methodCall.arguments['key'] as String;
+                final value = methodCall.arguments['value'] as String;
+                mockStore[key] = value;
+                return null;
+              case 'read':
+                final key = methodCall.arguments['key'] as String;
+                return mockStore[key];
+              case 'delete':
+                final key = methodCall.arguments['key'] as String;
+                mockStore.remove(key);
+                return null;
+              case 'deleteAll':
+                mockStore.clear();
+                return null;
+              case 'containsKey':
+                final key = methodCall.arguments['key'] as String;
+                return mockStore.containsKey(key) ? 'true' : 'false';
+              default:
+                return null;
+            }
+          },
+        );
   });
 
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-      null,
-    );
+          const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+          null,
+        );
   });
 
   group('Token operations', () {

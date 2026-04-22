@@ -38,11 +38,14 @@ void main() {
       expect(provider.getTranslatedText(translations), equals('Halo'));
     });
 
-    test('getTranslatedText returns English value after switching to en', () async {
-      await provider.setLanguage(LanguageProvider.english);
-      final translations = {'en': 'Hello', 'id': 'Halo'};
-      expect(provider.getTranslatedText(translations), equals('Hello'));
-    });
+    test(
+      'getTranslatedText returns English value after switching to en',
+      () async {
+        await provider.setLanguage(LanguageProvider.english);
+        final translations = {'en': 'Hello', 'id': 'Halo'};
+        expect(provider.getTranslatedText(translations), equals('Hello'));
+      },
+    );
 
     test('setLanguage updates currentLanguage', () async {
       await provider.setLanguage(LanguageProvider.english);
@@ -55,22 +58,28 @@ void main() {
       expect(provider.currentLanguage, equals(LanguageProvider.indonesian));
     });
 
-    test('getTranslatedText falls back to Indonesian when language key missing', () {
-      final translations = {'id': 'Halo'};
-      expect(provider.getTranslatedText(translations), equals('Halo'));
-    });
+    test(
+      'getTranslatedText falls back to Indonesian when language key missing',
+      () {
+        final translations = {'id': 'Halo'};
+        expect(provider.getTranslatedText(translations), equals('Halo'));
+      },
+    );
 
     test('getTranslatedText returns empty string when no keys match', () {
       final translations = <String, String>{};
       expect(provider.getTranslatedText(translations), equals(''));
     });
 
-    test('notifyListeners is called on setLanguage (ChangeNotifier fires)', () async {
-      var notified = false;
-      provider.addListener(() => notified = true);
-      await provider.setLanguage(LanguageProvider.english);
-      expect(notified, isTrue);
-    });
+    test(
+      'notifyListeners is called on setLanguage (ChangeNotifier fires)',
+      () async {
+        var notified = false;
+        provider.addListener(() => notified = true);
+        await provider.setLanguage(LanguageProvider.english);
+        expect(notified, isTrue);
+      },
+    );
   });
 
   // ─────────────────────────────────────────────────────────────────────────

@@ -1,7 +1,6 @@
 // Dialog for changing the user's password. Extracted from settings_screen.dart.
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer;
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -45,16 +44,17 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
       AppNavigator.pop(context);
       SnackBarUtils.showSuccess(
         context,
-        ref
-            .read(languageRiverpod)
-            .getTranslatedText(AppLocalizations.passwordChangedSuccess),
+        ref.read(languageRiverpod).getTranslatedText({
+          'en': 'Password changed successfully',
+          'id': 'Kata sandi berhasil diubah',
+        }),
       );
     } catch (e) {
       AppLogger.error('settings', e);
       if (!mounted) return;
       SnackBarUtils.showError(
         context,
-        '${ref.read(languageRiverpod).getTranslatedText(AppLocalizations.failedToChangePassword)}: ${ErrorUtils.getFriendlyMessage(e)}',
+        '${ref.read(languageRiverpod).getTranslatedText({'en': 'Failed to change password', 'id': 'Gagal mengubah kata sandi'})}: ${ErrorUtils.getFriendlyMessage(e)}',
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -74,9 +74,10 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
       validator:
           validator ??
           (val) => val == null || val.isEmpty
-              ? ref
-                    .read(languageRiverpod)
-                    .getTranslatedText(AppLocalizations.required)
+              ? ref.read(languageRiverpod).getTranslatedText({
+                  'en': 'This field is required',
+                  'id': 'Field ini harus diisi',
+                })
               : null,
       decoration: InputDecoration(
         labelText: label,
@@ -107,7 +108,10 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
         ),
         filled: true,
         fillColor: ColorUtils.slate50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -124,7 +128,9 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
       clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
         child: Column(
@@ -153,7 +159,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: const BorderRadius.all(Radius.circular(12)),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.lock_rounded,
                       color: Colors.white,
                       size: 22,
@@ -165,12 +171,11 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          ref
-                              .read(languageRiverpod)
-                              .getTranslatedText(
-                                AppLocalizations.changePassword,
-                              ),
-                          style: TextStyle(
+                          ref.read(languageRiverpod).getTranslatedText({
+                            'en': 'Change Password',
+                            'id': 'Ubah Kata Sandi',
+                          }),
+                          style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -200,9 +205,10 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                   children: [
                     _buildPasswordField(
                       controller: _oldPasswordController,
-                      label: ref
-                          .read(languageRiverpod)
-                          .getTranslatedText(AppLocalizations.oldPassword),
+                      label: ref.read(languageRiverpod).getTranslatedText({
+                        'en': 'Old Password',
+                        'id': 'Kata Sandi Lama',
+                      }),
                       obscure: _obscureOld,
                       onToggle: () =>
                           setState(() => _obscureOld = !_obscureOld),
@@ -210,39 +216,50 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                     const SizedBox(height: AppSpacing.md),
                     _buildPasswordField(
                       controller: _newPasswordController,
-                      label: ref
-                          .read(languageRiverpod)
-                          .getTranslatedText(AppLocalizations.newPassword),
+                      label: ref.read(languageRiverpod).getTranslatedText({
+                        'en': 'New Password',
+                        'id': 'Kata Sandi Baru',
+                      }),
                       obscure: _obscureNew,
                       onToggle: () =>
                           setState(() => _obscureNew = !_obscureNew),
                       validator: (val) {
                         final lang = ref.read(languageRiverpod);
                         if (val == null || val.isEmpty) {
-                          return lang.getTranslatedText(
-                            AppLocalizations.required,
-                          );
+                          return lang.getTranslatedText({
+                            'en': 'This field is required',
+                            'id': 'Field ini harus diisi',
+                          });
                         }
                         if (val.length < 8) {
-                          return lang.getTranslatedText(
-                            AppLocalizations.passwordMinLength,
-                          );
+                          return lang.getTranslatedText({
+                            'en': 'Password must be at least 8 characters',
+                            'id': 'Kata sandi harus minimal 8 karakter',
+                          });
                         }
                         if (!val.contains(RegExp(r'[a-z]')) ||
                             !val.contains(RegExp(r'[A-Z]'))) {
-                          return lang.getTranslatedText(
-                            AppLocalizations.passwordLetters,
-                          );
+                          return lang.getTranslatedText({
+                            'en':
+                                'Password must contain uppercase and lowercase letters',
+                            'id':
+                                'Kata sandi harus mengandung huruf besar dan kecil',
+                          });
                         }
                         if (!val.contains(RegExp(r'[0-9]'))) {
-                          return lang.getTranslatedText(
-                            AppLocalizations.passwordNumbers,
-                          );
+                          return lang.getTranslatedText({
+                            'en': 'Password must contain at least one number',
+                            'id':
+                                'Kata sandi harus mengandung minimal satu angka',
+                          });
                         }
                         if (!val.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-                          return lang.getTranslatedText(
-                            AppLocalizations.passwordSymbols,
-                          );
+                          return lang.getTranslatedText({
+                            'en':
+                                'Password must contain at least one special character',
+                            'id':
+                                'Kata sandi harus mengandung minimal satu karakter khusus',
+                          });
                         }
                         return null;
                       },
@@ -250,19 +267,19 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                     const SizedBox(height: AppSpacing.md),
                     _buildPasswordField(
                       controller: _confirmPasswordController,
-                      label: ref
-                          .read(languageRiverpod)
-                          .getTranslatedText(AppLocalizations.confirmPassword),
+                      label: ref.read(languageRiverpod).getTranslatedText({
+                        'en': 'Confirm Password',
+                        'id': 'Konfirmasi Kata Sandi',
+                      }),
                       obscure: _obscureConfirm,
                       onToggle: () =>
                           setState(() => _obscureConfirm = !_obscureConfirm),
                       validator: (val) {
                         if (val != _newPasswordController.text) {
-                          return ref
-                              .read(languageRiverpod)
-                              .getTranslatedText(
-                                AppLocalizations.passwordMismatch,
-                              );
+                          return ref.read(languageRiverpod).getTranslatedText({
+                            'en': 'Passwords do not match',
+                            'id': 'Kata sandi tidak cocok',
+                          });
                         }
                         return null;
                       },
@@ -289,14 +306,15 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           side: BorderSide(color: ColorUtils.slate300),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: const BorderRadius.all(Radius.circular(12)),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
                           ),
                         ),
                         child: Text(
-                          ref
-                              .read(languageRiverpod)
-                              .getTranslatedText(AppLocalizations.cancel),
+                          ref.read(languageRiverpod).getTranslatedText({
+                            'en': 'Cancel',
+                            'id': 'Batal',
+                          }),
                           style: TextStyle(color: ColorUtils.slate600),
                         ),
                       ),
@@ -308,13 +326,13 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: widget.primaryColor,
                           padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: const BorderRadius.all(Radius.circular(12)),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
                           ),
                           elevation: 0,
                         ),
                         child: _isLoading
-                            ? SizedBox(
+                            ? const SizedBox(
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
@@ -323,10 +341,11 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                                 ),
                               )
                             : Text(
-                                ref
-                                    .read(languageRiverpod)
-                                    .getTranslatedText(AppLocalizations.save),
-                                style: TextStyle(
+                                ref.read(languageRiverpod).getTranslatedText({
+                                  'en': 'Save',
+                                  'id': 'Simpan',
+                                }),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
                                 ),

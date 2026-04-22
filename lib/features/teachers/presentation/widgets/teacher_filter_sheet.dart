@@ -6,10 +6,10 @@
 // Like a Vue modal component — receives initial filter values as props and
 // emits the confirmed selection via [onApply].
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_status_chip.dart';
+import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
+import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_filter_sections.dart';
+import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_show_all_toggle.dart';
 
 /// Bottom-sheet widget for filtering the teacher list.
 ///
@@ -69,7 +69,8 @@ class TeacherFilterSheet extends StatefulWidget {
     String? employmentStatus,
     String? teachingClassId,
     bool showAll,
-  ) onApply;
+  )
+  onApply;
 
   @override
   TeacherFilterSheetState createState() => TeacherFilterSheetState();
@@ -77,11 +78,12 @@ class TeacherFilterSheet extends StatefulWidget {
 
 /// Mutable state for [TeacherFilterSheet].
 ///
-/// Like Vue's `data()` inside the modal component — holds temporary selections
-/// that are only committed to the parent when the user confirms.
+/// Like Vue's `data()` inside the modal component — holds temporary
+/// selections that are only committed to the parent when the user
+/// confirms.
 class TeacherFilterSheetState extends State<TeacherFilterSheet> {
-  // Temporary (uncommitted) filter selections — like v-model bindings inside a
-  // modal that are only emitted on "Save".
+  // Temporary (uncommitted) filter selections — like v-model bindings
+  // inside a modal that are only emitted on "Save".
   late String? _tempSelectedHomeroom;
   late String? _tempSelectedGender;
   late String? _tempSelectedEmploymentStatus;
@@ -98,487 +100,107 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
     _showAllTeachers = widget.initialShowAll;
   }
 
+  void _resetFilters() {
+    setState(() {
+      _tempSelectedHomeroom = null;
+      _tempSelectedGender = null;
+      _tempSelectedEmploymentStatus = null;
+      _tempSelectedTeachingClass = null;
+      _showAllTeachers = false;
+    });
+  }
+
+  void _updateHomeroom(String? value) {
+    setState(() {
+      _tempSelectedHomeroom = value;
+    });
+  }
+
+  void _updateGender(String? value) {
+    setState(() {
+      _tempSelectedGender = value;
+    });
+  }
+
+  void _updateEmploymentStatus(String? value) {
+    setState(() {
+      _tempSelectedEmploymentStatus = value;
+    });
+  }
+
+  void _updateTeachingClass(String? value) {
+    setState(() {
+      _tempSelectedTeachingClass = value;
+    });
+  }
+
+  void _updateShowAll(bool value) {
+    setState(() {
+      _showAllTeachers = value;
+    });
+  }
+
+  void _handleApply() {
+    widget.onApply(
+      _tempSelectedHomeroom,
+      _tempSelectedGender,
+      _tempSelectedEmploymentStatus,
+      _tempSelectedTeachingClass,
+      _showAllTeachers,
+    );
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = widget.languageProvider;
+    final color = Theme.of(context).primaryColor;
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            // Header gradient (Pattern #11)
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    ColorUtils.corporateBlue600,
-                    ColorUtils.corporateBlue600.withValues(alpha: 0.8),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.filter_list_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Filter Teachers',
-                          'id': 'Filter Guru',
-                        }),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _tempSelectedHomeroom = null;
-                        _tempSelectedGender = null;
-                        _tempSelectedEmploymentStatus = null;
-                        _tempSelectedTeachingClass = null;
-                        _showAllTeachers = false;
-                      });
-                    },
-                    child: Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Reset',
-                        'id': 'Reset',
-                      }),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Scrollable Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Show All Teachers Toggle
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: ColorUtils.slate50,
-                        borderRadius: const BorderRadius.all(Radius.circular(10)),
-                        border: Border.all(color: ColorUtils.slate200),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en': 'Show All Teachers',
-                                    'id': 'Tampilkan Semua Guru',
-                                  }),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                    color: ColorUtils.slate800,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  languageProvider.getTranslatedText({
-                                    'en':
-                                        'Include inactive (ignores academic year)',
-                                    'id':
-                                        'Termasuk tidak aktif (abaikan tahun ajaran)',
-                                  }),
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: ColorUtils.slate500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: _showAllTeachers,
-                            activeThumbColor: ColorUtils.corporateBlue600,
-                            activeTrackColor: ColorUtils.corporateBlue600
-                                .withValues(alpha: 0.4),
-                            onChanged: (bool value) {
-                              setState(() {
-                                _showAllTeachers = value;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // Gender Section
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.transgender_rounded,
-                          size: 16,
-                          color: ColorUtils.slate600,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Gender',
-                            'id': 'Jenis Kelamin',
-                          }),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate800,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        TeacherStatusChip(
-                          label: languageProvider.getTranslatedText({
-                            'en': 'All',
-                            'id': 'Semua',
-                          }),
-                          value: null,
-                          selectedValue: _tempSelectedGender,
-                          onSelected: () {
-                            setState(() {
-                              _tempSelectedGender = null;
-                            });
-                          },
-                        ),
-                        ...widget.availableGenders.map((gender) {
-                          return TeacherStatusChip(
-                            label: gender['label'],
-                            value: gender['value'].toString(),
-                            selectedValue: _tempSelectedGender,
-                            onSelected: () {
-                              setState(() {
-                                _tempSelectedGender =
-                                    gender['value'].toString();
-                              });
-                            },
-                          );
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // Employment Status Section
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.work_outline_rounded,
-                          size: 16,
-                          color: ColorUtils.slate600,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Employment Status',
-                            'id': 'Status Kepegawaian',
-                          }),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate800,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        TeacherStatusChip(
-                          label: languageProvider.getTranslatedText({
-                            'en': 'All',
-                            'id': 'Semua',
-                          }),
-                          value: null,
-                          selectedValue: _tempSelectedEmploymentStatus,
-                          onSelected: () {
-                            setState(() {
-                              _tempSelectedEmploymentStatus = null;
-                            });
-                          },
-                        ),
-                        ...widget.availableEmploymentStatus.map((status) {
-                          return TeacherStatusChip(
-                            label: status['label'],
-                            value: status['value'].toString(),
-                            selectedValue: _tempSelectedEmploymentStatus,
-                            onSelected: () {
-                              setState(() {
-                                _tempSelectedEmploymentStatus =
-                                    status['value'].toString();
-                              });
-                            },
-                          );
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // Teaching Class Section
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.school_outlined,
-                          size: 16,
-                          color: ColorUtils.slate600,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Teaching Class',
-                            'id': 'Kelas Ajar',
-                          }),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate800,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: ColorUtils.slate50,
-                        border: Border.all(color: ColorUtils.slate200),
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          isExpanded: true,
-                          value: _tempSelectedTeachingClass,
-                          hint: Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Select Class',
-                              'id': 'Pilih Kelas',
-                            }),
-                          ),
-                          items: [
-                            DropdownMenuItem<String>(
-                              value: null,
-                              child: Text(
-                                languageProvider.getTranslatedText({
-                                  'en': 'Clear Selection',
-                                  'id': 'Hapus Pilihan',
-                                }),
-                              ),
-                            ),
-                            ...widget.availableClass.map((classItem) {
-                              return DropdownMenuItem<String>(
-                                value: classItem['id'].toString(),
-                                child: Text(classItem['name'].toString()),
-                              );
-                            }),
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              _tempSelectedTeachingClass = value;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // Homeroom Status Section
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.groups_outlined,
-                          size: 16,
-                          color: ColorUtils.slate600,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Homeroom Teacher Status',
-                            'id': 'Status Wali Kelas',
-                          }),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate800,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        TeacherStatusChip(
-                          label: languageProvider.getTranslatedText({
-                            'en': 'All',
-                            'id': 'Semua',
-                          }),
-                          value: null,
-                          selectedValue: _tempSelectedHomeroom,
-                          onSelected: () {
-                            setState(() {
-                              _tempSelectedHomeroom = null;
-                            });
-                          },
-                        ),
-                        TeacherStatusChip(
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Homeroom Teacher',
-                            'id': 'Wali Kelas',
-                          }),
-                          value: 'wali_kelas',
-                          selectedValue: _tempSelectedHomeroom,
-                          onSelected: () {
-                            setState(() {
-                              _tempSelectedHomeroom = 'wali_kelas';
-                            });
-                          },
-                        ),
-                        TeacherStatusChip(
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Regular Teacher',
-                            'id': 'Bukan Wali Kelas',
-                          }),
-                          value: 'guru_biasa',
-                          selectedValue: _tempSelectedHomeroom,
-                          onSelected: () {
-                            setState(() {
-                              _tempSelectedHomeroom = 'guru_biasa';
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Footer Buttons (Pattern #11)
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  top: BorderSide(color: ColorUtils.slate200),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: ColorUtils.slate900.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => AppNavigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: BorderSide(color: ColorUtils.slate300),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
-                        ),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Cancel',
-                          'id': 'Batal',
-                        }),
-                        style: TextStyle(
-                          color: ColorUtils.slate700,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        widget.onApply(
-                          _tempSelectedHomeroom,
-                          _tempSelectedGender,
-                          _tempSelectedEmploymentStatus,
-                          _tempSelectedTeachingClass,
-                          _showAllTeachers,
-                        );
-                        AppNavigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorUtils.corporateBlue600,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
-                        ),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Apply Filter',
-                          'id': 'Terapkan Filter',
-                        }),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+    return AppFilterBottomSheet(
+      title: languageProvider.getTranslatedText({
+        'en': 'Filter Teachers',
+        'id': 'Filter Guru',
+      }),
+      icon: Icons.tune_rounded,
+      primaryColor: color,
+      maxHeightFactor: 0.75,
+      onApply: _handleApply,
+      onReset: _resetFilters,
+      content: TeacherFilterContent(
+        sections: [
+          TeacherShowAllToggle(
+            value: _showAllTeachers,
+            onChanged: _updateShowAll,
+            languageProvider: languageProvider,
+          ),
+          TeacherGenderSection(
+            selectedValue: _tempSelectedGender,
+            availableGenders: widget.availableGenders,
+            onSelected: _updateGender,
+            languageProvider: languageProvider,
+            primaryColor: color,
+          ),
+          TeacherEmploymentStatusSection(
+            selectedValue: _tempSelectedEmploymentStatus,
+            availableEmploymentStatus: widget.availableEmploymentStatus,
+            onSelected: _updateEmploymentStatus,
+            languageProvider: languageProvider,
+            primaryColor: color,
+          ),
+          TeacherClassSection(
+            selectedValue: _tempSelectedTeachingClass,
+            availableClass: widget.availableClass,
+            onChanged: _updateTeachingClass,
+            languageProvider: languageProvider,
+            primaryColor: color,
+          ),
+          TeacherHomeroomSection(
+            selectedValue: _tempSelectedHomeroom,
+            onSelected: _updateHomeroom,
+            languageProvider: languageProvider,
+            primaryColor: color,
+          ),
+        ],
       ),
     );
   }

@@ -11,9 +11,9 @@ import 'package:manajemensekolah/core/utils/currency_formatter.dart';
 
 // Helper: simulate a user typing text into a field.
 TextEditingValue _input(String text) => TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
-    );
+  text: text,
+  selection: TextSelection.collapsed(offset: text.length),
+);
 
 TextEditingValue _format(String input) {
   final formatter = CurrencyInputFormatter();
@@ -88,7 +88,10 @@ void main() {
     });
 
     test('"Rp 10.000" → 10000.0', () {
-      expect(CurrencyInputFormatter.parseCurrency('Rp 10.000'), equals(10000.0));
+      expect(
+        CurrencyInputFormatter.parseCurrency('Rp 10.000'),
+        equals(10000.0),
+      );
     });
 
     test('"Rp 1.500.000" → 1500000.0', () {

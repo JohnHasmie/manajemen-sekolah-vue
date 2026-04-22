@@ -84,7 +84,9 @@ Future<void> _goBack(WidgetTester tester) async {
       await tester.tap(backBtn.first);
     } else {
       debugPrint('⚠️ No back button found — using Navigator.pop');
-      final navigator = tester.state<NavigatorState>(find.byType(Navigator).last);
+      final navigator = tester.state<NavigatorState>(
+        find.byType(Navigator).last,
+      );
       navigator.pop();
     }
   }
@@ -123,20 +125,18 @@ void main() {
       debugPrint('▶ TC090: Admin quick actions');
 
       // Quick action labels as they appear in the real app (Indonesian)
-      final quickActions = [
-        'Data',
-        'Jadwal',
-        'Keuangan',
-        'Pengumuman',
-      ];
+      final quickActions = ['Data', 'Jadwal', 'Keuangan', 'Pengumuman'];
 
       for (final label in quickActions) {
         debugPrint('  → Tapping quick action: $label');
         final found = await _tapMenuItem(tester, label);
         if (found) {
           // Verify we navigated away from dashboard (Scaffold still visible)
-          expect(find.byType(Scaffold), findsWidgets,
-              reason: '$label should open a screen');
+          expect(
+            find.byType(Scaffold),
+            findsWidgets,
+            reason: '$label should open a screen',
+          );
           await _goBack(tester);
           await _scrollToTop(tester);
           debugPrint('  ✅ Quick action "$label" navigated and returned');
@@ -380,8 +380,11 @@ void main() {
         for (int i = 0; i < 15; i++) {
           await tester.pump(const Duration(milliseconds: 500));
         }
-        expect(find.byType(Scaffold), findsWidgets,
-            reason: 'Should open grade book for selected class');
+        expect(
+          find.byType(Scaffold),
+          findsWidgets,
+          reason: 'Should open grade book for selected class',
+        );
         debugPrint('  ✅ Grade book opened');
 
         // Back to class list
@@ -497,8 +500,11 @@ void main() {
         for (int i = 0; i < 15; i++) {
           await tester.pump(const Duration(milliseconds: 500));
         }
-        expect(find.byType(Scaffold), findsWidgets,
-            reason: 'Should open class attendance detail');
+        expect(
+          find.byType(Scaffold),
+          findsWidgets,
+          reason: 'Should open class attendance detail',
+        );
         debugPrint('  ✅ Class attendance detail opened');
         await _goBack(tester);
         debugPrint('  ✅ Back to class list');
@@ -732,18 +738,28 @@ void main() {
         if (found) {
           // Wait for any API data to load
           await _waitFor(tester, find.byType(Scaffold), maxSeconds: 10);
-          expect(find.byType(Scaffold), findsWidgets,
-              reason: '$menu should open a screen');
+          expect(
+            find.byType(Scaffold),
+            findsWidgets,
+            reason: '$menu should open a screen',
+          );
 
           await _goBack(tester);
           // After back, we should still have a Scaffold (dashboard)
-          expect(find.byType(Scaffold), findsWidgets,
-              reason: 'After back from $menu, dashboard should be visible');
+          expect(
+            find.byType(Scaffold),
+            findsWidgets,
+            reason: 'After back from $menu, dashboard should be visible',
+          );
           passed++;
-          debugPrint('  ✅ $menu navigated and returned (${passed + skipped}/${menus.length})');
+          debugPrint(
+            '  ✅ $menu navigated and returned (${passed + skipped}/${menus.length})',
+          );
         } else {
           skipped++;
-          debugPrint('  ⚠️ $menu not found — skipped (${passed + skipped}/${menus.length})');
+          debugPrint(
+            '  ⚠️ $menu not found — skipped (${passed + skipped}/${menus.length})',
+          );
         }
       }
 
@@ -783,17 +799,27 @@ void main() {
         final found = await _tapMenuItem(tester, menu);
         if (found) {
           await _waitFor(tester, find.byType(Scaffold), maxSeconds: 10);
-          expect(find.byType(Scaffold), findsWidgets,
-              reason: '$menu should open a screen');
+          expect(
+            find.byType(Scaffold),
+            findsWidgets,
+            reason: '$menu should open a screen',
+          );
 
           await _goBack(tester);
-          expect(find.byType(Scaffold), findsWidgets,
-              reason: 'After back from $menu, dashboard should be visible');
+          expect(
+            find.byType(Scaffold),
+            findsWidgets,
+            reason: 'After back from $menu, dashboard should be visible',
+          );
           passed++;
-          debugPrint('  ✅ $menu navigated and returned (${passed + skipped}/${menus.length})');
+          debugPrint(
+            '  ✅ $menu navigated and returned (${passed + skipped}/${menus.length})',
+          );
         } else {
           skipped++;
-          debugPrint('  ⚠️ $menu not found — skipped (${passed + skipped}/${menus.length})');
+          debugPrint(
+            '  ⚠️ $menu not found — skipped (${passed + skipped}/${menus.length})',
+          );
         }
       }
 

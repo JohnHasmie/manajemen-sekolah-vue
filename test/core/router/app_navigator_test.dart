@@ -17,21 +17,25 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 void main() {
   group('AppNavigator', () {
     testWidgets('push navigates to a new screen', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(builder: (context) {
-            return ElevatedButton(
-              onPressed: () {
-                AppNavigator.push(
-                  context,
-                  const Scaffold(body: Text('Second Screen')),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    AppNavigator.push(
+                      context,
+                      const Scaffold(body: Text('Second Screen')),
+                    );
+                  },
+                  child: const Text('Go'),
                 );
               },
-              child: const Text('Go'),
-            );
-          }),
+            ),
+          ),
         ),
-      ));
+      );
 
       // Verify we start on the first screen
       expect(find.text('Go'), findsOneWidget);
@@ -48,28 +52,35 @@ void main() {
     testWidgets('push returns result when popped with value', (tester) async {
       String? result;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(builder: (context) {
-            return ElevatedButton(
-              onPressed: () async {
-                result = await AppNavigator.push<String>(
-                  context,
-                  Scaffold(
-                    body: Builder(builder: (innerContext) {
-                      return ElevatedButton(
-                        onPressed: () => Navigator.pop(innerContext, 'done'),
-                        child: const Text('Pop with result'),
-                      );
-                    }),
-                  ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () async {
+                    result = await AppNavigator.push<String>(
+                      context,
+                      Scaffold(
+                        body: Builder(
+                          builder: (innerContext) {
+                            return ElevatedButton(
+                              onPressed: () =>
+                                  Navigator.pop(innerContext, 'done'),
+                              child: const Text('Pop with result'),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('Go'),
                 );
               },
-              child: const Text('Go'),
-            );
-          }),
+            ),
+          ),
         ),
-      ));
+      );
 
       // Push to second screen
       await tester.tap(find.text('Go'));
@@ -82,8 +93,9 @@ void main() {
       expect(result, 'done');
     });
 
-    testWidgets('pop goes back to previous screen (via GoRouter)',
-        (tester) async {
+    testWidgets('pop goes back to previous screen (via GoRouter)', (
+      tester,
+    ) async {
       // AppNavigator.pop uses context.canPop()/context.pop() from go_router,
       // so we must provide a GoRouter in the widget tree.
       final router = GoRouter(
@@ -92,28 +104,32 @@ void main() {
           GoRoute(
             path: '/',
             builder: (context, state) => Scaffold(
-              body: Builder(builder: (ctx) {
-                return ElevatedButton(
-                  onPressed: () {
-                    // Use Navigator.push (like AppNavigator.push does) to add a route
-                    Navigator.push(
-                      ctx,
-                      MaterialPageRoute(
-                        builder: (_) => Scaffold(
-                          body: Builder(builder: (innerContext) {
-                            return ElevatedButton(
-                              onPressed: () =>
-                                  AppNavigator.pop(innerContext),
-                              child: const Text('Go Back'),
-                            );
-                          }),
+              body: Builder(
+                builder: (ctx) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      // Use Navigator.push (like AppNavigator.push does) to add a route
+                      Navigator.push(
+                        ctx,
+                        MaterialPageRoute(
+                          builder: (_) => Scaffold(
+                            body: Builder(
+                              builder: (innerContext) {
+                                return ElevatedButton(
+                                  onPressed: () =>
+                                      AppNavigator.pop(innerContext),
+                                  child: const Text('Go Back'),
+                                );
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: const Text('Go Forward'),
-                );
-              }),
+                      );
+                    },
+                    child: const Text('Go Forward'),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -133,8 +149,9 @@ void main() {
       expect(find.text('Go Forward'), findsOneWidget);
     });
 
-    testWidgets('canPop returns true when there is a route to pop',
-        (tester) async {
+    testWidgets('canPop returns true when there is a route to pop', (
+      tester,
+    ) async {
       bool? canPopResult;
 
       final router = GoRouter(
@@ -143,29 +160,34 @@ void main() {
           GoRoute(
             path: '/',
             builder: (context, state) => Scaffold(
-              body: Builder(builder: (ctx) {
-                return ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      ctx,
-                      MaterialPageRoute(
-                        builder: (_) => Scaffold(
-                          body: Builder(builder: (innerContext) {
-                            return ElevatedButton(
-                              onPressed: () {
-                                canPopResult =
-                                    AppNavigator.canPop(innerContext);
+              body: Builder(
+                builder: (ctx) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        ctx,
+                        MaterialPageRoute(
+                          builder: (_) => Scaffold(
+                            body: Builder(
+                              builder: (innerContext) {
+                                return ElevatedButton(
+                                  onPressed: () {
+                                    canPopResult = AppNavigator.canPop(
+                                      innerContext,
+                                    );
+                                  },
+                                  child: const Text('Check canPop'),
+                                );
                               },
-                              child: const Text('Check canPop'),
-                            );
-                          }),
+                            ),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: const Text('Go Forward'),
-                );
-              }),
+                      );
+                    },
+                    child: const Text('Go Forward'),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -194,14 +216,16 @@ void main() {
           GoRoute(
             path: '/',
             builder: (context, state) => Scaffold(
-              body: Builder(builder: (ctx) {
-                return ElevatedButton(
-                  onPressed: () {
-                    canPopResult = AppNavigator.canPop(ctx);
-                  },
-                  child: const Text('Check canPop'),
-                );
-              }),
+              body: Builder(
+                builder: (ctx) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      canPopResult = AppNavigator.canPop(ctx);
+                    },
+                    child: const Text('Check canPop'),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -217,21 +241,25 @@ void main() {
     });
 
     testWidgets('pushReplacement replaces current route', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(builder: (context) {
-            return ElevatedButton(
-              onPressed: () {
-                AppNavigator.pushReplacement(
-                  context,
-                  const Scaffold(body: Text('Replacement Screen')),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    AppNavigator.pushReplacement(
+                      context,
+                      const Scaffold(body: Text('Replacement Screen')),
+                    );
+                  },
+                  child: const Text('Replace'),
                 );
               },
-              child: const Text('Replace'),
-            );
-          }),
+            ),
+          ),
         ),
-      ));
+      );
 
       // Push replacement
       await tester.tap(find.text('Replace'));
@@ -242,38 +270,45 @@ void main() {
       expect(find.text('Replace'), findsNothing);
     });
 
-    testWidgets('pushAndClearStack clears all routes and shows new screen',
-        (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(builder: (context) {
-            return ElevatedButton(
-              onPressed: () {
-                // First push a route so we have a stack
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => Scaffold(
-                      body: Builder(builder: (innerContext) {
-                        return ElevatedButton(
-                          onPressed: () {
-                            AppNavigator.pushAndClearStack(
-                              innerContext,
-                              const Scaffold(body: Text('Fresh Start')),
-                            );
-                          },
-                          child: const Text('Clear Stack'),
-                        );
-                      }),
-                    ),
-                  ),
+    testWidgets('pushAndClearStack clears all routes and shows new screen', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    // First push a route so we have a stack
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => Scaffold(
+                          body: Builder(
+                            builder: (innerContext) {
+                              return ElevatedButton(
+                                onPressed: () {
+                                  AppNavigator.pushAndClearStack(
+                                    innerContext,
+                                    const Scaffold(body: Text('Fresh Start')),
+                                  );
+                                },
+                                child: const Text('Clear Stack'),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('Go'),
                 );
               },
-              child: const Text('Go'),
-            );
-          }),
+            ),
+          ),
         ),
-      ));
+      );
 
       // Navigate forward
       await tester.tap(find.text('Go'));

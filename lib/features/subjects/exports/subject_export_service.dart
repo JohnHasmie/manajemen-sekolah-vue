@@ -6,11 +6,13 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 
 /// Service for exporting subject (mata pelajaran) data to Excel and downloading
 /// import templates via the backend API.
@@ -144,33 +146,33 @@ class ExcelSubjectService {
     final List<String> errors = [];
 
     for (int i = 0; i < subjects.length; i++) {
-      final subject = subjects[i];
+      final subject = subjects[i] as Map<String, dynamic>;
+      final model = Subject.fromJson(subject);
       final Map<String, dynamic> validatedSubject = {};
 
       // Include ID for backend lookup
-      if (subject['id'] != null) {
-        validatedSubject['id'] = subject['id'];
+      if (model.id.isNotEmpty) {
+        validatedSubject['id'] = model.id;
       }
 
       // Validate required fields
-      final code = subject['code'] ?? subject['kode'];
-      if (code == null || code.toString().isEmpty) {
+      if (model.code == null || model.code!.isEmpty) {
         errors.add('Baris ${i + 1}: Kode mata pelajaran tidak boleh kosong');
       } else {
-        validatedSubject['code'] = code;
+        validatedSubject['code'] = model.code;
       }
 
-      final name = subject['name'] ?? subject['nama'];
-      if (name == null || name.toString().isEmpty) {
+      if (model.name.isEmpty) {
         errors.add('Baris ${i + 1}: Nama mata pelajaran tidak boleh kosong');
       } else {
-        validatedSubject['name'] = name;
+        validatedSubject['name'] = model.name;
       }
 
-      // Field optional
+      // Field optional — not in Subject model, read raw
       validatedSubject['description'] =
           subject['description'] ?? subject['deskripsi'] ?? '';
-      validatedSubject['class_names'] = _getClassNames(subject);
+      validatedSubject['class_names'] =
+          model.classNames ?? _getClassNames(subject);
 
       if (errors.isEmpty) {
         validatedData.add(validatedSubject);
@@ -195,7 +197,10 @@ class ExcelSubjectService {
 
     final classList = subject['class_list'] ?? subject['classes'] ?? [];
     if (classList is List) {
-      return classList.map((classItem) => classItem['name'] ?? '').join(', ');
+      return classList
+          .map((classItem) =>
+              Classroom.fromJson(classItem as Map<String, dynamic>).name)
+          .join(', ');
     }
 
     return '';

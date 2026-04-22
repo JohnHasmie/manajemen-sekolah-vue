@@ -45,9 +45,7 @@ void main() {
     // ── 3. Renders emoji String icon ───────────────────────────────────────
     testWidgets('renders an emoji string icon', (tester) async {
       await tester.pumpWidget(
-        buildTestable(
-          MenuItemCard(title: 'Finance', icon: '💰', onTap: () {}),
-        ),
+        buildTestable(MenuItemCard(title: 'Finance', icon: '💰', onTap: () {})),
       );
 
       expect(find.text('💰'), findsOneWidget);

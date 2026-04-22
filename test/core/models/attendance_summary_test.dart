@@ -50,9 +50,7 @@ void main() {
     });
 
     test('handles missing optional fields with defaults', () {
-      final json = {
-        'tanggal': '2026-06-01',
-      };
+      final json = {'tanggal': '2026-06-01'};
 
       final summary = AttendanceSummary.fromJson(json);
 
@@ -87,9 +85,7 @@ void main() {
     });
 
     test('parses datetime with time component', () {
-      final json = {
-        'tanggal': '2026-03-25T14:30:00',
-      };
+      final json = {'tanggal': '2026-03-25T14:30:00'};
 
       final summary = AttendanceSummary.fromJson(json);
 

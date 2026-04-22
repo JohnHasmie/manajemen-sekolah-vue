@@ -23,27 +23,32 @@ void main() {
       expect(find.text('Lunas'), findsOneWidget);
     });
 
-    testWidgets('shows "Menunggu" when a payment has pending status', (tester) async {
+    testWidgets('shows "Menunggu" when a payment has pending status', (
+      tester,
+    ) async {
       final bill = {
         'status': 'unpaid',
         'payments': [
-          {'status': 'pending'}
+          {'status': 'pending'},
         ],
       };
       await tester.pumpWidget(_wrap(BillStatusCell(bill: bill)));
       expect(find.text('Menunggu'), findsOneWidget);
     });
 
-    testWidgets('shows "Belum" when status is not verified and no pending payments', (tester) async {
-      final bill = {
-        'status': 'unpaid',
-        'payments': [
-          {'status': 'rejected'}
-        ],
-      };
-      await tester.pumpWidget(_wrap(BillStatusCell(bill: bill)));
-      expect(find.text('Belum'), findsOneWidget);
-    });
+    testWidgets(
+      'shows "Belum" when status is not verified and no pending payments',
+      (tester) async {
+        final bill = {
+          'status': 'unpaid',
+          'payments': [
+            {'status': 'rejected'},
+          ],
+        };
+        await tester.pumpWidget(_wrap(BillStatusCell(bill: bill)));
+        expect(find.text('Belum'), findsOneWidget);
+      },
+    );
 
     testWidgets('shows "Belum" when payments list is empty', (tester) async {
       final bill = {'status': 'unpaid', 'payments': []};
