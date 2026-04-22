@@ -7,13 +7,12 @@ Map<String, dynamic> _makePlan({
   String? judul,
   String? mataPelajaranNama,
   String? kelasNama,
-}) =>
-    {
-      'id': 'lp-1',
-      'judul': judul ?? 'Pecahan Biasa',
-      'mata_pelajaran_nama': mataPelajaranNama ?? 'Matematika',
-      'kelas_nama': kelasNama ?? 'VII-A',
-    };
+}) => {
+  'id': 'lp-1',
+  'judul': judul ?? 'Pecahan Biasa',
+  'mata_pelajaran_nama': mataPelajaranNama ?? 'Matematika',
+  'kelas_nama': kelasNama ?? 'VII-A',
+};
 
 Widget _build({
   Map<String, dynamic>? lessonPlan,
@@ -24,23 +23,22 @@ Widget _build({
   VoidCallback? onView,
   VoidCallback? onEdit,
   VoidCallback? onDelete,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: LessonPlanCard(
-            lessonPlan: lessonPlan ?? _makePlan(),
-            accentColor: accentColor,
-            statusColor: statusColor,
-            statusLabel: statusLabel,
-            primaryColor: primaryColor,
-            onView: onView ?? () {},
-            onEdit: onEdit ?? () {},
-            onDelete: onDelete ?? () {},
-          ),
-        ),
+}) => MaterialApp(
+  home: Scaffold(
+    body: SingleChildScrollView(
+      child: LessonPlanCard(
+        lessonPlan: lessonPlan ?? _makePlan(),
+        accentColor: accentColor,
+        statusColor: statusColor,
+        statusLabel: statusLabel,
+        primaryColor: primaryColor,
+        onView: onView ?? () {},
+        onEdit: onEdit ?? () {},
+        onDelete: onDelete ?? () {},
       ),
-    );
+    ),
+  ),
+);
 
 void main() {
   group('LessonPlanCard', () {
@@ -55,27 +53,41 @@ void main() {
     });
 
     testWidgets('shows "No Title" when judul is null', (tester) async {
-      await tester.pumpWidget(_build(lessonPlan: {'mata_pelajaran_nama': 'Math', 'kelas_nama': 'VII'}));
+      await tester.pumpWidget(
+        _build(
+          lessonPlan: {'mata_pelajaran_nama': 'Math', 'kelas_nama': 'VII'},
+        ),
+      );
       expect(find.text('No Title'), findsOneWidget);
     });
 
     testWidgets('displays subject name', (tester) async {
-      await tester.pumpWidget(_build(lessonPlan: _makePlan(mataPelajaranNama: 'Fisika')));
+      await tester.pumpWidget(
+        _build(lessonPlan: _makePlan(mataPelajaranNama: 'Fisika')),
+      );
       expect(find.text('Fisika'), findsOneWidget);
     });
 
-    testWidgets('shows "No Subject" when mata_pelajaran_nama is null', (tester) async {
-      await tester.pumpWidget(_build(lessonPlan: {'judul': 'Title', 'kelas_nama': 'VII'}));
+    testWidgets('shows "No Subject" when mata_pelajaran_nama is null', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(lessonPlan: {'judul': 'Title', 'kelas_nama': 'VII'}),
+      );
       expect(find.text('No Subject'), findsOneWidget);
     });
 
     testWidgets('displays class name in info tag', (tester) async {
-      await tester.pumpWidget(_build(lessonPlan: _makePlan(kelasNama: 'VIII-B')));
+      await tester.pumpWidget(
+        _build(lessonPlan: _makePlan(kelasNama: 'VIII-B')),
+      );
       expect(find.text('VIII-B'), findsOneWidget);
     });
 
     testWidgets('shows "No Class" when kelas_nama is null', (tester) async {
-      await tester.pumpWidget(_build(lessonPlan: {'judul': 'Title', 'mata_pelajaran_nama': 'Math'}));
+      await tester.pumpWidget(
+        _build(lessonPlan: {'judul': 'Title', 'mata_pelajaran_nama': 'Math'}),
+      );
       expect(find.text('No Class'), findsOneWidget);
     });
 
@@ -127,9 +139,11 @@ void main() {
     testWidgets('onView fires when view button is tapped', (tester) async {
       var viewed = false;
       await tester.pumpWidget(_build(onView: () => viewed = true));
-      await tester.tap(find.byWidgetPredicate(
-        (w) => w is Icon && w.icon == Icons.visibility_outlined,
-      ));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.visibility_outlined,
+        ),
+      );
       await tester.pump();
       expect(viewed, isTrue);
     });
@@ -137,9 +151,11 @@ void main() {
     testWidgets('onEdit fires when edit button is tapped', (tester) async {
       var edited = false;
       await tester.pumpWidget(_build(onEdit: () => edited = true));
-      await tester.tap(find.byWidgetPredicate(
-        (w) => w is Icon && w.icon == Icons.edit_outlined,
-      ));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.edit_outlined,
+        ),
+      );
       await tester.pump();
       expect(edited, isTrue);
     });
@@ -147,14 +163,18 @@ void main() {
     testWidgets('onDelete fires when delete button is tapped', (tester) async {
       var deleted = false;
       await tester.pumpWidget(_build(onDelete: () => deleted = true));
-      await tester.tap(find.byWidgetPredicate(
-        (w) => w is Icon && w.icon == Icons.delete_outlined,
-      ));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.delete_outlined,
+        ),
+      );
       await tester.pump();
       expect(deleted, isTrue);
     });
 
-    testWidgets('onView fires when InkWell card area is tapped', (tester) async {
+    testWidgets('onView fires when InkWell card area is tapped', (
+      tester,
+    ) async {
       var viewed = false;
       await tester.pumpWidget(_build(onView: () => viewed = true));
       await tester.tap(find.byType(InkWell).first);
@@ -163,14 +183,19 @@ void main() {
     });
 
     testWidgets('long title is truncated to 2 lines', (tester) async {
-      await tester.pumpWidget(_build(
-        lessonPlan: _makePlan(
-          judul: 'Materi Matematika Bab 3: Bilangan Pecahan Biasa dan Campuran untuk Kelas VII',
+      await tester.pumpWidget(
+        _build(
+          lessonPlan: _makePlan(
+            judul:
+                'Materi Matematika Bab 3: Bilangan Pecahan Biasa dan Campuran untuk Kelas VII',
+          ),
         ),
-      ));
-      final titleText = tester.widget<Text>(find.text(
-        'Materi Matematika Bab 3: Bilangan Pecahan Biasa dan Campuran untuk Kelas VII',
-      ));
+      );
+      final titleText = tester.widget<Text>(
+        find.text(
+          'Materi Matematika Bab 3: Bilangan Pecahan Biasa dan Campuran untuk Kelas VII',
+        ),
+      );
       expect(titleText.maxLines, 2);
     });
   });

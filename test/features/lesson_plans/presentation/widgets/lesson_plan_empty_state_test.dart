@@ -7,8 +7,8 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_empty_state.dart';
 
 Widget _build(LanguageProvider lp) => MaterialApp(
-      home: Scaffold(body: LessonPlanEmptyState(languageProvider: lp)),
-    );
+  home: Scaffold(body: LessonPlanEmptyState(languageProvider: lp)),
+);
 
 void main() {
   late LanguageProvider langProvider;
@@ -40,7 +40,9 @@ void main() {
       expect(find.text('Belum ada RPP dibuat'), findsOneWidget);
     });
 
-    testWidgets('shows Indonesian hint text when language is id', (tester) async {
+    testWidgets('shows Indonesian hint text when language is id', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(langProvider));
       expect(
         find.text('Klik tombol "+" untuk membuat RPP pertama Anda.'),

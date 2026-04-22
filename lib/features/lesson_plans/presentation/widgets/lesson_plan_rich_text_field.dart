@@ -13,10 +13,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 class LessonPlanRichTextField extends StatelessWidget {
   final quill.QuillController controller;
 
-  const LessonPlanRichTextField({
-    super.key,
-    required this.controller,
-  });
+  const LessonPlanRichTextField({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

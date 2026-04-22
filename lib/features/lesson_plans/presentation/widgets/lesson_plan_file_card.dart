@@ -78,12 +78,12 @@ class LessonPlanFileCard extends StatelessWidget {
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.08),
             blurRadius: 12,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
           BoxShadow(
             color: ColorUtils.slate900.withValues(alpha: 0.06),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -150,7 +150,9 @@ class LessonPlanFileCard extends StatelessWidget {
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: primaryColor.withValues(alpha: 0.1),
-                          borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(10),
+                          ),
                           border: Border.all(
                             color: primaryColor.withValues(alpha: 0.2),
                           ),

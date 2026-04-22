@@ -19,15 +19,14 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/less
 Widget _build({
   required String label,
   required TextEditingController controller,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: LessonPlanMetaRow(label: label, controller: controller),
-        ),
-      ),
-    );
+}) => MaterialApp(
+  home: Scaffold(
+    body: Padding(
+      padding: const EdgeInsets.all(16),
+      child: LessonPlanMetaRow(label: label, controller: controller),
+    ),
+  ),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -37,10 +36,9 @@ void main() {
   group('LessonPlanMetaRow — rendering', () {
     testWidgets('renders label text', (tester) async {
       final ctrl = TextEditingController();
-      await tester.pumpWidget(_build(
-        label: 'Satuan Pendidikan',
-        controller: ctrl,
-      ));
+      await tester.pumpWidget(
+        _build(label: 'Satuan Pendidikan', controller: ctrl),
+      );
       expect(find.text('Satuan Pendidikan'), findsOneWidget);
     });
 
@@ -52,7 +50,9 @@ void main() {
 
     testWidgets('renders TextField', (tester) async {
       final ctrl = TextEditingController();
-      await tester.pumpWidget(_build(label: 'Mata Pelajaran', controller: ctrl));
+      await tester.pumpWidget(
+        _build(label: 'Mata Pelajaran', controller: ctrl),
+      );
       expect(find.byType(TextField), findsOneWidget);
     });
 

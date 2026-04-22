@@ -64,11 +64,7 @@ class LessonPlanRegenAllButton extends StatelessWidget {
                             color: primaryColor,
                           ),
                         )
-                      : Icon(
-                          Icons.auto_awesome,
-                          color: primaryColor,
-                          size: 20,
-                        ),
+                      : Icon(Icons.auto_awesome, color: primaryColor, size: 20),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(

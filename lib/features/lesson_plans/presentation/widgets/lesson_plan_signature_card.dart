@@ -32,12 +32,12 @@ class LessonPlanSignatureCard extends StatelessWidget {
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.08),
             blurRadius: 12,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
           BoxShadow(
             color: ColorUtils.slate900.withValues(alpha: 0.06),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -51,7 +51,7 @@ class LessonPlanSignatureCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      Text(
+                      const Text(
                         'Mengetahui',
                         style: TextStyle(
                           fontSize: 13,
@@ -59,9 +59,12 @@ class LessonPlanSignatureCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
-                      Text('Kepala Sekolah', style: TextStyle(fontSize: 13)),
+                      const Text(
+                        'Kepala Sekolah',
+                        style: TextStyle(fontSize: 13),
+                      ),
                       const SizedBox(height: 40),
-                      Text(
+                      const Text(
                         '...................................',
                         style: TextStyle(fontSize: 12),
                       ),
@@ -79,14 +82,14 @@ class LessonPlanSignatureCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      Text('', style: TextStyle(fontSize: 13)),
+                      const Text('', style: TextStyle(fontSize: 13)),
                       const SizedBox(height: AppSpacing.xs),
-                      Text(
+                      const Text(
                         'Guru Mata Pelajaran',
                         style: TextStyle(fontSize: 13),
                       ),
                       const SizedBox(height: 40),
-                      Text(
+                      const Text(
                         '...................................',
                         style: TextStyle(fontSize: 12),
                       ),

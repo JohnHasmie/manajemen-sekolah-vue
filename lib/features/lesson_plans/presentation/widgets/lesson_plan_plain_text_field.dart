@@ -38,9 +38,9 @@ class LessonPlanPlainTextField extends StatelessWidget {
         controller: controller,
         maxLines: maxLines,
         style: TextStyle(fontSize: 14, height: 1.6, color: ColorUtils.slate800),
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.all(AppSpacing.lg),
+          contentPadding: EdgeInsets.all(AppSpacing.lg),
         ),
       ),
     );

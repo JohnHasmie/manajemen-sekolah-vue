@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 
 /// Tappable card showing a teacher's avatar, name and NIP.
 ///
@@ -30,6 +31,7 @@ class TeacherSelectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatarColor = ColorUtils.getColorForIndex(index);
+    final model = Teacher.fromJson(teacher);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -52,10 +54,7 @@ class TeacherSelectCard extends StatelessWidget {
                   radius: 22,
                   backgroundColor: avatarColor.withValues(alpha: 0.15),
                   child: Text(
-                    teacher['name'] != null &&
-                            (teacher['name'] as String).isNotEmpty
-                        ? (teacher['name'] as String)[0].toUpperCase()
-                        : '?',
+                    model.initials,
                     style: TextStyle(
                       color: avatarColor,
                       fontWeight: FontWeight.bold,
@@ -69,7 +68,7 @@ class TeacherSelectCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        teacher['name'] ?? 'Unknown',
+                        model.name.isNotEmpty ? model.name : 'Unknown',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -78,8 +77,9 @@ class TeacherSelectCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        teacher['employee_number'] != null
-                            ? 'NIP: ${teacher['employee_number']}'
+                        model.employeeNumber != null &&
+                                model.employeeNumber!.isNotEmpty
+                            ? 'NIP: ${model.employeeNumber}'
                             : 'No NIP',
                         style: TextStyle(
                           fontSize: 12,

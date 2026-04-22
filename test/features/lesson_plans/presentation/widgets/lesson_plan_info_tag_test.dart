@@ -7,12 +7,11 @@ Widget _build({
   required IconData icon,
   required String label,
   Color? tagColor,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: LessonPlanInfoTag(icon: icon, label: label, tagColor: tagColor),
-      ),
-    );
+}) => MaterialApp(
+  home: Scaffold(
+    body: LessonPlanInfoTag(icon: icon, label: label, tagColor: tagColor),
+  ),
+);
 
 void main() {
   group('LessonPlanInfoTag', () {
@@ -34,17 +33,17 @@ void main() {
       );
     });
 
-    testWidgets('renders without tagColor (defaults to slate500)', (tester) async {
+    testWidgets('renders without tagColor (defaults to slate500)', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(icon: Icons.class_, label: 'VII-A'));
       expect(find.byType(LessonPlanInfoTag), findsOneWidget);
     });
 
     testWidgets('renders with custom tagColor', (tester) async {
-      await tester.pumpWidget(_build(
-        icon: Icons.class_,
-        label: 'VII-A',
-        tagColor: Colors.blue,
-      ));
+      await tester.pumpWidget(
+        _build(icon: Icons.class_, label: 'VII-A', tagColor: Colors.blue),
+      );
       expect(find.byType(LessonPlanInfoTag), findsOneWidget);
     });
 
@@ -67,10 +66,14 @@ void main() {
       expect(find.byType(LessonPlanInfoTag), findsOneWidget);
     });
 
-    testWidgets('Text widget declares maxLines=1 and ellipsis overflow',
-        (tester) async {
+    testWidgets('Text widget declares maxLines=1 and ellipsis overflow', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _build(icon: Icons.class_, label: 'Very long class name VII-A Bilingual'),
+        _build(
+          icon: Icons.class_,
+          label: 'Very long class name VII-A Bilingual',
+        ),
       );
       final text = tester.widget<Text>(
         find.text('Very long class name VII-A Bilingual'),

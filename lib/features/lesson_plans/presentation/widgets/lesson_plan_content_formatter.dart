@@ -187,7 +187,7 @@ class LessonPlanContentFormatter {
           buffer.writeln(
             'Kegiatan Pendahuluan${preliminaryTime.isNotEmpty ? ' ($preliminaryTime menit)' : ''}',
           );
-          for (var line in preliminaryActivities.split('\n')) {
+          for (final line in preliminaryActivities.split('\n')) {
             if (line.trim().isNotEmpty) {
               buffer.writeln('• ${line.trim()}');
             }
@@ -200,7 +200,7 @@ class LessonPlanContentFormatter {
           buffer.writeln(
             'Kegiatan Inti${coreTime.isNotEmpty ? ' ($coreTime menit)' : ''}',
           );
-          for (var line in coreActivities.split('\n')) {
+          for (final line in coreActivities.split('\n')) {
             if (line.trim().isNotEmpty) {
               if (line.trim().startsWith('A.') ||
                   line.trim().startsWith('B.') ||
@@ -219,7 +219,7 @@ class LessonPlanContentFormatter {
           buffer.writeln(
             'Kegiatan Penutup${closingTime.isNotEmpty ? ' ($closingTime menit)' : ''}',
           );
-          for (var line in closingActivities.split('\n')) {
+          for (final line in closingActivities.split('\n')) {
             if (line.trim().isNotEmpty) {
               buffer.writeln('• ${line.trim()}');
             }

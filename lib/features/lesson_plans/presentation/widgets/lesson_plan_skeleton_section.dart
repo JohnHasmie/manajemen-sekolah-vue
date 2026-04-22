@@ -40,9 +40,9 @@ class LessonPlanSkeletonSection extends StatelessWidget {
           child: Container(
             width: double.infinity,
             height: height,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
           ),
         ),

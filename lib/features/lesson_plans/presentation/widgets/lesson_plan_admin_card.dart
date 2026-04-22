@@ -5,6 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/status_badge.dart';
+import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 
 /// A card that shows title, subject, status badge, class/teacher tags
 /// and action buttons for an admin reviewing a lesson plan (RPP).
@@ -40,8 +42,10 @@ class LessonPlanAdminCard extends StatelessWidget {
   // Private helpers (previously private methods on the screen state)
   // ---------------------------------------------------------------------------
 
+  LessonPlan get _model => LessonPlan.fromJson(lessonPlan);
+
   Color _statusColor() {
-    switch (lessonPlan['status'] ?? '') {
+    switch (_model.status) {
       case 'Approved':
       case 'Disetujui':
         return ColorUtils.success600;
@@ -60,7 +64,8 @@ class LessonPlanAdminCard extends StatelessWidget {
   }
 
   String _statusLabel() {
-    switch (lessonPlan['status']) {
+    final status = _model.status;
+    switch (status) {
       case 'Approved':
       case 'Disetujui':
         return 'Disetujui';
@@ -74,45 +79,10 @@ class LessonPlanAdminCard extends StatelessWidget {
       case 'Ditolak':
         return 'Ditolak';
       default:
-        return lessonPlan['status'] ?? '-';
+        return status.isNotEmpty ? status : '-';
     }
   }
 
-  /// Small pill tag with an icon and label — like a Vue chip component.
-  Widget _buildInfoTag({
-    required IconData icon,
-    required String label,
-    Color? tagColor,
-  }) {
-    final color = tagColor ?? ColorUtils.slate500;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: const BorderRadius.all(Radius.circular(6)),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: color),
-          const SizedBox(width: AppSpacing.xs),
-          Flexible(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   /// Circular icon button — like a small action button component.
   Widget _buildCircleActionButton({
@@ -143,6 +113,7 @@ class LessonPlanAdminCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final accentColor = ColorUtils.getColorForIndex(index);
     final statusColor = _statusColor();
+    final model = _model;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -171,7 +142,9 @@ class LessonPlanAdminCard extends StatelessWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.15),
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(12),
+                        ),
                       ),
                       child: Icon(
                         Icons.description_rounded,
@@ -185,9 +158,7 @@ class LessonPlanAdminCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            lessonPlan['judul'] ??
-                                lessonPlan['title'] ??
-                                'No Title',
+                            model.title.isNotEmpty ? model.title : 'No Title',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -198,9 +169,9 @@ class LessonPlanAdminCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            lessonPlan['mata_pelajaran_nama'] ??
-                                lessonPlan['subject_name'] ??
-                                'No Subject',
+                            (model.subjectName ?? '').isNotEmpty
+                                ? model.subjectName!
+                                : 'No Subject',
                             style: TextStyle(
                               fontSize: 12,
                               color: ColorUtils.slate500,
@@ -212,25 +183,7 @@ class LessonPlanAdminCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
-                        border: Border.all(
-                          color: statusColor.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        _statusLabel(),
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                    StatusBadge(label: _statusLabel(), color: statusColor),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -241,17 +194,19 @@ class LessonPlanAdminCard extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 6,
                   children: [
-                    _buildInfoTag(
+                    StatusBadge(
+                      label: (model.className ?? '').isNotEmpty
+                          ? model.className!
+                          : 'No Class',
+                      color: ColorUtils.slate500,
                       icon: Icons.class_,
-                      label: lessonPlan['kelas_nama'] ??
-                          lessonPlan['class_name'] ??
-                          'No Class',
                     ),
-                    _buildInfoTag(
+                    StatusBadge(
+                      label: (model.teacherName ?? '').isNotEmpty
+                          ? model.teacherName!
+                          : 'No Teacher',
+                      color: ColorUtils.slate500,
                       icon: Icons.person_outline,
-                      label: lessonPlan['teacher_name'] ??
-                          lessonPlan['guru_nama'] ??
-                          'No Teacher',
                     ),
                   ],
                 ),

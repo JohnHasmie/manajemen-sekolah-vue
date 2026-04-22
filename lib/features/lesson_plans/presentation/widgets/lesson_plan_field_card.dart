@@ -56,12 +56,12 @@ class LessonPlanFieldCard extends StatelessWidget {
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.08),
             blurRadius: 12,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
           BoxShadow(
             color: ColorUtils.slate900.withValues(alpha: 0.06),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -73,7 +73,7 @@ class LessonPlanFieldCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(14),
                 topRight: Radius.circular(14),
               ),
@@ -93,7 +93,10 @@ class LessonPlanFieldCard extends StatelessWidget {
                 // Regen quota badge: "used/max" — hidden while limits are loading
                 if (regenInfo != null && !isLoadingLimits) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: remaining > 0
                           ? primaryColor.withValues(alpha: 0.1)
@@ -126,7 +129,9 @@ class LessonPlanFieldCard extends StatelessWidget {
                         color: remaining > 0
                             ? primaryColor.withValues(alpha: 0.1)
                             : ColorUtils.slate100,
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                         border: Border.all(
                           color: remaining > 0
                               ? primaryColor.withValues(alpha: 0.2)
