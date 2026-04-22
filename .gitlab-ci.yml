@@ -37,6 +37,9 @@ variables:
 .flutter_setup: &flutter_setup
   before_script:
     - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$PATH"
+    # Ensure CI runner's Flutter matches expected version (upgrades Dart SDK too)
+    - flutter upgrade --force || true
+    - flutter --version
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
     - flutter pub get
     - |
@@ -48,6 +51,9 @@ variables:
 .shorebird_setup: &shorebird_setup
   before_script:
     - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$HOME/.shorebird/bin:$PATH"
+    # Ensure CI runner's Flutter matches expected version
+    - flutter upgrade --force || true
+    - flutter --version
     - |
       if ! command -v shorebird &>/dev/null; then
         curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
