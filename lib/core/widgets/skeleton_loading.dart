@@ -60,7 +60,7 @@ class SkeletonListCard extends StatelessWidget {
         child: Row(
           children: [
             // Avatar placeholder
-            CircleAvatar(radius: 22, backgroundColor: Colors.white),
+            const CircleAvatar(radius: 22, backgroundColor: Colors.white),
             AppSpacing.h12,
 
             // Content placeholder
@@ -72,9 +72,9 @@ class SkeletonListCard extends StatelessWidget {
                   Container(
                     width: 120,
                     height: 14,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.white,
-                      borderRadius: const BorderRadius.all(Radius.circular(4)),
+                      borderRadius: BorderRadius.all(Radius.circular(4)),
                     ),
                   ),
                   AppSpacing.v8,
@@ -107,9 +107,9 @@ class SkeletonListCard extends StatelessWidget {
                 Container(
                   width: 52,
                   height: 20,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
                 ),
                 if (showActions) ...[
@@ -119,18 +119,18 @@ class SkeletonListCard extends StatelessWidget {
                       Container(
                         width: 28,
                         height: 28,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: Colors.white,
-                          borderRadius: const BorderRadius.all(Radius.circular(8)),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
                       ),
                       const SizedBox(width: 6),
                       Container(
                         width: 28,
                         height: 28,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: Colors.white,
-                          borderRadius: const BorderRadius.all(Radius.circular(8)),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
                       ),
                     ],
@@ -148,9 +148,9 @@ class SkeletonListCard extends StatelessWidget {
     return Container(
       width: width,
       height: 18,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(6)),
+        borderRadius: BorderRadius.all(Radius.circular(6)),
       ),
     );
   }
