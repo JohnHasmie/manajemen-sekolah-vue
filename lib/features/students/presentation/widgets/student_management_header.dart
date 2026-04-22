@@ -89,7 +89,7 @@ class StudentManagementHeader extends StatelessWidget {
           color: Colors.white.withValues(alpha: 0.2),
           borderRadius: const BorderRadius.all(Radius.circular(10)),
         ),
-        child: Icon(Icons.more_vert, color: Colors.white, size: 20),
+        child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
       ),
       itemBuilder: (BuildContext ctx) => [
         PopupMenuItem<String>(
@@ -111,7 +111,7 @@ class StudentManagementHeader extends StatelessWidget {
           value: 'export',
           child: Row(
             children: [
-              Icon(Icons.download, size: 20),
+              const Icon(Icons.download, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 languageProvider.getTranslatedText({
@@ -126,7 +126,7 @@ class StudentManagementHeader extends StatelessWidget {
           value: 'import',
           child: Row(
             children: [
-              Icon(Icons.upload, size: 20),
+              const Icon(Icons.upload, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 languageProvider.getTranslatedText({
@@ -141,7 +141,7 @@ class StudentManagementHeader extends StatelessWidget {
           value: 'template',
           child: Row(
             children: [
-              Icon(Icons.file_download, size: 20),
+              const Icon(Icons.file_download, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 languageProvider.getTranslatedText({
@@ -172,7 +172,7 @@ class StudentManagementHeader extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     controller: searchController,
-                    style: TextStyle(color: Colors.black87),
+                    style: const TextStyle(color: Colors.black87),
                     decoration: InputDecoration(
                       hintText: languageProvider.getTranslatedText({
                         'en': 'Search students...',
@@ -184,7 +184,7 @@ class StudentManagementHeader extends StatelessWidget {
                         color: ColorUtils.slate400,
                       ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
                       ),
@@ -236,7 +236,10 @@ class StudentManagementHeader extends StatelessWidget {
                       color: ColorUtils.error600,
                       shape: BoxShape.circle,
                     ),
-                    constraints: BoxConstraints(minWidth: 8, minHeight: 8),
+                    constraints: const BoxConstraints(
+                      minWidth: 8,
+                      minHeight: 8,
+                    ),
                   ),
                 ),
             ],
@@ -258,7 +261,7 @@ class StudentManagementHeader extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
-            child: Icon(Icons.filter_alt, size: 18, color: Colors.white),
+            child: const Icon(Icons.filter_alt, size: 18, color: Colors.white),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -287,10 +290,13 @@ class StudentManagementHeader extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.3),
                       width: 1,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     labelPadding: const EdgeInsets.only(left: 4),
                   ),
                 );
@@ -307,7 +313,7 @@ class StudentManagementHeader extends StatelessWidget {
                 color: ColorUtils.error600,
                 borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
-              child: Icon(Icons.clear_all, size: 18, color: Colors.white),
+              child: const Icon(Icons.clear_all, size: 18, color: Colors.white),
             ),
           ),
         ],

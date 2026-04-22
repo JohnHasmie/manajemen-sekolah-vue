@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
 
 /// Service for exporting teaching schedules (jadwal mengajar) to Excel.
 /// Similar to `Excel::download(new ScheduleExport($data), 'Jadwal.xlsx')` in Laravel.
@@ -37,7 +38,7 @@ class ExcelScheduleService {
 
       // Translate day names based on selected language
       final currentLang = languageProvider.currentLanguage;
-      for (var item in validatedData) {
+      for (final item in validatedData) {
         item['day_name'] = _translateDay(item['day_name'], currentLang);
       }
 
@@ -154,80 +155,56 @@ class ExcelScheduleService {
     final List<String> errors = [];
 
     for (int i = 0; i < schedules.length; i++) {
-      final schedule = schedules[i];
+      final schedule = schedules[i] as Map<String, dynamic>;
+      final model = Schedule.fromJson(schedule);
       final Map<String, dynamic> validatedSchedule = {};
 
       // Validate required fields
-      final teacherName = schedule['teacher_name'] ?? schedule['guru_nama'];
-      if (teacherName == null || teacherName.toString().isEmpty) {
+      if ((model.teacherName ?? '').isEmpty) {
         errors.add('Baris ${i + 1}: Nama guru tidak boleh kosong');
       } else {
-        validatedSchedule['teacher_name'] = teacherName;
+        validatedSchedule['teacher_name'] = model.teacherName;
       }
 
-      final subjectName =
-          schedule['subject_name'] ?? schedule['mata_pelajaran_nama'];
-      if (subjectName == null || subjectName.toString().isEmpty) {
+      if ((model.subjectName ?? '').isEmpty) {
         errors.add('Baris ${i + 1}: Nama mata pelajaran tidak boleh kosong');
       } else {
-        validatedSchedule['subject_name'] = subjectName;
+        validatedSchedule['subject_name'] = model.subjectName;
       }
 
-      final className = schedule['class_name'] ?? schedule['kelas_nama'];
-      if (className == null || className.toString().isEmpty) {
+      if ((model.className ?? '').isEmpty) {
         errors.add('Baris ${i + 1}: Nama kelas tidak boleh kosong');
       } else {
-        validatedSchedule['class_name'] = className;
+        validatedSchedule['class_name'] = model.className;
       }
 
-      final dayName =
-          schedule['day_name'] ??
-          schedule['hari_nama'] ??
-          schedule['day']?['name'] ??
-          schedule['day']?['nama'] ??
-          schedule['hari']?['name'] ??
-          schedule['hari']?['nama'] ??
-          '';
-
-      if (dayName.toString().isEmpty) {
+      if ((model.dayName ?? '').isEmpty) {
         errors.add('Baris ${i + 1}: Hari tidak boleh kosong');
       } else {
-        validatedSchedule['day_name'] = dayName;
+        validatedSchedule['day_name'] = model.dayName;
       }
 
-      final lessonHour =
-          schedule['lesson_hour'] ??
-          schedule['hour_number'] ??
-          schedule['jam_ke'];
-      if (lessonHour == null) {
+      if (model.lessonHour == null) {
         errors.add('Baris ${i + 1}: Jam ke tidak boleh kosong');
       } else {
-        validatedSchedule['lesson_hour'] = lessonHour;
+        validatedSchedule['lesson_hour'] = model.lessonHour;
       }
 
-      var semesterName = schedule['semester_name'] ?? schedule['semester'];
-      // Handle nested semester object if exists
-      if (semesterName == null && schedule['semester'] is Map) {
-        semesterName = schedule['semester']['name'];
-      }
-      if (semesterName == null || semesterName.toString().isEmpty) {
+      if ((model.semesterName ?? '').isEmpty) {
         errors.add('Baris ${i + 1}: Semester tidak boleh kosong');
       } else {
-        validatedSchedule['semester_name'] = semesterName;
+        validatedSchedule['semester_name'] = model.semesterName;
       }
 
-      if (schedule['academic_year'] == null ||
-          schedule['academic_year'].toString().isEmpty) {
+      if ((model.academicYear ?? '').isEmpty) {
         errors.add('Baris ${i + 1}: Tahun ajaran tidak boleh kosong');
       } else {
-        validatedSchedule['academic_year'] = schedule['academic_year'];
+        validatedSchedule['academic_year'] = model.academicYear;
       }
 
       // Field optional
-      validatedSchedule['start_time'] =
-          schedule['start_time'] ?? schedule['jam_mulai'];
-      validatedSchedule['end_time'] =
-          schedule['end_time'] ?? schedule['jam_selesai'];
+      validatedSchedule['start_time'] = model.startTime;
+      validatedSchedule['end_time'] = model.endTime;
 
       if (errors.isEmpty) {
         validatedData.add(validatedSchedule);

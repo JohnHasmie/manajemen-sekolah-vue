@@ -58,7 +58,9 @@ void main() {
     });
 
     testWidgets('renders gender text tag', (tester) async {
-      await tester.pumpWidget(_buildCard(student: _student, genderText: 'Female'));
+      await tester.pumpWidget(
+        _buildCard(student: _student, genderText: 'Female'),
+      );
       expect(find.text('Female'), findsOneWidget);
     });
 
@@ -81,7 +83,9 @@ void main() {
 
     // ── Edit / delete action icons ────────────────────────────────────────────
 
-    testWidgets('shows edit and delete icons when NOT read-only', (tester) async {
+    testWidgets('shows edit and delete icons when NOT read-only', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildCard(student: _student, isReadOnly: false));
       expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
       expect(find.byIcon(Icons.delete_outline), findsOneWidget);
@@ -140,8 +144,9 @@ void main() {
 
     // ── Edge cases ────────────────────────────────────────────────────────────
 
-    testWidgets('falls back to "No Name" when student name is null',
-        (tester) async {
+    testWidgets('falls back to "No Name" when student name is null', (
+      tester,
+    ) async {
       const noName = <String, dynamic>{'name': null};
       await tester.pumpWidget(_buildCard(student: noName));
       expect(find.text('No Name'), findsOneWidget);

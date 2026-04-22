@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_card_widgets.dart';
 
 /// A single schedule entry card for the admin list view.
@@ -61,9 +62,14 @@ class AdminScheduleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = ColorUtils.getColorForIndex(index);
-    final subjectName = schedule['mata_pelajaran_nama'] ?? 'No Subject';
-    final teacherName = schedule['guru_nama'] ?? '-';
-    final className = schedule['kelas_nama'] ?? '-';
+    final model = Schedule.fromJson(schedule);
+    final subjectName = (model.subjectName ?? '').isEmpty
+        ? 'No Subject'
+        : model.subjectName!;
+    final teacherName = (model.teacherName ?? '').isEmpty
+        ? '-'
+        : model.teacherName!;
+    final className = (model.className ?? '').isEmpty ? '-' : model.className!;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),

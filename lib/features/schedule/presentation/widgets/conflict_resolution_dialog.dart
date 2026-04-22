@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
 
 /// A dialog that shows conflicting schedules and lets the user select one to delete.
 ///
@@ -36,14 +37,17 @@ class ConflictResolutionDialog extends ConsumerStatefulWidget {
 
 /// State for [ConflictResolutionDialog]. Tracks which schedule the user selected.
 /// Like Vue's `data() { return { selectedId: null } }`.
-class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDialog> {
+class ConflictResolutionDialogState
+    extends ConsumerState<ConflictResolutionDialog> {
   String? _selectedScheduleToDelete;
 
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
@@ -53,7 +57,7 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
             // Header
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.warning_amber_rounded,
                   color: Colors.orange,
                   size: 28,
@@ -92,7 +96,7 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
 
             // List of conflicting schedules
             Container(
-              constraints: BoxConstraints(maxHeight: 300),
+              constraints: const BoxConstraints(maxHeight: 300),
               child: RadioGroup<String>(
                 groupValue: _selectedScheduleToDelete,
                 onChanged: (value) {
@@ -120,15 +124,15 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
                   child: OutlinedButton(
                     onPressed: widget.onCancel,
                     style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       side: BorderSide(color: Colors.grey.shade400),
                     ),
                     child: Text(
                       AppLocalizations.cancel.tr,
-                      style: TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black),
                     ),
                   ),
                 ),
@@ -144,8 +148,8 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
                       backgroundColor: _selectedScheduleToDelete != null
                           ? Colors.red.shade600
                           : Colors.grey.shade400,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
@@ -154,7 +158,7 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
                         'en': 'Delete Selected',
                         'id': 'Hapus yang Dipilih',
                       }),
-                      style: TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
@@ -172,8 +176,17 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
     dynamic schedule,
     LanguageProvider languageProvider,
   ) {
-    final scheduleId = schedule['id']?.toString() ?? '';
+    final model = Schedule.fromJson(
+      Map<String, dynamic>.from(schedule as Map),
+    );
+    final scheduleId = model.id;
     final isSelected = _selectedScheduleToDelete == scheduleId;
+    final startTime = (model.startTime ?? '');
+    final endTime = (model.endTime ?? '');
+    final startDisplay = startTime.length >= 5
+        ? startTime.substring(0, 5)
+        : startTime;
+    final endDisplay = endTime.length >= 5 ? endTime.substring(0, 5) : endTime;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -190,22 +203,24 @@ class ConflictResolutionDialogState extends ConsumerState<ConflictResolutionDial
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              schedule['mata_pelajaran_nama'] ?? 'No Subject',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              (model.subjectName ?? '').isEmpty
+                  ? 'No Subject'
+                  : model.subjectName!,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              '${languageProvider.getTranslatedText({'en': 'Teacher', 'id': 'Guru'})}: ${schedule['guru_nama'] ?? 'No Teacher'}',
+              '${languageProvider.getTranslatedText({'en': 'Teacher', 'id': 'Guru'})}: ${(model.teacherName ?? '').isEmpty ? 'No Teacher' : model.teacherName}',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 2),
             Text(
-              '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: ${schedule['kelas_nama'] ?? 'No Class'}',
+              '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: ${(model.className ?? '').isEmpty ? 'No Class' : model.className}',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 2),
             Text(
-              '${languageProvider.getTranslatedText({'en': 'Time', 'id': 'Waktu'})}: ${schedule['jam_mulai']?.toString().substring(0, 5) ?? ''} - ${schedule['jam_selesai']?.toString().substring(0, 5) ?? ''}',
+              '${languageProvider.getTranslatedText({'en': 'Time', 'id': 'Waktu'})}: $startDisplay - $endDisplay',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],

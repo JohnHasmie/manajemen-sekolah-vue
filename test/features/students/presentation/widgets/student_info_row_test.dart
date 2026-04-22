@@ -10,68 +10,80 @@ void main() {
   group('StudentInfoRow', () {
     testWidgets('renders label text', (tester) async {
       await tester.pumpWidget(
-        _wrap(StudentInfoRow(
-          label: 'Kelas',
-          value: '10A',
-          primaryColor: Colors.blue,
-        )),
+        _wrap(
+          const StudentInfoRow(
+            label: 'Kelas',
+            value: '10A',
+            primaryColor: Colors.blue,
+          ),
+        ),
       );
       expect(find.text('Kelas'), findsOneWidget);
     });
 
     testWidgets('renders value text', (tester) async {
       await tester.pumpWidget(
-        _wrap(StudentInfoRow(
-          label: 'NIS',
-          value: '12345',
-          primaryColor: Colors.teal,
-        )),
+        _wrap(
+          const StudentInfoRow(
+            label: 'NIS',
+            value: '12345',
+            primaryColor: Colors.teal,
+          ),
+        ),
       );
       expect(find.text('12345'), findsOneWidget);
     });
 
     testWidgets('shows "Tidak ada" when value is empty', (tester) async {
       await tester.pumpWidget(
-        _wrap(StudentInfoRow(
-          label: 'Alamat',
-          value: '',
-          primaryColor: Colors.teal,
-        )),
+        _wrap(
+          const StudentInfoRow(label: 'Alamat', value: '', primaryColor: Colors.teal),
+        ),
       );
       expect(find.text('Tidak ada'), findsOneWidget);
     });
 
-    testWidgets('uses known icon for "Kelas" label when no icon provided', (tester) async {
+    testWidgets('uses known icon for "Kelas" label when no icon provided', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _wrap(StudentInfoRow(
-          label: 'Kelas',
-          value: '10B',
-          primaryColor: Colors.blue,
-        )),
+        _wrap(
+          const StudentInfoRow(
+            label: 'Kelas',
+            value: '10B',
+            primaryColor: Colors.blue,
+          ),
+        ),
       );
       expect(find.byIcon(Icons.school), findsOneWidget);
     });
 
     testWidgets('uses explicit icon parameter when supplied', (tester) async {
       await tester.pumpWidget(
-        _wrap(StudentInfoRow(
-          label: 'Custom',
-          value: 'data',
-          primaryColor: Colors.purple,
-          icon: Icons.star,
-        )),
+        _wrap(
+          const StudentInfoRow(
+            label: 'Custom',
+            value: 'data',
+            primaryColor: Colors.purple,
+            icon: Icons.star,
+          ),
+        ),
       );
       expect(find.byIcon(Icons.star), findsOneWidget);
     });
 
-    testWidgets('value text maxLines is 3 when isMultiline is true', (tester) async {
+    testWidgets('value text maxLines is 3 when isMultiline is true', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _wrap(StudentInfoRow(
-          label: 'Catatan',
-          value: 'Long text',
-          primaryColor: Colors.blue,
-          isMultiline: true,
-        )),
+        _wrap(
+          const StudentInfoRow(
+            label: 'Catatan',
+            value: 'Long text',
+            primaryColor: Colors.blue,
+            isMultiline: true,
+          ),
+        ),
       );
       final valueText = tester.widget<Text>(find.text('Long text'));
       expect(valueText.maxLines, 3);

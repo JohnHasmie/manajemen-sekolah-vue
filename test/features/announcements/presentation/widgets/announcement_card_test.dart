@@ -6,16 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_card.dart';
 
 void main() {
-  Map<String, dynamic> baseData({
-    String? priority,
-    dynamic isRead,
-  }) =>
-      {
-        'title': 'Libur Nasional',
-        'content': 'Sekolah libur tanggal 17 Agustus.',
-        'priority': priority,
-        'is_read': isRead,
-      };
+  Map<String, dynamic> baseData({String? priority, dynamic isRead}) => {
+    'title': 'Libur Nasional',
+    'content': 'Sekolah libur tanggal 17 Agustus.',
+    'priority': priority,
+    'is_read': isRead,
+  };
 
   Widget buildSubject({
     Map<String, dynamic>? data,
@@ -57,8 +53,9 @@ void main() {
       expect(find.byIcon(Icons.delete_outline), findsOneWidget);
     });
 
-    testWidgets('fires onEdit callback when edit button is tapped',
-        (tester) async {
+    testWidgets('fires onEdit callback when edit button is tapped', (
+      tester,
+    ) async {
       var edited = false;
       await tester.pumpWidget(buildSubject(onEdit: () => edited = true));
 
@@ -68,8 +65,9 @@ void main() {
       expect(edited, isTrue);
     });
 
-    testWidgets('fires onDelete callback when delete button is tapped',
-        (tester) async {
+    testWidgets('fires onDelete callback when delete button is tapped', (
+      tester,
+    ) async {
       var deleted = false;
       await tester.pumpWidget(buildSubject(onDelete: () => deleted = true));
 
@@ -79,8 +77,9 @@ void main() {
       expect(deleted, isTrue);
     });
 
-    testWidgets('shows important label chip when priority is "penting"',
-        (tester) async {
+    testWidgets('shows important label chip when priority is "penting"', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildSubject(
           data: baseData(priority: 'penting'),
@@ -91,11 +90,10 @@ void main() {
       expect(find.text('Penting'), findsOneWidget);
     });
 
-    testWidgets('does NOT show important chip for normal priority',
-        (tester) async {
-      await tester.pumpWidget(
-        buildSubject(data: baseData(priority: 'normal')),
-      );
+    testWidgets('does NOT show important chip for normal priority', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildSubject(data: baseData(priority: 'normal')));
 
       // "Penting" text must not appear.
       expect(find.text('Penting'), findsNothing);

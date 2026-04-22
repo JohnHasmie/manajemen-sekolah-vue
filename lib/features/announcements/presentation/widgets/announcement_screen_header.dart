@@ -321,14 +321,17 @@ class AnnouncementScreenHeader extends StatelessWidget {
                                 color: Colors.white70,
                               ),
                               onDeleted: filter['onRemove'] as VoidCallback,
-                              backgroundColor:
-                                  Colors.white.withValues(alpha: 0.2),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
                               side: BorderSide(
                                 color: Colors.white.withValues(alpha: 0.4),
                                 width: 1,
                               ),
                               shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(8)),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(8),
+                                ),
                               ),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 6,
@@ -352,7 +355,9 @@ class AnnouncementScreenHeader extends StatelessWidget {
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
                         color: ColorUtils.error600,
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                       ),
                       child: const Icon(
                         Icons.clear_all,

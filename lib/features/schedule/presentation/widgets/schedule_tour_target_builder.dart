@@ -26,7 +26,7 @@ class ScheduleTourTargetBuilder {
 
     targets.add(
       TargetFocus(
-        identify: "ScheduleViewToggle",
+        identify: 'ScheduleViewToggle',
         keyTarget: viewToggleKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
@@ -44,7 +44,7 @@ class ScheduleTourTargetBuilder {
                       'en': 'Switch View Mode',
                       'id': 'Ganti Mode Tampilan',
                     }),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontSize: 20.0,
@@ -59,7 +59,10 @@ class ScheduleTourTargetBuilder {
                         'id':
                             'Beralih antara tampilan daftar atau tampilan grid jadwal yang komprehensif.',
                       }),
-                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
                     ),
                   ),
                 ],
@@ -72,7 +75,7 @@ class ScheduleTourTargetBuilder {
 
     targets.add(
       TargetFocus(
-        identify: "ScheduleMenu",
+        identify: 'ScheduleMenu',
         keyTarget: menuKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
@@ -90,7 +93,7 @@ class ScheduleTourTargetBuilder {
                       'en': 'Schedule Tools',
                       'id': 'Alat Jadwal',
                     }),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontSize: 20.0,
@@ -105,7 +108,10 @@ class ScheduleTourTargetBuilder {
                         'id':
                             'Ekspor, impor, atau unduh template jadwal dari menu ini.',
                       }),
-                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
                     ),
                   ),
                 ],
@@ -118,7 +124,7 @@ class ScheduleTourTargetBuilder {
 
     targets.add(
       TargetFocus(
-        identify: "ScheduleSearch",
+        identify: 'ScheduleSearch',
         keyTarget: searchKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
@@ -136,7 +142,7 @@ class ScheduleTourTargetBuilder {
                       'en': 'Search Schedule',
                       'id': 'Cari Jadwal',
                     }),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontSize: 20.0,
@@ -151,7 +157,10 @@ class ScheduleTourTargetBuilder {
                         'id':
                             'Temukan jadwal mengajar tertentu dengan mengetikkan kata kunci di sini.',
                       }),
-                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
                     ),
                   ),
                 ],
@@ -164,7 +173,7 @@ class ScheduleTourTargetBuilder {
 
     targets.add(
       TargetFocus(
-        identify: "ScheduleFilter",
+        identify: 'ScheduleFilter',
         keyTarget: filterKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
@@ -182,7 +191,7 @@ class ScheduleTourTargetBuilder {
                       'en': 'Apply Filters',
                       'id': 'Terapkan Filter',
                     }),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontSize: 20.0,
@@ -197,7 +206,10 @@ class ScheduleTourTargetBuilder {
                         'id':
                             'Saring jadwal berdasarkan guru, kelas, hari, atau periode akademik.',
                       }),
-                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
                     ),
                   ),
                 ],
@@ -210,7 +222,7 @@ class ScheduleTourTargetBuilder {
 
     targets.add(
       TargetFocus(
-        identify: "AddSchedule",
+        identify: 'AddSchedule',
         keyTarget: fabKey,
         alignSkip: Alignment.topLeft,
         shape: ShapeLightFocus.Circle,
@@ -227,7 +239,7 @@ class ScheduleTourTargetBuilder {
                       'en': 'Add New Schedule',
                       'id': 'Tambah Jadwal Baru',
                     }),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontSize: 20.0,
@@ -242,7 +254,10 @@ class ScheduleTourTargetBuilder {
                         'id':
                             'Klik di sini untuk membuat entri jadwal baru secara manual.',
                       }),
-                      style: TextStyle(color: Colors.white, fontSize: 14.0),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                      ),
                     ),
                   ),
                 ],

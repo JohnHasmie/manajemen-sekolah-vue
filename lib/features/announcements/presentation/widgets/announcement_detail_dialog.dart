@@ -7,6 +7,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_detail_row.dart';
 
 /// Dialog that shows full details of a single announcement.
@@ -35,8 +36,11 @@ class AnnouncementDetailDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final model = Announcement.fromJson(announcementData);
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -48,7 +52,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 gradient: cardGradient,
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
                 ),
@@ -63,9 +67,11 @@ class AnnouncementDetailDialog extends StatelessWidget {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(10),
+                          ),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.announcement,
                           color: Colors.white,
                           size: 20,
@@ -74,8 +80,8 @@ class AnnouncementDetailDialog extends StatelessWidget {
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
-                          announcementData['title'] ?? 'No Title',
-                          style: TextStyle(
+                          model.title.isNotEmpty ? model.title : 'No Title',
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -86,7 +92,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    formatDate(announcementData['created_at']),
+                    formatDate(model.createdAt),
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.9),
@@ -108,26 +114,32 @@ class AnnouncementDetailDialog extends StatelessWidget {
                     'important',
                   ].contains(announcementData['priority']))
                     Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.orange.withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                         border: Border.all(color: Colors.orange),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.warning, size: 14, color: Colors.orange),
+                          const Icon(
+                            Icons.warning,
+                            size: 14,
+                            color: Colors.orange,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             languageProvider.getTranslatedText({
                               'en': 'Important Announcement',
                               'id': 'Pengumuman Penting',
                             }),
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.orange,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
@@ -141,7 +153,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
 
                   // Content text
                   Text(
-                    announcementData['content'] ?? '',
+                    model.content,
                     style: TextStyle(
                       fontSize: 16,
                       height: 1.6,
@@ -175,7 +187,9 @@ class AnnouncementDetailDialog extends StatelessWidget {
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: ColorUtils.slate50,
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(12),
+                          ),
                           border: Border.all(color: ColorUtils.slate200),
                         ),
                         child: Row(
@@ -184,10 +198,10 @@ class AnnouncementDetailDialog extends StatelessWidget {
                               padding: const EdgeInsets.all(AppSpacing.sm),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: const BorderRadius.all(Radius.circular(8)),
-                                border: Border.all(
-                                  color: ColorUtils.slate200,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(8),
                                 ),
+                                border: Border.all(color: ColorUtils.slate200),
                               ),
                               child: Icon(
                                 Icons.attach_file,
@@ -309,8 +323,8 @@ class AnnouncementDetailDialog extends StatelessWidget {
                       onPressed: () => AppNavigator.pop(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
@@ -319,7 +333,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                           'en': 'Close',
                           'id': 'Tutup',
                         }),
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
                   ),

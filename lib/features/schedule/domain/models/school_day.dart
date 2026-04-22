@@ -1,8 +1,8 @@
 /// Typed model for a school day record from the `/days` API.
 ///
-/// Replaces raw `Map<String, dynamic>` access like `day['name_id']` with
-/// typed, null-safe properties. Like a Laravel Eloquent `Day` model cast
-/// to a DTO — centralizes field name resolution and type coercion.
+/// The backend stores English day names (Monday, Tuesday, …) in a single
+/// `name` column. Translation to Indonesian (Senin, Selasa, …) is handled
+/// at the Flutter UI layer via [dayNameToIndonesian].
 ///
 /// To convert from API / cache data:
 /// ```dart
@@ -11,25 +11,14 @@
 class SchoolDay {
   final String id;
   final String name;
-  final String nameId;
 
-  const SchoolDay({
-    required this.id,
-    required this.name,
-    required this.nameId,
-  });
+  const SchoolDay({required this.id, required this.name});
 
   /// Parses a school day from a JSON map.
-  /// Handles both `name_id` (Indonesian) and `name` (English) fields.
   factory SchoolDay.fromJson(Map<String, dynamic> json) => SchoolDay(
-        id: (json['id'] ?? '').toString(),
-        name: (json['name'] ?? '').toString(),
-        nameId: (json['name_id'] ?? json['name'] ?? '').toString(),
-      );
+    id: (json['id'] ?? '').toString(),
+    name: (json['name'] ?? '').toString(),
+  );
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'name_id': nameId,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'name': name};
 }

@@ -40,17 +40,16 @@ void main() {
       expect(find.byIcon(Icons.group_outlined), findsOneWidget);
     });
 
-    testWidgets('renders without error for different primary colours',
-        (tester) async {
+    testWidgets('renders without error for different primary colours', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject(primaryColor: Colors.purple));
 
       expect(find.byType(AnnouncementDetailRow), findsOneWidget);
     });
 
     testWidgets('label and value are both in the widget tree', (tester) async {
-      await tester.pumpWidget(
-        buildSubject(label: 'Date', value: '01/06/2025'),
-      );
+      await tester.pumpWidget(buildSubject(label: 'Date', value: '01/06/2025'));
 
       expect(find.text('Date'), findsOneWidget);
       expect(find.text('01/06/2025'), findsOneWidget);

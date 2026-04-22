@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/constants/api_endpoints.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/services/cache_invalidation_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for announcement-related API calls.
@@ -129,6 +130,7 @@ class ApiAnnouncementService {
       }
       final formData = FormData.fromMap(formMap);
       final response = await dioClient.post('/announcement', data: formData);
+      await CacheInvalidationService.onAnnouncementChanged();
       return response.data;
     } catch (e) {
       AppLogger.error('announcement', 'Error creating announcement: $e');
@@ -156,6 +158,7 @@ class ApiAnnouncementService {
         '/announcement/$id',
         data: formData,
       );
+      await CacheInvalidationService.onAnnouncementChanged();
       return response.data;
     } catch (e) {
       AppLogger.error('announcement', 'Error updating announcement: $e');
@@ -178,6 +181,33 @@ class ApiAnnouncementService {
 /// Holds static methods for global access (unread count, mark as read)
 /// and acts as the concrete implementation of [ApiAnnouncementService].
 class AnnouncementService extends ApiAnnouncementService {
+  /// Fetches announcement summary grouped by month + priority.
+  /// Returns list of { month_key, total, priorities: { biasa: N, penting: N } }.
+  static Future<List<Map<String, dynamic>>> getAnnouncementSummary({
+    String? search,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+
+      final response = await dioClient.get(
+        '/announcements/summary',
+        queryParameters: queryParams,
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic>) {
+        final data = result['data'];
+        if (data is List) {
+          return data.cast<Map<String, dynamic>>();
+        }
+      }
+      return [];
+    } catch (e) {
+      AppLogger.error('announcement', 'Error fetching summary: $e');
+      return [];
+    }
+  }
+
   /// Gets the count of unread announcements for badge display.
   static Future<int> getUnreadAnnouncementCount() async {
     try {

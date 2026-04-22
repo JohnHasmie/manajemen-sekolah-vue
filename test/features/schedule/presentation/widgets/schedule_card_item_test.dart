@@ -15,7 +15,7 @@ void main() {
       const date = '2026-04-01';
       const classId = 'class-uuid-1';
       const subjectId = 'subject-uuid-1';
-      final key = '${date}__${classId}__$subjectId';
+      const key = '${date}__${classId}__$subjectId';
       expect(key, '2026-04-01__class-uuid-1__subject-uuid-1');
     });
 
@@ -25,11 +25,9 @@ void main() {
     });
 
     test('summary lookup returns null when summaries map is empty', () {
-      final dailySummary = <String, dynamic>{
-        'summaries': <String, dynamic>{},
-      };
+      final dailySummary = <String, dynamic>{'summaries': <String, dynamic>{}};
       final summaries = dailySummary['summaries'] as Map;
-      final key = '2026-04-01__class-1__subject-1';
+      const key = '2026-04-01__class-1__subject-1';
       expect(summaries[key], isNull);
     });
 
@@ -37,7 +35,14 @@ void main() {
       final dailySummary = <String, dynamic>{
         'summaries': {
           '2026-04-01__class-1__subject-1': {
-            'attendance': {'filled': true, 'hadir': 10, 'sakit': 0, 'izin': 0, 'alpha': 0, 'total': 10},
+            'attendance': {
+              'filled': true,
+              'hadir': 10,
+              'sakit': 0,
+              'izin': 0,
+              'alpha': 0,
+              'total': 10,
+            },
             'class_activity': {'filled': true, 'count': 2},
             'material_progress': {'total': 5, 'checked': 3},
           },
@@ -62,8 +67,14 @@ void main() {
         },
       };
       final summaries = dailySummary['summaries'] as Map;
-      expect(summaries['2026-04-01__class-1__subject-1']!['attendance']['filled'], true);
-      expect(summaries['2026-04-02__class-1__subject-1']!['attendance']['filled'], false);
+      expect(
+        summaries['2026-04-01__class-1__subject-1']!['attendance']['filled'],
+        true,
+      );
+      expect(
+        summaries['2026-04-02__class-1__subject-1']!['attendance']['filled'],
+        false,
+      );
     });
   });
 
@@ -73,22 +84,31 @@ void main() {
 
   group('Button fill state', () {
     test('hasAttendance returns true when filled', () {
-      final summary = {'attendance': {'filled': true, 'hadir': 10}};
+      final summary = {
+        'attendance': {'filled': true, 'hadir': 10},
+      };
       expect(summary['attendance']?['filled'] == true, isTrue);
     });
 
     test('hasAttendance returns false when not filled', () {
-      final summary = {'attendance': {'filled': false, 'hadir': 0}};
+      final summary = {
+        'attendance': {'filled': false, 'hadir': 0},
+      };
       expect(summary['attendance']?['filled'] == true, isFalse);
     });
 
     test('hasAttendance returns false when summary is null', () {
       const Map<String, dynamic>? summary = null;
-      expect(summary != null && summary['attendance']?['filled'] == true, isFalse);
+      expect(
+        summary != null && summary['attendance']?['filled'] == true,
+        isFalse,
+      );
     });
 
     test('hasActivity returns true when count > 0', () {
-      final summary = {'class_activity': {'filled': true, 'count': 2}};
+      final summary = {
+        'class_activity': {'filled': true, 'count': 2},
+      };
       expect(summary['class_activity']?['filled'] == true, isTrue);
     });
 
@@ -116,11 +136,15 @@ void main() {
   group('computeScheduleDate logic', () {
     // Replicates the _computeScheduleDate logic for testing
     DateTime computeDate(int scheduleDayIndex, DateTime now) {
-      final todayIndex = now.weekday;
+      // now.weekday is 1-based (Monday=1), scheduleDayIndex is 0-based
+      final todayIndex = now.weekday - 1;
       int daysSince = todayIndex - scheduleDayIndex;
       if (daysSince < 0) daysSince += 7;
-      return DateTime(now.year, now.month, now.day)
-          .subtract(Duration(days: daysSince));
+      return DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: daysSince));
     }
 
     test('same day returns today', () {
@@ -148,8 +172,11 @@ void main() {
       final now = DateTime.now();
       for (int dayIdx = 1; dayIdx <= 6; dayIdx++) {
         final result = computeDate(dayIdx, now);
-        expect(result.isBefore(now.add(const Duration(days: 1))), isTrue,
-            reason: 'dayIndex=$dayIdx should not be in the future');
+        expect(
+          result.isBefore(now.add(const Duration(days: 1))),
+          isTrue,
+          reason: 'dayIndex=$dayIdx should not be in the future',
+        );
       }
     });
   });
@@ -180,7 +207,15 @@ void main() {
 
   group('Day grouping', () {
     test('schedules grouped by day in Senin-first order', () {
-      const dayOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+      const dayOrder = [
+        'Senin',
+        'Selasa',
+        'Rabu',
+        'Kamis',
+        'Jumat',
+        'Sabtu',
+        'Minggu',
+      ];
 
       final schedules = [
         {'day_name': 'Rabu', 'jam_mulai': '09:00'},
