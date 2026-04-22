@@ -13,11 +13,7 @@ class EssayQuizCard extends StatelessWidget {
   final int index;
   final Map<String, dynamic> quiz;
 
-  const EssayQuizCard({
-    super.key,
-    required this.index,
-    required this.quiz,
-  });
+  const EssayQuizCard({super.key, required this.index, required this.quiz});
 
   ({Color color, String label}) _difficultyConfig(String difficulty) {
     switch (difficulty) {
@@ -53,7 +49,9 @@ class EssayQuizCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             decoration: BoxDecoration(
               color: ColorUtils.violet500.withValues(alpha: 0.03),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(13),
+              ),
             ),
             child: Row(
               children: [
@@ -87,7 +85,10 @@ class EssayQuizCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: diffConfig.color.withValues(alpha: 0.1),
                     borderRadius: const BorderRadius.all(Radius.circular(6)),
@@ -143,7 +144,7 @@ class EssayQuizCard extends StatelessWidget {
                         color: ColorUtils.emerald500,
                       ),
                       const SizedBox(width: 6),
-                      Text(
+                      const Text(
                         'Kunci Jawaban',
                         style: TextStyle(
                           fontSize: 11,

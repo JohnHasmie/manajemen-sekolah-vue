@@ -64,7 +64,10 @@ class EmptyTabState extends StatelessWidget {
             GestureDetector(
               onTap: onGenerateTap,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: primaryColor,
                   borderRadius: const BorderRadius.all(Radius.circular(10)),
@@ -72,15 +75,15 @@ class EmptyTabState extends StatelessWidget {
                     BoxShadow(
                       color: primaryColor.withValues(alpha: 0.3),
                       blurRadius: 8,
-                      offset: Offset(0, 3),
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.auto_awesome, size: 16, color: Colors.white),
-                    const SizedBox(width: AppSpacing.sm),
+                    SizedBox(width: AppSpacing.sm),
                     Text(
                       'Generate',
                       style: TextStyle(

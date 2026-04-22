@@ -3,6 +3,7 @@
 // for a list of quiz items in a single horizontal row.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/stat_summary_card.dart';
 
 /// Horizontal stats bar summarising a quiz list by type and difficulty.
 ///
@@ -23,10 +24,10 @@ class QuizStatsBar extends StatelessWidget {
     final easy = quizzes.where((q) => q['difficulty'] == 'easy').length;
     final medium = quizzes.where((q) => q['difficulty'] == 'medium').length;
     final hard = quizzes.where((q) => q['difficulty'] == 'hard').length;
-    final mc =
-        quizzes.where((q) => q['question_type'] == 'multiple_choice').length;
-    final essay =
-        quizzes.where((q) => q['question_type'] == 'essay').length;
+    final mc = quizzes
+        .where((q) => q['question_type'] == 'multiple_choice')
+        .length;
+    final essay = quizzes.where((q) => q['question_type'] == 'essay').length;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -45,24 +46,23 @@ class QuizStatsBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _StatItemPremium(
+          StatSummaryRow(
+            padding: EdgeInsets.zero,
+            spacing: 0,
+            cards: [
+              StatSummaryCard(
                 icon: Icons.functions_rounded,
                 label: 'Total Kuis',
                 value: '${quizzes.length}',
                 color: primaryColor,
               ),
-              const _StatDivider(),
-              _StatItemPremium(
+              StatSummaryCard(
                 icon: Icons.check_circle_outline_rounded,
                 label: 'Pilihan Ganda',
                 value: '$mc',
                 color: ColorUtils.corporateBlue600,
               ),
-              const _StatDivider(),
-              _StatItemPremium(
+              StatSummaryCard(
                 icon: Icons.edit_note_rounded,
                 label: 'Essay',
                 value: '$essay',
@@ -80,7 +80,11 @@ class QuizStatsBar extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.bar_chart_rounded, size: 14, color: ColorUtils.slate400),
+                  Icon(
+                    Icons.bar_chart_rounded,
+                    size: 14,
+                    color: ColorUtils.slate400,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Tingkat Kesulitan:',
@@ -93,83 +97,19 @@ class QuizStatsBar extends StatelessWidget {
                   const SizedBox(width: 12),
                   _DiffBadge(label: 'Mudah', count: easy, color: Colors.green),
                   if (medium > 0) const SizedBox(width: 8),
-                  _DiffBadge(label: 'Sedang', count: medium, color: Colors.orange),
+                  _DiffBadge(
+                    label: 'Sedang',
+                    count: medium,
+                    color: Colors.orange,
+                  ),
                   if (hard > 0) const SizedBox(width: 8),
                   _DiffBadge(label: 'Sulit', count: hard, color: Colors.red),
                 ],
               ),
             ),
-          ]
+          ],
         ],
       ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Private sub-widgets
-// ---------------------------------------------------------------------------
-
-class _StatItemPremium extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  const _StatItemPremium({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: ColorUtils.slate800,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: ColorUtils.slate500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatDivider extends StatelessWidget {
-  const _StatDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 40,
-      color: ColorUtils.slate200,
     );
   }
 }

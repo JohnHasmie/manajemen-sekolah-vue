@@ -99,7 +99,9 @@ class ReferenceTabContent extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
                 decoration: BoxDecoration(
                   color: typeConfig.color.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(13)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(13),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -108,7 +110,9 @@ class ReferenceTabContent extends StatelessWidget {
                       height: 28,
                       decoration: BoxDecoration(
                         color: typeConfig.color.withValues(alpha: 0.12),
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                       ),
                       child: Icon(
                         typeConfig.icon,
@@ -119,13 +123,15 @@ class ReferenceTabContent extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: typeConfig.color.withValues(alpha: 0.1),
-                          borderRadius: const BorderRadius.all(Radius.circular(6)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(6),
+                          ),
                         ),
                         child: Text(
                           typeConfig.label,
@@ -225,7 +231,10 @@ class _EmptyReferenceState extends StatelessWidget {
             GestureDetector(
               onTap: onGenerateTap,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: primaryColor,
                   borderRadius: const BorderRadius.all(Radius.circular(10)),
@@ -233,15 +242,15 @@ class _EmptyReferenceState extends StatelessWidget {
                     BoxShadow(
                       color: primaryColor.withValues(alpha: 0.3),
                       blurRadius: 8,
-                      offset: Offset(0, 3),
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.auto_awesome, size: 16, color: Colors.white),
-                    const SizedBox(width: AppSpacing.sm),
+                    SizedBox(width: AppSpacing.sm),
                     Text(
                       'Generate AI',
                       style: TextStyle(

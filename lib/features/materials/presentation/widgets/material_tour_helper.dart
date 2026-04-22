@@ -26,10 +26,7 @@ class MaterialTourHelper {
   final GlobalKey filterKey;
   final GlobalKey searchKey;
 
-  const MaterialTourHelper({
-    required this.filterKey,
-    required this.searchKey,
-  });
+  const MaterialTourHelper({required this.filterKey, required this.searchKey});
 
   /// Checks the cache for `should_show == true` and, if so, schedules the
   /// tour on the next frame. Safe to call while the widget is still mounted.
@@ -71,7 +68,7 @@ class MaterialTourHelper {
     TutorialCoachMark(
       targets: targets,
       colorShadow: Colors.black,
-      textSkip: "LEWATI",
+      textSkip: 'LEWATI',
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: markDone,
@@ -85,7 +82,7 @@ class MaterialTourHelper {
   List<TargetFocus> _buildTargets() {
     return [
       TargetFocus(
-        identify: "FilterSection",
+        identify: 'FilterSection',
         keyTarget: filterKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
@@ -94,12 +91,12 @@ class MaterialTourHelper {
           TargetContent(
             align: ContentAlign.bottom,
             builder: (context, controller) {
-              return Column(
+              return const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    "Pilih Kelas & Mata Pelajaran",
+                    'Pilih Kelas & Mata Pelajaran',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -107,9 +104,9 @@ class MaterialTourHelper {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
+                    padding: EdgeInsets.only(top: 10.0),
                     child: Text(
-                      "Pilih kelas dan mata pelajaran yang Anda ampu di sini untuk melihat daftar Bab dan Sub-bab materi yang telah ditentukan oleh kurikulum.",
+                      'Pilih kelas dan mata pelajaran yang Anda ampu di sini untuk melihat daftar Bab dan Sub-bab materi yang telah ditentukan oleh kurikulum.',
                       style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
@@ -120,7 +117,7 @@ class MaterialTourHelper {
         ],
       ),
       TargetFocus(
-        identify: "SearchBar",
+        identify: 'SearchBar',
         keyTarget: searchKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
@@ -129,12 +126,12 @@ class MaterialTourHelper {
           TargetContent(
             align: ContentAlign.bottom,
             builder: (context, controller) {
-              return Column(
+              return const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    "Pencarian Materi",
+                    'Pencarian Materi',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -142,9 +139,9 @@ class MaterialTourHelper {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
+                    padding: EdgeInsets.only(top: 10.0),
                     child: Text(
-                      "Gunakan kolom ini untuk mencari nama bab atau sub-bab dengan cepat.",
+                      'Gunakan kolom ini untuk mencari nama bab atau sub-bab dengan cepat.',
                       style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
