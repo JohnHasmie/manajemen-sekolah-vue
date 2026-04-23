@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_table_widget.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_table_logic_mixin.dart';
+import 'package:manajemensekolah/features/grades/presentation/mixins/grade_table_helpers_mixin.dart';
 
-mixin GradeTableEditingMixin on State<GradeTableWidget>, GradeTableLogicMixin {
+mixin GradeTableEditingMixin on State<GradeTableWidget>, GradeTableLogicMixin, GradeTableHelpersMixin {
   String? get editingKey;
   int get editingStudentIdx;
   int get editingColIdx;
@@ -20,16 +21,7 @@ mixin GradeTableEditingMixin on State<GradeTableWidget>, GradeTableLogicMixin {
     bool? isSaving,
   });
 
-  /// Format a score value for display
-  String fmt(dynamic value) {
-    if (value == null) return '';
-    return value.toString();
-  }
-
-  /// Create a cell key for a student and column
-  String cellKey(dynamic student, String type, dynamic index) {
-    return '${student?['id']}|$type|$index';
-  }
+  // fmt() and cellKey() inherited from GradeTableHelpersMixin — do not redefine
 
   /// Starts editing at specific student and column indices
   void startEditingAt(int studentIdx, int colIdx, List<ColDef> cols) {
