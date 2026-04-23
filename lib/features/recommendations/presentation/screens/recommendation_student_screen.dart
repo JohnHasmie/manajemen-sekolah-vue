@@ -121,6 +121,10 @@ class _LearningRecommendationStudentScreenState
   Map<String, dynamic> get classData => widget.classData;
 
   @override
+  String? get academicYearId =>
+      ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+
+  @override
   Map<String, String> get teacher => widget.teacher;
 
   Color get _primaryColor =>

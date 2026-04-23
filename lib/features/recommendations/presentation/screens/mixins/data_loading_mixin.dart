@@ -17,6 +17,10 @@ mixin DataLoadingMixin {
 
   Map<String, dynamic> get classData;
 
+  /// The currently selected academic year ID from the dashboard.
+  /// Implementors should resolve from academicYearRiverpod.
+  String? get academicYearId;
+
   void setState(VoidCallback fn);
 
   String buildStudentsCacheKey() {
@@ -45,6 +49,7 @@ mixin DataLoadingMixin {
     try {
       final studentList = await getIt<ApiClassService>().getStudentsByClassId(
         classData['id'].toString(),
+        academicYearId: academicYearId,
       );
 
       // Only save to cache when we actually have data. `_tryLoadFromCache`

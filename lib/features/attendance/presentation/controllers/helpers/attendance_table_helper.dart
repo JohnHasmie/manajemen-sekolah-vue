@@ -56,6 +56,7 @@ class AttendanceTableHelper {
     // Parallel fetch: students + attendance records
     final students = await getIt<ApiClassService>().getStudentsByClassId(
       classId,
+      academicYearId: academicYearId,
     );
 
     final attendanceResult = await AttendanceService.getAttendancePaginated(

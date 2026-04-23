@@ -42,6 +42,7 @@ class AttendanceExportHelper {
 
     final students = await getIt<ApiClassService>().getStudentsByClassId(
       classId,
+      academicYearId: academicYearId,
     );
 
     final attendanceResult = await AttendanceService.getAttendancePaginated(
