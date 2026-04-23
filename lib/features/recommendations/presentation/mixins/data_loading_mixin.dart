@@ -144,8 +144,10 @@ mixin DataLoadingMixin on ConsumerState<LearningRecommendationClassScreen> {
     }
 
     try {
+      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
       final summary = await getIt<ApiRecommendationService>().getClassSummary(
         classId,
+        academicYearId: ayId,
       );
       if (mounted) {
         setState(() {
@@ -195,10 +197,12 @@ mixin DataLoadingMixin on ConsumerState<LearningRecommendationClassScreen> {
       // recommendations from ALL teachers in that homeroom — the whole
       // point of the Wali Kelas tab. In mengajar mode, scope by teacher
       // so we only see the current teacher's own authored recs.
+      final ayId2 = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
       final result = await getIt<ApiRecommendationService>().getRecommendations(
         teacherId: isHomeroomView ? null : effectiveTeacherId,
         homeroomClassId: isHomeroomView ? classId : null,
         classId: classId,
+        academicYearId: ayId2,
         perPage: 50,
       );
 

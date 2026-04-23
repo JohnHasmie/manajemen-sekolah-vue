@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -205,11 +206,13 @@ class _LearningRecommendationStudentScreenState
       // aggregate recs from every authoring teacher in the homeroom. In
       // mengajar mode scope by teacher so the counts reflect only the
       // current teacher's authored recs.
+      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
       final counts = await getIt<ApiRecommendationService>()
           .getStudentStatusCounts(
         classId: classId,
         teacherId: widget.isHomeroomView ? null : teacherId,
         homeroomClassId: widget.isHomeroomView ? classId : null,
+        academicYearId: ayId,
       );
       if (mounted) {
         setState(() {

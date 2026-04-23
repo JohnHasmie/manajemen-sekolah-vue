@@ -166,6 +166,7 @@ class DashboardDataFetcher {
       // Prefetch week summary (the main data the schedule screen needs)
       await getIt<ApiScheduleService>().getWeekSummary(
         teacherId: teacherId,
+        academicYearId: academicYearId,
       );
       AppLogger.debug(
         'dashboard_data_fetcher',

@@ -205,11 +205,13 @@ class _LearningRecommendationClassScreenState
     AppLogger.debug('recommendation', '   className: $className');
 
     try {
+      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
       final result = await getIt<ApiRecommendationService>().generateForClass(
         teacherId: effectiveTeacherId,
         classId: classId,
         subjectId: selectedSubject['id'] ?? '',
         includeOnTrack: includeOnTrack,
+        academicYearId: ayId,
       );
 
       if (result['async'] == true) {

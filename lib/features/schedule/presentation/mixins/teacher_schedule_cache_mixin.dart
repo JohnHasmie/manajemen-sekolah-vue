@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -119,8 +120,10 @@ mixin TeacherScheduleCacheMixin on ConsumerState<TeachingScheduleScreen> {
       final service = getIt<ApiScheduleService>();
 
       // Single API call replaces N separate getDailySummary calls
+      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
       final weekResult = await service.getWeekSummary(
         teacherId: teacherIdInternal,
+        academicYearId: ayId,
       );
 
       final days = weekResult['days'];
@@ -229,9 +232,11 @@ mixin TeacherScheduleCacheMixin on ConsumerState<TeachingScheduleScreen> {
       // Only fetch week-summary for the teacher's own schedule (Mengajar
       // tab). Wali Kelas mode shows another teacher's classes — the
       // attendance/material/activity summary is not relevant there.
-      AppLogger.debug('schedule',
-          'loadSchedule success — isHomeroomView=$isHomeroomViewInternal, '
-          'skipping week-summary=${isHomeroomViewInternal}');
+      AppLogger.debug(
+        'schedule',
+        'loadSchedule success — isHomeroomView=$isHomeroomViewInternal, '
+            'skipping week-summary=${isHomeroomViewInternal}',
+      );
       if (!isHomeroomViewInternal) {
         loadDailySummary();
       }
@@ -243,7 +248,8 @@ mixin TeacherScheduleCacheMixin on ConsumerState<TeachingScheduleScreen> {
       setState(() {
         isLoadingInternal = false;
         if (!hasData) {
-          errorMessageInternal = 'Gagal memuat jadwal. Tarik ke bawah untuk coba lagi.';
+          errorMessageInternal =
+              'Gagal memuat jadwal. Tarik ke bawah untuk coba lagi.';
         }
       });
     }
