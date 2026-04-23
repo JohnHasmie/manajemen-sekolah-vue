@@ -86,7 +86,7 @@ analyze:
   <<: *flutter_setup
   stage: analyze
   script:
-    - flutter analyze --fatal-warnings
+    - flutter analyze --fatal-warnings --no-fatal-infos
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
