@@ -269,15 +269,16 @@ class ApiClassService {
 
   /// Fetches all students in a given class.
   /// Like `Student::where('class_id', $classId)->get()` in Laravel.
-  Future<List<dynamic>> getStudentsByClassId(String classId) async {
+  Future<List<dynamic>> getStudentsByClassId(
+    String classId, {
+    String? academicYearId,
+  }) async {
     // Note: we intentionally do NOT swallow exceptions here. Callers already
-    // wrap this in their own try/catch to show error/retry UI. Swallowing
-    // would mask transient failures (auth token race, backend cold start,
-    // network hiccup) as "no students" and poison downstream caches —
-    // exactly the symptom we hit on the recommendation student screen where
-    // the first load rendered "Siswa belum tersedia" until the user pulled
-    // to refresh.
-    final result = await ApiService().get('/student/class/$classId');
+    // wrap this in their own try/catch to show error/retry UI.
+    final url = academicYearId != null
+        ? '/student/class/$classId?academic_year_id=$academicYearId'
+        : '/student/class/$classId';
+    final result = await ApiService().get(url);
 
     if (result is Map<String, dynamic>) {
       if (result.containsKey('data')) {

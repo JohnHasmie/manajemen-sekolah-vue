@@ -71,9 +71,12 @@ class ScheduleTeacherService {
   Future<Map<String, dynamic>> getDailySummary({
     required String teacherId,
     String? date,
+    String? academicYearId,
   }) async {
-    final dateStr = date ?? DateTime.now().toIso8601String().split('T').first;
-    final cacheKey = 'schedule_daily_summary_${teacherId}_$dateStr';
+    final dateStr = date ??
+        DateTime.now().toIso8601String().split('T').first;
+    final cacheKey =
+        'schedule_daily_summary_${teacherId}_$dateStr';
 
     // Try cache first
     final cached = await LocalCacheService.load(
@@ -81,14 +84,24 @@ class ScheduleTeacherService {
       ttl: const Duration(minutes: 5),
     );
     if (cached != null && cached is Map) {
-      AppLogger.debug('schedule', 'Daily summary loaded from cache');
+      AppLogger.debug(
+        'schedule',
+        'Daily summary loaded from cache',
+      );
       return Map<String, dynamic>.from(cached);
     }
 
     try {
+      final params = <String, dynamic>{
+        'teacher_id': teacherId,
+        'date': dateStr,
+      };
+      if (academicYearId != null) {
+        params['academic_year_id'] = academicYearId;
+      }
       final response = await dioClient.get(
         '/teaching-schedule/daily-summary',
-        queryParameters: {'teacher_id': teacherId, 'date': dateStr},
+        queryParameters: params,
       );
 
       final result = response.data is Map<String, dynamic>
@@ -110,10 +123,12 @@ class ScheduleTeacherService {
   Future<Map<String, dynamic>> getWeekSummary({
     required String teacherId,
     String? weekStart,
+    String? academicYearId,
   }) async {
     final now = DateTime.now();
     final monday = now.subtract(Duration(days: now.weekday - 1));
-    final weekStartStr = weekStart ??
+    final weekStartStr =
+        weekStart ??
         '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
     final cacheKey = 'schedule_week_summary_${teacherId}_$weekStartStr';
 
@@ -133,6 +148,8 @@ class ScheduleTeacherService {
         queryParameters: {
           'teacher_id': teacherId,
           'week_start': weekStartStr,
+          if (academicYearId != null)
+            'academic_year_id': academicYearId,
         },
       );
 

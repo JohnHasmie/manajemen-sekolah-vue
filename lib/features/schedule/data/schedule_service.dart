@@ -142,12 +142,22 @@ class ApiScheduleService {
   Future<Map<String, dynamic>> getDailySummary({
     required String teacherId,
     String? date,
-  }) => _teacherService.getDailySummary(teacherId: teacherId, date: date);
+    String? academicYearId,
+  }) => _teacherService.getDailySummary(
+    teacherId: teacherId,
+    date: date,
+    academicYearId: academicYearId,
+  );
 
   Future<Map<String, dynamic>> getWeekSummary({
     required String teacherId,
     String? weekStart,
-  }) => _teacherService.getWeekSummary(teacherId: teacherId, weekStart: weekStart);
+    String? academicYearId,
+  }) => _teacherService.getWeekSummary(
+    teacherId: teacherId,
+    weekStart: weekStart,
+    academicYearId: academicYearId,
+  );
 
   Future<void> recordMaterialView({
     required String teacherId,
