@@ -47,14 +47,9 @@ mixin LessonPlanCrudMixin on ConsumerState<LessonPlanScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: GenerateLessonPlanFormDialog(
-          teacherId: teacherId,
-          onSaved: forceRefresh,
-        ),
+      builder: (context) => GenerateLessonPlanFormDialog(
+        teacherId: teacherId,
+        onSaved: forceRefresh,
       ),
     );
   }

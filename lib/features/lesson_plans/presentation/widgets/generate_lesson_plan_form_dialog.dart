@@ -124,40 +124,30 @@ class _GenerateLessonPlanFormDialogState
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
     final primaryColor = ColorUtils.getRoleColor('guru');
-    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
     final mediaHeight = MediaQuery.of(context).size.height;
 
-    // Shell mirrors the flat-flow sheet pattern used by the manual RPP
-    // form, RPP detail, and AI-result sheets. Padding(bottom: keyboardInset)
-    // lifts the sheet above the keyboard; the outer container caps the
-    // height and paints the rounded top; SafeArea(top: false) ensures the
-    // footer clears the Samsung / iPhone home indicator so the Generate
-    // button is never hidden behind the system nav bar.
-    return Padding(
-      padding: EdgeInsets.only(bottom: keyboardInset),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: mediaHeight * 0.92 - keyboardInset,
+    // isScrollControlled: true on the parent showModalBottomSheet handles
+    // keyboard avoidance automatically — no manual Padding(bottom: keyboardInset).
+    return Container(
+      constraints: BoxConstraints(maxHeight: mediaHeight * 0.92),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
         ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                buildHeaderSection(languageProvider, primaryColor),
-                _buildFormSection(languageProvider, primaryColor),
-                buildFooterSection(languageProvider, primaryColor),
-              ],
-            ),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              buildHeaderSection(languageProvider, primaryColor),
+              _buildFormSection(languageProvider, primaryColor),
+              buildFooterSection(languageProvider, primaryColor),
+            ],
           ),
         ),
       ),
