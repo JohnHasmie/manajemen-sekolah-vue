@@ -3,6 +3,7 @@ import 'package:manajemensekolah/features/recommendations/data/recommendation_se
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_result_screen.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
@@ -89,12 +90,14 @@ mixin ResultFetchMixin on ConsumerState<LearningRecommendationResultScreen> {
       // homeroom_class_id, and `getRecommendations` prefers the homeroom
       // scope when both are supplied — pass nulls for the unused side
       // to make the intent explicit.
+      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
       final response = await getIt<ApiRecommendationService>()
           .getRecommendations(
             teacherId: widget.isHomeroomView ? null : teacherId,
             homeroomClassId: widget.isHomeroomView ? classId : null,
             classId: classId,
             studentId: studentId,
+            academicYearId: ayId,
           );
 
       if (response['success'] == true) {

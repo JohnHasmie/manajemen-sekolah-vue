@@ -70,6 +70,7 @@ class ApiRecommendationService {
     String? triggerSource,
     bool forceRegenerate = false,
     bool? includeOnTrack,
+    String? academicYearId,
   }) async {
     final requestData = {
       'teacher_id': teacherId,
@@ -78,6 +79,7 @@ class ApiRecommendationService {
       if (triggerSource != null) 'trigger_source': triggerSource,
       if (forceRegenerate) 'force_regenerate': true,
       if (includeOnTrack != null) 'include_on_track': includeOnTrack,
+      if (academicYearId != null) 'academic_year_id': academicYearId,
     };
 
     // Use validateStatus to accept 202 and 429 without throwing
@@ -168,12 +170,15 @@ class ApiRecommendationService {
     String? status,
     String? priority,
     String? category,
+    String? academicYearId,
     int page = 1,
     int perPage = 15,
   }) async {
     final params = <String, dynamic>{
       'page': page.toString(),
       'per_page': perPage.toString(),
+      if (academicYearId != null)
+        'academic_year_id': academicYearId,
     };
     // The backend requires teacher_id XOR homeroom_class_id. Prefer the
     // homeroom scope when both are supplied — the homeroom scope is the
@@ -252,11 +257,21 @@ class ApiRecommendationService {
   }
 
   /// Get class summary (aggregated recommendations by category/priority/status)
-  Future<Map<String, dynamic>> getClassSummary(String classId) async {
+  Future<Map<String, dynamic>> getClassSummary(
+    String classId, {
+    String? academicYearId,
+  }) async {
     try {
+      final params = <String, dynamic>{};
+      if (academicYearId != null) {
+        params['academic_year_id'] = academicYearId;
+      }
       final response = await _aiDio.get(
         '/recommendations/class/$classId/summary',
-        options: Options(receiveTimeout: const Duration(seconds: 30)),
+        queryParameters: params.isNotEmpty ? params : null,
+        options: Options(
+          receiveTimeout: const Duration(seconds: 30),
+        ),
       );
 
       AppLogger.debug(
@@ -291,6 +306,7 @@ class ApiRecommendationService {
     required String classId,
     String? teacherId,
     String? homeroomClassId,
+    String? academicYearId,
   }) async {
     try {
       final allData = <dynamic>[];
@@ -303,6 +319,7 @@ class ApiRecommendationService {
           classId: classId,
           teacherId: teacherId,
           homeroomClassId: homeroomClassId,
+          academicYearId: academicYearId,
           perPage: perPage,
           page: page,
         );

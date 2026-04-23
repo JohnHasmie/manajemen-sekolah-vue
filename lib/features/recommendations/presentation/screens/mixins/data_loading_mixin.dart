@@ -17,6 +17,10 @@ mixin DataLoadingMixin {
 
   Map<String, dynamic> get classData;
 
+  /// The currently selected academic year ID from the dashboard.
+  /// Implementors should resolve from academicYearRiverpod.
+  String? get academicYearId;
+
   void setState(VoidCallback fn);
 
   String buildStudentsCacheKey() {
@@ -45,6 +49,7 @@ mixin DataLoadingMixin {
     try {
       final studentList = await getIt<ApiClassService>().getStudentsByClassId(
         classData['id'].toString(),
+        academicYearId: academicYearId,
       );
 
       // Only save to cache when we actually have data. `_tryLoadFromCache`
@@ -56,8 +61,16 @@ mixin DataLoadingMixin {
         await LocalCacheService.save(cacheKey, studentList);
       }
 
+      // Deduplicate by student ID — safety net in case the API returns
+      // duplicate entries (e.g., from multiple student_classes pivot rows).
+      final seen = <String>{};
+      final deduped = studentList.where((s) {
+        final id = (s['id'] ?? s['student_id'])?.toString() ?? '';
+        return id.isNotEmpty && seen.add(id);
+      }).toList();
+
       setState(() {
-        students = studentList;
+        students = deduped;
         isLoading = false;
         errorMessage = '';
       });
