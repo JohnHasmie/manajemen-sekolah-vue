@@ -56,8 +56,16 @@ mixin DataLoadingMixin {
         await LocalCacheService.save(cacheKey, studentList);
       }
 
+      // Deduplicate by student ID — safety net in case the API returns
+      // duplicate entries (e.g., from multiple student_classes pivot rows).
+      final seen = <String>{};
+      final deduped = studentList.where((s) {
+        final id = (s['id'] ?? s['student_id'])?.toString() ?? '';
+        return id.isNotEmpty && seen.add(id);
+      }).toList();
+
       setState(() {
-        students = studentList;
+        students = deduped;
         isLoading = false;
         errorMessage = '';
       });
