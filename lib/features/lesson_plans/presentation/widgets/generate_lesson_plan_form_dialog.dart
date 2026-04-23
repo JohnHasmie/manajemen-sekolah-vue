@@ -136,7 +136,9 @@ class _GenerateLessonPlanFormDialogState
     return Padding(
       padding: EdgeInsets.only(bottom: keyboardInset),
       child: Container(
-        constraints: BoxConstraints(maxHeight: mediaHeight * 0.92),
+        constraints: BoxConstraints(
+          maxHeight: mediaHeight * 0.92 - keyboardInset,
+        ),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(

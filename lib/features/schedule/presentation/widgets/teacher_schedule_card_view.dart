@@ -207,7 +207,11 @@ class _TeacherScheduleCardViewState extends State<TeacherScheduleCardView>
       );
     }
 
-    slivers.add(const SliverPadding(padding: EdgeInsets.only(bottom: 16)));
+    // Extra bottom padding for Samsung/Android software nav bar
+    final bottomSafe = MediaQuery.of(context).padding.bottom;
+    slivers.add(SliverPadding(
+      padding: EdgeInsets.only(bottom: 16 + bottomSafe),
+    ));
 
     return slivers;
   }
