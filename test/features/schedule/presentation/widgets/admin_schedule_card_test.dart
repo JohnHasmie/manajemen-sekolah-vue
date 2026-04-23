@@ -23,12 +23,11 @@ Map<String, dynamic> _schedule({
   String subject = 'Matematika',
   String teacher = 'Pak Ahmad',
   String className = 'Kelas 7A',
-}) =>
-    {
-      'mata_pelajaran_nama': subject,
-      'guru_nama': teacher,
-      'kelas_nama': className,
-    };
+}) => {
+  'mata_pelajaran_nama': subject,
+  'guru_nama': teacher,
+  'kelas_nama': className,
+};
 
 Widget _build({
   Map<String, dynamic>? schedule,
@@ -65,23 +64,19 @@ Widget _build({
 void main() {
   group('AdminScheduleCard — content rendering', () {
     testWidgets('shows subject name from schedule map', (tester) async {
-      await tester.pumpWidget(_build(
-        schedule: _schedule(subject: 'Fisika'),
-      ));
+      await tester.pumpWidget(_build(schedule: _schedule(subject: 'Fisika')));
       expect(find.text('Fisika'), findsOneWidget);
     });
 
     testWidgets('shows teacher name from schedule map', (tester) async {
-      await tester.pumpWidget(_build(
-        schedule: _schedule(teacher: 'Bu Sari'),
-      ));
+      await tester.pumpWidget(_build(schedule: _schedule(teacher: 'Bu Sari')));
       expect(find.text('Bu Sari'), findsOneWidget);
     });
 
     testWidgets('shows class name tag', (tester) async {
-      await tester.pumpWidget(_build(
-        schedule: _schedule(className: 'Kelas 8B'),
-      ));
+      await tester.pumpWidget(
+        _build(schedule: _schedule(className: 'Kelas 8B')),
+      );
       expect(find.text('Kelas 8B'), findsOneWidget);
     });
 
@@ -95,29 +90,33 @@ void main() {
       expect(find.text('09:00 - 10:30'), findsOneWidget);
     });
 
-    testWidgets('falls back to "No Subject" when mata_pelajaran_nama absent',
-        (tester) async {
+    testWidgets('falls back to "No Subject" when mata_pelajaran_nama absent', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(schedule: {}));
       expect(find.text('No Subject'), findsOneWidget);
     });
 
-    testWidgets('falls back to "-" for teacher when guru_nama absent',
-        (tester) async {
+    testWidgets('falls back to "-" for teacher when guru_nama absent', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(schedule: {'mata_pelajaran_nama': 'IPA'}));
       expect(find.text('-'), findsWidgets); // teacher and class both '-'
     });
   });
 
   group('AdminScheduleCard — isReadOnly', () {
-    testWidgets('hides edit and delete buttons when isReadOnly=true',
-        (tester) async {
+    testWidgets('hides edit and delete buttons when isReadOnly=true', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(isReadOnly: true));
       expect(find.byIcon(Icons.edit_outlined), findsNothing);
       expect(find.byIcon(Icons.delete_outline), findsNothing);
     });
 
-    testWidgets('shows edit and delete buttons when isReadOnly=false',
-        (tester) async {
+    testWidgets('shows edit and delete buttons when isReadOnly=false', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(isReadOnly: false));
       expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
       expect(find.byIcon(Icons.delete_outline), findsOneWidget);
@@ -153,11 +152,13 @@ void main() {
     testWidgets('edit and delete fire independently', (tester) async {
       int editCount = 0;
       int deleteCount = 0;
-      await tester.pumpWidget(_build(
-        isReadOnly: false,
-        onEdit: () => editCount++,
-        onDelete: () => deleteCount++,
-      ));
+      await tester.pumpWidget(
+        _build(
+          isReadOnly: false,
+          onEdit: () => editCount++,
+          onDelete: () => deleteCount++,
+        ),
+      );
 
       await tester.tap(find.byIcon(Icons.edit_outlined));
       await tester.tap(find.byIcon(Icons.delete_outline));

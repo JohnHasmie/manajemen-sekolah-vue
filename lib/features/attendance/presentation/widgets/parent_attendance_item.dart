@@ -2,14 +2,13 @@
 // Like a Vue `<AttendanceItem>` component -- a Material card row showing
 // date box, subject name, day label, info tags, status badge, and unread dot.
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer;
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/status_badge.dart';
 import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
-import 'package:manajemensekolah/features/attendance/presentation/widgets/parent_attendance_info_tag.dart';
 
 /// A single attendance record row card for the parent view.
 ///
@@ -47,8 +46,7 @@ class ParentAttendanceItem extends ConsumerWidget {
     final currentLanguage = ref.watch(languageRiverpod).currentLanguage;
     final locale = currentLanguage == 'id' ? 'id_ID' : 'en_US';
     final date = record.date;
-    final subjectName =
-        record.subjectName ?? AppLocalizations.subject.tr;
+    final subjectName = record.subjectName ?? AppLocalizations.subject.tr;
     final lessonHourName = record.lessonHourName ?? '';
     final isRead = record.isRead;
 
@@ -96,10 +94,7 @@ class ParentAttendanceItem extends ConsumerWidget {
                       ),
                       Text(
                         DateFormat('MMM', locale).format(date),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: primaryColor,
-                        ),
+                        style: TextStyle(fontSize: 10, color: primaryColor),
                       ),
                     ],
                   ),
@@ -135,19 +130,27 @@ class ParentAttendanceItem extends ConsumerWidget {
                         spacing: 5,
                         runSpacing: 4,
                         children: [
-                          ParentAttendanceInfoTag(
+                          StatusBadge(
+                            label: DateFormat(
+                              'dd MMM yyyy',
+                              locale,
+                            ).format(date),
+                            color: ColorUtils.slate600,
                             icon: Icons.calendar_today_outlined,
-                            text: DateFormat('dd MMM yyyy', locale).format(date),
+                            fontSize: 10,
                           ),
                           if (lessonHourName.isNotEmpty)
-                            ParentAttendanceInfoTag(
+                            StatusBadge(
+                              label: lessonHourName,
+                              color: ColorUtils.slate600,
                               icon: Icons.access_time_outlined,
-                              text: lessonHourName,
+                              fontSize: 10,
                             ),
-                          ParentAttendanceInfoTag(
+                          StatusBadge(
+                            label: statusText,
+                            color: statusColor,
                             icon: statusIcon,
-                            text: statusText,
-                            tagColor: statusColor,
+                            fontSize: 10,
                           ),
                         ],
                       ),

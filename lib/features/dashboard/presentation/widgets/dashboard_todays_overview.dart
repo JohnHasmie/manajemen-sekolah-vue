@@ -52,7 +52,7 @@ class DashboardTodaysOverview extends StatelessWidget {
           GridView.count(
             padding: const EdgeInsets.only(top: 12),
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 2,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,

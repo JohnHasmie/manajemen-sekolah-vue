@@ -4,7 +4,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/parent_attendance_item.dart';
 
@@ -79,9 +78,9 @@ class ParentAttendanceList extends StatelessWidget {
       }
 
       return true;
-    }).toList()
-      ..sort((a, b) =>
-          b.date.toIso8601String().compareTo(a.date.toIso8601String()));
+    }).toList()..sort(
+      (a, b) => b.date.toIso8601String().compareTo(a.date.toIso8601String()),
+    );
   }
 
   @override
@@ -108,7 +107,7 @@ class ParentAttendanceList extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              AppLocalizations.noPresenceData.tr,
+              'Tidak ada data kehadiran',
               style: TextStyle(
                 color: ColorUtils.slate700,
                 fontSize: 16,

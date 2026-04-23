@@ -3,7 +3,10 @@
 // referenced by the static getters in [AppLocalizations] in language_utils.dart.
 part of 'language_utils.dart';
 
-const _kLessonPlan = {'en': 'Lesson Plan', 'id': 'Rencana Pelaksanaan Pembelajaran'};
+const _kLessonPlan = {
+  'en': 'Lesson Plan',
+  'id': 'Rencana Pelaksanaan Pembelajaran',
+};
 const _kLessonPlanList = {'en': 'Lesson Plan List', 'id': 'Daftar RPP'};
 const _kCreateLessonPlan = {'en': 'Create Lesson Plan', 'id': 'Buat RPP'};
 const _kEditLessonPlan = {'en': 'Edit Lesson Plan', 'id': 'Edit RPP'};
@@ -17,31 +20,79 @@ const _kAcademicYear = {'en': 'Academic Year', 'id': 'Tahun Ajaran'};
 const _kCoreCompetence = {'en': 'Core Competence', 'id': 'Kompetensi Inti'};
 const _kBasicCompetence = {'en': 'Basic Competence', 'id': 'Kompetensi Dasar'};
 const _kIndicators = {'en': 'Indicators', 'id': 'Indikator'};
-const _kLearningObjectives = {'en': 'Learning Objectives', 'id': 'Tujuan Pembelajaran'};
-const _kLearningMaterials = {'en': 'Learning Materials', 'id': 'Materi Pembelajaran'};
-const _kLearningMethods = {'en': 'Learning Methods', 'id': 'Metode Pembelajaran'};
+const _kLearningObjectives = {
+  'en': 'Learning Objectives',
+  'id': 'Tujuan Pembelajaran',
+};
+const _kLearningMaterials = {
+  'en': 'Learning Materials',
+  'id': 'Materi Pembelajaran',
+};
+const _kLearningMethods = {
+  'en': 'Learning Methods',
+  'id': 'Metode Pembelajaran',
+};
 const _kMediaTools = {'en': 'Media & Tools', 'id': 'Media dan Alat'};
-const _kLearningResources = {'en': 'Learning Resources', 'id': 'Sumber Belajar'};
-const _kLearningActivities = {'en': 'Learning Activities', 'id': 'Kegiatan Pembelajaran'};
+const _kLearningResources = {
+  'en': 'Learning Resources',
+  'id': 'Sumber Belajar',
+};
+const _kLearningActivities = {
+  'en': 'Learning Activities',
+  'id': 'Kegiatan Pembelajaran',
+};
 const _kAssessment = {'en': 'Assessment', 'id': 'Penilaian'};
 const _kAttachment = {'en': 'Attachment', 'id': 'Lampiran'};
-const _kCreateNewLessonPlan = {'en': 'Create New Lesson Plan', 'id': 'Buat RPP Baru'};
+const _kCreateNewLessonPlan = {
+  'en': 'Create New Lesson Plan',
+  'id': 'Buat RPP Baru',
+};
 const _kViewLessonPlan = {'en': 'View Lesson Plan', 'id': 'Lihat RPP'};
 const _kDownloadLessonPlan = {'en': 'Download Lesson Plan', 'id': 'Unduh RPP'};
 const _kUploadFile = {'en': 'Upload File', 'id': 'Unggah File'};
 const _kChooseFile = {'en': 'Choose File', 'id': 'Pilih File'};
 const _kFileSelected = {'en': 'File Selected', 'id': 'File Terpilih'};
-const _kNoLessonPlanAvailable = {'en': 'No lesson plans available', 'id': 'Belum ada RPP'};
-const _kLessonPlanCreatedSuccess = {'en': 'Lesson plan created successfully', 'id': 'RPP berhasil dibuat'};
-const _kLessonPlanUpdatedSuccess = {'en': 'Lesson plan updated successfully', 'id': 'RPP berhasil diperbarui'};
-const _kLessonPlanDeletedSuccess = {'en': 'Lesson plan deleted successfully', 'id': 'RPP berhasil dihapus'};
-const _kLessonPlanStatusUpdated = {'en': 'Lesson plan status updated', 'id': 'Status RPP berhasil diupdate'};
-const _kFileUploadSuccess = {'en': 'File uploaded successfully', 'id': 'File berhasil diunggah'};
-const _kFileUploadError = {'en': 'File upload failed', 'id': 'Gagal mengunggah file'};
-const _kInvalidFileType = {'en': 'Invalid file type. Please upload Word or PDF files only.', 'id': 'Tipe file tidak valid. Harap unggah file Word atau PDF saja.'};
-const _kFileTooLarge = {'en': 'File too large. Maximum size is 10MB.', 'id': 'File terlalu besar. Ukuran maksimal 10MB.'};
+const _kNoLessonPlanAvailable = {
+  'en': 'No lesson plans available',
+  'id': 'Belum ada RPP',
+};
+const _kLessonPlanCreatedSuccess = {
+  'en': 'Lesson plan created successfully',
+  'id': 'RPP berhasil dibuat',
+};
+const _kLessonPlanUpdatedSuccess = {
+  'en': 'Lesson plan updated successfully',
+  'id': 'RPP berhasil diperbarui',
+};
+const _kLessonPlanDeletedSuccess = {
+  'en': 'Lesson plan deleted successfully',
+  'id': 'RPP berhasil dihapus',
+};
+const _kLessonPlanStatusUpdated = {
+  'en': 'Lesson plan status updated',
+  'id': 'Status RPP berhasil diupdate',
+};
+const _kFileUploadSuccess = {
+  'en': 'File uploaded successfully',
+  'id': 'File berhasil diunggah',
+};
+const _kFileUploadError = {
+  'en': 'File upload failed',
+  'id': 'Gagal mengunggah file',
+};
+const _kInvalidFileType = {
+  'en': 'Invalid file type. Please upload Word or PDF files only.',
+  'id': 'Tipe file tidak valid. Harap unggah file Word atau PDF saja.',
+};
+const _kFileTooLarge = {
+  'en': 'File too large. Maximum size is 10MB.',
+  'id': 'File terlalu besar. Ukuran maksimal 10MB.',
+};
 const _kAllLessonPlans = {'en': 'All Lesson Plans', 'id': 'Semua RPP'};
-const _kFilterByStatus = {'en': 'Filter by Status', 'id': 'Filter Berdasarkan Status'};
+const _kFilterByStatus = {
+  'en': 'Filter by Status',
+  'id': 'Filter Berdasarkan Status',
+};
 const _kTeacherName = {'en': 'Teacher Name', 'id': 'Nama Guru'};
 const _kSubjectName = {'en': 'Subject Name', 'id': 'Nama Mata Pelajaran'};
 const _kCreationDate = {'en': 'Creation Date', 'id': 'Tanggal Dibuat'};
@@ -52,20 +103,53 @@ const _kApproveLessonPlan = {'en': 'Approve Lesson Plan', 'id': 'Setujui RPP'};
 const _kRejectLessonPlan = {'en': 'Reject Lesson Plan', 'id': 'Tolak RPP'};
 const _kLessonPlanDetails = {'en': 'Lesson Plan Details', 'id': 'Detail RPP'};
 const _kBasicInfo = {'en': 'Basic Information', 'id': 'Informasi Dasar'};
-const _kLearningComponents = {'en': 'Learning Components', 'id': 'Komponen Pembelajaran'};
-const _kAssessmentMethods = {'en': 'Assessment Methods', 'id': 'Metode Penilaian'};
-const _kNoLessonPlanCreated = {'en': 'No lesson plans created yet', 'id': 'Belum ada RPP yang dibuat'};
-const _kClickPlusToCreate = {'en': 'Press the + button to create a lesson plan', 'id': 'Tekan tombol + untuk membuat RPP'};
-const _kViewAndManageLessonPlans = {'en': 'View and manage your lesson plans', 'id': 'Lihat dan kelola RPP Anda'};
-const _kNoLessonPlanForFilter = {'en': 'No lesson plans found for the selected filter', 'id': 'Tidak ada RPP untuk filter yang dipilih'};
+const _kLearningComponents = {
+  'en': 'Learning Components',
+  'id': 'Komponen Pembelajaran',
+};
+const _kAssessmentMethods = {
+  'en': 'Assessment Methods',
+  'id': 'Metode Penilaian',
+};
+const _kNoLessonPlanCreated = {
+  'en': 'No lesson plans created yet',
+  'id': 'Belum ada RPP yang dibuat',
+};
+const _kClickPlusToCreate = {
+  'en': 'Press the + button to create a lesson plan',
+  'id': 'Tekan tombol + untuk membuat RPP',
+};
+const _kViewAndManageLessonPlans = {
+  'en': 'View and manage your lesson plans',
+  'id': 'Lihat dan kelola RPP Anda',
+};
+const _kNoLessonPlanForFilter = {
+  'en': 'No lesson plans found for the selected filter',
+  'id': 'Tidak ada RPP untuk filter yang dipilih',
+};
 const _kTitleRequired = {'en': 'Title is required', 'id': 'Judul harus diisi'};
-const _kSubjectRequired = {'en': 'Subject is required', 'id': 'Mata pelajaran harus dipilih'};
-const _kAcademicTermRequired = {'en': 'Semester is required', 'id': 'Semester harus dipilih'};
-const _kAcademicYearRequired = {'en': 'Academic year is required', 'id': 'Tahun ajaran harus diisi'};
+const _kSubjectRequired = {
+  'en': 'Subject is required',
+  'id': 'Mata pelajaran harus dipilih',
+};
+const _kAcademicTermRequired = {
+  'en': 'Semester is required',
+  'id': 'Semester harus dipilih',
+};
+const _kAcademicYearRequired = {
+  'en': 'Academic year is required',
+  'id': 'Tahun ajaran harus diisi',
+};
 const _kWordDocument = {'en': 'Word Document', 'id': 'Dokumen Word'};
-const _kPdfDocument = {'en': 'PDF Document', 'id': 'Dokumen PDF'};
-const _kSupportedFormats = {'en': 'Supported formats: .doc, .docx, .pdf', 'id': 'Format yang didukung: .doc, .docx, .pdf'};
-const _kSelectAndOrganizeMaterials = {'en': 'Select and organize your teaching materials', 'id': 'Pilih dan kelola materi pembelajaran Anda'};
+const _kLpPdfDocument = {'en': 'PDF Document', 'id': 'Dokumen PDF'};
+const _kSupportedFormats = {
+  'en': 'Supported formats: .doc, .docx, .pdf',
+  'id': 'Format yang didukung: .doc, .docx, .pdf',
+};
+const _kSelectAndOrganizeMaterials = {
+  'en': 'Select and organize your teaching materials',
+  'id': 'Pilih dan kelola materi pembelajaran Anda',
+};
 const _kPresence = {'en': 'Presence', 'id': 'Kehadiran'};
 const _kBilling = {'en': 'Billing', 'id': 'Tagihan'};
 const _kMaterialsLabel = {'en': 'Materials', 'id': 'Materi'};

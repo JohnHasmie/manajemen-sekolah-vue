@@ -53,7 +53,7 @@ class FinancePendingSection extends StatelessWidget {
           BoxShadow(
             color: ColorUtils.warning600.withValues(alpha: 0.08),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -91,13 +91,19 @@ class FinancePendingSection extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '$pendingCount $paymentsNeedVerificationLabel',
-                      style: TextStyle(color: ColorUtils.slate500, fontSize: 12),
+                      style: TextStyle(
+                        color: ColorUtils.slate500,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: ColorUtils.warning600.withValues(alpha: 0.1),
                   borderRadius: const BorderRadius.all(Radius.circular(20)),
@@ -119,10 +125,14 @@ class FinancePendingSection extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: onVerifyNow,
-                icon: Icon(Icons.verified_rounded, size: 16, color: Colors.white),
+                icon: const Icon(
+                  Icons.verified_rounded,
+                  size: 16,
+                  color: Colors.white,
+                ),
                 label: Text(
                   verifyNowLabel,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -131,8 +141,8 @@ class FinancePendingSection extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ColorUtils.warning600,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 11),
                 ),

@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/status_badge.dart';
+import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_info_tag.dart';
 
 /// A Material card that renders one teacher row in the admin list.
@@ -44,21 +46,16 @@ class TeacherCard extends ConsumerWidget {
     final languageProvider = ref.read(languageRiverpod);
     final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
 
-    // Determine homeroom status — homeroom_class can be a Map, a List, or null.
-    final isHomeroomTeacher =
-        (teacher['homeroom_class'] != null &&
-            teacher['homeroom_class'] is! List) ||
-        (teacher['homeroom_class'] is List &&
-            (teacher['homeroom_class'] as List).isNotEmpty);
-
-    final className = (teacher['homeroom_class'] is Map)
-        ? teacher['homeroom_class']['name']
-        : (teacher['homeroom_class'] is List &&
-              (teacher['homeroom_class'] as List).isNotEmpty)
-        ? teacher['homeroom_class'][0]['name']
-        : (teacher['homeroom_class_name'] ?? '-');
-
-    final email = teacher['user']?['email'] ?? teacher['email'] ?? '-';
+    // Normalize the heterogeneous API response shape through the typed model.
+    // This replaces ~15 lines of inline Map/List/null homeroom handling.
+    final model = Teacher.fromJson(teacher);
+    final isHomeroomTeacher = model.isHomeroomTeacher;
+    final className = model.homeroomClassName ?? '-';
+    final email = model.email.isNotEmpty ? model.email : '-';
+    final displayName = model.name.isNotEmpty ? model.name : 'No Name';
+    final avatarInitial = model.name.isNotEmpty
+        ? model.name[0].toUpperCase()
+        : 'N';
     final avatarColor = ColorUtils.getColorForIndex(index);
 
     return Container(
@@ -83,7 +80,7 @@ class TeacherCard extends ConsumerWidget {
                   radius: 22,
                   backgroundColor: avatarColor.withValues(alpha: 0.15),
                   child: Text(
-                    (teacher['name'] ?? 'N')[0].toUpperCase(),
+                    avatarInitial,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -99,7 +96,7 @@ class TeacherCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        teacher['name'] ?? 'No Name',
+                        displayName,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -128,7 +125,7 @@ class TeacherCard extends ConsumerWidget {
                   children: [
                     // Homeroom or Active badge
                     if (isHomeroomTeacher)
-                      _StatusBadge(
+                      StatusBadge(
                         label: languageProvider.getTranslatedText({
                           'en': 'Homeroom',
                           'id': 'Wali Kelas',
@@ -136,7 +133,7 @@ class TeacherCard extends ConsumerWidget {
                         color: ColorUtils.corporateBlue600,
                       )
                     else
-                      _StatusBadge(
+                      StatusBadge(
                         label: languageProvider.getTranslatedText({
                           'en': 'Active',
                           'id': 'Aktif',
@@ -175,45 +172,6 @@ class TeacherCard extends ConsumerWidget {
 }
 
 // ── Private helpers (only used inside this file) ─────────────────────────────
-
-/// Pill badge for homeroom / active status — like a Vue `<StatusBadge>` sub-component.
-class _StatusBadge extends StatelessWidget {
-  final String label;
-  final Color color;
-
-  const _StatusBadge({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: const BorderRadius.all(Radius.circular(8)),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 5,
-            height: 5,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// Small tappable icon button used for edit/delete actions inside the card.
 class _ActionIcon extends StatelessWidget {

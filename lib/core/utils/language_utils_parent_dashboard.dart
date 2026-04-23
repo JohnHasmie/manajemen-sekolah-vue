@@ -18,21 +18,45 @@ const _kSubjects = {'en': 'Subjects', 'id': 'Mata Pelajaran'};
 const _kOngoing = {'en': 'Ongoing', 'id': 'Sedang berlangsung'};
 const _kSubmitted = {'en': 'Submitted', 'id': 'Terkirim'};
 const _kPresenceReport = {'en': 'Presence Report', 'id': 'Laporan Presensi'};
-const _kSchoolSettings = {'en': 'School Settings', 'id': 'Pengaturan Sekolah'};
+const _kPdSchoolSettings = {
+  'en': 'School Settings',
+  'id': 'Pengaturan Sekolah',
+};
 const _kLatestInfo = {'en': 'Latest Info', 'id': 'Info terbaru'};
 const _kChildrenData = {'en': 'Children Data', 'id': 'Data Anak'};
-const _kRegisteredChildren = {'en': 'Registered Children', 'id': 'Anak terdaftar'};
+const _kRegisteredChildren = {
+  'en': 'Registered Children',
+  'id': 'Anak terdaftar',
+};
 const _kGrades = {'en': 'Grades', 'id': 'Nilai'};
-const _kNoChildrenLinked = {'en': 'No student/child linked to this account', 'id': 'Tidak ada data siswa/anak yang terhubung dengan akun ini'};
-const _kSelectChild = {'en': 'Select Child:', 'id': 'Pilih Anak:'};
-const _kNameNotAvailable = {'en': 'Name not available', 'id': 'Nama tidak tersedia'};
-const _kClassString = {'en': 'Class', 'id': 'Kelas'};
+const _kPdNoChildrenLinked = {
+  'en': 'No student/child linked to this account',
+  'id': 'Tidak ada data siswa/anak yang terhubung dengan akun ini',
+};
+const _kPdSelectChild = {'en': 'Select Child:', 'id': 'Pilih Anak:'};
+const _kPdNameNotAvailable = {
+  'en': 'Name not available',
+  'id': 'Nama tidak tersedia',
+};
+const _kPdClassString = {'en': 'Class', 'id': 'Kelas'};
 const _kAssessmentDate = {'en': 'Assessment Date', 'id': 'Tanggal Penilaian'};
 const _kTeacherNotes = {'en': 'Teacher Notes', 'id': 'Catatan Guru'};
-const _kSelectChildToViewGrades = {'en': 'Select child first to view grades', 'id': 'Pilih anak terlebih dahulu untuk melihat nilai'};
-const _kNoGradesData = {'en': 'No grades data for this child', 'id': 'Belum ada data nilai untuk anak ini'};
-const _kChildAcademicGrades = {'en': 'Child Academic Grades', 'id': 'Nilai Akademik Anak'};
-const _kMonitorChildGrades = {'en': 'Monitor your child\\\'s grade progress', 'id': 'Pantau perkembangan nilai anak Anda'};
+const _kPdSelectChildToViewGrades = {
+  'en': 'Select child first to view grades',
+  'id': 'Pilih anak terlebih dahulu untuk melihat nilai',
+};
+const _kNoGradesData = {
+  'en': 'No grades data for this child',
+  'id': 'Belum ada data nilai untuk anak ini',
+};
+const _kPdChildAcademicGrades = {
+  'en': 'Child Academic Grades',
+  'id': 'Nilai Akademik Anak',
+};
+const _kPdMonitorChildGrades = {
+  'en': 'Monitor your child\\\'s grade progress',
+  'id': 'Pantau perkembangan nilai anak Anda',
+};
 const _kUnknown = {'en': 'Unknown', 'id': 'Tidak Diketahui'};
 const _kActivityTitle = {'en': 'Activity Title', 'id': 'Judul Kegiatan'};
 const _kDate = {'en': 'Date', 'id': 'Tanggal'};
@@ -41,60 +65,117 @@ const _kDescription = {'en': 'Description', 'id': 'Deskripsi'};
 const _kChapterInfo = {'en': 'Chapter Info', 'id': 'Informasi Bab'};
 const _kChapter = {'en': 'Chapter', 'id': 'Bab'};
 const _kMainSubChapter = {'en': 'Main Sub-chapter', 'id': 'Sub Bab (Utama)'};
-const _kAdditionalSubChapter = {'en': 'Additional Sub-chapter', 'id': 'Sub Bab (Tambahan)'};
-const _kSelectChildToViewActivity = {'en': 'Select child first to view activities', 'id': 'Pilih anak terlebih dahulu untuk melihat aktivitas'};
-const _kNoActivityForChild = {'en': 'No activity for this child', 'id': 'Belum ada aktivitas untuk anak ini'};
-const _kChildClassActivity = {'en': 'Child Class Activity', 'id': 'Aktivitas Kelas Anak'};
-const _kMonitorChildActivity = {'en': 'Monitor your child\\\'s activity', 'id': 'Pantau aktivitas anak Anda'};
+const _kAdditionalSubChapter = {
+  'en': 'Additional Sub-chapter',
+  'id': 'Sub Bab (Tambahan)',
+};
+const _kSelectChildToViewActivity = {
+  'en': 'Select child first to view activities',
+  'id': 'Pilih anak terlebih dahulu untuk melihat aktivitas',
+};
+const _kNoActivityForChild = {
+  'en': 'No activity for this child',
+  'id': 'Belum ada aktivitas untuk anak ini',
+};
+const _kChildClassActivity = {
+  'en': 'Child Class Activity',
+  'id': 'Aktivitas Kelas Anak',
+};
+const _kMonitorChildActivity = {
+  'en': 'Monitor your child\\\'s activity',
+  'id': 'Pantau aktivitas anak Anda',
+};
 const _kAssignment = {'en': 'ASSIGNMENT', 'id': 'TUGAS'};
 const _kMaterial = {'en': 'MATERIAL', 'id': 'MATERI'};
 const _kMyBills = {'en': 'My Bills', 'id': 'Tagihan Saya'};
-const _kManageBillPayments = {'en': 'Manage bill payments', 'id': 'Kelola pembayaran tagihan'};
+const _kManageBillPayments = {
+  'en': 'Manage bill payments',
+  'id': 'Kelola pembayaran tagihan',
+};
 const _kSearchBills = {'en': 'Search bills...', 'id': 'Cari tagihan...'};
 const _kPaymentStatus = {'en': 'Payment Status', 'id': 'Status Pembayaran'};
 const _kPaid = {'en': 'Paid', 'id': 'Lunas'};
-const _kWaitingForVerification = {'en': 'Waiting for Verification', 'id': 'Menunggu Verifikasi'};
+const _kWaitingForVerification = {
+  'en': 'Waiting for Verification',
+  'id': 'Menunggu Verifikasi',
+};
 const _kPaymentPeriod = {'en': 'Payment Period', 'id': 'Periode Pembayaran'};
 const _kMonthly = {'en': 'Monthly', 'id': 'Bulanan'};
 const _kYearly = {'en': 'Yearly', 'id': 'Tahunan'};
 const _kFilter = {'en': 'Filter', 'id': 'Filter'};
 const _kApply = {'en': 'Apply', 'id': 'Terapkan'};
 const _kReset = {'en': 'Reset', 'id': 'Reset'};
-const _kChooseSource = {'en': 'Choose Source', 'id': 'Pilih Sumber'};
-const _kChooseImageSource = {'en': 'Choose image source', 'id': 'Pilih sumber gambar'};
-const _kGallery = {'en': 'Gallery', 'id': 'Galeri'};
-const _kCamera = {'en': 'Camera', 'id': 'Kamera'};
-const _kUnsupportedFileFormat = {'en': 'Unsupported file format. Only JPG, JPEG, and PNG are allowed.', 'id': 'Format file tidak didukung. Hanya JPG, JPEG, dan PNG yang diizinkan.'};
-const _kChooseFileType = {'en': 'Choose File Type', 'id': 'Pilih Jenis File'};
-const _kImageCameraGallery = {'en': 'Image (Camera/Gallery)', 'id': 'Gambar (Kamera/Galeri)'};
-const _kUploadPaymentProof = {'en': 'Upload Payment Proof', 'id': 'Upload Bukti Pembayaran'};
-const _kBillAmount = {'en': 'Bill Amount', 'id': 'Jumlah Tagihan'};
+const _kPdChooseSource = {'en': 'Choose Source', 'id': 'Pilih Sumber'};
+const _kPdChooseImageSource = {
+  'en': 'Choose image source',
+  'id': 'Pilih sumber gambar',
+};
+const _kPdGallery = {'en': 'Gallery', 'id': 'Galeri'};
+const _kPdCamera = {'en': 'Camera', 'id': 'Kamera'};
+const _kUnsupportedFileFormat = {
+  'en': 'Unsupported file format. Only JPG, JPEG, and PNG are allowed.',
+  'id': 'Format file tidak didukung. Hanya JPG, JPEG, dan PNG yang diizinkan.',
+};
+const _kPdChooseFileType = {'en': 'Choose File Type', 'id': 'Pilih Jenis File'};
+const _kPdImageCameraGallery = {
+  'en': 'Image (Camera/Gallery)',
+  'id': 'Gambar (Kamera/Galeri)',
+};
+const _kPdUploadPaymentProof = {
+  'en': 'Upload Payment Proof',
+  'id': 'Upload Bukti Pembayaran',
+};
+const _kPdBillAmount = {'en': 'Bill Amount', 'id': 'Jumlah Tagihan'};
 const _kStudent = {'en': 'Student', 'id': 'Siswa'};
 const _kPayNow = {'en': 'Pay Now', 'id': 'Bayar Sekarang'};
 const _kChildPresence = {'en': 'Child Presence', 'id': 'Absensi Anak'};
 const _kStudentName = {'en': 'Student Name', 'id': 'Nama Siswa'};
 const _kMonthlyRecap = {'en': 'Monthly Recap', 'id': 'Rekap Bulanan'};
 const _kAttendanceRate = {'en': 'Attendance Rate', 'id': 'Tingkat Kehadiran'};
-const _kPresent = {'en': 'Present', 'id': 'Hadir'};
-const _kLate = {'en': 'Late', 'id': 'Terlambat'};
-const _kPermission = {'en': 'Permission', 'id': 'Izin'};
-const _kSick = {'en': 'Sick', 'id': 'Sakit'};
-const _kAlpha = {'en': 'Alpha', 'id': 'Alpha'};
+const _kPdPresent = {'en': 'Present', 'id': 'Hadir'};
+const _kPdLate = {'en': 'Late', 'id': 'Terlambat'};
+const _kPdPermission = {'en': 'Permission', 'id': 'Izin'};
+const _kPdSick = {'en': 'Sick', 'id': 'Sakit'};
+const _kPdAlpha = {'en': 'Alpha', 'id': 'Alpha'};
 const _kPresenceHistory = {'en': 'Presence History', 'id': 'Riwayat Absensi'};
-const _kNoPresenceData = {'en': 'No presence data', 'id': 'Tidak ada data absensi'};
+const _kNoPresenceData = {
+  'en': 'No presence data',
+  'id': 'Tidak ada data absensi',
+};
 const _kForMonth = {'en': 'For month', 'id': 'Untuk bulan'};
-const _kLoadingPresenceData = {'en': 'Loading presence data...', 'id': 'Memuat data absensi...'};
-const _kFinancialManagement = {'en': 'Financial Management', 'id': 'Manajemen Keuangan'};
-const _kDashboard = {'en': 'Dashboard', 'id': 'Dashboard'};
-const _kPaymentTypes = {'en': 'Payment Types', 'id': 'Jenis Pembayaran'};
-const _kVerification = {'en': 'Verification', 'id': 'Verifikasi'};
+const _kLoadingPresenceData = {
+  'en': 'Loading presence data...',
+  'id': 'Memuat data absensi...',
+};
+const _kFinancialManagement = {
+  'en': 'Financial Management',
+  'id': 'Manajemen Keuangan',
+};
+const _kPdDashboard = {'en': 'Dashboard', 'id': 'Dashboard'};
+const _kPdPaymentTypes = {'en': 'Payment Types', 'id': 'Jenis Pembayaran'};
+const _kPdVerification = {'en': 'Verification', 'id': 'Verifikasi'};
 const _kMonthlyIncome = {'en': 'Monthly Income', 'id': 'Pendapatan Bulan Ini'};
-const _kPendingVerification = {'en': 'Pending Verification', 'id': 'Menunggu Verifikasi'};
-const _kUnpaid = {'en': 'Unpaid', 'id': 'Belum Bayar'};
-const _kVerified = {'en': 'Verified', 'id': 'Terverifikasi'};
-const _kAddPaymentType = {'en': 'Add Payment Type', 'id': 'Tambah Jenis Pembayaran'};
-const _kEditPaymentType = {'en': 'Edit Payment Type', 'id': 'Edit Jenis Pembayaran'};
-const _kDeletePaymentType = {'en': 'Delete Payment Type', 'id': 'Hapus Jenis Pembayaran'};
-const _kPaymentsPendingVerification = {'en': 'Payments Pending Verification', 'id': 'Pembayaran Menunggu Verifikasi'};
-const _kClassReport = {'en': 'Class Report', 'id': 'Laporan Kelas'};
+const _kPendingVerification = {
+  'en': 'Pending Verification',
+  'id': 'Menunggu Verifikasi',
+};
+const _kPdUnpaid = {'en': 'Unpaid', 'id': 'Belum Bayar'};
+const _kPdVerified = {'en': 'Verified', 'id': 'Terverifikasi'};
+const _kPdAddPaymentType = {
+  'en': 'Add Payment Type',
+  'id': 'Tambah Jenis Pembayaran',
+};
+const _kPdEditPaymentType = {
+  'en': 'Edit Payment Type',
+  'id': 'Edit Jenis Pembayaran',
+};
+const _kDeletePaymentType = {
+  'en': 'Delete Payment Type',
+  'id': 'Hapus Jenis Pembayaran',
+};
+const _kPdPaymentsPendingVerification = {
+  'en': 'Payments Pending Verification',
+  'id': 'Pembayaran Menunggu Verifikasi',
+};
+const _kPdClassReport = {'en': 'Class Report', 'id': 'Laporan Kelas'};
 const _kStudents = {'en': 'students', 'id': 'siswa'};

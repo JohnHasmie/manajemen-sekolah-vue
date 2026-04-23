@@ -17,6 +17,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:manajemensekolah/core/config/ai_config.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -30,7 +31,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 class ApiRecommendationService {
   /// Base URL for the AI microservice. Separate from the main Laravel API.
   /// Like having a second `API_BASE_URL` in your Laravel `.env` file.
-  final String _aiBaseUrl = 'https://edu-ai-api.kamillabs.com/api';
+  String get _aiBaseUrl => AiConfig.baseUrl;
 
   /// Lazily-initialized Dio instance dedicated to the AI microservice.
   /// Configured with Bearer-token-only auth (no X-School-ID).
@@ -151,9 +152,16 @@ class ApiRecommendationService {
     return {'async': false, 'data': body};
   }
 
-  /// List recommendations with filters (paginated)
+  /// List recommendations with filters (paginated).
+  ///
+  /// Pass exactly one of:
+  ///  - [teacherId] — guru view: only the teacher's own authored recs.
+  ///  - [homeroomClassId] — wali kelas view: every rec in a homeroom
+  ///    class regardless of authoring teacher. Backend uses this to
+  ///    switch the scope and 403s if the caller isn't the wali kelas.
   Future<Map<String, dynamic>> getRecommendations({
     String? teacherId,
+    String? homeroomClassId,
     String? classId,
     String? studentId,
     String? subjectId,
@@ -167,7 +175,12 @@ class ApiRecommendationService {
       'page': page.toString(),
       'per_page': perPage.toString(),
     };
-    if (teacherId != null && teacherId.isNotEmpty) {
+    // The backend requires teacher_id XOR homeroom_class_id. Prefer the
+    // homeroom scope when both are supplied — the homeroom scope is the
+    // cross-teacher view and is what the wali-kelas caller actually wants.
+    if (homeroomClassId != null && homeroomClassId.isNotEmpty) {
+      params['homeroom_class_id'] = homeroomClassId;
+    } else if (teacherId != null && teacherId.isNotEmpty) {
       params['teacher_id'] = teacherId;
     }
     if (classId != null) params['class_id'] = classId;
@@ -210,16 +223,24 @@ class ApiRecommendationService {
     return response.data;
   }
 
-  /// Update recommendation status
+  /// Update recommendation status.
+  ///
+  /// [teacherId] names the teacher performing the update. The backend
+  /// runs a two-stage check: (1) `EnsureTeacherOwnership` middleware
+  /// verifies this teacher id belongs to the authenticated user; (2) the
+  /// action allows the update only if that teacher is either the rec's
+  /// author OR the wali kelas of the rec's class.
   Future<Map<String, dynamic>> updateStatus({
     required String recommendationId,
     required String status, // pending, in_progress, completed, dismissed
+    required String teacherId,
     String? teacherNotes,
   }) async {
     final response = await _aiDio.patch(
       '/recommendations/$recommendationId/status',
       data: {
         'status': status,
+        'teacher_id': teacherId,
         if (teacherNotes != null) 'teacher_notes': teacherNotes,
       },
       options: Options(receiveTimeout: const Duration(seconds: 30)),
@@ -256,6 +277,73 @@ class ApiRecommendationService {
           'by_category': {},
         },
       };
+    }
+  }
+
+  /// Get per-student recommendation status counts for a class.
+  /// Returns a Map keyed by student_id with { total, pending, completed } counts.
+  /// Paginates through all pages (backend max per_page is 50).
+  ///
+  /// Pass [homeroomClassId] (not [teacherId]) when the caller is the wali
+  /// kelas — the counts then cover recs from ALL authoring teachers in
+  /// that homeroom, which is what the wali-kelas dashboard wants to show.
+  Future<Map<String, Map<String, int>>> getStudentStatusCounts({
+    required String classId,
+    String? teacherId,
+    String? homeroomClassId,
+  }) async {
+    try {
+      final allData = <dynamic>[];
+      int page = 1;
+      const perPage = 50;
+
+      // Fetch all pages
+      while (true) {
+        final result = await getRecommendations(
+          classId: classId,
+          teacherId: teacherId,
+          homeroomClassId: homeroomClassId,
+          perPage: perPage,
+          page: page,
+        );
+
+        final data = result['data'] as List? ?? [];
+        allData.addAll(data);
+
+        // Check if there are more pages
+        final meta = result['meta'] as Map?;
+        final lastPage = meta?['last_page'] ?? 1;
+        if (page >= (lastPage is int ? lastPage : int.tryParse(lastPage.toString()) ?? 1)) {
+          break;
+        }
+        page++;
+      }
+
+      final counts = <String, Map<String, int>>{};
+
+      for (final rec in allData) {
+        final studentId = rec['student_id']?.toString() ?? '';
+        if (studentId.isEmpty) continue;
+
+        final status = rec['status']?.toString().toLowerCase() ?? 'pending';
+        counts.putIfAbsent(
+          studentId,
+          () => {'total': 0, 'pending': 0, 'completed': 0},
+        );
+        counts[studentId]!['total'] = (counts[studentId]!['total'] ?? 0) + 1;
+        if (status == 'completed') {
+          counts[studentId]!['completed'] =
+              (counts[studentId]!['completed'] ?? 0) + 1;
+        } else {
+          counts[studentId]!['pending'] =
+              (counts[studentId]!['pending'] ?? 0) + 1;
+        }
+      }
+
+      return counts;
+    } catch (e) {
+      AppLogger.error('recommendation', 'getStudentStatusCounts error: $e');
+      return {};
     }
   }
 

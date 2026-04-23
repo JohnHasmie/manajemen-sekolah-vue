@@ -7,12 +7,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
 
 Map<String, dynamic> _base({Map<String, dynamic>? overrides}) => {
-      'id': '1',
-      'student_id': 's1',
-      'date': '2025-03-10',
-      'status': 'hadir',
-      ...?overrides,
-    };
+  'id': '1',
+  'student_id': 's1',
+  'date': '2025-03-10',
+  'status': 'hadir',
+  ...?overrides,
+};
 
 void main() {
   // ---------------------------------------------------------------------------
@@ -123,12 +123,16 @@ void main() {
   // ---------------------------------------------------------------------------
   group('Attendance.fromJson — subject fields', () {
     test('reads "subject_name" directly', () {
-      final a = Attendance.fromJson(_base(overrides: {'subject_name': 'Fisika'}));
+      final a = Attendance.fromJson(
+        _base(overrides: {'subject_name': 'Fisika'}),
+      );
       expect(a.subjectName, 'Fisika');
     });
 
     test('falls back to "mata_pelajaran_nama"', () {
-      final a = Attendance.fromJson(_base(overrides: {'mata_pelajaran_nama': 'Kimia'}));
+      final a = Attendance.fromJson(
+        _base(overrides: {'mata_pelajaran_nama': 'Kimia'}),
+      );
       expect(a.subjectName, 'Kimia');
     });
 
@@ -138,12 +142,16 @@ void main() {
     });
 
     test('falls back to "id_mata_pelajaran"', () {
-      final a = Attendance.fromJson(_base(overrides: {'id_mata_pelajaran': 'sub-9'}));
+      final a = Attendance.fromJson(
+        _base(overrides: {'id_mata_pelajaran': 'sub-9'}),
+      );
       expect(a.subjectId, 'sub-9');
     });
 
     test('falls back to "mata_pelajaran_id"', () {
-      final a = Attendance.fromJson(_base(overrides: {'mata_pelajaran_id': 'sub-11'}));
+      final a = Attendance.fromJson(
+        _base(overrides: {'mata_pelajaran_id': 'sub-11'}),
+      );
       expect(a.subjectId, 'sub-11');
     });
 
@@ -163,12 +171,16 @@ void main() {
   // ---------------------------------------------------------------------------
   group('Attendance.fromJson — lesson hour fields', () {
     test('reads "lesson_hour_name" directly', () {
-      final a = Attendance.fromJson(_base(overrides: {'lesson_hour_name': 'Jam 3'}));
+      final a = Attendance.fromJson(
+        _base(overrides: {'lesson_hour_name': 'Jam 3'}),
+      );
       expect(a.lessonHourName, 'Jam 3');
     });
 
     test('falls back to "jam_pelajaran_nama"', () {
-      final a = Attendance.fromJson(_base(overrides: {'jam_pelajaran_nama': 'Jam 1'}));
+      final a = Attendance.fromJson(
+        _base(overrides: {'jam_pelajaran_nama': 'Jam 1'}),
+      );
       expect(a.lessonHourName, 'Jam 1');
     });
 
@@ -178,12 +190,16 @@ void main() {
     });
 
     test('reads "lesson_hour_id" directly', () {
-      final a = Attendance.fromJson(_base(overrides: {'lesson_hour_id': 'lh-7'}));
+      final a = Attendance.fromJson(
+        _base(overrides: {'lesson_hour_id': 'lh-7'}),
+      );
       expect(a.lessonHourId, 'lh-7');
     });
 
     test('falls back to "id_jam_pelajaran"', () {
-      final a = Attendance.fromJson(_base(overrides: {'id_jam_pelajaran': 'lh-3'}));
+      final a = Attendance.fromJson(
+        _base(overrides: {'id_jam_pelajaran': 'lh-3'}),
+      );
       expect(a.lessonHourId, 'lh-3');
     });
   });

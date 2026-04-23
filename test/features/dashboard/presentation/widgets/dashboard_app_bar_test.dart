@@ -9,9 +9,7 @@ import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboa
 /// Wraps DashboardAppBar (a sliver) in a minimal scrollable scaffold.
 Widget buildTestable(DashboardAppBar appBar) {
   return MaterialApp(
-    home: Scaffold(
-      body: CustomScrollView(slivers: [appBar]),
-    ),
+    home: Scaffold(body: CustomScrollView(slivers: [appBar])),
   );
 }
 
@@ -69,8 +67,9 @@ void main() {
     });
 
     // ── 4. Notification badge shown when unreadAnnouncements > 0 ──────────
-    testWidgets('shows notification badge for unread announcements',
-        (tester) async {
+    testWidgets('shows notification badge for unread announcements', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestable(
           DashboardAppBar(

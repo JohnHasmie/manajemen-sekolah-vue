@@ -36,20 +36,19 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
   });
 
   LinearGradient get _cardGradient => LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [primaryColor, primaryColor.withValues(alpha: 0.7)],
-      );
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [primaryColor, primaryColor.withValues(alpha: 0.7)],
+  );
 
   @override
   Widget build(BuildContext context) {
     final String currentStatus = bill['status'] ?? 'pending';
     final bool isPaid = currentStatus == 'verified';
-    final statusColor =
-        isPaid ? ColorUtils.success600 : ColorUtils.error600;
+    final statusColor = isPaid ? ColorUtils.success600 : ColorUtils.error600;
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -72,7 +71,9 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             decoration: BoxDecoration(
               gradient: _cardGradient,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Row(
               children: [
@@ -83,7 +84,7 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.payment_rounded,
                     color: Colors.white,
                     size: 22,
@@ -94,7 +95,7 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Opsi Pembayaran',
                         style: TextStyle(
                           fontSize: 16,
@@ -115,9 +116,7 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            isPaid
-                                ? 'Status: Lunas'
-                                : 'Status: Belum Lunas',
+                            isPaid ? 'Status: Lunas' : 'Status: Belum Lunas',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.white.withValues(alpha: 0.85),

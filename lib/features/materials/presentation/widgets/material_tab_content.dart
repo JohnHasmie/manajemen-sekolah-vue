@@ -88,7 +88,9 @@ class MaterialTabContent extends StatelessWidget {
                                 color: ColorUtils.amber500.withValues(
                                   alpha: 0.15,
                                 ),
-                                borderRadius: const BorderRadius.all(Radius.circular(7)),
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(7),
+                                ),
                               ),
                               child: Center(
                                 child: Text(
@@ -155,8 +157,6 @@ class MaterialTabContent extends StatelessWidget {
           ),
         ],
 
-
-
         // ── Manual Content from backend ──────────────────────────────────
         if (contentList.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.lg),
@@ -199,7 +199,11 @@ class MaterialTabContent extends StatelessWidget {
                 borderRadius: const BorderRadius.all(Radius.circular(12)),
                 border: Border.all(color: ColorUtils.slate200),
                 boxShadow: [
-                  BoxShadow(color: ColorUtils.slate200.withValues(alpha: 0.4), blurRadius: 4, offset: const Offset(0, 2)),
+                  BoxShadow(
+                    color: ColorUtils.slate200.withValues(alpha: 0.4),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
               child: Material(
@@ -219,10 +223,16 @@ class MaterialTabContent extends StatelessWidget {
                           height: 42,
                           decoration: BoxDecoration(
                             color: cardColor.withValues(alpha: 0.1),
-                            borderRadius: const BorderRadius.all(Radius.circular(10)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(10),
+                            ),
                           ),
                           child: Center(
-                            child: Icon(Icons.description_rounded, color: cardColor, size: 22),
+                            child: Icon(
+                              Icons.description_rounded,
+                              color: cardColor,
+                              size: 22,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 14),
@@ -231,16 +241,31 @@ class MaterialTabContent extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                content['judul_konten'] ?? content['title'] ?? 'Lampiran',
-                                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: ColorUtils.slate800),
+                                content['judul_konten'] ??
+                                    content['title'] ??
+                                    'Lampiran',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  color: ColorUtils.slate800,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              if ((content['isi_konten'] ?? content['description'] ?? '').isNotEmpty) ...[
+                              if ((content['isi_konten'] ??
+                                      content['description'] ??
+                                      '')
+                                  .isNotEmpty) ...[
                                 const SizedBox(height: 4),
                                 Text(
-                                  content['isi_konten'] ?? content['description'] ?? '',
-                                  style: TextStyle(color: ColorUtils.slate500, fontSize: 12, height: 1.4),
+                                  content['isi_konten'] ??
+                                      content['description'] ??
+                                      '',
+                                  style: TextStyle(
+                                    color: ColorUtils.slate500,
+                                    fontSize: 12,
+                                    height: 1.4,
+                                  ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -249,7 +274,11 @@ class MaterialTabContent extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Icon(Icons.chevron_right_rounded, color: ColorUtils.slate400, size: 20),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: ColorUtils.slate400,
+                          size: 20,
+                        ),
                       ],
                     ),
                   ),

@@ -42,6 +42,11 @@ mixin PaginationMixin<T extends StatefulWidget> on State<T> {
   /// Pixel threshold before reaching the bottom to trigger next page load.
   double scrollThreshold = 200.0;
 
+  /// Guard flag — true while a reset+reload is in progress.
+  /// Prevents the scroll listener from firing loadMore when the list is
+  /// cleared and the scroll view temporarily shrinks.
+  bool _isPaginationResetting = false;
+
   /// Override this to implement your page loading logic.
   /// Called when a new page needs to be loaded.
   Future<void> loadPage(int page);
@@ -57,11 +62,34 @@ mixin PaginationMixin<T extends StatefulWidget> on State<T> {
     paginationScrollController.dispose();
   }
 
-  /// Resets pagination to page 1. Call when filters change.
+  /// Resets pagination to page 1. Call when filters change or on refresh.
+  ///
+  /// Sets [_isPaginationResetting] to block the scroll listener while the
+  /// consuming screen clears its list and reloads page 1. Call
+  /// [endPaginationReset] after the reload completes (or use
+  /// [resetAndLoad] for an all-in-one helper).
   void resetPagination() {
+    _isPaginationResetting = true;
     currentPage = 1;
     hasMoreData = true;
     isLoadingMore = false;
+  }
+
+  /// Clears the resetting guard so the scroll listener works again.
+  void endPaginationReset() {
+    _isPaginationResetting = false;
+  }
+
+  /// Convenience: resets pagination, calls [loadPage(1)], then clears the
+  /// guard. Consuming screens can override [loadPage] and call this from
+  /// their refresh/filter handlers.
+  Future<void> resetAndLoad() async {
+    resetPagination();
+    try {
+      await loadPage(1);
+    } finally {
+      _isPaginationResetting = false;
+    }
   }
 
   /// Updates pagination state from a backend response's pagination metadata.
@@ -83,6 +111,7 @@ mixin PaginationMixin<T extends StatefulWidget> on State<T> {
   }
 
   void _onScroll() {
+    if (_isPaginationResetting) return;
     if (!paginationScrollController.hasClients) return;
     if (isLoadingMore || !hasMoreData) return;
 

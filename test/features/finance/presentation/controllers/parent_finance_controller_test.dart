@@ -23,14 +23,14 @@ import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Builds a minimal [Student] for test use.
 Student _student({String id = 's1', String name = 'Ali'}) => Student(
-      id: id,
-      name: name,
-      className: '7A',
-      studentNumber: 'NIS001',
-      address: '',
-      guardianName: '',
-      phoneNumber: '',
-    );
+  id: id,
+  name: name,
+  className: '7A',
+  studentNumber: 'NIS001',
+  address: '',
+  guardianName: '',
+  phoneNumber: '',
+);
 
 /// Builds a minimal billing item map matching the API response shape.
 Map<String, dynamic> _bill({
@@ -38,8 +38,7 @@ Map<String, dynamic> _bill({
   bool isRead = false,
   String status = 'unpaid',
   String name = 'SPP Januari',
-}) =>
-    {'id': id, 'is_read': isRead, 'status': status, 'name': name};
+}) => {'id': id, 'is_read': isRead, 'status': status, 'name': name};
 
 /// Controller subclass that skips the real network-calling build().
 /// Initialises immediately with a caller-supplied [ParentFinanceState].
@@ -55,8 +54,9 @@ class _SeededParentFinanceController extends ParentFinanceController {
 Future<ProviderContainer> _container(ParentFinanceState seed) async {
   final c = ProviderContainer(
     overrides: [
-      parentFinanceProvider
-          .overrideWith(() => _SeededParentFinanceController(seed)),
+      parentFinanceProvider.overrideWith(
+        () => _SeededParentFinanceController(seed),
+      ),
     ],
   );
   await c.read(parentFinanceProvider.future);
@@ -74,10 +74,19 @@ void main() {
     const s = ParentFinanceState();
 
     test('students starts as empty list', () => expect(s.students, isEmpty));
-    test('billingItems starts as empty list', () => expect(s.billingItems, isEmpty));
+    test(
+      'billingItems starts as empty list',
+      () => expect(s.billingItems, isEmpty),
+    );
     test('isLoading starts as true', () => expect(s.isLoading, isTrue));
-    test('processedReadIds starts as empty set', () => expect(s.processedReadIds, isEmpty));
-    test('pendingReadIds starts as empty set', () => expect(s.pendingReadIds, isEmpty));
+    test(
+      'processedReadIds starts as empty set',
+      () => expect(s.processedReadIds, isEmpty),
+    );
+    test(
+      'pendingReadIds starts as empty set',
+      () => expect(s.pendingReadIds, isEmpty),
+    );
     test('searchQuery starts as empty string', () => expect(s.searchQuery, ''));
     test('statusFilter starts as null', () => expect(s.statusFilter, isNull));
     test('periodFilter starts as null', () => expect(s.periodFilter, isNull));
@@ -109,20 +118,26 @@ void main() {
     setUp(() {
       seed = ParentFinanceState(
         selectedStudent: _student(),
-        billingItems: [_bill(id: 'b1'), _bill(id: 'b2')],
+        billingItems: [
+          _bill(id: 'b1'),
+          _bill(id: 'b2'),
+        ],
         isLoading: false,
       );
     });
 
-    test('adds id to processedReadIds when item is unread and unseen', () async {
-      final c = await _container(seed);
-      addTearDown(c.dispose);
+    test(
+      'adds id to processedReadIds when item is unread and unseen',
+      () async {
+        final c = await _container(seed);
+        addTearDown(c.dispose);
 
-      c.read(parentFinanceProvider.notifier).markItemVisible('b1', false);
+        c.read(parentFinanceProvider.notifier).markItemVisible('b1', false);
 
-      final state = c.read(parentFinanceProvider).value!;
-      expect(state.processedReadIds, contains('b1'));
-    });
+        final state = c.read(parentFinanceProvider).value!;
+        expect(state.processedReadIds, contains('b1'));
+      },
+    );
 
     test('adds id to pendingReadIds when item is unread and unseen', () async {
       final c = await _container(seed);
@@ -134,16 +149,19 @@ void main() {
       expect(state.pendingReadIds, contains('b1'));
     });
 
-    test('is a no-op when isRead is true (server already marked it read)', () async {
-      final c = await _container(seed);
-      addTearDown(c.dispose);
+    test(
+      'is a no-op when isRead is true (server already marked it read)',
+      () async {
+        final c = await _container(seed);
+        addTearDown(c.dispose);
 
-      c.read(parentFinanceProvider.notifier).markItemVisible('b1', true);
+        c.read(parentFinanceProvider.notifier).markItemVisible('b1', true);
 
-      final state = c.read(parentFinanceProvider).value!;
-      expect(state.processedReadIds, isEmpty);
-      expect(state.pendingReadIds, isEmpty);
-    });
+        final state = c.read(parentFinanceProvider).value!;
+        expect(state.processedReadIds, isEmpty);
+        expect(state.pendingReadIds, isEmpty);
+      },
+    );
 
     test('is a no-op when id already in processedReadIds', () async {
       final seenSeed = seed.copyWith(processedReadIds: {'b1'});
@@ -170,18 +188,21 @@ void main() {
       expect(state.pendingReadIds, containsAll(['b1', 'b2']));
     });
 
-    test('does not duplicate ids when called twice for the same item', () async {
-      final c = await _container(seed);
-      addTearDown(c.dispose);
-      final notifier = c.read(parentFinanceProvider.notifier);
+    test(
+      'does not duplicate ids when called twice for the same item',
+      () async {
+        final c = await _container(seed);
+        addTearDown(c.dispose);
+        final notifier = c.read(parentFinanceProvider.notifier);
 
-      notifier.markItemVisible('b1', false);
-      notifier.markItemVisible('b1', false); // second call is a no-op
+        notifier.markItemVisible('b1', false);
+        notifier.markItemVisible('b1', false); // second call is a no-op
 
-      final state = c.read(parentFinanceProvider).value!;
-      // Set semantics: still exactly one entry
-      expect(state.processedReadIds.where((id) => id == 'b1'), hasLength(1));
-    });
+        final state = c.read(parentFinanceProvider).value!;
+        // Set semantics: still exactly one entry
+        expect(state.processedReadIds.where((id) => id == 'b1'), hasLength(1));
+      },
+    );
   });
 
   // ── processedReadIds / pendingReadIds Set semantics ─────────────────────
@@ -190,7 +211,9 @@ void main() {
     test('copyWith with Set spread deduplicates correctly', () {
       const s = ParentFinanceState();
       final s1 = s.copyWith(processedReadIds: {'a', 'b'});
-      final s2 = s1.copyWith(processedReadIds: {...s1.processedReadIds, 'b', 'c'});
+      final s2 = s1.copyWith(
+        processedReadIds: {...s1.processedReadIds, 'b', 'c'},
+      );
       // Set dedup: 'b' appears once
       expect(s2.processedReadIds, {'a', 'b', 'c'});
       expect(s2.processedReadIds.length, 3);

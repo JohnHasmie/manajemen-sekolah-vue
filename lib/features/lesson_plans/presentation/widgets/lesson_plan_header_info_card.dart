@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 
 /// Displays the RPP title and a metadata table (mata pelajaran, kelas, etc.).
 ///
@@ -20,27 +21,16 @@ class LessonPlanHeaderInfoCard extends StatelessWidget {
     required this.primaryColor,
   });
 
-  /// Helper that returns the first non-empty value found in [keys].
-  /// Like Laravel's `$rpp->title ?? $rpp->judul ?? ''`.
-  String _getField(List<String> keys, {String defaultValue = ''}) {
-    for (final key in keys) {
-      final value = lessonPlanData[key];
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString().trim();
-      }
-    }
-    return defaultValue;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final title = _getField(['judul', 'title'], defaultValue: 'RPP');
-    final subjectName = _getField(['mata_pelajaran_nama', 'subject_name']);
-    final className = _getField(['kelas_nama', 'class_name']);
-    final semester = _getField(['semester']);
-    final academicYear = _getField(['tahun_ajaran', 'academic_year']);
-    final teacherName = _getField(['guru_nama', 'teacher_name']);
-    final status = _getField(['status']);
+    final model = LessonPlan.fromJson(lessonPlanData);
+    final title = model.title.isNotEmpty ? model.title : 'RPP';
+    final subjectName = model.subjectName ?? '';
+    final className = model.className ?? '';
+    final semester = model.semester ?? '';
+    final academicYear = model.academicYear ?? '';
+    final teacherName = model.teacherName ?? '';
+    final status = model.status;
 
     final infoItems = <MapEntry<String, String>>[
       if (subjectName.isNotEmpty) MapEntry('Mata Pelajaran', subjectName),
@@ -60,12 +50,12 @@ class LessonPlanHeaderInfoCard extends StatelessWidget {
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.08),
             blurRadius: 12,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
           BoxShadow(
             color: ColorUtils.slate900.withValues(alpha: 0.06),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),

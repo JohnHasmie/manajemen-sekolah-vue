@@ -29,12 +29,14 @@ Widget _subScreen({
   List<({String label, String dest})> children = const [],
   List<({String label, Widget screen})> richChildren = const [],
 }) {
-  return Builder(builder: (ctx) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: ListView(
-        children: [
-          ...children.map((c) => ListTile(
+  return Builder(
+    builder: (ctx) {
+      return Scaffold(
+        appBar: AppBar(title: Text(title)),
+        body: ListView(
+          children: [
+            ...children.map(
+              (c) => ListTile(
                 title: Text(c.label),
                 onTap: () => AppNavigator.push(
                   ctx,
@@ -43,15 +45,19 @@ Widget _subScreen({
                     body: Text('${c.dest} body'),
                   ),
                 ),
-              )),
-          ...richChildren.map((c) => ListTile(
+              ),
+            ),
+            ...richChildren.map(
+              (c) => ListTile(
                 title: Text(c.label),
                 onTap: () => AppNavigator.push(ctx, c.screen),
-              )),
-        ],
-      ),
-    );
-  });
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
 
 /// Admin Dashboard mock — all real quick actions + menu items.
@@ -61,147 +67,236 @@ Widget _buildAdminDashboard() {
   return MaterialApp(
     home: Scaffold(
       appBar: AppBar(title: const Text('Admin Dashboard')),
-      body: Builder(builder: (ctx) {
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Quick Actions ──────────────────────────────────────────────
-              Row(children: [
-                QuickActionButton(
-                  label: 'Data',
-                  icon: Icons.folder_outlined,
-                  color: primaryColor,
-                  onTap: () => AppNavigator.push(ctx,
-                      _subScreen(title: 'Data Management', children: [
+      body: Builder(
+        builder: (ctx) {
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Quick Actions ──────────────────────────────────────────────
+                Row(
+                  children: [
+                    QuickActionButton(
+                      label: 'Data',
+                      icon: Icons.folder_outlined,
+                      color: primaryColor,
+                      onTap: () => AppNavigator.push(
+                        ctx,
+                        _subScreen(
+                          title: 'Data Management',
+                          children: [
+                            (label: 'Students', dest: 'Student Management'),
+                            (label: 'Teachers', dest: 'Teacher Management'),
+                            (label: 'Classrooms', dest: 'Classroom Management'),
+                            (label: 'Subjects', dest: 'Subject Management'),
+                          ],
+                        ),
+                      ),
+                    ),
+                    QuickActionButton(
+                      label: 'Schedule',
+                      icon: Icons.schedule_outlined,
+                      color: primaryColor,
+                      onTap: () => AppNavigator.push(
+                        ctx,
+                        _subScreen(
+                          title: 'Schedule Management',
+                          children: [
+                            (label: 'Add Schedule', dest: 'Add Schedule Form'),
+                            (
+                              label: 'Edit Schedule',
+                              dest: 'Edit Schedule Form',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    QuickActionButton(
+                      label: 'Finance',
+                      icon: Icons.account_balance_wallet_outlined,
+                      color: primaryColor,
+                      onTap: () => AppNavigator.push(
+                        ctx,
+                        _subScreen(
+                          title: 'Finance Screen',
+                          children: [
+                            (
+                              label: 'Payment Types',
+                              dest: 'Payment Type Detail',
+                            ),
+                            (label: 'Generate Bills', dest: 'Bill Generation'),
+                          ],
+                        ),
+                      ),
+                    ),
+                    QuickActionButton(
+                      label: 'Announcements',
+                      icon: Icons.announcement_outlined,
+                      color: primaryColor,
+                      onTap: () => AppNavigator.push(
+                        ctx,
+                        _subScreen(
+                          title: 'Announcements Screen',
+                          children: [
+                            (
+                              label: 'New Announcement',
+                              dest: 'Announcement Form',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // ── Menu Items: Data Management ────────────────────────────────
+                MenuItemCard(
+                  title: 'Manage Data',
+                  icon: Icons.folder_shared_outlined,
+                  onTap: () => AppNavigator.push(
+                    ctx,
+                    _subScreen(
+                      title: 'Data Management',
+                      children: [
                         (label: 'Students', dest: 'Student Management'),
                         (label: 'Teachers', dest: 'Teacher Management'),
                         (label: 'Classrooms', dest: 'Classroom Management'),
                         (label: 'Subjects', dest: 'Subject Management'),
-                      ])),
+                      ],
+                    ),
+                  ),
                 ),
-                QuickActionButton(
-                  label: 'Schedule',
+                MenuItemCard(
+                  title: 'Teaching Schedule',
                   icon: Icons.schedule_outlined,
-                  color: primaryColor,
-                  onTap: () => AppNavigator.push(ctx,
-                      _subScreen(title: 'Schedule Management', children: [
+                  onTap: () => AppNavigator.push(
+                    ctx,
+                    _subScreen(
+                      title: 'Schedule Management',
+                      children: [
                         (label: 'Add Schedule', dest: 'Add Schedule Form'),
-                        (label: 'Edit Schedule', dest: 'Edit Schedule Form'),
-                      ])),
+                      ],
+                    ),
+                  ),
                 ),
-                QuickActionButton(
-                  label: 'Finance',
+                MenuItemCard(
+                  title: 'Input Grades',
+                  icon: Icons.edit_note_outlined,
+                  onTap: () => AppNavigator.push(
+                    ctx,
+                    _subScreen(
+                      title: 'Grade Input',
+                      children: [
+                        (label: 'Kelas 7A', dest: 'Grade Book 7A'),
+                        (label: 'Kelas 8B', dest: 'Grade Book 8B'),
+                      ],
+                    ),
+                  ),
+                ),
+                MenuItemCard(
+                  title: 'Announcements',
+                  icon: Icons.announcement_outlined,
+                  onTap: () => AppNavigator.push(
+                    ctx,
+                    _subScreen(
+                      title: 'Announcements Screen',
+                      children: [
+                        (label: 'New Announcement', dest: 'Announcement Form'),
+                      ],
+                    ),
+                  ),
+                ),
+                MenuItemCard(
+                  title: 'Class Activities',
+                  icon: Icons.local_activity_outlined,
+                  onTap: () => AppNavigator.push(
+                    ctx,
+                    _subScreen(
+                      title: 'Class Activities Screen',
+                      children: [
+                        (
+                          label: 'Activity Detail',
+                          dest: 'Activity Detail View',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                MenuItemCard(
+                  title: 'Attendance Report',
+                  icon: Icons.check_circle_outline,
+                  onTap: () => AppNavigator.push(
+                    ctx,
+                    _subScreen(
+                      title: 'Attendance Report Screen',
+                      children: [
+                        (label: 'Export Report', dest: 'Export Dialog'),
+                      ],
+                    ),
+                  ),
+                ),
+                MenuItemCard(
+                  title: 'Lesson Plans',
+                  icon: Icons.description_outlined,
+                  onTap: () => AppNavigator.push(
+                    ctx,
+                    _subScreen(
+                      title: 'Lesson Plans Screen',
+                      children: [
+                        (
+                          label: 'Lesson Plan Detail',
+                          dest: 'Lesson Plan Detail View',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                MenuItemCard(
+                  title: 'Student Report Card',
+                  icon: Icons.assignment_turned_in_outlined,
+                  onTap: () => AppNavigator.push(
+                    ctx,
+                    _subScreen(
+                      title: 'Report Card Screen',
+                      children: [
+                        (label: 'View Report Card', dest: 'Report Card View'),
+                      ],
+                    ),
+                  ),
+                ),
+                MenuItemCard(
+                  title: 'Finance',
                   icon: Icons.account_balance_wallet_outlined,
-                  color: primaryColor,
-                  onTap: () => AppNavigator.push(ctx,
-                      _subScreen(title: 'Finance Screen', children: [
+                  onTap: () => AppNavigator.push(
+                    ctx,
+                    _subScreen(
+                      title: 'Finance Screen',
+                      children: [
                         (label: 'Payment Types', dest: 'Payment Type Detail'),
                         (label: 'Generate Bills', dest: 'Bill Generation'),
-                      ])),
+                      ],
+                    ),
+                  ),
                 ),
-                QuickActionButton(
-                  label: 'Announcements',
-                  icon: Icons.announcement_outlined,
-                  color: primaryColor,
-                  onTap: () => AppNavigator.push(ctx,
-                      _subScreen(title: 'Announcements Screen', children: [
-                        (label: 'New Announcement', dest: 'Announcement Form'),
-                      ])),
+                MenuItemCard(
+                  title: 'School Settings',
+                  icon: Icons.settings_applications,
+                  onTap: () => AppNavigator.push(
+                    ctx,
+                    _subScreen(
+                      title: 'School Settings Screen',
+                      children: [
+                        (label: 'Time Settings', dest: 'Time Settings View'),
+                        (label: 'Academic Year', dest: 'Academic Year View'),
+                      ],
+                    ),
+                  ),
                 ),
-              ]),
-
-              // ── Menu Items: Data Management ────────────────────────────────
-              MenuItemCard(
-                title: 'Manage Data',
-                icon: Icons.folder_shared_outlined,
-                onTap: () => AppNavigator.push(ctx,
-                    _subScreen(title: 'Data Management', children: [
-                      (label: 'Students', dest: 'Student Management'),
-                      (label: 'Teachers', dest: 'Teacher Management'),
-                      (label: 'Classrooms', dest: 'Classroom Management'),
-                      (label: 'Subjects', dest: 'Subject Management'),
-                    ])),
-              ),
-              MenuItemCard(
-                title: 'Teaching Schedule',
-                icon: Icons.schedule_outlined,
-                onTap: () => AppNavigator.push(ctx,
-                    _subScreen(title: 'Schedule Management', children: [
-                      (label: 'Add Schedule', dest: 'Add Schedule Form'),
-                    ])),
-              ),
-              MenuItemCard(
-                title: 'Input Grades',
-                icon: Icons.edit_note_outlined,
-                onTap: () => AppNavigator.push(ctx,
-                    _subScreen(title: 'Grade Input', children: [
-                      (label: 'Kelas 7A', dest: 'Grade Book 7A'),
-                      (label: 'Kelas 8B', dest: 'Grade Book 8B'),
-                    ])),
-              ),
-              MenuItemCard(
-                title: 'Announcements',
-                icon: Icons.announcement_outlined,
-                onTap: () => AppNavigator.push(ctx,
-                    _subScreen(title: 'Announcements Screen', children: [
-                      (label: 'New Announcement', dest: 'Announcement Form'),
-                    ])),
-              ),
-              MenuItemCard(
-                title: 'Class Activities',
-                icon: Icons.local_activity_outlined,
-                onTap: () => AppNavigator.push(ctx,
-                    _subScreen(title: 'Class Activities Screen', children: [
-                      (label: 'Activity Detail', dest: 'Activity Detail View'),
-                    ])),
-              ),
-              MenuItemCard(
-                title: 'Attendance Report',
-                icon: Icons.check_circle_outline,
-                onTap: () => AppNavigator.push(ctx,
-                    _subScreen(title: 'Attendance Report Screen', children: [
-                      (label: 'Export Report', dest: 'Export Dialog'),
-                    ])),
-              ),
-              MenuItemCard(
-                title: 'Lesson Plans',
-                icon: Icons.description_outlined,
-                onTap: () => AppNavigator.push(ctx,
-                    _subScreen(title: 'Lesson Plans Screen', children: [
-                      (label: 'Lesson Plan Detail', dest: 'Lesson Plan Detail View'),
-                    ])),
-              ),
-              MenuItemCard(
-                title: 'Student Report Card',
-                icon: Icons.assignment_turned_in_outlined,
-                onTap: () => AppNavigator.push(ctx,
-                    _subScreen(title: 'Report Card Screen', children: [
-                      (label: 'View Report Card', dest: 'Report Card View'),
-                    ])),
-              ),
-              MenuItemCard(
-                title: 'Finance',
-                icon: Icons.account_balance_wallet_outlined,
-                onTap: () => AppNavigator.push(ctx,
-                    _subScreen(title: 'Finance Screen', children: [
-                      (label: 'Payment Types', dest: 'Payment Type Detail'),
-                      (label: 'Generate Bills', dest: 'Bill Generation'),
-                    ])),
-              ),
-              MenuItemCard(
-                title: 'School Settings',
-                icon: Icons.settings_applications,
-                onTap: () => AppNavigator.push(ctx,
-                    _subScreen(title: 'School Settings Screen', children: [
-                      (label: 'Time Settings', dest: 'Time Settings View'),
-                      (label: 'Academic Year', dest: 'Academic Year View'),
-                    ])),
-              ),
-            ],
-          ),
-        );
-      }),
+              ],
+            ),
+          );
+        },
+      ),
     ),
   );
 }
@@ -232,12 +327,14 @@ Future<void> _assertScreenAndBack(
   String screen,
   String dashboardTitle,
 ) async {
-  expect(find.text(screen), findsOneWidget,
-      reason: 'Should be on "$screen"');
+  expect(find.text(screen), findsOneWidget, reason: 'Should be on "$screen"');
   await tester.tap(find.byType(BackButton));
   await tester.pumpAndSettle();
-  expect(find.text(dashboardTitle), findsOneWidget,
-      reason: 'Should return to "$dashboardTitle"');
+  expect(
+    find.text(dashboardTitle),
+    findsOneWidget,
+    reason: 'Should return to "$dashboardTitle"',
+  );
 }
 
 // ===========================================================================
@@ -258,19 +355,31 @@ void main() {
     testWidgets('Schedule → Schedule Management → back', (tester) async {
       await tester.pumpWidget(_buildAdminDashboard());
       await _tapQuick(tester, 'Schedule');
-      await _assertScreenAndBack(tester, 'Schedule Management', 'Admin Dashboard');
+      await _assertScreenAndBack(
+        tester,
+        'Schedule Management',
+        'Admin Dashboard',
+      );
     });
 
-    testWidgets('Finance (quick action) → Finance Screen → back', (tester) async {
+    testWidgets('Finance (quick action) → Finance Screen → back', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildAdminDashboard());
       await _tapQuick(tester, 'Finance');
       await _assertScreenAndBack(tester, 'Finance Screen', 'Admin Dashboard');
     });
 
-    testWidgets('Announcements (quick action) → Announcements Screen → back', (tester) async {
+    testWidgets('Announcements (quick action) → Announcements Screen → back', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildAdminDashboard());
       await _tapQuick(tester, 'Announcements');
-      await _assertScreenAndBack(tester, 'Announcements Screen', 'Admin Dashboard');
+      await _assertScreenAndBack(
+        tester,
+        'Announcements Screen',
+        'Admin Dashboard',
+      );
     });
   });
 
@@ -284,10 +393,16 @@ void main() {
       await _assertScreenAndBack(tester, 'Data Management', 'Admin Dashboard');
     });
 
-    testWidgets('Teaching Schedule → Schedule Management → back', (tester) async {
+    testWidgets('Teaching Schedule → Schedule Management → back', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildAdminDashboard());
       await _tapMenu(tester, 'Teaching Schedule');
-      await _assertScreenAndBack(tester, 'Schedule Management', 'Admin Dashboard');
+      await _assertScreenAndBack(
+        tester,
+        'Schedule Management',
+        'Admin Dashboard',
+      );
     });
 
     testWidgets('Input Grades → Grade Input → back', (tester) async {
@@ -296,34 +411,62 @@ void main() {
       await _assertScreenAndBack(tester, 'Grade Input', 'Admin Dashboard');
     });
 
-    testWidgets('Announcements (menu) → Announcements Screen → back', (tester) async {
+    testWidgets('Announcements (menu) → Announcements Screen → back', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildAdminDashboard());
       await _tapMenu(tester, 'Announcements');
-      await _assertScreenAndBack(tester, 'Announcements Screen', 'Admin Dashboard');
+      await _assertScreenAndBack(
+        tester,
+        'Announcements Screen',
+        'Admin Dashboard',
+      );
     });
 
-    testWidgets('Class Activities → Class Activities Screen → back', (tester) async {
+    testWidgets('Class Activities → Class Activities Screen → back', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildAdminDashboard());
       await _tapMenu(tester, 'Class Activities');
-      await _assertScreenAndBack(tester, 'Class Activities Screen', 'Admin Dashboard');
+      await _assertScreenAndBack(
+        tester,
+        'Class Activities Screen',
+        'Admin Dashboard',
+      );
     });
 
-    testWidgets('Attendance Report → Attendance Report Screen → back', (tester) async {
+    testWidgets('Attendance Report → Attendance Report Screen → back', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildAdminDashboard());
       await _tapMenu(tester, 'Attendance Report');
-      await _assertScreenAndBack(tester, 'Attendance Report Screen', 'Admin Dashboard');
+      await _assertScreenAndBack(
+        tester,
+        'Attendance Report Screen',
+        'Admin Dashboard',
+      );
     });
 
     testWidgets('Lesson Plans → Lesson Plans Screen → back', (tester) async {
       await tester.pumpWidget(_buildAdminDashboard());
       await _tapMenu(tester, 'Lesson Plans');
-      await _assertScreenAndBack(tester, 'Lesson Plans Screen', 'Admin Dashboard');
+      await _assertScreenAndBack(
+        tester,
+        'Lesson Plans Screen',
+        'Admin Dashboard',
+      );
     });
 
-    testWidgets('Student Report Card → Report Card Screen → back', (tester) async {
+    testWidgets('Student Report Card → Report Card Screen → back', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildAdminDashboard());
       await _tapMenu(tester, 'Student Report Card');
-      await _assertScreenAndBack(tester, 'Report Card Screen', 'Admin Dashboard');
+      await _assertScreenAndBack(
+        tester,
+        'Report Card Screen',
+        'Admin Dashboard',
+      );
     });
 
     testWidgets('Finance (menu) → Finance Screen → back', (tester) async {
@@ -332,10 +475,16 @@ void main() {
       await _assertScreenAndBack(tester, 'Finance Screen', 'Admin Dashboard');
     });
 
-    testWidgets('School Settings → School Settings Screen → back', (tester) async {
+    testWidgets('School Settings → School Settings Screen → back', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildAdminDashboard());
       await _tapMenu(tester, 'School Settings');
-      await _assertScreenAndBack(tester, 'School Settings Screen', 'Admin Dashboard');
+      await _assertScreenAndBack(
+        tester,
+        'School Settings Screen',
+        'Admin Dashboard',
+      );
     });
   });
 
@@ -343,193 +492,213 @@ void main() {
   // Deep: Data Management → children → back all to Dashboard
   // =========================================================================
   group('Admin Dashboard — Deep: Data Management', () {
-    testWidgets('Dashboard → Data Mgmt → Student Mgmt → back → back → Dashboard',
-        (tester) async {
-      await tester.pumpWidget(_buildAdminDashboard());
-
-      await _tapMenu(tester, 'Manage Data');
-      expect(find.text('Data Management'), findsOneWidget);
-
-      await tester.tap(find.text('Students'));
-      await tester.pumpAndSettle();
-      expect(find.text('Student Management'), findsOneWidget);
-
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Data Management'), findsOneWidget);
-
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Admin Dashboard'), findsOneWidget);
-    });
-
-    testWidgets('visits all 4 Data Mgmt children and always returns to Dashboard',
-        (tester) async {
-      for (final child in [
-        ('Students', 'Student Management'),
-        ('Teachers', 'Teacher Management'),
-        ('Classrooms', 'Classroom Management'),
-        ('Subjects', 'Subject Management'),
-      ]) {
+    testWidgets(
+      'Dashboard → Data Mgmt → Student Mgmt → back → back → Dashboard',
+      (tester) async {
         await tester.pumpWidget(_buildAdminDashboard());
 
         await _tapMenu(tester, 'Manage Data');
-        await tester.tap(find.text(child.$1));
+        expect(find.text('Data Management'), findsOneWidget);
+
+        await tester.tap(find.text('Students'));
         await tester.pumpAndSettle();
-        expect(find.text(child.$2), findsOneWidget);
+        expect(find.text('Student Management'), findsOneWidget);
 
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
+        expect(find.text('Data Management'), findsOneWidget);
+
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
         expect(find.text('Admin Dashboard'), findsOneWidget);
-      }
-    });
+      },
+    );
+
+    testWidgets(
+      'visits all 4 Data Mgmt children and always returns to Dashboard',
+      (tester) async {
+        for (final child in [
+          ('Students', 'Student Management'),
+          ('Teachers', 'Teacher Management'),
+          ('Classrooms', 'Classroom Management'),
+          ('Subjects', 'Subject Management'),
+        ]) {
+          await tester.pumpWidget(_buildAdminDashboard());
+
+          await _tapMenu(tester, 'Manage Data');
+          await tester.tap(find.text(child.$1));
+          await tester.pumpAndSettle();
+          expect(find.text(child.$2), findsOneWidget);
+
+          await tester.tap(find.byType(BackButton));
+          await tester.pumpAndSettle();
+          await tester.tap(find.byType(BackButton));
+          await tester.pumpAndSettle();
+          expect(find.text('Admin Dashboard'), findsOneWidget);
+        }
+      },
+    );
   });
 
   // =========================================================================
   // Deep: Grade Input → class → grade book → back all
   // =========================================================================
   group('Admin Dashboard — Deep: Grade Input', () {
-    testWidgets('Dashboard → Grade Input → Kelas 7A → back → back → Dashboard',
-        (tester) async {
-      await tester.pumpWidget(_buildAdminDashboard());
+    testWidgets(
+      'Dashboard → Grade Input → Kelas 7A → back → back → Dashboard',
+      (tester) async {
+        await tester.pumpWidget(_buildAdminDashboard());
 
-      await _tapMenu(tester, 'Input Grades');
-      expect(find.text('Grade Input'), findsOneWidget);
+        await _tapMenu(tester, 'Input Grades');
+        expect(find.text('Grade Input'), findsOneWidget);
 
-      await tester.tap(find.text('Kelas 7A'));
-      await tester.pumpAndSettle();
-      expect(find.text('Grade Book 7A'), findsOneWidget);
+        await tester.tap(find.text('Kelas 7A'));
+        await tester.pumpAndSettle();
+        expect(find.text('Grade Book 7A'), findsOneWidget);
 
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Grade Input'), findsOneWidget);
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(find.text('Grade Input'), findsOneWidget);
 
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Admin Dashboard'), findsOneWidget);
-    });
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(find.text('Admin Dashboard'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Dashboard → Grade Input → Kelas 8B → back → back → Dashboard',
-        (tester) async {
-      await tester.pumpWidget(_buildAdminDashboard());
+    testWidgets(
+      'Dashboard → Grade Input → Kelas 8B → back → back → Dashboard',
+      (tester) async {
+        await tester.pumpWidget(_buildAdminDashboard());
 
-      await _tapMenu(tester, 'Input Grades');
-      await tester.tap(find.text('Kelas 8B'));
-      await tester.pumpAndSettle();
-      expect(find.text('Grade Book 8B'), findsOneWidget);
+        await _tapMenu(tester, 'Input Grades');
+        await tester.tap(find.text('Kelas 8B'));
+        await tester.pumpAndSettle();
+        expect(find.text('Grade Book 8B'), findsOneWidget);
 
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Admin Dashboard'), findsOneWidget);
-    });
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(find.text('Admin Dashboard'), findsOneWidget);
+      },
+    );
   });
 
   // =========================================================================
   // Deep: Finance → child screens → back all
   // =========================================================================
   group('Admin Dashboard — Deep: Finance', () {
-    testWidgets('Dashboard → Finance → Payment Type → back → back → Dashboard',
-        (tester) async {
-      await tester.pumpWidget(_buildAdminDashboard());
+    testWidgets(
+      'Dashboard → Finance → Payment Type → back → back → Dashboard',
+      (tester) async {
+        await tester.pumpWidget(_buildAdminDashboard());
 
-      await _tapMenu(tester, 'Finance');
-      expect(find.text('Finance Screen'), findsOneWidget);
+        await _tapMenu(tester, 'Finance');
+        expect(find.text('Finance Screen'), findsOneWidget);
 
-      await tester.tap(find.text('Payment Types'));
-      await tester.pumpAndSettle();
-      expect(find.text('Payment Type Detail'), findsOneWidget);
+        await tester.tap(find.text('Payment Types'));
+        await tester.pumpAndSettle();
+        expect(find.text('Payment Type Detail'), findsOneWidget);
 
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Admin Dashboard'), findsOneWidget);
-    });
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(find.text('Admin Dashboard'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Dashboard → Finance → Generate Bills → back → back → Dashboard',
-        (tester) async {
-      await tester.pumpWidget(_buildAdminDashboard());
+    testWidgets(
+      'Dashboard → Finance → Generate Bills → back → back → Dashboard',
+      (tester) async {
+        await tester.pumpWidget(_buildAdminDashboard());
 
-      await _tapMenu(tester, 'Finance');
-      await tester.tap(find.text('Generate Bills'));
-      await tester.pumpAndSettle();
-      expect(find.text('Bill Generation'), findsOneWidget);
+        await _tapMenu(tester, 'Finance');
+        await tester.tap(find.text('Generate Bills'));
+        await tester.pumpAndSettle();
+        expect(find.text('Bill Generation'), findsOneWidget);
 
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Admin Dashboard'), findsOneWidget);
-    });
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(find.text('Admin Dashboard'), findsOneWidget);
+      },
+    );
   });
 
   // =========================================================================
   // Deep: School Settings → children → back all
   // =========================================================================
   group('Admin Dashboard — Deep: School Settings', () {
-    testWidgets('Dashboard → School Settings → Time Settings → back → back → Dashboard',
-        (tester) async {
-      await tester.pumpWidget(_buildAdminDashboard());
+    testWidgets(
+      'Dashboard → School Settings → Time Settings → back → back → Dashboard',
+      (tester) async {
+        await tester.pumpWidget(_buildAdminDashboard());
 
-      await _tapMenu(tester, 'School Settings');
-      await tester.tap(find.text('Time Settings'));
-      await tester.pumpAndSettle();
-      expect(find.text('Time Settings View'), findsOneWidget);
+        await _tapMenu(tester, 'School Settings');
+        await tester.tap(find.text('Time Settings'));
+        await tester.pumpAndSettle();
+        expect(find.text('Time Settings View'), findsOneWidget);
 
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Admin Dashboard'), findsOneWidget);
-    });
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(find.text('Admin Dashboard'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Dashboard → School Settings → Academic Year → back → back → Dashboard',
-        (tester) async {
-      await tester.pumpWidget(_buildAdminDashboard());
+    testWidgets(
+      'Dashboard → School Settings → Academic Year → back → back → Dashboard',
+      (tester) async {
+        await tester.pumpWidget(_buildAdminDashboard());
 
-      await _tapMenu(tester, 'School Settings');
-      await tester.tap(find.text('Academic Year'));
-      await tester.pumpAndSettle();
-      expect(find.text('Academic Year View'), findsOneWidget);
+        await _tapMenu(tester, 'School Settings');
+        await tester.tap(find.text('Academic Year'));
+        await tester.pumpAndSettle();
+        expect(find.text('Academic Year View'), findsOneWidget);
 
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Admin Dashboard'), findsOneWidget);
-    });
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(find.text('Admin Dashboard'), findsOneWidget);
+      },
+    );
   });
 
   // =========================================================================
   // Deep: Attendance Report → export → back all
   // =========================================================================
   group('Admin Dashboard — Deep: Attendance Report', () {
-    testWidgets('Dashboard → Attendance Report → Export → back → back → Dashboard',
-        (tester) async {
-      await tester.pumpWidget(_buildAdminDashboard());
+    testWidgets(
+      'Dashboard → Attendance Report → Export → back → back → Dashboard',
+      (tester) async {
+        await tester.pumpWidget(_buildAdminDashboard());
 
-      await _tapMenu(tester, 'Attendance Report');
-      await tester.tap(find.text('Export Report'));
-      await tester.pumpAndSettle();
-      expect(find.text('Export Dialog'), findsOneWidget);
+        await _tapMenu(tester, 'Attendance Report');
+        await tester.tap(find.text('Export Report'));
+        await tester.pumpAndSettle();
+        expect(find.text('Export Dialog'), findsOneWidget);
 
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Admin Dashboard'), findsOneWidget);
-    });
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(find.text('Admin Dashboard'), findsOneWidget);
+      },
+    );
   });
 
   // =========================================================================
   // Back-stack isolation
   // =========================================================================
   group('Admin Dashboard — Back-stack isolation between menus', () {
-    testWidgets('Grade Input and Finance stacks are independent', (tester) async {
+    testWidgets('Grade Input and Finance stacks are independent', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildAdminDashboard());
 
       // Visit Grade Input → 7A
@@ -574,12 +743,18 @@ void main() {
       for (final (title, screen) in menus) {
         await tester.pumpWidget(_buildAdminDashboard());
         await _tapMenu(tester, title);
-        expect(find.text(screen), findsOneWidget,
-            reason: '$title should open $screen');
+        expect(
+          find.text(screen),
+          findsOneWidget,
+          reason: '$title should open $screen',
+        );
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
-        expect(find.text('Admin Dashboard'), findsOneWidget,
-            reason: 'Back from $screen should restore Admin Dashboard');
+        expect(
+          find.text('Admin Dashboard'),
+          findsOneWidget,
+          reason: 'Back from $screen should restore Admin Dashboard',
+        );
       }
     });
   });

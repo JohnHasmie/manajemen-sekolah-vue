@@ -19,16 +19,15 @@ Attendance _makeRecord({
   bool isRead = true,
   String? subjectName,
   String? lessonHourName,
-}) =>
-    Attendance(
-      id: 'a1',
-      studentId: 's1',
-      date: DateTime(2025, 3, 10),
-      status: status,
-      isRead: isRead,
-      subjectName: subjectName ?? 'Matematika',
-      lessonHourName: lessonHourName,
-    );
+}) => Attendance(
+  id: 'a1',
+  studentId: 's1',
+  date: DateTime(2025, 3, 10),
+  status: status,
+  isRead: isRead,
+  subjectName: subjectName ?? 'Matematika',
+  lessonHourName: lessonHourName,
+);
 
 // Override languageRiverpod with a fresh LanguageProvider each time to avoid
 // "used after dispose" errors when the ProviderScope is torn down between tests.
@@ -39,24 +38,21 @@ Widget _build({
   String statusText = 'Hadir',
   IconData statusIcon = Icons.check_circle_outline,
   String normalizedStatus = 'hadir',
-}) =>
-    ProviderScope(
-      overrides: [
-        languageRiverpod.overrideWith((_) => LanguageProvider()),
-      ],
-      child: MaterialApp(
-        home: Scaffold(
-          body: ParentAttendanceItem(
-            record: record ?? _makeRecord(),
-            primaryColor: primaryColor,
-            statusColor: statusColor,
-            statusText: statusText,
-            statusIcon: statusIcon,
-            normalizedStatus: normalizedStatus,
-          ),
-        ),
+}) => ProviderScope(
+  overrides: [languageRiverpod.overrideWith((_) => LanguageProvider())],
+  child: MaterialApp(
+    home: Scaffold(
+      body: ParentAttendanceItem(
+        record: record ?? _makeRecord(),
+        primaryColor: primaryColor,
+        statusColor: statusColor,
+        statusText: statusText,
+        statusIcon: statusIcon,
+        normalizedStatus: normalizedStatus,
       ),
-    );
+    ),
+  ),
+);
 
 void main() {
   setUp(() async {
@@ -74,7 +70,9 @@ void main() {
     });
 
     testWidgets('shows subject name', (tester) async {
-      await tester.pumpWidget(_build(record: _makeRecord(subjectName: 'Fisika')));
+      await tester.pumpWidget(
+        _build(record: _makeRecord(subjectName: 'Fisika')),
+      );
       await tester.pump();
       expect(find.text('Fisika'), findsOneWidget);
     });
@@ -89,7 +87,9 @@ void main() {
       await tester.pumpWidget(_build(statusIcon: Icons.warning_rounded));
       await tester.pump();
       expect(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.warning_rounded),
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.warning_rounded,
+        ),
         findsOneWidget,
       );
     });
@@ -124,28 +124,33 @@ void main() {
     });
 
     testWidgets('shows lessonHourName tag when provided', (tester) async {
-      await tester.pumpWidget(_build(
-        record: _makeRecord(lessonHourName: 'Jam 2'),
-      ));
+      await tester.pumpWidget(
+        _build(record: _makeRecord(lessonHourName: 'Jam 2')),
+      );
       await tester.pump();
       expect(find.text('Jam 2'), findsOneWidget);
     });
 
-    testWidgets('does NOT show lesson hour tag when lessonHourName is null',
-        (tester) async {
-      await tester.pumpWidget(_build(record: _makeRecord(lessonHourName: null)));
+    testWidgets('does NOT show lesson hour tag when lessonHourName is null', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(record: _makeRecord(lessonHourName: null)),
+      );
       await tester.pump();
       // No lesson hour tag means no 'Jam' prefix text
       expect(find.textContaining('Jam'), findsNothing);
     });
 
     testWidgets('shows "Absen" status correctly', (tester) async {
-      await tester.pumpWidget(_build(
-        record: _makeRecord(status: 'alpha'),
-        statusText: 'Absen',
-        statusColor: Colors.red,
-        normalizedStatus: 'alpha',
-      ));
+      await tester.pumpWidget(
+        _build(
+          record: _makeRecord(status: 'alpha'),
+          statusText: 'Absen',
+          statusColor: Colors.red,
+          normalizedStatus: 'alpha',
+        ),
+      );
       await tester.pump();
       expect(find.text('Absen'), findsOneWidget);
     });

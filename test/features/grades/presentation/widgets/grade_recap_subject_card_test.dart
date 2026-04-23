@@ -18,29 +18,21 @@ import 'package:manajemensekolah/features/grades/presentation/widgets/grade_reca
 // Helpers
 // ---------------------------------------------------------------------------
 
-Map<String, dynamic> _item({
-  String? nama,
-  String? name,
-  String? subjectCode,
-}) =>
+Map<String, dynamic> _item({String? nama, String? name, String? subjectCode}) =>
     {
       if (nama != null) 'nama': nama,
       if (name != null) 'name': name,
       if (subjectCode != null) 'subject_code': subjectCode,
     };
 
-Widget _build({
-  Map<String, dynamic>? item,
-  VoidCallback? onTap,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: GradeRecapSubjectCard(
-          item: item ?? _item(nama: 'Matematika'),
-          onTap: onTap ?? () {},
-        ),
-      ),
-    );
+Widget _build({Map<String, dynamic>? item, VoidCallback? onTap}) => MaterialApp(
+  home: Scaffold(
+    body: GradeRecapSubjectCard(
+      item: item ?? _item(nama: 'Matematika'),
+      onTap: onTap ?? () {},
+    ),
+  ),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -66,14 +58,17 @@ void main() {
 
   group('GradeRecapSubjectCard — subject code tag', () {
     testWidgets('shows subject_code in info tag', (tester) async {
-      await tester.pumpWidget(_build(
-        item: _item(nama: 'Biologi', subjectCode: 'BIO-101'),
-      ));
+      await tester.pumpWidget(
+        _build(
+          item: _item(nama: 'Biologi', subjectCode: 'BIO-101'),
+        ),
+      );
       expect(find.text('BIO-101'), findsOneWidget);
     });
 
-    testWidgets('shows "Mata Pelajaran" fallback when subject_code absent',
-        (tester) async {
+    testWidgets('shows "Mata Pelajaran" fallback when subject_code absent', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(item: _item(nama: 'Kimia')));
       expect(find.text('Mata Pelajaran'), findsOneWidget);
     });

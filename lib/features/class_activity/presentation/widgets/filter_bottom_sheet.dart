@@ -2,10 +2,10 @@
 // Extracted from teacher_class_activity_screen.dart to reduce file size.
 // Like a Vue child component that emits 'apply' with the selected filter values.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
+import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
 
 /// Bottom sheet that lets the user pick a date-range filter
 /// ('today', 'week', or 'month').
@@ -60,277 +60,60 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     _tempDateFilter = widget.initialDateFilter;
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: widget.primaryColor.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-            ),
-            child: Icon(icon, size: 16, color: widget.primaryColor),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: ColorUtils.slate900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChip(String label, String value, String? selectedValue) {
-    final isSelected = selectedValue == value;
-    return GestureDetector(
-      onTap: () => setState(
-        () => _tempDateFilter = isSelected ? null : value,
-      ),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? widget.primaryColor.withValues(alpha: 0.1)
-              : ColorUtils.slate50,
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
-          border: Border.all(
-            color: isSelected ? widget.primaryColor : ColorUtils.slate200,
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? widget.primaryColor : ColorUtils.slate600,
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final languageProvider = widget.languageProvider;
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.55,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
+    final lp = widget.languageProvider;
+    return AppFilterBottomSheet(
+      title: lp.getTranslatedText({
+        'en': 'Filter Activities',
+        'id': 'Filter Kegiatan',
+      }),
+      icon: Icons.tune_rounded,
+      primaryColor: widget.primaryColor,
+      onApply: () {
+        Navigator.pop(context);
+        widget.onApply(_tempDateFilter);
+      },
+      onReset: () => setState(() => _tempDateFilter = null),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  widget.primaryColor,
-                  widget.primaryColor.withValues(alpha: 0.85),
-                ],
-              ),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    borderRadius: const BorderRadius.all(Radius.circular(2)),
-                  ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      ),
-                      child: const Icon(
-                        Icons.tune_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Filter Activities',
-                          'id': 'Filter Kegiatan',
-                        }),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () =>
-                          setState(() => _tempDateFilter = null),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        backgroundColor: Colors.white.withValues(
-                          alpha: 0.2,
-                        ),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Reset',
-                          'id': 'Reset',
-                        }),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          FilterSectionHeader(
+            title: lp.getTranslatedText({
+              'en': 'Time Range',
+              'id': 'Rentang Waktu',
+            }),
+            icon: Icons.date_range_rounded,
+            primaryColor: widget.primaryColor,
           ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionHeader(
-                    languageProvider.getTranslatedText({
-                      'en': 'Time Range',
-                      'id': 'Rentang Waktu',
-                    }),
-                    Icons.calendar_today_rounded,
-                  ),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildChip(
-                        languageProvider.getTranslatedText({
-                          'en': 'Today',
-                          'id': 'Hari Ini',
-                        }),
-                        'today',
-                        _tempDateFilter,
-                      ),
-                      _buildChip(
-                        languageProvider.getTranslatedText({
-                          'en': 'This Week',
-                          'id': 'Minggu Ini',
-                        }),
-                        'week',
-                        _tempDateFilter,
-                      ),
-                      _buildChip(
-                        languageProvider.getTranslatedText({
-                          'en': 'This Month',
-                          'id': 'Bulan Ini',
-                        }),
-                        'month',
-                        _tempDateFilter,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                ],
+          FilterChipGrid<String>(
+            options: [
+              FilterOption(
+                value: 'today',
+                label: lp.getTranslatedText({'en': 'Today', 'id': 'Hari Ini'}),
               ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: ColorUtils.slate200)),
-              boxShadow: [
-                BoxShadow(
-                  color: ColorUtils.slate900.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              top: false,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => AppNavigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: BorderSide(color: ColorUtils.slate300),
-                        foregroundColor: ColorUtils.slate700,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Cancel',
-                          'id': 'Batal',
-                        }),
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        AppNavigator.pop(context);
-                        widget.onApply(_tempDateFilter);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: widget.primaryColor,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Apply Filter',
-                          'id': 'Terapkan Filter',
-                        }),
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                ],
+              FilterOption(
+                value: 'week',
+                label: lp.getTranslatedText({
+                  'en': 'This Week',
+                  'id': 'Minggu Ini',
+                }),
               ),
-            ),
+              FilterOption(
+                value: 'month',
+                label: lp.getTranslatedText({
+                  'en': 'This Month',
+                  'id': 'Bulan Ini',
+                }),
+              ),
+            ],
+            selectedValue: _tempDateFilter,
+            onSelected: (val) => setState(() => _tempDateFilter = val),
+            selectedColor: widget.primaryColor,
           ),
+          // No trailing SizedBox: [AppFilterBottomSheet]'s `mainAxisSize.min`
+          // shrink-wraps the sheet to content height, and the footer supplies
+          // its own padding — matches every other single-section filter sheet.
         ],
       ),
     );

@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 
 /// A styled text field matching the classroom management bottom-sheet design.
 ///
@@ -47,7 +48,10 @@ class ClassroomDialogTextField extends StatelessWidget {
               width: 1.5,
             ),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
         ),
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
       ),
@@ -163,10 +167,10 @@ class ClassroomHomeroomTeacherDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     // Deduplicate teachers based on ID (API may return duplicates)
     final uniqueTeachers = <String, Map<String, dynamic>>{};
-    for (var teacher in teachers) {
-      if (teacher['id'] != null) {
-        uniqueTeachers[teacher['id'].toString()] =
-            Map<String, dynamic>.from(teacher);
+    for (final teacher in teachers) {
+      final model = Teacher.fromJson(teacher);
+      if (model.id.isNotEmpty) {
+        uniqueTeachers[model.id] = Map<String, dynamic>.from(teacher);
       }
     }
 
@@ -204,7 +208,10 @@ class ClassroomHomeroomTeacherDropdown extends StatelessWidget {
               width: 1.5,
             ),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
         ),
         items: [
           DropdownMenuItem<String>(
@@ -217,13 +224,14 @@ class ClassroomHomeroomTeacherDropdown extends StatelessWidget {
             ),
           ),
           ...uniqueTeachers.values.map((teacher) {
-            final teacherName = teacher['name'] ?? 'Unknown';
-            final teacherNip = teacher['nip']?.toString() ?? '';
+            final model = Teacher.fromJson(teacher);
+            final teacherName = model.name.isNotEmpty ? model.name : 'Unknown';
+            final teacherNip = model.employeeNumber ?? '';
             final displayText = teacherNip.isNotEmpty
                 ? '$teacherName (NIP: $teacherNip)'
                 : teacherName;
             return DropdownMenuItem<String>(
-              value: teacher['id'].toString(),
+              value: model.id,
               child: Text(displayText, overflow: TextOverflow.ellipsis),
             );
           }),

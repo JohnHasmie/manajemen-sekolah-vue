@@ -65,8 +65,9 @@ void main() {
       expect(find.text('3'), findsOneWidget);
     });
 
-    testWidgets('descriptive mode shows full status labels',
-        (WidgetTester tester) async {
+    testWidgets('descriptive mode shows full status labels', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildWidget(compactMode: false));
       // Default language is 'id', so labels are Indonesian
       for (final label in ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpha']) {
@@ -74,62 +75,68 @@ void main() {
       }
     });
 
-    testWidgets('compact mode shows letter labels',
-        (WidgetTester tester) async {
+    testWidgets('compact mode shows letter labels', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildWidget(compactMode: true));
       for (final label in ['H', 'T', 'S', 'I', 'A']) {
         expect(find.text(label), findsOneWidget);
       }
     });
 
-    testWidgets('onStatusChanged fires with correct studentId and status (descriptive)',
-        (WidgetTester tester) async {
-      String? capturedId;
-      String? capturedStatus;
+    testWidgets(
+      'onStatusChanged fires with correct studentId and status (descriptive)',
+      (WidgetTester tester) async {
+        String? capturedId;
+        String? capturedStatus;
 
-      await tester.pumpWidget(
-        buildWidget(
-          compactMode: false,
-          onStatusChanged: (id, status) {
-            capturedId = id;
-            capturedStatus = status;
-          },
-        ),
-      );
+        await tester.pumpWidget(
+          buildWidget(
+            compactMode: false,
+            onStatusChanged: (id, status) {
+              capturedId = id;
+              capturedStatus = status;
+            },
+          ),
+        );
 
-      // Tap the "Sakit" button in descriptive mode.
-      await tester.tap(find.text('Sakit'));
-      await tester.pump();
+        // Tap the "Sakit" button in descriptive mode.
+        await tester.tap(find.text('Sakit'));
+        await tester.pump();
 
-      expect(capturedId, equals('stu-1'));
-      expect(capturedStatus, equals('sakit'));
-    });
+        expect(capturedId, equals('stu-1'));
+        expect(capturedStatus, equals('sakit'));
+      },
+    );
 
-    testWidgets('onStatusChanged fires with correct studentId and status (compact)',
-        (WidgetTester tester) async {
-      String? capturedId;
-      String? capturedStatus;
+    testWidgets(
+      'onStatusChanged fires with correct studentId and status (compact)',
+      (WidgetTester tester) async {
+        String? capturedId;
+        String? capturedStatus;
 
-      await tester.pumpWidget(
-        buildWidget(
-          compactMode: true,
-          onStatusChanged: (id, status) {
-            capturedId = id;
-            capturedStatus = status;
-          },
-        ),
-      );
+        await tester.pumpWidget(
+          buildWidget(
+            compactMode: true,
+            onStatusChanged: (id, status) {
+              capturedId = id;
+              capturedStatus = status;
+            },
+          ),
+        );
 
-      // Tap the "S" button in compact mode.
-      await tester.tap(find.text('S'));
-      await tester.pump();
+        // Tap the "S" button in compact mode.
+        await tester.tap(find.text('S'));
+        await tester.pump();
 
-      expect(capturedId, equals('stu-1'));
-      expect(capturedStatus, equals('sakit'));
-    });
+        expect(capturedId, equals('stu-1'));
+        expect(capturedStatus, equals('sakit'));
+      },
+    );
 
-    testWidgets('avatar shows first letter of student name',
-        (WidgetTester tester) async {
+    testWidgets('avatar shows first letter of student name', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildWidget());
       expect(find.text('B'), findsOneWidget);
     });

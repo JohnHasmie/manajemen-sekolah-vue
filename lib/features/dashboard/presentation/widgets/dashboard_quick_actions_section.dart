@@ -36,7 +36,7 @@ class DashboardQuickActionsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     // Hide the section entirely once loaded if there are no actions for this role
     if (actions.isEmpty && isLoaded) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     return Padding(
@@ -68,16 +68,18 @@ class DashboardQuickActionsSection extends StatelessWidget {
             child: isLoaded
                 ? ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    physics: BouncingScrollPhysics(),
+                    physics: const BouncingScrollPhysics(),
                     itemCount: actions.length,
-                    separatorBuilder: (context, index) => const SizedBox(width: 10),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: 10),
                     itemBuilder: (context, index) => actions[index],
                   )
                 : ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    physics: NeverScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: 4,
-                    separatorBuilder: (context, index) => const SizedBox(width: 10),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: 10),
                     itemBuilder: (context, index) =>
                         const QuickActionSkeleton(),
                   ),

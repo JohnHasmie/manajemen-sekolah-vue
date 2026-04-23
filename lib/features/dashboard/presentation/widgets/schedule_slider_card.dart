@@ -6,6 +6,7 @@
 // reusable [SmoothPageIndicator] dot indicator widget.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A swipeable dashboard card showing today's class schedule entries.
@@ -50,12 +51,12 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
           BoxShadow(
             color: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
             blurRadius: 16,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
           BoxShadow(
             color: ColorUtils.slate900.withValues(alpha: 0.06),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -109,7 +110,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
             Icon(Icons.event_busy, color: ColorUtils.slate400, size: 24),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              "No classes",
+              'No classes',
               style: TextStyle(
                 color: ColorUtils.slate500,
                 fontSize: 12,
@@ -125,19 +126,13 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
   /// Builds the content for a single schedule slide: icon, time badge,
   /// subject name, and class name. Like a Vue `<ScheduleSlide>` template.
   Widget _buildScheduleContent(dynamic schedule) {
-    final subjectName =
-        schedule['subject']?['name'] ??
-        schedule['subject_name'] ??
-        'Unknown Subject';
-    final className =
-        schedule['class']?['name'] ?? schedule['class_name'] ?? '-';
-    final startTime =
-        schedule['lesson_hour']?['start_time'] ??
-        schedule['start_time'] ??
-        '--:--';
-    final endTime =
-        schedule['lesson_hour']?['end_time'] ?? schedule['end_time'] ?? '--:--';
-    final formattedTime = "${_formatTime(startTime)} - ${_formatTime(endTime)}";
+    final model =
+        Schedule.fromJson(schedule as Map<String, dynamic>);
+    final subjectName = model.subjectName ?? 'Unknown Subject';
+    final className = model.className ?? '-';
+    final startTime = model.startTime ?? '--:--';
+    final endTime = model.endTime ?? '--:--';
+    final formattedTime = '${_formatTime(startTime)} - ${_formatTime(endTime)}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,7 +171,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
             ),
           ],
         ),
-        Spacer(), // Push text to bottom
+        const Spacer(), // Push text to bottom
         Text(
           subjectName,
           style: TextStyle(
@@ -248,7 +243,7 @@ class SmoothPageIndicator extends StatelessWidget {
             // Simple logic for active dot
             final bool isActive = (page.round() == index);
             return AnimatedContainer(
-              duration: Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 200),
               margin: const EdgeInsets.symmetric(horizontal: 2),
               width: isActive ? 12 : 6,
               height: 6,

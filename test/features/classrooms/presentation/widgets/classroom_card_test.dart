@@ -101,8 +101,9 @@ void main() {
       expect(find.text('Grade 7 SMP'), findsOneWidget);
     });
 
-    testWidgets('renders student count chip with Indonesian label',
-        (tester) async {
+    testWidgets('renders student count chip with Indonesian label', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildCard(classData: _classroom));
       // Default language is 'id', so the chip reads "30 siswa".
       expect(find.text('30 siswa'), findsOneWidget);
@@ -116,46 +117,53 @@ void main() {
 
     // ── Homeroom teacher name resolution ─────────────────────────────────────
 
-    testWidgets('renders homeroom teacher from flat homeroom_teacher_name key',
-        (tester) async {
-      await tester.pumpWidget(_buildCard(classData: _classroom));
-      expect(find.text('Mr. Ahmad'), findsOneWidget);
-    });
+    testWidgets(
+      'renders homeroom teacher from flat homeroom_teacher_name key',
+      (tester) async {
+        await tester.pumpWidget(_buildCard(classData: _classroom));
+        expect(find.text('Mr. Ahmad'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'renders homeroom teacher from homeroom_teacher List pivot shape',
-        (tester) async {
-      await tester.pumpWidget(
-        _buildCard(classData: _classroomWithTeacherList),
-      );
-      expect(find.text('Ms. Sari'), findsOneWidget);
-    });
+      'renders homeroom teacher from homeroom_teacher List pivot shape',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildCard(classData: _classroomWithTeacherList),
+        );
+        expect(find.text('Ms. Sari'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'renders homeroom teacher from homeroom_teacher Map relation shape',
-        (tester) async {
-      await tester.pumpWidget(
-        _buildCard(classData: _classroomWithTeacherMap),
-      );
-      expect(find.text('Mr. Budi'), findsOneWidget);
-    });
+      'renders homeroom teacher from homeroom_teacher Map relation shape',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildCard(classData: _classroomWithTeacherMap),
+        );
+        expect(find.text('Mr. Budi'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'shows "Belum Ditugaskan" when no homeroom teacher is assigned',
-        (tester) async {
-      const noTeacher = <String, dynamic>{
-        'name': 'Class 10A',
-        'student_count': 20,
-        // no homeroom_teacher or homeroom_teacher_name keys
-      };
-      await tester.pumpWidget(_buildCard(classData: noTeacher));
-      // Default language is 'id'.
-      expect(find.text('Belum Ditugaskan'), findsOneWidget);
-    });
+      'shows "Belum Ditugaskan" when no homeroom teacher is assigned',
+      (tester) async {
+        const noTeacher = <String, dynamic>{
+          'name': 'Class 10A',
+          'student_count': 20,
+          // no homeroom_teacher or homeroom_teacher_name keys
+        };
+        await tester.pumpWidget(_buildCard(classData: noTeacher));
+        // Default language is 'id'.
+        expect(find.text('Belum Ditugaskan'), findsOneWidget);
+      },
+    );
 
     // ── Edit / delete action icons ────────────────────────────────────────────
 
-    testWidgets('shows edit and delete icons when NOT read-only', (tester) async {
+    testWidgets('shows edit and delete icons when NOT read-only', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _buildCard(classData: _classroom, readOnly: false),
       );
@@ -210,8 +218,9 @@ void main() {
 
     // ── Edge cases ────────────────────────────────────────────────────────────
 
-    testWidgets('falls back to "Class" and avatar "C" when name is null',
-        (tester) async {
+    testWidgets('falls back to "Class" and avatar "C" when name is null', (
+      tester,
+    ) async {
       const noName = <String, dynamic>{'student_count': 5};
       await tester.pumpWidget(_buildCard(classData: noName));
       expect(find.text('Class'), findsOneWidget);

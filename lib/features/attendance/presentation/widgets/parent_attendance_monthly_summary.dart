@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/features/attendance/presentation/widgets/parent_attendance_stat_item.dart';
+import 'package:manajemensekolah/core/widgets/stat_summary_card.dart';
 
 /// Summary card showing overall attendance percentage and per-status counts.
 ///
@@ -39,9 +39,9 @@ class ParentAttendanceMonthlySummary extends StatelessWidget {
     final totalDays = monthlySummary.values.reduce((a, b) => a + b);
     final attendancePercentage = totalDays > 0
         ? (((monthlySummary['hadir']! + monthlySummary['terlambat']!) /
-                    totalDays *
-                    100)
-                .round())
+                  totalDays *
+                  100)
+              .round())
         : 0;
 
     return Container(
@@ -86,9 +86,7 @@ class ParentAttendanceMonthlySummary extends StatelessWidget {
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.08),
               borderRadius: const BorderRadius.all(Radius.circular(10)),
-              border: Border.all(
-                color: primaryColor.withValues(alpha: 0.15),
-              ),
+              border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -103,7 +101,7 @@ class ParentAttendanceMonthlySummary extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
-                  AppLocalizations.attendanceRate.tr,
+                  'Tingkat Kehadiran',
                   style: TextStyle(
                     fontSize: 12,
                     color: primaryColor,
@@ -116,32 +114,38 @@ class ParentAttendanceMonthlySummary extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
 
           // Per-status stat items row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              ParentAttendanceStatItem(
+          StatSummaryRow(
+            padding: EdgeInsets.zero,
+            spacing: 16,
+            cards: [
+              StatSummaryCard(
                 label: AppLocalizations.present.tr,
-                count: monthlySummary['hadir']!,
+                value: monthlySummary['hadir']!.toString(),
+                icon: Icons.check_circle_outline,
                 color: getStatusColor('hadir'),
               ),
-              ParentAttendanceStatItem(
+              StatSummaryCard(
                 label: AppLocalizations.late.tr,
-                count: monthlySummary['terlambat']!,
+                value: monthlySummary['terlambat']!.toString(),
+                icon: Icons.access_time,
                 color: getStatusColor('terlambat'),
               ),
-              ParentAttendanceStatItem(
+              StatSummaryCard(
                 label: AppLocalizations.permission.tr,
-                count: monthlySummary['izin']!,
+                value: monthlySummary['izin']!.toString(),
+                icon: Icons.event_note,
                 color: getStatusColor('izin'),
               ),
-              ParentAttendanceStatItem(
+              StatSummaryCard(
                 label: AppLocalizations.sick.tr,
-                count: monthlySummary['sakit']!,
+                value: monthlySummary['sakit']!.toString(),
+                icon: Icons.medical_services,
                 color: getStatusColor('sakit'),
               ),
-              ParentAttendanceStatItem(
+              StatSummaryCard(
                 label: AppLocalizations.alpha.tr,
-                count: monthlySummary['alpha']!,
+                value: monthlySummary['alpha']!.toString(),
+                icon: Icons.cancel,
                 color: getStatusColor('alpha'),
               ),
             ],

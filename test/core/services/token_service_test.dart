@@ -47,29 +47,29 @@ void main() {
     // This intercepts all read/write calls that SecureStorageService makes.
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-      (MethodCall call) async {
-        switch (call.method) {
-          case 'write':
-            final key = call.arguments['key'] as String;
-            final value = call.arguments['value'] as String;
-            mockSecureStore[key] = value;
-            return null;
-          case 'read':
-            final key = call.arguments['key'] as String;
-            return mockSecureStore[key];
-          case 'delete':
-            final key = call.arguments['key'] as String;
-            mockSecureStore.remove(key);
-            return null;
-          case 'deleteAll':
-            mockSecureStore.clear();
-            return null;
-          default:
-            return null;
-        }
-      },
-    );
+          const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+          (MethodCall call) async {
+            switch (call.method) {
+              case 'write':
+                final key = call.arguments['key'] as String;
+                final value = call.arguments['value'] as String;
+                mockSecureStore[key] = value;
+                return null;
+              case 'read':
+                final key = call.arguments['key'] as String;
+                return mockSecureStore[key];
+              case 'delete':
+                final key = call.arguments['key'] as String;
+                mockSecureStore.remove(key);
+                return null;
+              case 'deleteAll':
+                mockSecureStore.clear();
+                return null;
+              default:
+                return null;
+            }
+          },
+        );
 
     // Fresh SharedPreferences for every test (used by PreferencesService
     // and LocalCacheService inside logout — but logout is not tested here).
@@ -79,9 +79,9 @@ void main() {
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-      null,
-    );
+          const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+          null,
+        );
   });
 
   // ── isTokenValid ────────────────────────────────────────────────────────
@@ -137,12 +137,15 @@ void main() {
       expect(token, isNull);
     });
 
-    test('returns the stored token after saving via SecureStorageService', () async {
-      await SecureStorageService().saveToken('my_saved_token');
+    test(
+      'returns the stored token after saving via SecureStorageService',
+      () async {
+        await SecureStorageService().saveToken('my_saved_token');
 
-      final token = await TokenService().getToken();
-      expect(token, 'my_saved_token');
-    });
+        final token = await TokenService().getToken();
+        expect(token, 'my_saved_token');
+      },
+    );
   });
 
   // ── getUserData ─────────────────────────────────────────────────────────
@@ -154,7 +157,11 @@ void main() {
     });
 
     test('returns data after saving via SecureStorageService', () async {
-      await SecureStorageService().saveUserData({'id': 1, 'name': 'Budi', 'role': 'student'});
+      await SecureStorageService().saveUserData({
+        'id': 1,
+        'name': 'Budi',
+        'role': 'student',
+      });
 
       final data = await TokenService().getUserData();
 

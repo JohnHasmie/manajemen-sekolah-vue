@@ -26,8 +26,12 @@ void showDashboardSchoolSelectionDialog({
   required DashboardState state,
   required String currentRole,
   required Color primaryColor,
-  required void Function(BuildContext ctx, String schoolId, List<String> roleList)
-      onNeedsRoleSelection,
+  required void Function(
+    BuildContext ctx,
+    String schoolId,
+    List<String> roleList,
+  )
+  onNeedsRoleSelection,
 }) {
   showDialog(
     context: context,
@@ -51,7 +55,7 @@ class _SchoolSelectionDialog extends StatelessWidget {
   final String currentRole;
   final Color primaryColor;
   final void Function(BuildContext ctx, String schoolId, List<String> roleList)
-      onNeedsRoleSelection;
+  onNeedsRoleSelection;
 
   const _SchoolSelectionDialog({
     required this.dialogContext,
@@ -67,7 +71,9 @@ class _SchoolSelectionDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
       title: Row(
         children: [
           Icon(Icons.school_rounded, color: primaryColor),
@@ -86,13 +92,14 @@ class _SchoolSelectionDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ...state.accessibleSchools.map((school) => _SchoolTile(
-                  school: school,
-                  isCurrent:
-                      school['school_id'] == state.userData['school_id'],
-                  primaryColor: primaryColor,
-                  onTap: () => _onSchoolTap(school),
-                )),
+            ...state.accessibleSchools.map(
+              (school) => _SchoolTile(
+                school: school,
+                isCurrent: school['school_id'] == state.userData['school_id'],
+                primaryColor: primaryColor,
+                onTap: () => _onSchoolTap(school),
+              ),
+            ),
           ],
         ),
       ),
@@ -114,7 +121,10 @@ class _SchoolSelectionDialog extends StatelessWidget {
     final router = GoRouter.of(parentContext);
 
     try {
-      final schoolId = school['school_id'].toString();
+      final schoolId = (school['school_id'] ?? school['id'] ?? '').toString();
+      if (schoolId.isEmpty) {
+        throw Exception('School ID is missing');
+      }
       final result = await ref
           .read(dashboardProvider.notifier)
           .switchSchool(schoolId);
@@ -129,8 +139,7 @@ class _SchoolSelectionDialog extends StatelessWidget {
         return;
       }
 
-      final newRole =
-          result['user']?['role']?.toString() ?? currentRole;
+      final newRole = result['user']?['role']?.toString() ?? currentRole;
       await LocalCacheService.clearAll();
       // Reset so the next dashboard page triggers a fresh initialize
       ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
@@ -190,17 +199,14 @@ class _SchoolTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.school,
-                color: isCurrent ? primaryColor : Colors.grey,
-              ),
+              Icon(Icons.school, color: isCurrent ? primaryColor : Colors.grey),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      school['school_name'],
+                      (school['school_name'] ?? school['name'] ?? 'Unknown School').toString(),
                       style: TextStyle(
                         fontWeight: isCurrent
                             ? FontWeight.bold
@@ -245,21 +251,31 @@ void showDashboardRolePickerDialog({
 }) {
   IconData roleIcon(String role) {
     switch (role) {
-      case 'admin': return Icons.admin_panel_settings;
-      case 'guru':  return Icons.school;
-      case 'wali':  return Icons.family_restroom;
-      case 'staff': return Icons.work;
-      default:      return Icons.person;
+      case 'admin':
+        return Icons.admin_panel_settings;
+      case 'guru':
+        return Icons.school;
+      case 'wali':
+        return Icons.family_restroom;
+      case 'staff':
+        return Icons.work;
+      default:
+        return Icons.person;
     }
   }
 
   String roleName(String role) {
     switch (role) {
-      case 'admin': return 'Administrator';
-      case 'guru':  return 'Guru / Teacher';
-      case 'wali':  return 'Wali Murid / Parent';
-      case 'staff': return 'Staff';
-      default:      return role;
+      case 'admin':
+        return 'Administrator';
+      case 'guru':
+        return 'Guru / Teacher';
+      case 'wali':
+        return 'Wali Murid / Parent';
+      case 'staff':
+        return 'Staff';
+      default:
+        return role;
     }
   }
 
@@ -267,16 +283,21 @@ void showDashboardRolePickerDialog({
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
       title: Row(
         children: [
           Icon(Icons.swap_horiz_rounded, color: primaryColor),
           const SizedBox(width: AppSpacing.sm),
-          Text(
-            'Select Role / Pilih Role',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
+          Expanded(
+            child: Text(
+              'Select Role / Pilih Role',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -297,12 +318,9 @@ void showDashboardRolePickerDialog({
                         .read(dashboardProvider.notifier)
                         .switchSchool(schoolId, role: role);
                     if (!ref.context.mounted) return;
-                    final newRole =
-                        result['user']?['role']?.toString() ?? role;
+                    final newRole = result['user']?['role']?.toString() ?? role;
                     await LocalCacheService.clearAll();
-                    ref
-                        .read(dashboardProvider.notifier)
-                        .resetForSchoolSwitch();
+                    ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
                     if (ref.context.mounted) {
                       if (newRole == currentRole) {
                         ref.invalidate(dashboardProvider);
@@ -356,10 +374,7 @@ void showDashboardRolePickerDialog({
       actions: [
         TextButton(
           onPressed: () => AppNavigator.pop(dialogContext),
-          child: Text(
-            'Cancel',
-            style: TextStyle(color: Colors.grey.shade600),
-          ),
+          child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
         ),
       ],
     ),

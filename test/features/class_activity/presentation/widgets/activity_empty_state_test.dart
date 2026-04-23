@@ -31,8 +31,9 @@ void main() {
       expect(find.byType(Center), findsWidgets);
     });
 
-    testWidgets('renders with a long message without overflow error',
-        (tester) async {
+    testWidgets('renders with a long message without overflow error', (
+      tester,
+    ) async {
       final longMsg = 'A' * 200;
       await tester.pumpWidget(buildSubject(longMsg));
 

@@ -32,7 +32,9 @@ class _FinancePopupDialogState extends State<FinancePopupDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -148,8 +150,8 @@ class _FinancePopupDialogState extends State<FinancePopupDialog> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: ColorUtils.success600,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,

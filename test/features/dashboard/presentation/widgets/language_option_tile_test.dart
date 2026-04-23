@@ -101,7 +101,9 @@ void main() {
     });
 
     // ── 5. Color is applied to the Icon ───────────────────────────────────
-    testWidgets('applies the accent color to the language icon', (tester) async {
+    testWidgets('applies the accent color to the language icon', (
+      tester,
+    ) async {
       const accentColor = Colors.red;
       final provider = LanguageProvider();
 

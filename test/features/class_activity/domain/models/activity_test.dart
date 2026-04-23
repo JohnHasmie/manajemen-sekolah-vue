@@ -80,7 +80,9 @@ void main() {
     });
 
     test('location can describe a complex venue string', () {
-      final act = makeActivity(location: 'Gedung Serbaguna Lt. 2, Kab. Bandung');
+      final act = makeActivity(
+        location: 'Gedung Serbaguna Lt. 2, Kab. Bandung',
+      );
       expect(act.location, 'Gedung Serbaguna Lt. 2, Kab. Bandung');
     });
 
@@ -94,7 +96,12 @@ void main() {
     });
 
     test('different activity names are stored correctly', () {
-      final names = ['Ujian Tengah Semester', 'Studi Lapangan', 'Bakti Sosial', 'Pentas Seni'];
+      final names = [
+        'Ujian Tengah Semester',
+        'Studi Lapangan',
+        'Bakti Sosial',
+        'Pentas Seni',
+      ];
       for (final n in names) {
         final act = makeActivity(name: n);
         expect(act.name, n);

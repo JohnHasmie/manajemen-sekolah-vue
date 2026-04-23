@@ -75,7 +75,7 @@ class TimetableDataSource extends DataGridSource {
             padding: const EdgeInsets.all(AppSpacing.xs),
             child: Text(
               timeSlot,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
               textAlign: TextAlign.center,
             ),
           );
@@ -124,7 +124,10 @@ class TimetableDataSource extends DataGridSource {
                   // Nama kelas
                   Container(
                     width: 24,
-                    padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 2,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
                       color: primaryColor.withValues(alpha: 0.2),
                       borderRadius: const BorderRadius.all(Radius.circular(3)),

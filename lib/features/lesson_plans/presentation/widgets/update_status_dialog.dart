@@ -106,11 +106,17 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
       if (mounted) {
         AppNavigator.pop(context);
         widget.onStatusUpdated();
-        SnackBarUtils.showSuccess(context, AppLocalizations.lessonPlanStatusUpdated.tr);
+        SnackBarUtils.showSuccess(
+          context,
+          AppLocalizations.lessonPlanStatusUpdated.tr,
+        );
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(context, '${AppLocalizations.failedToUpdate.tr}: $e');
+        SnackBarUtils.showError(
+          context,
+          '${AppLocalizations.failedToUpdate.tr}: $e',
+        );
       }
     } finally {
       if (mounted) {
@@ -127,7 +133,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
       child: GestureDetector(
         onTap: () => setState(() => selectedStatus = value),
         child: AnimatedContainer(
-          duration: Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
@@ -178,7 +184,9 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
     final primaryColor = getPrimaryColor();
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -202,7 +210,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.swap_horiz_rounded,
                     color: Colors.white,
                     size: 24,
@@ -213,7 +221,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Update Status RPP',
                         style: TextStyle(
                           fontSize: 16,
@@ -328,8 +336,8 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: ColorUtils.slate300),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(
@@ -346,12 +354,12 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                       backgroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: isUpdating
-                        ? SizedBox(
+                        ? const SizedBox(
                             height: 18,
                             width: 18,
                             child: CircularProgressIndicator(
@@ -359,7 +367,7 @@ class _UpdateStatusDialogState extends ConsumerState<UpdateStatusDialog> {
                               color: Colors.white,
                             ),
                           )
-                        : Text(
+                        : const Text(
                             'Update Status',
                             style: TextStyle(
                               color: Colors.white,

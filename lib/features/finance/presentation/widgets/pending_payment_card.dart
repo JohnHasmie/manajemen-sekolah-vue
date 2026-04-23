@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/status_badge.dart';
 
 /// Card widget for a single pending payment entry.
 ///
@@ -62,7 +63,9 @@ class PendingPaymentCard extends StatelessWidget {
                         color: ColorUtils.getColorForIndex(
                           index,
                         ).withValues(alpha: 0.12),
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(12),
+                        ),
                         border: Border.all(
                           color: ColorUtils.getColorForIndex(
                             index,
@@ -104,36 +107,12 @@ class PendingPaymentCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: ColorUtils.warning600.withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
-                        border: Border.all(
-                          color: ColorUtils.warning600.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: ColorUtils.warning600,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            'Menunggu',
-                            style: TextStyle(
-                              color: ColorUtils.warning600,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                    StatusBadge(
+                      label: 'Menunggu',
+                      color: ColorUtils.warning600,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
                     ),
                   ],
@@ -149,10 +128,15 @@ class PendingPaymentCard extends StatelessWidget {
                   runSpacing: 6,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
-                        borderRadius: const BorderRadius.all(Radius.circular(6)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(6),
+                        ),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
                       child: Row(
@@ -175,10 +159,15 @@ class PendingPaymentCard extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
-                        borderRadius: const BorderRadius.all(Radius.circular(6)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(6),
+                        ),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
                       child: Row(
@@ -202,10 +191,15 @@ class PendingPaymentCard extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
-                        borderRadius: const BorderRadius.all(Radius.circular(6)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(6),
+                        ),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
                       child: Row(
@@ -236,7 +230,7 @@ class PendingPaymentCard extends StatelessWidget {
                   GestureDetector(
                     onTap: onShowProof,
                     child: Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 8,
                       ),
@@ -244,7 +238,9 @@ class PendingPaymentCard extends StatelessWidget {
                         color: ColorUtils.corporateBlue600.withValues(
                           alpha: 0.08,
                         ),
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                         border: Border.all(
                           color: ColorUtils.corporateBlue600.withValues(
                             alpha: 0.2,
@@ -287,12 +283,12 @@ class PendingPaymentCard extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: onVerify,
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.verified_rounded,
                         size: 16,
                         color: Colors.white,
                       ),
-                      label: Text(
+                      label: const Text(
                         'Verifikasi',
                         style: TextStyle(
                           color: Colors.white,
@@ -303,8 +299,8 @@ class PendingPaymentCard extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: const BorderRadius.all(Radius.circular(10)),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),

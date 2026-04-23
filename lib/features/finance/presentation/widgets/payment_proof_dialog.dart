@@ -56,8 +56,7 @@ class PaymentProofDialog extends StatelessWidget {
 
     // Guard: caller should have checked, but just in case.
     if (imageFile == null) {
-      SnackBarUtils.showWarning(
-          context, AppLocalizations.noPaymentProof.tr);
+      SnackBarUtils.showWarning(context, AppLocalizations.noPaymentProof.tr);
       return const SizedBox.shrink();
     }
 
@@ -66,9 +65,9 @@ class PaymentProofDialog extends StatelessWidget {
       child: Container(
         width: double.infinity,
         height: MediaQuery.of(context).size.height * 0.8,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -86,8 +85,11 @@ class PaymentProofDialog extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.photo_library,
-                      color: Colors.white, size: 20),
+                  const Icon(
+                    Icons.photo_library,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   const Text(
                     'Bukti Pembayaran',
@@ -99,8 +101,11 @@ class PaymentProofDialog extends StatelessWidget {
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close,
-                        color: Colors.white, size: 20),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     onPressed: () => AppNavigator.pop(context),
                   ),
                 ],
@@ -132,13 +137,15 @@ class PaymentProofDialog extends StatelessWidget {
                       return Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.error_outline,
-                              color: ColorUtils.error600, size: 40),
+                          Icon(
+                            Icons.error_outline,
+                            color: ColorUtils.error600,
+                            size: 40,
+                          ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
                             AppLocalizations.failedToLoadImage.tr,
-                            style:
-                                TextStyle(color: ColorUtils.error600),
+                            style: TextStyle(color: ColorUtils.error600),
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
@@ -172,10 +179,7 @@ class PaymentProofDialog extends StatelessWidget {
                 children: [
                   const Text(
                     'Informasi Pembayaran',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   FinanceInfoRow(

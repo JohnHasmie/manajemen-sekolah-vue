@@ -9,7 +9,7 @@ class NotificationNotifier extends AsyncNotifier<List<dynamic>> {
   @override
   Future<List<dynamic>> build() async {
     _apiService = getIt<ApiNotificationService>();
-    // Default to fetching for the current role if we can determine it, 
+    // Default to fetching for the current role if we can determine it,
     // but typically we pass it or use a separate provider for current role.
     // For now, we'll keep it flexible.
     return [];
@@ -43,7 +43,10 @@ class NotificationNotifier extends AsyncNotifier<List<dynamic>> {
         currentList.where((n) => n['id'].toString() != id).toList(),
       );
     } catch (e) {
-      AppLogger.error('notification_controller', 'Failed to delete notification: $e');
+      AppLogger.error(
+        'notification_controller',
+        'Failed to delete notification: $e',
+      );
     }
   }
 
@@ -52,7 +55,10 @@ class NotificationNotifier extends AsyncNotifier<List<dynamic>> {
       await _apiService.markAllRead();
       state = const AsyncValue.data([]);
     } catch (e) {
-      AppLogger.error('notification_controller', 'Failed to mark all as read: $e');
+      AppLogger.error(
+        'notification_controller',
+        'Failed to mark all as read: $e',
+      );
     }
   }
 }

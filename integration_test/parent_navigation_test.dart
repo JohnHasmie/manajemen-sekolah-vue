@@ -83,8 +83,9 @@ Future<void> _goBack(WidgetTester tester) async {
       await tester.tap(backBtn.first);
     } else {
       debugPrint('⚠️ No back button found — using Navigator.pop');
-      final navigator =
-          tester.state<NavigatorState>(find.byType(Navigator).last);
+      final navigator = tester.state<NavigatorState>(
+        find.byType(Navigator).last,
+      );
       navigator.pop();
     }
   }
@@ -132,7 +133,9 @@ void main() {
 
       final found = await _tapItem(tester, 'Pengumuman PPDB');
       if (!found) {
-        debugPrint('  ⚠️ Quick action Pengumuman PPDB not found — skipping TC114');
+        debugPrint(
+          '  ⚠️ Quick action Pengumuman PPDB not found — skipping TC114',
+        );
         return;
       }
 
@@ -453,7 +456,9 @@ void main() {
       }
 
       await _waitFor(tester, find.byType(Scaffold), maxSeconds: 10);
-      debugPrint('  ✅ Kehadiran screen loaded (student selector or attendance)');
+      debugPrint(
+        '  ✅ Kehadiran screen loaded (student selector or attendance)',
+      );
 
       // Select first student if a selector is visible
       final listTile = find.byType(ListTile);

@@ -4,6 +4,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_report_screen.dart';
@@ -37,11 +38,11 @@ class ClassReportTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (isLoading) {
-      return SkeletonListLoading(itemCount: 6, infoTagCount: 1);
+      return const SkeletonListLoading(itemCount: 6, infoTagCount: 1);
     }
 
     if (classList.isEmpty) {
-      return EmptyState(
+      return const EmptyState(
         title: 'Belum ada data kelas',
         subtitle: 'Data kelas akan muncul di sini',
         icon: Icons.class_,
@@ -77,11 +78,12 @@ class ClassReportTab extends ConsumerWidget {
       child: InkWell(
         borderRadius: const BorderRadius.all(Radius.circular(16)),
         onTap: () {
+          final classModel = Classroom.fromJson(classItem);
           AppNavigator.push(
             context,
             ClassFinanceReportScreen(
-              classId: classItem['id'].toString(),
-              className: classItem['name'] ?? 'Kelas',
+              classId: classModel.id,
+              className: classModel.name,
             ),
           );
         },
@@ -114,7 +116,7 @@ class ClassReportTab extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      classItem['name'] ?? 'Kelas',
+                      Classroom.fromJson(classItem).name,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
@@ -123,7 +125,7 @@ class ClassReportTab extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${classItem['student_count'] ?? studentList.length} siswa',
+                      '${Classroom.fromJson(classItem).studentCount} siswa',
                       style: TextStyle(
                         color: ColorUtils.slate500,
                         fontSize: 12,
@@ -164,11 +166,11 @@ class ClassReportTab extends ConsumerWidget {
         .selectedAcademicYear?['id']
         ?.toString();
 
-    for (var student in studentList) {
+    for (final student in studentList) {
       final studentId = student['id']?.toString();
       final billList = billsByStudent[studentId] ?? [];
 
-      for (var bill in billList) {
+      for (final bill in billList) {
         // Filter based on academic year
         final billAcademicYearId = bill['academic_year_id']?.toString();
         if (selectedAcademicYearId != null &&
@@ -188,7 +190,7 @@ class ClassReportTab extends ConsumerWidget {
         else {
           bool hasPendingPayment = false;
           if (bill['payments'] != null && bill['payments'] is List) {
-            for (var p in bill['payments']) {
+            for (final p in bill['payments']) {
               final pStatus = p['status'];
               if (pStatus == 'pending' || pStatus == 'test_status') {
                 hasPendingPayment = true;

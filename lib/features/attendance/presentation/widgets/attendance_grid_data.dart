@@ -43,11 +43,14 @@ class AttendanceDataSource extends DataGridSource {
   }) {
     dataGridRows = students.map<DataGridRow>((data) {
       final List<DataGridCell> cells = [
-        DataGridCell<AttendanceGridData>(columnName: 'student_info', value: data),
+        DataGridCell<AttendanceGridData>(
+          columnName: 'student_info',
+          value: data,
+        ),
       ];
 
-      for (var date in dates) {
-        for (var subjectId in subjectIds) {
+      for (final date in dates) {
+        for (final subjectId in subjectIds) {
           final columnKey = '$date-$subjectId';
           final lookupKey = '${data.studentId}-$date-$subjectId';
           final status = data.attendance[lookupKey] ?? '-';

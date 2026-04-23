@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_circle_action_button.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_info_tag.dart';
 
@@ -49,15 +50,12 @@ class SubjectCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Like a Vue computed property — derive display values from raw data.
     final languageProvider = ref.read(languageRiverpod);
-    final classCount = subject['jumlah_kelas'] ?? 0;
-    final isActive = subject['is_active'] ?? true;
+    final model = Subject.fromJson(subject);
+    final classCount = model.classCount;
+    final isActive = model.isActive;
     final avatarColor = ColorUtils.getColorForIndex(index);
-    final subjectCode = subject['code'] ?? subject['kode'] ?? '-';
-    final classNames = (subject['kelas_names']?.toString() ?? '')
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
+    final subjectCode = (model.code ?? '').isNotEmpty ? model.code! : '-';
+    final classNames = model.classNameList;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
@@ -83,7 +81,7 @@ class SubjectCard extends ConsumerWidget {
                   radius: 24,
                   backgroundColor: avatarColor.withValues(alpha: 0.15),
                   child: Text(
-                    (subject['name'] ?? 'S')[0].toUpperCase(),
+                    model.initial,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -100,7 +98,7 @@ class SubjectCard extends ConsumerWidget {
                     children: [
                       // Subject name
                       Text(
-                        subject['name'] ?? 'No Name',
+                        model.name.isNotEmpty ? model.name : 'No Name',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -139,10 +137,11 @@ class SubjectCard extends ConsumerWidget {
                             ),
                             decoration: BoxDecoration(
                               color: isActive
-                                  ? ColorUtils.success600
-                                      .withValues(alpha: 0.1)
+                                  ? ColorUtils.success600.withValues(alpha: 0.1)
                                   : ColorUtils.error600.withValues(alpha: 0.1),
-                              borderRadius: const BorderRadius.all(Radius.circular(4)),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(4),
+                              ),
                             ),
                             child: Row(
                               children: [

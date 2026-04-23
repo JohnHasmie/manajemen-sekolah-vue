@@ -6,6 +6,7 @@
 library;
 
 import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/services/cache_invalidation_service.dart';
 
 /// Service for raport (report card) API calls.
 /// Like a Laravel Resource Controller with show, store, and custom initial-data actions.
@@ -21,7 +22,10 @@ class ApiReportCardService {
     if (academicYearId != null) params['academic_year_id'] = academicYearId;
     if (semesterId != null) params['semester_id'] = semesterId;
 
-    final response = await dioClient.get('/raports/teacher-summary', queryParameters: params);
+    final response = await dioClient.get(
+      '/raports/teacher-summary',
+      queryParameters: params,
+    );
     final result = response.data;
     if (result is Map && result['data'] is List) return result['data'];
     if (result is List) return result;
@@ -111,6 +115,7 @@ class ApiReportCardService {
     final response = await dioClient.post('/raport', data: data);
 
     if (response.data != null && response.data['success'] == true) {
+      await CacheInvalidationService.onReportCardChanged();
       return response.data['data'] as Map<String, dynamic>;
     }
     return null;

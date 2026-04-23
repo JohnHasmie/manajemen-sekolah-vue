@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 
 /// A modal bottom sheet that presents column-level actions for one assessment.
 ///
@@ -64,145 +64,86 @@ class GradeColumnOptionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ── View Details tile ───────────────────────────────────────────
+        ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
+            ),
+            child: Icon(Icons.visibility, color: ColorUtils.corporateBlue600),
+          ),
+          title: Text(
+            labelViewDetails,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: ColorUtils.slate800,
+            ),
+          ),
+          onTap: () {
+            Navigator.pop(context);
+            onViewDetails();
+          },
         ),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── Gradient header bar ─────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+
+        // ── Edit / Delete tiles — only when user can edit ───────────────
+        if (canEdit && !isReadOnly) ...[
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    primaryColor,
-                    primaryColor.withValues(alpha: 0.8),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
+                color: ColorUtils.warning600.withValues(alpha: 0.1),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.assessment_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      '$gradeTypeLabel - $displayTitle',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+              child: Icon(Icons.edit, color: ColorUtils.warning600),
+            ),
+            title: Text(
+              labelEditAssessment,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: ColorUtils.slate800,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // ── View Details tile ───────────────────────────────────────────
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
-                ),
-                child: Icon(
-                  Icons.visibility,
-                  color: ColorUtils.corporateBlue600,
-                ),
+            onTap: () {
+              Navigator.pop(context);
+              onEditAssessment();
+            },
+          ),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: ColorUtils.error600.withValues(alpha: 0.1),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
-              title: Text(
-                labelViewDetails,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: ColorUtils.slate800,
-                ),
-              ),
-              onTap: () {
-                AppNavigator.pop(context);
-                onViewDetails();
-              },
+              child: Icon(Icons.delete_outline, color: ColorUtils.error600),
             ),
-
-            // ── Edit / Delete tiles — only when user can edit ───────────────
-            if (canEdit && !isReadOnly) ...[
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: ColorUtils.warning600.withValues(alpha: 0.1),
-                    borderRadius: const BorderRadius.all(Radius.circular(8)),
-                  ),
-                  child: Icon(Icons.edit, color: ColorUtils.warning600),
-                ),
-                title: Text(
-                  labelEditAssessment,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: ColorUtils.slate800,
-                  ),
-                ),
-                onTap: () {
-                  AppNavigator.pop(context);
-                  onEditAssessment();
-                },
+            title: Text(
+              labelDeleteAssessment,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: ColorUtils.error600,
               ),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: ColorUtils.error600.withValues(alpha: 0.1),
-                    borderRadius: const BorderRadius.all(Radius.circular(8)),
-                  ),
-                  child: Icon(
-                    Icons.delete_outline,
-                    color: ColorUtils.error600,
-                  ),
-                ),
-                title: Text(
-                  labelDeleteAssessment,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: ColorUtils.error600,
-                  ),
-                ),
-                subtitle: Text(
-                  labelDeleteSubtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: ColorUtils.error600.withValues(alpha: 0.7),
-                  ),
-                ),
-                onTap: () {
-                  AppNavigator.pop(context);
-                  onDeleteAssessment();
-                },
+            ),
+            subtitle: Text(
+              labelDeleteSubtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: ColorUtils.error600.withValues(alpha: 0.7),
               ),
-            ],
-            const SizedBox(height: AppSpacing.md),
-          ],
-        ),
-      ),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              onDeleteAssessment();
+            },
+          ),
+        ],
+        const SizedBox(height: AppSpacing.md),
+      ],
     );
   }
 }
@@ -226,10 +167,12 @@ void showGradeColumnOptionsSheet({
   required String labelDeleteAssessment,
   required String labelDeleteSubtitle,
 }) {
-  showModalBottomSheet(
+  AppBottomSheet.show(
     context: context,
-    backgroundColor: Colors.transparent,
-    builder: (_) => GradeColumnOptionsSheet(
+    title: '$gradeTypeLabel - $displayTitle',
+    icon: Icons.assessment_outlined,
+    primaryColor: primaryColor,
+    content: GradeColumnOptionsSheet(
       gradeTypeLabel: gradeTypeLabel,
       displayTitle: displayTitle,
       primaryColor: primaryColor,

@@ -31,24 +31,23 @@ Widget _build({
   Color primaryColor = Colors.blue,
   VoidCallback? onRegenTap,
   String Function(String)? stripHtml,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: LessonPlanFieldCard(
-            fieldKey: fieldKey,
-            fieldLabel: fieldLabel,
-            value: value,
-            regenInfo: regenInfo,
-            isLoadingLimits: isLoadingLimits,
-            isRegeneratingThis: isRegeneratingThis,
-            primaryColor: primaryColor,
-            onRegenTap: onRegenTap ?? () {},
-            stripHtml: stripHtml ?? _identity,
-          ),
-        ),
+}) => MaterialApp(
+  home: Scaffold(
+    body: SingleChildScrollView(
+      child: LessonPlanFieldCard(
+        fieldKey: fieldKey,
+        fieldLabel: fieldLabel,
+        value: value,
+        regenInfo: regenInfo,
+        isLoadingLimits: isLoadingLimits,
+        isRegeneratingThis: isRegeneratingThis,
+        primaryColor: primaryColor,
+        onRegenTap: onRegenTap ?? () {},
+        stripHtml: stripHtml ?? _identity,
       ),
-    );
+    ),
+  ),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -68,16 +67,20 @@ void main() {
   });
 
   group('LessonPlanFieldCard — body content', () {
-    testWidgets('renders value via stripHtml in SelectableText', (tester) async {
+    testWidgets('renders value via stripHtml in SelectableText', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(value: 'Peserta didik mampu berhitung'));
       expect(find.text('Peserta didik mampu berhitung'), findsOneWidget);
     });
 
     testWidgets('applies stripHtml transform to value', (tester) async {
-      await tester.pumpWidget(_build(
-        value: '<p>Rich <b>text</b></p>',
-        stripHtml: (s) => s.replaceAll(RegExp(r'<[^>]*>'), ''),
-      ));
+      await tester.pumpWidget(
+        _build(
+          value: '<p>Rich <b>text</b></p>',
+          stripHtml: (s) => s.replaceAll(RegExp(r'<[^>]*>'), ''),
+        ),
+      );
       expect(find.text('Rich text'), findsOneWidget);
     });
   });
@@ -90,27 +93,34 @@ void main() {
     });
 
     testWidgets('no badge when isLoadingLimits=true', (tester) async {
-      await tester.pumpWidget(_build(
-        regenInfo: {'remaining': 2, 'max': 3, 'used': 1},
-        isLoadingLimits: true,
-      ));
+      await tester.pumpWidget(
+        _build(
+          regenInfo: {'remaining': 2, 'max': 3, 'used': 1},
+          isLoadingLimits: true,
+        ),
+      );
       expect(find.textContaining('/'), findsNothing);
     });
 
-    testWidgets('shows "used/max" badge when regenInfo present + not loading',
-        (tester) async {
-      await tester.pumpWidget(_build(
-        regenInfo: {'remaining': 1, 'max': 3, 'used': 2},
-        isLoadingLimits: false,
-      ));
+    testWidgets('shows "used/max" badge when regenInfo present + not loading', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(
+          regenInfo: {'remaining': 1, 'max': 3, 'used': 2},
+          isLoadingLimits: false,
+        ),
+      );
       expect(find.text('2/3'), findsOneWidget);
     });
 
     testWidgets('shows "0/2" badge when both used=0 and max=2', (tester) async {
-      await tester.pumpWidget(_build(
-        regenInfo: {'remaining': 2, 'max': 2, 'used': 0},
-        isLoadingLimits: false,
-      ));
+      await tester.pumpWidget(
+        _build(
+          regenInfo: {'remaining': 2, 'max': 2, 'used': 0},
+          isLoadingLimits: false,
+        ),
+      );
       expect(find.text('0/2'), findsOneWidget);
     });
   });
@@ -128,24 +138,24 @@ void main() {
       expect(find.byIcon(Icons.star_rounded), findsNothing);
     });
 
-    testWidgets('fires onRegenTap when star tapped and not regenerating',
-        (tester) async {
+    testWidgets('fires onRegenTap when star tapped and not regenerating', (
+      tester,
+    ) async {
       bool tapped = false;
-      await tester.pumpWidget(_build(
-        isRegeneratingThis: false,
-        onRegenTap: () => tapped = true,
-      ));
+      await tester.pumpWidget(
+        _build(isRegeneratingThis: false, onRegenTap: () => tapped = true),
+      );
       await tester.tap(find.byIcon(Icons.star_rounded));
       expect(tapped, isTrue);
     });
 
-    testWidgets('does NOT fire onRegenTap when isRegeneratingThis=true',
-        (tester) async {
+    testWidgets('does NOT fire onRegenTap when isRegeneratingThis=true', (
+      tester,
+    ) async {
       bool tapped = false;
-      await tester.pumpWidget(_build(
-        isRegeneratingThis: true,
-        onRegenTap: () => tapped = true,
-      ));
+      await tester.pumpWidget(
+        _build(isRegeneratingThis: true, onRegenTap: () => tapped = true),
+      );
       // spinner is shown, tapping the InkWell area has onTap=null
       await tester.tap(find.byType(InkWell), warnIfMissed: false);
       expect(tapped, isFalse);
@@ -153,14 +163,17 @@ void main() {
   });
 
   group('LessonPlanFieldCard — regenInfo null defaults', () {
-    testWidgets('defaults remaining=2 when regenInfo=null (no crash)',
-        (tester) async {
+    testWidgets('defaults remaining=2 when regenInfo=null (no crash)', (
+      tester,
+    ) async {
       // Should not throw — falls back to remaining=2
-      await tester.pumpWidget(_build(
-        regenInfo: null,
-        isLoadingLimits: false,
-        isRegeneratingThis: false,
-      ));
+      await tester.pumpWidget(
+        _build(
+          regenInfo: null,
+          isLoadingLimits: false,
+          isRegeneratingThis: false,
+        ),
+      );
       expect(find.byType(LessonPlanFieldCard), findsOneWidget);
     });
   });

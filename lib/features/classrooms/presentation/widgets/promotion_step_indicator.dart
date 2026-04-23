@@ -43,7 +43,7 @@ class PromotionStepIndicator extends StatelessWidget {
           BoxShadow(
             color: ColorUtils.slate900.withValues(alpha: 0.04),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -73,14 +73,14 @@ class PromotionStepIndicator extends StatelessWidget {
                             BoxShadow(
                               color: primaryColor.withValues(alpha: 0.3),
                               blurRadius: 8,
-                              offset: Offset(0, 2),
+                              offset: const Offset(0, 2),
                             ),
                           ]
                         : null,
                   ),
                   child: Center(
                     child: isCompleted
-                        ? Icon(
+                        ? const Icon(
                             Icons.check_rounded,
                             color: Colors.white,
                             size: 18,

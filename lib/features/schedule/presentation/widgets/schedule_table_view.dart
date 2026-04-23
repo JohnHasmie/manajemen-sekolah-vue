@@ -155,8 +155,8 @@ class ScheduleTableView extends StatelessWidget {
                     horizontal: 14,
                     vertical: 10,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                   textStyle: const TextStyle(
                     fontSize: 13,
@@ -202,7 +202,7 @@ class ScheduleTableView extends StatelessWidget {
                   final rowDays = timetableDataSource.days;
 
                   int maxSchedules = 0;
-                  for (var day in rowDays) {
+                  for (final day in rowDays) {
                     final count = gridData
                         .where((d) => d.timeSlot == timeSlot && d.day == day)
                         .length;
@@ -285,7 +285,9 @@ class ScheduleTableView extends StatelessWidget {
                                       color: Colors.white.withValues(
                                         alpha: 0.22,
                                       ),
-                                      borderRadius: const BorderRadius.all(Radius.circular(4)),
+                                      borderRadius: const BorderRadius.all(
+                                        Radius.circular(4),
+                                      ),
                                     ),
                                     child: Text(
                                       className.toString().length > 4

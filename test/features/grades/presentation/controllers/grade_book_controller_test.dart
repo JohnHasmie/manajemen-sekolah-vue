@@ -12,6 +12,8 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/grades/presentation/controllers/grade_book_controller.dart';
+import 'package:manajemensekolah/features/grades/presentation/controllers/grade_book_models.dart';
+import 'package:manajemensekolah/features/grades/presentation/controllers/helpers/grade_data_processor.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 // ---------------------------------------------------------------------------
@@ -24,17 +26,16 @@ Student _student({
   String name = 'Budi Santoso',
   String studentNumber = 'NIS001',
   String? studentClassId,
-}) =>
-    Student(
-      id: id,
-      name: name,
-      className: '7A',
-      studentNumber: studentNumber,
-      address: '',
-      guardianName: '',
-      phoneNumber: '',
-      studentClassId: studentClassId,
-    );
+}) => Student(
+  id: id,
+  name: name,
+  className: '7A',
+  studentNumber: studentNumber,
+  address: '',
+  guardianName: '',
+  phoneNumber: '',
+  studentClassId: studentClassId,
+);
 
 /// Builds a minimal grade record matching the internal (normalised) format
 /// produced by [GradeBookController.processAndApplyGradeData].
@@ -47,26 +48,24 @@ Map<String, dynamic> _grade({
   String? assessmentId,
   dynamic score = 85,
   String? id,
-}) =>
-    {
-      'id': id,
-      'siswa_id': siswaId,
-      'student_class_id': studentClassId,
-      'jenis': type,
-      'tanggal': date,
-      'title': title,
-      'assessment_id': assessmentId,
-      'score': score,
-      'deskripsi': null,
-    };
+}) => {
+  'id': id,
+  'siswa_id': siswaId,
+  'student_class_id': studentClassId,
+  'jenis': type,
+  'tanggal': date,
+  'title': title,
+  'assessment_id': assessmentId,
+  'score': score,
+  'deskripsi': null,
+};
 
 /// Builds an assessment header map.
 Map<String, dynamic> _header({
   String date = '2025-01-15',
   String title = '',
   String? id,
-}) =>
-    {'id': id, 'date': date, 'title': title, 'is_temp': false};
+}) => {'id': id, 'date': date, 'title': title, 'is_temp': false};
 
 void main() {
   late ProviderContainer container;
@@ -137,12 +136,26 @@ void main() {
     });
 
     test('only enabled types are returned', () {
-      final filter = {'uh': true, 'tugas': false, 'uts': true, 'uas': false, 'pts': false, 'pas': false};
+      final filter = {
+        'uh': true,
+        'tugas': false,
+        'uts': true,
+        'uas': false,
+        'pts': false,
+        'pas': false,
+      };
       expect(ctrl.computeFilteredGradeTypes(allTypes, filter), ['uh', 'uts']);
     });
 
     test('preserves original order of allGradeTypeList', () {
-      final filter = {'pts': true, 'uh': true, 'tugas': false, 'uts': false, 'uas': false, 'pas': false};
+      final filter = {
+        'pts': true,
+        'uh': true,
+        'tugas': false,
+        'uts': false,
+        'uas': false,
+        'pas': false,
+      };
       // Order should follow allTypes, not the filter map iteration order
       expect(ctrl.computeFilteredGradeTypes(allTypes, filter), ['uh', 'pts']);
     });
@@ -215,15 +228,24 @@ void main() {
       expect(result['uh']!.first['id'], isNull);
     });
 
-    test('does not add duplicate date for same type (temp entry with null title)', () {
-      // addNewAssessment deduplicates only against temp entries (title == null).
-      final existing = {
-        'uh': [{'id': null, 'date': '2025-03-10', 'title': null, 'is_temp': true}],
-      };
-      final result = ctrl.addNewAssessment('uh', existing, DateTime(2025, 3, 10));
-      // Already exists with same date + null title — should not add duplicate
-      expect(result!['uh'], hasLength(1));
-    });
+    test(
+      'does not add duplicate date for same type (temp entry with null title)',
+      () {
+        // addNewAssessment deduplicates only against temp entries (title == null).
+        final existing = {
+          'uh': [
+            {'id': null, 'date': '2025-03-10', 'title': null, 'is_temp': true},
+          ],
+        };
+        final result = ctrl.addNewAssessment(
+          'uh',
+          existing,
+          DateTime(2025, 3, 10),
+        );
+        // Already exists with same date + null title — should not add duplicate
+        expect(result!['uh'], hasLength(1));
+      },
+    );
 
     test('creates list for new type when type did not exist', () {
       final result = ctrl.addNewAssessment('uts', {}, DateTime(2025, 6, 1));
@@ -240,7 +262,11 @@ void main() {
       final existing = {
         'uh': [_header(date: '2025-03-20')],
       };
-      final result = ctrl.addNewAssessment('uh', existing, DateTime(2025, 3, 5));
+      final result = ctrl.addNewAssessment(
+        'uh',
+        existing,
+        DateTime(2025, 3, 5),
+      );
       final dates = result!['uh']!.map((h) => h['date']).toList();
       expect(dates, ['2025-03-05', '2025-03-20']);
     });
@@ -251,14 +277,40 @@ void main() {
   group('getGradeForStudentAndHeader', () {
     final student = _student(id: '1', studentClassId: 'sc1');
     final grades = [
-      _grade(siswaId: '1', type: 'uh', date: '2025-01-15', title: '', assessmentId: 'a1', score: 80),
-      _grade(siswaId: '2', type: 'uh', date: '2025-01-15', title: '', assessmentId: 'a1', score: 90),
-      _grade(siswaId: '1', type: 'tugas', date: '2025-02-01', title: 'PR1', assessmentId: 'a2', score: 75),
+      _grade(
+        siswaId: '1',
+        type: 'uh',
+        date: '2025-01-15',
+        title: '',
+        assessmentId: 'a1',
+        score: 80,
+      ),
+      _grade(
+        siswaId: '2',
+        type: 'uh',
+        date: '2025-01-15',
+        title: '',
+        assessmentId: 'a1',
+        score: 90,
+      ),
+      _grade(
+        siswaId: '1',
+        type: 'tugas',
+        date: '2025-02-01',
+        title: 'PR1',
+        assessmentId: 'a2',
+        score: 75,
+      ),
     ];
 
     test('returns correct grade matched by assessmentId + studentId', () {
       final header = _header(date: '2025-01-15', id: 'a1');
-      final result = ctrl.getGradeForStudentAndHeader(student, 'uh', header, grades);
+      final result = ctrl.getGradeForStudentAndHeader(
+        student,
+        'uh',
+        header,
+        grades,
+      );
       expect(result, isNotNull);
       expect(result!['score'], 80);
     });
@@ -266,41 +318,87 @@ void main() {
     test('returns null when student has no grade for the header', () {
       final other = _student(id: '99');
       final header = _header(date: '2025-01-15', id: 'a1');
-      final result = ctrl.getGradeForStudentAndHeader(other, 'uh', header, grades);
+      final result = ctrl.getGradeForStudentAndHeader(
+        other,
+        'uh',
+        header,
+        grades,
+      );
       expect(result, isNull);
     });
 
     test('returns null when grade type does not match', () {
       final header = _header(date: '2025-01-15', id: 'a1');
-      final result = ctrl.getGradeForStudentAndHeader(student, 'tugas', header, grades);
+      final result = ctrl.getGradeForStudentAndHeader(
+        student,
+        'tugas',
+        header,
+        grades,
+      );
       expect(result, isNull);
     });
 
-    test('returns correct grade when matched by date + title (no assessmentId)', () {
-      final gradesNoId = [
-        _grade(siswaId: '1', type: 'tugas', date: '2025-02-01', title: 'PR1', assessmentId: null, score: 75),
-      ];
-      final header = _header(date: '2025-02-01', title: 'PR1', id: null);
-      final result = ctrl.getGradeForStudentAndHeader(student, 'tugas', header, gradesNoId);
-      expect(result, isNotNull);
-      expect(result!['score'], 75);
-    });
+    test(
+      'returns correct grade when matched by date + title (no assessmentId)',
+      () {
+        final gradesNoId = [
+          _grade(
+            siswaId: '1',
+            type: 'tugas',
+            date: '2025-02-01',
+            title: 'PR1',
+            assessmentId: null,
+            score: 75,
+          ),
+        ];
+        final header = _header(date: '2025-02-01', title: 'PR1', id: null);
+        final result = ctrl.getGradeForStudentAndHeader(
+          student,
+          'tugas',
+          header,
+          gradesNoId,
+        );
+        expect(result, isNotNull);
+        expect(result!['score'], 75);
+      },
+    );
 
     test('returns null on empty grade list', () {
       final header = _header(date: '2025-01-15', id: 'a1');
-      final result = ctrl.getGradeForStudentAndHeader(student, 'uh', header, []);
+      final result = ctrl.getGradeForStudentAndHeader(
+        student,
+        'uh',
+        header,
+        [],
+      );
       expect(result, isNull);
     });
   });
 
-  // ─── processAndApplyGradeData ─────────────────────────────────────────────
+  // ─── GradeDataProcessor.processRawData ─────────────────────────────────────
 
-  group('processAndApplyGradeData', () {
+  group('GradeDataProcessor.processRawData', () {
     const allTypes = ['uh', 'tugas', 'uts', 'uas', 'pts', 'pas'];
 
     final rawStudents = [
-      {'id': '1', 'name': 'Budi', 'class_name': '7A', 'student_number': 'NIS001', 'address': '', 'guardian_name': '', 'phone_number': ''},
-      {'id': '2', 'name': 'Ani', 'class_name': '7A', 'student_number': 'NIS002', 'address': '', 'guardian_name': '', 'phone_number': ''},
+      {
+        'id': '1',
+        'name': 'Budi',
+        'class_name': '7A',
+        'student_number': 'NIS001',
+        'address': '',
+        'guardian_name': '',
+        'phone_number': '',
+      },
+      {
+        'id': '2',
+        'name': 'Ani',
+        'class_name': '7A',
+        'student_number': 'NIS002',
+        'address': '',
+        'guardian_name': '',
+        'phone_number': '',
+      },
     ];
 
     final rawGrades = [
@@ -331,18 +429,30 @@ void main() {
     ];
 
     test('produces correct student list from raw data', () {
-      final result = ctrl.processAndApplyGradeData(rawStudents, rawGrades, allTypes);
+      final result = GradeDataProcessor.processRawData(
+        rawStudents,
+        rawGrades,
+        allTypes,
+      );
       expect(result.studentList, hasLength(2));
       expect(result.studentList.first.name, 'Budi');
     });
 
     test('filteredStudentList equals studentList on first load', () {
-      final result = ctrl.processAndApplyGradeData(rawStudents, rawGrades, allTypes);
+      final result = GradeDataProcessor.processRawData(
+        rawStudents,
+        rawGrades,
+        allTypes,
+      );
       expect(result.filteredStudentList.length, result.studentList.length);
     });
 
     test('produces correct gradeList length', () {
-      final result = ctrl.processAndApplyGradeData(rawStudents, rawGrades, allTypes);
+      final result = GradeDataProcessor.processRawData(
+        rawStudents,
+        rawGrades,
+        allTypes,
+      );
       expect(result.gradeList, hasLength(3));
     });
 
@@ -356,12 +466,20 @@ void main() {
           'score': 100,
         },
       ];
-      final result = ctrl.processAndApplyGradeData(rawStudents, orphanGrade, allTypes);
+      final result = GradeDataProcessor.processRawData(
+        rawStudents,
+        orphanGrade,
+        allTypes,
+      );
       expect(result.gradeList, isEmpty);
     });
 
     test('builds assessment headers grouped by type', () {
-      final result = ctrl.processAndApplyGradeData(rawStudents, rawGrades, allTypes);
+      final result = GradeDataProcessor.processRawData(
+        rawStudents,
+        rawGrades,
+        allTypes,
+      );
       expect(result.assessmentHeaders.containsKey('uh'), isTrue);
       expect(result.assessmentHeaders.containsKey('tugas'), isTrue);
       // Only 2 types in rawGrades
@@ -370,7 +488,11 @@ void main() {
 
     test('deduplicates assessment headers by assessmentId', () {
       // Both g1 and g2 share assessment_id a1 — should produce only 1 header
-      final result = ctrl.processAndApplyGradeData(rawStudents, rawGrades, allTypes);
+      final result = GradeDataProcessor.processRawData(
+        rawStudents,
+        rawGrades,
+        allTypes,
+      );
       expect(result.assessmentHeaders['uh'], hasLength(1));
     });
 
@@ -391,8 +513,14 @@ void main() {
           'score': 80,
         },
       ];
-      final result = ctrl.processAndApplyGradeData(rawStudents, rawGrades2, allTypes);
-      final dates = result.assessmentHeaders['uh']!.map((h) => h['date']).toList();
+      final result = GradeDataProcessor.processRawData(
+        rawStudents,
+        rawGrades2,
+        allTypes,
+      );
+      final dates = result.assessmentHeaders['uh']!
+          .map((h) => h['date'])
+          .toList();
       expect(dates, ['2025-01-01', '2025-03-01']);
     });
 
@@ -401,23 +529,27 @@ void main() {
         {
           'id': 'gX',
           'student_id': '1',
-          'assessment': {'type': 'unknown_type', 'date': '2025-01-01', 'title': ''},
+          'assessment': {
+            'type': 'unknown_type',
+            'date': '2025-01-01',
+            'title': '',
+          },
           'assessment_id': 'aX',
           'score': 50,
         },
       ];
-      final result = ctrl.processAndApplyGradeData(rawStudents, gradeWithUnknownType, allTypes);
+      final result = GradeDataProcessor.processRawData(
+        rawStudents,
+        gradeWithUnknownType,
+        allTypes,
+      );
       expect(result.assessmentHeaders, isEmpty);
     });
 
-    test('isLoading is false in result', () {
-      final result = ctrl.processAndApplyGradeData(rawStudents, [], allTypes);
-      expect(result.isLoading, isFalse);
-    });
-
-    test('error is null in result', () {
-      final result = ctrl.processAndApplyGradeData(rawStudents, [], allTypes);
-      expect(result.error, isNull);
+    test('empty grades produce empty assessmentHeaders', () {
+      final result = GradeDataProcessor.processRawData(rawStudents, [], allTypes);
+      expect(result.assessmentHeaders, isEmpty);
+      expect(result.studentList, hasLength(2));
     });
   });
 

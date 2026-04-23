@@ -29,12 +29,16 @@ void main() {
       expect(find.text('Tidak ada'), findsOneWidget);
     });
 
-    testWidgets('renders each item as a chip when value is List<String>', (tester) async {
+    testWidgets('renders each item as a chip when value is List<String>', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _wrap(TeacherInfoRow(
-          label: 'Mata Pelajaran',
-          value: <String>['Matematika', 'Fisika'],
-        )),
+        _wrap(
+          const TeacherInfoRow(
+            label: 'Mata Pelajaran',
+            value: <String>['Matematika', 'Fisika'],
+          ),
+        ),
       );
       expect(find.text('Matematika'), findsOneWidget);
       expect(find.text('Fisika'), findsOneWidget);

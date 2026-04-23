@@ -24,15 +24,14 @@ Map<String, dynamic> _item({
   String? description,
   dynamic goal,
   String? periode = 'bulanan',
-}) =>
-    {
-      'name': name,
-      'amount': amount,
-      'status': status,
-      if (description != null) 'description': description,
-      if (goal != null) 'goal': goal,
-      'periode': periode,
-    };
+}) => {
+  'name': name,
+  'amount': amount,
+  'status': status,
+  if (description != null) 'description': description,
+  if (goal != null) 'goal': goal,
+  'periode': periode,
+};
 
 Widget _build({
   Map<String, dynamic>? item,
@@ -81,7 +80,9 @@ void main() {
       expect(find.text('Aktif'), findsOneWidget);
     });
 
-    testWidgets('shows "Non-Aktif" chip when status is not aktif', (tester) async {
+    testWidgets('shows "Non-Aktif" chip when status is not aktif', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(item: _item(status: 'nonaktif')));
       expect(find.text('Non-Aktif'), findsOneWidget);
     });
@@ -125,7 +126,9 @@ void main() {
   });
 
   group('PaymentTypeCard — action callbacks', () {
-    testWidgets('fires onGenerateBills on autorenew button tap', (tester) async {
+    testWidgets('fires onGenerateBills on autorenew button tap', (
+      tester,
+    ) async {
       bool called = false;
       await tester.pumpWidget(_build(onGenerateBills: () => called = true));
       await tester.tap(find.byIcon(Icons.autorenew_rounded));
@@ -150,11 +153,13 @@ void main() {
       int genCount = 0;
       int editCount = 0;
       int delCount = 0;
-      await tester.pumpWidget(_build(
-        onGenerateBills: () => genCount++,
-        onEdit: () => editCount++,
-        onDelete: () => delCount++,
-      ));
+      await tester.pumpWidget(
+        _build(
+          onGenerateBills: () => genCount++,
+          onEdit: () => editCount++,
+          onDelete: () => delCount++,
+        ),
+      );
 
       await tester.tap(find.byIcon(Icons.autorenew_rounded));
       await tester.tap(find.byIcon(Icons.edit_rounded));

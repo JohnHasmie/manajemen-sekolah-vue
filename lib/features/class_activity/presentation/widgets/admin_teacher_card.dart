@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_info_tag.dart';
+import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 
 /// A single card representing one teacher in the admin class-activity screen.
 ///
@@ -34,9 +35,11 @@ class AdminTeacherCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final teacherName = teacher['name']?.toString() ?? 'Nama tidak tersedia';
-    final teacherEmail = teacher['email']?.toString() ?? '';
-    final teacherNip = teacher['nip']?.toString() ?? '';
+    final model = Teacher.fromJson(teacher);
+    final teacherName =
+        model.name.isNotEmpty ? model.name : 'Nama tidak tersedia';
+    final teacherEmail = model.email;
+    final teacherNip = model.employeeNumber ?? '';
     final avatarColor = ColorUtils.getColorForIndex(index);
 
     return Container(

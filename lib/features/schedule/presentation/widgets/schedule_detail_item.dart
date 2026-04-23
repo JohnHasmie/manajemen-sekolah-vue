@@ -45,9 +45,7 @@ class ScheduleDetailItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.all(Radius.circular(10)),
-              border: Border.all(
-                color: primaryColor.withValues(alpha: 0.15),
-              ),
+              border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
             ),
             child: Icon(icon, size: 18, color: primaryColor),
           ),

@@ -1,12 +1,12 @@
-/// announcement_test.dart - Unit tests for the Announcement domain model.
+/// announcement_test.dart - Unit tests for the Announcement Freezed model.
 ///
-/// The Announcement class is a plain Dart data class (no fromJson/toJson,
-/// no == override, no freezed). Tests verify:
+/// The Announcement class is a @freezed data class with [_standardizeJson]
+/// that normalizes Indonesian ↔ English keys and heterogeneous `is_read`
+/// values. Tests verify:
 ///   1. All fields are stored and accessible after construction.
-///   2. Each field type is correct (String, DateTime).
-///   3. Two separately constructed instances with the same data are NOT equal
-///      because Dart's default == is reference equality (no override exists).
-///   4. A single instance IS equal to itself (same reference).
+///   2. fromJson normalizes Indonesian keys correctly.
+///   3. Two instances with the same data ARE equal (Freezed == override).
+///   4. is_read normalization works for bool, int, String, and null.
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -22,15 +22,17 @@ void main() {
     String id = 'ann-1',
     String title = 'Libur Lebaran',
     String content = 'Sekolah libur mulai tanggal 10 April.',
-    DateTime? date,
     String category = 'Akademik',
+    String? createdAt,
+    bool isRead = true,
   }) {
     return Announcement(
       id: id,
       title: title,
       content: content,
-      date: date ?? DateTime(2025, 4, 10),
       category: category,
+      createdAt: createdAt ?? '2025-04-10',
+      isRead: isRead,
     );
   }
 
@@ -40,20 +42,21 @@ void main() {
 
   group('Announcement constructor', () {
     test('stores all required fields correctly', () {
-      final date = DateTime(2025, 4, 10);
       final ann = Announcement(
         id: 'ann-42',
         title: 'Pengumuman Ujian',
         content: 'Ujian nasional dilaksanakan bulan Mei.',
-        date: date,
         category: 'Akademik',
+        createdAt: '2025-05-01',
+        isRead: false,
       );
 
       expect(ann.id, 'ann-42');
       expect(ann.title, 'Pengumuman Ujian');
       expect(ann.content, 'Ujian nasional dilaksanakan bulan Mei.');
-      expect(ann.date, date);
       expect(ann.category, 'Akademik');
+      expect(ann.createdAt, '2025-05-01');
+      expect(ann.isRead, false);
     });
 
     test('accepts any non-empty string as id', () {
@@ -69,63 +72,145 @@ void main() {
       }
     });
 
-    test('stores a DateTime with time component', () {
-      final dateWithTime = DateTime(2025, 6, 15, 8, 30, 0);
-      final ann = makeAnnouncement(date: dateWithTime);
-
-      expect(ann.date.year, 2025);
-      expect(ann.date.month, 6);
-      expect(ann.date.day, 15);
-      expect(ann.date.hour, 8);
-      expect(ann.date.minute, 30);
-    });
-
-    test('title and content are stored independently', () {
-      final ann = Announcement(
+    test('isRead defaults to true', () {
+      const ann = Announcement(
         id: '1',
-        title: 'Short Title',
-        content: 'A much longer content body that describes the announcement in detail.',
-        date: DateTime(2025, 1, 1),
+        title: 'Test',
+        content: 'Body',
         category: 'Umum',
       );
-
-      expect(ann.title, isNot(equals(ann.content)));
-    });
-
-    test('fields are final (read-only) - verified by accessing them', () {
-      final ann = makeAnnouncement();
-      // Just accessing all fields verifies they are readable; the compiler
-      // prevents assignment because they are declared final.
-      expect(ann.id, isA<String>());
-      expect(ann.title, isA<String>());
-      expect(ann.content, isA<String>());
-      expect(ann.date, isA<DateTime>());
-      expect(ann.category, isA<String>());
+      expect(ann.isRead, true);
     });
   });
 
   // ---------------------------------------------------------------------------
-  // Equality & identity (no == override → reference equality)
+  // fromJson / _standardizeJson
+  // ---------------------------------------------------------------------------
+
+  group('Announcement.fromJson', () {
+    test('parses English keys', () {
+      final ann = Announcement.fromJson({
+        'id': 'ann-1',
+        'title': 'Title',
+        'content': 'Content body',
+        'category': 'Akademik',
+        'created_at': '2025-04-10',
+        'is_read': false,
+      });
+
+      expect(ann.id, 'ann-1');
+      expect(ann.title, 'Title');
+      expect(ann.content, 'Content body');
+      expect(ann.category, 'Akademik');
+      expect(ann.createdAt, '2025-04-10');
+      expect(ann.isRead, false);
+    });
+
+    test('normalizes Indonesian keys', () {
+      final ann = Announcement.fromJson({
+        'id': 2,
+        'judul': 'Judul Indo',
+        'isi': 'Isi pengumuman',
+        'kategori': 'Keuangan',
+        'tanggal': '2025-06-01',
+      });
+
+      expect(ann.id, '2');
+      expect(ann.title, 'Judul Indo');
+      expect(ann.content, 'Isi pengumuman');
+      expect(ann.category, 'Keuangan');
+      expect(ann.createdAt, '2025-06-01');
+    });
+
+    test('normalizes is_read from int 1', () {
+      final ann = Announcement.fromJson({
+        'id': '1',
+        'title': 'T',
+        'content': 'C',
+        'category': 'Umum',
+        'is_read': 1,
+      });
+      expect(ann.isRead, true);
+    });
+
+    test('normalizes is_read from int 0', () {
+      final ann = Announcement.fromJson({
+        'id': '1',
+        'title': 'T',
+        'content': 'C',
+        'category': 'Umum',
+        'is_read': 0,
+      });
+      expect(ann.isRead, false);
+    });
+
+    test('normalizes is_read from string "1"', () {
+      final ann = Announcement.fromJson({
+        'id': '1',
+        'title': 'T',
+        'content': 'C',
+        'category': 'Umum',
+        'is_read': '1',
+      });
+      expect(ann.isRead, true);
+    });
+
+    test('normalizes is_read from null to true (default)', () {
+      final ann = Announcement.fromJson({
+        'id': '1',
+        'title': 'T',
+        'content': 'C',
+        'category': 'Umum',
+      });
+      expect(ann.isRead, true);
+    });
+
+    test('coerces numeric id to string', () {
+      final ann = Announcement.fromJson({
+        'id': 42,
+        'title': 'T',
+        'content': 'C',
+        'category': 'Umum',
+      });
+      expect(ann.id, '42');
+    });
+
+    test('handles missing optional fields gracefully', () {
+      final ann = Announcement.fromJson({
+        'id': '1',
+        'title': 'T',
+        'content': 'C',
+        'category': 'Umum',
+      });
+      expect(ann.createdAt, isNull);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Equality (Freezed == override)
   // ---------------------------------------------------------------------------
 
   group('Announcement equality', () {
     test('same instance is equal to itself', () {
       final ann = makeAnnouncement();
-      // ignore: unrelated_type_equality_checks
       expect(ann == ann, isTrue);
     });
 
-    test('two separate instances with identical data are NOT equal', () {
-      // Because Announcement does not override ==, Dart uses reference equality.
-      // This is expected behaviour for a plain data class without overrides.
+    test('two separate instances with identical data ARE equal (Freezed)', () {
       final a = makeAnnouncement();
       final b = makeAnnouncement();
-      expect(a == b, isFalse);
+      expect(a == b, isTrue);
     });
 
     test('two instances with different ids are not equal', () {
       final a = makeAnnouncement(id: 'ann-1');
       final b = makeAnnouncement(id: 'ann-2');
+      expect(a == b, isFalse);
+    });
+
+    test('two instances with different isRead are not equal', () {
+      final a = makeAnnouncement(isRead: true);
+      final b = makeAnnouncement(isRead: false);
       expect(a == b, isFalse);
     });
   });
@@ -136,11 +221,10 @@ void main() {
 
   group('Announcement edge cases', () {
     test('empty strings are valid field values', () {
-      final ann = Announcement(
+      const ann = Announcement(
         id: '',
         title: '',
         content: '',
-        date: DateTime(2000),
         category: '',
       );
 
@@ -156,10 +240,14 @@ void main() {
       expect(ann.content.length, 10000);
     });
 
-    test('date at epoch boundary is stored correctly', () {
-      final epoch = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-      final ann = makeAnnouncement(date: epoch);
-      expect(ann.date.millisecondsSinceEpoch, 0);
+    test('fromJson with konten key works', () {
+      final ann = Announcement.fromJson({
+        'id': '1',
+        'title': 'T',
+        'konten': 'Konten alternatif',
+        'category': 'Umum',
+      });
+      expect(ann.content, 'Konten alternatif');
     });
   });
 }

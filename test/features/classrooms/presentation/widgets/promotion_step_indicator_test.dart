@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/widgets/promotion_step_indicator.dart';
 
 Widget buildTestable(Widget child) {
-  return MaterialApp(home: Scaffold(body: SizedBox(width: 400, child: child)));
+  return MaterialApp(
+    home: Scaffold(body: SizedBox(width: 400, child: child)),
+  );
 }
 
 const steps = ['Select', 'Students', 'Review', 'Summary'];
@@ -33,8 +35,9 @@ void main() {
     });
 
     // ── 2. Active step circle uses primaryColor ────────────────────────────
-    testWidgets('active step circle uses primaryColor as background',
-        (tester) async {
+    testWidgets('active step circle uses primaryColor as background', (
+      tester,
+    ) async {
       const color = Colors.indigo;
 
       await tester.pumpWidget(
@@ -109,7 +112,9 @@ void main() {
     });
 
     // ── 6. Renders without error for 2-step wizard ────────────────────────
-    testWidgets('renders correctly for a minimal 2-step wizard', (tester) async {
+    testWidgets('renders correctly for a minimal 2-step wizard', (
+      tester,
+    ) async {
       const twoSteps = ['Step 1', 'Step 2'];
 
       await tester.pumpWidget(

@@ -11,6 +11,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Service for generating student data Excel files entirely on the client side.
 /// Unlike the other `Excel*Service` classes that POST to the backend, this service
@@ -64,31 +65,22 @@ class ExcelService {
       // Add data rows
       for (int i = 0; i < students.length; i++) {
         final student = students[i];
+        final model = Student.fromJson(student as Map<String, dynamic>);
         final rowIndex = i + 2;
 
-        sheet
-            .getRangeByIndex(rowIndex, 1)
-            .setText(student['student_number'] ?? '');
-        sheet.getRangeByIndex(rowIndex, 2).setText(student['name'] ?? '');
-        sheet
-            .getRangeByIndex(rowIndex, 3)
-            .setText(student['class']?['name'] ?? student['class_name'] ?? '');
+        sheet.getRangeByIndex(rowIndex, 1).setText(model.studentNumber);
+        sheet.getRangeByIndex(rowIndex, 2).setText(model.name);
+        sheet.getRangeByIndex(rowIndex, 3).setText(model.className);
         sheet
             .getRangeByIndex(rowIndex, 4)
-            .setText(_getGenderText(student['gender'], languageProvider));
+            .setText(_getGenderText(model.gender, languageProvider));
         sheet
             .getRangeByIndex(rowIndex, 5)
-            .setText(_formatDateForExport(student['date_of_birth']));
-        sheet.getRangeByIndex(rowIndex, 6).setText(student['address'] ?? '');
-        sheet
-            .getRangeByIndex(rowIndex, 7)
-            .setText(student['guardian_name'] ?? '');
-        sheet
-            .getRangeByIndex(rowIndex, 8)
-            .setText(student['guardian_email'] ?? '');
-        sheet
-            .getRangeByIndex(rowIndex, 9)
-            .setText(student['phone_number'] ?? '');
+            .setText(_formatDateForExport(model.dateOfBirth));
+        sheet.getRangeByIndex(rowIndex, 6).setText(model.address);
+        sheet.getRangeByIndex(rowIndex, 7).setText(model.guardianName);
+        sheet.getRangeByIndex(rowIndex, 8).setText(model.guardianEmail ?? '');
+        sheet.getRangeByIndex(rowIndex, 9).setText(model.phoneNumber);
         sheet.getRangeByIndex(rowIndex, 10).setText('Active');
 
         // Alternate row colors for better readability
@@ -230,7 +222,7 @@ class ExcelService {
   /// Like a plain-text version of the template for users without Excel software.
   static Future<void> downloadTemplateCSV(BuildContext context) async {
     try {
-      final String csvContent =
+      const String csvContent =
           '''NIS*,Name*,Class*,Gender*,Date of Birth*,Address*,Parent Name*,Parent Email,Phone Number*
 12345,John Doe,10 IPA 1,Laki-laki,2005-01-15,Jl. Contoh No. 123,Jane Doe,jane@example.com,08123456789
 *Wajib diisi,Format tanggal: YYYY-MM-DD,Jenis Kelamin: Laki-laki / Perempuan''';

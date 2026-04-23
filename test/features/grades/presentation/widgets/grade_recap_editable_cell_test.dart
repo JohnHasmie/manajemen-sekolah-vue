@@ -31,10 +31,13 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('shows history icon', (tester) async {
+    testWidgets('shows history / bulk-select affordance icon',
+        (tester) async {
       await tester.pumpWidget(_build());
       expect(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.history),
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.keyboard_arrow_down_rounded,
+        ),
         findsOneWidget,
       );
     });
@@ -77,25 +80,31 @@ void main() {
       expect(values, contains(87.5));
     });
 
-    testWidgets('onHistoryTap fires when history icon is tapped', (tester) async {
+    testWidgets('onHistoryTap fires when affordance icon is tapped',
+        (tester) async {
       var tapped = false;
       await tester.pumpWidget(_build(onHistoryTap: () => tapped = true));
-      await tester.tap(find.byIcon(Icons.history));
+      await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
       await tester.pump();
       expect(tapped, isTrue);
     });
 
-    testWidgets('width is constrained to 100', (tester) async {
+    testWidgets('text field is constrained to 40px wide', (tester) async {
       await tester.pumpWidget(_build());
-      final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
-      expect(sizedBox.width, 100);
+      // The first explicit SizedBox wraps the TextField.
+      final sizedBox = tester
+          .widgetList<SizedBox>(find.byType(SizedBox))
+          .firstWhere((s) => s.width == 40, orElse: () => const SizedBox());
+      expect(sizedBox.width, 40);
     });
 
     testWidgets('keyboard type is numeric with decimal', (tester) async {
       await tester.pumpWidget(_build());
       final tf = tester.widget<TextField>(find.byType(TextField));
-      expect(tf.keyboardType,
-          TextInputType.numberWithOptions(decimal: true));
+      expect(
+        tf.keyboardType,
+        const TextInputType.numberWithOptions(decimal: true),
+      );
     });
 
     testWidgets('text is center-aligned', (tester) async {

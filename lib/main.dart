@@ -37,12 +37,12 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:manajemensekolah/core/widgets/error_handler.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/firebase_options.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer;
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_router.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/constants/api_endpoints.dart';
+import 'package:manajemensekolah/core/config/ai_config.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -78,14 +78,16 @@ void main() async {
 
     // Set system navigation bar to match app background (prevents black bar
     // on Samsung/Android devices with software navigation buttons).
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      systemNavigationBarColor: Color(0xFFF8FAFC), // ColorUtils.slate50
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: Color(0xFFF8FAFC), // ColorUtils.slate50
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
 
     // Load environment variables
     try {
-      await dotenv.load(fileName: ".env");
+      await dotenv.load(fileName: '.env');
       AppLogger.info('init', '.env loaded');
     } catch (e, stack) {
       AppLogger.warning('init', 'Failed to load .env: $e');
@@ -99,6 +101,10 @@ void main() async {
     // Initialize ApiService FIRST (before anything else)
     await ApiService.init();
     AppLogger.info('init', 'ApiService initialized');
+
+    // Initialize AI microservice config (reads AI_API_BASE_URL from env)
+    AiConfig.init();
+    AppLogger.info('init', 'AiConfig initialized: ${AiConfig.baseUrl}');
 
     // Initialize Dio HTTP client with interceptors
     createDioClient(ApiService.baseUrl);
@@ -144,7 +150,7 @@ void main() async {
     // Setup error handling (non-blocking)
     _setupErrorHandling();
 
-    runApp(ProviderScope(child: SchoolManagementApp()));
+    runApp(const ProviderScope(child: SchoolManagementApp()));
   }, LogService.sendError);
 }
 
@@ -214,7 +220,10 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
         try {
           await FCMService().initialize();
           if (!FCMService().isInitialized) {
-            AppLogger.warning('init', 'FCM failed to initialize: ${FCMService().initError ?? "unknown"}. Push notifications will not work.');
+            AppLogger.warning(
+              'init',
+              'FCM failed to initialize: ${FCMService().initError ?? "unknown"}. Push notifications will not work.',
+            );
           } else {
             AppLogger.info('init', 'FCM Service initialized in app');
           }
@@ -294,7 +303,7 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return MaterialApp(
+      return const MaterialApp(
         home: Scaffold(
           body: Center(
             child: Column(
@@ -322,18 +331,31 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
       theme: ThemeData(
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF16A34A), brightness: Brightness.light),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF16A34A),
+          brightness: Brightness.light,
+        ),
         datePickerTheme: DatePickerThemeData(
           headerBackgroundColor: const Color(0xFF16A34A),
           headerForegroundColor: Colors.white,
-          dayOverlayColor: WidgetStatePropertyAll(const Color(0xFF16A34A).withValues(alpha: 0.1)),
+          dayOverlayColor: WidgetStatePropertyAll(
+            const Color(0xFF16A34A).withValues(alpha: 0.1),
+          ),
           todayBorder: const BorderSide(color: Color(0xFF16A34A)),
           todayForegroundColor: const WidgetStatePropertyAll(Color(0xFF16A34A)),
         ),
         timePickerTheme: TimePickerThemeData(
           dialHandColor: const Color(0xFF16A34A),
-          hourMinuteColor: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF16A34A).withValues(alpha: 0.1) : Colors.grey.shade200),
-          hourMinuteTextColor: WidgetStateColor.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF16A34A) : Colors.black87),
+          hourMinuteColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? const Color(0xFF16A34A).withValues(alpha: 0.1)
+                : Colors.grey.shade200,
+          ),
+          hourMinuteTextColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? const Color(0xFF16A34A)
+                : Colors.black87,
+          ),
         ),
       ),
       localizationsDelegates: const [
@@ -345,11 +367,12 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
       supportedLocales: const [Locale('en', 'US'), Locale('id', 'ID')],
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        final appcastUrl = '${ApiService.baseUrl.replaceAll('/api', '')}${ApiEndpoints.appcast}';
+        final appcastUrl =
+            '${ApiService.baseUrl.replaceAll('/api', '')}${ApiEndpoints.appcast}';
         UpgraderAppcastStore appcastStore() => UpgraderAppcastStore(
-              appcastURL: appcastUrl,
-              osVersion: Version.parse('0.0.0'),
-            );
+          appcastURL: appcastUrl,
+          osVersion: Version.parse('0.0.0'),
+        );
         return UpgradeAlert(
           upgrader: Upgrader(
             storeController: UpgraderStoreController(

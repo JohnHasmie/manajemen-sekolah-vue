@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 
 /// Service for exporting RPP (Rencana Pelaksanaan Pembelajaran / Lesson Plan) to Excel.
 /// Similar to `Excel::download(new RppExport($data), 'Data_RPP.xlsx')` in Laravel.
@@ -111,36 +112,34 @@ class ExcelLessonPlanService {
 
     for (int i = 0; i < lessonPlanList.length; i++) {
       final lessonPlan = lessonPlanList[i];
+      final model = LessonPlan.fromJson(lessonPlan);
       final Map<String, dynamic> validatedLessonPlan = {};
 
       // Validate required fields for export
-      if (lessonPlan['title'] == null ||
-          lessonPlan['title'].toString().isEmpty) {
+      if (model.title.isEmpty) {
         errors.add('Baris ${i + 1}: Judul RPP tidak boleh kosong');
       } else {
-        validatedLessonPlan['title'] = lessonPlan['title'];
+        validatedLessonPlan['title'] = model.title;
       }
 
-      if (lessonPlan['subject_name'] == null ||
-          lessonPlan['subject_name'].toString().isEmpty) {
+      if (model.subjectName == null || model.subjectName!.isEmpty) {
         errors.add('Baris ${i + 1}: Mata pelajaran tidak boleh kosong');
       } else {
-        validatedLessonPlan['subject_name'] = lessonPlan['subject_name'];
+        validatedLessonPlan['subject_name'] = model.subjectName;
       }
 
-      if (lessonPlan['class_name'] == null ||
-          lessonPlan['class_name'].toString().isEmpty) {
+      if (model.className == null || model.className!.isEmpty) {
         errors.add('Baris ${i + 1}: Kelas tidak boleh kosong');
       } else {
-        validatedLessonPlan['class_name'] = lessonPlan['class_name'];
+        validatedLessonPlan['class_name'] = model.className;
       }
 
       // Field lainnya
-      validatedLessonPlan['teacher_name'] = lessonPlan['teacher_name'] ?? '';
-      validatedLessonPlan['semester'] = lessonPlan['semester'] ?? '';
-      validatedLessonPlan['academic_year'] = lessonPlan['academic_year'] ?? '';
-      validatedLessonPlan['status'] = lessonPlan['status'] ?? '';
-      validatedLessonPlan['created_at'] = lessonPlan['created_at'] ?? '';
+      validatedLessonPlan['teacher_name'] = model.teacherName ?? '';
+      validatedLessonPlan['semester'] = model.semester ?? '';
+      validatedLessonPlan['academic_year'] = model.academicYear ?? '';
+      validatedLessonPlan['status'] = model.status;
+      validatedLessonPlan['created_at'] = model.createdAt ?? '';
 
       // Map keys to match backend expectation
       validatedLessonPlan['note_admin'] =

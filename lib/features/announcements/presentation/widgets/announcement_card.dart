@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_info_tag.dart';
 
 /// A single announcement card row rendered inside the admin list.
@@ -50,11 +51,8 @@ class AnnouncementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isUnread =
-        announcementData['is_read'] != null &&
-        announcementData['is_read'] != true &&
-        announcementData['is_read'] != 1 &&
-        announcementData['is_read'] != '1';
+    final model = Announcement.fromJson(announcementData);
+    final isUnread = !model.isRead;
     final isImportant = [
       'penting',
       'important',
@@ -107,7 +105,7 @@ class AnnouncementCard extends StatelessWidget {
                     children: [
                       // Title
                       Text(
-                        announcementData['title'] ?? 'No Title',
+                        model.title.isNotEmpty ? model.title : 'No Title',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -119,7 +117,7 @@ class AnnouncementCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       // Content preview
                       Text(
-                        announcementData['content'] ?? '',
+                        model.content,
                         style: TextStyle(
                           fontSize: 12,
                           color: ColorUtils.slate600,
@@ -177,7 +175,9 @@ class AnnouncementCard extends StatelessWidget {
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: primaryColor.withValues(alpha: 0.1),
-                          borderRadius: const BorderRadius.all(Radius.circular(8)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(8),
+                          ),
                         ),
                         child: Icon(
                           Icons.edit_outlined,
@@ -195,7 +195,9 @@ class AnnouncementCard extends StatelessWidget {
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: ColorUtils.error600.withValues(alpha: 0.1),
-                          borderRadius: const BorderRadius.all(Radius.circular(8)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(8),
+                          ),
                         ),
                         child: Icon(
                           Icons.delete_outline,

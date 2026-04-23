@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 
 /// A form dropdown listing all available homeroom teachers.
 ///
@@ -30,9 +31,10 @@ class PromotionHomeroomTeacherDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     // De-duplicate teachers by ID (same as removing duplicate keys in a Vue computed).
     final uniqueTeachers = <String, Map<String, dynamic>>{};
-    for (var teacher in teachers) {
-      if (teacher['id'] != null) {
-        uniqueTeachers[teacher['id'].toString()] = teacher;
+    for (final teacher in teachers) {
+      final model = Teacher.fromJson(teacher);
+      if (model.id.isNotEmpty) {
+        uniqueTeachers[model.id] = teacher;
       }
     }
 
@@ -57,13 +59,12 @@ class PromotionHomeroomTeacherDropdown extends StatelessWidget {
             'id': 'Wali Kelas',
           }),
           labelStyle: TextStyle(color: ColorUtils.slate600, fontSize: 13),
-          prefixIcon: Icon(
-            Icons.person_rounded,
-            color: primaryColor,
-            size: 18,
-          ),
+          prefixIcon: Icon(Icons.person_rounded, color: primaryColor, size: 18),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
         ),
         items: [
           DropdownMenuItem<String>(
@@ -77,13 +78,14 @@ class PromotionHomeroomTeacherDropdown extends StatelessWidget {
             ),
           ),
           ...uniqueTeachers.values.map((teacher) {
-            final teacherName = teacher['name'] ?? 'Unknown';
-            final teacherNip = teacher['nip']?.toString() ?? '';
+            final model = Teacher.fromJson(teacher);
+            final teacherName = model.name.isNotEmpty ? model.name : 'Unknown';
+            final teacherNip = model.employeeNumber ?? '';
             final displayText = teacherNip.isNotEmpty
                 ? '$teacherName (NIP: $teacherNip)'
                 : teacherName;
             return DropdownMenuItem<String>(
-              value: teacher['id'].toString(),
+              value: model.id,
               child: Text(displayText, overflow: TextOverflow.ellipsis),
             );
           }),

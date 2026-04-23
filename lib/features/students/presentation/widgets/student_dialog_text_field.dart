@@ -73,7 +73,10 @@ class StudentDialogTextField extends StatelessWidget {
             borderRadius: const BorderRadius.all(Radius.circular(12)),
             borderSide: BorderSide(color: primaryColor, width: 1.5),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
         ),
         style: TextStyle(fontSize: 14, color: ColorUtils.slate800),
         keyboardType: keyboardType,

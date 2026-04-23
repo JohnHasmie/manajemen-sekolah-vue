@@ -51,7 +51,10 @@ void main() {
       final result = AppDateUtils.parseLocalDate('not-a-date');
       final after = DateTime.now();
       // Should be between before and after (i.e., "today")
-      expect(result.isAfter(before.subtract(const Duration(seconds: 1))), isTrue);
+      expect(
+        result.isAfter(before.subtract(const Duration(seconds: 1))),
+        isTrue,
+      );
       expect(result.isBefore(after.add(const Duration(seconds: 1))), isTrue);
     });
 
@@ -82,11 +85,14 @@ void main() {
       expect(AppDateUtils.formatDateForApi(date), equals('2024-12-31'));
     });
 
-    test('round-trip: parseLocalDate → formatDateForApi returns original string', () {
-      const original = '2024-08-20';
-      final parsed = AppDateUtils.parseLocalDate(original);
-      expect(AppDateUtils.formatDateForApi(parsed), equals(original));
-    });
+    test(
+      'round-trip: parseLocalDate → formatDateForApi returns original string',
+      () {
+        const original = '2024-08-20';
+        final parsed = AppDateUtils.parseLocalDate(original);
+        expect(AppDateUtils.formatDateForApi(parsed), equals(original));
+      },
+    );
   });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -212,10 +218,7 @@ void main() {
     });
 
     test('valid date string formats to default dd/MM/yyyy', () {
-      expect(
-        AppDateUtils.formatDateString('2024-01-15'),
-        equals('15/01/2024'),
-      );
+      expect(AppDateUtils.formatDateString('2024-01-15'), equals('15/01/2024'));
     });
 
     test('custom format parameter is applied', () {

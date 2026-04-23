@@ -1,0 +1,192 @@
+import 'package:flutter/material.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/'
+    'teacher_attendance_screen.dart';
+import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart'
+    as sched;
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_card_action_button.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_card_attendance_detail.dart';
+
+/// Mixin for action button building and attendance dialogs.
+mixin ScheduleCardActionMixin {
+  // Abstract members requiring implementation.
+  void setState(VoidCallback fn);
+  BuildContext get context;
+
+  // Required state access.
+  dynamic get languageProvider => null;
+  String get teacherId => '';
+  String get teacherNama => '';
+  Map<String, dynamic> get schedule => {};
+  String? get subjectId => null;
+  String? get subjectName => null;
+  String? get classId => null;
+  String? get className => null;
+  VoidCallback? get onRefresh => null;
+
+  // Color and data access.
+  Color getPrimaryColor() => Colors.blue;
+  Map<String, dynamic>? getSummary() => null;
+  DateTime computeScheduleDate() => DateTime.now();
+  bool hasAttendance(Map<String, dynamic>? summary) => false;
+
+  /// Builds the row of action buttons for the card.
+  ///
+  /// When [ctx] is provided it is used instead of the [context] getter,
+  /// which allows StatelessWidget hosts (e.g. ScheduleCardItem) to forward
+  /// the BuildContext from their build method.
+  Widget buildActionButtons(
+    Color primary,
+    bool attendanceFilled,
+    bool activityFilled,
+    bool materialFilled, {
+    BuildContext? ctx,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: buildAttendanceButton(primary, attendanceFilled, ctx: ctx),
+        ),
+        const SizedBox(width: 6),
+        Expanded(child: buildMaterialButton(primary, materialFilled, ctx: ctx)),
+        const SizedBox(width: 6),
+        Expanded(child: buildActivityButton(primary, activityFilled, ctx: ctx)),
+      ],
+    );
+  }
+
+  /// Builds attendance action button.
+  Widget buildAttendanceButton(
+    Color primary,
+    bool isFilled, {
+    BuildContext? ctx,
+  }) {
+    return Builder(
+      builder: (fallbackCtx) {
+        final effectiveCtx = ctx ?? fallbackCtx;
+        return ScheduleCardActionButton(
+          icon: Icons.fact_check_rounded,
+          label: languageProvider.getTranslatedText({
+            'en': 'Attendance',
+            'id': 'Presensi',
+          }),
+          isFilled: isFilled,
+          primary: primary,
+          onPressed: () {
+            openAttendance(effectiveCtx, isFilled);
+          },
+        );
+      },
+    );
+  }
+
+  /// Builds material action button.
+  Widget buildMaterialButton(
+    Color primary,
+    bool isFilled, {
+    BuildContext? ctx,
+  }) {
+    return Builder(
+      builder: (fallbackCtx) {
+        final effectiveCtx = ctx ?? fallbackCtx;
+        return ScheduleCardActionButton(
+          icon: Icons.library_books_rounded,
+          label: languageProvider.getTranslatedText({
+            'en': 'Material',
+            'id': 'Materi',
+          }),
+          isFilled: isFilled,
+          primary: primary,
+          onPressed: () => openMaterial(effectiveCtx),
+        );
+      },
+    );
+  }
+
+  /// Builds class activity action button.
+  Widget buildActivityButton(
+    Color primary,
+    bool isFilled, {
+    BuildContext? ctx,
+  }) {
+    return Builder(
+      builder: (fallbackCtx) {
+        final effectiveCtx = ctx ?? fallbackCtx;
+        return ScheduleCardActionButton(
+          icon: Icons.assignment_rounded,
+          label: languageProvider.getTranslatedText({
+            'en': 'Class Activity',
+            'id': 'Kegiatan Kelas',
+          }),
+          isFilled: isFilled,
+          primary: primary,
+          onPressed: () => openClassActivity(effectiveCtx),
+        );
+      },
+    );
+  }
+
+  /// Opens attendance view (detail sheet if filled, dialog if not).
+  void openAttendance(BuildContext ctx, bool hasData) {
+    if (hasData) {
+      final summary = getSummary();
+      final att = summary?['attendance'];
+      showModalBottomSheet(
+        context: ctx,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => ScheduleCardAttendanceDetail(
+          subjectName: subjectName ?? '-',
+          className: className ?? '-',
+          schedule: schedule,
+          attendance: att,
+          primary: getPrimaryColor(),
+          languageProvider: languageProvider,
+          onEditTap: () {
+            Navigator.pop(ctx);
+            showAttendanceDialog(ctx, 1);
+          },
+        ),
+      );
+    } else {
+      showAttendanceDialog(ctx, 1);
+    }
+  }
+
+  /// Shows attendance dialog with initial tab index.
+  void showAttendanceDialog(BuildContext ctx, int tabIndex) {
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (dialogContext) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.96,
+          expand: false,
+          builder: (context, scrollController) {
+            return AttendancePage(
+              teacher: {'id': teacherId, 'nama': teacherNama},
+              initialDate: computeScheduleDate(),
+              initialSubjectId: subjectId,
+              initialSubjectName: subjectName,
+              initialclassId: classId,
+              initialClassName: className,
+              initialLessonHourNumber:
+                  sched.Schedule.fromJson(schedule).lessonHour,
+              initialTabIndex: tabIndex,
+              embedded: true,
+              scrollController: scrollController,
+            );
+          },
+        );
+      },
+    ).then((_) => onRefresh?.call());
+  }
+
+  /// Opens material screen (stub for implementation).
+  void openMaterial(BuildContext ctx);
+
+  /// Opens class activity screen (stub for implementation).
+  void openClassActivity(BuildContext ctx);
+}

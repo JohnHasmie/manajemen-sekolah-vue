@@ -6,12 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/auth/domain/models/user.dart';
 
 Map<String, dynamic> _base({Map<String, dynamic>? overrides}) => {
-      'id': 'u-1',
-      'name': 'Ahmad',
-      'email': 'ahmad@school.id',
-      'role': 'guru',
-      ...?overrides,
-    };
+  'id': 'u-1',
+  'name': 'Ahmad',
+  'email': 'ahmad@school.id',
+  'role': 'guru',
+  ...?overrides,
+};
 
 void main() {
   // ---------------------------------------------------------------------------
@@ -39,7 +39,11 @@ void main() {
     });
 
     test('missing id → empty string fallback', () {
-      final u = User.fromJson({'name': 'A', 'email': 'a@b.com', 'role': 'guru'});
+      final u = User.fromJson({
+        'name': 'A',
+        'email': 'a@b.com',
+        'role': 'guru',
+      });
       expect(u.id, '');
     });
   });
@@ -131,12 +135,16 @@ void main() {
   // ---------------------------------------------------------------------------
   group('User.fromJson — schoolName field', () {
     test('reads "school_name" directly', () {
-      final u = User.fromJson(_base(overrides: {'school_name': 'SMP Negeri 1'}));
+      final u = User.fromJson(
+        _base(overrides: {'school_name': 'SMP Negeri 1'}),
+      );
       expect(u.schoolName, 'SMP Negeri 1');
     });
 
     test('falls back to "nama_sekolah"', () {
-      final u = User.fromJson(_base(overrides: {'nama_sekolah': 'SMA Negeri 2'}));
+      final u = User.fromJson(
+        _base(overrides: {'nama_sekolah': 'SMA Negeri 2'}),
+      );
       expect(u.schoolName, 'SMA Negeri 2');
     });
 
@@ -152,7 +160,9 @@ void main() {
   group('User.fromJson — profilePictureUrl field', () {
     test('reads "profile_picture_url" directly', () {
       final u = User.fromJson(
-        _base(overrides: {'profile_picture_url': 'https://cdn.example.com/pic.jpg'}),
+        _base(
+          overrides: {'profile_picture_url': 'https://cdn.example.com/pic.jpg'},
+        ),
       );
       expect(u.profilePictureUrl, 'https://cdn.example.com/pic.jpg');
     });

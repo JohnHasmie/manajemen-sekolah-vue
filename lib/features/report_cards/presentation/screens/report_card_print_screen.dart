@@ -1,19 +1,14 @@
-// Report card print preview screen.
-// Like `pages/teacher/Raport/PrintPreview.vue` in a Vue app.
-//
-// Displays a formatted preview of a student's report card data.
-// PDF printing is planned but not yet implemented.
-// This is a StatelessWidget -- no local mutable state needed.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/mixins/report_card_print_layout_mixin.dart';
 
 /// Print preview for a student's report card.
 ///
 /// StatelessWidget -- like a Vue presentational component with only props.
-/// Props (like Vue props): [reportCardData], [studentName], [className].
+/// Uses ReportCardPrintLayoutMixin for layout-building methods.
 class ReportCardPrintScreen extends StatelessWidget {
   final Map<String, dynamic> reportCardData;
   final String studentName;
@@ -32,7 +27,6 @@ class ReportCardPrintScreen extends StatelessWidget {
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          // Pattern #7 Gradient Header
           Container(
             width: double.infinity,
             padding: EdgeInsets.only(
@@ -81,9 +75,9 @@ class ReportCardPrintScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Preview Raport',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -105,7 +99,8 @@ class ReportCardPrintScreen extends StatelessWidget {
                   onTap: () {
                     SnackBarUtils.showInfo(
                       context,
-                      'Fungsi cetak PDF menggunakan Syncfusion akan segera diimplementasikan.',
+                      'Fungsi cetak PDF menggunakan Syncfusion akan '
+                      'segera diimplementasikan.',
                     );
                   },
                   child: Container(
@@ -125,7 +120,6 @@ class ReportCardPrintScreen extends StatelessWidget {
               ],
             ),
           ),
-
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -137,23 +131,10 @@ class ReportCardPrintScreen extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(32.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildHeader(),
-                      const SizedBox(height: AppSpacing.xxl),
-                      _buildSikapSection(),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildGradeSection(),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildEkstraSection(),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildPrestasiSection(),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildInfoSection(),
-                      const SizedBox(height: AppSpacing.xxxl),
-                      _buildSignatures(),
-                    ],
+                  child: _PrintLayoutBuilder(
+                    reportCardData: reportCardData,
+                    studentName: studentName,
+                    className: className,
                   ),
                 ),
               ),
@@ -163,390 +144,51 @@ class ReportCardPrintScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildHeader() {
+class _PrintLayoutBuilder extends StatefulWidget {
+  final Map<String, dynamic> reportCardData;
+  final String studentName;
+  final String className;
+
+  const _PrintLayoutBuilder({
+    required this.reportCardData,
+    required this.studentName,
+    required this.className,
+  });
+
+  @override
+  State<_PrintLayoutBuilder> createState() => _PrintLayoutBuilderState();
+}
+
+class _PrintLayoutBuilderState extends State<_PrintLayoutBuilder>
+    with ReportCardPrintLayoutMixin {
+  @override
+  Map<String, dynamic> get reportCardData => widget.reportCardData;
+  @override
+  String get studentName => widget.studentName;
+  @override
+  String get className => widget.className;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'PENCAPAIAN KOMPETENSI PESERTA DIDIK',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
+        buildHeader(),
+        const SizedBox(height: AppSpacing.xxl),
+        buildSikapSection(),
         const SizedBox(height: AppSpacing.lg),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeaderRow(
-                    'Nama Sekolah',
-                    'SMA / SMK Bintang Bangsa',
-                  ), // Default/Placeholder
-                  _buildHeaderRow('Alamat', 'Jl. Pendidikan No. 1'),
-                  _buildHeaderRow('Nama', studentName),
-                  _buildHeaderRow('Nomor Induk / NISN', '-'),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeaderRow('Kelas', className),
-                  _buildHeaderRow(
-                    'Semester',
-                    '1 (Ganjil)',
-                  ), // Hardcoded assuming semester 1
-                  _buildHeaderRow(
-                    'Tahun Pelajaran',
-                    '2023/2024',
-                  ), // Hardcoded placeholder
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeaderRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-          const Text(' : '),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Container(
-      color: Colors.grey.shade300,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Widget _buildSikapSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildSectionTitle('A. SIKAP'),
-        // Spiritual
-        const Text(
-          '1. Sikap Spiritual',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 16.0, top: 4, bottom: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Predikat: ${reportCardData['spiritual_predicate'] ?? '-'}'),
-              Text(
-                'Deskripsi: ${reportCardData['spiritual_description'] ?? '-'}',
-              ),
-            ],
-          ),
-        ),
-        // Social
-        const Text(
-          '2. Sikap Sosial',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 16.0, top: 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Predikat: ${reportCardData['social_predicate'] ?? '-'}'),
-              Text('Deskripsi: ${reportCardData['social_description'] ?? '-'}'),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGradeSection() {
-    final List<dynamic> subjects = reportCardData['raport_subjects'] ?? [];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildSectionTitle('B. PENGETAHUAN DAN KETERAMPILAN'),
-        Table(
-          border: TableBorder.all(color: Colors.black87),
-          columnWidths: const {
-            0: FlexColumnWidth(1), // No
-            1: FlexColumnWidth(4), // Mata Pelajaran
-            2: FlexColumnWidth(2), // Pengetahuan Nilai
-            3: FlexColumnWidth(2), // Pengetahuan Predikat
-            4: FlexColumnWidth(2), // Keterampilan Nilai
-            5: FlexColumnWidth(2), // Keterampilan Predikat
-          },
-          children: [
-            TableRow(
-              decoration: BoxDecoration(color: Colors.grey.shade200),
-              children: [
-                _buildTableCell('No', isHeader: true),
-                _buildTableCell('Mata Pelajaran', isHeader: true),
-                _buildTableCell('Pengetahuan\n(Nilai)', isHeader: true),
-                _buildTableCell('Pengetahuan\n(Predikat)', isHeader: true),
-                _buildTableCell('Keterampilan\n(Nilai)', isHeader: true),
-                _buildTableCell('Keterampilan\n(Predikat)', isHeader: true),
-              ],
-            ),
-            for (int i = 0; i < subjects.length; i++)
-              TableRow(
-                children: [
-                  _buildTableCell((i + 1).toString(), center: true),
-                  _buildTableCell(subjects[i]['subject']?['name'] ?? '-'),
-                  _buildTableCell(
-                    subjects[i]['knowledge_score']?.toString() ?? '-',
-                    center: true,
-                  ),
-                  _buildTableCell(
-                    subjects[i]['knowledge_predicate'] ?? '-',
-                    center: true,
-                  ),
-                  _buildTableCell(
-                    subjects[i]['skill_score']?.toString() ?? '-',
-                    center: true,
-                  ),
-                  _buildTableCell(
-                    subjects[i]['skill_predicate'] ?? '-',
-                    center: true,
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEkstraSection() {
-    final List<dynamic> extras = reportCardData['extracurriculars'] ?? [];
-    if (extras.isEmpty) return const SizedBox();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildSectionTitle('C. EKSTRAKURIKULER'),
-        Table(
-          border: TableBorder.all(color: Colors.black87),
-          columnWidths: const {
-            0: FlexColumnWidth(1),
-            1: FlexColumnWidth(4),
-            2: FlexColumnWidth(2),
-            3: FlexColumnWidth(4),
-          },
-          children: [
-            TableRow(
-              decoration: BoxDecoration(color: Colors.grey.shade200),
-              children: [
-                _buildTableCell('No', isHeader: true),
-                _buildTableCell('Kegiatan Ekstrakurikuler', isHeader: true),
-                _buildTableCell('Predikat', isHeader: true),
-                _buildTableCell('Keterangan', isHeader: true),
-              ],
-            ),
-            for (int i = 0; i < extras.length; i++)
-              TableRow(
-                children: [
-                  _buildTableCell((i + 1).toString(), center: true),
-                  _buildTableCell(extras[i]['name'] ?? '-'),
-                  _buildTableCell(extras[i]['score'] ?? '-', center: true),
-                  _buildTableCell(extras[i]['description'] ?? '-'),
-                ],
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPrestasiSection() {
-    final List<dynamic> achievements = reportCardData['achievements'] ?? [];
-    if (achievements.isEmpty) return const SizedBox();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildSectionTitle('D. PRESTASI'),
-        Table(
-          border: TableBorder.all(color: Colors.black87),
-          columnWidths: const {
-            0: FlexColumnWidth(1),
-            1: FlexColumnWidth(4),
-            2: FlexColumnWidth(5),
-          },
-          children: [
-            TableRow(
-              decoration: BoxDecoration(color: Colors.grey.shade200),
-              children: [
-                _buildTableCell('No', isHeader: true),
-                _buildTableCell('Jenis Prestasi', isHeader: true),
-                _buildTableCell('Keterangan', isHeader: true),
-              ],
-            ),
-            for (int i = 0; i < achievements.length; i++)
-              TableRow(
-                children: [
-                  _buildTableCell((i + 1).toString(), center: true),
-                  _buildTableCell(achievements[i]['type'] ?? '-'),
-                  _buildTableCell(achievements[i]['name'] ?? '-'),
-                ],
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 1,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildSectionTitle('E. KETIDAKHADIRAN'),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black87),
-                    ),
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    child: Column(
-                      children: [
-                        _buildHeaderRow(
-                          'Sakit',
-                          '${reportCardData['attendance_sick'] ?? 0} hari',
-                        ),
-                        _buildHeaderRow(
-                          'Izin',
-                          '${reportCardData['attendance_permit'] ?? 0} hari',
-                        ),
-                        _buildHeaderRow(
-                          'Tanpa Keterangan',
-                          '${reportCardData['attendance_absent'] ?? 0} hari',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildSectionTitle('F. CATATAN WALI KELAS'),
-                  Container(
-                    height: 100,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black87),
-                    ),
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    child: Text(reportCardData['homeroom_notes'] ?? ''),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        buildGradeSection(),
         const SizedBox(height: AppSpacing.lg),
-        if (reportCardData['promotion_decision'] != null &&
-            reportCardData['promotion_decision'].toString().isNotEmpty)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildSectionTitle('G. KEPUTUSAN'),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black87),
-                ),
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                child: Text(
-                  'Berdasarkan pencapaian seluruh kompetensi, peserta didik dinyatakan: ${reportCardData['promotion_decision']}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
+        buildEkstraSection(),
+        const SizedBox(height: AppSpacing.lg),
+        buildPrestasiSection(),
+        const SizedBox(height: AppSpacing.lg),
+        buildInfoSection(),
+        const SizedBox(height: AppSpacing.xxxl),
+        buildSignatures(),
       ],
-    );
-  }
-
-  Widget _buildSignatures() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          children: [
-            const Text('Mengetahui,'),
-            const Text('Orang Tua/Wali'),
-            const SizedBox(height: 60),
-            const Text('...........................'),
-          ],
-        ),
-        Column(
-          children: [
-            const Text('Mengetahui,'),
-            const Text('Kepala Sekolah'),
-            const SizedBox(height: 60),
-            const Text('...........................'),
-          ],
-        ),
-        Column(
-          children: [
-            const Text('Kota, .. ............. 20..'),
-            const Text('Wali Kelas'),
-            const SizedBox(height: 60),
-            const Text('...........................'),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTableCell(
-    String text, {
-    bool isHeader = false,
-    bool center = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-        ),
-        textAlign: center || isHeader ? TextAlign.center : TextAlign.left,
-      ),
     );
   }
 }

@@ -4,8 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_info_row.dart';
 
 Widget _build(String label, String value) => MaterialApp(
-      home: Scaffold(body: FinanceInfoRow(label: label, value: value)),
-    );
+  home: Scaffold(
+    body: FinanceInfoRow(label: label, value: value),
+  ),
+);
 
 void main() {
   group('FinanceInfoRow', () {
@@ -29,16 +31,22 @@ void main() {
       expect(find.text(': '), findsOneWidget);
     });
 
-    testWidgets('handles empty label and value without crashing', (tester) async {
+    testWidgets('handles empty label and value without crashing', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build('', ''));
       expect(find.byType(FinanceInfoRow), findsOneWidget);
     });
 
-    testWidgets('displays long value text without overflow crash', (tester) async {
-      await tester.pumpWidget(_build(
-        'Keterangan',
-        'Pembayaran SPP bulan Maret 2025 untuk kelas VII-A sudah diterima',
-      ));
+    testWidgets('displays long value text without overflow crash', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(
+          'Keterangan',
+          'Pembayaran SPP bulan Maret 2025 untuk kelas VII-A sudah diterima',
+        ),
+      );
       expect(find.byType(FinanceInfoRow), findsOneWidget);
     });
 
@@ -55,7 +63,7 @@ void main() {
 
     testWidgets('can stack multiple rows without crashing', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [

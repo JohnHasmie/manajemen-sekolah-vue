@@ -78,7 +78,11 @@ class DashboardAppBar extends StatelessWidget {
                     color: primaryColor,
                     borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                  child: Icon(Icons.school, color: Colors.white, size: 18),
+                  child: const Icon(
+                    Icons.school,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
 
@@ -141,15 +145,19 @@ class DashboardAppBar extends StatelessWidget {
                             color: ColorUtils.error600,
                             shape: BoxShape.circle,
                           ),
-                          constraints: BoxConstraints(
+                          constraints: const BoxConstraints(
                             minWidth: 14,
                             minHeight: 14,
                           ),
                           child: Text(
-                            (unreadNotifications ?? unreadAnnouncements ?? 0) > 9
+                            (unreadNotifications ?? unreadAnnouncements ?? 0) >
+                                    9
                                 ? '9+'
-                                : (unreadNotifications ?? unreadAnnouncements ?? 0).toString(),
-                            style: TextStyle(
+                                : (unreadNotifications ??
+                                          unreadAnnouncements ??
+                                          0)
+                                      .toString(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 7,
                               fontWeight: FontWeight.bold,

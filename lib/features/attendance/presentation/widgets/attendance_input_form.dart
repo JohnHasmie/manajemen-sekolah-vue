@@ -12,6 +12,8 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
+import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 
 /// The top form card in the attendance input tab.
 ///
@@ -99,17 +101,29 @@ class AttendanceInputForm extends StatelessWidget {
             Expanded(
               child: Text(
                 '${initialSubjectName ?? '-'} · ${initialClassName ?? '-'} · Jam ke-${initialLessonHourNumber ?? '-'}',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ColorUtils.slate700),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: ColorUtils.slate700,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.calendar_today_rounded, size: 11, color: ColorUtils.slate400),
+            Icon(
+              Icons.calendar_today_rounded,
+              size: 11,
+              color: ColorUtils.slate400,
+            ),
             const SizedBox(width: 4),
             Text(
               dateStr,
-              style: TextStyle(fontSize: 11, color: ColorUtils.slate500, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 11,
+                color: ColorUtils.slate500,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -163,8 +177,10 @@ class AttendanceInputForm extends StatelessWidget {
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
-                            DateFormat('EEE, dd MMM yyyy', 'id_ID')
-                                .format(selectedDate),
+                            DateFormat(
+                              'EEE, dd MMM yyyy',
+                              'id_ID',
+                            ).format(selectedDate),
                             style: TextStyle(
                               fontSize: 13,
                               color: ColorUtils.slate800,
@@ -220,8 +236,7 @@ class AttendanceInputForm extends StatelessWidget {
                               'en': 'Select Hour',
                               'id': 'Pilih Jam',
                             }),
-                            style:
-                                TextStyle(color: ColorUtils.slate500),
+                            style: TextStyle(color: ColorUtils.slate500),
                           ),
                         ),
                         ...lessonHours.map(
@@ -286,15 +301,19 @@ class AttendanceInputForm extends StatelessWidget {
                               'en': 'Select Class',
                               'id': 'Pilih Kelas',
                             }),
-                            style:
-                                TextStyle(color: ColorUtils.slate500),
+                            style: TextStyle(color: ColorUtils.slate500),
                           ),
                         ),
                         ...classList.map(
-                          (classItem) => DropdownMenuItem<String>(
-                            value: classItem['id'],
-                            child: Text(classItem['name'] ?? ''),
-                          ),
+                          (classItem) {
+                            final model = Classroom.fromJson(
+                              classItem as Map<String, dynamic>,
+                            );
+                            return DropdownMenuItem<String>(
+                              value: model.id,
+                              child: Text(model.name),
+                            );
+                          },
                         ),
                       ],
                       onChanged: onClassChanged,
@@ -343,22 +362,23 @@ class AttendanceInputForm extends StatelessWidget {
                               'en': 'Select Subject',
                               'id': 'Pilih Mapel',
                             }),
-                            style:
-                                TextStyle(color: ColorUtils.slate500),
+                            style: TextStyle(color: ColorUtils.slate500),
                           ),
                         ),
                         ...subjectTeacher.map(
-                          (mp) => DropdownMenuItem<String>(
-                            value: mp['id'],
-                            child: Text(
-                              mp['nama'] ??
-                                  mp['name'] ??
-                                  mp['mata_pelajaran_nama'] ??
-                                  'Unknown',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                          (mp) {
+                            final subj = Subject.fromJson(
+                              mp as Map<String, dynamic>,
+                            );
+                            return DropdownMenuItem<String>(
+                              value: subj.id,
+                              child: Text(
+                                subj.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          },
                         ),
                       ],
                       onChanged: onSubjectChanged,
@@ -378,10 +398,9 @@ class AttendanceInputForm extends StatelessWidget {
                   'en': 'No subjects assigned for this class.',
                   'id': 'Tidak ada mata pelajaran untuk kelas ini.',
                 }),
-                style: TextStyle(color: Colors.orange, fontSize: 12),
+                style: const TextStyle(color: Colors.orange, fontSize: 12),
               ),
             ),
-
         ],
       ),
     );

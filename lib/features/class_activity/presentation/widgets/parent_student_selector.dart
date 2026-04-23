@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// A student-picker dropdown used by the parent class activity screen.
 ///
@@ -117,8 +118,16 @@ class ParentStudentSelector extends StatelessWidget {
                 color: ColorUtils.slate500,
               ),
               items: studentList.map((student) {
+                final model = Student.fromJson(
+                  student as Map<String, dynamic>,
+                );
+                final className =
+                    model.className.isNotEmpty ? model.className : '-';
+                final nis = model.studentNumber.isNotEmpty
+                    ? model.studentNumber
+                    : '-';
                 return DropdownMenuItem<String>(
-                  value: student['id'],
+                  value: model.id,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Column(
@@ -126,8 +135,9 @@ class ParentStudentSelector extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          student['name'] ??
-                              AppLocalizations.nameNotAvailable.tr,
+                          model.name.isNotEmpty
+                              ? model.name
+                              : AppLocalizations.nameNotAvailable.tr,
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
@@ -135,7 +145,7 @@ class ParentStudentSelector extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${AppLocalizations.classString.tr}: ${student['kelas_nama'] ?? student['class']?['name'] ?? '-'} • NIS: ${student['student_number'] ?? '-'}',
+                          '${AppLocalizations.classString.tr}: $className • NIS: $nis',
                           style: TextStyle(
                             fontSize: 12,
                             color: ColorUtils.slate500,

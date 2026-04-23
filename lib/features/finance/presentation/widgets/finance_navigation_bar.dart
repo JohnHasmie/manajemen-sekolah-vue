@@ -75,7 +75,7 @@ class FinanceNavigationBar extends StatelessWidget {
           BoxShadow(
             color: ColorUtils.slate900.withValues(alpha: 0.06),
             blurRadius: 6,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -91,7 +91,7 @@ class FinanceNavigationBar extends StatelessWidget {
               key: isSelected ? tabBarKey : null,
               onTap: () => onTabSelected(index),
               child: AnimatedContainer(
-                duration: Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
@@ -114,7 +114,9 @@ class FinanceNavigationBar extends StatelessWidget {
                         Icon(
                           item['icon'] as IconData,
                           size: 22,
-                          color: isSelected ? primaryColor : ColorUtils.slate400,
+                          color: isSelected
+                              ? primaryColor
+                              : ColorUtils.slate400,
                         ),
                         if (badge > 0)
                           Positioned(
@@ -127,11 +129,13 @@ class FinanceNavigationBar extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: ColorUtils.error600,
-                                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
                               ),
                               child: Text(
                                 badge > 99 ? '99+' : '$badge',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 8,
                                   fontWeight: FontWeight.w700,

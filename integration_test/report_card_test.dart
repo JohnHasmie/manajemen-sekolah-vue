@@ -33,8 +33,9 @@ Future<void> _goBack(WidgetTester tester) async {
     if (backBtn.evaluate().isNotEmpty) {
       await tester.tap(backBtn.first);
     } else {
-      final navigator =
-          tester.state<NavigatorState>(find.byType(Navigator).last);
+      final navigator = tester.state<NavigatorState>(
+        find.byType(Navigator).last,
+      );
       navigator.pop();
     }
   }
@@ -109,7 +110,9 @@ void main() {
       }
 
       if (!selected) {
-        debugPrint('  ⚠️ No class selector found — may already show report cards');
+        debugPrint(
+          '  ⚠️ No class selector found — may already show report cards',
+        );
       }
 
       expect(find.byType(Scaffold), findsWidgets);
@@ -228,7 +231,9 @@ void main() {
         }
 
         if (!foundAction) {
-          debugPrint('  ⚠️ No print/export button found — checking AppBar actions');
+          debugPrint(
+            '  ⚠️ No print/export button found — checking AppBar actions',
+          );
           // Check AppBar actions
           final appBarAction = find.descendant(
             of: find.byType(AppBar),
@@ -237,7 +242,9 @@ void main() {
           if (appBarAction.evaluate().isNotEmpty) {
             debugPrint('  ✅ AppBar has action buttons');
           } else {
-            debugPrint('  ℹ️ No print/export action visible on this report card');
+            debugPrint(
+              '  ℹ️ No print/export action visible on this report card',
+            );
           }
         }
 

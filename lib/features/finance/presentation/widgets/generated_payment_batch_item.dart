@@ -68,9 +68,7 @@ class GeneratedPaymentBatchItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.all(Radius.circular(12)),
-              border: Border.all(
-                color: primaryColor.withValues(alpha: 0.15),
-              ),
+              border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
             ),
             child: Icon(
               Icons.receipt_long_rounded,
@@ -102,10 +100,15 @@ class GeneratedPaymentBatchItem extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.08),
-                        borderRadius: const BorderRadius.all(Radius.circular(6)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(6),
+                        ),
                       ),
                       child: Text(
                         amount,
@@ -118,10 +121,15 @@ class GeneratedPaymentBatchItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: ColorUtils.info600.withValues(alpha: 0.08),
-                        borderRadius: const BorderRadius.all(Radius.circular(6)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(6),
+                        ),
                       ),
                       child: Text(
                         '$count Tagihan',

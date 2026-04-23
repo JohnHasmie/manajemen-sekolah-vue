@@ -26,27 +26,22 @@ Map<String, dynamic> _rec({
   String description = 'Kerjakan soal aljabar berikut.',
   String aiReasoning = 'Siswa lemah di aljabar.',
   List<dynamic>? materials,
-}) =>
-    {
-      'priority': priority,
-      'type': type,
-      'title': title,
-      'description': description,
-      'ai_reasoning': aiReasoning,
-      if (materials != null) 'materials': materials,
-    };
+}) => {
+  'priority': priority,
+  'type': type,
+  'title': title,
+  'description': description,
+  'ai_reasoning': aiReasoning,
+  if (materials != null) 'materials': materials,
+};
 
-Widget _build({Map<String, dynamic>? rec, Key? listKey}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: RecommendationCard(
-            rec: rec ?? _rec(),
-            listKey: listKey,
-          ),
-        ),
-      ),
-    );
+Widget _build({Map<String, dynamic>? rec, Key? listKey}) => MaterialApp(
+  home: Scaffold(
+    body: SingleChildScrollView(
+      child: RecommendationCard(rec: rec ?? _rec(), listKey: listKey),
+    ),
+  ),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -72,7 +67,9 @@ void main() {
       expect(find.text('LOW'), findsOneWidget);
     });
 
-    testWidgets('fallback priority is "LOW" when priority absent', (tester) async {
+    testWidgets('fallback priority is "LOW" when priority absent', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(rec: {'type': 'video', 'title': 'Test'}));
       await tester.pumpAndSettle();
       expect(find.text('LOW'), findsOneWidget);
@@ -106,8 +103,12 @@ void main() {
       expect(find.text('Latihan Soal Aljabar'), findsOneWidget);
     });
 
-    testWidgets('falls back to "Rekomendasi" when title absent', (tester) async {
-      await tester.pumpWidget(_build(rec: {'priority': 'low', 'type': 'video'}));
+    testWidgets('falls back to "Rekomendasi" when title absent', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(rec: {'priority': 'low', 'type': 'video'}),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Rekomendasi'), findsOneWidget);
     });
@@ -120,16 +121,18 @@ void main() {
       expect(find.text('REKOMENDASI:'), findsOneWidget);
     });
 
-    testWidgets('shows "BERDASARKAN ANALISIS AI:" reasoning label', (tester) async {
+    testWidgets('shows "BERDASARKAN ANALISIS AI:" reasoning label', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build());
       await tester.pumpAndSettle();
       expect(find.text('BERDASARKAN ANALISIS AI:'), findsOneWidget);
     });
 
     testWidgets('shows ai_reasoning text', (tester) async {
-      await tester.pumpWidget(_build(
-        rec: _rec(aiReasoning: 'Siswa lemah di aljabar.'),
-      ));
+      await tester.pumpWidget(
+        _build(rec: _rec(aiReasoning: 'Siswa lemah di aljabar.')),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Siswa lemah di aljabar.'), findsOneWidget);
     });
@@ -148,20 +151,26 @@ void main() {
       expect(find.text('MATERI & AKTIVITAS:'), findsNothing);
     });
 
-    testWidgets('hides materials section when materials is empty list',
-        (tester) async {
+    testWidgets('hides materials section when materials is empty list', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(rec: _rec(materials: [])));
       await tester.pumpAndSettle();
       expect(find.text('MATERI & AKTIVITAS:'), findsNothing);
     });
 
-    testWidgets('shows "MATERI & AKTIVITAS:" when materials has items',
-        (tester) async {
-      await tester.pumpWidget(_build(
-        rec: _rec(materials: [
-          {'title': 'Soal Latihan 1', 'type': 'exercise'},
-        ]),
-      ));
+    testWidgets('shows "MATERI & AKTIVITAS:" when materials has items', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(
+          rec: _rec(
+            materials: [
+              {'title': 'Soal Latihan 1', 'type': 'exercise'},
+            ],
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('MATERI & AKTIVITAS:'), findsOneWidget);
     });

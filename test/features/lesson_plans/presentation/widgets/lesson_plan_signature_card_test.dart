@@ -18,17 +18,16 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/less
 Widget _build({
   required bool isAiGenerated,
   Color primaryColor = Colors.blue,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: LessonPlanSignatureCard(
-            isAiGenerated: isAiGenerated,
-            primaryColor: primaryColor,
-          ),
-        ),
+}) => MaterialApp(
+  home: Scaffold(
+    body: SingleChildScrollView(
+      child: LessonPlanSignatureCard(
+        isAiGenerated: isAiGenerated,
+        primaryColor: primaryColor,
       ),
-    );
+    ),
+  ),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -46,8 +45,9 @@ void main() {
       expect(find.text('Guru Mata Pelajaran'), findsOneWidget);
     });
 
-    testWidgets('renders "Mengetahui" header for principal column',
-        (tester) async {
+    testWidgets('renders "Mengetahui" header for principal column', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(isAiGenerated: false));
       expect(find.text('Mengetahui'), findsOneWidget);
     });
@@ -60,8 +60,9 @@ void main() {
   });
 
   group('LessonPlanSignatureCard — isAiGenerated=false', () {
-    testWidgets('does NOT show AI notice when isAiGenerated=false',
-        (tester) async {
+    testWidgets('does NOT show AI notice when isAiGenerated=false', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(isAiGenerated: false));
       expect(
         find.text('RPP ini digenerate secara otomatis menggunakan AI'),

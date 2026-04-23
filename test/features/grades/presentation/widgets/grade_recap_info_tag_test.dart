@@ -4,8 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_info_tag.dart';
 
 Widget _build(IconData icon, String text) => MaterialApp(
-      home: Scaffold(body: GradeRecapInfoTag(icon: icon, text: text)),
-    );
+  home: Scaffold(
+    body: GradeRecapInfoTag(icon: icon, text: text),
+  ),
+);
 
 void main() {
   group('GradeRecapInfoTag', () {
@@ -22,7 +24,9 @@ void main() {
     testWidgets('displays the icon', (tester) async {
       await tester.pumpWidget(_build(Icons.layers_outlined, 'Level'));
       expect(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.layers_outlined),
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.layers_outlined,
+        ),
         findsOneWidget,
       );
     });
@@ -32,10 +36,14 @@ void main() {
       expect(find.byType(GradeRecapInfoTag), findsOneWidget);
     });
 
-    testWidgets('Text widget declares maxLines=1 and ellipsis overflow',
-        (tester) async {
+    testWidgets('Text widget declares maxLines=1 and ellipsis overflow', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _build(Icons.person_outline, 'A very long teacher name that should be truncated'),
+        _build(
+          Icons.person_outline,
+          'A very long teacher name that should be truncated',
+        ),
       );
       final text = tester.widget<Text>(find.byType(Text).last);
       expect(text.maxLines, 1);
@@ -55,14 +63,16 @@ void main() {
     testWidgets('icon has size 11', (tester) async {
       await tester.pumpWidget(_build(Icons.layers_outlined, 'VII'));
       final icon = tester.widget<Icon>(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.layers_outlined),
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.layers_outlined,
+        ),
       );
       expect(icon.size, 11);
     });
 
     testWidgets('can render multiple tags side by side', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Wrap(
               children: [

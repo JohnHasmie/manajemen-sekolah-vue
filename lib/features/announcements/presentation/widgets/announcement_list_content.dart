@@ -6,6 +6,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/core/widgets/paginated_list_view.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_card.dart';
 
 /// Scrollable content area for [AdminAnnouncementScreen].
@@ -13,7 +14,7 @@ import 'package:manajemensekolah/features/announcements/presentation/widgets/ann
 /// In Vue terms this maps to `<AnnouncementListContent>` — it receives the
 /// current data/loading/error state as props and emits events via callbacks.
 /// The four possible states mirror a Vue `v-if/v-else-if` chain:
-///   loading → skeleton · error → ErrorScreen · empty → EmptyState · data → ListView.
+///   loading → skeleton · error → ErrorScreen · empty → EmptyState · data → PaginatedListView.
 class AnnouncementListContent extends StatelessWidget {
   /// Whether the initial page is still loading (shows skeleton loader).
   final bool isLoading;
@@ -26,6 +27,9 @@ class AnnouncementListContent extends StatelessWidget {
 
   /// Whether the pagination mixin is currently fetching the next page.
   final bool isLoadingMore;
+
+  /// Whether there are more pages to load.
+  final bool hasMoreData;
 
   /// Primary brand color for this role (admin).
   final Color primaryColor;
@@ -69,12 +73,16 @@ class AnnouncementListContent extends StatelessWidget {
   /// Called when the list is pulled down to refresh.
   final Future<void> Function() onRefresh;
 
+  /// Called when scrolling near the bottom to load more items.
+  final Future<void> Function() onLoadMore;
+
   const AnnouncementListContent({
     super.key,
     required this.isLoading,
     required this.errorMessage,
     required this.announcements,
     required this.isLoadingMore,
+    required this.hasMoreData,
     required this.primaryColor,
     required this.scrollController,
     required this.languageProvider,
@@ -89,25 +97,41 @@ class AnnouncementListContent extends StatelessWidget {
     required this.onItemEdit,
     required this.onItemDelete,
     required this.onRefresh,
+    required this.onLoadMore,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Loading → show skeleton placeholder rows (like a Vue v-if="isLoading")
-    if (isLoading) {
-      return SkeletonListLoading(
-        padding: const EdgeInsets.only(top: 8, bottom: 80),
-      );
-    }
-
     // Error with no cached data → show full-screen error with retry button
     if (errorMessage != null) {
       return ErrorScreen(errorMessage: errorMessage!, onRetry: onRetry);
     }
 
-    // Empty list → show contextual empty state with action button
-    if (announcements.isEmpty) {
-      return EmptyState(
+    return PaginatedListView<Map<String, dynamic>>(
+      items: announcements.cast<Map<String, dynamic>>(),
+      itemBuilder: (context, item, index) {
+        // Notify parent so it can batch-mark the item as read
+        onItemVisible(item);
+
+        return AnnouncementCard(
+          announcementData: item,
+          primaryColor: primaryColor,
+          formattedDate: formatDate(item['created_at'] as String?),
+          targetText: getTargetText(item),
+          importantLabel: importantLabel,
+          onTap: () => onItemTap(item),
+          onEdit: () => onItemEdit(item),
+          onDelete: () => onItemDelete(item),
+        );
+      },
+      onLoadMore: onLoadMore,
+      hasMore: hasMoreData,
+      isLoadingMore: isLoadingMore,
+      isInitialLoading: isLoading && announcements.isEmpty,
+      loadingState: const SkeletonListLoading(
+        padding: EdgeInsets.only(top: 8, bottom: 80),
+      ),
+      emptyState: EmptyState(
         icon: Icons.announcement_outlined,
         title: languageProvider.getTranslatedText({
           'en': 'No Announcements',
@@ -126,48 +150,10 @@ class AnnouncementListContent extends StatelessWidget {
           'id': 'Buat Pengumuman',
         }),
         onPressed: onCreateTap,
-      );
-    }
-
-    // Data loaded → infinite-scroll ListView of announcement cards
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      color: primaryColor,
-      backgroundColor: Colors.white,
-      child: ListView.builder(
-        controller: scrollController,
-        padding: const EdgeInsets.only(top: 8, bottom: 16),
-        // +1 slot for the "loading more" spinner at the bottom
-        itemCount: announcements.length + (isLoadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          // Bottom spinner shown while the next page is being fetched
-          if (index == announcements.length) {
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              alignment: Alignment.center,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: primaryColor,
-              ),
-            );
-          }
-
-          final item = announcements[index] as Map<String, dynamic>;
-          // Notify parent so it can batch-mark the item as read
-          onItemVisible(item);
-
-          return AnnouncementCard(
-            announcementData: item,
-            primaryColor: primaryColor,
-            formattedDate: formatDate(item['created_at'] as String?),
-            targetText: getTargetText(item),
-            importantLabel: importantLabel,
-            onTap: () => onItemTap(item),
-            onEdit: () => onItemEdit(item),
-            onDelete: () => onItemDelete(item),
-          );
-        },
       ),
+      controller: scrollController,
+      padding: const EdgeInsets.only(top: 8, bottom: 16),
+      onRefresh: onRefresh,
     );
   }
 }

@@ -142,20 +142,23 @@ void main() {
       expect(key, isNull);
     });
 
-    test('returns null when selectedFilterSemester differs from selectedSemester', () {
-      final key = ctrl.buildScheduleCacheKey(
-        teacherId: teacherId,
-        selectedDayIds: [],
-        selectedClassId: null,
-        searchText: '',
-        selectedFilterSemester: '2',
-        selectedSemester: semester,
-        selectedAcademicYear: year,
-        isHomeroomView: false,
-        selectedHomeroomClass: null,
-      );
-      expect(key, isNull);
-    });
+    test(
+      'returns null when selectedFilterSemester differs from selectedSemester',
+      () {
+        final key = ctrl.buildScheduleCacheKey(
+          teacherId: teacherId,
+          selectedDayIds: [],
+          selectedClassId: null,
+          searchText: '',
+          selectedFilterSemester: '2',
+          selectedSemester: semester,
+          selectedAcademicYear: year,
+          isHomeroomView: false,
+          selectedHomeroomClass: null,
+        );
+        expect(key, isNull);
+      },
+    );
 
     test('returns homeroom key when isHomeroomView with selected class', () {
       final key = ctrl.buildScheduleCacheKey(
@@ -172,20 +175,23 @@ void main() {
       expect(key, 'schedule_homeroom_CLS7A_1_2024/2025');
     });
 
-    test('uses selectedFilterSemester in key when it matches selectedSemester', () {
-      final key = ctrl.buildScheduleCacheKey(
-        teacherId: teacherId,
-        selectedDayIds: [],
-        selectedClassId: null,
-        searchText: '',
-        selectedFilterSemester: semester,
-        selectedSemester: semester,
-        selectedAcademicYear: year,
-        isHomeroomView: false,
-        selectedHomeroomClass: null,
-      );
-      expect(key, 'schedule_teacher_T42_1_2024/2025');
-    });
+    test(
+      'uses selectedFilterSemester in key when it matches selectedSemester',
+      () {
+        final key = ctrl.buildScheduleCacheKey(
+          teacherId: teacherId,
+          selectedDayIds: [],
+          selectedClassId: null,
+          searchText: '',
+          selectedFilterSemester: semester,
+          selectedSemester: semester,
+          selectedAcademicYear: year,
+          isHomeroomView: false,
+          selectedHomeroomClass: null,
+        );
+        expect(key, 'schedule_teacher_T42_1_2024/2025');
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -238,12 +244,16 @@ void main() {
 
   group('extractDayIds', () {
     test('returns ids from a List<dynamic> days_ids field', () {
-      final ids = ctrl.extractDayIds({'days_ids': ['1', '2', '3']});
+      final ids = ctrl.extractDayIds({
+        'days_ids': ['1', '2', '3'],
+      });
       expect(ids, ['1', '2', '3']);
     });
 
     test('returns ids from an integer list (casts to String)', () {
-      final ids = ctrl.extractDayIds({'days_ids': [1, 2]});
+      final ids = ctrl.extractDayIds({
+        'days_ids': [1, 2],
+      });
       expect(ids, ['1', '2']);
     });
 
@@ -290,13 +300,12 @@ void main() {
       String className = '7A',
       List<String> dayIds = const ['1'],
       String classId = 'C1',
-    }) =>
-        {
-          'mata_pelajaran_nama': subject,
-          'kelas_nama': className,
-          'days_ids': dayIds,
-          'class_id': classId,
-        };
+    }) => {
+      'mata_pelajaran_nama': subject,
+      'kelas_nama': className,
+      'days_ids': dayIds,
+      'class_id': classId,
+    };
 
     test('returns all schedules when no filters are active', () {
       final list = [schedule(subject: 'Math'), schedule(subject: 'Science')];
@@ -322,7 +331,10 @@ void main() {
     });
 
     test('search filter matches mata_pelajaran_nama (case-insensitive)', () {
-      final list = [schedule(subject: 'Mathematics'), schedule(subject: 'Physics')];
+      final list = [
+        schedule(subject: 'Mathematics'),
+        schedule(subject: 'Physics'),
+      ];
       final result = ctrl.getFilteredSchedules(
         scheduleList: list,
         searchText: 'math',

@@ -106,7 +106,10 @@ class LessonPlanFormattedContent extends StatelessWidget {
             line.startsWith('2.')) {
           return Padding(
             padding: const EdgeInsets.only(left: 16, bottom: 4),
-            child: Text(line, style: TextStyle(fontSize: 14, height: 1.5)),
+            child: Text(
+              line,
+              style: const TextStyle(fontSize: 14, height: 1.5),
+            ),
           );
         }
 
@@ -118,7 +121,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               line,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
           );
         }
@@ -126,7 +129,7 @@ class LessonPlanFormattedContent extends StatelessWidget {
         // Default body text
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Text(line, style: TextStyle(fontSize: 14, height: 1.5)),
+          child: Text(line, style: const TextStyle(fontSize: 14, height: 1.5)),
         );
       }).toList(),
     );

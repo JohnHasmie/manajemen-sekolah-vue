@@ -11,16 +11,15 @@
 // inside this widget.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/finance/data/finance_service.dart';
 import 'package:manajemensekolah/features/settings/data/academic_service.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/mixins/generate_bills_dialog_ui_mixin.dart';
 
 /// Full-screen dialog for generating bills for a payment type.
 ///
@@ -55,9 +54,10 @@ class GenerateBillsDialog extends StatefulWidget {
   State<GenerateBillsDialog> createState() => _GenerateBillsDialogState();
 }
 
-class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
+class _GenerateBillsDialogState extends State<GenerateBillsDialog>
+    with GenerateBillsDialogUiMixin {
   // Currently selected month name (Indonesian), defaults to current month.
-  String _selectedMonth = DateFormat('MMMM', 'id_ID').format(DateTime.now());
+  late String _selectedMonth;
   String? _selectedAcademicYearId;
 
   List<dynamic> _academicYears = [];
@@ -66,15 +66,56 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
   bool _isLoadingYears = true;
   bool _isLoadingGenerated = false;
 
-  // Fixed list of Indonesian month names (Jan–Dec).
-  static const List<String> _months = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-  ];
+  // Mixin property accessors
+  @override
+  Color get primaryColor => widget.primaryColor;
+
+  @override
+  LinearGradient get cardGradient => widget.cardGradient;
+
+  @override
+  Map<String, dynamic> get paymentType => widget.paymentType;
+
+  @override
+  String get selectedMonth => _selectedMonth;
+
+  @override
+  set selectedMonth(String value) => _selectedMonth = value;
+
+  @override
+  String? get selectedAcademicYearId => _selectedAcademicYearId;
+
+  @override
+  set selectedAcademicYearId(String? value) => _selectedAcademicYearId = value;
+
+  @override
+  List<dynamic> get academicYears => _academicYears;
+
+  @override
+  set academicYears(List<dynamic> value) => _academicYears = value;
+
+  @override
+  List<String> get generatedMonths => _generatedMonths;
+
+  @override
+  set generatedMonths(List<String> value) => _generatedMonths = value;
+
+  @override
+  bool get isLoadingYears => _isLoadingYears;
+
+  @override
+  set isLoadingYears(bool value) => _isLoadingYears = value;
+
+  @override
+  bool get isLoadingGenerated => _isLoadingGenerated;
+
+  @override
+  set isLoadingGenerated(bool value) => _isLoadingGenerated = value;
 
   @override
   void initState() {
     super.initState();
+    _selectedMonth = DateFormat('MMMM', 'id_ID').format(DateTime.now());
     _fetchAcademicYears();
   }
 
@@ -124,6 +165,11 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
     }
   }
 
+  @override
+  void _notifyAcademicYearChanged(String academicYearId) {
+    _fetchGeneratedMonths(academicYearId);
+  }
+
   // ─── Generate action (called when user taps the Generate button) ─────────────
 
   Future<void> _generate() async {
@@ -162,8 +208,6 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
     }
   }
 
-  // ─── Build ───────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     final bool canGenerate =
@@ -172,299 +216,20 @@ class _GenerateBillsDialogState extends State<GenerateBillsDialog> {
 
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
         width: MediaQuery.of(context).size.width * 0.9,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildHeader(),
-            _buildContent(),
-            _buildFooter(canGenerate),
+            buildHeader(),
+            buildContent(),
+            buildFooter(canGenerate, _generate),
           ],
         ),
-      ),
-    );
-  }
-
-  // Gradient header with icon + payment type name.
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(gradient: widget.cardGradient),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
-            ),
-            child: Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Generate Tagihan',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  widget.paymentType['name'] ?? '',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Academic year dropdown + month grid.
-  Widget _buildContent() {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionLabel(Icons.school_rounded, 'Tahun Ajaran'),
-          const SizedBox(height: 10),
-          _buildAcademicYearDropdown(),
-          const SizedBox(height: AppSpacing.xl),
-          _buildSectionLabel(Icons.date_range_rounded, 'Pilih Bulan'),
-          const SizedBox(height: 10),
-          _buildMonthGrid(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionLabel(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 15, color: ColorUtils.slate600),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: ColorUtils.slate800,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAcademicYearDropdown() {
-    if (_isLoadingYears) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: CircularProgressIndicator(color: widget.primaryColor),
-        ),
-      );
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButtonFormField<String>(
-          initialValue: _selectedAcademicYearId,
-          decoration: InputDecoration(
-            prefixIcon: Icon(
-              Icons.calendar_today_rounded,
-              color: widget.primaryColor,
-              size: 18,
-            ),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(vertical: 12),
-          ),
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: ColorUtils.slate900,
-            fontSize: 14,
-          ),
-          items: _academicYears.map((y) {
-            return DropdownMenuItem<String>(
-              value: y['id'].toString(),
-              child: Text(y['year'] ?? 'Unknown'),
-            );
-          }).toList(),
-          onChanged: (val) {
-            if (val != null) {
-              setState(() {
-                _selectedAcademicYearId = val;
-                _isLoadingGenerated = true;
-                _generatedMonths = [];
-              });
-              _fetchGeneratedMonths(val);
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMonthGrid() {
-    if (_isLoadingGenerated) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: CircularProgressIndicator(color: widget.primaryColor),
-        ),
-      );
-    }
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 2.2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: _months.length,
-      itemBuilder: (context, index) {
-        final month = _months[index];
-        final isGenerated = _generatedMonths.contains(month);
-        final isSelected = _selectedMonth == month;
-
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: isGenerated
-                ? null
-                : () => setState(() => _selectedMonth = month),
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
-            child: Container(
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isGenerated
-                    ? ColorUtils.slate100
-                    : isSelected
-                    ? widget.primaryColor
-                    : Colors.white,
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                border: Border.all(
-                  color: isGenerated
-                      ? ColorUtils.slate200
-                      : isSelected
-                      ? widget.primaryColor
-                      : ColorUtils.slate200,
-                ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: widget.primaryColor.withValues(alpha: 0.3),
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Text(
-                      month,
-                      style: TextStyle(
-                        color: isGenerated
-                            ? ColorUtils.slate400
-                            : isSelected
-                            ? Colors.white
-                            : ColorUtils.slate700,
-                        fontSize: 12,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  if (isGenerated)
-                    Positioned(
-                      right: 3,
-                      top: 3,
-                      child: Icon(
-                        Icons.check_circle_rounded,
-                        size: 12,
-                        color: ColorUtils.success600,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // Cancel / Generate buttons.
-  Widget _buildFooter(bool canGenerate) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => AppNavigator.pop(context),
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                side: BorderSide(color: ColorUtils.slate300),
-              ),
-              child: Text(
-                AppLocalizations.cancel.tr,
-                style: TextStyle(color: ColorUtils.slate600),
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: canGenerate ? _generate : null,
-              icon: Icon(Icons.auto_awesome_rounded, size: 16, color: Colors.white),
-              label: Text(
-                'Generate',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: widget.primaryColor,
-                disabledBackgroundColor: ColorUtils.slate300,
-                shape: RoundedRectangleBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                elevation: 0,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

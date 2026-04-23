@@ -19,12 +19,12 @@ import 'package:manajemensekolah/features/recommendations/presentation/widgets/r
 // ---------------------------------------------------------------------------
 
 Widget _build(dynamic matItem) => MaterialApp(
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: RecommendationMaterialItem(matItem: matItem),
-        ),
-      ),
-    );
+  home: Scaffold(
+    body: SingleChildScrollView(
+      child: RecommendationMaterialItem(matItem: matItem),
+    ),
+  ),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -33,31 +33,41 @@ Widget _build(dynamic matItem) => MaterialApp(
 void main() {
   group('RecommendationMaterialItem — type icon mapping', () {
     testWidgets('type=video shows play icon', (tester) async {
-      await tester.pumpWidget(_build({'type': 'video', 'title': 'Video 1', 'content': ''}));
+      await tester.pumpWidget(
+        _build({'type': 'video', 'title': 'Video 1', 'content': ''}),
+      );
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.play_circle_filled_rounded), findsOneWidget);
     });
 
     testWidgets('type=exercise shows task_alt icon', (tester) async {
-      await tester.pumpWidget(_build({'type': 'exercise', 'title': 'Latihan', 'content': ''}));
+      await tester.pumpWidget(
+        _build({'type': 'exercise', 'title': 'Latihan', 'content': ''}),
+      );
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.task_alt_rounded), findsOneWidget);
     });
 
     testWidgets('type=reading shows auto_stories icon', (tester) async {
-      await tester.pumpWidget(_build({'type': 'reading', 'title': 'Bacaan', 'content': ''}));
+      await tester.pumpWidget(
+        _build({'type': 'reading', 'title': 'Bacaan', 'content': ''}),
+      );
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.auto_stories_rounded), findsOneWidget);
     });
 
     testWidgets('type=other shows extension icon', (tester) async {
-      await tester.pumpWidget(_build({'type': 'other', 'title': 'Misc', 'content': ''}));
+      await tester.pumpWidget(
+        _build({'type': 'other', 'title': 'Misc', 'content': ''}),
+      );
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.extension_rounded), findsOneWidget);
     });
 
     testWidgets('unknown type falls back to extension icon', (tester) async {
-      await tester.pumpWidget(_build({'type': 'quiz', 'title': 'Kuis', 'content': ''}));
+      await tester.pumpWidget(
+        _build({'type': 'quiz', 'title': 'Kuis', 'content': ''}),
+      );
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.extension_rounded), findsOneWidget);
     });
@@ -65,7 +75,9 @@ void main() {
 
   group('RecommendationMaterialItem — title', () {
     testWidgets('shows title from mat map', (tester) async {
-      await tester.pumpWidget(_build({'type': 'video', 'title': 'Intro Aljabar', 'content': ''}));
+      await tester.pumpWidget(
+        _build({'type': 'video', 'title': 'Intro Aljabar', 'content': ''}),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Intro Aljabar'), findsOneWidget);
     });
@@ -78,7 +90,9 @@ void main() {
   });
 
   group('RecommendationMaterialItem — non-map guard', () {
-    testWidgets('renders empty SizedBox for non-map input (string)', (tester) async {
+    testWidgets('renders empty SizedBox for non-map input (string)', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build('invalid'));
       await tester.pumpAndSettle();
       // No icon rendered — guard returned SizedBox.shrink

@@ -111,7 +111,9 @@ class TeacherInfoRow extends StatelessWidget {
                           color: ColorUtils.corporateBlue600.withValues(
                             alpha: 0.08,
                           ),
-                          borderRadius: const BorderRadius.all(Radius.circular(6)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(6),
+                          ),
                           border: Border.all(
                             color: ColorUtils.corporateBlue600.withValues(
                               alpha: 0.2,

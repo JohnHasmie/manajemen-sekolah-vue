@@ -49,7 +49,15 @@ void main() {
     });
 
     test('handles missing fields with defaults from fromJson', () {
-      final json = {'id': 3, 'name': 'Generic', 'kelas_nama': '7A', 'nomor_induk': 'S003', 'address': '', 'nama_wali': '', 'nomor_hp': ''};
+      final json = {
+        'id': 3,
+        'name': 'Generic',
+        'kelas_nama': '7A',
+        'nomor_induk': 'S003',
+        'address': '',
+        'nama_wali': '',
+        'nomor_hp': '',
+      };
 
       final student = Student.fromJson(json);
 
@@ -85,7 +93,7 @@ void main() {
         'student_number': 'Num',
         'address': 'Addr',
         'guardian_name': 'Guardian',
-        'phone_number': 'Phone'
+        'phone_number': 'Phone',
       };
       final student = Student.fromJson(json);
       expect(student.id, '123');

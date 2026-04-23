@@ -7,6 +7,7 @@
 // In Laravel terms, this consumes `GET /api/settings/lesson-hours` and
 // `PUT /api/settings/lesson-hours` with per-day session definitions.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/settings/data/settings_service.dart';
@@ -63,7 +64,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
 
       final allSessions = futures[1];
       final Map<String, List<dynamic>> grouped = {};
-      for (var session in allSessions) {
+      for (final session in allSessions) {
         final dayId = session['day_id'].toString();
         grouped.putIfAbsent(dayId, () => []).add(session);
       }
@@ -146,7 +147,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      day['name_id'] ?? day['name_en'] ?? 'Hari',
+                      dayNameToIndonesian(day['name'] ?? 'Hari'),
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -216,7 +217,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                 BoxShadow(
                   color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
                   blurRadius: 8,
-                  offset: Offset(0, 2),
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -243,7 +244,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Pengaturan Waktu',
                         style: TextStyle(
                           fontSize: 20,
@@ -271,7 +272,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
               context: context,
               removeTop: true,
               child: _isLoadingTime
-                  ? SkeletonListLoading(itemCount: 6, infoTagCount: 1)
+                  ? const SkeletonListLoading(itemCount: 6, infoTagCount: 1)
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       child: Column(
@@ -287,7 +288,9 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                                   decoration: BoxDecoration(
                                     color: ColorUtils.corporateBlue600
                                         .withValues(alpha: 0.1),
-                                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(8),
+                                    ),
                                   ),
                                   child: Icon(
                                     Icons.calendar_today_outlined,
@@ -321,7 +324,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
                           ),
                           ListView.builder(
                             shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
+                            physics: const NeverScrollableScrollPhysics(),
                             itemCount: _days.length,
                             itemBuilder: (context, index) =>
                                 _buildDayCard(_days[index], index),

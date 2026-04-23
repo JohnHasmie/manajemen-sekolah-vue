@@ -1,600 +1,624 @@
-// Displays AI-generated learning recommendations for a specific student.
-// Like `pages/teacher/LearningRecommendation/Result.vue` in a Vue app.
+// Shows AI-generated learning recommendations for a student.
 //
-// Shows the recommendation cards with HTML content (rendered via
-// flutter_widget_from_html) and allows navigation to the edit screen.
-// In Laravel terms, this is like `RecommendationController@show`.
+// Presented as a draggable bottom sheet (flat-flow pattern) on top of the
+// student list sheet. Built from the shared [BottomSheetHeader] +
+// [BottomSheetFooter] scaffolding so the header gradient, drag handle,
+// close button, and footer button row stay consistent with the rest of
+// the teacher bottom sheets (filter sheets, grade editor, etc.). Pops
+// with a bool indicating whether any status was toggled so the student
+// sheet can refresh its counts.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
-import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_edit_screen.dart';
-import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
-import 'package:manajemensekolah/core/services/cache_service.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer;
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
-import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_error_state.dart';
+import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_header.dart';
+import 'package:manajemensekolah/core/widgets/empty_state.dart';
+import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
+import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_card.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/mixins/result_tour_mixin.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/mixins/result_fetch_mixin.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/mixins/result_navigation_mixin.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Shows AI-generated learning recommendations for a student in a class.
 ///
-/// Fetches recommendations from the API (with caching) and renders them
-/// as expandable cards with HTML content. Teachers can navigate to the
-/// edit screen to modify recommendations.
-///
-/// Props (like Vue props): [teacher], [student], [classData].
+/// Presented as a bottom sheet — call [show] instead of pushing this widget
+/// as a route. The sheet pops with a bool indicating whether any status
+/// toggles happened during the session.
 class LearningRecommendationResultScreen extends ConsumerStatefulWidget {
   final Map<String, String> teacher;
   final Map<String, dynamic> student;
   final Map<String, dynamic> classData;
+
+  /// Whether this sheet was opened from the Wali Kelas tab. When true the
+  /// rec list is fetched by `homeroom_class_id` (cross-teacher scope) and
+  /// content edits are disabled — only status toggles remain available,
+  /// which the backend will authorize for either the rec's author or the
+  /// class's wali kelas.
+  final bool isHomeroomView;
 
   const LearningRecommendationResultScreen({
     super.key,
     required this.teacher,
     required this.student,
     required this.classData,
+    this.isHomeroomView = false,
   });
+
+  /// Opens this view as a modal bottom sheet. Returns `true` when any
+  /// recommendation status was toggled so the caller can refresh counts.
+  static Future<bool?> show({
+    required BuildContext context,
+    required Map<String, String> teacher,
+    required Map<String, dynamic> student,
+    required Map<String, dynamic> classData,
+    bool isHomeroomView = false,
+  }) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black54,
+      builder: (_) => LearningRecommendationResultScreen(
+        teacher: teacher,
+        student: student,
+        classData: classData,
+        isHomeroomView: isHomeroomView,
+      ),
+    );
+  }
 
   @override
   ConsumerState<LearningRecommendationResultScreen> createState() =>
       _LearningRecommendationResultScreenState();
 }
 
-/// State for [LearningRecommendationResultScreen].
-///
-/// Like a Vue component with `data() { return { isLoading, recommendations, errorMessage } }`.
-/// Uses cache-first strategy then falls back to API.
 class _LearningRecommendationResultScreenState
-    extends ConsumerState<LearningRecommendationResultScreen> {
+    extends ConsumerState<LearningRecommendationResultScreen>
+    with ResultTourMixin, ResultFetchMixin, ResultNavigationMixin {
   bool _isLoading = true;
   List<dynamic> _recommendations = [];
   String _errorMessage = '';
   final GlobalKey _recommendationListKey = GlobalKey();
   final GlobalKey _editButtonKey = GlobalKey();
+  String _priorityFilter = 'all';
+  String _statusFilter = 'all'; // 'all', 'pending', 'completed'
 
-  /// Like Vue's `mounted()` -- fetches recommendations on screen load.
+  /// Tracks which recommendation IDs are currently updating status.
+  final Set<String> _updatingIds = {};
+
+  /// Whether any recommendation status was changed during this session.
+  /// Returned to the caller on dismiss so it can refresh data.
+  bool _statusChanged = false;
+
   @override
   void initState() {
     super.initState();
-    _fetchRecommendations();
+    fetchRecommendations();
   }
 
-  String _buildRecommendationsCacheKey() {
-    final teacherId =
-        widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
-    final classId = widget.classData['id']?.toString() ?? '';
-    final studentId =
-        widget.student['student_id']?.toString() ??
-        widget.student['id']?.toString() ??
-        '';
-    return 'recommendation_result_${teacherId}_${classId}_$studentId';
-  }
+  @override
+  GlobalKey get recommendationListKey => _recommendationListKey;
 
-  Future<void> _forceRefresh() async {
-    await LocalCacheService.invalidate(_buildRecommendationsCacheKey());
-    await LocalCacheService.clearStartingWith('tour_recommendation_result_');
-    _fetchRecommendations(useCache: false);
-  }
+  @override
+  GlobalKey get editButtonKey => _editButtonKey;
 
-  /// Fetches learning recommendations from API with cache-first strategy.
-  /// Like `axios.get('/api/recommendations')` in Vue with localStorage caching.
-  /// Handles rate limiting errors gracefully.
-  Future<void> _fetchRecommendations({bool useCache = true}) async {
-    final cacheKey = _buildRecommendationsCacheKey();
+  @override
+  bool get isLoading => _isLoading;
 
-    // Try cache — return early
-    if (useCache) {
-      final cached = await LocalCacheService.load(cacheKey);
-      if (cached != null && cached is List && cached.isNotEmpty) {
-        if (!mounted) return;
-        setState(() {
-          _recommendations = cached;
-          _isLoading = false;
-          _errorMessage = '';
-        });
-        AppLogger.debug(
-          'recommendation',
-          'RecommendationResult: from cache (${cached.length})',
-        );
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _checkAndShowTour();
-        });
-        return;
-      }
+  @override
+  set isLoading(bool value) => _isLoading = value;
+
+  @override
+  String get errorMessage => _errorMessage;
+
+  @override
+  set errorMessage(String value) => _errorMessage = value;
+
+  @override
+  List<dynamic> get recommendations => _recommendations;
+
+  @override
+  set recommendations(List<dynamic> value) => _recommendations = value;
+
+  String get _studentName => Student.fromJson(widget.student).name;
+
+  List<dynamic> get _filteredRecommendations {
+    var filtered = _recommendations.toList();
+
+    // Filter by status
+    if (_statusFilter != 'all') {
+      filtered = filtered.where((rec) {
+        final status = rec['status']?.toString().toLowerCase() ?? 'pending';
+        return status == _statusFilter;
+      }).toList();
     }
 
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = '';
-      });
+    // Filter by priority
+    if (_priorityFilter != 'all') {
+      filtered = filtered.where((rec) {
+        final priority = rec['priority']?.toString().toLowerCase() ?? 'low';
+        return priority == _priorityFilter;
+      }).toList();
     }
+
+    return filtered;
+  }
+
+  int _countByPriority(String priority) {
+    return _recommendations.where((rec) {
+      return (rec['priority']?.toString().toLowerCase() ?? 'low') == priority;
+    }).length;
+  }
+
+  int _countByStatus(String status) {
+    return _recommendations.where((rec) {
+      return (rec['status']?.toString().toLowerCase() ?? 'pending') == status;
+    }).length;
+  }
+
+  /// Toggles a recommendation's status between pending and completed.
+  Future<void> _toggleStatus(Map<String, dynamic> rec) async {
+    final recId = rec['id']?.toString();
+    if (recId == null || recId.isEmpty) return;
+
+    final currentStatus =
+        rec['status']?.toString().toLowerCase() ?? 'pending';
+    final newStatus = currentStatus == 'completed' ? 'pending' : 'completed';
+
+    setState(() => _updatingIds.add(recId));
 
     try {
-      final teacherId =
-          widget.teacher['teacher_id'] ?? widget.teacher['id'] ?? '';
-      final classId = widget.classData['id']?.toString() ?? '';
-      final studentId =
-          widget.student['student_id']?.toString() ??
-          widget.student['id']?.toString() ??
-          '';
-
-      AppLogger.debug(
-        'recommendation',
-        'Fetching recommendations: teacherId=$teacherId, classId=$classId, studentId=$studentId',
+      // The backend now requires `teacher_id` — it verifies the teacher
+      // belongs to the authenticated user and then authorizes the update
+      // only if that teacher is either the rec's author OR the wali kelas
+      // of the rec's class. In wali-kelas mode this is what lets the user
+      // toggle status on recs authored by other teachers.
+      final teacherId = widget.teacher['id'] ?? '';
+      await getIt<ApiRecommendationService>().updateStatus(
+        recommendationId: recId,
+        status: newStatus,
+        teacherId: teacherId,
       );
 
-      final response = await getIt<ApiRecommendationService>()
-          .getRecommendations(
-            teacherId: teacherId,
-            classId: classId,
-            studentId: studentId,
-          );
-
-      if (response['success'] == true) {
-        final data = response['data'];
-        final List recommendations;
-        if (data is List) {
-          recommendations = data;
-        } else if (data is Map && data['data'] is List) {
-          recommendations = data['data'];
-        } else {
-          recommendations = [];
-        }
-
-        AppLogger.debug(
-          'recommendation',
-          'Recommendations count: ${recommendations.length}',
-        );
-
-        await LocalCacheService.save(cacheKey, recommendations);
-
-        if (!mounted) return;
+      // Update local state
+      if (mounted) {
         setState(() {
-          _recommendations = recommendations;
-          _isLoading = false;
-          _errorMessage = '';
-        });
-
-        if (recommendations.isNotEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) _checkAndShowTour();
-          });
-        }
-      } else {
-        if (!mounted) return;
-        if (_recommendations.isEmpty) {
-          setState(() {
-            _errorMessage =
-                response['message'] ?? 'Gagal mengambil rekomendasi.';
-            _isLoading = false;
-          });
-        }
-      }
-    } on RateLimitException catch (e) {
-      if (mounted && _recommendations.isEmpty) {
-        setState(() {
-          _errorMessage = e.message;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted && _recommendations.isEmpty) {
-        setState(() {
-          _errorMessage = e.toString();
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _checkAndShowTour() async {
-    final tourCacheKey = CacheKeyBuilder.tourStatus(
-      'recommendation_result_screen',
-      'guru',
-    );
-    try {
-      // Cache-only: tour status pre-fetched from dashboard
-      final cached = await LocalCacheService.load(
-        tourCacheKey,
-        ttl: const Duration(hours: 24),
-      );
-      if (cached != null && cached is Map) {
-        if (cached['should_show'] == true) {
-          if (mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _showTour();
-            });
+          rec['status'] = newStatus;
+          if (newStatus == 'completed') {
+            rec['completed_at'] = DateTime.now().toIso8601String();
+          } else {
+            rec['completed_at'] = null;
           }
+          _updatingIds.remove(recId);
+          _statusChanged = true;
+        });
+
+        // Invalidate caches so the flow back up the stack (student list,
+        // class summary cards, and history strip) all reflect the new
+        // "diterapkan" counts on the next read.
+        //
+        // - recommendation_result_*: this student's rec list cache.
+        // - recommendation_summary_$classId: drives the class card totals
+        //   + the by_status/by_priority badges on the class screen.
+        // - recommendation_history_${classId}_*: drives the date-grouped
+        //   history strip on the class screen (by_status counts).
+        final teacherId = widget.teacher['id'] ?? '';
+        final classId = widget.classData['id']?.toString() ?? '';
+        final studentId = widget.student['id']?.toString() ?? '';
+        await Future.wait([
+          LocalCacheService.invalidate(
+            'recommendation_result_${teacherId}_${classId}_$studentId',
+          ),
+          LocalCacheService.clearStartingWith(
+            'recommendation_summary_$classId',
+          ),
+          LocalCacheService.clearStartingWith(
+            'recommendation_history_$classId',
+          ),
+        ]);
+
+        if (mounted) {
+          SnackBarUtils.showInfo(
+            context,
+            newStatus == 'completed'
+                ? 'Rekomendasi ditandai sudah diterapkan'
+                : 'Rekomendasi dikembalikan ke belum diterapkan',
+          );
         }
       }
     } catch (e) {
-      AppLogger.error('recommendation', e);
+      if (mounted) {
+        setState(() => _updatingIds.remove(recId));
+        SnackBarUtils.showError(context, 'Gagal memperbarui status');
+      }
     }
-  }
-
-  void _showTour() {
-    final List<TargetFocus> targets = _createTourTargets();
-    if (targets.isEmpty) return;
-
-    final languageProvider = ref.read(languageRiverpod);
-
-    TutorialCoachMark(
-      targets: targets,
-      colorShadow: Colors.black,
-      textSkip: languageProvider.getTranslatedText({
-        'en': 'SKIP',
-        'id': 'LEWATI',
-      }),
-      alignSkip: Alignment.topRight,
-      paddingFocus: 10,
-      opacityShadow: 0.8,
-      onFinish: () {
-        getIt<ApiTourService>().completeTour(
-          name: 'learning_recommendation_result_tour',
-          role: 'guru',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('recommendation_result_screen', 'guru'),
-          {'should_show': false},
-        );
-      },
-      onSkip: () {
-        getIt<ApiTourService>().completeTour(
-          name: 'learning_recommendation_result_tour',
-          role: 'guru',
-          platform: 'mobile',
-        );
-        LocalCacheService.save(
-          CacheKeyBuilder.tourStatus('recommendation_result_screen', 'guru'),
-          {'should_show': false},
-        );
-        return true;
-      },
-    ).show(context: context);
-  }
-
-  List<TargetFocus> _createTourTargets() {
-    final List<TargetFocus> targets = [];
-    final languageProvider = ref.read(languageRiverpod);
-
-    targets.add(
-      TargetFocus(
-        identify: "RecommendationList",
-        keyTarget: _recommendationListKey,
-        shape: ShapeLightFocus.RRect,
-        radius: 12,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  border: Border.all(color: Colors.white24, width: 1),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Learning Recommendations',
-                        'id': 'Rekomendasi Belajar',
-                      }),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 20.0,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en':
-                              'These are AI-generated recommendations tailored to the student\'s performance.',
-                          'id':
-                              'Ini adalah rekomendasi berbasis AI yang disesuaikan dengan performa siswa.',
-                        }),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14.0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    targets.add(
-      TargetFocus(
-        identify: "EditButton",
-        keyTarget: _editButtonKey,
-        shape: ShapeLightFocus.Circle,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  border: Border.all(color: Colors.white24, width: 1),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Edit Results',
-                        'id': 'Ubah Hasil',
-                      }),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 20.0,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en':
-                              'Tap here to manually adjust or regenerate the recommendations.',
-                          'id':
-                              'Ketuk di sini untuk menyesuaikan secara manual atau membuat ulang rekomendasi.',
-                        }),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14.0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    return targets;
-  }
-
-  void _navigateToEdit() async {
-    final result = await AppNavigator.push(
-      context,
-      LearningRecommendationEditScreen(
-        teacher: widget.teacher,
-        student: widget.student,
-        recommendations: _recommendations,
-      ),
-    );
-
-    if (result == true) {
-      await LocalCacheService.invalidate(_buildRecommendationsCacheKey());
-      _fetchRecommendations(useCache: false); // Refresh if data was saved
-    }
-  }
-
-  Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          // Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              bottom: 20,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _getPrimaryColor(),
-                  _getPrimaryColor().withValues(alpha: 0.8),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _getPrimaryColor().withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
+    final primary = getPrimaryColor();
+    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
+    final mediaHeight = MediaQuery.of(context).size.height;
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          AppNavigator.pop(context, _statusChanged);
+        }
+      },
+      child: Padding(
+        padding: EdgeInsets.only(bottom: keyboardInset),
+        child: Container(
+          constraints: BoxConstraints(maxHeight: mediaHeight * 0.92),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                GestureDetector(
-                  onTap: () => AppNavigator.pop(context),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 20,
+                BottomSheetHeader(
+                  title: 'Rekomendasi Belajar',
+                  subtitle: 'Siswa: $_studentName',
+                  icon: Icons.lightbulb_rounded,
+                  primaryColor: primary,
+                  onClose: () => AppNavigator.pop(context, _statusChanged),
+                ),
+                Flexible(child: _buildBody()),
+                // Wali Kelas view is read-only for rec content — the
+                // aggregated list may include recs authored by other
+                // teachers and the bulk-edit screen edits them together,
+                // so we drop the footer entirely in that mode. Status
+                // toggles stay available inline on each card (backend
+                // authorizes wali kelas to toggle status cross-teacher),
+                // and the header's close button still dismisses the sheet.
+                if (!_isLoading &&
+                    _recommendations.isNotEmpty &&
+                    !widget.isHomeroomView)
+                  KeyedSubtree(
+                    key: _editButtonKey,
+                    child: BottomSheetFooter(
+                      primaryLabel: 'Edit Hasil',
+                      secondaryLabel: 'Tutup',
+                      primaryColor: primary,
+                      onPrimary: navigateToEdit,
+                      onSecondary: () =>
+                          AppNavigator.pop(context, _statusChanged),
                     ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Rekomendasi Belajar',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'Siswa: ${widget.student['nama'] ?? widget.student['name'] ?? 'Siswa'}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.white),
-                  onSelected: (value) {
-                    if (value == 'refresh') _forceRefresh();
-                    if (value == 'edit') _navigateToEdit();
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'refresh',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.refresh,
-                            size: 20,
-                            color: ColorUtils.info600,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(AppLocalizations.updateData.tr),
-                        ],
-                      ),
-                    ),
-                    if (!_isLoading && _recommendations.isNotEmpty)
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.edit_note,
-                              size: 20,
-                              color: ColorUtils.slate600,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            const Text('Edit Hasil'),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
 
-          // Body
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const SkeletonListLoading(itemCount: 3, infoTagCount: 2);
+    }
+
+    if (_errorMessage.isNotEmpty) {
+      return AppErrorState(
+        message: _errorMessage,
+        onRetry: forceRefresh,
+        role: 'guru',
+      );
+    }
+
+    if (_recommendations.isEmpty) {
+      return const EmptyState(
+        icon: Icons.lightbulb_outline,
+        title: 'Belum Ada Rekomendasi',
+        subtitle:
+            'Generate rekomendasi dari halaman kelas terlebih dahulu',
+      );
+    }
+
+    final filtered = _filteredRecommendations;
+
+    return AppRefreshIndicator(
+      onRefresh: forceRefresh,
+      role: 'guru',
+      child: Column(
+        children: [
+          // Summary stats bar
+          _buildSummaryBar(),
+
+          // Status filter chips
+          _buildStatusFilterChips(),
+
+          // Priority filter chips
+          _buildPriorityFilterChips(),
+
+          // Recommendation list
           Expanded(
-            child: _isLoading
-                ? const SkeletonListLoading()
-                : _errorMessage.isNotEmpty
-                ? Center(
-                    child: Text(
-                      _errorMessage,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  )
-                : _recommendations.isEmpty
+            child: filtered.isEmpty
                 ? Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xxxl),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.lightbulb_outline,
-                            size: 48,
-                            color: ColorUtils.slate300,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          Text(
-                            'Belum ada rekomendasi untuk siswa ini.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: ColorUtils.slate500,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            'Generate rekomendasi dari halaman kelas terlebih dahulu.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: ColorUtils.slate400,
-                            ),
-                          ),
-                        ],
+                      padding: const EdgeInsets.all(32),
+                      child: Text(
+                        'Tidak ada rekomendasi dengan filter ini',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: ColorUtils.slate400,
+                        ),
                       ),
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    itemCount: _recommendations.length,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(
+                        top: 8, bottom: 12, left: 16, right: 16),
+                    itemCount: filtered.length,
                     itemBuilder: (context, index) {
-                      final rec = _recommendations[index];
+                      final rec = filtered[index];
+                      final recId = rec['id']?.toString() ?? '';
                       return RecommendationCard(
                         rec: rec,
-                        listKey: index == 0 ? _recommendationListKey : null,
+                        listKey:
+                            index == 0 ? _recommendationListKey : null,
+                        isUpdatingStatus: _updatingIds.contains(recId),
+                        onToggleStatus: () => _toggleStatus(rec),
                       );
                     },
                   ),
           ),
         ],
       ),
-      floatingActionButton: (!_isLoading && _recommendations.isNotEmpty)
-          ? FloatingActionButton.extended(
-              key: _editButtonKey,
-              onPressed: _navigateToEdit,
-              backgroundColor: _getPrimaryColor(),
-              icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-              label: const Text(
-                'Edit Hasil',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            )
-          : null,
     );
   }
 
+  Widget _buildSummaryBar() {
+    final highCount = _countByPriority('high');
+    final mediumCount = _countByPriority('medium');
+    final lowCount = _countByPriority('low');
+    final completedCount = _countByStatus('completed');
+    final primary = getPrimaryColor();
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        border: Border.all(color: ColorUtils.slate100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _SummaryStatItem(
+            icon: Icons.auto_awesome_rounded,
+            value: '${_recommendations.length}',
+            label: 'Total',
+            color: primary,
+          ),
+          _verticalDivider(),
+          _SummaryStatItem(
+            icon: Icons.check_circle_rounded,
+            value: '$completedCount',
+            label: 'Diterapkan',
+            color: ColorUtils.emerald500,
+          ),
+          _verticalDivider(),
+          _SummaryStatItem(
+            icon: Icons.priority_high_rounded,
+            value: '$highCount',
+            label: 'Tinggi',
+            color: ColorUtils.red500,
+          ),
+          _verticalDivider(),
+          _SummaryStatItem(
+            icon: Icons.remove_rounded,
+            value: '$mediumCount',
+            label: 'Sedang',
+            color: ColorUtils.amber500,
+          ),
+          _verticalDivider(),
+          _SummaryStatItem(
+            icon: Icons.arrow_downward_rounded,
+            value: '$lowCount',
+            label: 'Rendah',
+            color: ColorUtils.corporateBlue500,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _verticalDivider() {
+    return Container(
+      width: 1,
+      height: 28,
+      margin: const EdgeInsets.symmetric(horizontal: 6),
+      color: ColorUtils.slate100,
+    );
+  }
+
+  Widget _buildStatusFilterChips() {
+    final primary = getPrimaryColor();
+    final pendingCount = _countByStatus('pending');
+    final completedCount = _countByStatus('completed');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
+        children: [
+          _FilterChip(
+            label: 'Semua',
+            isActive: _statusFilter == 'all',
+            color: primary,
+            onTap: () => setState(() => _statusFilter = 'all'),
+          ),
+          const SizedBox(width: 6),
+          _FilterChip(
+            label: 'Belum Diterapkan ($pendingCount)',
+            isActive: _statusFilter == 'pending',
+            color: ColorUtils.amber500,
+            onTap: () => setState(() => _statusFilter = 'pending'),
+          ),
+          const SizedBox(width: 6),
+          _FilterChip(
+            label: 'Diterapkan ($completedCount)',
+            isActive: _statusFilter == 'completed',
+            color: ColorUtils.emerald500,
+            onTap: () => setState(() => _statusFilter = 'completed'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriorityFilterChips() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _FilterChip(
+              label: 'Semua Prioritas',
+              isActive: _priorityFilter == 'all',
+              color: ColorUtils.slate500,
+              outlined: true,
+              onTap: () => setState(() => _priorityFilter = 'all'),
+            ),
+            const SizedBox(width: 6),
+            _FilterChip(
+              label: 'Tinggi',
+              isActive: _priorityFilter == 'high',
+              color: ColorUtils.red500,
+              outlined: true,
+              onTap: () => setState(() => _priorityFilter = 'high'),
+            ),
+            const SizedBox(width: 6),
+            _FilterChip(
+              label: 'Sedang',
+              isActive: _priorityFilter == 'medium',
+              color: ColorUtils.amber500,
+              outlined: true,
+              onTap: () => setState(() => _priorityFilter = 'medium'),
+            ),
+            const SizedBox(width: 6),
+            _FilterChip(
+              label: 'Rendah',
+              isActive: _priorityFilter == 'low',
+              color: ColorUtils.corporateBlue500,
+              outlined: true,
+              onTap: () => setState(() => _priorityFilter = 'low'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Single stat item in the summary bar.
+class _SummaryStatItem extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color color;
+
+  const _SummaryStatItem({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: ColorUtils.slate400,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Filter chip for priority/status filtering.
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool isActive;
+  final Color color;
+  final bool outlined;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.isActive,
+    required this.color,
+    this.outlined = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: isActive ? color : Colors.white,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+            border: Border.all(
+              color: isActive ? color : ColorUtils.slate200,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isActive ? Colors.white : ColorUtils.slate500,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

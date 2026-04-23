@@ -79,20 +79,32 @@ class MenuItemCard extends StatelessWidget {
               // Badge
               if (badgeCount != null && badgeCount! > 0) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: ColorUtils.error600,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     badgeCount! > 99 ? '99+' : badgeCount.toString(),
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700, height: 1.1),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      height: 1.1,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
               ],
               // Chevron
-              Icon(Icons.chevron_right_rounded, size: 20, color: ColorUtils.slate300),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: ColorUtils.slate300,
+              ),
             ],
           ),
         ),
@@ -104,7 +116,9 @@ class MenuItemCard extends StatelessWidget {
     if (iconData is IconData) {
       return Icon(iconData, size: 20, color: color);
     } else if (iconData is String) {
-      return Center(child: Text(iconData, style: const TextStyle(fontSize: 18)));
+      return Center(
+        child: Text(iconData, style: const TextStyle(fontSize: 18)),
+      );
     }
     return const SizedBox.shrink();
   }

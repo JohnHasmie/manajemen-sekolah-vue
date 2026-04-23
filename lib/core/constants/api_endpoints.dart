@@ -69,7 +69,7 @@ class ApiEndpoints {
   // ── Grades ──
   static const grades = '/grades';
   static const gradesTeacherSummary = '/grades/teacher-summary';
-  static const grade = '/grade';
+  static const gradesAdminOverview = '/grades/admin-overview';
   static const gradeRecaps = '/grade-recaps';
   static const gradeRecapsTeacherSummary = '/grade-recaps/teacher-summary';
   static const gradeMarkRead = '/grade/mark-read';
@@ -86,7 +86,8 @@ class ApiEndpoints {
 
   // ── Class Activity ──
   static const classActivity = '/class-activity';
-  static const classActivityTeacherSummary = '/class-activities/teacher-summary';
+  static const classActivityTeacherSummary =
+      '/class-activities/teacher-summary';
 
   // ── Report Cards ──
   static const reportCards = '/raport';
@@ -124,7 +125,8 @@ class ApiEndpoints {
   static const fcmTokenEndpoint = '/fcm/token';
 
   // ── Material Progress ──
-  static const materialProgressTeacherSummary = '/material-progress/teacher-summary';
+  static const materialProgressTeacherSummary =
+      '/material-progress/teacher-summary';
 
   // ── Days / Semesters ──
   static const days = '/day';

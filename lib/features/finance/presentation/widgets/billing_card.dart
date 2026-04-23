@@ -34,8 +34,13 @@ class BillingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = billing['status']?.toString().toLowerCase() ?? 'unpaid';
-    final type = (billing['type'] ?? billing['periode'])?.toString().toLowerCase() ?? 'bulanan';
-    final isRead = billing['is_read'] == true || billing['is_read'] == 1 || billing['is_read'] == '1';
+    final type =
+        (billing['type'] ?? billing['periode'])?.toString().toLowerCase() ??
+        'bulanan';
+    final isRead =
+        billing['is_read'] == true ||
+        billing['is_read'] == 1 ||
+        billing['is_read'] == '1';
 
     Color statusColor;
     String statusText;
@@ -44,17 +49,26 @@ class BillingCard extends StatelessWidget {
     switch (status) {
       case 'verified':
         statusColor = ColorUtils.success600;
-        statusText = languageProvider.getTranslatedText({'en': 'Verified', 'id': 'Terverifikasi'});
+        statusText = languageProvider.getTranslatedText({
+          'en': 'Verified',
+          'id': 'Terverifikasi',
+        });
         statusIcon = Icons.check_circle_outline;
         break;
       case 'pending':
         statusColor = ColorUtils.warning600;
-        statusText = languageProvider.getTranslatedText({'en': 'Pending', 'id': 'Tertunda'});
+        statusText = languageProvider.getTranslatedText({
+          'en': 'Pending',
+          'id': 'Tertunda',
+        });
         statusIcon = Icons.history;
         break;
       default:
         statusColor = ColorUtils.error600;
-        statusText = languageProvider.getTranslatedText({'en': 'Unpaid', 'id': 'Belum Bayar'});
+        statusText = languageProvider.getTranslatedText({
+          'en': 'Unpaid',
+          'id': 'Belum Bayar',
+        });
         statusIcon = Icons.error_outline;
     }
 
@@ -64,7 +78,9 @@ class BillingCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(
-          color: isRead ? ColorUtils.slate200 : statusColor.withValues(alpha: 0.3),
+          color: isRead
+              ? ColorUtils.slate200
+              : statusColor.withValues(alpha: 0.3),
           width: isRead ? 1 : 2,
         ),
         boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
@@ -87,7 +103,10 @@ class BillingCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            billing['name'] ?? billing['title'] ?? billing['jenis_pembayaran_nama'] ?? '-',
+                            billing['name'] ??
+                                billing['title'] ??
+                                billing['jenis_pembayaran_nama'] ??
+                                '-',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -98,7 +117,9 @@ class BillingCard extends StatelessWidget {
                           ),
                           AppSpacing.v4,
                           Text(
-                            billing['description'] ?? billing['jenis_pembayaran_deskripsi'] ?? '-',
+                            billing['description'] ??
+                                billing['jenis_pembayaran_deskripsi'] ??
+                                '-',
                             style: TextStyle(
                               fontSize: 12,
                               color: ColorUtils.slate500,
@@ -110,11 +131,18 @@ class BillingCard extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
-                        border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -145,8 +173,14 @@ class BillingCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          languageProvider.getTranslatedText({'en': 'Amount', 'id': 'Jumlah'}),
-                          style: TextStyle(fontSize: 11, color: ColorUtils.slate400),
+                          languageProvider.getTranslatedText({
+                            'en': 'Amount',
+                            'id': 'Jumlah',
+                          }),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: ColorUtils.slate400,
+                          ),
                         ),
                         AppSpacing.v2,
                         Text(
@@ -163,8 +197,14 @@ class BillingCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          languageProvider.getTranslatedText({'en': 'Method', 'id': 'Metode'}),
-                          style: TextStyle(fontSize: 11, color: ColorUtils.slate400),
+                          languageProvider.getTranslatedText({
+                            'en': 'Method',
+                            'id': 'Metode',
+                          }),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: ColorUtils.slate400,
+                          ),
                         ),
                         AppSpacing.v2,
                         Text(
@@ -187,11 +227,16 @@ class BillingCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       decoration: BoxDecoration(
                         color: ColorUtils.primary.withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.all(Radius.circular(4)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(4),
+                        ),
                       ),
                       child: Center(
                         child: Text(
-                          languageProvider.getTranslatedText({'en': 'NEW', 'id': 'BARU'}),
+                          languageProvider.getTranslatedText({
+                            'en': 'NEW',
+                            'id': 'BARU',
+                          }),
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,

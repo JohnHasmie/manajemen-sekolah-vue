@@ -80,8 +80,11 @@ class TeacherAttendanceController
 
       // 3. Initialize edited status map from current records
       final Map<String, String> editedStatus = {};
-      for (var student in students) {
-        editedStatus[student.id] = _getInitialStatus(student.id, attendanceRecords);
+      for (final student in students) {
+        editedStatus[student.id] = _getInitialStatus(
+          student.id,
+          attendanceRecords,
+        );
       }
 
       return TeacherAttendanceState(
@@ -90,7 +93,10 @@ class TeacherAttendanceController
         editedStatus: editedStatus,
       );
     } catch (e, st) {
-      AppLogger.error('attendance', 'Failed to initialize attendance controller: $e');
+      AppLogger.error(
+        'attendance',
+        'Failed to initialize attendance controller: $e',
+      );
       return Future.error(e, st);
     }
   }
@@ -111,7 +117,9 @@ class TeacherAttendanceController
   void toggleEdit() {
     final currentState = state.value;
     if (currentState == null) return;
-    state = AsyncData(currentState.copyWith(isEditing: !currentState.isEditing));
+    state = AsyncData(
+      currentState.copyWith(isEditing: !currentState.isEditing),
+    );
   }
 
   /// Updates a student's status in the local [editedStatus] map.
@@ -134,9 +142,12 @@ class TeacherAttendanceController
 
     try {
       int successCount = 0;
-      
-      for (var student in currentState.students) {
-        final initialStatus = _getInitialStatus(student.id, currentState.attendanceRecords);
+
+      for (final student in currentState.students) {
+        final initialStatus = _getInitialStatus(
+          student.id,
+          currentState.attendanceRecords,
+        );
         final currentStatus = currentState.editedStatus[student.id];
 
         // Only save if the status has actually changed
@@ -171,7 +182,9 @@ class TeacherAttendanceController
         state = const AsyncLoading();
         state = await AsyncValue.guard(_initialize);
       } else {
-        state = AsyncData(currentState.copyWith(isSaving: false, isEditing: false));
+        state = AsyncData(
+          currentState.copyWith(isSaving: false, isEditing: false),
+        );
       }
       return true;
     } catch (e) {
@@ -207,10 +220,9 @@ class TeacherAttendanceController
 }
 
 /// Provider for TeacherAttendanceController.
-final teacherAttendanceProvider = AsyncNotifierProvider.family<
-    TeacherAttendanceController,
-    TeacherAttendanceState,
-    TeacherAttendanceParams>(
-  TeacherAttendanceController.new,
-  isAutoDispose: true,
-);
+final teacherAttendanceProvider =
+    AsyncNotifierProvider.family<
+      TeacherAttendanceController,
+      TeacherAttendanceState,
+      TeacherAttendanceParams
+    >(TeacherAttendanceController.new, isAutoDispose: true);

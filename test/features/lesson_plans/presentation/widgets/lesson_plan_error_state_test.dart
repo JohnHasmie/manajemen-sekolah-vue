@@ -63,20 +63,24 @@ void main() {
       expect(find.text('Connection refused'), findsOneWidget);
     });
 
-    testWidgets('displays empty string when errorMessage is null', (tester) async {
+    testWidgets('displays empty string when errorMessage is null', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(errorMessage: null));
       // Should not crash; empty text widget rendered
       expect(find.byType(LessonPlanErrorState), findsOneWidget);
     });
 
-    testWidgets('shows Indonesian retry button label when language is id',
-        (tester) async {
+    testWidgets('shows Indonesian retry button label when language is id', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build());
       expect(find.text('Coba Lagi'), findsOneWidget);
     });
 
-    testWidgets('shows English retry button label when language is en',
-        (tester) async {
+    testWidgets('shows English retry button label when language is en', (
+      tester,
+    ) async {
       final lp = LanguageProvider()..setLanguage(LanguageProvider.english);
       await tester.pumpWidget(_build(lp: lp));
       expect(find.text('Retry'), findsOneWidget);
@@ -97,11 +101,15 @@ void main() {
       expect(style, Colors.teal);
     });
 
-    testWidgets('shows long error message without overflow crash', (tester) async {
-      await tester.pumpWidget(_build(
-        errorMessage:
-            'An unexpected error occurred while loading RPP data from the server. Please check your internet connection and try again.',
-      ));
+    testWidgets('shows long error message without overflow crash', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _build(
+          errorMessage:
+              'An unexpected error occurred while loading RPP data from the server. Please check your internet connection and try again.',
+        ),
+      );
       expect(find.byType(LessonPlanErrorState), findsOneWidget);
     });
   });

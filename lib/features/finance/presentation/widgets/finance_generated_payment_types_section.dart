@@ -77,7 +77,7 @@ class FinanceGeneratedPaymentTypesSection extends StatelessWidget {
         else
           ListView.builder(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: generatedBatches.length,
             itemBuilder: (context, index) {
               final item = generatedBatches[index] as Map<String, dynamic>;

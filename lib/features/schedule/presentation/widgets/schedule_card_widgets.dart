@@ -48,11 +48,7 @@ class ScheduleFilterSectionHeader extends StatelessWidget {
 /// Pass an [icon] and a short [text] label. The widget clips long text to one
 /// line with an ellipsis so card rows stay tidy.
 class ScheduleInfoTag extends StatelessWidget {
-  const ScheduleInfoTag({
-    super.key,
-    required this.icon,
-    required this.text,
-  });
+  const ScheduleInfoTag({super.key, required this.icon, required this.text});
 
   final IconData icon;
   final String text;

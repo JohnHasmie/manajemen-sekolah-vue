@@ -72,7 +72,10 @@ class GradeAssessmentDetailDialog extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: ColorUtils.slate500, fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+          ),
           Text(
             value,
             style: TextStyle(
@@ -89,7 +92,9 @@ class GradeAssessmentDetailDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -101,10 +106,7 @@ class GradeAssessmentDetailDialog extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  primaryColor,
-                  primaryColor.withValues(alpha: 0.8),
-                ],
+                colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
               ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
@@ -113,7 +115,11 @@ class GradeAssessmentDetailDialog extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.assessment_outlined, color: Colors.white, size: 22),
+                const Icon(
+                  Icons.assessment_outlined,
+                  color: Colors.white,
+                  size: 22,
+                ),
                 const SizedBox(width: AppSpacing.md),
                 Text(
                   labelTitle,
@@ -156,13 +162,16 @@ class GradeAssessmentDetailDialog extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                 ),
                 child: const Text(
                   'OK',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),

@@ -56,30 +56,28 @@ void main() {
       expect(iconFinder, findsOneWidget);
     });
 
-    testWidgets(
-      'does not show a button when buttonText is null',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(buildWidget(buttonText: null));
-        // No ElevatedButton should be in the tree when the button is omitted.
-        expect(find.byType(ElevatedButton), findsNothing);
-      },
-    );
+    testWidgets('does not show a button when buttonText is null', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(buildWidget(buttonText: null));
+      // No ElevatedButton should be in the tree when the button is omitted.
+      expect(find.byType(ElevatedButton), findsNothing);
+    });
 
-    testWidgets(
-      'default icon is people_outline when none supplied',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: EmptyState(title: 'T', subtitle: 'S'),
-            ),
+    testWidgets('default icon is people_outline when none supplied', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: EmptyState(title: 'T', subtitle: 'S'),
           ),
-        );
-        final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Icons.people_outline,
-        );
-        expect(iconFinder, findsOneWidget);
-      },
-    );
+        ),
+      );
+      final iconFinder = find.byWidgetPredicate(
+        (w) => w is Icon && w.icon == Icons.people_outline,
+      );
+      expect(iconFinder, findsOneWidget);
+    });
   });
 }

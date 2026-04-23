@@ -40,17 +40,20 @@ void main() {
       expect(s.name, 'Siti Rahayu');
     });
 
-    test('defaults to empty string when both "name" and "nama" are missing', () {
-      final s = Student.fromJson({
-        'id': '3',
-        'class_name': 'VII-A',
-        'student_number': '003',
-        'address': '-',
-        'guardian_name': '-',
-        'phone_number': '-',
-      });
-      expect(s.name, '');
-    });
+    test(
+      'defaults to empty string when both "name" and "nama" are missing',
+      () {
+        final s = Student.fromJson({
+          'id': '3',
+          'class_name': 'VII-A',
+          'student_number': '003',
+          'address': '-',
+          'guardian_name': '-',
+          'phone_number': '-',
+        });
+        expect(s.name, '');
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -59,43 +62,65 @@ void main() {
   group('Student.fromJson — className field', () {
     test('reads "class_name" directly', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'IX-C',
-        'student_number': '1', 'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'IX-C',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.className, 'IX-C');
     });
 
     test('falls back to "kelas_nama"', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'kelas_nama': 'VIII-A',
-        'student_number': '1', 'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'kelas_nama': 'VIII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.className, 'VIII-A');
     });
 
     test('reads from nested class.name map', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A',
+        'id': '1',
+        'name': 'A',
         'class': {'id': 'c1', 'name': 'VII-B'},
-        'student_number': '1', 'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.className, 'VII-B');
     });
 
     test('"class_name" takes priority over "kelas_nama"', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A',
+        'id': '1',
+        'name': 'A',
         'class_name': 'IX-A',
         'kelas_nama': 'IX-B',
-        'student_number': '1', 'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.className, 'IX-A');
     });
 
     test('defaults to empty string when all class name keys are absent', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A',
-        'student_number': '1', 'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.className, '');
     });
@@ -107,27 +132,39 @@ void main() {
   group('Student.fromJson — studentNumber field', () {
     test('reads "student_number" directly', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
         'student_number': '20240001',
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.studentNumber, '20240001');
     });
 
     test('falls back to "nomor_induk"', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
         'nomor_induk': '20240002',
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.studentNumber, '20240002');
     });
 
     test('converts numeric nomor_induk to string', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
         'nomor_induk': 12345,
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.studentNumber, '12345');
     });
@@ -139,18 +176,26 @@ void main() {
   group('Student.fromJson — address field', () {
     test('reads "address" directly', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
         'address': 'Jl. Merdeka No. 10',
-        'guardian_name': '-', 'phone_number': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.address, 'Jl. Merdeka No. 10');
     });
 
     test('falls back to "alamat" key', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
         'alamat': 'Jl. Proklamasi No. 5',
-        'guardian_name': '-', 'phone_number': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.address, 'Jl. Proklamasi No. 5');
     });
@@ -162,16 +207,26 @@ void main() {
   group('Student.fromJson — guardianName field', () {
     test('reads "guardian_name" directly', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': 'Pak Ahmad', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': 'Pak Ahmad',
+        'phone_number': '-',
       });
       expect(s.guardianName, 'Pak Ahmad');
     });
 
     test('falls back to "nama_wali"', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'nama_wali': 'Ibu Dewi', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'nama_wali': 'Ibu Dewi',
+        'phone_number': '-',
       });
       expect(s.guardianName, 'Ibu Dewi');
     });
@@ -183,16 +238,26 @@ void main() {
   group('Student.fromJson — phoneNumber field', () {
     test('reads "phone_number" directly', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': '-', 'phone_number': '0812345678',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '0812345678',
       });
       expect(s.phoneNumber, '0812345678');
     });
 
     test('falls back to "nomor_hp"', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': '-', 'nomor_hp': '087654321',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'nomor_hp': '087654321',
       });
       expect(s.phoneNumber, '087654321');
     });
@@ -204,8 +269,13 @@ void main() {
   group('Student.fromJson — optional classId / studentClassId', () {
     test('reads "class_id" directly', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
         'class_id': 'c-42',
       });
       expect(s.classId, 'c-42');
@@ -213,8 +283,13 @@ void main() {
 
     test('falls back to "id_kelas" for classId', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
         'id_kelas': 'c-99',
       });
       expect(s.classId, 'c-99');
@@ -222,8 +297,13 @@ void main() {
 
     test('converts numeric classId to string', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
         'class_id': 7,
       });
       expect(s.classId, '7');
@@ -231,16 +311,26 @@ void main() {
 
     test('classId is null when absent', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.classId, isNull);
     });
 
     test('reads "student_class_id" directly', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
         'student_class_id': 'sc-5',
       });
       expect(s.studentClassId, 'sc-5');
@@ -248,8 +338,13 @@ void main() {
 
     test('falls back to "id_siswa_kelas"', () {
       final s = Student.fromJson({
-        'id': '1', 'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'id': '1',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
         'id_siswa_kelas': 'sc-88',
       });
       expect(s.studentClassId, 'sc-88');
@@ -263,8 +358,12 @@ void main() {
     test('numeric id is coerced to String', () {
       final s = Student.fromJson({
         'id': 42,
-        'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.id, '42');
     });
@@ -272,8 +371,12 @@ void main() {
     test('string id is kept as-is', () {
       final s = Student.fromJson({
         'id': 'stu-001',
-        'name': 'A', 'class_name': 'VII-A', 'student_number': '1',
-        'address': '-', 'guardian_name': '-', 'phone_number': '-',
+        'name': 'A',
+        'class_name': 'VII-A',
+        'student_number': '1',
+        'address': '-',
+        'guardian_name': '-',
+        'phone_number': '-',
       });
       expect(s.id, 'stu-001');
     });

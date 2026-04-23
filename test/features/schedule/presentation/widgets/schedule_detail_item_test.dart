@@ -21,18 +21,17 @@ Widget _build({
   String value = 'Senin',
   Color primaryColor = Colors.blue,
   bool isLast = false,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: ScheduleDetailItem(
-          icon: icon,
-          title: title,
-          value: value,
-          primaryColor: primaryColor,
-          isLast: isLast,
-        ),
-      ),
-    );
+}) => MaterialApp(
+  home: Scaffold(
+    body: ScheduleDetailItem(
+      icon: icon,
+      title: title,
+      value: value,
+      primaryColor: primaryColor,
+      isLast: isLast,
+    ),
+  ),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -56,10 +55,9 @@ void main() {
     });
 
     testWidgets('renders title and value independently', (tester) async {
-      await tester.pumpWidget(_build(
-        title: 'Mata Pelajaran',
-        value: 'Matematika',
-      ));
+      await tester.pumpWidget(
+        _build(title: 'Mata Pelajaran', value: 'Matematika'),
+      );
       expect(find.text('Mata Pelajaran'), findsOneWidget);
       expect(find.text('Matematika'), findsOneWidget);
     });
@@ -71,8 +69,9 @@ void main() {
   });
 
   group('ScheduleDetailItem — isLast border', () {
-    testWidgets('isLast=false: shows bottom border (Border object present)',
-        (tester) async {
+    testWidgets('isLast=false: shows bottom border (Border object present)', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(isLast: false));
       // Widget renders without crashing; border logic is visual only
       expect(find.byType(ScheduleDetailItem), findsOneWidget);
@@ -85,10 +84,11 @@ void main() {
   });
 
   group('ScheduleDetailItem — multiple rows', () {
-    testWidgets('renders multiple items with correct title/value pairs',
-        (tester) async {
+    testWidgets('renders multiple items with correct title/value pairs', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
@@ -118,14 +118,16 @@ void main() {
   });
 
   group('ScheduleDetailItem — primaryColor', () {
-    testWidgets('renders with green primaryColor without crashing',
-        (tester) async {
+    testWidgets('renders with green primaryColor without crashing', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(primaryColor: Colors.green));
       expect(find.byType(ScheduleDetailItem), findsOneWidget);
     });
 
-    testWidgets('renders with red primaryColor without crashing',
-        (tester) async {
+    testWidgets('renders with red primaryColor without crashing', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(primaryColor: Colors.red));
       expect(find.byType(ScheduleDetailItem), findsOneWidget);
     });

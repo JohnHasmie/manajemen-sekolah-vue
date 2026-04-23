@@ -7,16 +7,15 @@ Widget _build({
   IconData icon = Icons.person_outline,
   String title = 'Informasi Pribadi',
   Color primaryColor = Colors.blue,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: StudentSectionHeader(
-          icon: icon,
-          title: title,
-          primaryColor: primaryColor,
-        ),
-      ),
-    );
+}) => MaterialApp(
+  home: Scaffold(
+    body: StudentSectionHeader(
+      icon: icon,
+      title: title,
+      primaryColor: primaryColor,
+    ),
+  ),
+);
 
 void main() {
   group('StudentSectionHeader', () {
@@ -33,7 +32,9 @@ void main() {
     testWidgets('displays the icon', (tester) async {
       await tester.pumpWidget(_build(icon: Icons.home_outlined));
       expect(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.home_outlined),
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.home_outlined,
+        ),
         findsOneWidget,
       );
     });
@@ -41,7 +42,9 @@ void main() {
     testWidgets('icon has size 16', (tester) async {
       await tester.pumpWidget(_build(icon: Icons.person_outline));
       final icon = tester.widget<Icon>(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.person_outline),
+        find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.person_outline,
+        ),
       );
       expect(icon.size, 16);
     });
@@ -71,7 +74,7 @@ void main() {
 
     testWidgets('can render multiple headers in a column', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [

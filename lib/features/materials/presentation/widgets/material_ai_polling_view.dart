@@ -47,7 +47,7 @@ class MaterialAiPollingView extends StatelessWidget {
                     child: CircularProgressIndicator(
                       color: primaryColor.withValues(alpha: 0.15),
                       strokeWidth: 4,
-                      value: 1.0, 
+                      value: 1.0,
                     ),
                   ),
                   SizedBox(
@@ -86,9 +86,9 @@ class MaterialAiPollingView extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                pollingStatus.isNotEmpty 
-                  ? pollingStatus 
-                  : 'Merangkum materi, menyusun kuis, dan mencari referensi terbaik...',
+                pollingStatus.isNotEmpty
+                    ? pollingStatus
+                    : 'Merangkum materi, menyusun kuis, dan mencari referensi terbaik...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -98,7 +98,10 @@ class MaterialAiPollingView extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),

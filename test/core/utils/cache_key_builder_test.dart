@@ -29,10 +29,7 @@ void main() {
     });
 
     test('teacherList builds correct key with query', () {
-      expect(
-        CacheKeyBuilder.teacherList('s1', 'math'),
-        'teacher_list_s1_math',
-      );
+      expect(CacheKeyBuilder.teacherList('s1', 'math'), 'teacher_list_s1_math');
     });
 
     test('teacherList builds correct key without query', () {
@@ -42,10 +39,7 @@ void main() {
 
   group('CacheKeyBuilder - Student keys', () {
     test('studentList builds correct key with query', () {
-      expect(
-        CacheKeyBuilder.studentList('s1', 'budi'),
-        'student_list_s1_budi',
-      );
+      expect(CacheKeyBuilder.studentList('s1', 'budi'), 'student_list_s1_budi');
     });
 
     test('studentList builds correct key without query', () {
@@ -69,10 +63,7 @@ void main() {
 
   group('CacheKeyBuilder - Subject keys', () {
     test('subjectList builds correct key with query', () {
-      expect(
-        CacheKeyBuilder.subjectList('s1', 'IPA'),
-        'subject_list_s1_IPA',
-      );
+      expect(CacheKeyBuilder.subjectList('s1', 'IPA'), 'subject_list_s1_IPA');
     });
 
     test('subjectList builds correct key without query', () {
@@ -115,10 +106,7 @@ void main() {
 
   group('CacheKeyBuilder - Grade keys', () {
     test('gradeClasses builds correct key', () {
-      expect(
-        CacheKeyBuilder.gradeClasses('t1', 'y1'),
-        'grade_classes_t1_y1',
-      );
+      expect(CacheKeyBuilder.gradeClasses('t1', 'y1'), 'grade_classes_t1_y1');
     });
   });
 
@@ -149,10 +137,7 @@ void main() {
 
   group('CacheKeyBuilder - Finance keys', () {
     test('financeData builds correct key', () {
-      expect(
-        CacheKeyBuilder.financeData('s1', 'y1'),
-        'finance_s1_y1',
-      );
+      expect(CacheKeyBuilder.financeData('s1', 'y1'), 'finance_s1_y1');
     });
   });
 
@@ -165,10 +150,7 @@ void main() {
     });
 
     test('custom without scope builds two-part key', () {
-      expect(
-        CacheKeyBuilder.custom('feature', 'context'),
-        'feature_context',
-      );
+      expect(CacheKeyBuilder.custom('feature', 'context'), 'feature_context');
     });
 
     test('custom with null scope builds two-part key', () {

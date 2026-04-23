@@ -65,8 +65,8 @@ class _PromotionCreateClassDialogState
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
       ),
       clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
@@ -106,7 +106,7 @@ class _PromotionCreateClassDialogState
                             'en': 'Create New Class',
                             'id': 'Buat Kelas Baru',
                           }),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -182,8 +182,8 @@ class _PromotionCreateClassDialogState
                       onPressed: () => AppNavigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: ColorUtils.slate300),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 13),
                       ),
@@ -205,8 +205,8 @@ class _PromotionCreateClassDialogState
                       onPressed: _submit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         elevation: 2,
@@ -217,7 +217,7 @@ class _PromotionCreateClassDialogState
                           'en': 'Create',
                           'id': 'Buat',
                         }),
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
@@ -284,7 +284,10 @@ class _PromotionCreateClassDialogState
           labelStyle: TextStyle(color: ColorUtils.slate600, fontSize: 13),
           prefixIcon: Icon(icon, color: widget.primaryColor, size: 18),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
         ),
       ),
     );

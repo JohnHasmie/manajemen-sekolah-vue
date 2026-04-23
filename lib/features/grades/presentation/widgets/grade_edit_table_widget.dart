@@ -98,10 +98,7 @@ class GradeEditTableWidget extends StatelessWidget {
           'id': 'UTS',
         });
       case 'uas':
-        return languageProvider.getTranslatedText({
-          'en': 'Final',
-          'id': 'UAS',
-        });
+        return languageProvider.getTranslatedText({'en': 'Final', 'id': 'UAS'});
       case 'pts':
         return languageProvider.getTranslatedText({
           'en': 'Midterm Exam',
@@ -164,7 +161,7 @@ class GradeEditTableWidget extends StatelessWidget {
                 // "Finish" delegates all saving logic back to the parent via
                 // [onFinish], keeping this widget free of API/setState calls.
                 onPressed: onFinish,
-                icon: Icon(Icons.check, size: 16),
+                icon: const Icon(Icons.check, size: 16),
                 label: Text(
                   languageProvider.getTranslatedText({
                     'en': 'Finish',
@@ -214,7 +211,9 @@ class GradeEditTableWidget extends StatelessWidget {
                                 'en': 'Name',
                                 'id': 'Nama',
                               }),
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           Container(
@@ -226,19 +225,25 @@ class GradeEditTableWidget extends StatelessWidget {
                                 'en': 'Grade',
                                 'id': 'Nilai',
                               }),
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           Expanded(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 languageProvider.getTranslatedText({
                                   'en': 'Description',
                                   'id': 'Deskripsi',
                                 }),
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -263,7 +268,7 @@ class GradeEditTableWidget extends StatelessWidget {
                             // Student name + number
                             Container(
                               width: 150,
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 12,
                               ),
@@ -315,18 +320,15 @@ class GradeEditTableWidget extends StatelessWidget {
                                     color: ColorUtils.slate400,
                                   ),
                                 ),
-                                onFieldSubmitted: (value) => onSaveGrade(
-                                  student,
-                                  'score',
-                                  value,
-                                ),
+                                onFieldSubmitted: (value) =>
+                                    onSaveGrade(student, 'score', value),
                               ),
                             ),
 
                             // Description input
                             Expanded(
                               child: Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 8,
                                 ),
@@ -337,22 +339,18 @@ class GradeEditTableWidget extends StatelessWidget {
                                   decoration: InputDecoration(
                                     isDense: true,
                                     border: InputBorder.none,
-                                    hintText: languageProvider.getTranslatedText(
-                                      {
-                                        'en': 'Add description...',
-                                        'id': 'Tambah deskripsi...',
-                                      },
-                                    ),
+                                    hintText: languageProvider
+                                        .getTranslatedText({
+                                          'en': 'Add description...',
+                                          'id': 'Tambah deskripsi...',
+                                        }),
                                     hintStyle: TextStyle(
                                       color: ColorUtils.slate400,
                                       fontSize: 12,
                                     ),
                                   ),
-                                  onFieldSubmitted: (value) => onSaveGrade(
-                                    student,
-                                    'deskripsi',
-                                    value,
-                                  ),
+                                  onFieldSubmitted: (value) =>
+                                      onSaveGrade(student, 'deskripsi', value),
                                 ),
                               ),
                             ),

@@ -24,10 +24,7 @@ class LessonPlanDialogField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(color: ColorUtils.slate500, fontSize: 12),
-        ),
+        Text(label, style: TextStyle(color: ColorUtils.slate500, fontSize: 12)),
         const SizedBox(height: AppSpacing.xs),
         Container(
           width: double.infinity,

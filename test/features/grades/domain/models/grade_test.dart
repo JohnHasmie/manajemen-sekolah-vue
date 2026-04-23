@@ -82,7 +82,14 @@ void main() {
     });
 
     test('different subject names are stored correctly', () {
-      final subjects = ['Matematika', 'Fisika', 'Kimia', 'Biologi', 'Sejarah', 'PPKn'];
+      final subjects = [
+        'Matematika',
+        'Fisika',
+        'Kimia',
+        'Biologi',
+        'Sejarah',
+        'PPKn',
+      ];
       for (final s in subjects) {
         final grade = makeGrade(subject: s);
         expect(grade.subject, s);
@@ -139,12 +146,7 @@ void main() {
 
   group('Grade edge cases', () {
     test('empty strings are valid field values', () {
-      final grade = Grade(
-        studentId: '',
-        subject: '',
-        score: 0.0,
-        semester: '',
-      );
+      final grade = Grade(studentId: '', subject: '', score: 0.0, semester: '');
 
       expect(grade.studentId, '');
       expect(grade.subject, '');

@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 
 /// A single card representing one subject in the admin class-activity screen.
 ///
@@ -33,7 +34,8 @@ class AdminSubjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subjectName = subject['name']?.toString() ?? 'Mata Pelajaran';
+    final model = Subject.fromJson(subject);
+    final subjectName = model.name.isEmpty ? 'Mata Pelajaran' : model.name;
     final subjectColor = ColorUtils.getColorForIndex(index);
 
     return Container(

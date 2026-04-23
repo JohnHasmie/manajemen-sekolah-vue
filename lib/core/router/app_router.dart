@@ -55,31 +55,31 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/',
-      builder: (context, state) => Dashboard(role: 'admin'),
+      builder: (context, state) => const Dashboard(role: 'admin'),
     ),
     GoRoute(
       path: '/admin',
-      builder: (context, state) => Dashboard(role: 'admin'),
+      builder: (context, state) => const Dashboard(role: 'admin'),
     ),
     GoRoute(
       path: '/guru',
-      builder: (context, state) => Dashboard(role: 'guru'),
+      builder: (context, state) => const Dashboard(role: 'guru'),
     ),
     GoRoute(
       path: '/teacher',
-      builder: (context, state) => Dashboard(role: 'guru'),
+      builder: (context, state) => const Dashboard(role: 'guru'),
     ),
     GoRoute(
       path: '/staff',
-      builder: (context, state) => Dashboard(role: 'staff'),
+      builder: (context, state) => const Dashboard(role: 'staff'),
     ),
     GoRoute(
       path: '/wali',
-      builder: (context, state) => Dashboard(role: 'wali'),
+      builder: (context, state) => const Dashboard(role: 'wali'),
     ),
     GoRoute(
       path: '/parent',
-      builder: (context, state) => Dashboard(role: 'wali'),
+      builder: (context, state) => const Dashboard(role: 'wali'),
     ),
   ],
 );

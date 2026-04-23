@@ -13,26 +13,26 @@ void main() {
   });
 
   Map<String, dynamic> materialActivity() => {
-        'title': 'Matematika Bab 3',
-        'subject_name': 'Matematika',
-        'class_name': '10A',
-        'jenis': 'materi',
-        'day': 'Senin',
-        'date': '2025-06-09',
-        'deskripsi': 'Belajar integral dasar',
-        'target_role': 'semua',
-      };
+    'title': 'Matematika Bab 3',
+    'subject_name': 'Matematika',
+    'class_name': '10A',
+    'jenis': 'materi',
+    'day': 'Senin',
+    'date': '2025-06-09',
+    'deskripsi': 'Belajar integral dasar',
+    'target_role': 'semua',
+  };
 
   Map<String, dynamic> assignmentActivity() => {
-        'title': 'PR Fisika',
-        'subject_name': 'Fisika',
-        'class_name': '11B',
-        'jenis': 'tugas',
-        'day': 'Selasa',
-        'date': '2025-06-10',
-        'batas_waktu': '2025-06-17',
-        'target_role': 'semua',
-      };
+    'title': 'PR Fisika',
+    'subject_name': 'Fisika',
+    'class_name': '11B',
+    'jenis': 'tugas',
+    'day': 'Selasa',
+    'date': '2025-06-10',
+    'batas_waktu': '2025-06-17',
+    'target_role': 'semua',
+  };
 
   Widget buildSubject({
     required Map<String, dynamic> activity,

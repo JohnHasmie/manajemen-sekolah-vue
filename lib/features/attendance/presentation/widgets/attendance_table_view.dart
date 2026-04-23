@@ -53,7 +53,7 @@ class AttendanceTableView extends StatelessWidget {
   Widget build(BuildContext context) {
     // Skeleton while data is being fetched from the API.
     if (isLoading) {
-      return SkeletonListLoading(
+      return const SkeletonListLoading(
         itemCount: 10,
         infoTagCount: 1,
         showActions: false,
@@ -97,7 +97,7 @@ class AttendanceTableView extends StatelessWidget {
     // Group dates by month for the stacked header rows.
     // Like a PHP array_group_by() — maps 'MMMM yyyy' → [date strings].
     final Map<String, List<String>> monthsMap = {};
-    for (var dateStr in uniqueDates) {
+    for (final dateStr in uniqueDates) {
       try {
         final date = DateTime.parse(dateStr);
         final monthKey = DateFormat(
@@ -120,7 +120,7 @@ class AttendanceTableView extends StatelessWidget {
             color: ColorUtils.slate100,
             blurRadius: 10,
             spreadRadius: 2,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -147,8 +147,7 @@ class AttendanceTableView extends StatelessWidget {
                   ...monthsMap.entries.map((entry) {
                     final columns = entry.value
                         .expand(
-                          (date) =>
-                              uniqueSubjectIds.map((sId) => '$date-$sId'),
+                          (date) => uniqueSubjectIds.map((sId) => '$date-$sId'),
                         )
                         .toList();
 
@@ -159,7 +158,7 @@ class AttendanceTableView extends StatelessWidget {
                         child: Text(
                           entry.key.toUpperCase(),
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             fontSize: 12,
@@ -228,9 +227,7 @@ class AttendanceTableView extends StatelessWidget {
             GridColumn(
               columnName: 'student_info',
               width: 250,
-              label: Container(
-                color: primaryColor.withValues(alpha: 0.05),
-              ),
+              label: Container(color: primaryColor.withValues(alpha: 0.05)),
             ),
             ...uniqueDates.expand((date) {
               return uniqueSubjectIds.map((sId) {
@@ -240,7 +237,10 @@ class AttendanceTableView extends StatelessWidget {
                   columnName: '$date-$sId',
                   width: 100,
                   label: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 8,
+                    ),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       border: Border(

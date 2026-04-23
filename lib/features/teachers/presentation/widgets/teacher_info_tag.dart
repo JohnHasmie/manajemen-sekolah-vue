@@ -16,11 +16,7 @@ class TeacherInfoTag extends StatelessWidget {
   /// The label text shown next to the icon.
   final String text;
 
-  const TeacherInfoTag({
-    super.key,
-    required this.icon,
-    required this.text,
-  });
+  const TeacherInfoTag({super.key, required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {

@@ -42,11 +42,7 @@ class PromotionGradeLevelDropdown extends StatelessWidget {
             'id': 'Tingkat Kelas',
           }),
           labelStyle: TextStyle(color: ColorUtils.slate600, fontSize: 13),
-          prefixIcon: Icon(
-            Icons.grade_rounded,
-            color: primaryColor,
-            size: 18,
-          ),
+          prefixIcon: Icon(Icons.grade_rounded, color: primaryColor, size: 18),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         ),

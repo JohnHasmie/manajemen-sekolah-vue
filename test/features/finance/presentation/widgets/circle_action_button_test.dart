@@ -20,19 +20,18 @@ Widget _build({
   Color color = Colors.blue,
   VoidCallback? onPressed,
   String? tooltip,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: CircleActionButton(
-            icon: icon,
-            color: color,
-            onPressed: onPressed ?? () {},
-            tooltip: tooltip,
-          ),
-        ),
+}) => MaterialApp(
+  home: Scaffold(
+    body: Center(
+      child: CircleActionButton(
+        icon: icon,
+        color: color,
+        onPressed: onPressed ?? () {},
+        tooltip: tooltip,
       ),
-    );
+    ),
+  ),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -64,8 +63,9 @@ void main() {
       expect(pressed, isTrue);
     });
 
-    testWidgets('fires onPressed multiple times on multiple taps',
-        (tester) async {
+    testWidgets('fires onPressed multiple times on multiple taps', (
+      tester,
+    ) async {
       int count = 0;
       await tester.pumpWidget(_build(onPressed: () => count++));
       await tester.tap(find.byType(InkWell));

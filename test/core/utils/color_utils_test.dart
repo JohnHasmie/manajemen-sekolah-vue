@@ -135,7 +135,14 @@ void main() {
     const amber = Color(0xFFF59E0B);
     const gray = Color(0xFF6B7280);
 
-    for (final status in ['active', 'aktif', 'present', 'hadir', 'completed', 'selesai']) {
+    for (final status in [
+      'active',
+      'aktif',
+      'present',
+      'hadir',
+      'completed',
+      'selesai',
+    ]) {
       test('$status → green', () {
         expect(ColorUtils.getStatusColor(status), equals(green));
       });
@@ -149,7 +156,14 @@ void main() {
       expect(ColorUtils.getStatusColor('Aktif'), equals(green));
     });
 
-    for (final status in ['inactive', 'nonaktif', 'absent', 'absen', 'pending', 'menunggu']) {
+    for (final status in [
+      'inactive',
+      'nonaktif',
+      'absent',
+      'absen',
+      'pending',
+      'menunggu',
+    ]) {
       test('$status → red', () {
         expect(ColorUtils.getStatusColor(status), equals(red));
       });
@@ -408,9 +422,13 @@ void main() {
     });
 
     test('each type has a distinct start color', () {
-      final starts = ['primary', 'success', 'warning', 'danger', 'info']
-          .map((t) => ColorUtils.getCardGradient(t)[0])
-          .toList();
+      final starts = [
+        'primary',
+        'success',
+        'warning',
+        'danger',
+        'info',
+      ].map((t) => ColorUtils.getCardGradient(t)[0]).toList();
       expect(starts.toSet().length, 5);
     });
 
@@ -462,8 +480,9 @@ void main() {
     });
 
     test('medium gray background → returns black or white', () {
-      final result =
-          ColorUtils.getTextColorForBackground(const Color(0xFF808080));
+      final result = ColorUtils.getTextColorForBackground(
+        const Color(0xFF808080),
+      );
       expect(result == Colors.black || result == Colors.white, isTrue);
     });
   });
@@ -507,8 +526,11 @@ void main() {
       for (int i = 1; i < shades.length; i++) {
         final prev = shades[i - 1].computeLuminance();
         final curr = shades[i].computeLuminance();
-        expect(curr, lessThanOrEqualTo(prev),
-            reason: 'slate shade $i should be darker than ${i - 1}');
+        expect(
+          curr,
+          lessThanOrEqualTo(prev),
+          reason: 'slate shade $i should be darker than ${i - 1}',
+        );
       }
     });
   });

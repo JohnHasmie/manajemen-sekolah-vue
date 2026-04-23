@@ -1,5 +1,6 @@
 import 'package:manajemensekolah/core/constants/api_endpoints.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/services/cache_invalidation_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Dedicated service for all Finance/Billing (Tagihan) API operations.
@@ -100,6 +101,7 @@ class FinanceService {
         ApiEndpoints.paymentManual,
         data: data,
       );
+      await CacheInvalidationService.onFinanceChanged();
       return response.data;
     } catch (e) {
       AppLogger.error('api', 'Error input pembayaran manual: $e');
@@ -125,6 +127,7 @@ class FinanceService {
         ApiEndpoints.generateBill,
         data: body,
       );
+      await CacheInvalidationService.onFinanceChanged();
       return response.data;
     } catch (e) {
       AppLogger.error('api', 'Error generating bills: $e');
@@ -178,6 +181,7 @@ class FinanceService {
         url += '?month=$month';
       }
       final response = await dioClient.delete(url);
+      await CacheInvalidationService.onFinanceChanged();
       return response.data;
     } catch (e) {
       AppLogger.error('api', 'Error deleting bills by type: $e');

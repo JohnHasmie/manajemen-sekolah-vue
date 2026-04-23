@@ -12,6 +12,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/services/cache_invalidation_service.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
@@ -181,8 +182,7 @@ class ApiClassService {
   /// Called after any mutation (create/update/delete/import) to ensure fresh data.
   /// Like Laravel's `Cache::tags('classes')->flush()`.
   Future<void> _clearClassCache() async {
-    await LocalCacheService.clearStartingWith('class_');
-    AppLogger.info('classroom', 'Class cache cleared due to changes');
+    await CacheInvalidationService.onClassChanged();
   }
 
   /// Legacy method to fetch all classes as a flat list.
@@ -270,20 +270,23 @@ class ApiClassService {
   /// Fetches all students in a given class.
   /// Like `Student::where('class_id', $classId)->get()` in Laravel.
   Future<List<dynamic>> getStudentsByClassId(String classId) async {
-    try {
-      final result = await ApiService().get('/student/class/$classId');
+    // Note: we intentionally do NOT swallow exceptions here. Callers already
+    // wrap this in their own try/catch to show error/retry UI. Swallowing
+    // would mask transient failures (auth token race, backend cold start,
+    // network hiccup) as "no students" and poison downstream caches —
+    // exactly the symptom we hit on the recommendation student screen where
+    // the first load rendered "Siswa belum tersedia" until the user pulled
+    // to refresh.
+    final result = await ApiService().get('/student/class/$classId');
 
-      if (result is Map<String, dynamic>) {
-        if (result.containsKey('data')) {
-          return result['data'] ?? [];
-        }
-        return [];
+    if (result is Map<String, dynamic>) {
+      if (result.containsKey('data')) {
+        return result['data'] ?? [];
       }
-
-      return result is List ? result : [];
-    } catch (e) {
       return [];
     }
+
+    return result is List ? result : [];
   }
 
   /// Promotes students to the next class/grade level. Clears cache after success.

@@ -10,6 +10,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_detail_item.dart';
 
 /// Shows a modal dialog with all fields of one schedule entry.
@@ -48,7 +49,8 @@ class ScheduleDetailDialog extends StatelessWidget {
   final String Function(
     Map<String, dynamic> schedule, [
     LanguageProvider? provider,
-  ]) formatScheduleDays;
+  ])
+  formatScheduleDays;
 
   /// Pure helper — returns the grade-level label for a class ID.
   final String Function(String classId) getGradeLevel;
@@ -58,9 +60,12 @@ class ScheduleDetailDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final model = Schedule.fromJson(schedule);
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: const BorderRadius.all(Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -72,10 +77,7 @@ class ScheduleDetailDialog extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  primaryColor,
-                  primaryColor.withValues(alpha: 0.82),
-                ],
+                colors: [primaryColor, primaryColor.withValues(alpha: 0.82)],
               ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
@@ -119,7 +121,9 @@ class ScheduleDetailDialog extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        schedule['mata_pelajaran_nama'] ?? '-',
+                        (model.subjectName ?? '').isEmpty
+                            ? '-'
+                            : model.subjectName!,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.white.withValues(alpha: 0.85),
@@ -161,7 +165,9 @@ class ScheduleDetailDialog extends StatelessWidget {
                     'en': 'Subject',
                     'id': 'Mata Pelajaran',
                   }),
-                  value: schedule['mata_pelajaran_nama'] ?? '-',
+                  value: (model.subjectName ?? '').isEmpty
+                      ? '-'
+                      : model.subjectName!,
                   primaryColor: primaryColor,
                 ),
                 ScheduleDetailItem(
@@ -170,7 +176,9 @@ class ScheduleDetailDialog extends StatelessWidget {
                     'en': 'Teacher',
                     'id': 'Guru',
                   }),
-                  value: schedule['guru_nama'] ?? '-',
+                  value: (model.teacherName ?? '').isEmpty
+                      ? '-'
+                      : model.teacherName!,
                   primaryColor: primaryColor,
                 ),
                 ScheduleDetailItem(
@@ -179,7 +187,9 @@ class ScheduleDetailDialog extends StatelessWidget {
                     'en': 'Class',
                     'id': 'Kelas',
                   }),
-                  value: schedule['kelas_nama'] ?? '-',
+                  value: (model.className ?? '').isEmpty
+                      ? '-'
+                      : model.className!,
                   primaryColor: primaryColor,
                 ),
                 ScheduleDetailItem(
@@ -206,7 +216,7 @@ class ScheduleDetailDialog extends StatelessWidget {
                     'en': 'Grade Level',
                     'id': 'Tingkat Kelas',
                   }),
-                  value: getGradeLevel(schedule['class_id'] ?? ''),
+                  value: getGradeLevel(model.classId ?? ''),
                   primaryColor: primaryColor,
                   isLast: true,
                 ),
@@ -230,8 +240,8 @@ class ScheduleDetailDialog extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       side: BorderSide(color: ColorUtils.slate300),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: Text(
@@ -270,8 +280,8 @@ class ScheduleDetailDialog extends StatelessWidget {
                         backgroundColor: primaryColor,
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
                         ),
                       ),
                     ),

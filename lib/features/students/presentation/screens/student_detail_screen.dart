@@ -1,30 +1,22 @@
-// Student detail view screen - shows full profile info for a single student.
-import 'package:flutter_riverpod/flutter_riverpod.dart'
-    hide Provider, Consumer;
-//
-// Like `pages/admin/students/{id}.vue` - a detail/show page that displays
-// all student information (personal data, class, guardian, etc.).
-//
-// In Laravel terms, this calls `GET /api/students/{id}` (StudentController@show).
+// Student detail screen - full profile with loading/error states.
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/features/students/data/student_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/date_utils.dart';
-import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/features/students/presentation/widgets/student_info_row.dart';
-import 'package:manajemensekolah/features/students/presentation/widgets/student_section_header.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
+import 'package:manajemensekolah/features/students/presentation/mixins/student_detail_data_mixin.dart';
+import 'package:manajemensekolah/features/students/presentation/mixins/student_detail_formatting_mixin.dart';
+import 'package:manajemensekolah/features/students/presentation/mixins/student_detail_ui_mixin.dart';
+import 'package:manajemensekolah/features/students/presentation/mixins/student_detail_ui_builder_mixin.dart';
+import 'package:manajemensekolah/features/students/presentation/mixins/student_detail_state_builder_mixin.dart';
+import 'package:manajemensekolah/features/students/presentation/mixins/student_detail_header_mixin.dart';
 
 /// Student detail screen - displays full profile for a single student.
 ///
 /// Takes a [student] map (basic data) and fetches full details from API.
 /// Optionally accepts [onEdit] callback to trigger refresh in parent screen.
-/// Like a Vue route page with `props: true` receiving the student object.
 class StudentDetailScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> student;
   final VoidCallback? onEdit;
@@ -37,84 +29,46 @@ class StudentDetailScreen extends ConsumerStatefulWidget {
 
 /// Mutable state for [StudentDetailScreen].
 ///
-/// Key state (like Vue `data()`):
-/// - [_studentDetail] - full student data from API (null until loaded)
-/// - [_isLoading] / [_errorMessage] - loading and error states
-class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
+/// Manages loading state, error handling, and student data display.
+/// Uses mixins for data loading, formatting, and UI building.
+class StudentDetailScreenState extends ConsumerState<StudentDetailScreen>
+    with
+        StudentDetailDataMixin,
+        StudentDetailFormattingMixin,
+        StudentDetailUiMixin,
+        StudentDetailUiBuilderMixin,
+        StudentDetailStateBuilderMixin,
+        StudentDetailHeaderMixin {
   Map<String, dynamic>? _studentDetail;
   bool _isLoading = true;
   String? _errorMessage;
 
-  /// Like Vue's `mounted()` - fetches full student details from the API.
+  // Implement StudentDetailDataMixin properties
+  @override
+  Map<String, dynamic>? get studentDetail => _studentDetail;
+  @override
+  set studentDetail(Map<String, dynamic>? value) => _studentDetail = value;
+
+  @override
+  bool get isLoading => _isLoading;
+  @override
+  set isLoading(bool value) => _isLoading = value;
+
+  @override
+  String? get errorMessage => _errorMessage;
+  @override
+  set errorMessage(String? value) => _errorMessage = value;
+
+  /// Fetches full student details from API.
   @override
   void initState() {
     super.initState();
     _loadStudentDetail();
   }
 
-  Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor('admin');
-  }
-
-  /// Fetches full student details by ID from the API.
-  /// Like calling `GET /api/students/{id}` in a Vue method.
-  Future<void> _loadStudentDetail() async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      final studentDetail = await getIt<ApiStudentService>().getStudentById(
-        widget.student['id'].toString(),
-      );
-
-      if (!mounted) return;
-      setState(() {
-        _studentDetail = studentDetail is Map<String, dynamic>
-            ? studentDetail
-            : null;
-        _isLoading = false;
-      });
-    } catch (e) {
-      AppLogger.error('student', e);
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _errorMessage = ErrorUtils.getFriendlyMessage(e);
-      });
-      SnackBarUtils.showError(
-        context,
-        '${AppLocalizations.failedToLoadDetail.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
-      );
-    }
-  }
-
-  String _getGenderText(String? gender, LanguageProvider languageProvider) {
-    switch (gender) {
-      case 'M':
-      case 'L':
-        return languageProvider.getTranslatedText({
-          'en': 'Male',
-          'id': 'Laki-laki',
-        });
-      case 'F':
-      case 'P':
-        return languageProvider.getTranslatedText({
-          'en': 'Female',
-          'id': 'Perempuan',
-        });
-      default:
-        return languageProvider.getTranslatedText({
-          'en': 'Unknown',
-          'id': 'Tidak Diketahui',
-        });
-    }
-  }
-
-  String _formatDate(String? date) {
-    if (date == null) return '-';
-    return AppDateUtils.formatDateString(date, format: 'dd/MM/yyyy');
+  /// Wrapper for mixin's loadStudentDetail method.
+  void _loadStudentDetail() {
+    loadStudentDetail(studentId: Student.fromJson(widget.student).id);
   }
 
   @override
@@ -122,614 +76,81 @@ class StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
     final languageProvider = ref.read(languageRiverpod);
     final student = _studentDetail ?? widget.student;
     final classes = student['classes'] as List<dynamic>? ?? [];
-
-    final nameStr = student['name'] ?? '';
-    final nameHash = nameStr.codeUnits.fold(0, (sum, c) => sum + c);
-    final avatarColor = ColorUtils.getColorForIndex(nameHash);
-    final initial = nameStr.isNotEmpty ? nameStr[0].toUpperCase() : '?';
-    final className = student['class']?['name'] ?? '';
-    final nis = student['student_number'] ?? '';
+    final nameStr = Student.fromJson(student).name;
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          // --- Gradient Header (Pattern #7) ---
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              bottom: 16,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _getPrimaryColor(),
-                  _getPrimaryColor().withValues(alpha: 0.8),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _getPrimaryColor().withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => AppNavigator.pop(context),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: Icon(
-                      Icons.arrow_back_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Student Detail',
-                          'id': 'Detail Siswa',
-                        }),
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        nameStr.isNotEmpty
-                            ? nameStr
-                            : languageProvider.getTranslatedText({
-                                'en': 'Complete student information',
-                                'id': 'Informasi lengkap siswa',
-                              }),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.85),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: _loadStudentDetail,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: Icon(
-                      Icons.refresh_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                if (widget.onEdit != null) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  GestureDetector(
-                    onTap: () {
-                      AppNavigator.pop(context);
-                      widget.onEdit?.call();
-                    },
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      ),
-                      child: Icon(
-                        Icons.edit_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+          buildHeader(
+            context,
+            languageProvider,
+            nameStr,
+            onRefresh: _loadStudentDetail,
+            onEdit: widget.onEdit != null
+                ? () {
+                    AppNavigator.pop(context);
+                    widget.onEdit?.call();
+                  }
+                : null,
           ),
-
-          // --- Body (conditional) ---
           Expanded(
-            child: _isLoading
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: _getPrimaryColor().withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              _getPrimaryColor(),
-                            ),
-                            strokeWidth: 3,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Loading student detail...',
-                            'id': 'Memuat detail siswa...',
-                          }),
-                          style: TextStyle(
-                            color: ColorUtils.slate600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : _errorMessage != null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: ColorUtils.error600.withValues(
-                                alpha: 0.08,
-                              ),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: ColorUtils.error600.withValues(
-                                  alpha: 0.2,
-                                ),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.error_outline_rounded,
-                              size: 36,
-                              color: ColorUtils.error600,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'An error occurred',
-                              'id': 'Terjadi kesalahan',
-                            }),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: ColorUtils.slate800,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            _errorMessage!,
-                            style: TextStyle(
-                              color: ColorUtils.slate600,
-                              fontSize: 13,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: AppSpacing.xl),
-                          ElevatedButton.icon(
-                            onPressed: _loadStudentDetail,
-                            icon: Icon(
-                              Icons.refresh_rounded,
-                              size: 18,
-                              color: Colors.white,
-                            ),
-                            label: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Try Again',
-                                'id': 'Coba Lagi',
-                              }),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _getPrimaryColor(),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: const BorderRadius.all(Radius.circular(12)),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              elevation: 2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // --- Profile Header Card ---
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                _getPrimaryColor(),
-                                _getPrimaryColor().withValues(alpha: 0.8),
-                              ],
-                            ),
-                            borderRadius: const BorderRadius.all(Radius.circular(16)),
-                            boxShadow: ColorUtils.corporateShadow(
-                              elevation: 2.0,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 72,
-                                height: 72,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: avatarColor,
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.4),
-                                    width: 3,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.2,
-                                      ),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    initial,
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              Text(
-                                nameStr.isNotEmpty ? nameStr : 'No Name',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (nis.toString().isNotEmpty)
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius: const BorderRadius.all(Radius.circular(20)),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.badge_outlined,
-                                            size: 12,
-                                            color: Colors.white,
-                                          ),
-                                          const SizedBox(width: AppSpacing.xs),
-                                          Text(
-                                            'NIS: $nis',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  if (className.isNotEmpty) ...[
-                                    const SizedBox(width: AppSpacing.sm),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius: const BorderRadius.all(Radius.circular(20)),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.school_outlined,
-                                            size: 12,
-                                            color: Colors.white,
-                                          ),
-                                          const SizedBox(width: AppSpacing.xs),
-                                          Text(
-                                            className,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // --- Personal Information Card ---
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: const BorderRadius.all(Radius.circular(16)),
-                            border: Border.all(color: ColorUtils.slate200),
-                            boxShadow: ColorUtils.corporateShadow(
-                              elevation: 1.0,
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              StudentSectionHeader(
-                                icon: Icons.person_rounded,
-                                title: languageProvider.getTranslatedText({
-                                  'en': 'Personal Information',
-                                  'id': 'Informasi Pribadi',
-                                }),
-                                primaryColor: _getPrimaryColor(),
-                              ),
-                              StudentInfoRow(
-                                label: 'NIS',
-                                value: student['student_number']?.toString() ?? '-',
-                                primaryColor: _getPrimaryColor(),
-                                icon: Icons.badge,
-                              ),
-                              StudentInfoRow(
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Class',
-                                  'id': 'Kelas',
-                                }),
-                                value: student['class']?['name'] ?? 'No Class',
-                                primaryColor: _getPrimaryColor(),
-                                icon: Icons.school,
-                              ),
-                              StudentInfoRow(
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Gender',
-                                  'id': 'Jenis Kelamin',
-                                }),
-                                value: _getGenderText(
-                                  student['gender'],
-                                  languageProvider,
-                                ),
-                                primaryColor: _getPrimaryColor(),
-                                icon: Icons.transgender,
-                              ),
-                              StudentInfoRow(
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Birth Date',
-                                  'id': 'Tanggal Lahir',
-                                }),
-                                value: _formatDate(student['date_of_birth']),
-                                primaryColor: _getPrimaryColor(),
-                                icon: Icons.cake,
-                              ),
-                              StudentInfoRow(
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Address',
-                                  'id': 'Alamat',
-                                }),
-                                value: student['address'] ?? 'No Address',
-                                primaryColor: _getPrimaryColor(),
-                                icon: Icons.location_on,
-                                isMultiline: true,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // --- Class History Card ---
-                        if (classes.isNotEmpty) ...[
-                          const SizedBox(height: AppSpacing.md),
-                          Container(
-                            padding: const EdgeInsets.all(AppSpacing.lg),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: const BorderRadius.all(Radius.circular(16)),
-                              border: Border.all(color: ColorUtils.slate200),
-                              boxShadow: ColorUtils.corporateShadow(
-                                elevation: 1.0,
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                StudentSectionHeader(
-                                  icon: Icons.history_rounded,
-                                  title: languageProvider.getTranslatedText({
-                                    'en': 'Class History',
-                                    'id': 'Riwayat Kelas',
-                                  }),
-                                  primaryColor: _getPrimaryColor(),
-                                ),
-                                ...classes.map<Widget>((classItem) {
-                                  final year =
-                                      classItem['academic_year']?['year'] ??
-                                      'Unknown Year';
-                                  return StudentInfoRow(
-                                    label: year,
-                                    value: classItem['name'] ?? 'Unknown Class',
-                                    primaryColor: _getPrimaryColor(),
-                                    icon: Icons.history,
-                                  );
-                                }),
-                              ],
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: AppSpacing.md),
-
-                        // --- Parent Information Card ---
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: const BorderRadius.all(Radius.circular(16)),
-                            border: Border.all(color: ColorUtils.slate200),
-                            boxShadow: ColorUtils.corporateShadow(
-                              elevation: 1.0,
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              StudentSectionHeader(
-                                icon: Icons.family_restroom_rounded,
-                                title: languageProvider.getTranslatedText({
-                                  'en': 'Parent Information',
-                                  'id': 'Informasi Wali',
-                                }),
-                                primaryColor: _getPrimaryColor(),
-                              ),
-                              StudentInfoRow(
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Parent Name',
-                                  'id': 'Nama Wali',
-                                }),
-                                value: student['guardian_name'] ?? 'No Parent Name',
-                                primaryColor: _getPrimaryColor(),
-                                icon: Icons.person,
-                              ),
-                              StudentInfoRow(
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Phone Number',
-                                  'id': 'No. Telepon',
-                                }),
-                                value: student['phone_number'] ?? 'No Phone',
-                                primaryColor: _getPrimaryColor(),
-                                icon: Icons.phone,
-                              ),
-                              StudentInfoRow(
-                                label: languageProvider.getTranslatedText({
-                                  'en': 'Parent Email',
-                                  'id': 'Email Wali',
-                                }),
-                                value: student['parent_email'] ??
-                                    student['guardian_email'] ??
-                                    'No Email',
-                                primaryColor: _getPrimaryColor(),
-                                icon: Icons.email,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xxl),
-
-                        // --- Back Button ---
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => AppNavigator.pop(context),
-                            icon: Icon(
-                              Icons.arrow_back_rounded,
-                              size: 18,
-                              color: ColorUtils.slate700,
-                            ),
-                            label: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Back to Student List',
-                                'id': 'Kembali ke Daftar Siswa',
-                              }),
-                              style: TextStyle(
-                                color: ColorUtils.slate700,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 13),
-                              side: BorderSide(color: ColorUtils.slate300),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: const BorderRadius.all(Radius.circular(12)),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                      ],
-                    ),
-                  ),
+            child: _buildBodyContent(languageProvider, student, classes),
           ),
         ],
       ),
     );
+  }
+
+  /// Builds body content based on loading/error/success states.
+  Widget _buildBodyContent(
+    LanguageProvider languageProvider,
+    Map<String, dynamic> student,
+    List<dynamic> classes,
+  ) {
+    if (_isLoading) {
+      return buildLoadingState(languageProvider);
+    }
+    if (_errorMessage != null) {
+      return buildErrorState(
+        languageProvider,
+        _errorMessage,
+        _loadStudentDetail,
+      );
+    }
+    return _buildScrollableContent(languageProvider, student, classes);
+  }
+
+  /// Builds scrollable content with all info cards.
+  Widget _buildScrollableContent(
+    LanguageProvider languageProvider,
+    Map<String, dynamic> student,
+    List<dynamic> classes,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          buildProfileHeaderCard(student),
+          const SizedBox(height: AppSpacing.lg),
+          buildPersonalInfoCard(languageProvider, student),
+          if (classes.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            buildClassHistoryCard(languageProvider, classes),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          buildParentInfoCard(languageProvider, student),
+          const SizedBox(height: AppSpacing.xxl),
+          buildBackButton(context, languageProvider),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

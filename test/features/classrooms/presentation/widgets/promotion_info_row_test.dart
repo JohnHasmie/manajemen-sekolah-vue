@@ -15,7 +15,7 @@ void main() {
     testWidgets('shows the label text', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionInfoRow(
+          const PromotionInfoRow(
             icon: Icons.class_,
             label: 'Source Class',
             value: 'Grade 7A',
@@ -31,7 +31,7 @@ void main() {
     testWidgets('shows the value text', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionInfoRow(
+          const PromotionInfoRow(
             icon: Icons.class_,
             label: 'Target Class',
             value: 'Grade 8A',
@@ -47,7 +47,7 @@ void main() {
     testWidgets('renders the provided icon', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionInfoRow(
+          const PromotionInfoRow(
             icon: Icons.school,
             label: 'School',
             value: 'SMA Negeri 1',
@@ -65,7 +65,7 @@ void main() {
 
       await tester.pumpWidget(
         buildTestable(
-          PromotionInfoRow(
+          const PromotionInfoRow(
             icon: Icons.person,
             label: 'Teacher',
             value: 'Budi',
@@ -82,7 +82,7 @@ void main() {
     testWidgets('label and value coexist in the same widget', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionInfoRow(
+          const PromotionInfoRow(
             icon: Icons.date_range,
             label: 'Academic Year',
             value: '2024/2025',
@@ -96,14 +96,16 @@ void main() {
     });
 
     // ── 6. Renders without error for long value strings ───────────────────
-    testWidgets('renders without overflow for a long value string',
-        (tester) async {
+    testWidgets('renders without overflow for a long value string', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionInfoRow(
+          const PromotionInfoRow(
             icon: Icons.notes,
             label: 'Notes',
-            value: 'This is a very long value string that tests overflow handling',
+            value:
+                'This is a very long value string that tests overflow handling',
             primaryColor: Colors.orange,
           ),
         ),

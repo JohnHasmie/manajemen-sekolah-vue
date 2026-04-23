@@ -36,14 +36,34 @@ Future<DateTime?> showModernDatePicker({
                 end: Alignment.bottomRight,
                 colors: [p, p.withValues(alpha: 0.85)],
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
-            child: Row(children: [
-              const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 12),
-              Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white))),
-              IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close, color: Colors.white, size: 20)),
-            ]),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.calendar_today_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                ),
+              ],
+            ),
           ),
           // Calendar — use ThemeData.light() to avoid inheriting global colorScheme.fromSeed
           SizedBox(
@@ -66,15 +86,27 @@ Future<DateTime?> showModernDatePicker({
                   backgroundColor: Colors.white,
                   elevation: 0,
                   dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.any((s) => s == WidgetState.selected || s == WidgetState.pressed)) return Colors.white;
+                    if (states.any(
+                      (s) =>
+                          s == WidgetState.selected || s == WidgetState.pressed,
+                    )) {
+                      return Colors.white;
+                    }
                     return ColorUtils.slate800;
                   }),
                   dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.any((s) => s == WidgetState.selected || s == WidgetState.pressed)) return p;
+                    if (states.any(
+                      (s) =>
+                          s == WidgetState.selected || s == WidgetState.pressed,
+                    )) {
+                      return p;
+                    }
                     return Colors.transparent;
                   }),
                   todayForegroundColor: WidgetStateProperty.all(p),
-                  todayBackgroundColor: WidgetStateProperty.all(p.withValues(alpha: 0.1)),
+                  todayBackgroundColor: WidgetStateProperty.all(
+                    p.withValues(alpha: 0.1),
+                  ),
                 ),
               ),
               child: Material(
@@ -82,7 +114,8 @@ Future<DateTime?> showModernDatePicker({
                 child: CalendarDatePicker(
                   initialDate: tempDate,
                   firstDate: firstDate ?? DateTime(2024),
-                  lastDate: lastDate ?? DateTime.now().add(const Duration(days: 365)),
+                  lastDate:
+                      lastDate ?? DateTime.now().add(const Duration(days: 365)),
                   onDateChanged: (date) {
                     tempDate = date;
                   },
@@ -92,14 +125,32 @@ Future<DateTime?> showModernDatePicker({
           ),
           // Footer
           Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(ctx).padding.bottom + 16),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              8,
+              16,
+              MediaQuery.of(ctx).padding.bottom + 16,
+            ),
             child: SizedBox(
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: () { result = tempDate; Navigator.pop(ctx); },
-                style: ElevatedButton.styleFrom(backgroundColor: p, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('Pilih Tanggal', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                onPressed: () {
+                  result = tempDate;
+                  Navigator.pop(ctx);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: p,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Pilih Tanggal',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ),

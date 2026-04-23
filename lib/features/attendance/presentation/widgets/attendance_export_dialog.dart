@@ -158,10 +158,7 @@ class _AttendanceExportDialogState
         TextButton(
           onPressed: () => AppNavigator.pop(context),
           child: Text(
-            languageProvider.getTranslatedText({
-              'en': 'Cancel',
-              'id': 'Batal',
-            }),
+            languageProvider.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
           ),
         ),
         ElevatedButton(

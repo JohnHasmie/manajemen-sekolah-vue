@@ -15,7 +15,7 @@ void main() {
     testWidgets('shows the title string', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionSectionHeader(
+          const PromotionSectionHeader(
             icon: Icons.info_outline,
             title: 'Promotion Details',
             primaryColor: Colors.blue,
@@ -30,7 +30,7 @@ void main() {
     testWidgets('renders the provided icon', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionSectionHeader(
+          const PromotionSectionHeader(
             icon: Icons.list_alt,
             title: 'Student List',
             primaryColor: Colors.green,
@@ -47,7 +47,7 @@ void main() {
 
       await tester.pumpWidget(
         buildTestable(
-          PromotionSectionHeader(
+          const PromotionSectionHeader(
             icon: Icons.settings,
             title: 'Settings',
             primaryColor: color,
@@ -63,7 +63,7 @@ void main() {
     testWidgets('title and icon appear together in a Row', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionSectionHeader(
+          const PromotionSectionHeader(
             icon: Icons.check_circle_outline,
             title: 'Summary',
             primaryColor: Colors.teal,
@@ -80,7 +80,7 @@ void main() {
     testWidgets('renders without overflow for long title', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionSectionHeader(
+          const PromotionSectionHeader(
             icon: Icons.info,
             title: 'A Very Long Section Title That Might Overflow',
             primaryColor: Colors.purple,
@@ -95,7 +95,7 @@ void main() {
     testWidgets('wraps content in a Container', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionSectionHeader(
+          const PromotionSectionHeader(
             icon: Icons.grade,
             title: 'Grades',
             primaryColor: Colors.amber,

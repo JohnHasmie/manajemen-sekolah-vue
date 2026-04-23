@@ -1,507 +1,223 @@
-// Admin teaching schedule management screen - full CRUD for class schedules.
-//
-// Like `pages/admin/schedules.vue` - manages the school timetable with create,
-// edit, delete, search, multi-filter (teacher, class, day, semester, lesson hour),
-// infinite scroll pagination, Excel import/export, and a timetable grid view.
-//
-// In Laravel terms, this consumes ScheduleController endpoints.
-// Also handles conflict detection (double-booked teachers/rooms).
-// Supports two view modes: card list and Syncfusion data grid (timetable).
-//
-// All data/logic methods live in AdminScheduleController — this file only owns
-// state variables, setState calls, lifecycle hooks, dialog/navigation, and
-// widget build methods.
-import 'dart:async';
-
+// Admin schedule management: tour/data/filter logic extracted to mixins; UI to widgets.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/services/cache_service.dart';
-import 'package:manajemensekolah/core/services/fcm_service.dart';
-import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
-import 'package:manajemensekolah/core/widgets/empty_state.dart';
-import 'package:manajemensekolah/core/widgets/gradient_page_header.dart';
-import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/schedule/presentation/controllers/admin_schedule_controller.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_card.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_detail_dialog.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_filter_sheet.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_dialog.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_table_view.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_tour_target_builder.dart';
+import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_tour_mixin.dart';
+import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_data_mixin.dart';
+import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_filter_mixin.dart';
+import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_state_bridge_mixin.dart';
+import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_dialogs_mixin.dart';
+import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_events_mixin.dart';
+import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_actions_mixin.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_header.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_list_builder.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/timetable_data_source.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-/// Admin teaching schedule management with full CRUD, timetable grid, and conflict detection.
-///
-/// This is a [StatefulWidget] - like a Vue page with extensive local state for
-/// schedule list, reference data (teachers, subjects, classes, days), pagination,
-/// filters, and two view modes (card list vs timetable grid).
 class TeachingScheduleManagementScreen extends ConsumerStatefulWidget {
   const TeachingScheduleManagementScreen({super.key});
-
   @override
   TeachingScheduleManagementScreenState createState() =>
       TeachingScheduleManagementScreenState();
 }
 
-/// Mutable state for [TeachingScheduleManagementScreen].
-///
-/// Key state (like Vue `data()`):
-/// - [_scheduleList] - paginated schedule entries from API
-/// - [_teacherList] / [_subjectList] / [_classList] / [_dayList] / [_lessonHourList] - reference data
-/// - [_showTableView] - toggles between card list and timetable grid (Syncfusion DataGrid)
-/// - [_gridData] / [_timetableDataSource] - data source for the timetable grid view
-/// - Filter states: [_selectedTeacherId], [_selectedClassId], [_selectedDayId], etc.
-/// - Pagination: [_currentPage], [_hasMoreData], [_isLoadingMore] for infinite scroll
-///
-/// Listens to AcademicYearProvider for year changes and FCM for real-time sync.
-/// setState() triggers re-render like Vue's reactivity system.
 class TeachingScheduleManagementScreenState
-    extends ConsumerState<TeachingScheduleManagementScreen> {
-  // Controller holds all data/logic methods. Accessed via Riverpod provider so
-  // it shares the same instance as any other widget reading the same provider.
-  // Like injecting a Laravel controller into a view — the screen doesn't own the
-  // logic, it just calls the controller and rebuilds via setState.
+    extends ConsumerState<TeachingScheduleManagementScreen>
+    with
+        AdminScheduleTourMixin,
+        AdminScheduleStateBridgeMixin,
+        AdminScheduleDataMixin,
+        AdminScheduleFilterMixin,
+        AdminScheduleDialogsMixin,
+        AdminScheduleEventsMixin,
+        AdminScheduleActionsMixin {
   late AdminScheduleController _controller;
-
-  List<dynamic> _scheduleList = [];
-  List<dynamic> _subjectList = [];
-  List<dynamic> _classList = [];
-  List<dynamic> _dayList = [];
-  List<dynamic> _termList = [];
-  List<dynamic> _lessonHourList = [];
-
-  bool _isLoading = true;
-  String _selectedTerm = '1'; // Will be set by _setDefaultAcademicPeriod()
-  String _selectedAcademicYear =
-      '2024/2025'; // Will be set by _setDefaultAcademicPeriod()
-  final TextEditingController _searchController = TextEditingController();
-
-  // Scroll Controller for Infinite Scroll
-  final ScrollController _scrollController = ScrollController();
-
-  // Pagination States (Infinite Scroll)
+  List<dynamic> _scheduleList = [],
+      _subjectList = [],
+      _classList = [],
+      _dayList = [],
+      _termList = [],
+      _lessonHourList = [];
+  bool _isLoading = true,
+      _hasMoreData = true,
+      _isLoadingMore = false,
+      _hasActiveFilter = false,
+      _showTableView = false,
+      _isTourShowing = false;
   int _currentPage = 1;
-  final int _perPage = 10; // Fixed 10 items per load
-  bool _hasMoreData = true;
-  bool _isLoadingMore = false;
-
-  // Filter state (Backend filtering)
-  String? _selectedTeacherId; // Filter by teacher
-  String? _selectedClassId; // Filter by class
-  String? _selectedDayId; // Filter by day
-  String? _selectedFilterTerm;
-  String? _selectedLessonHour; // Filter by Lesson Hour
-  bool _hasActiveFilter = false;
-
-  // Filter Options (from backend)
-  List<dynamic> _availableTeachers = [];
-  List<dynamic> _availableClasses = [];
-  List<dynamic> _availableDays = [];
-  List<dynamic> _availableSemesters = [];
-  List<dynamic> _availableAcademicYears = [];
-
-  // Search debounce
-  Timer? _searchDebounce;
-
-  // Tour Keys
-  final GlobalKey _menuKey = GlobalKey();
-  final GlobalKey _searchKey = GlobalKey();
-  final GlobalKey _filterKey = GlobalKey();
-  final GlobalKey _fabKey = GlobalKey();
-  final GlobalKey _viewToggleKey = GlobalKey();
-  bool _isTourShowing = false;
-
-  // Additional state for table view
-  bool _showTableView = false;
+  final int _perPage = 10;
+  String _selectedTerm = '1', _selectedAcademicYear = '2024/2025';
+  String? _selectedTeacherId,
+      _selectedClassId,
+      _selectedDayId,
+      _selectedFilterTerm,
+      _selectedLessonHour;
+  String? _lastCachedAcademicYear, _lastCachedTerm;
+  List<dynamic> _availableTeachers = [],
+      _availableClasses = [],
+      _availableDays = [],
+      _availableSemesters = [],
+      _availableAcademicYears = [];
+  final TextEditingController _searchController = TextEditingController();
   List<ScheduleGridData> _gridData = [];
-  TimetableDataSource? _timetableDataSource;
-  AcademicYearProvider? _academicYearProvider;
-
-  // Persisted cache key values
-  String? _lastCachedAcademicYear;
-  String? _lastCachedTerm;
-
-  /// Like Vue's `mounted()` - sets up scroll listener, academic year provider,
-  /// FCM sync listener, and loads all reference data + schedule list.
+  dynamic _timetableDataSource;
+  final GlobalKey _menuKey = GlobalKey(),
+      _searchKey = GlobalKey(),
+      _filterKey = GlobalKey(),
+      _fabKey = GlobalKey(),
+      _viewToggleKey = GlobalKey();
+  @override
+  AdminScheduleController get controller => _controller;
+  @override
+  List<dynamic> get scheduleList => _scheduleList;
+  @override
+  List<dynamic> get subjectList => _subjectList;
+  @override
+  List<dynamic> get classList => _classList;
+  @override
+  List<dynamic> get dayList => _dayList;
+  @override
+  List<dynamic> get termList => _termList;
+  @override
+  List<dynamic> get lessonHourList => _lessonHourList;
+  @override
+  bool get isLoading => _isLoading;
+  @override
+  String get selectedTerm => _selectedTerm;
+  @override
+  String get selectedAcademicYear => _selectedAcademicYear;
+  @override
+  int get currentPage => _currentPage;
+  @override
+  int get perPage => _perPage;
+  @override
+  bool get hasMoreData => _hasMoreData;
+  @override
+  bool get isLoadingMore => _isLoadingMore;
+  @override
+  String? get lastCachedAcademicYear => _lastCachedAcademicYear;
+  @override
+  String? get lastCachedTerm => _lastCachedTerm;
+  @override
+  List<dynamic> get availableTeachers => _availableTeachers;
+  @override
+  List<dynamic> get availableClasses => _availableClasses;
+  @override
+  List<dynamic> get availableDays => _availableDays;
+  @override
+  List<dynamic> get availableSemesters => _availableSemesters;
+  @override
+  List<dynamic> get availableAcademicYears => _availableAcademicYears;
+  @override
+  String? get selectedTeacherId => _selectedTeacherId;
+  @override
+  String? get selectedClassId => _selectedClassId;
+  @override
+  String? get selectedDayId => _selectedDayId;
+  @override
+  String? get selectedFilterTerm => _selectedFilterTerm;
+  @override
+  String? get selectedLessonHour => _selectedLessonHour;
+  @override
+  bool get hasActiveFilter => _hasActiveFilter;
+  @override
+  GlobalKey get menuKey => _menuKey;
+  @override
+  GlobalKey get searchKey => _searchKey;
+  @override
+  GlobalKey get filterKey => _filterKey;
+  @override
+  GlobalKey get fabKey => _fabKey;
+  @override
+  GlobalKey get viewToggleKey => _viewToggleKey;
+  @override
+  bool get isTourShowing => _isTourShowing;
+  @override
+  set isTourShowing(bool v) => _isTourShowing = v;
+  @override
+  void updateScheduleList(List<dynamic> v) => _scheduleList = v;
+  @override
+  void updateSubjectList(List<dynamic> v) => _subjectList = v;
+  @override
+  void updateClassList(List<dynamic> v) => _classList = v;
+  @override
+  void updateDayList(List<dynamic> v) => _dayList = v;
+  @override
+  void updateTermList(List<dynamic> v) => _termList = v;
+  @override
+  void updateLessonHourList(List<dynamic> v) => _lessonHourList = v;
+  @override
+  void updateIsLoading(bool v) => _isLoading = v;
+  @override
+  void updateCurrentPage(int v) => _currentPage = v;
+  @override
+  void updateHasMoreData(bool v) => _hasMoreData = v;
+  @override
+  void updateIsLoadingMore(bool v) => _isLoadingMore = v;
+  @override
+  void updateLastCachedAcademicYear(String? v) => _lastCachedAcademicYear = v;
+  @override
+  void updateLastCachedTerm(String? v) => _lastCachedTerm = v;
+  @override
+  void updateAvailableTeachers(List<dynamic> v) => _availableTeachers = v;
+  @override
+  void updateAvailableClasses(List<dynamic> v) => _availableClasses = v;
+  @override
+  void updateAvailableDays(List<dynamic> v) => _availableDays = v;
+  @override
+  void updateAvailableSemesters(List<dynamic> v) => _availableSemesters = v;
+  @override
+  void updateAvailableAcademicYears(List<dynamic> v) =>
+      _availableAcademicYears = v;
+  @override
+  void updateSelectedAcademicYear(String v) => _selectedAcademicYear = v;
+  @override
+  void updateSelectedTerm(String v) => _selectedTerm = v;
+  @override
+  void updateSelectedTeacherId(String? v) => _selectedTeacherId = v;
+  @override
+  void updateSelectedClassId(String? v) => _selectedClassId = v;
+  @override
+  void updateSelectedDayId(String? v) => _selectedDayId = v;
+  @override
+  void updateSelectedFilterTerm(String? v) => _selectedFilterTerm = v;
+  @override
+  void updateSelectedLessonHour(String? v) => _selectedLessonHour = v;
+  @override
+  void updateHasActiveFilter(bool v) => _hasActiveFilter = v;
+  @override
+  bool get showTableView => _showTableView;
+  @override
+  TextEditingController get searchController => _searchController;
   @override
   void initState() {
-    super.initState();
-
-    // Resolve the controller via Riverpod. Must be done in initState (not the
-    // constructor) because `ref` is only available after the widget is wired in.
+    // Assign the late controller BEFORE super.initState() so that mixins'
+    // initState (notably AdminScheduleEventsMixin, which kicks off
+    // loadCachedScheduleData/loadFilterOptions/loadData synchronously) can
+    // safely reach the `controller` getter. Riverpod's `ref` is available
+    // on ConsumerState from construction, so reading the provider here is
+    // fine.
     _controller = ref.read(adminScheduleControllerProvider);
-
-    // Listen to scroll for infinite scroll
-    _scrollController.addListener(_onScroll);
-
-    // Set default academic year from provider
-    _academicYearProvider = ref.read(academicYearRiverpod);
-    if (_academicYearProvider?.selectedAcademicYear != null) {
-      _selectedAcademicYear = _academicYearProvider!.selectedAcademicYear!['id']
-          .toString();
-    } else {
-      _setDefaultAcademicPeriod();
-    }
-
-    // Listen to academic year changes
-    _academicYearProvider?.addListener(_onAcademicYearProviderChanged);
-
-    // Load cached data first for instant display, then fetch fresh
-    _loadCachedScheduleData();
-    _loadFilterOptions();
-    _loadData();
-
-    // Listen to real-time sync trigger
-    FCMService().syncTrigger.addListener(_onSyncTriggered);
+    super.initState();
   }
-
-  /// Load cached schedule data for instant display before any API calls.
-  /// Delegates to the controller; applies result with setState here.
-  Future<void> _loadCachedScheduleData() async {
-    final result = await _controller.loadCachedScheduleData();
-    if (result == null || !mounted) return;
-    setState(() {
-      _scheduleList = result.scheduleList;
-      _subjectList = result.subjectList;
-      _classList = result.classList;
-      _dayList = result.dayList;
-      _termList = result.semesterList;
-      _lessonHourList = result.lessonHourList;
-      _hasMoreData = result.hasMoreData;
-      _isLoading = result.isLoading;
-      _lastCachedAcademicYear = _selectedAcademicYear;
-      _lastCachedTerm = _selectedTerm;
-    });
-    _updateGridData();
-  }
-
-  void _onSyncTriggered() {
-    final trigger = FCMService().syncTrigger.value;
-    if (trigger != null && trigger['type'] == 'refresh_schedules') {
-      if (mounted) {
-        AppLogger.debug('schedule', 'Sync triggered: refresh_schedules');
-        _loadData(resetPage: true, useCache: false);
-      }
-    }
-  }
-
-  /// Set default academic period based on current date.
-  /// Delegates pure calculation to the controller.
-  void _setDefaultAcademicPeriod() {
-    _selectedAcademicYear = _controller.setDefaultAcademicPeriod(
-      availableAcademicYears: _availableAcademicYears,
-    );
-  }
-
-  /// Update semester selection after semester list is loaded.
-  /// Delegates to the controller; applies result with setState here.
-  Future<void> _updateCurrentTerm() async {
-    final newSemesterId = await _controller.updateCurrentSemester(
-      semesterList: _termList,
-      currentSemesterId: _selectedTerm,
-    );
-    if (newSemesterId != null && mounted) {
-      setState(() => _selectedTerm = newSemesterId);
-      _loadData(resetPage: true);
-    }
-  }
-
-  /// Generate list of academic years
 
   @override
   void dispose() {
-    FCMService().syncTrigger.removeListener(_onSyncTriggered);
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
     _searchController.dispose();
-    _searchDebounce?.cancel();
-    _academicYearProvider?.removeListener(_onAcademicYearProviderChanged);
     super.dispose();
   }
 
-  void _onAcademicYearProviderChanged() {
-    if (mounted && _academicYearProvider?.selectedAcademicYear != null) {
-      setState(() {
-        _selectedAcademicYear = _academicYearProvider!
-            .selectedAcademicYear!['id']
-            .toString();
-        // Usually changing year resets semester or keeps it if ID matches.
-      });
-      _loadFilterOptions(); // Reload classes based on new academic year
-      _loadData(resetPage: true);
-    }
-  }
-
-  void _onScroll() {
-    // Detect when user scrolls near bottom
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      if (!_isLoadingMore && _hasMoreData && !_isLoading) {
-        _loadMoreData();
-      }
-    }
-  }
-
-  /// Fetches filter options and applies them with setState.
-  Future<void> _loadFilterOptions() async {
-    final result = await _controller.loadFilterOptions(
-      selectedAcademicYear: _selectedAcademicYear,
-    );
-    if (result == null || !mounted) return;
-    setState(() {
-      _availableTeachers = result.teachers;
-      _availableClasses = result.classes;
-      _availableDays = result.days;
-      _availableSemesters = result.semesters;
-      _availableAcademicYears = result.academicYears;
-    });
-  }
-
-  void _showInfoSnackBar(String message) {
-    if (!mounted) return;
-    SnackBarUtils.showInfo(context, message);
-  }
-
-  /// Builds the cache key for the current state, delegates to controller, and
-  /// also syncs [_lastCachedAcademicYear] / [_lastCachedTerm] so that
-  /// subsequent early-cache loads resolve the right key.
-  String? _buildScheduleCacheKey() {
-    final key = _controller.buildScheduleCacheKey(
-      currentPage: _currentPage,
-      showTableView: _showTableView,
-      selectedAcademicYear: _selectedAcademicYear,
-      selectedSemester: _selectedTerm,
-      selectedTeacherId: _selectedTeacherId,
-      selectedClassId: _selectedClassId,
-      selectedDayId: _selectedDayId,
-      selectedJamPelajaran: _selectedLessonHour,
-      selectedFilterSemester: _selectedFilterTerm,
-      searchText: _searchController.text,
-      lastCachedAcademicYear: _lastCachedAcademicYear,
-      lastCachedSemester: _lastCachedTerm,
-    );
-    if (key != null) {
-      _lastCachedAcademicYear = _selectedAcademicYear;
-      _lastCachedTerm = _selectedTerm;
-    }
-    return key;
-  }
-
-  /// Unpacks a [ScheduleLoadResult] into local state fields.
-  /// Must be called inside setState — no setState call here.
-  void _applyLoadResult(ScheduleLoadResult result) {
-    _scheduleList = result.scheduleList;
-    _subjectList = result.subjectList;
-    _classList = result.classList;
-    _dayList = result.dayList.isEmpty && _availableDays.isNotEmpty
-        ? _availableDays
-        : result.dayList;
-    _termList = result.semesterList;
-    _lessonHourList = result.lessonHourList;
-    _hasMoreData = result.hasMoreData;
-    _isLoading = result.isLoading;
-  }
-
-  /// Loads all schedule + reference data, with cache-first strategy.
-  /// Delegates API/cache work to the controller; this method only owns state
-  /// updates (setState) and UI side-effects (tour, snackbar).
-  Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
-    if (resetPage) {
-      _currentPage = 1;
-      _hasMoreData = true;
-    }
-
-    try {
-      final result = await _controller.loadData(
-        showTableView: _showTableView,
-        selectedSemester: _selectedTerm,
-        selectedFilterSemester: _selectedFilterTerm,
-        selectedAcademicYear: _selectedAcademicYear,
-        selectedTeacherId: _selectedTeacherId,
-        selectedClassId: _selectedClassId,
-        selectedDayId: _selectedDayId,
-        selectedJamPelajaran: _selectedLessonHour,
-        searchText: _searchController.text,
-        perPage: _perPage,
-        availableDays: _availableDays,
-        lastCachedAcademicYear: _lastCachedAcademicYear,
-        lastCachedSemester: _lastCachedTerm,
-        useCache: useCache,
-      );
-
-      if (!mounted) return;
-
-      if (result == null) {
-        // Error path — show snackbar only when there's nothing cached to show
-        if (_scheduleList.isEmpty) {
-          _showErrorSnackBar(
-            ref.read(languageRiverpod).getTranslatedText({
-              'en': 'Failed to load schedules',
-              'id': 'Gagal memuat jadwal',
-            }),
-          );
-        }
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      setState(() => _applyLoadResult(result));
-      _updateGridData();
-
-      // Cache the result for next cold start
-      _controller.saveScheduleToCache(
-        cacheKey: _buildScheduleCacheKey(),
-        scheduleResponse: {'data': result.scheduleList},
-        teacher: result.teacherList,
-        subject: result.subjectList,
-        classData: result.classList,
-        days: result.dayList,
-        semester: result.semesterList,
-        lessonHours: result.lessonHourList,
-      );
-
-      if (_termList.isNotEmpty) {
-        _updateCurrentTerm();
-      }
-    } catch (e) {
-      AppLogger.error('schedule', e);
-      if (!mounted) return;
-      if (_scheduleList.isEmpty) {
-        _showErrorSnackBar(ErrorUtils.getFriendlyMessage(e));
-      }
-      setState(() => _isLoading = false);
-    } finally {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _checkAndShowTour();
-      });
-    }
-  }
-
-  /// Force refresh: clears caches then reloads from the API.
-  Future<void> _forceRefresh() async {
-    await _controller.forceRefresh(
-      cacheKey: _buildScheduleCacheKey(),
-      selectedAcademicYear: _selectedAcademicYear,
-    );
-    await _loadData(resetPage: true, useCache: false);
-  }
-
-  /// Loads the next page of schedules for infinite scroll.
-  Future<void> _loadMoreData() async {
-    if (_isLoadingMore || !_hasMoreData) return;
-    setState(() => _isLoadingMore = true);
-
-    _currentPage++;
-    final result = await _controller.loadMoreData(
-      nextPage: _currentPage,
-      perPage: _perPage,
-      selectedSemester: _selectedTerm,
-      selectedFilterSemester: _selectedFilterTerm,
-      selectedAcademicYear: _selectedAcademicYear,
-      selectedTeacherId: _selectedTeacherId,
-      selectedClassId: _selectedClassId,
-      selectedDayId: _selectedDayId,
-      selectedJamPelajaran: _selectedLessonHour,
-      searchText: _searchController.text,
-    );
-
-    if (!mounted) return;
-
-    if (result == null) {
-      setState(() {
-        _isLoadingMore = false;
-        _currentPage--;
-      });
-      return;
-    }
-
-    setState(() {
-      _scheduleList.addAll(result.newItems);
-      _hasMoreData = result.hasMoreData;
-      _isLoadingMore = false;
-    });
-    _updateGridData();
-    AppLogger.info(
-      'schedule',
-      'Loaded more schedules: Page $_currentPage, Total: ${_scheduleList.length}',
-    );
-  }
-
-  /// Opens file picker and imports schedules from Excel.
-  Future<void> _importFromExcel() async {
-    final languageProvider = ref.read(languageRiverpod);
-    try {
-      setState(() => _isLoading = true);
-      final imported = await _controller.importFromExcel();
-      if (!mounted) return;
-      if (imported) {
-        _loadData(resetPage: true, useCache: false);
-        _showInfoSnackBar(
-          languageProvider.getTranslatedText({
-            'en': 'Import successful',
-            'id': 'Import berhasil',
-          }),
-        );
-      } else {
-        setState(() => _isLoading = false);
-      }
-    } catch (e) {
-      AppLogger.error('schedule', e);
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      _showErrorSnackBar(
-        '${languageProvider.getTranslatedText({'en': 'Failed to import file: ', 'id': 'Gagal mengimpor file: '})}${ErrorUtils.getFriendlyMessage(e)}',
-      );
-    }
-  }
-
-  /// Exports current schedule list to Excel.
-  Future<void> _exportToExcel() async {
-    try {
-      await _controller.exportToExcel(
-        context: context,
-        scheduleList: _scheduleList,
-        dayList: _dayList,
-        availableAcademicYears: _availableAcademicYears,
-      );
-    } catch (e) {
-      AppLogger.error('schedule', e);
-      _showErrorSnackBar(
-        '${ref.read(languageRiverpod).getTranslatedText({'en': 'Export failed: ', 'id': 'Export gagal: '})}${ErrorUtils.getFriendlyMessage(e)}',
-      );
-    }
-  }
-
-  /// Downloads the Excel import template.
-  Future<void> _downloadTemplate() async {
-    try {
-      await _controller.downloadTemplate(context);
-    } catch (e) {
-      AppLogger.error('schedule', e);
-      _showErrorSnackBar(
-        '${ref.read(languageRiverpod).getTranslatedText({'en': 'Download template failed: ', 'id': 'Gagal download template: '})}${ErrorUtils.getFriendlyMessage(e)}',
-      );
-    }
-  }
-
-  /// Rebuilds the timetable data source from current state.
-  /// Delegates all logic to the controller; assigns results to local fields.
-  void _updateGridData() {
-    final result = _controller.updateGridData(
-      scheduleList: _getFilteredSchedules(),
+  @override
+  void updateGridData() {
+    final r = _controller.updateGridData(
+      scheduleList: getFilteredSchedules(
+        _scheduleList,
+        _dayList,
+        _searchController.text,
+      ),
       dayList: _dayList,
       classList: _classList,
       lessonHourList: _lessonHourList,
@@ -509,869 +225,114 @@ class TeachingScheduleManagementScreenState
       selectedDayId: _selectedDayId,
       selectedClassId: _selectedClassId,
       selectedJamPelajaran: _selectedLessonHour,
-      onScheduleTap: _showScheduleDetail,
+      onScheduleTap: showScheduleDetail,
     );
-    _gridData = result.gridData;
-    _timetableDataSource = result.timetableDataSource;
-  }
-
-  void _showErrorSnackBar(String message) {
-    if (mounted) {
-      SnackBarUtils.showError(context, message);
-    }
-  }
-
-  void _showSuccessSnackBar(String message) {
-    if (mounted) {
-      SnackBarUtils.showSuccess(
-        context,
-        ref.read(languageRiverpod).getTranslatedText({
-          'en': message,
-          'id': message.replaceAll('successfully', 'berhasil'),
-        }),
-      );
-    }
-  }
-
-  Future<void> _addSchedule() async {
-    final result = await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => ScheduleFormDialog(
-        teacherList: _availableTeachers,
-        subjectList: _subjectList,
-        classList: _availableClasses,
-        dayList: _availableDays,
-        semesterList: _availableSemesters,
-        lessonHourList: _lessonHourList,
-        semester: _selectedTerm,
-        academicYear: _selectedAcademicYear,
-        academicYearList: _availableAcademicYears,
-        apiService: _controller.apiService,
-        apiTeacherService: _controller.apiTeacherService,
-      ),
-    );
-
-    if (result != null) {
-      await _checkAndResolveConflicts(result);
-    }
-  }
-
-  Future<void> _editSchedule(dynamic schedule) async {
-    final result = await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => ScheduleFormDialog(
-        teacherList: _availableTeachers,
-        subjectList: _subjectList,
-        classList: _availableClasses,
-        dayList: _availableDays,
-        semesterList: _availableSemesters,
-        lessonHourList: _lessonHourList,
-        semester: _selectedTerm,
-        academicYear: _selectedAcademicYear,
-        academicYearList: _availableAcademicYears,
-        schedule: schedule,
-        apiService: _controller.apiService,
-        apiTeacherService: _controller.apiTeacherService,
-      ),
-    );
-
-    if (result != null) {
-      await _checkAndResolveConflicts(
-        result,
-        editingScheduleId: schedule['id'],
-      );
-    }
-  }
-
-  Future<void> _deleteSchedule(String id) async {
-    final confirmed = await showDialog(
-      context: context,
-      builder: (context) {
-        final languageProvider = ref.watch(languageRiverpod);
-        return ConfirmationDialog(
-          title: languageProvider.getTranslatedText({
-            'en': 'Delete Schedule',
-            'id': 'Hapus Jadwal',
-          }),
-          content: languageProvider.getTranslatedText({
-            'en': 'Are you sure you want to delete this schedule?',
-            'id': 'Apakah Anda yakin ingin menghapus jadwal ini?',
-          }),
-          confirmText: languageProvider.getTranslatedText({
-            'en': 'Delete',
-            'id': 'Hapus',
-          }),
-          confirmColor: Colors.red,
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      final ok = await _controller.deleteSchedule(id);
-      if (ok) {
-        _showSuccessSnackBar('Schedule successfully deleted');
-        _loadData(resetPage: true, useCache: false);
-      } else {
-        _showErrorSnackBar(
-          ref.read(languageRiverpod).getTranslatedText({
-            'en': 'Failed to delete schedule',
-            'id': 'Gagal menghapus jadwal',
-          }),
-        );
-      }
-    }
-  }
-
-  /// Shows the conflict-resolution dialog if needed, then saves the schedule
-  /// and reloads data. Dialog/navigation stays here; API work in controller.
-  Future<void> _checkAndResolveConflicts(
-    Map<String, dynamic> newScheduleData, {
-    String? editingScheduleId,
-  }) async {
-    try {
-      final saved = await _controller.checkAndResolveConflicts(
-        context,
-        newScheduleData,
-        editingScheduleId: editingScheduleId,
-      );
-      if (saved) {
-        _showSuccessSnackBar('Schedule successfully saved');
-        _loadData(resetPage: true, useCache: false);
-      }
-    } catch (e) {
-      _showErrorSnackBar('Failed to save schedule: $e');
-      _loadData(resetPage: true, useCache: false);
-    }
-  }
-
-  Color _getPrimaryColor() => _controller.getPrimaryColor();
-
-  void _clearAllFilters() {
-    setState(() {
-      _selectedTeacherId = null;
-      _selectedClassId = null;
-      _selectedDayId = null;
-      _selectedFilterTerm = null;
-      _selectedLessonHour = null;
-      _searchController.clear();
-      _hasActiveFilter = false;
-    });
-    _loadData();
-  }
-
-  List<Map<String, dynamic>> _buildFilterChips(
-    LanguageProvider languageProvider,
-  ) {
-    final List<Map<String, dynamic>> filterChips = [];
-
-    // Add Day Filter Chip
-    if (_selectedDayId != null) {
-      final day = _availableDays.firstWhere(
-        (d) => d['id'].toString() == _selectedDayId,
-        orElse: () => {},
-      );
-      final String dayNameRaw = day.isNotEmpty
-          ? (day['name'] ?? day['nama'] ?? '')
-          : 'Day';
-
-      // Localization helper for days
-      final dayMap = {
-        'senin': {'en': 'Monday', 'id': 'Senin'},
-        'selasa': {'en': 'Tuesday', 'id': 'Selasa'},
-        'rabu': {'en': 'Wednesday', 'id': 'Rabu'},
-        'kamis': {'en': 'Thursday', 'id': 'Kamis'},
-        'jumat': {'en': 'Friday', 'id': 'Jumat'},
-        'jum\'at': {'en': 'Friday', 'id': 'Jumat'},
-        'sabtu': {'en': 'Saturday', 'id': 'Sabtu'},
-        'minggu': {'en': 'Sunday', 'id': 'Minggu'},
-        'monday': {'en': 'Monday', 'id': 'Senin'},
-        'tuesday': {'en': 'Tuesday', 'id': 'Selasa'},
-        'wednesday': {'en': 'Wednesday', 'id': 'Rabu'},
-        'thursday': {'en': 'Thursday', 'id': 'Kamis'},
-        'friday': {'en': 'Friday', 'id': 'Jumat'},
-        'saturday': {'en': 'Saturday', 'id': 'Sabtu'},
-        'sunday': {'en': 'Sunday', 'id': 'Minggu'},
-      };
-
-      final normalizedKey = dayNameRaw.toLowerCase();
-      final label = dayMap[normalizedKey] != null
-          ? languageProvider.getTranslatedText(dayMap[normalizedKey]!)
-          : dayNameRaw;
-
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'})}: $label',
-        'onRemove': () {
-          setState(() {
-            _selectedDayId = null;
-            _hasActiveFilter = _controller.checkActiveFilter(
-              selectedDayId: null,
-              selectedClassId: _selectedClassId,
-              selectedJamPelajaran: _selectedLessonHour,
-              selectedFilterSemester: _selectedFilterTerm,
-              selectedSemester: _selectedTerm,
-            );
-          });
-          _loadData();
-        },
-      });
-    }
-
-    // Add Class Filter Chip
-    if (_selectedClassId != null) {
-      final cls = _availableClasses.firstWhere(
-        (c) => c['id'].toString() == _selectedClassId,
-        orElse: () => {},
-      );
-      final label = cls.isNotEmpty ? (cls['name'] ?? cls['nama']) : 'Class';
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: $label',
-        'onRemove': () {
-          setState(() {
-            _selectedClassId = null;
-            _hasActiveFilter = _controller.checkActiveFilter(
-              selectedDayId: _selectedDayId,
-              selectedClassId: null,
-              selectedJamPelajaran: _selectedLessonHour,
-              selectedFilterSemester: _selectedFilterTerm,
-              selectedSemester: _selectedTerm,
-            );
-          });
-          _loadData();
-        },
-      });
-    }
-
-    // Add Semester Filter Chip
-    if (_selectedFilterTerm != null &&
-        _selectedFilterTerm != _selectedTerm) {
-      final semester = _termList.firstWhere(
-        (s) => s['id'].toString() == _selectedFilterTerm,
-        orElse: () => {},
-      );
-      String semesterNameRaw = semester.isNotEmpty
-          ? (semester['name'] ??
-                semester['nama'] ??
-                'Semester $_selectedFilterTerm')
-          : 'Semester $_selectedFilterTerm';
-
-      if (semester.isNotEmpty &&
-          semester['academic_year'] != null &&
-          semester['academic_year']['year'] != null) {
-        semesterNameRaw += ' (${semester['academic_year']['year']})';
-      }
-      final label = semesterNameRaw;
-
-      filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Semester', 'id': 'Semester'})}: $label',
-        'onRemove': () {
-          setState(() {
-            _selectedFilterTerm = null;
-            _hasActiveFilter = _controller.checkActiveFilter(
-              selectedDayId: _selectedDayId,
-              selectedClassId: _selectedClassId,
-              selectedJamPelajaran: _selectedLessonHour,
-              selectedFilterSemester: null,
-              selectedSemester: _selectedTerm,
-            );
-          });
-          _loadData();
-        },
-      });
-    }
-
-    return filterChips;
-  }
-
-  void _showFilterSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ScheduleFilterSheet(
-        availableDays: _availableDays,
-        availableClasses: _availableClasses,
-        semesterList: _termList,
-        lessonHourList: _lessonHourList,
-        currentSemester: _selectedTerm,
-        selectedDayId: _selectedDayId,
-        selectedClassId: _selectedClassId,
-        selectedFilterSemester: _selectedFilterTerm,
-        selectedJamPelajaran: _selectedLessonHour,
-        onApply: ({
-          required String? dayId,
-          required String? classId,
-          required String? semester,
-          required String? lessonHour,
-        }) {
-          setState(() {
-            _selectedDayId = dayId;
-            _selectedClassId = classId;
-            _selectedFilterTerm = semester;
-            _selectedLessonHour = lessonHour;
-            _hasActiveFilter = _controller.checkActiveFilter(
-              selectedDayId: dayId,
-              selectedClassId: classId,
-              selectedJamPelajaran: lessonHour,
-              selectedFilterSemester: semester,
-              selectedSemester: _selectedTerm,
-            );
-          });
-          _loadData();
-        },
-      ),
-    );
-  }
-
-  /// Delegates client-side filtering to the controller.
-  List<dynamic> _getFilteredSchedules() {
-    return _controller.getFilteredSchedules(
-      scheduleList: _scheduleList,
-      dayList: _dayList,
-      searchText: _searchController.text,
-      selectedTeacherId: _selectedTeacherId,
-      selectedClassId: _selectedClassId,
-      selectedDayId: _selectedDayId,
-      selectedJamPelajaran: _selectedLessonHour,
-    );
-  }
-
-  Widget _buildTableView() {
-    if (_timetableDataSource == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return ScheduleTableView(
-      timetableDataSource: _timetableDataSource!,
-      dayList: _dayList,
-      classList: _classList,
-      selectedClassId: _selectedClassId,
-      gridData: _gridData,
-      primaryColor: _getPrimaryColor(),
-      languageProvider: ref.read(languageRiverpod),
-      onExport: _exportToExcel,
-      translateDay: _controller.translateDay,
-    );
+    _gridData = r.gridData;
+    _timetableDataSource = r.timetableDataSource;
   }
 
   @override
+  void setIsLoading(bool v) => setState(() => _isLoading = v);
+  Widget _buildHeader(LanguageProvider lp) => AdminScheduleHeader(
+    title: lp.getTranslatedText({
+      'en': 'Teaching Schedule',
+      'id': 'Jadwal Mengajar',
+    }),
+    subtitle: lp.getTranslatedText({
+      'en': 'Manage teaching schedules',
+      'id': 'Kelola jadwal mengajar',
+    }),
+    primaryColor: _controller.getPrimaryColor(),
+    searchController: _searchController,
+    showTableView: _showTableView,
+    hasActiveFilter: _hasActiveFilter,
+    menuKey: _menuKey,
+    searchKey: _searchKey,
+    filterKey: _filterKey,
+    viewToggleKey: _viewToggleKey,
+    filterChips: buildFilterChips(lp),
+    clearAllLabel: 'Clear All',
+    onBack: () => AppNavigator.pop(context),
+    onViewToggle: () {
+      setState(() => _showTableView = !_showTableView);
+      loadData(
+        resetPage: true,
+        useCache: true,
+        searchText: _searchController.text,
+        showTableView: _showTableView,
+      );
+    },
+    onShowFilter: showFilterSheet,
+    onClearAllFilters: clearAllFilters,
+    onSearch: triggerSearch,
+    onRefresh: () => forceRefresh().then(
+      (_) => loadData(
+        resetPage: true,
+        useCache: false,
+        searchText: _searchController.text,
+        showTableView: _showTableView,
+      ),
+    ),
+    onExport: exportToExcel,
+    onImport: importFromExcel,
+    onDownloadTemplate: downloadTemplate,
+    canImport: !ref.read(academicYearRiverpod).isReadOnly,
+  );
+  @override
   Widget build(BuildContext context) {
-    final languageProvider = ref.watch(languageRiverpod);
-    final filteredSchedules = _getFilteredSchedules();
-
+    final lp = ref.watch(languageRiverpod);
+    final filtered = getFilteredSchedules(
+      _scheduleList,
+      _dayList,
+      _searchController.text,
+    );
+    final isRO = ref.read(academicYearRiverpod).isReadOnly;
     return Scaffold(
       backgroundColor: ColorUtils.lightGray,
       body: Column(
         children: [
-          // Header
-          GradientPageHeader(
-            title: languageProvider.getTranslatedText({
-              'en': 'Teaching Schedule',
-              'id': 'Jadwal Mengajar',
-            }),
-            subtitle: languageProvider.getTranslatedText({
-              'en': 'Manage teaching schedules',
-              'id': 'Kelola jadwal mengajar',
-            }),
-            primaryColor: _getPrimaryColor(),
-            onBackPressed: () => AppNavigator.pop(context),
-            actionMenu: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _showTableView = !_showTableView;
-                      if (_showTableView) {
-                        _loadData();
-                      } else {
-                        _loadData();
-                      }
-                    });
-                  },
-                  child: Container(
-                    key: _viewToggleKey,
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: Icon(
-                      _showTableView ? Icons.view_list : Icons.table_chart,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                PopupMenuButton<String>(
-                  key: _menuKey,
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'refresh':
-                        _forceRefresh();
-                        break;
-                      case 'export':
-                        _exportToExcel();
-                        break;
-                      case 'import':
-                        _importFromExcel();
-                        break;
-                      case 'template':
-                        _downloadTemplate();
-                        break;
-                    }
-                  },
-                  icon: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: Icon(Icons.more_vert, color: Colors.white, size: 20),
-                  ),
-                  itemBuilder: (BuildContext context) => [
-                    PopupMenuItem<String>(
-                      value: 'refresh',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.refresh,
-                            size: 20,
-                            color: ColorUtils.info600,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Refresh Data',
-                              'id': 'Perbarui Data',
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<String>(
-                      value: 'export',
-                      child: Row(
-                        children: [
-                          Icon(Icons.download, size: 20),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Export to Excel',
-                              'id': 'Export ke Excel',
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!ref.read(academicYearRiverpod).isReadOnly)
-                      PopupMenuItem<String>(
-                        value: 'import',
-                        child: Row(
-                          children: [
-                            Icon(Icons.upload, size: 20),
-                            const SizedBox(width: AppSpacing.sm),
-                            Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Import from Excel',
-                                'id': 'Import dari Excel',
-                              }),
-                            ),
-                          ],
-                        ),
-                      ),
-                    PopupMenuItem<String>(
-                      value: 'template',
-                      child: Row(
-                        children: [
-                          Icon(Icons.file_download, size: 20),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Download Template',
-                              'id': 'Download Template',
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            searchBar: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    key: _searchKey,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            style: TextStyle(color: Colors.black87),
-                            decoration: InputDecoration(
-                              hintText: languageProvider.getTranslatedText({
-                                'en': 'Search schedules...',
-                                'id': 'Cari jadwal...',
-                              }),
-                              hintStyle: TextStyle(color: Colors.grey),
-                              prefixIcon: Icon(
-                                Icons.search,
-                                color: Colors.grey,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                            ),
-                            onSubmitted: (_) {
-                              if (_showTableView) {
-                                setState(_updateGridData);
-                              } else {
-                                _loadData();
-                              }
-                            },
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(right: 4),
-                          child: IconButton(
-                            icon: Icon(Icons.search, color: _getPrimaryColor()),
-                            onPressed: () {
-                              if (_showTableView) {
-                                setState(_updateGridData);
-                              } else {
-                                _loadData();
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                // Filter Button
-                Container(
-                  key: _filterKey,
-                  decoration: BoxDecoration(
-                    color: _hasActiveFilter
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      IconButton(
-                        onPressed: _showFilterSheet,
-                        icon: Icon(
-                          Icons.tune,
-                          color: _hasActiveFilter
-                              ? _getPrimaryColor()
-                              : Colors.white,
-                        ),
-                        tooltip: languageProvider.getTranslatedText({
-                          'en': 'Filter',
-                          'id': 'Filter',
-                        }),
-                      ),
-                      if (_hasActiveFilter)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(AppSpacing.xs),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            constraints: BoxConstraints(
-                              minWidth: 8,
-                              minHeight: 8,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            filterChips: _hasActiveFilter
-                ? SizedBox(
-                    height: 32,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: [
-                              ..._buildFilterChips(languageProvider).map((
-                                filter,
-                              ) {
-                                return Container(
-                                  margin: const EdgeInsets.only(right: 6),
-                                  child: Chip(
-                                    label: Text(
-                                      filter['label'],
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: _getPrimaryColor(),
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    deleteIcon: Icon(
-                                      Icons.close,
-                                      size: 16,
-                                      color: _getPrimaryColor(),
-                                    ),
-                                    onDeleted: filter['onRemove'],
-                                    backgroundColor: Colors.white,
-                                    side: BorderSide(
-                                      color: Colors.white,
-                                      width: 0,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    labelPadding: const EdgeInsets.only(left: 4),
-                                  ),
-                                );
-                              }),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        InkWell(
-                          onTap: _clearAllFilters,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.2),
-                              borderRadius: const BorderRadius.all(Radius.circular(8)),
-                              border: Border.all(
-                                color: Colors.red.withValues(alpha: 0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Clear All',
-                                'id': 'Hapus Semua',
-                              }),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : null,
-          ),
+          _buildHeader(lp),
           Expanded(
-            child: _isLoading
-                ? SkeletonListLoading(
-                    padding: const EdgeInsets.only(top: 8, bottom: 80),
-                  )
-                : _showTableView
-                ? _buildTableView()
-                : filteredSchedules.isEmpty
-                ? EmptyState(
-                    title: languageProvider.getTranslatedText({
-                      'en': 'No Schedules Found',
-                      'id': 'Jadwal Tidak Ditemukan',
-                    }),
-                    subtitle: languageProvider.getTranslatedText({
-                      'en': 'Try adjusting your filters',
-                      'id': 'Coba sesuaikan filter Anda',
-                    }),
-                    icon: Icons.event_busy,
-                  )
-                : RefreshIndicator(
-                    onRefresh: () async {
-                      await _loadData(resetPage: true, useCache: false);
-                    },
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.only(top: 8, bottom: 80),
-                      itemCount:
-                          filteredSchedules.length + (_hasMoreData ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == filteredSchedules.length) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16.0),
-                            child: Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    _getPrimaryColor(),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-
-                        final schedule = filteredSchedules[index];
-                        return _buildScheduleCard(schedule, index);
-                      },
-                    ),
-                  ),
+            child: AdminScheduleListBuilder(
+              isLoading: _isLoading,
+              showTableView: _showTableView,
+              filteredSchedules: filtered,
+              gridData: _gridData,
+              timetableDataSource: _timetableDataSource,
+              dayList: _dayList,
+              classList: _classList,
+              hasMoreData: _hasMoreData,
+              isLoadingMore: _isLoadingMore,
+              selectedClassId: _selectedClassId,
+              primaryColor: _controller.getPrimaryColor(),
+              controller: _controller,
+              scrollController: scrollController,
+              isReadOnly: isRO,
+              currentLanguage: lp.currentLanguage,
+              onRefresh: () => loadData(
+                resetPage: true,
+                useCache: false,
+                searchText: _searchController.text,
+                showTableView: _showTableView,
+              ),
+              onScheduleTap: showScheduleDetail,
+              onScheduleEdit: editSchedule,
+              onScheduleDelete: deleteSchedule,
+            ),
           ),
         ],
       ),
-      floatingActionButton: ref.read(academicYearRiverpod).isReadOnly
+      floatingActionButton: isRO
           ? null
           : FloatingActionButton(
               key: _fabKey,
-              onPressed: _addSchedule,
-              backgroundColor: _getPrimaryColor(),
+              onPressed: addSchedule,
+              backgroundColor: _controller.getPrimaryColor(),
               shape: RoundedRectangleBorder(
-                borderRadius: const BorderRadius.all(Radius.circular(16)),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(Icons.add, color: Colors.white, size: 20),
+              child: const Icon(Icons.add, color: Colors.white, size: 20),
             ),
     );
   }
-
-  Widget _buildScheduleCard(Map<String, dynamic> schedule, int index) {
-    final language = ref.read(languageRiverpod).currentLanguage;
-    return AdminScheduleCard(
-      schedule: schedule,
-      index: index,
-      isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
-      primaryColor: _getPrimaryColor(),
-      dayLabel: _controller.formatScheduleDays(schedule, _dayList, language),
-      timeLabel: _controller.formatTime(schedule),
-      onTap: () => _showScheduleDetail(schedule),
-      onEdit: () => _editSchedule(schedule),
-      onDelete: () => _deleteSchedule(schedule['id']),
-    );
-  }
-
-  void _showScheduleDetail(Map<String, dynamic> schedule) {
-    showDialog(
-      context: context,
-      builder: (context) => ScheduleDetailDialog(
-        schedule: schedule,
-        primaryColor: _getPrimaryColor(),
-        languageProvider: ref.read(languageRiverpod),
-        isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
-        formatTime: _controller.formatTime,
-        formatScheduleDays: (s, [p]) => _controller.formatScheduleDays(
-          s,
-          _dayList,
-          (p ?? ref.read(languageRiverpod))!.currentLanguage,
-        ),
-        getGradeLevel: (id) => _controller.getGradeLevel(id, _classList),
-        onEdit: _editSchedule,
-      ),
-    );
-  }
-
-  Future<void> _checkAndShowTour() async {
-    if (_isTourShowing) return;
-    try {
-      final tourCacheKey = CacheKeyBuilder.tourStatus(
-        'schedule_management',
-        'admin',
-      );
-
-      // Only use cache (pre-fetched by dashboard), no API call
-      final cached = await LocalCacheService.load(
-        tourCacheKey,
-        ttl: const Duration(hours: 24),
-      );
-      if (cached != null && cached is Map) {
-        if (cached['should_show'] == true) {
-          if (mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted && !_isTourShowing) _showTour();
-            });
-          }
-        }
-      }
-    } catch (e) {
-      AppLogger.error('schedule', e);
-    }
-  }
-
-  /// Marks the tour as completed in the backend and local cache, then hides it.
-  void _completeTour() {
-    setState(() => _isTourShowing = false);
-    getIt<ApiTourService>().completeTour(
-      name: 'teaching_schedule_management_tour',
-      role: 'admin',
-      platform: 'mobile',
-    );
-    LocalCacheService.save(
-      CacheKeyBuilder.tourStatus('schedule_management', 'admin'),
-      {'should_show': false},
-    );
-  }
-
-  void _showTour() {
-    final List<TargetFocus> targets = _createTourTargets();
-    if (targets.isEmpty) return;
-
-    setState(() => _isTourShowing = true);
-
-    TutorialCoachMark(
-      targets: targets,
-      colorShadow: Colors.black,
-      textSkip: ref.read(languageRiverpod).getTranslatedText({
-        'en': 'SKIP',
-        'id': 'LEWATI',
-      }),
-      paddingFocus: 10,
-      opacityShadow: 0.8,
-      onFinish: _completeTour,
-      onSkip: () {
-        _completeTour();
-        return true;
-      },
-      onClickOverlay: (_) {},
-    ).show(context: context);
-  }
-
-  /// Delegates to [ScheduleTourTargetBuilder.build].
-  List<TargetFocus> _createTourTargets() => ScheduleTourTargetBuilder.build(
-    viewToggleKey: _viewToggleKey,
-    menuKey: _menuKey,
-    searchKey: _searchKey,
-    filterKey: _filterKey,
-    fabKey: _fabKey,
-    languageProvider: ref.read(languageRiverpod),
-  );
 }

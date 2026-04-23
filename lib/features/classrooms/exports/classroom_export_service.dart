@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 
 /// Service for exporting class data to Excel and downloading import templates.
 /// Similar to a Laravel controller that uses Maatwebsite/Excel:
@@ -195,14 +196,15 @@ class ExcelClassService {
     final List<String> errors = [];
 
     for (int i = 0; i < classes.length; i++) {
-      final classItem = classes[i];
+      final classItem = classes[i] as Map<String, dynamic>;
+      final model = Classroom.fromJson(classItem);
       final Map<String, dynamic> validatedClass = {};
 
       // Validate required fields
-      if (classItem['name'] == null || classItem['name'].toString().isEmpty) {
+      if (model.name.isEmpty) {
         errors.add('Baris ${i + 1}: Nama kelas tidak boleh kosong');
       } else {
-        validatedClass['name'] = classItem['name'];
+        validatedClass['name'] = model.name;
       }
 
       if (classItem['grade_level'] == null) {
@@ -216,23 +218,10 @@ class ExcelClassService {
         }
       }
 
-      // Field optional
-      // Handle homeroom_teacher which can be List (from pivot) or Map (legacy)
-      String homeroomName = '';
-      final homeroomData = classItem['homeroom_teacher'];
-
-      if (homeroomData is List) {
-        if (homeroomData.isNotEmpty) {
-          homeroomName = homeroomData[0]['name'] ?? '';
-        }
-      } else if (homeroomData is Map) {
-        homeroomName = homeroomData['name'] ?? '';
-      } else {
-        homeroomName = classItem['homeroom_teacher_name'] ?? '';
-      }
-
-      validatedClass['homeroom_teacher_name'] = homeroomName;
-      validatedClass['student_count'] = classItem['student_count'] ?? 0;
+      // homeroom_teacher name — Classroom model already handles
+      // List-from-pivot / Map-legacy / flat-field polymorphism.
+      validatedClass['homeroom_teacher_name'] = model.homeroomTeacherName ?? '';
+      validatedClass['student_count'] = model.studentCount;
 
       if (errors.isEmpty) {
         validatedData.add(validatedClass);

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/features/finance/presentation/widgets/finance_stat_card.dart';
+import 'package:manajemensekolah/core/widgets/stat_summary_card.dart';
 
 /// A horizontal row of three [FinanceStatCard] tiles: unpaid, verified, pending.
 ///
@@ -41,45 +41,31 @@ class FinanceDashboardStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return StatSummaryRow(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Row(
-        children: [
-          Expanded(
-            child: FinanceStatCard(
-              icon: Icons.receipt_long_rounded,
-              value: '${unpaidCount ?? 0}',
-              label: languageProvider.getTranslatedText(
-                AppLocalizations.unpaid,
-              ),
-              color: ColorUtils.warning600,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: FinanceStatCard(
-              icon: Icons.verified_rounded,
-              value: '${verifiedCount ?? 0}',
-              label: languageProvider.getTranslatedText(
-                AppLocalizations.verified,
-              ),
-              color: ColorUtils.success600,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: FinanceStatCard(
-              icon: Icons.pending_actions_rounded,
-              value: '$totalPendingPayments',
-              label: languageProvider.getTranslatedText({
-                'en': 'Pending',
-                'id': 'Menunggu',
-              }),
-              color: ColorUtils.corporateBlue600,
-            ),
-          ),
-        ],
-      ),
+      cards: [
+        StatSummaryCard(
+          icon: Icons.receipt_long_rounded,
+          value: '${unpaidCount ?? 0}',
+          label: languageProvider.getTranslatedText(AppLocalizations.unpaid),
+          color: ColorUtils.warning600,
+        ),
+        StatSummaryCard(
+          icon: Icons.verified_rounded,
+          value: '${verifiedCount ?? 0}',
+          label: languageProvider.getTranslatedText(AppLocalizations.verified),
+          color: ColorUtils.success600,
+        ),
+        StatSummaryCard(
+          icon: Icons.pending_actions_rounded,
+          value: '$totalPendingPayments',
+          label: languageProvider.getTranslatedText({
+            'en': 'Pending',
+            'id': 'Menunggu',
+          }),
+          color: ColorUtils.corporateBlue600,
+        ),
+      ],
     );
   }
 }

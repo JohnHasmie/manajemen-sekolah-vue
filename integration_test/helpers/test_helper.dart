@@ -25,7 +25,7 @@ void initBinding() {
 Future<void> initializeTestApp() async {
   if (!_initialized) {
     try {
-      await dotenv.load(fileName: ".env");
+      await dotenv.load(fileName: '.env');
     } catch (_) {}
     await PreferencesService().init();
     await ApiService.init();
@@ -50,10 +50,8 @@ Future<void> pumpApp(WidgetTester tester) async {
 
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [
-        languageRiverpod.overrideWith((_) => freshLangProvider),
-      ],
-      child: SchoolManagementApp(),
+      overrides: [languageRiverpod.overrideWith((_) => freshLangProvider)],
+      child: const SchoolManagementApp(),
     ),
   );
   await tester.pump();
@@ -75,7 +73,10 @@ Future<void> takeScreenshot(WidgetTester tester, String name) async {
 /// Capture a screenshot when a test fails. Call this in a try/catch around
 /// your test body or in addTearDown.
 /// Saves to integration_test/screenshots/failures/
-Future<void> captureFailureScreenshot(WidgetTester tester, String testName) async {
+Future<void> captureFailureScreenshot(
+  WidgetTester tester,
+  String testName,
+) async {
   try {
     final sanitized = testName.replaceAll(RegExp(r'[^\w]'), '_');
     await takeScreenshot(tester, 'failure_$sanitized');
@@ -206,7 +207,10 @@ Future<void> _settle(WidgetTester tester, {int timeout = 3}) async {
 Future<void> navigateToMenu(WidgetTester tester, String menuText) async {
   final menu = find.text(menuText);
   if (menu.evaluate().isEmpty) {
-    await tester.drag(find.byType(SingleChildScrollView).first, const Offset(0, -300));
+    await tester.drag(
+      find.byType(SingleChildScrollView).first,
+      const Offset(0, -300),
+    );
     await _settle(tester);
   }
   await tester.tap(find.text(menuText));

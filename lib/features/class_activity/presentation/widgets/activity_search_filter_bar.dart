@@ -48,16 +48,24 @@ class ActivitySearchFilterBar extends StatelessWidget {
                     child: TextField(
                       controller: searchController,
                       textAlignVertical: TextAlignVertical.center,
-                      style: TextStyle(color: ColorUtils.slate800, fontSize: 13),
+                      style: TextStyle(
+                        color: ColorUtils.slate800,
+                        fontSize: 13,
+                      ),
                       decoration: InputDecoration(
                         isDense: true,
                         hintText: languageProvider.getTranslatedText({
                           'en': 'Search activities...',
                           'id': 'Cari kegiatan...',
                         }),
-                        hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
+                        hintStyle: TextStyle(
+                          color: ColorUtils.slate400,
+                          fontSize: 13,
+                        ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                        ),
                       ),
                       onSubmitted: (_) {
                         onSearchSubmitted();
@@ -86,7 +94,9 @@ class ActivitySearchFilterBar extends StatelessWidget {
             height: 48,
             width: 48,
             decoration: BoxDecoration(
-              color: hasActiveFilter ? primaryColor.withValues(alpha: 0.12) : Colors.white,
+              color: hasActiveFilter
+                  ? primaryColor.withValues(alpha: 0.12)
+                  : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: hasActiveFilter ? primaryColor : ColorUtils.slate200,

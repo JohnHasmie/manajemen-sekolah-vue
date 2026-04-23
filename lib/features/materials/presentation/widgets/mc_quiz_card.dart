@@ -56,7 +56,9 @@ class McQuizCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(13)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(13),
+              ),
             ),
             child: Row(
               children: [
@@ -90,7 +92,10 @@ class McQuizCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: diffConfig.color.withValues(alpha: 0.1),
                     borderRadius: const BorderRadius.all(Radius.circular(6)),
@@ -184,7 +189,7 @@ class McQuizCard extends StatelessWidget {
                             ? FontWeight.w600
                             : FontWeight.w400,
                         color: isCorrect
-                            ? Color(0xFF059669)
+                            ? const Color(0xFF059669)
                             : ColorUtils.slate700,
                       ),
                     ),

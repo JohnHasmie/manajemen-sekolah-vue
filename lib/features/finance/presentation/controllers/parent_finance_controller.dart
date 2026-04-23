@@ -13,9 +13,9 @@ import 'package:manajemensekolah/features/finance/presentation/controllers/paren
 
 final parentFinanceProvider =
     AsyncNotifierProvider<ParentFinanceController, ParentFinanceState>(
-  ParentFinanceController.new,
-  isAutoDispose: true,
-);
+      ParentFinanceController.new,
+      isAutoDispose: true,
+    );
 
 class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
   Timer? _markReadTimer;
@@ -50,42 +50,51 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
   // --- Actions ---
 
   Future<void> selectStudent(Student student) async {
-    state = state.whenData((s) => s.copyWith(
-      selectedStudent: student,
-      isLoading: true,
-      billingItems: [],
-    ));
+    state = state.whenData(
+      (s) => s.copyWith(
+        selectedStudent: student,
+        isLoading: true,
+        billingItems: [],
+      ),
+    );
     final billing = await _loadBilling(student.id, useCache: true);
-    state = state.whenData((s) => s.copyWith(
-      billingItems: billing,
-      isLoading: false,
-    ));
+    state = state.whenData(
+      (s) => s.copyWith(billingItems: billing, isLoading: false),
+    );
   }
 
   Future<void> updateFilters({String? status, String? period}) async {
     final currentState = state.value;
     if (currentState?.selectedStudent == null) return;
-    state = AsyncData(currentState!.copyWith(
-      statusFilter: status,
-      periodFilter: period,
-      isLoading: true,
-    ));
-    final billing = await _loadBilling(currentState.selectedStudent!.id, useCache: false);
-    state = state.whenData((s) => s.copyWith(
-      billingItems: billing,
-      isLoading: false,
-    ));
+    state = AsyncData(
+      currentState!.copyWith(
+        statusFilter: status,
+        periodFilter: period,
+        isLoading: true,
+      ),
+    );
+    final billing = await _loadBilling(
+      currentState.selectedStudent!.id,
+      useCache: false,
+    );
+    state = state.whenData(
+      (s) => s.copyWith(billingItems: billing, isLoading: false),
+    );
   }
 
   Future<void> updateSearch(String query) async {
     final currentState = state.value;
     if (currentState?.selectedStudent == null) return;
-    state = AsyncData(currentState!.copyWith(searchQuery: query, isLoading: true));
-    final billing = await _loadBilling(currentState.selectedStudent!.id, useCache: false);
-    state = state.whenData((s) => s.copyWith(
-      billingItems: billing,
-      isLoading: false,
-    ));
+    state = AsyncData(
+      currentState!.copyWith(searchQuery: query, isLoading: true),
+    );
+    final billing = await _loadBilling(
+      currentState.selectedStudent!.id,
+      useCache: false,
+    );
+    state = state.whenData(
+      (s) => s.copyWith(billingItems: billing, isLoading: false),
+    );
   }
 
   void markItemVisible(String id, bool isRead) {
@@ -94,12 +103,14 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
     if (!isRead && !currentState.processedReadIds.contains(id)) {
       final newProcessed = {...currentState.processedReadIds, id};
       final newPending = {...currentState.pendingReadIds, id};
-      
-      state = AsyncData(currentState.copyWith(
-        processedReadIds: newProcessed,
-        pendingReadIds: newPending,
-      ));
-      
+
+      state = AsyncData(
+        currentState.copyWith(
+          processedReadIds: newProcessed,
+          pendingReadIds: newPending,
+        ),
+      );
+
       _scheduleMarkRead();
     }
   }
@@ -129,10 +140,9 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
       return item;
     }).toList();
 
-    state = AsyncData(currentState.copyWith(
-      billingItems: newBillingItems,
-      pendingReadIds: {},
-    ));
+    state = AsyncData(
+      currentState.copyWith(billingItems: newBillingItems, pendingReadIds: {}),
+    );
 
     try {
       await FinanceService.markBillRead(
@@ -154,8 +164,11 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
 
   Future<List<Student>> _loadStudents() async {
     const cacheKey = 'parent_billing_students';
-    final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 6));
-    
+    final cached = await LocalCacheService.load(
+      cacheKey,
+      ttl: const Duration(hours: 6),
+    );
+
     if (cached != null && cached is List && cached.isNotEmpty) {
       return cached.map((s) => Student.fromJson(s)).toList();
     }
@@ -175,7 +188,9 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
 
       List<dynamic> filtered = allStudents;
       if (userData['siswa_id'] != null && userData['siswa_id'].isNotEmpty) {
-        filtered = allStudents.where((s) => s['id'] == userData['siswa_id']).toList();
+        filtered = allStudents
+            .where((s) => s['id'] == userData['siswa_id'])
+            .toList();
       }
 
       LocalCacheService.save(cacheKey, filtered);
@@ -186,11 +201,17 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
     }
   }
 
-  Future<List<dynamic>> _loadBilling(String studentId, {bool useCache = true}) async {
+  Future<List<dynamic>> _loadBilling(
+    String studentId, {
+    bool useCache = true,
+  }) async {
     final cacheKey = 'parent_billing_list_$studentId';
-    
+
     if (useCache) {
-      final cached = await LocalCacheService.load(cacheKey, ttl: const Duration(hours: 3));
+      final cached = await LocalCacheService.load(
+        cacheKey,
+        ttl: const Duration(hours: 3),
+      );
       if (cached != null && cached is List && cached.isNotEmpty) {
         return List<dynamic>.from(cached);
       }
@@ -201,14 +222,18 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
         '/bill/parent',
         params: {
           'student_id': studentId,
-          if (state.value?.searchQuery.isNotEmpty ?? false) 'search': state.value?.searchQuery,
-          if (state.value?.statusFilter != null) 'status': state.value?.statusFilter,
-          if (state.value?.periodFilter != null) 'periode': state.value?.periodFilter,
+          if (state.value?.searchQuery.isNotEmpty ?? false)
+            'search': state.value?.searchQuery,
+          if (state.value?.statusFilter != null)
+            'status': state.value?.statusFilter,
+          if (state.value?.periodFilter != null)
+            'periode': state.value?.periodFilter,
         },
       );
       final list = response is List ? response : [];
       // Only cache unfiltered results to avoid stale filtered data
-      final hasFilters = (state.value?.searchQuery.isNotEmpty ?? false) ||
+      final hasFilters =
+          (state.value?.searchQuery.isNotEmpty ?? false) ||
           state.value?.statusFilter != null ||
           state.value?.periodFilter != null;
       if (!hasFilters) {
@@ -225,10 +250,12 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
     final current = state.value;
     if (current?.selectedStudent == null) return;
     state = state.whenData((s) => s.copyWith(isLoading: true));
-    final billing = await _loadBilling(current!.selectedStudent!.id, useCache: false);
-    state = state.whenData((s) => s.copyWith(
-      billingItems: billing,
-      isLoading: false,
-    ));
+    final billing = await _loadBilling(
+      current!.selectedStudent!.id,
+      useCache: false,
+    );
+    state = state.whenData(
+      (s) => s.copyWith(billingItems: billing, isLoading: false),
+    );
   }
 }

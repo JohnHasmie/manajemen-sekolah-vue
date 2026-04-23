@@ -22,27 +22,29 @@ Future<bool?> _showDialog(
 }) async {
   bool? result;
 
-  final router = GoRouter(routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => Builder(
-        builder: (ctx) => TextButton(
-          onPressed: () async {
-            result = await showDialog<bool>(
-              context: ctx,
-              builder: (_) => ConfirmationDialog(
-                title: title,
-                content: content,
-                confirmText: confirmText,
-                confirmColor: confirmColor,
-              ),
-            );
-          },
-          child: const Text('Open'),
+  final router = GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () async {
+              result = await showDialog<bool>(
+                context: ctx,
+                builder: (_) => ConfirmationDialog(
+                  title: title,
+                  content: content,
+                  confirmText: confirmText,
+                  confirmColor: confirmColor,
+                ),
+              );
+            },
+            child: const Text('Open'),
+          ),
         ),
       ),
-    ),
-  ]);
+    ],
+  );
 
   await tester.pumpWidget(MaterialApp.router(routerConfig: router));
   await tester.pumpAndSettle();

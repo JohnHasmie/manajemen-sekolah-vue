@@ -17,6 +17,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// A single student card in the admin student list.
 ///
@@ -82,7 +83,8 @@ class StudentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatarColor = ColorUtils.getColorForIndex(index);
-    final className = student['class']?['name'] ?? '-';
+    final model = Student.fromJson(student);
+    final className = model.className.isNotEmpty ? model.className : '-';
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
@@ -106,7 +108,7 @@ class StudentCard extends StatelessWidget {
                   radius: 22,
                   backgroundColor: avatarColor.withValues(alpha: 0.15),
                   child: Text(
-                    (student['name'] ?? 'N')[0].toUpperCase(),
+                    model.initials,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -123,7 +125,7 @@ class StudentCard extends StatelessWidget {
                     children: [
                       // Name row
                       Text(
-                        student['name'] ?? 'No Name',
+                        model.name.isNotEmpty ? model.name : 'No Name',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -152,10 +154,15 @@ class StudentCard extends StatelessWidget {
                   children: [
                     // Status dot
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: ColorUtils.success600.withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                         border: Border.all(
                           color: ColorUtils.success600.withValues(alpha: 0.3),
                         ),
@@ -190,12 +197,16 @@ class StudentCard extends StatelessWidget {
                           // Edit button
                           InkWell(
                             onTap: onEdit,
-                            borderRadius: const BorderRadius.all(Radius.circular(8)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(8),
+                            ),
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 color: primaryColor.withValues(alpha: 0.1),
-                                borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(8),
+                                ),
                               ),
                               child: Icon(
                                 Icons.edit_outlined,
@@ -208,14 +219,18 @@ class StudentCard extends StatelessWidget {
                           // Delete button
                           InkWell(
                             onTap: onDelete,
-                            borderRadius: const BorderRadius.all(Radius.circular(8)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(8),
+                            ),
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 color: ColorUtils.error600.withValues(
                                   alpha: 0.1,
                                 ),
-                                borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(8),
+                                ),
                               ),
                               child: Icon(
                                 Icons.delete_outline,

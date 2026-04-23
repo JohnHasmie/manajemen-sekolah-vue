@@ -52,12 +52,12 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
           BoxShadow(
             color: ColorUtils.info600.withValues(alpha: 0.12),
             blurRadius: 16,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
           BoxShadow(
             color: ColorUtils.slate900.withValues(alpha: 0.06),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -114,7 +114,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              "No materials",
+              'No materials',
               style: TextStyle(
                 color: ColorUtils.slate500,
                 fontSize: 12,
@@ -174,7 +174,7 @@ class _MaterialSliderCardState extends State<MaterialSliderCard> {
             ),
           ],
         ),
-        Spacer(),
+        const Spacer(),
         // Subject name
         Text(
           subjectName,

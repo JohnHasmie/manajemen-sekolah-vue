@@ -44,8 +44,9 @@ void main() {
       expect(textWidget.style?.color, equals(Colors.white));
     });
 
-    testWidgets('label uses color when not selected',
-        (WidgetTester tester) async {
+    testWidgets('label uses color when not selected', (
+      WidgetTester tester,
+    ) async {
       const testColor = Colors.red;
       await tester.pumpWidget(
         buildWidget(label: 'A', color: testColor, isSelected: false),
@@ -54,8 +55,9 @@ void main() {
       expect(textWidget.style?.color, equals(testColor));
     });
 
-    testWidgets('onTap callback fires when tapped',
-        (WidgetTester tester) async {
+    testWidgets('onTap callback fires when tapped', (
+      WidgetTester tester,
+    ) async {
       bool tapped = false;
       await tester.pumpWidget(buildWidget(onTap: () => tapped = true));
       await tester.tap(find.byType(GestureDetector));

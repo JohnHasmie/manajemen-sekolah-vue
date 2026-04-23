@@ -17,8 +17,9 @@ class GradeConstants {
   ];
 
   /// Default filter state — all types visible.
-  static Map<String, bool> get defaultFilter =>
-      {for (final t in allTypes) t: true};
+  static Map<String, bool> get defaultFilter => {
+    for (final t in allTypes) t: true,
+  };
 
   /// English labels for each grade type.
   static const Map<String, String> labelsEn = {

@@ -50,12 +50,12 @@ class LessonPlanStatusCard extends StatelessWidget {
               BoxShadow(
                 color: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
                 blurRadius: 16,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               ),
               BoxShadow(
                 color: ColorUtils.slate900.withValues(alpha: 0.06),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -116,7 +116,7 @@ class LessonPlanStatusCard extends StatelessWidget {
                   ),
                 ],
               ),
-              Spacer(),
+              const Spacer(),
               // Status breakdown - vertical
               _buildStatusRow(ColorUtils.success600, 'Disetujui', approved),
               const SizedBox(height: AppSpacing.xs),

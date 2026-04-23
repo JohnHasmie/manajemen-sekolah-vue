@@ -50,33 +50,75 @@ class ReportCardInfoTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         // Attendance section
-        _SectionTitle(title: 'Ketidakhadiran', icon: Icons.event_busy_rounded),
+        const _SectionTitle(
+          title: 'Ketidakhadiran',
+          icon: Icons.event_busy_rounded,
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: ColorUtils.slate100)),
-          child: Row(children: [
-            _AttendanceField(label: 'Sakit', controller: sickCtrl, color: ColorUtils.warning600),
-            const SizedBox(width: 10),
-            _AttendanceField(label: 'Izin', controller: permitCtrl, color: ColorUtils.info600),
-            const SizedBox(width: 10),
-            _AttendanceField(label: 'Tanpa Ket.', controller: absentCtrl, color: ColorUtils.error600),
-          ]),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: ColorUtils.slate100),
+          ),
+          child: Row(
+            children: [
+              _AttendanceField(
+                label: 'Sakit',
+                controller: sickCtrl,
+                color: ColorUtils.warning600,
+              ),
+              const SizedBox(width: 10),
+              _AttendanceField(
+                label: 'Izin',
+                controller: permitCtrl,
+                color: ColorUtils.info600,
+              ),
+              const SizedBox(width: 10),
+              _AttendanceField(
+                label: 'Tanpa Ket.',
+                controller: absentCtrl,
+                color: ColorUtils.error600,
+              ),
+            ],
+          ),
         ),
 
-        Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(height: 1, color: ColorUtils.slate100)),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Divider(height: 1, color: ColorUtils.slate100),
+        ),
 
         // Notes section
-        _SectionTitle(title: 'Catatan Wali Kelas', icon: Icons.edit_note_rounded),
+        const _SectionTitle(
+          title: 'Catatan Wali Kelas',
+          icon: Icons.edit_note_rounded,
+        ),
         const SizedBox(height: 8),
-        _LabeledTextField(label: 'Catatan, saran, atau motivasi...', controller: notesCtrl, maxLines: 4),
+        _LabeledTextField(
+          label: 'Catatan, saran, atau motivasi...',
+          controller: notesCtrl,
+          maxLines: 4,
+        ),
 
-        Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Divider(height: 1, color: ColorUtils.slate100)),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Divider(height: 1, color: ColorUtils.slate100),
+        ),
 
         // Promotion decision
-        _SectionTitle(title: 'Keputusan Akhir Tahun', icon: Icons.gavel_rounded),
+        const _SectionTitle(
+          title: 'Keputusan Akhir Tahun',
+          icon: Icons.gavel_rounded,
+        ),
         const SizedBox(height: 8),
-        _LabeledDropdown(label: 'Keputusan', value: promotionDecision, items: decisions, onChanged: onPromotionChanged),
+        _LabeledDropdown(
+          label: 'Keputusan',
+          value: promotionDecision,
+          items: decisions,
+          onChanged: onPromotionChanged,
+        ),
       ],
     );
   }
@@ -96,14 +138,30 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = ColorUtils.getRoleColor('guru');
-    return Row(children: [
-      if (icon != null) ...[
-        Container(width: 28, height: 28, decoration: BoxDecoration(color: p.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-          child: Icon(icon, size: 16, color: p)),
-        const SizedBox(width: 10),
+    return Row(
+      children: [
+        if (icon != null) ...[
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: p.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: p),
+          ),
+          const SizedBox(width: 10),
+        ],
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: ColorUtils.slate900,
+          ),
+        ),
       ],
-      Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ColorUtils.slate900)),
-    ]);
+    );
   }
 }
 
@@ -112,29 +170,55 @@ class _AttendanceField extends StatelessWidget {
   final TextEditingController controller;
   final Color color;
 
-  const _AttendanceField({required this.label, required this.controller, required this.color});
+  const _AttendanceField({
+    required this.label,
+    required this.controller,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(child: Column(children: [
-      Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
-      const SizedBox(height: 4),
-      TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: color),
-        decoration: InputDecoration(
-          isDense: true,
-          filled: true, fillColor: color.withValues(alpha: 0.06),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: color.withValues(alpha: 0.15))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: color.withValues(alpha: 0.15))),
-          contentPadding: const EdgeInsets.symmetric(vertical: 10),
-          hintText: '0',
-          hintStyle: TextStyle(color: color.withValues(alpha: 0.3)),
-        ),
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: color.withValues(alpha: 0.06),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: color.withValues(alpha: 0.15)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: color.withValues(alpha: 0.15)),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              hintText: '0',
+              hintStyle: TextStyle(color: color.withValues(alpha: 0.3)),
+            ),
+          ),
+        ],
       ),
-    ]));
+    );
   }
 }
 
@@ -158,7 +242,14 @@ class _LabeledTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: ColorUtils.slate600)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: ColorUtils.slate600,
+          ),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
@@ -169,10 +260,22 @@ class _LabeledTextField extends StatelessWidget {
             isDense: true,
             filled: true,
             fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: ColorUtils.slate200)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: ColorUtils.slate200)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: p, width: 1.5)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: ColorUtils.slate200),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: ColorUtils.slate200),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: p, width: 1.5),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
           ),
         ),
       ],
@@ -201,23 +304,49 @@ class _LabeledDropdown extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: ColorUtils.slate600)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: ColorUtils.slate600,
+          ),
+        ),
         const SizedBox(height: 6),
-        Wrap(spacing: 6, runSpacing: 6, children: items.map((item) {
-          final selected = item == value;
-          return GestureDetector(
-            onTap: () => onChanged(item),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: selected ? p.withValues(alpha: 0.1) : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: selected ? p.withValues(alpha: 0.3) : ColorUtils.slate200, width: selected ? 1.5 : 1),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: items.map((item) {
+            final selected = item == value;
+            return GestureDetector(
+              onTap: () => onChanged(item),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: selected ? p.withValues(alpha: 0.1) : Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: selected
+                        ? p.withValues(alpha: 0.3)
+                        : ColorUtils.slate200,
+                    width: selected ? 1.5 : 1,
+                  ),
+                ),
+                child: Text(
+                  item,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    color: selected ? p : ColorUtils.slate500,
+                  ),
+                ),
               ),
-              child: Text(item, style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.w400, color: selected ? p : ColorUtils.slate500)),
-            ),
-          );
-        }).toList()),
+            );
+          }).toList(),
+        ),
       ],
     );
   }

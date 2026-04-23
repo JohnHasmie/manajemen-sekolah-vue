@@ -18,7 +18,8 @@ class ParentBillingScreen extends ConsumerStatefulWidget {
   const ParentBillingScreen({super.key});
 
   @override
-  ConsumerState<ParentBillingScreen> createState() => _ParentBillingScreenState();
+  ConsumerState<ParentBillingScreen> createState() =>
+      _ParentBillingScreenState();
 }
 
 class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
@@ -42,8 +43,14 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
   Future<void> _checkAndShowTour() async {
     try {
-      final tourCacheKey = CacheKeyBuilder.tourStatus('parent_billing_screen', 'wali');
-      final cached = await LocalCacheService.load(tourCacheKey, ttl: const Duration(hours: 24));
+      final tourCacheKey = CacheKeyBuilder.tourStatus(
+        'parent_billing_screen',
+        'wali',
+      );
+      final cached = await LocalCacheService.load(
+        tourCacheKey,
+        ttl: const Duration(hours: 24),
+      );
       if (cached != null && cached is Map && cached['should_show'] == true) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _showTour();
@@ -62,7 +69,10 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     TutorialCoachMark(
       targets: targets,
       colorShadow: Colors.black,
-      textSkip: languageProvider.getTranslatedText({'en': 'SKIP', 'id': 'LEWATI'}),
+      textSkip: languageProvider.getTranslatedText({
+        'en': 'SKIP',
+        'id': 'LEWATI',
+      }),
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: _completeTour,
@@ -88,7 +98,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
   List<TargetFocus> _createTourTargets(LanguageProvider languageProvider) {
     return [
       TargetFocus(
-        identify: "StudentSelector",
+        identify: 'StudentSelector',
         keyTarget: _studentSelectorKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
@@ -101,15 +111,24 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  languageProvider.getTranslatedText({'en': 'Select Child', 'id': 'Pilih Anak'}),
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
+                  languageProvider.getTranslatedText({
+                    'en': 'Select Child',
+                    'id': 'Pilih Anak',
+                  }),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20.0,
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 10.0),
                   child: Text(
                     languageProvider.getTranslatedText({
-                      'en': 'Select your child to view their billings and payments.',
-                      'id': 'Pilih anak Anda untuk melihat tagihan dan pembayaran mereka.',
+                      'en':
+                          'Select your child to view their billings and payments.',
+                      'id':
+                          'Pilih anak Anda untuk melihat tagihan dan pembayaran mereka.',
                     }),
                     style: const TextStyle(color: Colors.white, fontSize: 14.0),
                   ),
@@ -120,7 +139,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         ],
       ),
       TargetFocus(
-        identify: "BillingList",
+        identify: 'BillingList',
         keyTarget: _billingListKey,
         alignSkip: Alignment.topRight,
         shape: ShapeLightFocus.RRect,
@@ -133,15 +152,24 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  languageProvider.getTranslatedText({'en': 'Billing List', 'id': 'Daftar Tagihan'}),
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
+                  languageProvider.getTranslatedText({
+                    'en': 'Billing List',
+                    'id': 'Daftar Tagihan',
+                  }),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20.0,
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 10.0),
                   child: Text(
                     languageProvider.getTranslatedText({
-                      'en': 'See your child\'s bill status here, pay bills, and view history.',
-                      'id': 'Lihat status tagihan anak Anda di sini, bayar tagihan, dan lihat riwayat.',
+                      'en':
+                          'See your child\'s bill status here, pay bills, and view history.',
+                      'id':
+                          'Lihat status tagihan anak Anda di sini, bayar tagihan, dan lihat riwayat.',
                     }),
                     style: const TextStyle(color: Colors.white, fontSize: 14.0),
                   ),
@@ -167,7 +195,9 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         currentPeriod: state.periodFilter,
         languageProvider: lp,
         onApply: (status, period) {
-          ref.read(parentFinanceProvider.notifier).updateFilters(status: status, period: period);
+          ref
+              .read(parentFinanceProvider.notifier)
+              .updateFilters(status: status, period: period);
         },
       ),
     );
@@ -182,8 +212,14 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
       backgroundColor: ColorUtils.slate50,
       appBar: AppBar(
         title: Text(
-          languageProvider.getTranslatedText({'en': 'School Billing', 'id': 'Tagihan Sekolah'}),
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          languageProvider.getTranslatedText({
+            'en': 'School Billing',
+            'id': 'Tagihan Sekolah',
+          }),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         backgroundColor: ColorUtils.primary,
         elevation: 0,
@@ -194,7 +230,8 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () => ref.read(parentFinanceProvider.notifier).forceRefresh(),
+            onPressed: () =>
+                ref.read(parentFinanceProvider.notifier).forceRefresh(),
           ),
         ],
       ),
@@ -212,13 +249,16 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                 });
               },
               decoration: InputDecoration(
-                hintText: languageProvider.getTranslatedText({'en': 'Search billing...', 'id': 'Cari tagihan...'}),
+                hintText: languageProvider.getTranslatedText({
+                  'en': 'Search billing...',
+                  'id': 'Cari tagihan...',
+                }),
                 prefixIcon: Icon(Icons.search, color: ColorUtils.slate400),
                 filled: true,
                 fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                border: OutlineInputBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
@@ -235,7 +275,9 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
               key: _studentSelectorKey,
               students: state.students,
               selectedStudent: state.selectedStudent,
-              onSelected: (student) => ref.read(parentFinanceProvider.notifier).selectStudent(student),
+              onSelected: (student) => ref
+                  .read(parentFinanceProvider.notifier)
+                  .selectStudent(student),
             ),
             loading: () => const SizedBox(height: 90),
             error: (_, __) => const SizedBox.shrink(),

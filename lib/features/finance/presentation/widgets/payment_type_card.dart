@@ -66,7 +66,9 @@ class PaymentTypeCard extends StatelessWidget {
                         color: ColorUtils.getColorForIndex(
                           index,
                         ).withValues(alpha: 0.12),
-                        borderRadius: const BorderRadius.all(Radius.circular(12)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(12),
+                        ),
                         border: Border.all(
                           color: ColorUtils.getColorForIndex(
                             index,
@@ -109,14 +111,19 @@ class PaymentTypeCard extends StatelessWidget {
                     const SizedBox(width: AppSpacing.sm),
                     // Status chip
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color:
                             (item['status'] == 'aktif'
                                     ? ColorUtils.success600
                                     : ColorUtils.error600)
                                 .withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                         border: Border.all(
                           color:
                               (item['status'] == 'aktif'
@@ -176,10 +183,15 @@ class PaymentTypeCard extends StatelessWidget {
                   runSpacing: 6,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.08),
-                        borderRadius: const BorderRadius.all(Radius.circular(6)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(6),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -203,13 +215,15 @@ class PaymentTypeCard extends StatelessWidget {
                     ),
                     if (item['goal'] != null)
                       Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 6,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: ColorUtils.info600.withValues(alpha: 0.08),
-                          borderRadius: const BorderRadius.all(Radius.circular(6)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(6),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -221,7 +235,7 @@ class PaymentTypeCard extends StatelessWidget {
                             ),
                             const SizedBox(width: AppSpacing.xs),
                             ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: 160),
+                              constraints: const BoxConstraints(maxWidth: 160),
                               child: Text(
                                 getGoalDescription(item['goal']),
                                 style: TextStyle(

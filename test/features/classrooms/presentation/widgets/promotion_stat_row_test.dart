@@ -15,7 +15,7 @@ void main() {
     testWidgets('displays the label string', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionStatRow(
+          const PromotionStatRow(
             icon: Icons.people,
             label: 'Total Students',
             value: '30',
@@ -31,7 +31,7 @@ void main() {
     testWidgets('displays the value string', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionStatRow(
+          const PromotionStatRow(
             icon: Icons.check,
             label: 'Eligible',
             value: '25',
@@ -47,7 +47,7 @@ void main() {
     testWidgets('renders the provided icon', (tester) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionStatRow(
+          const PromotionStatRow(
             icon: Icons.trending_up,
             label: 'Promoted',
             value: '20',
@@ -65,7 +65,7 @@ void main() {
 
       await tester.pumpWidget(
         buildTestable(
-          PromotionStatRow(
+          const PromotionStatRow(
             icon: Icons.warning,
             label: 'Not Promoted',
             value: '5',
@@ -84,7 +84,7 @@ void main() {
 
       await tester.pumpWidget(
         buildTestable(
-          PromotionStatRow(
+          const PromotionStatRow(
             icon: Icons.block,
             label: 'Retained',
             value: '10',
@@ -98,11 +98,12 @@ void main() {
     });
 
     // ── 6. Label and value coexist in the same row ────────────────────────
-    testWidgets('label and value both visible in the same widget',
-        (tester) async {
+    testWidgets('label and value both visible in the same widget', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestable(
-          PromotionStatRow(
+          const PromotionStatRow(
             icon: Icons.people,
             label: 'All Students',
             value: '40',
