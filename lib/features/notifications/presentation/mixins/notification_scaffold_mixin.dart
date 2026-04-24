@@ -6,10 +6,10 @@ import 'package:manajemensekolah/features/notifications/presentation/mixins/noti
 
 /// Mixin for scaffold/layout and async value handling.
 mixin NotificationScaffoldMixin on NotificationWidgetBuilderMixin {
-  late WidgetRef ref;
-  late Color primaryColor;
+  WidgetRef get ref;
+  Color get primaryColor;
   @override
-  late BuildContext context;
+  BuildContext get context;
 
   // Methods to be implemented by the class using this mixin
   Future<void> loadData();

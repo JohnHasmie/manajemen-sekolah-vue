@@ -3,8 +3,8 @@ import 'package:manajemensekolah/features/notifications/presentation/controllers
 
 /// Mixin for notification API operations (load, mark read, delete).
 mixin NotificationActionsMixin {
-  late WidgetRef ref;
-  late String role;
+  WidgetRef get ref;
+  String get role;
 
   Future<void> loadData() async {
     await ref.read(notificationProvider.notifier).fetchNotifications(role);

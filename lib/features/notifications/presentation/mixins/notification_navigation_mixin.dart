@@ -7,8 +7,8 @@ import 'package:manajemensekolah/features/class_activity/presentation/screens/pa
 
 /// Mixin for notification tap-to-navigate logic.
 mixin NotificationNavigationMixin {
-  late BuildContext context;
-  late String role;
+  BuildContext get context;
+  String get role;
 
   void handleTap(Map<String, dynamic> notif) {
     final type = notif['type'];

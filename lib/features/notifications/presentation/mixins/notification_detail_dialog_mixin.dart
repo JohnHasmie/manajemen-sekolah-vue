@@ -9,7 +9,7 @@ import 'package:manajemensekolah/features/notifications/presentation/mixins/date
 /// Mixin for showing notification detail dialog.
 mixin NotificationDetailDialogMixin
     on NotificationTypeMixin, DateFormattingMixin {
-  late BuildContext context;
+  BuildContext get context;
 
   void showDetailDialog(Map<String, dynamic> notif) {
     final color = getColor(notif['type'] ?? 'general');
