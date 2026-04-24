@@ -187,25 +187,26 @@ Principle: **satu implementasi, tiga role**. Mirror the teacher-role refactor th
 ### T3.1 — Rebuild `admin_dashboard_screen.dart`
 **Reference:** `Admin_Refactor_Wireframe_02_Dashboard_Redesign`.
 **Subtasks:**
-- [ ] Replace stats grid + menu grid with:
-  - `SchoolPill` (T0.3) in AppBar
-  - `HeroStatsCard` (T0.4) — "Kehadiran hari ini" primary metric
-  - `PendingInboxCard` (T0.4) — aggregated alerts: verifikasi pembayaran (n), RPP pending review (n), tagihan overdue (n), pengumuman draft (n)
-  - `QuickActionGrid` (T0.4) — 4 tiles: Manajemen Siswa · Keuangan · Laporan · Pengaturan
-- [ ] Remove all inline stat calculations — centralise in `DashboardRepository` (backend)
-- [ ] Pull-to-refresh via `AppRefreshIndicator`
+- [x] Replace stats grid + menu grid with:
+  - `SchoolPill.expanded` (T0.3) in navy gradient header
+  - `HeroStatsRow` of 3 `HeroStatsCard` (T0.4) — Siswa · Guru · Verifikasi
+  - `PendingInboxCard` (T0.4) — Verifikasi pembayaran · RPP menunggu review · Pengumuman draft · Tagihan menunggak
+  - `QuickActionGrid` (T0.4) — 4 tiles: Siswa · Keuangan · Laporan · Pengaturan
+- [x] Pull-to-refresh via `AppRefreshIndicator`
+- [ ] Remove all inline stat calculations — centralise in `DashboardRepository` (backend) *(deferred to Phase 5 — stats map read with 0-fallback; backend fields land next)*
 
 ### T3.2 — Pending inbox filtered view
-- [ ] Tap a PendingInboxCard item → navigate to relevant screen with pre-applied filter
-  - "23 verifikasi" → FinanceHub scrolled to verification section
-  - "5 RPP pending" → `admin_lesson_plan_screen` filtered to status=pending_review
-  - "87 tagihan menunggak" → FinanceHub filtered to overdue
-- [ ] Use existing navigation + filter-state pattern
+- [x] Tap a PendingInboxCard item → navigate to relevant screen with pre-applied filter
+  - Verifikasi pembayaran → `FinanceScreen(initialTabIndex: 2)`
+  - RPP menunggu review → `AdminLessonPlanScreen(initialStatusFilter: 'pending_review')`
+  - Pengumuman draft → `AdminAnnouncementScreen(initialStatusFilter: 'draft')`
+  - Tagihan menunggak → `FinanceScreen(initialTabIndex: 3)` *(Class Report tab — per-class bill drill-down)*
+- [x] Use existing navigation + filter-state pattern *(added `initStatusFilter` to lesson-plan `FilterManagementMixin`; announcement `selectedStatusFilter` seeded directly from initState)*
 
 ### T3.3 — Real-time indicator
-- [ ] PendingInboxCard polls every 60s OR subscribes to Pusher/Reverb channel (check backend)
-- [ ] Visual: green dot = connected, grey = stale
-- [ ] Fallback to pull-to-refresh if no realtime
+- [x] PendingInboxCard polls every 60s (Timer.periodic invoking `refreshStats()` — no Pusher/Reverb backend yet)
+- [x] Visual: green pulsing dot = connected, grey static = stale
+- [x] Fallback to pull-to-refresh — manual refresh also resets the 60s timer
 
 ---
 

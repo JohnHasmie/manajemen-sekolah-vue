@@ -26,7 +26,15 @@ import 'package:manajemensekolah/features/announcements/presentation/widgets/ann
 ///
 /// This is a [ConsumerStatefulWidget] - like a Vue page component.
 class AdminAnnouncementScreen extends ConsumerStatefulWidget {
-  const AdminAnnouncementScreen({super.key});
+  /// Optional status filter seeded before the first build.
+  ///
+  /// Set when the admin dashboard's PendingInboxCard drills into "Draft
+  /// pengumuman" — e.g., `'draft'` so the list lands pre-scoped instead of
+  /// forcing the user to open the filter sheet. Mirrors the announcement
+  /// `status` column on the backend (`draft`, `published`, `archived`).
+  final String? initialStatusFilter;
+
+  const AdminAnnouncementScreen({super.key, this.initialStatusFilter});
 
   @override
   AdminAnnouncementScreenState createState() => AdminAnnouncementScreenState();
@@ -75,6 +83,16 @@ class AdminAnnouncementScreenState
     perPage = 10;
     initPagination();
     initializeState();
+
+    // Seed the status filter before loadData() so the first API request
+    // already has the scope applied — avoids a flash of unfiltered content
+    // when deep-linked from the admin dashboard inbox.
+    final seed = widget.initialStatusFilter;
+    if (seed != null && seed.isNotEmpty) {
+      selectedStatusFilter = seed;
+      hasActiveFilter = true;
+    }
+
     loadFilterOptions();
     loadData();
   }

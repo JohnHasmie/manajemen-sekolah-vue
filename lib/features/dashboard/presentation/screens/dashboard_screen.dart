@@ -20,6 +20,7 @@ import 'package:manajemensekolah/features/dashboard/presentation/mixins/helpers_
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/content_builders_mixin.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/cards_mixin.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/dialog_mixin.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/screens/admin_dashboard_body.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/finance_popup_dialog.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_popup_dialog.dart';
 import 'package:manajemensekolah/features/notifications/presentation/screens/notification_list_screen.dart';
@@ -143,6 +144,42 @@ class _DashboardState extends ConsumerState<Dashboard>
     DashboardState state,
   ) {
     final primaryColor = getPrimaryColor();
+
+    // Admin fork (Phase 3 redesign). Guru and wali still go through the
+    // shared content builder so their dashboards remain unchanged.
+    if (effectiveRole == 'admin') {
+      return AdminDashboardBody(
+        primaryColor: primaryColor,
+        state: state,
+        profileHeaderKey: _profileHeaderKey,
+        heroSectionKey: _heroSectionKey,
+        quickActionsKey: _quickActionsKey,
+        statsSectionKey: _statsSectionKey,
+        menuGridKey: _menuGridKey,
+        onLanguageTap: () =>
+            showLanguageDialog(context, languageProvider, primaryColor),
+        onNotificationTap: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => NotificationListScreen(role: widget.role),
+            ),
+          );
+          ref.read(dashboardProvider.notifier).refreshStats();
+        },
+        onAccountTap: () =>
+            showAccountBottomSheet(context, state, primaryColor, effectiveRole),
+        onSchoolSwitchTap: () => showAcademicYearDialog(context),
+        onShowNoStudentsDialog: () => showNoStudentsDialog(context),
+        onShowStudentSelectionDialog: (parent, students, {academicYearId}) =>
+            showStudentSelectionDialog(
+              context,
+              parent,
+              students,
+              academicYearId: academicYearId,
+            ),
+      );
+    }
+
     return buildDashboardContent(
       context,
       languageProvider,

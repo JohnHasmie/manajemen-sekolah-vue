@@ -27,7 +27,20 @@ class AdminLessonPlanScreen extends ConsumerStatefulWidget {
   final String? teacherId;
   final String? teacherName;
 
-  const AdminLessonPlanScreen({super.key, this.teacherId, this.teacherName});
+  /// Optional status filter seeded before the first build.
+  ///
+  /// When the admin dashboard's PendingInboxCard taps "RPP menunggu review",
+  /// this is set to `'pending_review'` so the admin lands on a pre-scoped
+  /// list instead of having to open the filter sheet. Valid values mirror the
+  /// lesson-plan `status` column on the backend.
+  final String? initialStatusFilter;
+
+  const AdminLessonPlanScreen({
+    super.key,
+    this.teacherId,
+    this.teacherName,
+    this.initialStatusFilter,
+  });
 
   @override
   ConsumerState<AdminLessonPlanScreen> createState() =>
@@ -91,6 +104,10 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen>
     super.initState();
     _scrollController.addListener(_onScroll);
 
+    // Seed the status filter up-front when deep-linked from the admin
+    // dashboard inbox so the first fetch already returns scoped data.
+    initStatusFilter(widget.initialStatusFilter);
+
     if (widget.teacherId != null) {
       _showTeacherList = false;
       _selectedTeacherId = widget.teacherId;
@@ -144,10 +161,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen>
   void _viewDetail(Map<String, dynamic> plan) async {
     // Flat-flow bottom sheet (#145/RPP refactor) — approve/reject now
     // happens in a sheet over the admin list instead of a separate route.
-    await LessonPlanAdminDetailPage.show(
-      context: context,
-      lessonPlan: plan,
-    );
+    await LessonPlanAdminDetailPage.show(context: context, lessonPlan: plan);
     if (!_showTeacherList || _selectedTeacherName != null) {
       loadLessonPlansByTeacher();
     }
