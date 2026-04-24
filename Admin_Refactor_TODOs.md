@@ -212,12 +212,15 @@ Principle: **satu implementasi, tiga role**. Mirror the teacher-role refactor th
 
 ## Phase 4 — Sistem (Jadwal dual-view, Pengumuman, Settings)
 
-### T4.1 — Dual-view for Jadwal (list + matrix)
+### T4.1 — Dual-view for Jadwal (list + matrix) ✅
 **Already listed partially in T1.5; this task is the view-toggle infrastructure.**
-- [ ] Reuse `ViewToggleButton` from teacher refactor
-- [ ] Matrix view = `FrozenColumnTable` with rows=time-slots, columns=days-of-week
-- [ ] Same filter applies to both views (filter state is single source of truth)
-- [ ] Teacher reference: the matrix toggle in `teacher_grade_recap_screen.dart`
+**Shipped in** `admin_schedule_matrix_view.dart` (new) + header wiring in `admin_schedule_management_screen.dart`.
+- [x] Reuse `ViewToggleButton` from teacher refactor — placed in the gradient-header trailing slot next to `AdminDataMenu` via `AdminCrudScaffold.actionMenu` as a `Row`, cycling `ViewMode.card` ↔ `ViewMode.table` on tap.
+- [x] Matrix view = `FrozenColumnTable` with rows=time-slots (sticky left 92px column with "Jam N" chip + start/end time), columns=days-of-week (164px each). Cells render `_ScheduleChip` stacks per `(startTime-endTime, dayId)` bucket; em-dash placeholder when empty. Multi-day schedules fan out across every day in `days_ids` (List / stringified list / `dayId` fallback all handled).
+- [x] Same filter applies to both views — `filteredSchedules` + `_selectedDayId` / `_selectedLessonHour` pass through to both branches of `childBuilder`; the matrix also honours those two filters at the axis level so selecting a day narrows columns.
+- [x] Teacher reference: the matrix toggle in `teacher_grade_recap_screen.dart` (uses `availableModes: [ViewMode.card, ViewMode.table]`).
+- [x] Matrix mode keeps rendering even when `filteredSchedules.isEmpty` so the grid + toggle stay visible; empty reference data (no time slots or no days) falls through to `_EmptyMatrixCard` rather than a bare header strip.
+- [x] `dart format` + `dart analyze lib/` — clean
 
 ### T4.2 — Migrate `admin_announcement_screen.dart` compose flow
 **Non-compliance:** `admin_dialog_mixin.dart` uses `showDialog` for compose.
@@ -294,7 +297,7 @@ Principle: **satu implementasi, tiga role**. Mirror the teacher-role refactor th
 ### T5.5 — Metrics report
 - [ ] LOC delta per feature (target: ~60% net reduction) *(run `git log --shortstat release/teacher-refactor-2026-04-22` for totals)*
 - [x] New shared components added: `AdminCrudScaffold`, `BulkActionBar`, `SchoolPill`, `HeroStatsCard`, `PendingInboxCard`, `QuickActionGrid`
-- [ ] Non-compliant screens: 11 → 0 *(remaining: Jadwal matrix T4.1. class-activity T4.3 ✅ done — three legacy widgets retired, teacher consumers migrated to shared `AppBottomSheet` / `AppFilterBottomSheet`. System settings T4.5 ✅ done. RPP approval status dialog ✅ done.)*
+- [x] Non-compliant screens: 11 → 0 *(final items: Jadwal matrix T4.1 ✅ done — dual-view toggle with `FrozenColumnTable` matrix. class-activity T4.3 ✅ done — three legacy widgets retired, teacher consumers migrated to shared `AppBottomSheet` / `AppFilterBottomSheet`. System settings T4.5 ✅ done. RPP approval status dialog ✅ done.)*
 - [x] `dart analyze` — clean across lib/
 - [ ] Deliver to stakeholders as Markdown report in `/docs/`
 
