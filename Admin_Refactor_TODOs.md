@@ -268,7 +268,7 @@ Principle: **satu implementasi, tiga role**. Mirror the teacher-role refactor th
 ## Phase 5 — Cleanup, Docs, QA
 
 ### T5.1 — Redundancy sweep
-- [x] `grep -r "showDialog(" lib/features/**/admin_*.dart` — 5 remaining, all acceptable (read-only detail dialogs, loading spinner, shared `ConfirmationDialog`); one edge case (`UpdateStatusDialog` for RPP approval) deferred to a future sheet migration — not a simple add/edit field form
+- [x] `grep -r "showDialog(" lib/features/**/admin_*.dart` — all remaining are acceptable (read-only detail dialogs, loading spinner, shared `ConfirmationDialog`). `UpdateStatusDialog` (RPP approval) migrated to `update_status_sheet.dart` using `AppBottomSheet` + `BottomSheetFooter` (commit `refactor(lesson-plans): migrate UpdateStatusDialog to AppBottomSheet`).
 - [x] `grep -r "showModalBottomSheet(" lib/features/**/admin_*.dart` — no bare calls outside `AppBottomSheet` / `AppEditBottomSheet` / `AppFilterBottomSheet` wrappers
 - [x] Three mixin files stubbed as deprecated (sandbox FS blocks physical `unlink`; files have `// Deprecated.` marker and no importers). Follow-up can `git rm` on a dev machine: `announcement_form_header_mixin.dart`, `announcement_form_footer_mixin.dart`, `lesson_plan_regen_dialogs.dart`.
 - [x] `dart format` applied to every file touched across Phases 0–4
@@ -286,12 +286,12 @@ Principle: **satu implementasi, tiga role**. Mirror the teacher-role refactor th
 
 ### T5.4 — Update CLAUDE.md
 - [x] Shared-component conventions captured in `lib/core/widgets/README.md` (functions as the Flutter-side conventions doc).
-- [ ] Top-level `CLAUDE.md` conventions update — backlog; not present in this repo yet.
+- [x] Top-level `CLAUDE.md` created — working contract for adding/editing/refactoring code. Covers directory layout, shared-component pickers, don't-dos, sandboxed-FS workarounds, git hygiene, verification checklist, common edge cases, and the satu-implementasi-tiga-role rule.
 
 ### T5.5 — Metrics report
 - [ ] LOC delta per feature (target: ~60% net reduction) *(run `git log --shortstat release/teacher-refactor-2026-04-22` for totals)*
 - [x] New shared components added: `AdminCrudScaffold`, `BulkActionBar`, `SchoolPill`, `HeroStatsCard`, `PendingInboxCard`, `QuickActionGrid`
-- [ ] Non-compliant screens: 11 → 0 *(remaining: RPP approval status dialog, class-activity admin migration T4.3, Jadwal matrix T4.1, System settings T4.5 — deferred)*
+- [ ] Non-compliant screens: 11 → 0 *(remaining: class-activity admin migration T4.3, Jadwal matrix T4.1, System settings T4.5 — deferred. RPP approval status dialog ✅ done.)*
 - [x] `dart analyze` — clean across lib/
 - [ ] Deliver to stakeholders as Markdown report in `/docs/`
 
