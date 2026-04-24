@@ -14,10 +14,8 @@ mixin SessionRowBuildingMixin on State<TeacherScheduleTableView> {
   }) {
     final model = Schedule.fromJson(schedule);
     final sessionNum = model.lessonHour?.toString() ?? '-';
-    final startTime =
-        (this as dynamic).formatTime(model.startTime) as String;
-    final endTime =
-        (this as dynamic).formatTime(model.endTime) as String;
+    final startTime = (this as dynamic).formatTime(model.startTime) as String;
+    final endTime = (this as dynamic).formatTime(model.endTime) as String;
     final widget = (this as dynamic).widget;
     final primary = widget.primaryColor as Color;
 

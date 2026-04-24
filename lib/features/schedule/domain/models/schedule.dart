@@ -94,10 +94,10 @@ abstract class Schedule with _$Schedule {
     // TeachingSchedule responses nest the day inside lesson_hour.
     final dynamic rawLessonHour = m['lesson_hour'];
     if (rawLessonHour is Map) {
-      m['start_time'] ??= rawLessonHour['start_time'] ??
-          rawLessonHour['jam_mulai'];
-      m['end_time'] ??= rawLessonHour['end_time'] ??
-          rawLessonHour['jam_selesai'];
+      m['start_time'] ??=
+          rawLessonHour['start_time'] ?? rawLessonHour['jam_mulai'];
+      m['end_time'] ??=
+          rawLessonHour['end_time'] ?? rawLessonHour['jam_selesai'];
       m['lesson_hour_id'] ??= rawLessonHour['id'];
       // Extract day from lesson_hour.day before overwriting lesson_hour.
       // Backend sends {name: "Wednesday", order_number: 3}.
@@ -106,8 +106,8 @@ abstract class Schedule with _$Schedule {
         m['day_id'] ??= lhDay['id'];
         m['day_name'] ??= lhDay['name'] ?? lhDay['nama'];
       }
-      m['lesson_hour'] = rawLessonHour['hour_number'] ??
-          rawLessonHour['jam_ke'];
+      m['lesson_hour'] =
+          rawLessonHour['hour_number'] ?? rawLessonHour['jam_ke'];
     }
     m['lesson_hour'] ??= m['jam_ke'] ?? m['hour_number'];
     m['lesson_hour_id'] ??= m['jam_pelajaran_id'];

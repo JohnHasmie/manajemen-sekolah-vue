@@ -99,10 +99,7 @@ mixin ScheduleTableNavigationMixin on State<TeacherScheduleTableView> {
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           child: TeacherMaterialScreen(
-            teacher: {
-              'id': teacherId,
-              'nama': widget.teacherNama as String,
-            },
+            teacher: {'id': teacherId, 'nama': widget.teacherNama as String},
             initialSubjectId: subjectId,
             initialSubjectName: subjectName,
             initialClassId: classId,
@@ -114,9 +111,9 @@ mixin ScheduleTableNavigationMixin on State<TeacherScheduleTableView> {
     ).then((_) async {
       // Record material view after user interacted and closed the sheet.
       if (classId != null && subjectId != null && teacherId.isNotEmpty) {
-        final date = DateFormat('yyyy-MM-dd').format(
-          (this as dynamic).computeScheduleDate(schedule) as DateTime,
-        );
+        final date = DateFormat(
+          'yyyy-MM-dd',
+        ).format((this as dynamic).computeScheduleDate(schedule) as DateTime);
         await getIt<ApiScheduleService>().recordMaterialView(
           teacherId: teacherId,
           classId: classId,

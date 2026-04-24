@@ -31,15 +31,9 @@ mixin TeacherFormInitMixin on ConsumerState<TeacherFormDialog> {
     final model = widget.teacher != null
         ? Teacher.fromJson(widget.teacher!)
         : null;
-    nameController = TextEditingController(
-      text: model?.name ?? '',
-    );
-    emailController = TextEditingController(
-      text: model?.email ?? '',
-    );
-    nipController = TextEditingController(
-      text: model?.employeeNumber ?? '',
-    );
+    nameController = TextEditingController(text: model?.name ?? '');
+    emailController = TextEditingController(text: model?.email ?? '');
+    nipController = TextEditingController(text: model?.employeeNumber ?? '');
   }
 
   void _initializeGender() {
