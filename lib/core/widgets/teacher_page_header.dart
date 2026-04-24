@@ -181,14 +181,11 @@ class TeacherPageHeader extends StatelessWidget {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(10)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(10),
+                          ),
                         ),
-                        child: Icon(
-                          backIcon,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                        child: Icon(backIcon, color: Colors.white, size: 20),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),

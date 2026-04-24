@@ -80,25 +80,35 @@ mixin AttendanceDialogAddMixin
       content: StatefulBuilder(
         builder: (ctx, setSS) {
           final classes = classList
-              .map((c) => FilterOption<String>(
-                    value: c['id']?.toString() ?? '',
-                    label: c['name']?.toString() ?? c['nama']?.toString() ?? '-',
-                  ))
+              .map(
+                (c) => FilterOption<String>(
+                  value: c['id']?.toString() ?? '',
+                  label: c['name']?.toString() ?? c['nama']?.toString() ?? '-',
+                ),
+              )
               .toList();
 
           final subjects = pickSubjectList.isNotEmpty
               ? pickSubjectList
-                  .map((s) => FilterOption<String>(
+                    .map(
+                      (s) => FilterOption<String>(
                         value: s['id']?.toString() ?? '',
-                        label: s['name']?.toString() ?? s['nama']?.toString() ?? '-',
-                      ))
-                  .toList()
+                        label:
+                            s['name']?.toString() ??
+                            s['nama']?.toString() ??
+                            '-',
+                      ),
+                    )
+                    .toList()
               : <FilterOption<String>>[];
 
           return TeacherFilterContent(
             sections: [
               FilterChipGrid<String>(
-                title: lp.getTranslatedText({'en': 'Select Class', 'id': 'Pilih Kelas'}),
+                title: lp.getTranslatedText({
+                  'en': 'Select Class',
+                  'id': 'Pilih Kelas',
+                }),
                 options: classes,
                 selectedValue: pickClassId,
                 onSelected: (v) {

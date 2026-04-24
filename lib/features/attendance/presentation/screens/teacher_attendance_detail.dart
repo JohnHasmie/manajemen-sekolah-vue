@@ -60,7 +60,9 @@ class _TeacherAttendanceDetailPageState
     subjectId: widget.subjectId,
     classId: widget.classId,
     date: widget.date,
-    teacherId: widget.filterTeacherId ?? (widget.canEdit ? Teacher.fromJson(widget.teacher).id : null),
+    teacherId:
+        widget.filterTeacherId ??
+        (widget.canEdit ? Teacher.fromJson(widget.teacher).id : null),
     lessonHourId: widget.lessonHourId,
   );
 
@@ -231,26 +233,34 @@ class _TeacherAttendanceDetailPageState
                 ),
         ],
       ),
-      floatingActionButton: widget.canEdit ? FloatingActionButton.extended(
-        onPressed: openEditSheet,
-        backgroundColor: getPrimaryColor(),
-        elevation: 3,
-        highlightElevation: 6,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        icon: const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
-        label: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Edit Attendance',
-            'id': 'Update Kehadiran',
-          }),
-          style: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ) : null,
+      floatingActionButton: widget.canEdit
+          ? FloatingActionButton.extended(
+              onPressed: openEditSheet,
+              backgroundColor: getPrimaryColor(),
+              elevation: 3,
+              highlightElevation: 6,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              icon: const Icon(
+                Icons.edit_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+              label: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Edit Attendance',
+                  'id': 'Update Kehadiran',
+                }),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            )
+          : null,
     );
   }
 }

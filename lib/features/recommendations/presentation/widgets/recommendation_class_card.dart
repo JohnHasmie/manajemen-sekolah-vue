@@ -109,7 +109,12 @@ class RecommendationClassCard extends StatelessWidget {
 
           // ── Stats row (only when there are recs to show) ──
           if (!isLoading && totalRec > 0)
-            _buildStatsRow(totalRec, completedCount, pendingCount, highPriority),
+            _buildStatsRow(
+              totalRec,
+              completedCount,
+              pendingCount,
+              highPriority,
+            ),
 
           // ── History section (collapsed when empty) ──
           if (!isLoading) _buildHistorySection(),
@@ -128,8 +133,8 @@ class RecommendationClassCard extends StatelessWidget {
     final statusLabel = isLoading
         ? 'Memuat data...'
         : (totalRec > 0
-            ? '$totalRec rekomendasi aktif'
-            : 'Belum ada rekomendasi');
+              ? '$totalRec rekomendasi aktif'
+              : 'Belum ada rekomendasi');
     final subtitle = '$studentLabel  •  $statusLabel';
 
     return Container(
@@ -164,11 +169,7 @@ class RecommendationClassCard extends StatelessWidget {
               ),
               borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
-            child: Icon(
-              Icons.school_rounded,
-              size: 22,
-              color: primaryColor,
-            ),
+            child: Icon(Icons.school_rounded, size: 22, color: primaryColor),
           ),
           const SizedBox(width: 12),
 
@@ -191,8 +192,9 @@ class RecommendationClassCard extends StatelessWidget {
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight:
-                        totalRec > 0 ? FontWeight.w600 : FontWeight.w400,
+                    fontWeight: totalRec > 0
+                        ? FontWeight.w600
+                        : FontWeight.w400,
                     color: totalRec > 0
                         ? primaryColor.withValues(alpha: 0.85)
                         : ColorUtils.slate500,
@@ -209,8 +211,10 @@ class RecommendationClassCard extends StatelessWidget {
               onTap: onViewStudents,
               borderRadius: const BorderRadius.all(Radius.circular(8)),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.08),
                   borderRadius: const BorderRadius.all(Radius.circular(8)),
@@ -342,14 +346,16 @@ class RecommendationClassCard extends StatelessWidget {
               ],
             ),
           ),
-          ...history.map((entry) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: RecommendationHistoryItem(
-                  entry: entry,
-                  primaryColor: primaryColor,
-                  onTap: () => onHistoryItemTap(entry),
-                ),
-              )),
+          ...history.map(
+            (entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: RecommendationHistoryItem(
+                entry: entry,
+                primaryColor: primaryColor,
+                onTap: () => onHistoryItemTap(entry),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -363,9 +369,7 @@ class RecommendationClassCard extends StatelessWidget {
     // without overwhelming the card when nothing's happened yet.
     return Padding(
       padding: EdgeInsets.fromLTRB(12, hasActivity ? 4 : 12, 12, 12),
-      child: hasActivity
-          ? _buildPrimaryCta()
-          : _buildTonalCta(),
+      child: hasActivity ? _buildPrimaryCta() : _buildTonalCta(),
     );
   }
 

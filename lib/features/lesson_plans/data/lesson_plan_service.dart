@@ -146,7 +146,8 @@ class LessonPlanService {
   }) async {
     final queryParams = <String, dynamic>{};
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
-    if (academicYearId != null) queryParams['academic_year_id'] = academicYearId;
+    if (academicYearId != null)
+      queryParams['academic_year_id'] = academicYearId;
     if (status != null) queryParams['status'] = status;
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
 

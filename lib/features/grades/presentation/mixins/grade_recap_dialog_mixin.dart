@@ -65,20 +65,21 @@ mixin GradeRecapDialogMixin {
         primaryColor: primaryColor,
         languageProvider: lp,
         teacherId: teacherData['id']?.toString() ?? '',
-        onApply: ({
-          String? classId,
-          String? className,
-          String? subjectId,
-          String? subjectName,
-        }) {
-          setState(() {
-            filterClassId = classId;
-            filterClassName = className;
-            filterSubjectId = subjectId;
-            filterSubjectName = subjectName;
-          });
-          loadData();
-        },
+        onApply:
+            ({
+              String? classId,
+              String? className,
+              String? subjectId,
+              String? subjectName,
+            }) {
+              setState(() {
+                filterClassId = classId;
+                filterClassName = className;
+                filterSubjectId = subjectId;
+                filterSubjectName = subjectName;
+              });
+              loadData();
+            },
       ),
     );
   }
@@ -127,7 +128,8 @@ class _GradeRecapFilterSheet extends StatefulWidget {
     String? className,
     String? subjectId,
     String? subjectName,
-  }) onApply;
+  })
+  onApply;
 
   const _GradeRecapFilterSheet({
     required this.availableClasses,
@@ -181,8 +183,8 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
       final list = raw is List
           ? raw
           : (raw is Map && raw['data'] is List
-              ? raw['data'] as List
-              : <dynamic>[]);
+                ? raw['data'] as List
+                : <dynamic>[]);
       if (mounted) {
         setState(() => _subjectList = list);
       }
@@ -234,8 +236,9 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
                 selectedValue: _classId,
                 onSelected: (classId) async {
                   final isDeselect = classId == _classId;
-                  final match = widget.availableClasses
-                      .where((c) => c['id'] == classId);
+                  final match = widget.availableClasses.where(
+                    (c) => c['id'] == classId,
+                  );
                   setState(() {
                     _classId = isDeselect ? null : classId;
                     _className = isDeselect
@@ -297,10 +300,7 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
                   'en': 'Loading subjects...',
                   'id': 'Memuat mapel...',
                 }),
-                style: TextStyle(
-                  color: ColorUtils.slate500,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
               ),
             ),
         ],

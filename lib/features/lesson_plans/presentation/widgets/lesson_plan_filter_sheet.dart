@@ -66,10 +66,7 @@ class _LessonPlanFilterSheetContentState
         value: null,
         label: lang.getTranslatedText({'en': 'All', 'id': 'Semua'}),
       ),
-      FilterOption(
-        value: 'Draft',
-        label: 'Draft',
-      ),
+      FilterOption(value: 'Draft', label: 'Draft'),
       FilterOption(
         value: 'Pending',
         label: lang.getTranslatedText({'en': 'Pending', 'id': 'Menunggu'}),

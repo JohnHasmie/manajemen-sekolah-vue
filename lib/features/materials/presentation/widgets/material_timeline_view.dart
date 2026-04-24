@@ -12,6 +12,7 @@ class MaterialTimelineView extends StatelessWidget {
   final List<dynamic> subChapterMaterialList;
   final Map<String, bool> checkedChapter;
   final Map<String, bool> checkedSubChapter;
+
   /// Controls whether the Materi/Kuis/Ref tags render in colour (true) or
   /// grey (false) for each sub-chapter row. Purely visual. (#141)
   final Map<String, bool> generatedSubChapter;
@@ -71,8 +72,7 @@ class MaterialTimelineView extends StatelessWidget {
               chapterColor: chColor,
               isLast: subIdx == subs.length - 1,
               isChecked: checkedSubChapter[sc['id'].toString()] ?? false,
-              isGenerated:
-                  generatedSubChapter[sc['id'].toString()] ?? false,
+              isGenerated: generatedSubChapter[sc['id'].toString()] ?? false,
               primaryColor: primaryColor,
               onCheck: onSubChapterCheck,
               onTap: onSubChapterTap,

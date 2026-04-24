@@ -205,7 +205,10 @@ class _LearningRecommendationClassScreenState
     AppLogger.debug('recommendation', '   className: $className');
 
     try {
-      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+      final ayId = ref
+          .read(academicYearRiverpod)
+          .selectedAcademicYear?['id']
+          ?.toString();
       final result = await getIt<ApiRecommendationService>().generateForClass(
         teacherId: effectiveTeacherId,
         classId: classId,
@@ -322,15 +325,17 @@ class _LearningRecommendationClassScreenState
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () => Navigator.pop(ctx, subject),
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(12)),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 14),
+                          horizontal: 14,
+                          vertical: 14,
+                        ),
                         decoration: BoxDecoration(
                           color: primaryColor.withValues(alpha: 0.04),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(12)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(12),
+                          ),
                           border: Border.all(
                             color: primaryColor.withValues(alpha: 0.12),
                           ),
@@ -343,7 +348,8 @@ class _LearningRecommendationClassScreenState
                               decoration: BoxDecoration(
                                 color: primaryColor.withValues(alpha: 0.1),
                                 borderRadius: const BorderRadius.all(
-                                    Radius.circular(10)),
+                                  Radius.circular(10),
+                                ),
                               ),
                               child: Icon(
                                 Icons.menu_book_rounded,
@@ -376,9 +382,7 @@ class _LearningRecommendationClassScreenState
                 },
               ),
             ),
-            SizedBox(
-              height: MediaQuery.of(ctx).padding.bottom + 8,
-            ),
+            SizedBox(height: MediaQuery.of(ctx).padding.bottom + 8),
           ],
         ),
       ),

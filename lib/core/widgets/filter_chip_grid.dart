@@ -163,7 +163,9 @@ class FilterChipGrid<T> extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: selected ? color.withValues(alpha: 0.1) : ColorUtils.slate50,
+                  color: selected
+                      ? color.withValues(alpha: 0.1)
+                      : ColorUtils.slate50,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: selected ? color : ColorUtils.slate200,
@@ -186,7 +188,9 @@ class FilterChipGrid<T> extends StatelessWidget {
                         option.label,
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: selected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                           color: selected ? color : ColorUtils.slate600,
                         ),
                         overflow: TextOverflow.ellipsis,

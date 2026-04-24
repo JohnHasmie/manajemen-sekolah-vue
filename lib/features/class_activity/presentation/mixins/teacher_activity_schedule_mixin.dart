@@ -42,8 +42,9 @@ mixin TeacherActivityScheduleMixin
     final todayEn = wdEn[now.weekday] ?? '';
 
     for (final s in schedules) {
-      final Map<String, dynamic> sm =
-          s is Map<String, dynamic> ? s : <String, dynamic>{};
+      final Map<String, dynamic> sm = s is Map<String, dynamic>
+          ? s
+          : <String, dynamic>{};
       final model = Schedule.fromJson(sm);
 
       // Schedule.fromJson normalizes nested day/hari maps into dayName

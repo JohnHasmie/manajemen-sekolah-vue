@@ -169,8 +169,7 @@ class _LearningRecommendationResultScreenState
     final recId = rec['id']?.toString();
     if (recId == null || recId.isEmpty) return;
 
-    final currentStatus =
-        rec['status']?.toString().toLowerCase() ?? 'pending';
+    final currentStatus = rec['status']?.toString().toLowerCase() ?? 'pending';
     final newStatus = currentStatus == 'completed' ? 'pending' : 'completed';
 
     setState(() => _updatingIds.add(recId));
@@ -322,8 +321,7 @@ class _LearningRecommendationResultScreenState
       return const EmptyState(
         icon: Icons.lightbulb_outline,
         title: 'Belum Ada Rekomendasi',
-        subtitle:
-            'Generate rekomendasi dari halaman kelas terlebih dahulu',
+        subtitle: 'Generate rekomendasi dari halaman kelas terlebih dahulu',
       );
     }
 
@@ -362,15 +360,18 @@ class _LearningRecommendationResultScreenState
                 : ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.only(
-                        top: 8, bottom: 12, left: 16, right: 16),
+                      top: 8,
+                      bottom: 12,
+                      left: 16,
+                      right: 16,
+                    ),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final rec = filtered[index];
                       final recId = rec['id']?.toString() ?? '';
                       return RecommendationCard(
                         rec: rec,
-                        listKey:
-                            index == 0 ? _recommendationListKey : null,
+                        listKey: index == 0 ? _recommendationListKey : null,
                         isUpdatingStatus: _updatingIds.contains(recId),
                         onToggleStatus: () => _toggleStatus(rec),
                       );
@@ -605,9 +606,7 @@ class _FilterChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? color : Colors.white,
             borderRadius: const BorderRadius.all(Radius.circular(8)),
-            border: Border.all(
-              color: isActive ? color : ColorUtils.slate200,
-            ),
+            border: Border.all(color: isActive ? color : ColorUtils.slate200),
           ),
           child: Text(
             label,

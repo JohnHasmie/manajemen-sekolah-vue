@@ -83,9 +83,9 @@ mixin ClassActivityNavigationMixin on ConsumerState<AdminClassActivityScreen> {
   List<dynamic> getFilteredSubjects() {
     final searchTerm = searchController.text.toLowerCase();
     return subjectList.where((subject) {
-      final name = Subject.fromJson(subject as Map<String, dynamic>)
-          .name
-          .toLowerCase();
+      final name = Subject.fromJson(
+        subject as Map<String, dynamic>,
+      ).name.toLowerCase();
       return searchTerm.isEmpty || name.contains(searchTerm);
     }).toList();
   }

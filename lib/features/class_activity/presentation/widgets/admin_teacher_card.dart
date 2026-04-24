@@ -36,8 +36,9 @@ class AdminTeacherCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Teacher.fromJson(teacher);
-    final teacherName =
-        model.name.isNotEmpty ? model.name : 'Nama tidak tersedia';
+    final teacherName = model.name.isNotEmpty
+        ? model.name
+        : 'Nama tidak tersedia';
     final teacherEmail = model.email;
     final teacherNip = model.employeeNumber ?? '';
     final avatarColor = ColorUtils.getColorForIndex(index);

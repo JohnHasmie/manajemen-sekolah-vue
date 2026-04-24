@@ -118,8 +118,9 @@ mixin StudentDetailUiBuilderMixin {
           ),
           ...classes.map<Widget>((classItem) {
             final year = classItem['academic_year']?['year'] ?? 'Unknown Year';
-            final classModel =
-                Classroom.fromJson(classItem as Map<String, dynamic>);
+            final classModel = Classroom.fromJson(
+              classItem as Map<String, dynamic>,
+            );
             return StudentInfoRow(
               label: year,
               value: classModel.name,
@@ -162,10 +163,9 @@ mixin StudentDetailUiBuilderMixin {
               'en': 'Parent Name',
               'id': 'Nama Wali',
             }),
-            value:
-                model.guardianName.isNotEmpty
-                    ? model.guardianName
-                    : 'No Parent Name',
+            value: model.guardianName.isNotEmpty
+                ? model.guardianName
+                : 'No Parent Name',
             primaryColor: getPrimaryColor(),
             icon: Icons.person,
           ),
@@ -174,8 +174,9 @@ mixin StudentDetailUiBuilderMixin {
               'en': 'Phone Number',
               'id': 'No. Telepon',
             }),
-            value:
-                model.phoneNumber.isNotEmpty ? model.phoneNumber : 'No Phone',
+            value: model.phoneNumber.isNotEmpty
+                ? model.phoneNumber
+                : 'No Phone',
             primaryColor: getPrimaryColor(),
             icon: Icons.phone,
           ),

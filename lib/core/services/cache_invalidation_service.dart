@@ -28,9 +28,7 @@ class CacheInvalidationService {
   /// displays summary stats from many sources.
   static Future<void> onDashboardChanged() async {
     _log('dashboard');
-    await Future.wait([
-      LocalCacheService.clearStartingWith('dashboard_'),
-    ]);
+    await Future.wait([LocalCacheService.clearStartingWith('dashboard_')]);
   }
 
   // ---------------------------------------------------------------------------
@@ -258,9 +256,6 @@ class CacheInvalidationService {
   // ---------------------------------------------------------------------------
 
   static void _log(String feature) {
-    AppLogger.debug(
-      'cache_invalidation',
-      'Invalidating caches for: $feature',
-    );
+    AppLogger.debug('cache_invalidation', 'Invalidating caches for: $feature');
   }
 }

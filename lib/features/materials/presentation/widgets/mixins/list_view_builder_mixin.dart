@@ -100,7 +100,11 @@ mixin ListViewBuilderMixin {
             Row(
               children: [
                 const SizedBox(width: 4),
-                Icon(Icons.person_rounded, size: 12, color: ColorUtils.slate500),
+                Icon(
+                  Icons.person_rounded,
+                  size: 12,
+                  color: ColorUtils.slate500,
+                ),
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(

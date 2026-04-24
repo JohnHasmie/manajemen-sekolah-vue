@@ -99,8 +99,7 @@ class _TeacherAnnouncementFilterSheetState
       ),
       FilterOption<String>(
         value: 'Kedaluwarsa',
-        label:
-            _lp.getTranslatedText({'en': 'Expired', 'id': 'Kedaluwarsa'}),
+        label: _lp.getTranslatedText({'en': 'Expired', 'id': 'Kedaluwarsa'}),
       ),
     ];
 
@@ -137,10 +136,7 @@ class _TeacherAnnouncementFilterSheetState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FilterSectionHeader(
-                title: _lp.getTranslatedText({
-                  'en': 'Status',
-                  'id': 'Status',
-                }),
+                title: _lp.getTranslatedText({'en': 'Status', 'id': 'Status'}),
                 icon: Icons.info_outline_rounded,
                 primaryColor: widget.primaryColor,
               ),

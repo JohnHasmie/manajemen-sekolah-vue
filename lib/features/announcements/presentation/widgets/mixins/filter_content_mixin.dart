@@ -39,9 +39,10 @@ mixin FilterContentMixin {
               primaryColor: primaryColor,
             ),
             FilterChipGrid<String>(
-              options: ['Penting', 'Biasa']
-                  .map((p) => FilterOption(value: p, label: p))
-                  .toList(),
+              options: [
+                'Penting',
+                'Biasa',
+              ].map((p) => FilterOption(value: p, label: p)).toList(),
               selectedValue: tempSelectedPrioritas,
               onSelected: (val) => setState(() => tempSelectedPrioritas = val),
               selectedColor: primaryColor,
@@ -103,19 +104,31 @@ mixin FilterContentMixin {
     return [
       {
         'value': 'Semua',
-        'label': languageProvider.getTranslatedText({'en': 'All', 'id': 'Semua'}),
+        'label': languageProvider.getTranslatedText({
+          'en': 'All',
+          'id': 'Semua',
+        }),
       },
       {
         'value': 'Guru',
-        'label': languageProvider.getTranslatedText({'en': 'Teachers', 'id': 'Guru'}),
+        'label': languageProvider.getTranslatedText({
+          'en': 'Teachers',
+          'id': 'Guru',
+        }),
       },
       {
         'value': 'Siswa',
-        'label': languageProvider.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
+        'label': languageProvider.getTranslatedText({
+          'en': 'Students',
+          'id': 'Siswa',
+        }),
       },
       {
         'value': 'Orang Tua',
-        'label': languageProvider.getTranslatedText({'en': 'Parents', 'id': 'Orang Tua'}),
+        'label': languageProvider.getTranslatedText({
+          'en': 'Parents',
+          'id': 'Orang Tua',
+        }),
       },
     ];
   }
@@ -125,15 +138,24 @@ mixin FilterContentMixin {
     return [
       {
         'value': 'Aktif',
-        'label': languageProvider.getTranslatedText({'en': 'Active', 'id': 'Aktif'}),
+        'label': languageProvider.getTranslatedText({
+          'en': 'Active',
+          'id': 'Aktif',
+        }),
       },
       {
         'value': 'Terjadwal',
-        'label': languageProvider.getTranslatedText({'en': 'Scheduled', 'id': 'Terjadwal'}),
+        'label': languageProvider.getTranslatedText({
+          'en': 'Scheduled',
+          'id': 'Terjadwal',
+        }),
       },
       {
         'value': 'Kedaluwarsa',
-        'label': languageProvider.getTranslatedText({'en': 'Expired', 'id': 'Kedaluwarsa'}),
+        'label': languageProvider.getTranslatedText({
+          'en': 'Expired',
+          'id': 'Kedaluwarsa',
+        }),
       },
     ];
   }

@@ -105,15 +105,12 @@ class GradeRecapEditableCell extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: hasValue
-                        ? _scoreColor(score)
-                        : ColorUtils.slate300,
+                    color: hasValue ? _scoreColor(score) : ColorUtils.slate300,
                   ),
                   decoration: InputDecoration(
                     isDense: true,
                     isCollapsed: true,
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     border: InputBorder.none,
                     hintText: '–',
                     hintStyle: TextStyle(
@@ -122,8 +119,7 @@ class GradeRecapEditableCell extends StatelessWidget {
                       fontSize: 13,
                     ),
                   ),
-                  onChanged: (val) =>
-                      onChanged(double.tryParse(val) ?? 0.0),
+                  onChanged: (val) => onChanged(double.tryParse(val) ?? 0.0),
                   onSubmitted: (_) => onMoveDown?.call(),
                 ),
               ),
@@ -139,9 +135,7 @@ class GradeRecapEditableCell extends StatelessWidget {
                 child: Icon(
                   Icons.keyboard_arrow_down_rounded,
                   size: 14,
-                  color: hasValue
-                      ? ColorUtils.slate500
-                      : ColorUtils.slate200,
+                  color: hasValue ? ColorUtils.slate500 : ColorUtils.slate200,
                 ),
               ),
             ),

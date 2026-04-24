@@ -234,9 +234,9 @@ mixin SubChapterAiGenerationMixin on ConsumerState<SubBabDetailPage> {
       AppLogger.debug(
         'material',
         '[#137] _applyResult saving key=$aiCacheKey '
-        'keys=${data.keys.toList()} '
-        'quizzes=${(data['quizzes'] as List?)?.length ?? 0} '
-        'refs=${(data['references'] as List?)?.length ?? 0}',
+            'keys=${data.keys.toList()} '
+            'quizzes=${(data['quizzes'] as List?)?.length ?? 0} '
+            'refs=${(data['references'] as List?)?.length ?? 0}',
       );
       await LocalCacheService.save(aiCacheKey, data);
       final verify = await LocalCacheService.load(
@@ -246,7 +246,7 @@ mixin SubChapterAiGenerationMixin on ConsumerState<SubBabDetailPage> {
       AppLogger.debug(
         'material',
         '[#137] _applyResult save verify: '
-        '${verify != null ? "OK" : "SAVE SILENTLY FAILED"}',
+            '${verify != null ? "OK" : "SAVE SILENTLY FAILED"}',
       );
 
       // Also write a sub-chapter-scoped pointer key that stores just the
@@ -264,7 +264,7 @@ mixin SubChapterAiGenerationMixin on ConsumerState<SubBabDetailPage> {
         AppLogger.debug(
           'material',
           '[#137] _applyResult saved pointer key=$pointerKey '
-          'material_id=$materialId',
+              'material_id=$materialId',
         );
       } else {
         AppLogger.error(
@@ -304,8 +304,8 @@ mixin SubChapterAiGenerationMixin on ConsumerState<SubBabDetailPage> {
         AppLogger.debug(
           'material',
           '[#138] markMaterialGenerated OK teacher=${widget.teacherId} '
-          'subject=${widget.subjectId} class=$classId '
-          'chapter=${widget.chapter['id']} sub=${widget.subChapter['id']}',
+              'subject=${widget.subjectId} class=$classId '
+              'chapter=${widget.chapter['id']} sub=${widget.subChapter['id']}',
         );
 
         // Clear the teacher-summary caches so pull-to-refresh returns the

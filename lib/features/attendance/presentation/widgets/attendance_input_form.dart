@@ -304,17 +304,15 @@ class AttendanceInputForm extends StatelessWidget {
                             style: TextStyle(color: ColorUtils.slate500),
                           ),
                         ),
-                        ...classList.map(
-                          (classItem) {
-                            final model = Classroom.fromJson(
-                              classItem as Map<String, dynamic>,
-                            );
-                            return DropdownMenuItem<String>(
-                              value: model.id,
-                              child: Text(model.name),
-                            );
-                          },
-                        ),
+                        ...classList.map((classItem) {
+                          final model = Classroom.fromJson(
+                            classItem as Map<String, dynamic>,
+                          );
+                          return DropdownMenuItem<String>(
+                            value: model.id,
+                            child: Text(model.name),
+                          );
+                        }),
                       ],
                       onChanged: onClassChanged,
                     ),
@@ -365,21 +363,19 @@ class AttendanceInputForm extends StatelessWidget {
                             style: TextStyle(color: ColorUtils.slate500),
                           ),
                         ),
-                        ...subjectTeacher.map(
-                          (mp) {
-                            final subj = Subject.fromJson(
-                              mp as Map<String, dynamic>,
-                            );
-                            return DropdownMenuItem<String>(
-                              value: subj.id,
-                              child: Text(
-                                subj.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          },
-                        ),
+                        ...subjectTeacher.map((mp) {
+                          final subj = Subject.fromJson(
+                            mp as Map<String, dynamic>,
+                          );
+                          return DropdownMenuItem<String>(
+                            value: subj.id,
+                            child: Text(
+                              subj.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }),
                       ],
                       onChanged: onSubjectChanged,
                     ),

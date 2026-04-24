@@ -233,18 +233,19 @@ class GradePageState extends ConsumerState<GradePage>
           .read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
-      final data = await GradeService.getTeacherGradeSummary(
-        teacherId: teacherId,
-        academicYearId: ayId,
-        view: _isHomeroomView ? 'wali_kelas' : 'mengajar',
-        classId: _filterClassId,
-        subjectId: _filterSubjectId,
-      ).timeout(
-        const Duration(seconds: 20),
-        onTimeout: () => throw TimeoutException(
-          'Permintaan ke server melebihi batas waktu (20 detik).',
-        ),
-      );
+      final data =
+          await GradeService.getTeacherGradeSummary(
+            teacherId: teacherId,
+            academicYearId: ayId,
+            view: _isHomeroomView ? 'wali_kelas' : 'mengajar',
+            classId: _filterClassId,
+            subjectId: _filterSubjectId,
+          ).timeout(
+            const Duration(seconds: 20),
+            onTimeout: () => throw TimeoutException(
+              'Permintaan ke server melebihi batas waktu (20 detik).',
+            ),
+          );
       if (mounted) {
         // Silently update UI with fresh data
         setState(() {
@@ -266,10 +267,12 @@ class GradePageState extends ConsumerState<GradePage>
   }
 
   String _buildGradeCacheKey() {
-    final ayId = ref
-        .read(academicYearRiverpod)
-        .selectedAcademicYear?['id']
-        ?.toString() ?? 'default';
+    final ayId =
+        ref
+            .read(academicYearRiverpod)
+            .selectedAcademicYear?['id']
+            ?.toString() ??
+        'default';
     final view = _isHomeroomView ? 'wali_kelas' : 'mengajar';
     return 'nilai_input_${teacherId}_${view}_$ayId';
   }

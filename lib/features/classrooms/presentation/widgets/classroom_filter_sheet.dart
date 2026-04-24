@@ -94,9 +94,8 @@ class ClassroomFilterSheetState extends State<ClassroomFilterSheet> {
                     .map((g) => FilterOption<String?>(value: g, label: g))
                     .toList(),
                 selectedValue: _tempGrade,
-                onSelected: (val) => setState(
-                  () => _tempGrade = val == _tempGrade ? null : val,
-                ),
+                onSelected: (val) =>
+                    setState(() => _tempGrade = val == _tempGrade ? null : val),
                 selectedColor: primary,
               ),
             ],
@@ -116,10 +115,7 @@ class ClassroomFilterSheetState extends State<ClassroomFilterSheet> {
                 options: [
                   FilterOption<String?>(
                     value: null,
-                    label: lang.getTranslatedText({
-                      'en': 'All',
-                      'id': 'Semua',
-                    }),
+                    label: lang.getTranslatedText({'en': 'All', 'id': 'Semua'}),
                   ),
                   FilterOption<String?>(
                     value: 'true',

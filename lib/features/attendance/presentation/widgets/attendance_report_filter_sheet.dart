@@ -182,8 +182,10 @@ class _AttendanceFilterSheetState extends ConsumerState<_AttendanceFilterSheet>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             FilterSectionHeader(
-              title: filterLang
-                  .getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+              title: filterLang.getTranslatedText({
+                'en': 'Class',
+                'id': 'Kelas',
+              }),
               icon: Icons.class_outlined,
               primaryColor: widget.primaryColor,
             ),
@@ -197,12 +199,8 @@ class _AttendanceFilterSheetState extends ConsumerState<_AttendanceFilterSheet>
   Widget _buildClassChips() {
     return FilterChipGrid<String>(
       options: widget.classList.map((classItem) {
-        final model =
-            Classroom.fromJson(classItem as Map<String, dynamic>);
-        return FilterOption(
-          value: model.id,
-          label: model.name,
-        );
+        final model = Classroom.fromJson(classItem as Map<String, dynamic>);
+        return FilterOption(value: model.id, label: model.name);
       }).toList(),
       selectedValues: Set.from(_tempClassIds),
       onMultiSelected: (selected) {

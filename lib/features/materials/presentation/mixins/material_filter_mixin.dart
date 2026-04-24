@@ -36,7 +36,11 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
   Future<List<dynamic>> getSubjectsForClass(String classId);
 
   /// Load chapter content for a given subject.
-  Future<void> loadChapterContent(String subjectId, {bool useCache = true, String? search});
+  Future<void> loadChapterContent(
+    String subjectId, {
+    bool useCache = true,
+    String? search,
+  });
 
   // ── Filter UI ──
 
@@ -51,9 +55,13 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
 
     showFilterSheet(
       context: context,
-      title: lp.getTranslatedText({'en': 'Filter Materials', 'id': 'Filter Materi'}),
+      title: lp.getTranslatedText({
+        'en': 'Filter Materials',
+        'id': 'Filter Materi',
+      }),
       primaryColor: primaryColor,
-      onApply: () => _applyFilter(context, tClassId, tClassName, tSubjectId, tSubjectList),
+      onApply: () =>
+          _applyFilter(context, tClassId, tClassName, tSubjectId, tSubjectList),
       onReset: () => setState(() {
         selectedClassId = null;
         selectedClassName = null;
@@ -65,17 +73,23 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
       content: StatefulBuilder(
         builder: (ctx, setSS) {
           final classes = classList
-              .map((c) => FilterOption<String>(
-                    value: c['id']?.toString() ?? '',
-                    label: (c['name'] ?? c['nama'])?.toString() ?? '-',
-                  ))
+              .map(
+                (c) => FilterOption<String>(
+                  value: c['id']?.toString() ?? '',
+                  label: (c['name'] ?? c['nama'])?.toString() ?? '-',
+                ),
+              )
               .toList();
 
           final subjects = tSubjectList
-              .map((s) => FilterOption<String>(
-                    value: s['id']?.toString() ?? '',
-                    label: (s['name'] ?? s['mata_pelajaran_name'])?.toString() ?? '-',
-                  ))
+              .map(
+                (s) => FilterOption<String>(
+                  value: s['id']?.toString() ?? '',
+                  label:
+                      (s['name'] ?? s['mata_pelajaran_name'])?.toString() ??
+                      '-',
+                ),
+              )
               .toList();
 
           return TeacherFilterContent(
@@ -84,8 +98,7 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   FilterSectionHeader(
-                    title:
-                        lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+                    title: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
                     icon: Icons.class_outlined,
                     primaryColor: primaryColor,
                   ),
@@ -105,8 +118,8 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
                         );
                         if ((sc as Map?)?.isNotEmpty ?? false) {
                           final scMap = sc as Map<String, dynamic>;
-                          tClassName =
-                              (scMap['name'] ?? scMap['nama'])?.toString();
+                          tClassName = (scMap['name'] ?? scMap['nama'])
+                              ?.toString();
                         } else {
                           tClassName = null;
                         }

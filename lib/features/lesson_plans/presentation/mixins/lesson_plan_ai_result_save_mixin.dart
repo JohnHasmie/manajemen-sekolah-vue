@@ -51,16 +51,18 @@ mixin LessonPlanAiResultSaveMixin
       AppLogger.debug('lesson_plan', 'PATCH RPP $_lessonPlanAiId: $payload');
 
       final token = PreferencesService().getString('token');
-      final dio = Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        validateStatus: (_) => true,
-      ));
+      final dio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          validateStatus: (_) => true,
+        ),
+      );
 
       final response = await dio.patch(
         '${AiConfig.baseUrl}/lesson-plans/$_lessonPlanAiId',
@@ -98,14 +100,14 @@ mixin LessonPlanAiResultSaveMixin
   Map<String, dynamic> _buildUpdatePayload() {
     return {
       'title': titleController.text,
-      'core_competence':
-          coreCompetencyController.document.toPlainText().trim(),
-      'basic_competence':
-          basicCompetencyController.document.toPlainText().trim(),
-      'learning_objective':
-          objectivesController.document.toPlainText().trim(),
-      'learning_activities':
-          coreActivityController.document.toPlainText().trim(),
+      'core_competence': coreCompetencyController.document.toPlainText().trim(),
+      'basic_competence': basicCompetencyController.document
+          .toPlainText()
+          .trim(),
+      'learning_objective': objectivesController.document.toPlainText().trim(),
+      'learning_activities': coreActivityController.document
+          .toPlainText()
+          .trim(),
       'assessment': assessmentController.document.toPlainText().trim(),
     };
   }

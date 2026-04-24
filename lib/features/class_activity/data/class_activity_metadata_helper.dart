@@ -25,7 +25,8 @@ class MetadataHelper {
     int page = 1,
     bool includeContext = false,
   }) {
-    final isCacheable = includeContext &&
+    final isCacheable =
+        includeContext &&
         page == 1 &&
         classId == null &&
         subjectId == null &&

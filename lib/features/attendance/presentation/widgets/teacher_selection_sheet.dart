@@ -111,8 +111,7 @@ class _TeacherListContent extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              model.employeeNumber != null &&
-                      model.employeeNumber!.isNotEmpty
+              model.employeeNumber != null && model.employeeNumber!.isNotEmpty
                   ? model.employeeNumber!
                   : 'N/A',
             ),

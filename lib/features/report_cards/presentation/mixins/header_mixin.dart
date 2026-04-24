@@ -43,12 +43,7 @@ mixin HeaderMixin on ConsumerState<ReportCardOverviewPage> {
     final label = getFilterStatusLabel();
     if (label.isEmpty) return null;
 
-    return [
-      ActiveFilter(
-        label: label,
-        onRemove: clearFilters,
-      ),
-    ];
+    return [ActiveFilter(label: label, onRemove: clearFilters)];
   }
 
   Widget buildViewToggleButton();

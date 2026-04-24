@@ -97,10 +97,7 @@ class _AppQuillEditorState extends State<AppQuillEditor> {
       clipBehavior: Clip.antiAlias,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          if (widget.showToolbar) _buildToolbar(),
-          _buildEditor(),
-        ],
+        children: [if (widget.showToolbar) _buildToolbar(), _buildEditor()],
       ),
     );
   }
@@ -110,9 +107,7 @@ class _AppQuillEditorState extends State<AppQuillEditor> {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        border: Border(
-          bottom: BorderSide(color: ColorUtils.slate200),
-        ),
+        border: Border(bottom: BorderSide(color: ColorUtils.slate200)),
       ),
       child: Row(
         children: [

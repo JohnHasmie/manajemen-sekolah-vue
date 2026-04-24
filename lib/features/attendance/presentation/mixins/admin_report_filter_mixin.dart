@@ -50,9 +50,7 @@ mixin AdminReportFilterMixin on ConsumerState<AdminAttendanceReportScreen> {
     });
   }
 
-  List<ActiveFilter> buildFilterChips(
-    LanguageProvider languageProvider,
-  ) {
+  List<ActiveFilter> buildFilterChips(LanguageProvider languageProvider) {
     return controller.buildFilterChips(
       languageProvider: languageProvider,
       selectedDateFilter: selectedDateFilter,

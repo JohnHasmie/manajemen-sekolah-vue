@@ -95,7 +95,10 @@ mixin ClassPromotionDataMixin on ConsumerState<ClassPromotionWizard> {
   Future<void> loadStudents(String classId) async {
     isLoading = true;
     try {
-      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+      final ayId = ref
+          .read(academicYearRiverpod)
+          .selectedAcademicYear?['id']
+          ?.toString();
       final studentsData = await getIt<ApiClassService>().getStudentsByClassId(
         classId,
         academicYearId: ayId,

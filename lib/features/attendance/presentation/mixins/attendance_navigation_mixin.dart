@@ -75,7 +75,8 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
           className: className,
           subjectId: subjectId,
           subjectName: subjectName,
-          filterTeacherId: teacherId ?? (isHomeroomView ? null : this.teacherId),
+          filterTeacherId:
+              teacherId ?? (isHomeroomView ? null : this.teacherId),
           lessonHours: lessonHours,
           classList: classList,
           primaryColor: primaryColor,

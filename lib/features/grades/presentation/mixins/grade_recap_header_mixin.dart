@@ -22,10 +22,7 @@ mixin GradeRecapHeaderMixin on ConsumerState<GradeRecapOverviewPage> {
   Widget buildHeader(LanguageProvider lp) {
     final isHomeroomTeacher = ref.watch(teacherRiverpod).isHomeroomTeacher;
     return TeacherPageHeader(
-      title: lp.getTranslatedText({
-        'en': 'Grade Recap',
-        'id': 'Rekap Nilai',
-      }),
+      title: lp.getTranslatedText({'en': 'Grade Recap', 'id': 'Rekap Nilai'}),
       subtitle: isHomeroomView
           ? lp.getTranslatedText({
               'en': 'Homeroom class grade recap',
@@ -47,9 +44,7 @@ mixin GradeRecapHeaderMixin on ConsumerState<GradeRecapOverviewPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
-            isListView
-                ? Icons.view_agenda_rounded
-                : Icons.list_rounded,
+            isListView ? Icons.view_agenda_rounded : Icons.list_rounded,
             color: Colors.white,
             size: 18,
           ),
@@ -102,28 +97,32 @@ mixin GradeRecapHeaderMixin on ConsumerState<GradeRecapOverviewPage> {
 
     final filters = <ActiveFilter>[];
     if (filterClassName != null) {
-      filters.add(ActiveFilter(
-        label: filterClassName!,
-        onRemove: () {
-          setState(() {
-            filterClassId = null;
-            filterClassName = null;
-          });
-          loadData();
-        },
-      ));
+      filters.add(
+        ActiveFilter(
+          label: filterClassName!,
+          onRemove: () {
+            setState(() {
+              filterClassId = null;
+              filterClassName = null;
+            });
+            loadData();
+          },
+        ),
+      );
     }
     if (filterSubjectName != null) {
-      filters.add(ActiveFilter(
-        label: filterSubjectName!,
-        onRemove: () {
-          setState(() {
-            filterSubjectId = null;
-            filterSubjectName = null;
-          });
-          loadData();
-        },
-      ));
+      filters.add(
+        ActiveFilter(
+          label: filterSubjectName!,
+          onRemove: () {
+            setState(() {
+              filterSubjectId = null;
+              filterSubjectName = null;
+            });
+            loadData();
+          },
+        ),
+      );
     }
     return filters.isEmpty ? null : filters;
   }

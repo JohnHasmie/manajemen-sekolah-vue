@@ -123,8 +123,9 @@ mixin ParentAttendanceFilterMixin
                       }).toList(),
                       selectedValue: tempSemesterFilter,
                       onSelected: (val) => setSS(() {
-                        tempSemesterFilter =
-                            val == tempSemesterFilter ? null : val;
+                        tempSemesterFilter = val == tempSemesterFilter
+                            ? null
+                            : val;
                       }),
                       selectedColor: primaryColor,
                     ),

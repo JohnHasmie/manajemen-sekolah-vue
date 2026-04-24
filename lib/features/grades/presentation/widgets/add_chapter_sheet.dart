@@ -18,10 +18,7 @@ class AddChapterResult {
   /// ```
   final Map<String, dynamic>? assessment;
 
-  const AddChapterResult({
-    required this.name,
-    required this.assessment,
-  });
+  const AddChapterResult({required this.name, required this.assessment});
 }
 
 /// Modal bottom sheet for adding a new grade column.
@@ -286,9 +283,9 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
         Text(
           materials.isEmpty
               ? 'Belum ada materi pembelajaran terdaftar. Ketik nama kolom '
-                  'secara manual.'
+                    'secara manual.'
               : 'Pilih dari materi pembelajaran yang sudah Anda buat, atau '
-                  'ketik nama sendiri.',
+                    'ketik nama sendiri.',
           style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
         ),
         const SizedBox(height: 12),
@@ -349,8 +346,7 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color:
-                    selected ? widget.primaryColor : ColorUtils.slate200,
+                color: selected ? widget.primaryColor : ColorUtils.slate200,
                 width: selected ? 1.4 : 1,
               ),
             ),
@@ -373,9 +369,7 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
                   child: Icon(
                     Icons.menu_book_rounded,
                     size: 16,
-                    color: selected
-                        ? widget.primaryColor
-                        : ColorUtils.slate600,
+                    color: selected ? widget.primaryColor : ColorUtils.slate600,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -445,8 +439,7 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
                 child: Icon(
                   Icons.edit_rounded,
                   size: 16,
-                  color:
-                      selected ? widget.primaryColor : ColorUtils.slate600,
+                  color: selected ? widget.primaryColor : ColorUtils.slate600,
                 ),
               ),
               const SizedBox(width: 10),
@@ -562,8 +555,7 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
                 child: Icon(
                   Icons.edit_note_rounded,
                   size: 20,
-                  color:
-                      selected ? widget.primaryColor : ColorUtils.slate600,
+                  color: selected ? widget.primaryColor : ColorUtils.slate600,
                 ),
               ),
               const SizedBox(width: 12),
@@ -619,7 +611,8 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
   }
 
   Widget _buildAssessmentTile(Map<String, dynamic> a) {
-    final selected = !_manualSelected &&
+    final selected =
+        !_manualSelected &&
         _selectedAssessment != null &&
         _selectedAssessment!['title'] == a['title'] &&
         _selectedAssessment!['date'] == a['date'] &&
@@ -729,10 +722,7 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
             icon: const Icon(Icons.arrow_back_rounded, size: 18),
             label: const Text(
               'Kembali',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: ColorUtils.slate700,
@@ -784,10 +774,7 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
       ),
       filled: true,
       fillColor: ColorUtils.slate50,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 12,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(color: ColorUtils.slate200),

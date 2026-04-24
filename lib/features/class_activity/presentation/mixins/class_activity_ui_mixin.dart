@@ -90,9 +90,15 @@ mixin ClassActivityUiMixin on ConsumerState<AdminClassActivityScreen> {
             _buildDescriptionSection(activity),
           ],
           if (activity['judul_bab'] != null ||
-              (activity['chapter'] is Map ? activity['chapter']['title'] : null) != null ||
+              (activity['chapter'] is Map
+                      ? activity['chapter']['title']
+                      : null) !=
+                  null ||
               activity['judul_sub_bab'] != null ||
-              (activity['subChapter'] is Map ? activity['subChapter']['title'] : null) != null) ...[
+              (activity['subChapter'] is Map
+                      ? activity['subChapter']['title']
+                      : null) !=
+                  null) ...[
             const SizedBox(height: AppSpacing.lg),
             _buildChapterSection(activity),
           ],
@@ -190,7 +196,10 @@ mixin ClassActivityUiMixin on ConsumerState<AdminClassActivityScreen> {
     return AdminActivityDetailItem(
       icon: Icons.person,
       label: 'Guru Pengajar',
-      value: activity['guru_nama'] ?? (activity['teacher'] is Map ? activity['teacher']['name'] : null) ?? 'Tidak Diketahui',
+      value:
+          activity['guru_nama'] ??
+          (activity['teacher'] is Map ? activity['teacher']['name'] : null) ??
+          'Tidak Diketahui',
       primaryColor: getPrimaryColor(),
     );
   }
@@ -280,10 +289,16 @@ mixin ClassActivityUiMixin on ConsumerState<AdminClassActivityScreen> {
         _buildSectionTitle('Informasi Bab'),
         const SizedBox(height: AppSpacing.sm),
         if (activity['judul_bab'] != null ||
-            (activity['chapter'] is Map ? activity['chapter']['title'] : null) != null)
+            (activity['chapter'] is Map
+                    ? activity['chapter']['title']
+                    : null) !=
+                null)
           _buildMainChapterItem(activity),
         if (activity['judul_sub_bab'] != null ||
-            (activity['subChapter'] is Map ? activity['subChapter']['title'] : null) != null)
+            (activity['subChapter'] is Map
+                    ? activity['subChapter']['title']
+                    : null) !=
+                null)
           _buildSubChapterItem(activity),
         if (_hasAdditionalMaterial(activity))
           _buildAdditionalMaterialItems(activity),
@@ -303,9 +318,10 @@ mixin ClassActivityUiMixin on ConsumerState<AdminClassActivityScreen> {
   }
 
   Widget _buildMainChapterItem(Map<String, dynamic> activity) {
-    final chapterTitle = activity['judul_bab']
-        ?? (activity['chapter'] is Map ? activity['chapter']['title'] : null)
-        ?? '-';
+    final chapterTitle =
+        activity['judul_bab'] ??
+        (activity['chapter'] is Map ? activity['chapter']['title'] : null) ??
+        '-';
     return AdminActivityDetailItem(
       icon: Icons.menu_book,
       label: 'Bab',
@@ -315,9 +331,12 @@ mixin ClassActivityUiMixin on ConsumerState<AdminClassActivityScreen> {
   }
 
   Widget _buildSubChapterItem(Map<String, dynamic> activity) {
-    final subChapterTitle = activity['judul_sub_bab']
-        ?? (activity['subChapter'] is Map ? activity['subChapter']['title'] : null)
-        ?? '-';
+    final subChapterTitle =
+        activity['judul_sub_bab'] ??
+        (activity['subChapter'] is Map
+            ? activity['subChapter']['title']
+            : null) ??
+        '-';
     return AdminActivityDetailItem(
       icon: Icons.bookmark,
       label: 'Sub Bab (Utama)',

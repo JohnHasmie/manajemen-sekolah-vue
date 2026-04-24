@@ -133,15 +133,15 @@ class FrozenColumnTable extends StatefulWidget {
     this.showLeftColumnShadow = true,
     this.onRowTap,
     this.horizontalController,
-  })  : assert(
-          leftColumns.length > 0,
-          'leftColumns must contain at least one column.',
-        ),
-        assert(
-          (leftSecondaryHeader == null) == (rightSecondaryHeader == null),
-          'leftSecondaryHeader and rightSecondaryHeader must both be null '
-          'or both non-null.',
-        );
+  }) : assert(
+         leftColumns.length > 0,
+         'leftColumns must contain at least one column.',
+       ),
+       assert(
+         (leftSecondaryHeader == null) == (rightSecondaryHeader == null),
+         'leftSecondaryHeader and rightSecondaryHeader must both be null '
+         'or both non-null.',
+       );
 
   @override
   State<FrozenColumnTable> createState() => _FrozenColumnTableState();
@@ -181,10 +181,7 @@ class _FrozenColumnTableState extends State<FrozenColumnTable> {
   /// gesture arena.
   Widget _wrapTappable(int rowIndex, Widget child) {
     if (widget.onRowTap == null) return child;
-    return InkWell(
-      onTap: () => widget.onRowTap!(rowIndex),
-      child: child,
-    );
+    return InkWell(onTap: () => widget.onRowTap!(rowIndex), child: child);
   }
 
   @override
@@ -241,7 +238,7 @@ class _FrozenColumnTableState extends State<FrozenColumnTable> {
               width: totalWidth,
               decoration:
                   widget.rowDecorationBuilder?.call(i) ??
-                      _defaultRowDecoration(i),
+                  _defaultRowDecoration(i),
               child: Row(
                 children: [
                   for (final col in widget.leftColumns)
@@ -259,7 +256,8 @@ class _FrozenColumnTableState extends State<FrozenColumnTable> {
 
   Widget _buildRightScrollable() {
     final rightWidth = _rightTotalWidth;
-    final headerStripHeight = widget.headerHeight +
+    final headerStripHeight =
+        widget.headerHeight +
         (_hasSecondaryHeader ? widget.secondaryHeaderHeight : 0);
 
     final scrollable = SingleChildScrollView(
@@ -293,7 +291,8 @@ class _FrozenColumnTableState extends State<FrozenColumnTable> {
               Container(
                 height: widget.rowHeight,
                 width: rightWidth,
-                decoration: widget.rowDecorationBuilder?.call(i) ??
+                decoration:
+                    widget.rowDecorationBuilder?.call(i) ??
                     _defaultRowDecoration(i),
                 child: Row(
                   children: [

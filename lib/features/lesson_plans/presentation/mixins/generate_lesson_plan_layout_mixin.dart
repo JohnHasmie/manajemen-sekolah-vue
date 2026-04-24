@@ -101,9 +101,7 @@ mixin GenerateLessonPlanLayoutMixin
               decoration: BoxDecoration(
                 color: primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: primaryColor.withValues(alpha: 0.2),
-                ),
+                border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

@@ -44,7 +44,11 @@ mixin MaterialDataLoadMixin on ConsumerState<TeacherMaterialScreen> {
   void loadContentProgress(String subjectId);
   void checkAndShowTour();
   void autoSelectCurrentSchedule(List<dynamic> classes, List<dynamic> subjects);
-  Future<void> loadChapterContent(String subjectId, {bool useCache, String? search});
+  Future<void> loadChapterContent(
+    String subjectId, {
+    bool useCache,
+    String? search,
+  });
   Future<List<dynamic>> resolveClassesAndProfile(
     String teacherId,
     List<dynamic> initial,
@@ -56,7 +60,11 @@ mixin MaterialDataLoadMixin on ConsumerState<TeacherMaterialScreen> {
     ({String? id, String? name}) sel,
     bool useCache,
   );
-  void loadOverviewAndSchedules(String teacherId, List<dynamic> classes, {String? search});
+  void loadOverviewAndSchedules(
+    String teacherId,
+    List<dynamic> classes, {
+    String? search,
+  });
   void resetChapterMaps(List<dynamic> chapters, List<dynamic> subChapters);
 
   // Error state accessor for inline error display

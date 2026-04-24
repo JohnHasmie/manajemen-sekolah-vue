@@ -51,10 +51,8 @@ abstract class Student with _$Student {
     mapped['class_id'] ??= mapped['id_kelas'];
     mapped['student_class_id'] ??= mapped['id_siswa_kelas'];
     mapped['gender'] ??= mapped['jenis_kelamin'];
-    mapped['date_of_birth'] ??=
-        mapped['tanggal_lahir'] ?? mapped['tgl_lahir'];
-    mapped['guardian_email'] ??=
-        mapped['parent_email'] ?? mapped['email_wali'];
+    mapped['date_of_birth'] ??= mapped['tanggal_lahir'] ?? mapped['tgl_lahir'];
+    mapped['guardian_email'] ??= mapped['parent_email'] ?? mapped['email_wali'];
 
     // Use "name" from alternate keys used by report-card APIs.
     mapped['name'] ??= mapped['student_name'];

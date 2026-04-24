@@ -17,8 +17,7 @@ mixin ResultFetchMixin on ConsumerState<LearningRecommendationResultScreen> {
   /// Segments the cache by scope (`wali` vs `mengajar`) so switching
   /// between roles doesn't show the other scope's stale list.
   String buildRecommendationsCacheKey() {
-    final teacherId =
-        Teacher.fromJson(widget.teacher).id;
+    final teacherId = Teacher.fromJson(widget.teacher).id;
     final classId = widget.classData['id']?.toString() ?? '';
     final studentId = Student.fromJson(widget.student).id;
     final scopeTag = widget.isHomeroomView ? 'wali' : 'mengajar';
@@ -71,8 +70,7 @@ mixin ResultFetchMixin on ConsumerState<LearningRecommendationResultScreen> {
     }
 
     try {
-      final teacherId =
-          Teacher.fromJson(widget.teacher).id;
+      final teacherId = Teacher.fromJson(widget.teacher).id;
       final classId = widget.classData['id']?.toString() ?? '';
       final studentId = Student.fromJson(widget.student).id;
 
@@ -90,7 +88,10 @@ mixin ResultFetchMixin on ConsumerState<LearningRecommendationResultScreen> {
       // homeroom_class_id, and `getRecommendations` prefers the homeroom
       // scope when both are supplied — pass nulls for the unused side
       // to make the intent explicit.
-      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+      final ayId = ref
+          .read(academicYearRiverpod)
+          .selectedAcademicYear?['id']
+          ?.toString();
       final response = await getIt<ApiRecommendationService>()
           .getRecommendations(
             teacherId: widget.isHomeroomView ? null : teacherId,

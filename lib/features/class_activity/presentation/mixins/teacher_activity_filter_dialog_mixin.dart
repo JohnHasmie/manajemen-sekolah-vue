@@ -25,20 +25,21 @@ mixin TeacherActivityFilterDialogMixin {
         primaryColor: primaryColor,
         languageProvider: lp,
         onFetchSubjects: _fetchSubjectsForClass,
-        onApply: ({
-          String? classId,
-          String? subjectId,
-          String? dateOption,
-          List<dynamic>? subjectList,
-        }) {
-          updateFilters(
-            classId: classId,
-            subjectId: subjectId,
-            dateOption: dateOption,
-            subjectList: subjectList,
-          );
-          forceRefresh();
-        },
+        onApply:
+            ({
+              String? classId,
+              String? subjectId,
+              String? dateOption,
+              List<dynamic>? subjectList,
+            }) {
+              updateFilters(
+                classId: classId,
+                subjectId: subjectId,
+                dateOption: dateOption,
+                subjectList: subjectList,
+              );
+              forceRefresh();
+            },
       ),
     );
   }
@@ -93,7 +94,8 @@ class _ActivityFilterSheet extends StatefulWidget {
     String? subjectId,
     String? dateOption,
     List<dynamic>? subjectList,
-  }) onApply;
+  })
+  onApply;
 
   const _ActivityFilterSheet({
     required this.classList,
@@ -204,9 +206,8 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
                 ),
                 FilterChipGrid<String>(
                   options: _subjectList.map((s) {
-                    final id = (s['id'] ?? s['mata_pelajaran_id'])
-                            ?.toString() ??
-                        '';
+                    final id =
+                        (s['id'] ?? s['mata_pelajaran_id'])?.toString() ?? '';
                     final name = (s['nama'] ?? s['name'] ?? '-').toString();
                     return FilterOption(value: id, label: name);
                   }).toList(),

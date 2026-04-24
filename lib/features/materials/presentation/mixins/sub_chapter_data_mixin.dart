@@ -104,7 +104,7 @@ mixin SubChapterDataMixin on ConsumerState<SubBabDetailPage> {
     AppLogger.debug(
       'material',
       '[#137] loadAiContent START key=$aiCacheKey '
-      'teacher=${widget.teacherId} chapter=$chapterId sub=$subChapterId',
+          'teacher=${widget.teacherId} chapter=$chapterId sub=$subChapterId',
     );
 
     // Try local cache — return early if hit
@@ -122,8 +122,8 @@ mixin SubChapterDataMixin on ConsumerState<SubBabDetailPage> {
         AppLogger.debug(
           'material',
           '[#137] cache HIT keys=${map.keys.toList()} '
-          'quizzes=${(map['quizzes'] as List?)?.length ?? 0} '
-          'refs=${(map['references'] as List?)?.length ?? 0}',
+              'quizzes=${(map['quizzes'] as List?)?.length ?? 0} '
+              'refs=${(map['references'] as List?)?.length ?? 0}',
         );
         return;
       }
@@ -177,17 +177,14 @@ mixin SubChapterDataMixin on ConsumerState<SubBabDetailPage> {
             AppLogger.error(
               'material',
               '[#137] pointer fetch returned unexpected shape: '
-              '${materialResult.runtimeType}',
+                  '${materialResult.runtimeType}',
             );
           }
         } else {
           AppLogger.debug('material', '[#137] pointer cache MISS');
         }
       } catch (pointerError) {
-        AppLogger.error(
-          'material',
-          '[#137] pointer tier threw: $pointerError',
-        );
+        AppLogger.error('material', '[#137] pointer tier threw: $pointerError');
       }
 
       // Tier 2 — server-side cache check by teacher+chapter+sub.
@@ -225,7 +222,7 @@ mixin SubChapterDataMixin on ConsumerState<SubBabDetailPage> {
           AppLogger.debug(
             'material',
             '[#137] checkMaterialCache parsed cached=$isCached '
-            'material_id=$materialId',
+                'material_id=$materialId',
           );
 
           if (isCached && materialId != null) {
@@ -246,7 +243,7 @@ mixin SubChapterDataMixin on ConsumerState<SubBabDetailPage> {
               AppLogger.error(
                 'material',
                 '[#137] getGeneratedMaterial returned unexpected shape: '
-                '${materialResult.runtimeType}',
+                    '${materialResult.runtimeType}',
               );
             }
           }
@@ -317,10 +314,7 @@ mixin SubChapterDataMixin on ConsumerState<SubBabDetailPage> {
             }
           }
         } catch (listError) {
-          AppLogger.error(
-            'material',
-            '[#137] list fallback threw: $listError',
-          );
+          AppLogger.error('material', '[#137] list fallback threw: $listError');
         }
       }
 
@@ -381,7 +375,7 @@ mixin SubChapterDataMixin on ConsumerState<SubBabDetailPage> {
                 AppLogger.debug(
                   'material',
                   '[#139] teacher-agnostic lookup HIT material_id=$materialId '
-                  'keys=${data.keys.toList()}',
+                      'keys=${data.keys.toList()}',
                 );
                 // Rehydrate the sub-chapter pointer cache so subsequent
                 // re-opens short-circuit at tier 1.5 instead of round-
@@ -399,7 +393,7 @@ mixin SubChapterDataMixin on ConsumerState<SubBabDetailPage> {
               AppLogger.debug(
                 'material',
                 '[#139] teacher-agnostic lookup MISS cached=$isCached '
-                'material_id=$materialId',
+                    'material_id=$materialId',
               );
 
               // Self-heal: if the teacher-agnostic lookup confirms the
@@ -431,18 +425,14 @@ mixin SubChapterDataMixin on ConsumerState<SubBabDetailPage> {
                       },
                     ],
                   });
-                  await LocalCacheService.clearStartingWith(
-                    'materi_summary_',
-                  );
-                  await LocalCacheService.clearStartingWith(
-                    'materi_progress_',
-                  );
+                  await LocalCacheService.clearStartingWith('materi_summary_');
+                  await LocalCacheService.clearStartingWith('materi_progress_');
                   AppLogger.debug(
                     'material',
                     '[#139] self-heal reset is_generated for stale flag '
-                    'teacher=${widget.teacherId} class=$classId '
-                    'chapter=${widget.chapter['id']} '
-                    'sub=${widget.subChapter['id']}',
+                        'teacher=${widget.teacherId} class=$classId '
+                        'chapter=${widget.chapter['id']} '
+                        'sub=${widget.subChapter['id']}',
                   );
                 } catch (healError) {
                   AppLogger.error(

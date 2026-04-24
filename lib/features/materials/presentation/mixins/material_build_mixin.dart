@@ -99,7 +99,11 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
   Future<void> forceRefresh();
 
   /// Load chapter content (with optional search).
-  Future<void> loadChapterContent(String subjectId, {bool useCache, String? search});
+  Future<void> loadChapterContent(
+    String subjectId, {
+    bool useCache,
+    String? search,
+  });
 
   /// Load overview and schedules (with optional search).
   Future<void> loadOverviewAndSchedules(
@@ -109,8 +113,7 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
   });
 
   /// Get teacher ID from widget.
-  String get _teacherId =>
-      widget.teacher['id']?.toString() ?? '';
+  String get _teacherId => widget.teacher['id']?.toString() ?? '';
 
   /// Perform search — calls backend API with search term.
   void performSearch() {
@@ -227,7 +230,10 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
       searchHintText: lp.getTranslatedText(
         selectedSubject != null
             ? {'en': 'Search chapters...', 'id': 'Cari bab...'}
-            : {'en': 'Search class or subject...', 'id': 'Cari kelas atau mapel...'},
+            : {
+                'en': 'Search class or subject...',
+                'id': 'Cari kelas atau mapel...',
+              },
       ),
       activeFilters: _buildActiveFilterChips(lp),
       onClearAllFilters: clearAllFilters,

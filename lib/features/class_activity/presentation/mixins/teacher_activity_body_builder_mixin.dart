@@ -25,14 +25,11 @@ mixin TeacherActivityBodyBuilderMixin
         'id': 'Tarik ke bawah untuk memuat ulang',
       }),
       emptyIcon: Icons.event_note_outlined,
-      loadingBuilder: () => const SkeletonListLoading(
-        itemCount: 4,
-        infoTagCount: 2,
-      ),
+      loadingBuilder: () =>
+          const SkeletonListLoading(itemCount: 4, infoTagCount: 2),
       childBuilder: () => _buildActivityList(lp),
     );
   }
-
 
   Widget _buildActivityList(LanguageProvider lp) {
     return ListView.builder(
@@ -81,10 +78,8 @@ mixin TeacherActivityBodyBuilderMixin
         'id': 'Tarik ke bawah untuk memuat ulang',
       }),
       emptyIcon: Icons.event_note_outlined,
-      loadingBuilder: () => const SkeletonListLoading(
-        itemCount: 5,
-        infoTagCount: 1,
-      ),
+      loadingBuilder: () =>
+          const SkeletonListLoading(itemCount: 5, infoTagCount: 1),
       childBuilder: () => _buildTimelineList(lp),
     );
   }

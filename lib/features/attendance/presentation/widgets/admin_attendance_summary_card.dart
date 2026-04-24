@@ -277,4 +277,3 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
     );
   }
 }
-

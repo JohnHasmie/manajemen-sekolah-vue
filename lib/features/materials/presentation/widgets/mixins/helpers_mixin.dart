@@ -6,6 +6,7 @@ mixin HelpersMixin {
   Map<String, bool> getExpandedChapter();
   Map<String, bool> getCheckedChapter();
   Map<String, bool> getCheckedSubChapter();
+
   /// Map of subChapterId → is_generated. Purely a visual signal for the
   /// three Materi/Kuis/Ref badges; does not drive the checkbox lock. (#141)
   Map<String, bool> getGeneratedSubChapter();

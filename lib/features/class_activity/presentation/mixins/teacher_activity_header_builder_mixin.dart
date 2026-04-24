@@ -76,46 +76,54 @@ mixin TeacherActivityHeaderBuilderMixin
 
     final filters = <ActiveFilter>[];
     if (filterClassId != null) {
-      final className = classList
+      final className =
+          classList
               .firstWhere(
                 (c) => c['id']?.toString() == filterClassId,
                 orElse: () => {'name': 'Unknown'},
               )['name']
               ?.toString() ??
           'Unknown';
-      filters.add(ActiveFilter(
-        label: className,
-        onRemove: () {
-          updateFilters(classId: null, subjectId: null);
-          forceRefresh();
-        },
-      ));
+      filters.add(
+        ActiveFilter(
+          label: className,
+          onRemove: () {
+            updateFilters(classId: null, subjectId: null);
+            forceRefresh();
+          },
+        ),
+      );
     }
     if (filterSubjectId != null) {
-      final subjectName = filterSubjectList
+      final subjectName =
+          filterSubjectList
               .firstWhere(
                 (s) => s['id']?.toString() == filterSubjectId,
                 orElse: () => {'name': 'Unknown'},
               )['name']
               ?.toString() ??
           'Unknown';
-      filters.add(ActiveFilter(
-        label: subjectName,
-        onRemove: () {
-          updateFilters(subjectId: null);
-          forceRefresh();
-        },
-      ));
+      filters.add(
+        ActiveFilter(
+          label: subjectName,
+          onRemove: () {
+            updateFilters(subjectId: null);
+            forceRefresh();
+          },
+        ),
+      );
     }
     if (filterDateOption != null) {
       final label = _dateFilterLabel(lp);
-      filters.add(ActiveFilter(
-        label: label,
-        onRemove: () {
-          updateFilters(dateOption: null);
-          forceRefresh();
-        },
-      ));
+      filters.add(
+        ActiveFilter(
+          label: label,
+          onRemove: () {
+            updateFilters(dateOption: null);
+            forceRefresh();
+          },
+        ),
+      );
     }
     return filters.isEmpty ? null : filters;
   }

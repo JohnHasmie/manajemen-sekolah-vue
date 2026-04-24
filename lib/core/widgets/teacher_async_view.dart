@@ -126,11 +126,7 @@ class TeacherAsyncView extends StatelessWidget {
 
     if (errorMessage != null) {
       return errorBuilder?.call(errorMessage) ??
-          AppErrorState(
-            message: errorMessage,
-            onRetry: onRefresh,
-            role: role,
-          );
+          AppErrorState(message: errorMessage, onRetry: onRefresh, role: role);
     }
 
     if (isEmpty) {
@@ -144,7 +140,8 @@ class TeacherAsyncView extends StatelessWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             child: SizedBox(
               height: constraints.maxHeight,
-              child: emptyBuilder?.call() ??
+              child:
+                  emptyBuilder?.call() ??
                   EmptyState(
                     title: emptyTitle,
                     subtitle: emptySubtitle,

@@ -175,7 +175,10 @@ class AdminSubjectManagementScreenState
           searchText: _searchController.text,
           existingClassNames: _availableClassNames,
           existingGradeLevels: _availableGradeLevels,
-          academicYearId: ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString(),
+          academicYearId: ref
+              .read(academicYearRiverpod)
+              .selectedAcademicYear?['id']
+              ?.toString(),
         );
 
     if (!mounted) return;

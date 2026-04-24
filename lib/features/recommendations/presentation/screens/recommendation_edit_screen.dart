@@ -125,8 +125,7 @@ class _LearningRecommendationEditScreenState
                     '${widget.recommendations.length} rekomendasi untuk diedit',
                 icon: Icons.edit_note_rounded,
                 primaryColor: primaryColor,
-                onClose:
-                    _isSaving ? null : () => AppNavigator.pop(context),
+                onClose: _isSaving ? null : () => AppNavigator.pop(context),
               ),
               Flexible(
                 child: ListView.builder(
@@ -139,15 +138,14 @@ class _LearningRecommendationEditScreenState
                 ),
               ),
               BottomSheetFooter(
-                primaryLabel: _isSaving
-                    ? 'Menyimpan...'
-                    : 'Simpan Perubahan',
+                primaryLabel: _isSaving ? 'Menyimpan...' : 'Simpan Perubahan',
                 secondaryLabel: 'Batal',
                 primaryColor: primaryColor,
                 primaryEnabled: !_isSaving,
                 onPrimary: saveChanges,
-                onSecondary:
-                    _isSaving ? () {} : () => AppNavigator.pop(context),
+                onSecondary: _isSaving
+                    ? () {}
+                    : () => AppNavigator.pop(context),
               ),
             ],
           ),

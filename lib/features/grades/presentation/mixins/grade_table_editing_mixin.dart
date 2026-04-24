@@ -4,7 +4,8 @@ import 'package:manajemensekolah/features/grades/presentation/widgets/grade_tabl
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_table_logic_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_table_helpers_mixin.dart';
 
-mixin GradeTableEditingMixin on State<GradeTableWidget>, GradeTableLogicMixin, GradeTableHelpersMixin {
+mixin GradeTableEditingMixin
+    on State<GradeTableWidget>, GradeTableLogicMixin, GradeTableHelpersMixin {
   String? get editingKey;
   int get editingStudentIdx;
   int get editingColIdx;

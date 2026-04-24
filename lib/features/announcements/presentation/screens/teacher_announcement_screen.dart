@@ -54,8 +54,7 @@ class TeacherAnnouncementScreenState
 
   /// Whether any filter (priority or status) is currently active —
   /// drives the filter-icon badge in the header.
-  bool get _hasActiveFilter =>
-      _filterPriority != null || _filterStatus != null;
+  bool get _hasActiveFilter => _filterPriority != null || _filterStatus != null;
 
   @override
   void initState() {
@@ -91,8 +90,7 @@ class TeacherAnnouncementScreenState
             _announcements = [..._announcements, ...newItems];
           }
         });
-        updatePaginationFromMeta(
-            result['pagination'] as Map<String, dynamic>?);
+        updatePaginationFromMeta(result['pagination'] as Map<String, dynamic>?);
       }
     } catch (e) {
       AppLogger.error('announcement', 'loadPage($page) error: $e');
@@ -265,14 +263,12 @@ class TeacherAnnouncementScreenState
   }
 
   /// Fetches all announcements for a given month (for expanded summary).
-  Future<List<Map<String, dynamic>>> _loadMonthItems(
-      String monthKey) async {
+  Future<List<Map<String, dynamic>>> _loadMonthItems(String monthKey) async {
     final parts = monthKey.split('-');
     if (parts.length != 2) return [];
     final year = int.tryParse(parts[0]) ?? 2026;
     final month = int.tryParse(parts[1]) ?? 1;
-    final dateFrom =
-        '$year-${month.toString().padLeft(2, '0')}-01';
+    final dateFrom = '$year-${month.toString().padLeft(2, '0')}-01';
     final lastDay = DateTime(year, month + 1, 0).day;
     final dateTo =
         '$year-${month.toString().padLeft(2, '0')}-${lastDay.toString().padLeft(2, '0')}';
@@ -289,13 +285,10 @@ class TeacherAnnouncementScreenState
       );
       // Filter client-side by month since we don't have date_from/date_to in paginated endpoint
       final allItems = List<dynamic>.from(result['data'] ?? []);
-      return allItems
-          .cast<Map<String, dynamic>>()
-          .where((item) {
-            final createdAt = item['created_at']?.toString() ?? '';
-            return createdAt.startsWith(monthKey);
-          })
-          .toList();
+      return allItems.cast<Map<String, dynamic>>().where((item) {
+        final createdAt = item['created_at']?.toString() ?? '';
+        return createdAt.startsWith(monthKey);
+      }).toList();
     } catch (e) {
       AppLogger.error('announcement', 'Load month items error: $e');
       return [];
@@ -358,8 +351,7 @@ class TeacherAnnouncementScreenState
             activeFilters: _buildActiveFilters(languageProvider),
             onClearAllFilters: _clearAllFilters,
             trailing: ViewToggleButton(
-              currentMode:
-                  _isSummaryView ? ViewMode.grid : ViewMode.list,
+              currentMode: _isSummaryView ? ViewMode.grid : ViewMode.list,
               availableModes: const [ViewMode.grid, ViewMode.list],
               onChanged: (mode) => setState(() {
                 _isSummaryView = mode == ViewMode.grid;

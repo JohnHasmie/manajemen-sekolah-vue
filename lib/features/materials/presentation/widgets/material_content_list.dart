@@ -12,6 +12,7 @@ class MaterialContentList extends StatelessWidget
   final Map<String, bool> expandedChapter;
   final Map<String, bool> checkedChapter;
   final Map<String, bool> checkedSubChapter;
+
   /// Visual-only signal for the Materi/Kuis/Ref badges on each sub-chapter
   /// row. Does not affect the checkbox lock. (#141)
   final Map<String, bool> generatedSubChapter;

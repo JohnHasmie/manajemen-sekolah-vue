@@ -73,8 +73,7 @@ class MaterialFilterDialog extends StatefulWidget {
   }
 
   @override
-  State<MaterialFilterDialog> createState() =>
-      _MaterialFilterDialogState();
+  State<MaterialFilterDialog> createState() => _MaterialFilterDialogState();
 }
 
 class _MaterialFilterDialogState extends State<MaterialFilterDialog> {
@@ -122,18 +121,14 @@ class _MaterialFilterDialogState extends State<MaterialFilterDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FilterSectionHeader(
-                title: _lp.getTranslatedText({
-                  'en': 'Class',
-                  'id': 'Kelas',
-                }),
+                title: _lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
                 icon: Icons.class_outlined,
                 primaryColor: widget.primaryColor,
               ),
               FilterChipGrid<String>(
                 options: widget.classList.map((c) {
                   final id = c['id']?.toString() ?? '';
-                  final name =
-                      (c['name'] ?? c['nama'] ?? '-').toString();
+                  final name = (c['name'] ?? c['nama'] ?? '-').toString();
                   return FilterOption(value: id, label: name);
                 }).toList(),
                 selectedValue: _classId,
@@ -145,8 +140,7 @@ class _MaterialFilterDialogState extends State<MaterialFilterDialog> {
                     _subjectList = [];
                   });
                   if (newId != null) {
-                    final subjects =
-                        await widget.onLoadSubjects(newId);
+                    final subjects = await widget.onLoadSubjects(newId);
                     if (mounted) {
                       setState(() => _subjectList = subjects);
                     }
@@ -170,16 +164,13 @@ class _MaterialFilterDialogState extends State<MaterialFilterDialog> {
                 ),
                 FilterChipGrid<String>(
                   options: _subjectList.map((s) {
-                    final id = (s['id'] ?? s['mata_pelajaran_id'])
-                            ?.toString() ??
-                        '';
-                    final name =
-                        (s['nama'] ?? s['name'] ?? '-').toString();
+                    final id =
+                        (s['id'] ?? s['mata_pelajaran_id'])?.toString() ?? '';
+                    final name = (s['nama'] ?? s['name'] ?? '-').toString();
                     return FilterOption(value: id, label: name);
                   }).toList(),
                   selectedValue: _subjectId,
-                  onSelected: (val) =>
-                      setState(() => _subjectId = val),
+                  onSelected: (val) => setState(() => _subjectId = val),
                   selectedColor: widget.primaryColor,
                 ),
               ],
@@ -192,10 +183,7 @@ class _MaterialFilterDialogState extends State<MaterialFilterDialog> {
                   'en': 'Loading subjects...',
                   'id': 'Memuat mapel...',
                 }),
-                style: TextStyle(
-                  color: ColorUtils.slate500,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
               ),
             ),
         ],

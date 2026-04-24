@@ -36,8 +36,8 @@ mixin AdminMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
       MenuItem(
         title: AppLocalizations.inputGrades.tr,
         icon: Icons.edit_note_outlined,
-        onTap: () => AppNavigator.push(
-            context, const AdminGradeOverviewScreen()),
+        onTap: () =>
+            AppNavigator.push(context, const AdminGradeOverviewScreen()),
       ),
     ];
   }

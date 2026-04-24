@@ -56,8 +56,7 @@ class SubjectClassManagementPageState
 
   /// Gets subject ID from widget
   @override
-  dynamic getSubjectId() =>
-      model_subject.Subject.fromJson(widget.subject).id;
+  dynamic getSubjectId() => model_subject.Subject.fromJson(widget.subject).id;
 
   /// Gets subject display name (Indonesian/English normalized)
   String _subjectName() => model_subject.Subject.fromJson(widget.subject).name;

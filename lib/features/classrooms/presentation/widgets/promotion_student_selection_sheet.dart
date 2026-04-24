@@ -158,9 +158,7 @@ class _PromotionStudentSelectionSheetState
               itemCount: widget.students.length,
               itemBuilder: (context, index) {
                 final student = widget.students[index];
-                final model = Student.fromJson(
-                  student as Map<String, dynamic>,
-                );
+                final model = Student.fromJson(student as Map<String, dynamic>);
                 final id = model.id;
                 final isPromoted = widget.isAlreadyPromoted(student);
                 final isSelected = widget.selectedStudentIds.contains(id);

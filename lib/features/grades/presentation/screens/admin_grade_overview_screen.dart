@@ -52,7 +52,8 @@ class _AdminGradeOverviewScreenState
   }
 
   String _buildCacheKey() {
-    final ayId = ref
+    final ayId =
+        ref
             .read(academicYearRiverpod)
             .selectedAcademicYear?['id']
             ?.toString() ??
@@ -73,8 +74,9 @@ class _AdminGradeOverviewScreenState
           );
           if (cached is Map<String, dynamic> && mounted) {
             setState(() {
-              _schoolStats =
-                  Map<String, dynamic>.from(cached['school_stats'] ?? {});
+              _schoolStats = Map<String, dynamic>.from(
+                cached['school_stats'] ?? {},
+              );
               _teachers = (cached['teachers'] as List?) ?? [];
               _isLoading = false;
             });
@@ -93,14 +95,11 @@ class _AdminGradeOverviewScreenState
           .read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
-      final data = await GradeService.getAdminOverview(
-        academicYearId: ayId,
-      );
+      final data = await GradeService.getAdminOverview(academicYearId: ayId);
 
       if (mounted) {
         setState(() {
-          _schoolStats =
-              Map<String, dynamic>.from(data['school_stats'] ?? {});
+          _schoolStats = Map<String, dynamic>.from(data['school_stats'] ?? {});
           _teachers = (data['teachers'] as List?) ?? [];
           _isLoading = false;
           _errorMessage = null;
@@ -144,8 +143,10 @@ class _AdminGradeOverviewScreenState
       body: Column(
         children: [
           TeacherPageHeader(
-            title: lp.getTranslatedText(
-                {'en': 'Grades Overview', 'id': 'Rekap Nilai'}),
+            title: lp.getTranslatedText({
+              'en': 'Grades Overview',
+              'id': 'Rekap Nilai',
+            }),
             subtitle: lp.getTranslatedText({
               'en': 'School-wide grade overview',
               'id': 'Rekap nilai seluruh sekolah',
@@ -154,8 +155,10 @@ class _AdminGradeOverviewScreenState
             showSearchFilter: true,
             searchController: _searchController,
             onSearchChanged: (_) => setState(() {}),
-            searchHintText: lp.getTranslatedText(
-                {'en': 'Search teacher...', 'id': 'Cari guru...'}),
+            searchHintText: lp.getTranslatedText({
+              'en': 'Search teacher...',
+              'id': 'Cari guru...',
+            }),
           ),
           Expanded(child: _buildContent(lp)),
         ],
@@ -183,8 +186,10 @@ class _AdminGradeOverviewScreenState
     if (_teachers.isEmpty) {
       return EmptyState(
         icon: Icons.grade_outlined,
-        title: lp.getTranslatedText(
-            {'en': 'No Grade Data', 'id': 'Belum Ada Data Nilai'}),
+        title: lp.getTranslatedText({
+          'en': 'No Grade Data',
+          'id': 'Belum Ada Data Nilai',
+        }),
         subtitle: lp.getTranslatedText({
           'en': 'No grades have been recorded yet',
           'id': 'Belum ada nilai yang dicatat',
@@ -310,8 +315,11 @@ class _AdminGradeOverviewScreenState
           // Row 3: Teachers + students count
           Row(
             children: [
-              Icon(Icons.person_outline, size: 14,
-                  color: Colors.white.withValues(alpha: 0.7)),
+              Icon(
+                Icons.person_outline,
+                size: 14,
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
               const SizedBox(width: 4),
               Text(
                 '$totalTeachers guru',
@@ -321,8 +329,11 @@ class _AdminGradeOverviewScreenState
                 ),
               ),
               const SizedBox(width: 16),
-              Icon(Icons.school_outlined, size: 14,
-                  color: Colors.white.withValues(alpha: 0.7)),
+              Icon(
+                Icons.school_outlined,
+                size: 14,
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
               const SizedBox(width: 4),
               Text(
                 '$totalStudents siswa',
@@ -357,10 +368,7 @@ class _AdminGradeOverviewScreenState
           ),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 9,
-              color: color.withValues(alpha: 0.8),
-            ),
+            style: TextStyle(fontSize: 9, color: color.withValues(alpha: 0.8)),
           ),
         ],
       ),
@@ -398,8 +406,7 @@ class _AdminGradeOverviewScreenState
 
   Widget _buildSectionTitle(LanguageProvider lp) {
     return Text(
-      lp.getTranslatedText(
-          {'en': 'Per Teacher', 'id': 'Per Guru'}),
+      lp.getTranslatedText({'en': 'Per Teacher', 'id': 'Per Guru'}),
       style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w700,
@@ -420,8 +427,9 @@ class _AdminGradeOverviewScreenState
     final classCount = teacher['class_count'] ?? 0;
     final passed = teacher['passed'] ?? 0;
     final failed = teacher['failed'] ?? 0;
-    final passRate =
-        totalGrades > 0 ? (passed / totalGrades * 100).roundToDouble() : 0.0;
+    final passRate = totalGrades > 0
+        ? (passed / totalGrades * 100).roundToDouble()
+        : 0.0;
     final subjects = (teacher['subjects'] as List?) ?? [];
     final dist = teacher['distribution'] is Map
         ? Map<String, dynamic>.from(teacher['distribution'])
@@ -439,8 +447,8 @@ class _AdminGradeOverviewScreenState
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          onTap: () => _openTeacherGrades(
-              Map<String, dynamic>.from(teacher as Map)),
+          onTap: () =>
+              _openTeacherGrades(Map<String, dynamic>.from(teacher as Map)),
           borderRadius: BorderRadius.circular(14),
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -476,7 +484,9 @@ class _AdminGradeOverviewScreenState
                     if (avgScore != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: _scoreColor(avgScore).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
@@ -495,16 +505,20 @@ class _AdminGradeOverviewScreenState
                               'Avg',
                               style: TextStyle(
                                 fontSize: 8,
-                                color: _scoreColor(avgScore)
-                                    .withValues(alpha: 0.7),
+                                color: _scoreColor(
+                                  avgScore,
+                                ).withValues(alpha: 0.7),
                               ),
                             ),
                           ],
                         ),
                       ),
                     const SizedBox(width: 4),
-                    Icon(Icons.chevron_right_rounded,
-                        size: 18, color: ColorUtils.slate300),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: ColorUtils.slate300,
+                    ),
                   ],
                 ),
 
@@ -524,8 +538,8 @@ class _AdminGradeOverviewScreenState
                               passRate >= 75
                                   ? ColorUtils.success600
                                   : passRate >= 50
-                                      ? ColorUtils.warning600
-                                      : ColorUtils.error600,
+                                  ? ColorUtils.warning600
+                                  : ColorUtils.error600,
                             ),
                           ),
                         ),
@@ -556,7 +570,9 @@ class _AdminGradeOverviewScreenState
                           : null;
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: _adminColor.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(6),

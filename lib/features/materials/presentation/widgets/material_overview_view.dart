@@ -54,18 +54,22 @@ class MaterialOverviewView extends StatelessWidget {
     if (overviewSummary.isEmpty) {
       final isSearching = searchText.isNotEmpty;
       return EmptyState(
-        title: languageProvider.getTranslatedText(isSearching
-            ? {'en': 'No Results', 'id': 'Tidak Ditemukan'}
-            : {'en': 'No Materials', 'id': 'Tidak Ada Materi'}),
-        subtitle: languageProvider.getTranslatedText(isSearching
-            ? {
-                'en': 'No results for "$searchText"',
-                'id': 'Tidak ditemukan untuk "$searchText"',
-              }
-            : {
-                'en': 'No teaching materials found',
-                'id': 'Tidak ada materi mengajar',
-              }),
+        title: languageProvider.getTranslatedText(
+          isSearching
+              ? {'en': 'No Results', 'id': 'Tidak Ditemukan'}
+              : {'en': 'No Materials', 'id': 'Tidak Ada Materi'},
+        ),
+        subtitle: languageProvider.getTranslatedText(
+          isSearching
+              ? {
+                  'en': 'No results for "$searchText"',
+                  'id': 'Tidak ditemukan untuk "$searchText"',
+                }
+              : {
+                  'en': 'No teaching materials found',
+                  'id': 'Tidak ada materi mengajar',
+                },
+        ),
         icon: isSearching ? Icons.search : Icons.menu_book,
       );
     }

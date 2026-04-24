@@ -70,10 +70,7 @@ class GradeRecapStatsHero extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(999),
@@ -196,9 +193,7 @@ class GradeRecapStatsHero extends StatelessWidget {
               ),
               Expanded(
                 child: _StatCell(
-                  value: avgScore != null
-                      ? avgScore!.toStringAsFixed(0)
-                      : '–',
+                  value: avgScore != null ? avgScore!.toStringAsFixed(0) : '–',
                   label: 'Rata-rata',
                   icon: Icons.stars_outlined,
                   valueColor: avgScore != null

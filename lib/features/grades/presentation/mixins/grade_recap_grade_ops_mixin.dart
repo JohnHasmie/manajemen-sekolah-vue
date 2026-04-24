@@ -119,8 +119,7 @@ mixin GradeRecapGradeOpsMixin on ConsumerState<GradeRecapPage> {
       final neighbourScId =
           tableData[target]['student_class_id']?.toString() ?? '';
       if (neighbourScId.isEmpty) return null;
-      final neighbourKey =
-          '$neighbourScId|$type|${chapterIndex ?? 'null'}';
+      final neighbourKey = '$neighbourScId|$type|${chapterIndex ?? 'null'}';
       return scoreFocusNodes[neighbourKey];
     }
 

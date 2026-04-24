@@ -53,8 +53,7 @@ mixin LessonPlanFormDialogMixin on State<LessonPlanFormDialog> {
       primaryLabel: isEditMode
           ? lang.getTranslatedText({'en': 'Update', 'id': 'Perbarui'})
           : lang.getTranslatedText({'en': 'Save', 'id': 'Simpan'}),
-      secondaryLabel:
-          lang.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
+      secondaryLabel: lang.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
       primaryColor: color,
       onPrimary: () => submitFormAction(
         formKey,

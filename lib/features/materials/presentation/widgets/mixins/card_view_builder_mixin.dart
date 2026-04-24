@@ -50,7 +50,8 @@ mixin CardViewBuilderMixin {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           headerRow(cn, sn, pct, pctColor, g['total_chapters'] ?? 0, p),
-          if (isHomeroomView && (g['teacher_name'] ?? '').toString().isNotEmpty) ...[
+          if (isHomeroomView &&
+              (g['teacher_name'] ?? '').toString().isNotEmpty) ...[
             const SizedBox(height: 6),
             _teacherRow(g['teacher_name'].toString(), p),
           ],

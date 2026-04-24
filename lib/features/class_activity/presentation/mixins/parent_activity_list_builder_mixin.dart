@@ -149,7 +149,11 @@ mixin ParentActivityListBuilderMixin
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
-                              if ((activity['judul_bab'] ?? (activity['chapter'] is Map ? activity['chapter']['title'] : null)) != null) ...[
+                              if ((activity['judul_bab'] ??
+                                      (activity['chapter'] is Map
+                                          ? activity['chapter']['title']
+                                          : null)) !=
+                                  null) ...[
                                 const SizedBox(height: 6),
                                 Row(
                                   children: [
@@ -162,8 +166,17 @@ mixin ParentActivityListBuilderMixin
                                     Expanded(
                                       child: Text(
                                         () {
-                                          final bab = activity['judul_bab'] ?? (activity['chapter'] is Map ? activity['chapter']['title'] : null) ?? '';
-                                          final subBab = activity['judul_sub_bab'] ?? (activity['subChapter'] is Map ? activity['subChapter']['title'] : null);
+                                          final bab =
+                                              activity['judul_bab'] ??
+                                              (activity['chapter'] is Map
+                                                  ? activity['chapter']['title']
+                                                  : null) ??
+                                              '';
+                                          final subBab =
+                                              activity['judul_sub_bab'] ??
+                                              (activity['subChapter'] is Map
+                                                  ? activity['subChapter']['title']
+                                                  : null);
                                           return '$bab${subBab != null ? ' • $subBab' : ''}';
                                         }(),
                                         style: TextStyle(

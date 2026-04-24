@@ -206,7 +206,10 @@ class _SchoolTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      (school['school_name'] ?? school['name'] ?? 'Unknown School').toString(),
+                      (school['school_name'] ??
+                              school['name'] ??
+                              'Unknown School')
+                          .toString(),
                       style: TextStyle(
                         fontWeight: isCurrent
                             ? FontWeight.bold

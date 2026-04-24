@@ -161,9 +161,7 @@ class StudentDataHelper {
   /// Returns [FilterOptionsResult] — screen applies via setState.
   static Future<FilterOptionsResult?> loadFilterOptions() async {
     try {
-      final data = await FilterOptionsService.getFilterOptions(
-        role: 'admin',
-      );
+      final data = await FilterOptionsService.getFilterOptions(role: 'admin');
 
       final gradeCount = (data['grade_levels'] as List?)?.length ?? 0;
       final classCount = (data['classes'] as List?)?.length ?? 0;

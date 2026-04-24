@@ -203,7 +203,9 @@ class ActivityGroupCardWidget extends StatelessWidget {
   /// the 40px leading icon to keep the visual hierarchy tidy.
   Widget _buildTeacherRow(dynamic group) {
     final raw =
-        group['teacher_name'] ?? group['guru_nama'] ?? group['teacher']?['name'];
+        group['teacher_name'] ??
+        group['guru_nama'] ??
+        group['teacher']?['name'];
     final name = raw?.toString().trim() ?? '';
     if (name.isEmpty) return const SizedBox.shrink();
 

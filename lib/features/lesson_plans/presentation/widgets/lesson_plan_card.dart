@@ -57,11 +57,7 @@ class LessonPlanCard extends StatelessWidget {
           child: Row(
             children: [
               // Left status accent strip
-              Container(
-                width: 4,
-                height: 80,
-                color: statusColor,
-              ),
+              Container(width: 4, height: 80, color: statusColor),
 
               // Content
               Expanded(
@@ -75,8 +71,9 @@ class LessonPlanCard extends StatelessWidget {
                         height: 40,
                         decoration: BoxDecoration(
                           color: statusColor.withValues(alpha: 0.08),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(10)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(10),
+                          ),
                         ),
                         child: Icon(
                           Icons.description_rounded,
@@ -133,7 +130,8 @@ class LessonPlanCard extends StatelessWidget {
                                 if (hasSubject && hasClass)
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 5),
+                                      horizontal: 5,
+                                    ),
                                     child: Text(
                                       '·',
                                       style: TextStyle(
@@ -185,10 +183,10 @@ class LessonPlanCard extends StatelessWidget {
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color:
-                                        statusColor.withValues(alpha: 0.08),
+                                    color: statusColor.withValues(alpha: 0.08),
                                     borderRadius: const BorderRadius.all(
-                                        Radius.circular(6)),
+                                      Radius.circular(6),
+                                    ),
                                   ),
                                   child: Text(
                                     statusLabel,
@@ -217,11 +215,12 @@ class LessonPlanCard extends StatelessWidget {
                           color: ColorUtils.slate400,
                         ),
                         padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 28, minHeight: 28),
+                        constraints: const BoxConstraints(
+                          minWidth: 28,
+                          minHeight: 28,
+                        ),
                         shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.all(Radius.circular(10)),
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
                         ),
                         itemBuilder: (context) => [
                           PopupMenuItem(
@@ -229,8 +228,11 @@ class LessonPlanCard extends StatelessWidget {
                             height: 40,
                             child: Row(
                               children: [
-                                Icon(Icons.edit_outlined,
-                                    size: 16, color: ColorUtils.slate500),
+                                Icon(
+                                  Icons.edit_outlined,
+                                  size: 16,
+                                  color: ColorUtils.slate500,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Edit',
@@ -247,14 +249,18 @@ class LessonPlanCard extends StatelessWidget {
                             height: 40,
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline_rounded,
-                                    size: 16, color: ColorUtils.red500),
+                                Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 16,
+                                  color: ColorUtils.red500,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Hapus',
                                   style: TextStyle(
-                                      fontSize: 13,
-                                      color: ColorUtils.red500),
+                                    fontSize: 13,
+                                    color: ColorUtils.red500,
+                                  ),
                                 ),
                               ],
                             ),
