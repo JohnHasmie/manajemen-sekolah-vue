@@ -3,13 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/core/widgets/app_alert_dialog.dart';
+import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/report_cards/data/report_card_service.dart';
 import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/parent_report_card_detail_screen.dart';
@@ -58,14 +57,20 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
   Future<void> publishReportCards() async {
     if (selectedClass == null) return;
 
-    final confirm = await AppAlertDialog.show(
+    // Uses the shared [ConfirmationDialog] (gradient header + confirm/cancel
+    // footer) so the bulk publish flow matches every other destructive /
+    // high-impact confirmation across the admin role.
+    final confirm = await showDialog<bool>(
       context: context,
-      title: 'Kirim Rapor',
-      message: 'Apakah Anda yakin ingin mengirim rapor kepada wali murid?',
-      confirmText: 'Ya, Kirim',
-      cancelText: 'Batal',
-      confirmColor: ColorUtils.corporateBlue600,
-      showCancel: true,
+      builder: (_) => const ConfirmationDialog(
+        title: 'Kirim Rapor',
+        content:
+            'Rapor kelas ini akan dipublikasikan dan dikirim ke seluruh '
+            'wali murid. Tindakan ini tidak dapat dibatalkan setelah '
+            'dikirim.',
+        confirmText: 'Ya, Kirim',
+        confirmColor: Color(0xFF2563EB), // corporate blue (ColorUtils).
+      ),
     );
 
     if (confirm != true) return;
@@ -195,9 +200,7 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
             studentName: model.name.isNotEmpty ? model.name : 'Unknown',
             userRole: 'admin',
             studentData: {
-              'nis': model.studentNumber.isNotEmpty
-                  ? model.studentNumber
-                  : '-',
+              'nis': model.studentNumber.isNotEmpty ? model.studentNumber : '-',
               'nisn': '-',
             },
           ),
@@ -221,10 +224,7 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
     }
 
     final model = Student.fromJson(student);
-    SnackBarUtils.showInfo(
-      context,
-      'Menyiapkan PDF untuk ${model.name}...',
-    );
+    SnackBarUtils.showInfo(context, 'Menyiapkan PDF untuk ${model.name}...');
 
     try {
       final academicYearProvider = ref.read(academicYearRiverpod);

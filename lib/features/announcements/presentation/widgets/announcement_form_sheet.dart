@@ -1,23 +1,26 @@
 // Bottom sheet form for creating/editing announcements.
 //
-// Extracted from admin_announcement_screen.dart to reduce file size.
-// Like a Vue component that handles the announcement CRUD form,
-// receiving callbacks for save actions.
-//
-// In Laravel terms, this is the "create/edit form" partial that posts to
-// POST /api/announcements or PUT /api/announcements/{id}.
+// Migrated to the shared [AppBottomSheet] + [BottomSheetFooter] scaffold
+// during the Admin Refactor · Phase 4 so the compose sheet shares the
+// canonical drag-handle → gradient-header → scrollable-body → Samsung-safe
+// footer layout with every other admin edit sheet (Kelas, Mapel, Jadwal,
+// Keuangan, etc.). The field-level mixins that build form rows, date
+// pickers, file picker, and save logic are preserved verbatim; only the
+// hand-rolled header/footer containers were retired (see deleted
+// `announcement_form_*_header/footer_mixin.dart`).
 
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/announcement_form_date_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/announcement_form_fields_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/announcement_form_file_mixin.dart';
-import 'package:manajemensekolah/features/announcements/presentation/mixins/announcement_form_footer_mixin.dart';
-import 'package:manajemensekolah/features/announcements/presentation/mixins/announcement_form_header_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/announcement_form_save_mixin.dart';
 
 /// A bottom sheet form for adding or editing an announcement.
@@ -45,8 +48,6 @@ class AnnouncementFormSheet extends StatefulWidget {
 
 class _AnnouncementFormSheetState extends State<AnnouncementFormSheet>
     with
-        AnnouncementFormHeaderMixin,
-        AnnouncementFormFooterMixin,
         AnnouncementFormSaveMixin,
         AnnouncementFormFieldsMixin,
         AnnouncementFormDateMixin,
@@ -61,6 +62,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet>
   File? _selectedFile;
   bool _isSaving = false;
 
+  @override
   bool get _isEdit => widget.announcementData != null;
 
   @override
@@ -107,6 +109,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet>
   Widget _buildFormFields(LanguageProvider lang, Color primaryColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         buildDialogTextField(
           controller: _titleController,
@@ -189,31 +192,50 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet>
     final primaryColor = widget.primaryColor;
 
     return Padding(
+      // MediaQuery viewInsets handling — keep the sheet lifted above the
+      // on-screen keyboard when a text field is focused. AppBottomSheet
+      // sets maxHeightFactor internally so we don't need an outer SizedBox.
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.92,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              buildHeader(lang, primaryColor),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: _buildFormFields(lang, primaryColor),
-                ),
-              ),
-              buildFooter(lang, primaryColor),
-            ],
-          ),
+      child: AppBottomSheet(
+        title: _isEdit
+            ? lang.getTranslatedText({
+                'en': 'Edit Announcement',
+                'id': 'Edit Pengumuman',
+              })
+            : lang.getTranslatedText({
+                'en': 'Add Announcement',
+                'id': 'Tambah Pengumuman',
+              }),
+        subtitle: _isEdit
+            ? lang.getTranslatedText({
+                'en': 'Update announcement information',
+                'id': 'Perbarui informasi pengumuman',
+              })
+            : lang.getTranslatedText({
+                'en': 'Fill in announcement details',
+                'id': 'Isi detail pengumuman',
+              }),
+        icon: _isEdit ? Icons.edit_rounded : Icons.announcement_rounded,
+        primaryColor: primaryColor,
+        maxHeightFactor: 0.92,
+        contentPadding: const EdgeInsets.all(AppSpacing.xl),
+        content: _buildFormFields(lang, primaryColor),
+        footer: BottomSheetFooter(
+          primaryLabel: _isSaving
+              ? lang.getTranslatedText({'en': 'Saving…', 'id': 'Menyimpan…'})
+              : (_isEdit
+                    ? lang.getTranslatedText({'en': 'Update', 'id': 'Perbarui'})
+                    : lang.getTranslatedText({'en': 'Save', 'id': 'Simpan'})),
+          secondaryLabel: lang.getTranslatedText({
+            'en': 'Cancel',
+            'id': 'Batal',
+          }),
+          primaryColor: primaryColor,
+          primaryEnabled: !_isSaving,
+          onPrimary: () => handleSave(lang),
+          onSecondary: () => AppNavigator.pop(context),
         ),
       ),
     );
