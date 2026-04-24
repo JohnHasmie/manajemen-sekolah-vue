@@ -110,6 +110,7 @@ class FinanceTabContent extends StatelessWidget {
           onGenerateBills: onGenerateBills,
           onEdit: onEdit,
           onDelete: onDelete,
+          onRefresh: onRefresh,
         ),
         FinanceVerificationTab(
           pendingPaymentList: pendingPaymentList,
