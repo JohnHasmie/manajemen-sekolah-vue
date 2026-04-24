@@ -90,8 +90,9 @@ class ClassFinanceTable extends StatelessWidget {
 
   List<MonthGroup> _filterGroups() {
     return monthGroups
-        .where((m) =>
-            selectedMonthKey == null || m.monthKey == selectedMonthKey)
+        .where(
+          (m) => selectedMonthKey == null || m.monthKey == selectedMonthKey,
+        )
         .map((m) {
           if (selectedPaymentTypeId == null) return m;
           final filtered = m.paymentTypes
@@ -191,10 +192,7 @@ class ClassFinanceTable extends StatelessWidget {
         children: [
           Text(
             model.name.isNotEmpty ? model.name : '-',
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
             overflow: TextOverflow.ellipsis,
           ),
           if (model.studentNumber.isNotEmpty)
@@ -216,20 +214,23 @@ class ClassFinanceTable extends StatelessWidget {
     final cols = <FrozenTableColumn>[];
     for (final group in groups) {
       if (group.paymentTypes.isEmpty) {
-        cols.add(FrozenTableColumn(
-          width: _cellWidth,
-          header: _buildTypeHeader('-', faded: true),
-          cellBuilder: (i) => _buildCell(null),
-        ));
+        cols.add(
+          FrozenTableColumn(
+            width: _cellWidth,
+            header: _buildTypeHeader('-', faded: true),
+            cellBuilder: (i) => _buildCell(null),
+          ),
+        );
       } else {
         for (final type in group.paymentTypes) {
-          cols.add(FrozenTableColumn(
-            width: _cellWidth,
-            header: _buildTypeHeader(type.name),
-            cellBuilder: (i) => _buildCell(
-              _findBill(filteredStudents[i], group, type),
+          cols.add(
+            FrozenTableColumn(
+              width: _cellWidth,
+              header: _buildTypeHeader(type.name),
+              cellBuilder: (i) =>
+                  _buildCell(_findBill(filteredStudents[i], group, type)),
             ),
-          ));
+          );
         }
       }
     }

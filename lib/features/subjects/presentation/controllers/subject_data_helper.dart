@@ -189,12 +189,14 @@ class SubjectDataHelper {
       }
 
       // Step 2: Fetch fresh data from API
+      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
       final response = await getIt<ApiSubjectService>().getSubjectsPaginated(
         page: 1,
         limit: perPage,
         status: selectedStatusFilter,
         gradeLevel: selectedGradeLevelFilter,
         search: searchText.trim().isEmpty ? null : searchText.trim(),
+        academicYearId: ayId,
       );
 
       final data = List<dynamic>.from(response['data'] ?? []);
@@ -251,6 +253,7 @@ class SubjectDataHelper {
     required String searchText,
     required List<String> existingClassNames,
     required List<String> existingGradeLevels,
+    String? academicYearId,
   }) async {
     try {
       final response = await getIt<ApiSubjectService>().getSubjectsPaginated(
@@ -259,6 +262,7 @@ class SubjectDataHelper {
         status: selectedStatusFilter,
         gradeLevel: selectedGradeLevelFilter,
         search: searchText.trim().isEmpty ? null : searchText.trim(),
+        academicYearId: academicYearId,
       );
 
       final data = List<dynamic>.from(response['data'] ?? []);

@@ -44,7 +44,9 @@ class ScheduleCardSummarySheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Schedule.fromJson(schedule);
-    final subjectName = (model.subjectName ?? '').isEmpty ? '-' : model.subjectName!;
+    final subjectName = (model.subjectName ?? '').isEmpty
+        ? '-'
+        : model.subjectName!;
     final className = (model.className ?? '').isEmpty ? '-' : model.className!;
     final summaryData = _extractSummaryData();
 

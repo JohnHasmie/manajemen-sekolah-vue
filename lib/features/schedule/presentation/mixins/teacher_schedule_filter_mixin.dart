@@ -111,22 +111,24 @@ mixin TeacherScheduleFilterMixin on ConsumerState<TeachingScheduleScreen> {
           ? languageProvider.getTranslatedText(dayMap[normalizedKey]!)
           : dayNameRaw;
 
-      filterChips.add(ActiveFilter(
-        label: label,
-        onRemove: () {
-          setState(() {
-            selectedDayIdsInternal.remove(dayId);
-            checkActiveFilter(selectedTerm);
-          });
-          loadSchedule(
-            searchController: searchController,
-            selectedDayIds: selectedDayIdsInternal,
-            selectedClassId: selectedClassIdInternal,
-            selectedFilterSemester: selectedFilterSemesterInternal,
-            dayIdMap: dayIdMapInternal,
-          );
-        },
-      ));
+      filterChips.add(
+        ActiveFilter(
+          label: label,
+          onRemove: () {
+            setState(() {
+              selectedDayIdsInternal.remove(dayId);
+              checkActiveFilter(selectedTerm);
+            });
+            loadSchedule(
+              searchController: searchController,
+              selectedDayIds: selectedDayIdsInternal,
+              selectedClassId: selectedClassIdInternal,
+              selectedFilterSemester: selectedFilterSemesterInternal,
+              dayIdMap: dayIdMapInternal,
+            );
+          },
+        ),
+      );
     }
 
     if (selectedClassIdInternal != null) {
@@ -134,22 +136,24 @@ mixin TeacherScheduleFilterMixin on ConsumerState<TeachingScheduleScreen> {
         (c) => c['id'] == selectedClassIdInternal,
         orElse: () => {'name': 'Class'},
       );
-      filterChips.add(ActiveFilter(
-        label: cls['name'] ?? 'Class',
-        onRemove: () {
-          setState(() {
-            selectedClassIdInternal = null;
-            checkActiveFilter(selectedTerm);
-          });
-          loadSchedule(
-            searchController: searchController,
-            selectedDayIds: selectedDayIdsInternal,
-            selectedClassId: selectedClassIdInternal,
-            selectedFilterSemester: selectedFilterSemesterInternal,
-            dayIdMap: dayIdMapInternal,
-          );
-        },
-      ));
+      filterChips.add(
+        ActiveFilter(
+          label: cls['name'] ?? 'Class',
+          onRemove: () {
+            setState(() {
+              selectedClassIdInternal = null;
+              checkActiveFilter(selectedTerm);
+            });
+            loadSchedule(
+              searchController: searchController,
+              selectedDayIds: selectedDayIdsInternal,
+              selectedClassId: selectedClassIdInternal,
+              selectedFilterSemester: selectedFilterSemesterInternal,
+              dayIdMap: dayIdMapInternal,
+            );
+          },
+        ),
+      );
     }
 
     if (selectedFilterSemesterInternal != null &&
@@ -158,22 +162,24 @@ mixin TeacherScheduleFilterMixin on ConsumerState<TeachingScheduleScreen> {
         (s) => s['id'].toString() == selectedFilterSemesterInternal,
         orElse: () => {'nama': 'Semester $selectedFilterSemesterInternal'},
       );
-      filterChips.add(ActiveFilter(
-        label: semester['nama'] ?? 'Semester',
-        onRemove: () {
-          setState(() {
-            selectedFilterSemesterInternal = null;
-            checkActiveFilter(selectedTerm);
-          });
-          loadSchedule(
-            searchController: searchController,
-            selectedDayIds: selectedDayIdsInternal,
-            selectedClassId: selectedClassIdInternal,
-            selectedFilterSemester: selectedFilterSemesterInternal,
-            dayIdMap: dayIdMapInternal,
-          );
-        },
-      ));
+      filterChips.add(
+        ActiveFilter(
+          label: semester['nama'] ?? 'Semester',
+          onRemove: () {
+            setState(() {
+              selectedFilterSemesterInternal = null;
+              checkActiveFilter(selectedTerm);
+            });
+            loadSchedule(
+              searchController: searchController,
+              selectedDayIds: selectedDayIdsInternal,
+              selectedClassId: selectedClassIdInternal,
+              selectedFilterSemester: selectedFilterSemesterInternal,
+              dayIdMap: dayIdMapInternal,
+            );
+          },
+        ),
+      );
     }
 
     return filterChips;

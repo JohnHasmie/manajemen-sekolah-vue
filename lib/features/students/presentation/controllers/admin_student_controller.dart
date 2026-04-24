@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 import 'package:manajemensekolah/features/students/presentation/controllers/helpers/student_cache_helper.dart';
 import 'package:manajemensekolah/features/students/presentation/controllers/helpers/student_data_helper.dart';
 import 'package:manajemensekolah/features/students/presentation/controllers/helpers/student_deletion_helper.dart';
@@ -128,18 +129,21 @@ class AdminStudentController {
     );
   }
 
-  /// Builds the filter chip list for the header bar.
-  /// Returns a list of {label, onRemove} maps — the screen renders them.
-  /// Callbacks inside onRemove call setState on the screen then trigger
-  /// loadData.
-  List<Map<String, dynamic>> buildFilterChips({
+  /// Builds the typed active-filter chip list for the header bar.
+  ///
+  /// Each chip carries a per-filter removal callback — tapping the × on
+  /// a class chip removes that specific class only, not all filters.
+  List<ActiveFilter> buildFilterChips({
     required String? selectedStatusFilter,
     required List<String> selectedClassIds,
     required String? selectedGenderFilter,
     required String? selectedGuardian,
     required List<dynamic> classList,
     required LanguageProvider languageProvider,
-    required VoidCallback onFilterChanged,
+    required VoidCallback onClearStatus,
+    required void Function(String classId) onClearClass,
+    required VoidCallback onClearGender,
+    required VoidCallback onClearGuardian,
   }) {
     return StudentFilterHelper.buildFilterChips(
       selectedStatusFilter: selectedStatusFilter,
@@ -148,7 +152,10 @@ class AdminStudentController {
       selectedGuardian: selectedGuardian,
       classList: classList,
       languageProvider: languageProvider,
-      onFilterChanged: onFilterChanged,
+      onClearStatus: onClearStatus,
+      onClearClass: onClearClass,
+      onClearGender: onClearGender,
+      onClearGuardian: onClearGuardian,
     );
   }
 

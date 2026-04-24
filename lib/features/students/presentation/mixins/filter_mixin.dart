@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 import 'package:manajemensekolah/features/students/presentation/controllers/admin_student_controller.dart';
 import 'package:manajemensekolah/features/students/presentation/screens/admin_student_management_screen.dart';
 
@@ -53,12 +54,14 @@ mixin FilterMixin on ConsumerState<StudentManagementScreen> {
     loadData();
   }
 
-  List<Map<String, dynamic>> buildFilterChips(
-    LanguageProvider languageProvider,
-  ) => _buildFilterChips(languageProvider);
-  List<Map<String, dynamic>> _buildFilterChips(
+  List<ActiveFilter> buildFilterChips(
     LanguageProvider languageProvider,
   ) {
+    void onChanged() {
+      _checkActiveFilter();
+      loadData();
+    }
+
     return ref
         .read(adminStudentControllerProvider)
         .buildFilterChips(
@@ -68,9 +71,21 @@ mixin FilterMixin on ConsumerState<StudentManagementScreen> {
           selectedGuardian: selectedGuardian,
           classList: classList,
           languageProvider: languageProvider,
-          onFilterChanged: () {
-            _checkActiveFilter();
-            loadData();
+          onClearStatus: () {
+            setState(() => selectedStatusFilter = null);
+            onChanged();
+          },
+          onClearClass: (classId) {
+            setState(() => selectedClassIds.remove(classId));
+            onChanged();
+          },
+          onClearGender: () {
+            setState(() => selectedGenderFilter = null);
+            onChanged();
+          },
+          onClearGuardian: () {
+            setState(() => selectedGuardian = null);
+            onChanged();
           },
         );
   }

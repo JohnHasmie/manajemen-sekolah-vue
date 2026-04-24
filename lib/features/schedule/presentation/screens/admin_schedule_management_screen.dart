@@ -1,338 +1,817 @@
-// Admin schedule management: tour/data/filter logic extracted to mixins; UI to widgets.
+// Admin teaching-schedule management screen — full CRUD for Jadwal Mengajar.
+//
+// Refactored from the 7-mixin state-smuggling pattern
+// (Tour + StateBridge + Data + Filter + Dialogs + Events + Actions) into a
+// single flat [ConsumerState] that delegates data/Excel/CRUD work to
+// [AdminScheduleController]. The bespoke gradient header, per-feature list
+// builder, and coach-mark tour are retired in favor of the shared
+// [AdminCrudScaffold] + [AdminDataMenu] + [PaginatedListView] stack.
+//
+// What lives here: UI flags (loading / error / filters / pagination cursor),
+// the reference data lists (teachers, classes, days, semesters, academic
+// years, lesson hours), and dispatch glue that hands state down to the
+// controller + sheets. Everything else has moved out.
+//
+// Phase 1 scope carve-out: list view only. The prior dual-view toggle
+// (calendar grid vs card list via `_showTableView`) is deferred to
+// Phase 4 (#189) per the Admin Refactor plan.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/services/fcm_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/action_confirm_sheet.dart';
+import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
+import 'package:manajemensekolah/core/widgets/admin_data_menu.dart';
+import 'package:manajemensekolah/core/widgets/paginated_list_view.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/schedule/presentation/controllers/admin_schedule_controller.dart';
-import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_tour_mixin.dart';
-import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_data_mixin.dart';
-import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_filter_mixin.dart';
-import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_state_bridge_mixin.dart';
-import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_dialogs_mixin.dart';
-import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_events_mixin.dart';
-import 'package:manajemensekolah/features/schedule/presentation/mixins/admin_schedule_actions_mixin.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_header.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_list_builder.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/timetable_data_source.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_card.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_detail_dialog.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_filter_sheet.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_dialog.dart';
 
+/// Admin teaching-schedule management screen with full CRUD, search, filters,
+/// and Excel import/export.
+///
+/// Name preserved — referenced from `cards_mixin.dart` and
+/// `admin_menu_items_mixin.dart`.
 class TeachingScheduleManagementScreen extends ConsumerStatefulWidget {
   const TeachingScheduleManagementScreen({super.key});
+
   @override
   TeachingScheduleManagementScreenState createState() =>
       TeachingScheduleManagementScreenState();
 }
 
+/// Mutable state for [TeachingScheduleManagementScreen].
+///
+/// Holds pagination cursor, filter selections, loaded data, and the
+/// teacher + class + day + semester + academic-year + lesson-hour lookup
+/// lists that populate the add/edit sheet and filter sheet.
 class TeachingScheduleManagementScreenState
-    extends ConsumerState<TeachingScheduleManagementScreen>
-    with
-        AdminScheduleTourMixin,
-        AdminScheduleStateBridgeMixin,
-        AdminScheduleDataMixin,
-        AdminScheduleFilterMixin,
-        AdminScheduleDialogsMixin,
-        AdminScheduleEventsMixin,
-        AdminScheduleActionsMixin {
-  late AdminScheduleController _controller;
-  List<dynamic> _scheduleList = [],
-      _subjectList = [],
-      _classList = [],
-      _dayList = [],
-      _termList = [],
-      _lessonHourList = [];
-  bool _isLoading = true,
-      _hasMoreData = true,
-      _isLoadingMore = false,
-      _hasActiveFilter = false,
-      _showTableView = false,
-      _isTourShowing = false;
-  int _currentPage = 1;
-  final int _perPage = 10;
-  String _selectedTerm = '1', _selectedAcademicYear = '2024/2025';
-  String? _selectedTeacherId,
-      _selectedClassId,
-      _selectedDayId,
-      _selectedFilterTerm,
-      _selectedLessonHour;
-  String? _lastCachedAcademicYear, _lastCachedTerm;
-  List<dynamic> _availableTeachers = [],
-      _availableClasses = [],
-      _availableDays = [],
-      _availableSemesters = [],
-      _availableAcademicYears = [];
+    extends ConsumerState<TeachingScheduleManagementScreen> {
+  // Search — shared with [AdminCrudScaffold] via [searchController].
   final TextEditingController _searchController = TextEditingController();
-  List<ScheduleGridData> _gridData = [];
-  dynamic _timetableDataSource;
-  final GlobalKey _menuKey = GlobalKey(),
-      _searchKey = GlobalKey(),
-      _filterKey = GlobalKey(),
-      _fabKey = GlobalKey(),
-      _viewToggleKey = GlobalKey();
-  @override
-  AdminScheduleController get controller => _controller;
-  @override
-  List<dynamic> get scheduleList => _scheduleList;
-  @override
-  List<dynamic> get subjectList => _subjectList;
-  @override
-  List<dynamic> get classList => _classList;
-  @override
-  List<dynamic> get dayList => _dayList;
-  @override
-  List<dynamic> get termList => _termList;
-  @override
-  List<dynamic> get lessonHourList => _lessonHourList;
-  @override
-  bool get isLoading => _isLoading;
-  @override
-  String get selectedTerm => _selectedTerm;
-  @override
-  String get selectedAcademicYear => _selectedAcademicYear;
-  @override
-  int get currentPage => _currentPage;
-  @override
-  int get perPage => _perPage;
-  @override
-  bool get hasMoreData => _hasMoreData;
-  @override
-  bool get isLoadingMore => _isLoadingMore;
-  @override
-  String? get lastCachedAcademicYear => _lastCachedAcademicYear;
-  @override
-  String? get lastCachedTerm => _lastCachedTerm;
-  @override
-  List<dynamic> get availableTeachers => _availableTeachers;
-  @override
-  List<dynamic> get availableClasses => _availableClasses;
-  @override
-  List<dynamic> get availableDays => _availableDays;
-  @override
-  List<dynamic> get availableSemesters => _availableSemesters;
-  @override
-  List<dynamic> get availableAcademicYears => _availableAcademicYears;
-  @override
-  String? get selectedTeacherId => _selectedTeacherId;
-  @override
-  String? get selectedClassId => _selectedClassId;
-  @override
-  String? get selectedDayId => _selectedDayId;
-  @override
-  String? get selectedFilterTerm => _selectedFilterTerm;
-  @override
-  String? get selectedLessonHour => _selectedLessonHour;
-  @override
-  bool get hasActiveFilter => _hasActiveFilter;
-  @override
-  GlobalKey get menuKey => _menuKey;
-  @override
-  GlobalKey get searchKey => _searchKey;
-  @override
-  GlobalKey get filterKey => _filterKey;
-  @override
-  GlobalKey get fabKey => _fabKey;
-  @override
-  GlobalKey get viewToggleKey => _viewToggleKey;
-  @override
-  bool get isTourShowing => _isTourShowing;
-  @override
-  set isTourShowing(bool v) => _isTourShowing = v;
-  @override
-  void updateScheduleList(List<dynamic> v) => _scheduleList = v;
-  @override
-  void updateSubjectList(List<dynamic> v) => _subjectList = v;
-  @override
-  void updateClassList(List<dynamic> v) => _classList = v;
-  @override
-  void updateDayList(List<dynamic> v) => _dayList = v;
-  @override
-  void updateTermList(List<dynamic> v) => _termList = v;
-  @override
-  void updateLessonHourList(List<dynamic> v) => _lessonHourList = v;
-  @override
-  void updateIsLoading(bool v) => _isLoading = v;
-  @override
-  void updateCurrentPage(int v) => _currentPage = v;
-  @override
-  void updateHasMoreData(bool v) => _hasMoreData = v;
-  @override
-  void updateIsLoadingMore(bool v) => _isLoadingMore = v;
-  @override
-  void updateLastCachedAcademicYear(String? v) => _lastCachedAcademicYear = v;
-  @override
-  void updateLastCachedTerm(String? v) => _lastCachedTerm = v;
-  @override
-  void updateAvailableTeachers(List<dynamic> v) => _availableTeachers = v;
-  @override
-  void updateAvailableClasses(List<dynamic> v) => _availableClasses = v;
-  @override
-  void updateAvailableDays(List<dynamic> v) => _availableDays = v;
-  @override
-  void updateAvailableSemesters(List<dynamic> v) => _availableSemesters = v;
-  @override
-  void updateAvailableAcademicYears(List<dynamic> v) =>
-      _availableAcademicYears = v;
-  @override
-  void updateSelectedAcademicYear(String v) => _selectedAcademicYear = v;
-  @override
-  void updateSelectedTerm(String v) => _selectedTerm = v;
-  @override
-  void updateSelectedTeacherId(String? v) => _selectedTeacherId = v;
-  @override
-  void updateSelectedClassId(String? v) => _selectedClassId = v;
-  @override
-  void updateSelectedDayId(String? v) => _selectedDayId = v;
-  @override
-  void updateSelectedFilterTerm(String? v) => _selectedFilterTerm = v;
-  @override
-  void updateSelectedLessonHour(String? v) => _selectedLessonHour = v;
-  @override
-  void updateHasActiveFilter(bool v) => _hasActiveFilter = v;
-  @override
-  bool get showTableView => _showTableView;
-  @override
-  TextEditingController get searchController => _searchController;
+
+  // Loaded schedule data (server-paginated).
+  List<dynamic> _scheduleList = [];
+
+  // Reference lists returned alongside schedules — used by the detail
+  // dialog, form, and filter sheet.
+  List<dynamic> _subjectList = [];
+  List<dynamic> _classList = [];
+  List<dynamic> _dayList = [];
+  List<dynamic> _termList = [];
+  List<dynamic> _lessonHourList = [];
+
+  // Filter-option lists (sourced from FilterOptionsService; populate the
+  // chip pickers in [ScheduleFilterSheet]).
+  List<dynamic> _availableTeachers = [];
+  List<dynamic> _availableClasses = [];
+  List<dynamic> _availableDays = [];
+  List<dynamic> _availableSemesters = [];
+  List<dynamic> _availableAcademicYears = [];
+
+  // UI flags.
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  // Pagination cursor.
+  int _currentPage = 1;
+  static const int _perPage = 10;
+  bool _isLoadingMore = false;
+  bool _hasMoreData = true;
+
+  // Academic-period selection. [_selectedTerm] tracks the current semester
+  // (auto-resolved on first load); [_selectedAcademicYear] tracks the active
+  // year and is kept in sync with [AcademicYearProvider].
+  String _selectedTerm = '1';
+  String _selectedAcademicYear = '2024/2025';
+
+  // Filter selections (applied to the API query + client overlay).
+  String? _selectedClassId;
+  String? _selectedDayId;
+  String? _selectedFilterTerm;
+  String? _selectedLessonHour;
+  bool _hasActiveFilter = false;
+
+  // Cache bookkeeping — used by [buildScheduleCacheKey] to only persist
+  // unfiltered first-page results.
+  String? _lastCachedAcademicYear;
+  String? _lastCachedTerm;
+
+  // Search debounce — avoids spamming the API on every keystroke.
+  Timer? _searchDebounce;
+
+  // Provider listener — reacts to academic-year changes in the app-level
+  // picker.
+  AcademicYearProvider? _academicYearProvider;
+
   @override
   void initState() {
-    // Assign the late controller BEFORE super.initState() so that mixins'
-    // initState (notably AdminScheduleEventsMixin, which kicks off
-    // loadCachedScheduleData/loadFilterOptions/loadData synchronously) can
-    // safely reach the `controller` getter. Riverpod's `ref` is available
-    // on ConsumerState from construction, so reading the provider here is
-    // fine.
-    _controller = ref.read(adminScheduleControllerProvider);
     super.initState();
+    FCMService().syncTrigger.addListener(_onSyncTriggered);
+    _academicYearProvider = ref.read(academicYearRiverpod);
+    _academicYearProvider?.addListener(_onAcademicYearChanged);
+    _initialize();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
+    FCMService().syncTrigger.removeListener(_onSyncTriggered);
+    _academicYearProvider?.removeListener(_onAcademicYearChanged);
     super.dispose();
   }
 
-  @override
-  void updateGridData() {
-    final r = _controller.updateGridData(
-      scheduleList: getFilteredSchedules(
-        _scheduleList,
-        _dayList,
-        _searchController.text,
-      ),
-      dayList: _dayList,
-      classList: _classList,
-      lessonHourList: _lessonHourList,
-      availableDays: _availableDays,
-      selectedDayId: _selectedDayId,
-      selectedClassId: _selectedClassId,
-      selectedJamPelajaran: _selectedLessonHour,
-      onScheduleTap: showScheduleDetail,
-    );
-    _gridData = r.gridData;
-    _timetableDataSource = r.timetableDataSource;
+  // ── Initialization ──────────────────────────────────────────────────
+
+  Future<void> _initialize() async {
+    // Seed the academic year from the global picker when available; fall back
+    // to the API's "current" flag otherwise.
+    final providerYear = _academicYearProvider?.selectedAcademicYear;
+    if (providerYear != null) {
+      _selectedAcademicYear = providerYear['id'].toString();
+    }
+
+    // Show stale cache immediately for instant paint, then hit the API.
+    await _loadCachedScheduleData();
+    await _loadFilterOptions();
+
+    if (providerYear == null) {
+      _setDefaultAcademicPeriod();
+    }
+
+    await _loadSchedules();
   }
 
-  @override
-  void setIsLoading(bool v) => setState(() => _isLoading = v);
-  Widget _buildHeader(LanguageProvider lp) => AdminScheduleHeader(
-    title: lp.getTranslatedText({
-      'en': 'Teaching Schedule',
-      'id': 'Jadwal Mengajar',
-    }),
-    subtitle: lp.getTranslatedText({
-      'en': 'Manage teaching schedules',
-      'id': 'Kelola jadwal mengajar',
-    }),
-    primaryColor: _controller.getPrimaryColor(),
-    searchController: _searchController,
-    showTableView: _showTableView,
-    hasActiveFilter: _hasActiveFilter,
-    menuKey: _menuKey,
-    searchKey: _searchKey,
-    filterKey: _filterKey,
-    viewToggleKey: _viewToggleKey,
-    filterChips: buildFilterChips(lp),
-    clearAllLabel: 'Clear All',
-    onBack: () => AppNavigator.pop(context),
-    onViewToggle: () {
-      setState(() => _showTableView = !_showTableView);
-      loadData(
-        resetPage: true,
-        useCache: true,
+  // ── Cache & filter-option warm-up ───────────────────────────────────
+
+  Future<void> _loadCachedScheduleData() async {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final result = await ctrl.loadCachedScheduleData();
+    if (result == null || !mounted) return;
+    setState(() {
+      _scheduleList = result.scheduleList;
+      _subjectList = result.subjectList;
+      _classList = result.classList;
+      _dayList = result.dayList;
+      _termList = result.semesterList;
+      _lessonHourList = result.lessonHourList;
+      _hasMoreData = result.hasMoreData;
+      _isLoading = result.isLoading;
+      _lastCachedAcademicYear = _selectedAcademicYear;
+      _lastCachedTerm = _selectedTerm;
+    });
+  }
+
+  Future<void> _loadFilterOptions() async {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final result = await ctrl.loadFilterOptions(
+      selectedAcademicYear: _selectedAcademicYear,
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _availableTeachers = result.teachers;
+      _availableClasses = result.classes;
+      _availableDays = result.days;
+      _availableSemesters = result.semesters;
+      _availableAcademicYears = result.academicYears;
+    });
+  }
+
+  void _setDefaultAcademicPeriod() {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final year = ctrl.setDefaultAcademicPeriod(
+      availableAcademicYears: _availableAcademicYears,
+    );
+    _selectedAcademicYear = year;
+  }
+
+  Future<void> _updateCurrentTerm() async {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final newSemesterId = await ctrl.updateCurrentSemester(
+      semesterList: _termList,
+      currentSemesterId: _selectedTerm,
+    );
+    if (newSemesterId != null && mounted) {
+      setState(() => _selectedTerm = newSemesterId);
+      await _loadSchedules();
+    }
+  }
+
+  // ── Data loading ────────────────────────────────────────────────────
+
+  String? _buildCacheKey() {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final key = ctrl.buildScheduleCacheKey(
+      currentPage: _currentPage,
+      showTableView: false,
+      selectedAcademicYear: _selectedAcademicYear,
+      selectedSemester: _selectedTerm,
+      selectedTeacherId: null,
+      selectedClassId: _selectedClassId,
+      selectedDayId: _selectedDayId,
+      selectedJamPelajaran: _selectedLessonHour,
+      selectedFilterSemester: _selectedFilterTerm,
+      searchText: _searchController.text,
+      lastCachedAcademicYear: _lastCachedAcademicYear,
+      lastCachedSemester: _lastCachedTerm,
+    );
+    if (key != null) {
+      _lastCachedAcademicYear = _selectedAcademicYear;
+      _lastCachedTerm = _selectedTerm;
+    }
+    return key;
+  }
+
+  Future<void> _loadSchedules({
+    bool resetPage = true,
+    bool useCache = true,
+  }) async {
+    if (resetPage) {
+      _currentPage = 1;
+      _hasMoreData = true;
+      if (_scheduleList.isEmpty && mounted) {
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      }
+    }
+
+    final ctrl = ref.read(adminScheduleControllerProvider);
+
+    try {
+      final result = await ctrl.loadData(
+        showTableView: false,
+        selectedSemester: _selectedTerm,
+        selectedFilterSemester: _selectedFilterTerm,
+        selectedAcademicYear: _selectedAcademicYear,
+        selectedTeacherId: null,
+        selectedClassId: _selectedClassId,
+        selectedDayId: _selectedDayId,
+        selectedJamPelajaran: _selectedLessonHour,
         searchText: _searchController.text,
-        showTableView: _showTableView,
+        perPage: _perPage,
+        availableDays: _availableDays,
+        lastCachedAcademicYear: _lastCachedAcademicYear,
+        lastCachedSemester: _lastCachedTerm,
+        useCache: useCache,
       );
-    },
-    onShowFilter: showFilterSheet,
-    onClearAllFilters: clearAllFilters,
-    onSearch: triggerSearch,
-    onRefresh: () => forceRefresh().then(
-      (_) => loadData(
-        resetPage: true,
-        useCache: false,
-        searchText: _searchController.text,
-        showTableView: _showTableView,
+
+      if (!mounted) return;
+
+      if (result == null) {
+        setState(() {
+          _isLoading = false;
+          if (_scheduleList.isEmpty) {
+            _errorMessage = ref.read(languageRiverpod).getTranslatedText(const {
+              'en': 'Failed to load schedules',
+              'id': 'Gagal memuat jadwal',
+            });
+          }
+        });
+        return;
+      }
+
+      setState(() {
+        _scheduleList = result.scheduleList;
+        _subjectList = result.subjectList;
+        _classList = result.classList;
+        _dayList = result.dayList.isEmpty && _availableDays.isNotEmpty
+            ? _availableDays
+            : result.dayList;
+        _termList = result.semesterList;
+        _lessonHourList = result.lessonHourList;
+        _hasMoreData = result.hasMoreData;
+        _isLoading = false;
+        _errorMessage = null;
+      });
+
+      ctrl.saveScheduleToCache(
+        cacheKey: _buildCacheKey(),
+        scheduleResponse: {'data': result.scheduleList},
+        teacher: result.teacherList,
+        subject: result.subjectList,
+        classData: result.classList,
+        days: result.dayList,
+        semester: result.semesterList,
+        lessonHours: result.lessonHourList,
+      );
+
+      if (_termList.isNotEmpty) {
+        await _updateCurrentTerm();
+      }
+    } catch (e) {
+      AppLogger.error('schedule', e);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        if (_scheduleList.isEmpty) {
+          _errorMessage = ErrorUtils.getFriendlyMessage(e);
+        }
+      });
+    }
+  }
+
+  Future<void> _loadMoreSchedules() async {
+    if (_isLoadingMore || !_hasMoreData) return;
+    setState(() => _isLoadingMore = true);
+
+    final nextPage = _currentPage + 1;
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final result = await ctrl.loadMoreData(
+      nextPage: nextPage,
+      perPage: _perPage,
+      selectedSemester: _selectedTerm,
+      selectedFilterSemester: _selectedFilterTerm,
+      selectedAcademicYear: _selectedAcademicYear,
+      selectedTeacherId: null,
+      selectedClassId: _selectedClassId,
+      selectedDayId: _selectedDayId,
+      selectedJamPelajaran: _selectedLessonHour,
+      searchText: _searchController.text,
+    );
+
+    if (!mounted) return;
+
+    if (result == null) {
+      setState(() => _isLoadingMore = false);
+      return;
+    }
+
+    setState(() {
+      _currentPage = nextPage;
+      _scheduleList = List<dynamic>.from(_scheduleList)
+        ..addAll(result.newItems);
+      _hasMoreData = result.hasMoreData;
+      _isLoadingMore = false;
+    });
+  }
+
+  Future<void> _onRefresh() => _loadSchedules(resetPage: true, useCache: false);
+
+  Future<void> _forceRefresh() async {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    await ctrl.forceRefresh(
+      cacheKey: _buildCacheKey(),
+      selectedAcademicYear: _selectedAcademicYear,
+    );
+    if (!mounted) return;
+    await _loadSchedules(resetPage: true, useCache: false);
+  }
+
+  void _onSyncTriggered() {
+    final trigger = FCMService().syncTrigger.value;
+    if (trigger == null || !mounted) return;
+    if (trigger['type'] == 'refresh_schedules') {
+      AppLogger.debug(
+        'schedule',
+        'Real-time sync triggered (refresh_schedules): Reloading',
+      );
+      _loadSchedules(resetPage: true, useCache: false);
+    }
+  }
+
+  void _onAcademicYearChanged() {
+    if (!mounted) return;
+    final providerYear = _academicYearProvider?.selectedAcademicYear;
+    if (providerYear == null) return;
+    setState(() => _selectedAcademicYear = providerYear['id'].toString());
+    _loadFilterOptions();
+    _loadSchedules(resetPage: true, useCache: true);
+  }
+
+  // ── Search ──────────────────────────────────────────────────────────
+
+  void _onSearchChanged(String _) {
+    _refreshHasActiveFilter();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) _loadSchedules();
+    });
+  }
+
+  // ── Filter state ────────────────────────────────────────────────────
+
+  void _refreshHasActiveFilter() {
+    setState(() {
+      _hasActiveFilter = ref
+          .read(adminScheduleControllerProvider)
+          .checkActiveFilter(
+            selectedDayId: _selectedDayId,
+            selectedClassId: _selectedClassId,
+            selectedJamPelajaran: _selectedLessonHour,
+            selectedFilterSemester: _selectedFilterTerm,
+            selectedSemester: _selectedTerm,
+          );
+    });
+  }
+
+  void _openFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ScheduleFilterSheet(
+        availableDays: _availableDays,
+        availableClasses: _availableClasses,
+        semesterList: _termList,
+        lessonHourList: _lessonHourList,
+        currentSemester: _selectedTerm,
+        selectedDayId: _selectedDayId,
+        selectedClassId: _selectedClassId,
+        selectedFilterSemester: _selectedFilterTerm,
+        selectedJamPelajaran: _selectedLessonHour,
+        onApply:
+            ({
+              required String? dayId,
+              required String? classId,
+              required String? semester,
+              required String? lessonHour,
+            }) {
+              setState(() {
+                _selectedDayId = dayId;
+                _selectedClassId = classId;
+                _selectedFilterTerm = semester;
+                _selectedLessonHour = lessonHour;
+              });
+              _refreshHasActiveFilter();
+              _loadSchedules();
+            },
       ),
-    ),
-    onExport: exportToExcel,
-    onImport: importFromExcel,
-    onDownloadTemplate: downloadTemplate,
-    canImport: !ref.read(academicYearRiverpod).isReadOnly,
-  );
+    );
+  }
+
+  void _clearAllFilters() {
+    _searchController.clear();
+    setState(() {
+      _selectedDayId = null;
+      _selectedClassId = null;
+      _selectedFilterTerm = null;
+      _selectedLessonHour = null;
+      _hasActiveFilter = false;
+      _currentPage = 1;
+    });
+    _loadSchedules();
+  }
+
+  // Per-chip removal callbacks — each chip's × only removes that filter.
+  void _removeDayFilter() {
+    setState(() => _selectedDayId = null);
+    _refreshHasActiveFilter();
+    _loadSchedules();
+  }
+
+  void _removeClassFilter() {
+    setState(() => _selectedClassId = null);
+    _refreshHasActiveFilter();
+    _loadSchedules();
+  }
+
+  void _removeSemesterFilter() {
+    setState(() => _selectedFilterTerm = null);
+    _refreshHasActiveFilter();
+    _loadSchedules();
+  }
+
+  void _removeLessonHourFilter() {
+    setState(() => _selectedLessonHour = null);
+    _refreshHasActiveFilter();
+    _loadSchedules();
+  }
+
+  // ── Row-level actions ───────────────────────────────────────────────
+
+  void _showScheduleDetail(Map<String, dynamic> schedule) {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    showDialog(
+      context: context,
+      builder: (_) => ScheduleDetailDialog(
+        schedule: schedule,
+        primaryColor: ctrl.getPrimaryColor(),
+        languageProvider: ref.read(languageRiverpod),
+        isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
+        formatTime: ctrl.formatTime,
+        formatScheduleDays: (s, [p]) {
+          final LanguageProvider lp = p ?? ref.read(languageRiverpod);
+          return ctrl.formatScheduleDays(s, _dayList, lp.currentLanguage);
+        },
+        getGradeLevel: (id) => ctrl.getGradeLevel(id, _classList),
+        onEdit: (s) {
+          Navigator.of(context).pop();
+          _openAddEditSheet(schedule: s);
+        },
+      ),
+    );
+  }
+
+  void _openAddEditSheet({dynamic schedule}) async {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ScheduleFormDialog(
+        teacherList: _availableTeachers,
+        subjectList: _subjectList,
+        classList: _availableClasses,
+        dayList: _availableDays,
+        semesterList: _availableSemesters,
+        lessonHourList: _lessonHourList,
+        semester: _selectedTerm,
+        academicYear: _selectedAcademicYear,
+        academicYearList: _availableAcademicYears,
+        schedule: schedule,
+        apiService: ctrl.apiService,
+        apiTeacherService: ctrl.apiTeacherService,
+      ),
+    );
+    if (result != null && mounted) {
+      await _checkAndResolveConflicts(
+        result,
+        editingScheduleId: schedule?['id']?.toString(),
+      );
+    }
+  }
+
+  Future<void> _checkAndResolveConflicts(
+    Map<String, dynamic> newScheduleData, {
+    String? editingScheduleId,
+  }) async {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final lp = ref.read(languageRiverpod);
+    try {
+      final saved = await ctrl.checkAndResolveConflicts(
+        context,
+        newScheduleData,
+        editingScheduleId: editingScheduleId,
+      );
+      if (!mounted) return;
+      if (saved) {
+        SnackBarUtils.showSuccess(
+          context,
+          lp.getTranslatedText(const {
+            'en': 'Schedule successfully saved',
+            'id': 'Jadwal berhasil disimpan',
+          }),
+        );
+        await _loadSchedules(resetPage: true, useCache: false);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      SnackBarUtils.showError(
+        context,
+        '${lp.getTranslatedText(const {'en': 'Failed to save schedule: ', 'id': 'Gagal menyimpan jadwal: '})}${ErrorUtils.getFriendlyMessage(e)}',
+      );
+      await _loadSchedules(resetPage: true, useCache: false);
+    }
+  }
+
+  Future<void> _deleteSchedule(Map<String, dynamic> schedule) async {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final lp = ref.read(languageRiverpod);
+
+    final confirmed = await ActionConfirmSheet.show(
+      context: context,
+      title: lp.getTranslatedText(const {
+        'en': 'Delete Schedule',
+        'id': 'Hapus Jadwal',
+      }),
+      message: lp.getTranslatedText(const {
+        'en': 'Are you sure you want to delete this schedule?',
+        'id': 'Apakah Anda yakin ingin menghapus jadwal ini?',
+      }),
+      confirmText: lp.getTranslatedText(const {'en': 'Delete', 'id': 'Hapus'}),
+      isDestructive: true,
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final id = schedule['id']?.toString();
+    if (id == null) return;
+    final ok = await ctrl.deleteSchedule(id);
+
+    if (!mounted) return;
+
+    if (ok) {
+      SnackBarUtils.showSuccess(
+        context,
+        lp.getTranslatedText(const {
+          'en': 'Schedule successfully deleted',
+          'id': 'Jadwal berhasil dihapus',
+        }),
+      );
+      await _loadSchedules(resetPage: true, useCache: false);
+    } else {
+      SnackBarUtils.showError(
+        context,
+        lp.getTranslatedText(const {
+          'en': 'Failed to delete schedule',
+          'id': 'Gagal menghapus jadwal',
+        }),
+      );
+    }
+  }
+
+  // ── Excel flows ─────────────────────────────────────────────────────
+
+  Future<void> _exportToExcel() async {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final lp = ref.read(languageRiverpod);
+    try {
+      await ctrl.exportToExcel(
+        context: context,
+        scheduleList: _scheduleList,
+        dayList: _dayList,
+        availableAcademicYears: _availableAcademicYears,
+      );
+    } catch (e) {
+      AppLogger.error('schedule', e);
+      if (!mounted) return;
+      SnackBarUtils.showError(
+        context,
+        '${lp.getTranslatedText(const {'en': 'Export failed: ', 'id': 'Export gagal: '})}${ErrorUtils.getFriendlyMessage(e)}',
+      );
+    }
+  }
+
+  Future<void> _importFromExcel() async {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final lp = ref.read(languageRiverpod);
+    try {
+      setState(() => _isLoading = true);
+      final imported = await ctrl.importFromExcel();
+      if (!mounted) return;
+      if (imported) {
+        await _loadSchedules(resetPage: true, useCache: false);
+        if (mounted) {
+          SnackBarUtils.showInfo(
+            context,
+            lp.getTranslatedText(const {
+              'en': 'Import successful',
+              'id': 'Import berhasil',
+            }),
+          );
+        }
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      AppLogger.error('schedule', e);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      SnackBarUtils.showError(
+        context,
+        '${lp.getTranslatedText(const {'en': 'Failed to import file: ', 'id': 'Gagal mengimpor berkas: '})}${ErrorUtils.getFriendlyMessage(e)}',
+      );
+    }
+  }
+
+  Future<void> _downloadTemplate() async {
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final lp = ref.read(languageRiverpod);
+    try {
+      await ctrl.downloadTemplate(context);
+    } catch (e) {
+      AppLogger.error('schedule', e);
+      if (!mounted) return;
+      SnackBarUtils.showError(
+        context,
+        '${lp.getTranslatedText(const {'en': 'Download template failed: ', 'id': 'Gagal download template: '})}${ErrorUtils.getFriendlyMessage(e)}',
+      );
+    }
+  }
+
+  // ── Build ───────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    final lp = ref.watch(languageRiverpod);
-    final filtered = getFilteredSchedules(
-      _scheduleList,
-      _dayList,
-      _searchController.text,
+    final lang = ref.watch(languageRiverpod);
+    final academicYear = ref.watch(academicYearRiverpod);
+    final ctrl = ref.read(adminScheduleControllerProvider);
+    final primaryColor = ctrl.getPrimaryColor();
+
+    // Client-side overlay: the server slice already respects the filter
+    // chips, so we only apply search here. Kept to mirror the prior
+    // behaviour (the controller's filter helper also tolerates class/day/
+    // lesson-hour filters client-side for cached-data edge cases).
+    final filteredSchedules = ctrl.getFilteredSchedules(
+      scheduleList: _scheduleList,
+      dayList: _dayList,
+      searchText: _searchController.text,
+      selectedTeacherId: null,
+      selectedClassId: _selectedClassId,
+      selectedDayId: _selectedDayId,
+      selectedJamPelajaran: _selectedLessonHour,
     );
-    final isRO = ref.read(academicYearRiverpod).isReadOnly;
-    return Scaffold(
-      backgroundColor: ColorUtils.lightGray,
-      body: Column(
-        children: [
-          _buildHeader(lp),
-          Expanded(
-            child: AdminScheduleListBuilder(
-              isLoading: _isLoading,
-              showTableView: _showTableView,
-              filteredSchedules: filtered,
-              gridData: _gridData,
-              timetableDataSource: _timetableDataSource,
-              dayList: _dayList,
-              classList: _classList,
-              hasMoreData: _hasMoreData,
-              isLoadingMore: _isLoadingMore,
-              selectedClassId: _selectedClassId,
-              primaryColor: _controller.getPrimaryColor(),
-              controller: _controller,
-              scrollController: scrollController,
-              isReadOnly: isRO,
-              currentLanguage: lp.currentLanguage,
-              onRefresh: () => loadData(
-                resetPage: true,
-                useCache: false,
-                searchText: _searchController.text,
-                showTableView: _showTableView,
-              ),
-              onScheduleTap: showScheduleDetail,
-              onScheduleEdit: editSchedule,
-              onScheduleDelete: deleteSchedule,
-            ),
-          ),
-        ],
+
+    final activeFilters = ctrl.buildActiveFilterChips(
+      selectedDayId: _selectedDayId,
+      selectedClassId: _selectedClassId,
+      selectedFilterTerm: _selectedFilterTerm,
+      selectedLessonHour: _selectedLessonHour,
+      selectedTerm: _selectedTerm,
+      availableDays: _availableDays,
+      availableClasses: _availableClasses,
+      termList: _termList,
+      languageProvider: lang,
+      onClearDay: _removeDayFilter,
+      onClearClass: _removeClassFilter,
+      onClearSemester: _removeSemesterFilter,
+      onClearLessonHour: _removeLessonHourFilter,
+    );
+
+    return AdminCrudScaffold(
+      title: lang.getTranslatedText(const {
+        'en': 'Teaching Schedule',
+        'id': 'Jadwal Mengajar',
+      }),
+      subtitle: lang.getTranslatedText(const {
+        'en': 'Manage teaching schedules',
+        'id': 'Kelola jadwal mengajar',
+      }),
+      primaryColor: primaryColor,
+      searchController: _searchController,
+      searchHint: lang.getTranslatedText(const {
+        'en': 'Search schedules...',
+        'id': 'Cari jadwal...',
+      }),
+      onSearchChanged: _onSearchChanged,
+      onSearchSubmitted: (_) => _loadSchedules(),
+      onFilterTap: _openFilterSheet,
+      hasActiveFilter: _hasActiveFilter,
+      activeFilters: activeFilters,
+      onClearAllFilters: _clearAllFilters,
+      actionMenu: AdminDataMenu(
+        languageProvider: lang,
+        onRefresh: _forceRefresh,
+        onExport: _exportToExcel,
+        onImport: academicYear.isReadOnly ? null : _importFromExcel,
+        onDownloadTemplate: _downloadTemplate,
       ),
-      floatingActionButton: isRO
-          ? null
-          : FloatingActionButton(
-              key: _fabKey,
-              onPressed: addSchedule,
-              backgroundColor: _controller.getPrimaryColor(),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.add, color: Colors.white, size: 20),
+      isLoading: _isLoading,
+      errorMessage: _errorMessage,
+      isEmpty: filteredSchedules.isEmpty,
+      onRefresh: _onRefresh,
+      emptyTitle: lang.getTranslatedText(const {
+        'en': 'No schedules',
+        'id': 'Tidak ada jadwal',
+      }),
+      emptySubtitle: _searchController.text.isEmpty && !_hasActiveFilter
+          ? lang.getTranslatedText(const {
+              'en': 'Tap + to add a schedule',
+              'id': 'Tap + untuk menambah jadwal',
+            })
+          : lang.getTranslatedText(const {
+              'en': 'No search results found',
+              'id': 'Tidak ditemukan hasil pencarian',
+            }),
+      emptyIcon: Icons.calendar_today_outlined,
+      childBuilder: () => PaginatedListView<dynamic>(
+        items: filteredSchedules,
+        itemBuilder: (context, schedule, index) {
+          final scheduleMap = Map<String, dynamic>.from(schedule as Map);
+          return AdminScheduleCard(
+            schedule: scheduleMap,
+            index: index,
+            isReadOnly: academicYear.isReadOnly,
+            primaryColor: primaryColor,
+            dayLabel: ctrl.formatScheduleDays(
+              scheduleMap,
+              _dayList,
+              lang.currentLanguage,
             ),
+            timeLabel: ctrl.formatTime(scheduleMap),
+            onTap: () => _showScheduleDetail(scheduleMap),
+            onEdit: () => _openAddEditSheet(schedule: scheduleMap),
+            onDelete: () => _deleteSchedule(scheduleMap),
+          );
+        },
+        onLoadMore: _loadMoreSchedules,
+        hasMore: _hasMoreData,
+        isLoadingMore: _isLoadingMore,
+        padding: const EdgeInsets.only(top: 8, bottom: 16),
+      ),
+      onFabTap: () => _openAddEditSheet(),
+      fabIcon: Icons.add,
+      hideFab: academicYear.isReadOnly,
     );
   }
 }
+
+/// Backwards-compat alias — legacy code and tests may still reference the
+/// long-form screen-state name. The mutable state class name was preserved
+/// during the refactor so no callers need to change.
+///
+/// (No alias needed: [TeachingScheduleManagementScreenState] is already the
+/// public state type.)

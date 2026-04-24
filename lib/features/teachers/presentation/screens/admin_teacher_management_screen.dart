@@ -1,22 +1,34 @@
+// Admin teacher management screen — full CRUD for teachers.
+//
+// Refactored from the 5-mixin (DataLoading + Crud + Filter + Tour + Ui)
+// implementation into a single flat [ConsumerState] that delegates all
+// data/Excel/CRUD work to [AdminTeacherController]. The per-feature
+// gradient header (`TeacherScreenHeader`) and list wrapper
+// (`TeacherListContent`) are retired in favor of the shared
+// [AdminCrudScaffold] + [AdminDataMenu] + [PaginatedListView] stack.
+//
+// What lives here: UI flags (loading / error / filters / pagination
+// cursor) + dispatch glue that hands state down to the controller.
+// Everything else has moved out.
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/widgets/error_screen.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
-import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_data_loading_mixin.dart';
-import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_crud_mixin.dart';
-import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_filter_mixin.dart';
-import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_tour_mixin.dart';
-import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_ui_mixin.dart';
-import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_screen_header.dart';
-import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_list_content.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
+import 'package:manajemensekolah/core/widgets/admin_data_menu.dart';
+import 'package:manajemensekolah/core/widgets/paginated_list_view.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/features/teachers/presentation/controllers/admin_teacher_controller.dart';
+import 'package:manajemensekolah/features/teachers/presentation/controllers/helpers/teacher_filter_helper.dart';
+import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_card.dart';
+import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_filter_sheet.dart';
 
+/// Admin-facing teacher management screen.
 class TeacherAdminScreen extends ConsumerStatefulWidget {
   const TeacherAdminScreen({super.key});
 
@@ -24,288 +36,425 @@ class TeacherAdminScreen extends ConsumerStatefulWidget {
   TeacherAdminScreenState createState() => TeacherAdminScreenState();
 }
 
-class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
-    with
-        TeacherDataLoadingMixin,
-        TeacherCrudMixin,
-        TeacherFilterMixin,
-        TeacherTourMixin,
-        TeacherUiMixin {
-  final ApiTeacherService _teacherService = getIt<ApiTeacherService>();
+/// Mutable state for [TeacherAdminScreen].
+///
+/// Holds the pagination cursor, filter selections, and loaded-data cache
+/// that feed [AdminCrudScaffold]. All network + cache + Excel work is
+/// delegated to [AdminTeacherController].
+class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
+  // Search text — shared with [AdminCrudScaffold] via [searchController].
+  final TextEditingController _searchController = TextEditingController();
 
-  // Core data state
+  // Loaded data.
   List<dynamic> _teachers = [];
   List<dynamic> _subjects = [];
   List<dynamic> _classes = [];
   bool _isLoading = true;
   String? _errorMessage;
 
-  // Controllers
-  final ScrollController _scrollController = ScrollController();
-  final TextEditingController _searchController = TextEditingController();
-
-  // Pagination state
+  // Pagination cursor.
   int _currentPage = 1;
-  final int _perPage = 10;
-  bool _hasMoreData = true;
+  static const int _perPage = 10;
   bool _isLoadingMore = false;
+  bool _hasMoreData = true;
 
-  // Filter state
+  // Filter selections.
   String? _selectedClassId;
   String? _selectedHomeroomFilter;
   String? _selectedGender;
   String? _selectedEmploymentStatus;
   String? _selectedTeachingClassId;
-  bool _hasActiveFilter = false;
   bool _showAllTeachers = false;
+  bool _hasActiveFilter = false;
 
-  // Filter options state
+  // Filter-option lists (populated once from /filter-options).
   List<dynamic> _availableClass = [];
   List<dynamic> _availableGenders = [];
   List<dynamic> _availableEmploymentStatus = [];
 
-  // Tour targets
-  final GlobalKey _menuKey = GlobalKey();
-  final GlobalKey _searchKey = GlobalKey();
-  final GlobalKey _filterKey = GlobalKey();
+  // FAB GlobalKey reserved for potential reintroduction of tour plumbing.
   final GlobalKey _fabKey = GlobalKey();
-
-  // ─── Mixin getters/setters bridge (Abstract getters for mixins) ───
-  @override
-  List<dynamic> get teachers => _teachers;
-  @override
-  set teachers(List<dynamic> v) => _teachers = v;
-
-  @override
-  List<dynamic> get subjects => _subjects;
-  @override
-  set subjects(List<dynamic> v) => _subjects = v;
-
-  @override
-  List<dynamic> get classes => _classes;
-  @override
-  set classes(List<dynamic> v) => _classes = v;
-
-  @override
-  bool get isLoading => _isLoading;
-  @override
-  set isLoading(bool v) => _isLoading = v;
-
-  @override
-  String? get errorMessage => _errorMessage;
-  @override
-  set errorMessage(String? v) => _errorMessage = v;
-
-  @override
-  int get currentPage => _currentPage;
-  @override
-  set currentPage(int v) => _currentPage = v;
-
-  @override
-  int get perPage => _perPage;
-
-  @override
-  bool get hasMoreData => _hasMoreData;
-  @override
-  set hasMoreData(bool v) => _hasMoreData = v;
-
-  @override
-  bool get isLoadingMore => _isLoadingMore;
-  @override
-  set isLoadingMore(bool v) => _isLoadingMore = v;
-
-  @override
-  String? get selectedClassId => _selectedClassId;
-  @override
-  set selectedClassId(String? v) => _selectedClassId = v;
-
-  @override
-  String? get selectedHomeroomFilter => _selectedHomeroomFilter;
-  @override
-  set selectedHomeroomFilter(String? v) => _selectedHomeroomFilter = v;
-
-  @override
-  String? get selectedGender => _selectedGender;
-  @override
-  set selectedGender(String? v) => _selectedGender = v;
-
-  @override
-  String? get selectedEmploymentStatus => _selectedEmploymentStatus;
-  @override
-  set selectedEmploymentStatus(String? v) => _selectedEmploymentStatus = v;
-
-  @override
-  String? get selectedTeachingClassId => _selectedTeachingClassId;
-  @override
-  set selectedTeachingClassId(String? v) => _selectedTeachingClassId = v;
-
-  @override
-  bool get hasActiveFilter => _hasActiveFilter;
-  @override
-  set hasActiveFilter(bool v) => _hasActiveFilter = v;
-
-  @override
-  bool get showAllTeachers => _showAllTeachers;
-  @override
-  set showAllTeachers(bool v) => _showAllTeachers = v;
-
-  @override
-  String get searchText => _searchController.text;
-
-  @override
-  List<dynamic> get availableClass => _availableClass;
-  @override
-  set availableClass(List<dynamic> v) => _availableClass = v;
-
-  @override
-  List<dynamic> get availableGenders => _availableGenders;
-  @override
-  set availableGenders(List<dynamic> v) => _availableGenders = v;
-
-  @override
-  List<dynamic> get availableEmploymentStatus => _availableEmploymentStatus;
-  @override
-  set availableEmploymentStatus(List<dynamic> v) =>
-      _availableEmploymentStatus = v;
-
-  @override
-  GlobalKey get menuKey => _menuKey;
-  @override
-  GlobalKey get searchKey => _searchKey;
-  @override
-  GlobalKey get filterKey => _filterKey;
-  @override
-  GlobalKey get fabKey => _fabKey;
 
   @override
   void initState() {
     super.initState();
-    _initializeListeners();
-    _initializeData();
-  }
-
-  void _initializeListeners() {
-    final academicYearProvider = ref.read(academicYearRiverpod);
-    academicYearProvider.addListener(_onAcademicYearChanged);
+    ref.read(academicYearRiverpod).addListener(_onAcademicYearChanged);
     FCMService().syncTrigger.addListener(_onSyncTriggered);
-  }
-
-  void _initializeData() {
-    loadFilterOptions();
-    loadData();
-  }
-
-  void _onSyncTriggered() {
-    final trigger = FCMService().syncTrigger.value;
-    if (trigger != null &&
-        (trigger['type'] == 'refresh_teachers' ||
-            trigger['type'] == 'refresh_schedules')) {
-      if (mounted) {
-        AppLogger.debug('teacher', 'Sync triggered: ${trigger['type']}');
-        loadData(useCache: false);
-      }
-    }
+    _loadFilterOptions();
+    _loadData();
   }
 
   @override
   void dispose() {
-    FCMService().syncTrigger.removeListener(_onSyncTriggered);
-    _scrollController.dispose();
     _searchController.dispose();
+    FCMService().syncTrigger.removeListener(_onSyncTriggered);
+    ref.read(academicYearRiverpod).removeListener(_onAcademicYearChanged);
     super.dispose();
   }
 
+  // ── Data loading ────────────────────────────────────────────────────
+
+  Future<void> _loadFilterOptions() async {
+    final options = await ref
+        .read(adminTeacherControllerProvider)
+        .loadFilterOptions();
+    if (!mounted || options == null) return;
+    setState(() {
+      _availableClass = options.availableClass;
+      _availableGenders = options.availableGenders;
+      _availableEmploymentStatus = options.availableEmploymentStatus;
+    });
+  }
+
+  Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
+    if (resetPage) {
+      _currentPage = 1;
+      _hasMoreData = true;
+      if (_teachers.isEmpty && mounted) {
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      }
+    }
+
+    final result = await ref
+        .read(adminTeacherControllerProvider)
+        .loadData(
+          useCache: useCache,
+          currentPage: _currentPage,
+          perPage: _perPage,
+          selectedClassId: _selectedClassId,
+          selectedHomeroomFilter: _selectedHomeroomFilter,
+          selectedGender: _selectedGender,
+          selectedEmploymentStatus: _selectedEmploymentStatus,
+          selectedTeachingClassId: _selectedTeachingClassId,
+          showAllTeachers: _showAllTeachers,
+          searchText: _searchController.text,
+        );
+
+    if (!mounted) return;
+
+    if (result.errorMessage != null && _teachers.isEmpty) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = result.errorMessage;
+      });
+      return;
+    }
+
+    setState(() {
+      _teachers = result.teachers;
+      _subjects = result.subjects;
+      _classes = result.classes;
+      _hasMoreData = result.hasMoreData;
+      _isLoading = false;
+      _errorMessage = null;
+    });
+  }
+
+  Future<void> _loadMoreData() async {
+    if (_isLoadingMore || !_hasMoreData) return;
+    setState(() => _isLoadingMore = true);
+
+    final result = await ref
+        .read(adminTeacherControllerProvider)
+        .loadMoreData(
+          nextPage: _currentPage + 1,
+          perPage: _perPage,
+          selectedClassId: _selectedClassId,
+          selectedHomeroomFilter: _selectedHomeroomFilter,
+          selectedGender: _selectedGender,
+          selectedEmploymentStatus: _selectedEmploymentStatus,
+          selectedTeachingClassId: _selectedTeachingClassId,
+          showAllTeachers: _showAllTeachers,
+          searchText: _searchController.text,
+        );
+
+    if (!mounted) return;
+
+    if (result == null) {
+      setState(() => _isLoadingMore = false);
+      return;
+    }
+
+    _currentPage++;
+    setState(() {
+      _teachers = [..._teachers, ...result.additionalTeachers];
+      _hasMoreData = result.hasMoreData;
+      _isLoadingMore = false;
+    });
+    AppLogger.info(
+      'teacher',
+      'Loaded more data: Page $_currentPage, Total items: ${_teachers.length}',
+    );
+  }
+
+  Future<void> _onRefresh() => _loadData(resetPage: true, useCache: false);
+
+  Future<void> _forceRefresh() async {
+    await ref
+        .read(adminTeacherControllerProvider)
+        .forceRefreshCaches(
+          currentPage: _currentPage,
+          selectedClassId: _selectedClassId,
+          selectedHomeroomFilter: _selectedHomeroomFilter,
+          selectedGender: _selectedGender,
+          selectedEmploymentStatus: _selectedEmploymentStatus,
+          selectedTeachingClassId: _selectedTeachingClassId,
+          showAllTeachers: _showAllTeachers,
+          searchText: _searchController.text,
+        );
+    await _loadFilterOptions();
+    await _loadData(resetPage: true, useCache: false);
+  }
+
   void _onAcademicYearChanged() {
-    if (mounted) {
-      loadFilterOptions();
-      loadData();
+    if (!mounted) return;
+    _loadFilterOptions();
+    _loadData();
+  }
+
+  void _onSyncTriggered() {
+    final trigger = FCMService().syncTrigger.value;
+    if (trigger == null || !mounted) return;
+    if (trigger['type'] == 'refresh_teachers' ||
+        trigger['type'] == 'refresh_schedules') {
+      AppLogger.debug('teacher', 'Sync triggered: ${trigger['type']}');
+      _loadData(useCache: false);
     }
   }
 
-  void _handleSearchSubmit() {
+  // ── Filter state ────────────────────────────────────────────────────
+
+  void _refreshHasActiveFilter() {
     setState(() {
-      _currentPage = 1;
+      _hasActiveFilter = TeacherFilterHelper.checkActiveFilter(
+        selectedHomeroomFilter: _selectedHomeroomFilter,
+        selectedGender: _selectedGender,
+        selectedEmploymentStatus: _selectedEmploymentStatus,
+        selectedTeachingClassId: _selectedTeachingClassId,
+        searchText: _searchController.text,
+      );
     });
-    loadData();
   }
 
-  Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor('admin');
+  void _openFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => TeacherFilterSheet(
+        initialHomeroom: _selectedHomeroomFilter,
+        initialGender: _selectedGender,
+        initialEmploymentStatus: _selectedEmploymentStatus,
+        initialTeachingClass: _selectedTeachingClassId,
+        initialShowAll: _showAllTeachers,
+        availableGenders: _availableGenders,
+        availableEmploymentStatus: _availableEmploymentStatus,
+        availableClass: _availableClass,
+        languageProvider: ref.read(languageRiverpod),
+        onApply: (homeroom, gender, employment, teachingClass, showAll) {
+          setState(() {
+            _selectedHomeroomFilter = homeroom;
+            _selectedGender = gender;
+            _selectedEmploymentStatus = employment;
+            _selectedTeachingClassId = teachingClass;
+            _showAllTeachers = showAll;
+          });
+          _refreshHasActiveFilter();
+          _loadData();
+        },
+      ),
+    );
   }
+
+  void _clearAllFilters() {
+    _searchController.clear();
+    setState(() {
+      _selectedClassId = null;
+      _selectedHomeroomFilter = null;
+      _selectedGender = null;
+      _selectedEmploymentStatus = null;
+      _selectedTeachingClassId = null;
+      _currentPage = 1;
+      _hasActiveFilter = false;
+    });
+    _loadData();
+  }
+
+  // Per-chip removal callbacks — each chip carries its own targeted
+  // callback so the × on one chip only removes that filter.
+  void _removeHomeroomFilter() {
+    setState(() => _selectedHomeroomFilter = null);
+    _refreshHasActiveFilter();
+    _loadData();
+  }
+
+  void _removeGenderFilter() {
+    setState(() => _selectedGender = null);
+    _refreshHasActiveFilter();
+    _loadData();
+  }
+
+  void _removeEmploymentFilter() {
+    setState(() => _selectedEmploymentStatus = null);
+    _refreshHasActiveFilter();
+    _loadData();
+  }
+
+  void _removeTeachingClassFilter() {
+    setState(() => _selectedTeachingClassId = null);
+    _refreshHasActiveFilter();
+    _loadData();
+  }
+
+  // ── Row-level actions ───────────────────────────────────────────────
+
+  void _openTeacherDetail(Map<String, dynamic> teacher) {
+    ref.read(adminTeacherControllerProvider).navigateToDetail(context, teacher);
+  }
+
+  void _openAddEditSheet({Map<String, dynamic>? teacher}) {
+    ref
+        .read(adminTeacherControllerProvider)
+        .openTeacherFormDialog(
+          context: context,
+          subjects: _subjects,
+          classes: _classes,
+          teacher: teacher,
+          onSaved: _loadData,
+        );
+  }
+
+  Future<void> _deleteTeacher(Map<String, dynamic> teacher) async {
+    final deleted = await ref
+        .read(adminTeacherControllerProvider)
+        .deleteTeacher(teacher, context);
+    if (!deleted || !mounted) return;
+    await _loadData();
+    if (!mounted) return;
+    SnackBarUtils.showSuccess(
+      context,
+      ref.read(languageRiverpod).getTranslatedText(const {
+        'en': 'Teacher successfully deleted',
+        'id': 'Guru berhasil dihapus',
+      }),
+    );
+  }
+
+  // ── Excel flows ─────────────────────────────────────────────────────
+
+  Future<void> _exportToExcel() {
+    return ref
+        .read(adminTeacherControllerProvider)
+        .exportToExcel(
+          context: context,
+          selectedClassId: _selectedClassId,
+          showAllTeachers: _showAllTeachers,
+          searchText: _searchController.text,
+        );
+  }
+
+  Future<void> _importFromExcel() async {
+    final imported = await ref
+        .read(adminTeacherControllerProvider)
+        .importFromExcel(context);
+    if (!imported || !mounted) return;
+    await _loadData();
+  }
+
+  Future<void> _downloadTemplate() {
+    return ref.read(adminTeacherControllerProvider).downloadTemplate(context);
+  }
+
+  // ── Build ───────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = ref.watch(languageRiverpod);
+    final lang = ref.watch(languageRiverpod);
+    final academicYear = ref.watch(academicYearRiverpod);
+    final primaryColor = ColorUtils.getRoleColor('admin');
 
-    if (_errorMessage != null) {
-      return ErrorScreen(errorMessage: _errorMessage!, onRetry: loadData);
-    }
-
-    return Scaffold(
-      backgroundColor: ColorUtils.lightGray,
-      body: Column(
-        children: [
-          TeacherScreenHeader(
-            menuKey: _menuKey,
-            searchKey: _searchKey,
-            filterKey: _filterKey,
-            searchController: _searchController,
-            hasActiveFilter: hasActiveFilter,
-            primaryColor: _getPrimaryColor(),
-            onMenuRefresh: forceRefresh,
-            onMenuExport: exportToExcel,
-            onMenuImport: importFromExcel,
-            onMenuTemplate: downloadTemplate,
-            onFilterTap: showFilterSheet,
-            onSearchSubmit: _handleSearchSubmit,
-            onClearAllFilters: clearAllFilters,
-            filterChips: buildFilterChipWidgets(),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Expanded(
-            child: TeacherListContent(
-              isLoading: _isLoading,
-              teachers: _teachers,
-              isLoadingMore: _isLoadingMore,
-              hasSearch: _searchController.text.isNotEmpty,
-              hasFilter: hasActiveFilter,
-              scrollController: _scrollController,
-              languageProvider: languageProvider,
-              onRefresh: refreshData,
-              onLoadMore: loadMoreData,
-              hasMoreData: _hasMoreData,
-              onTapDetail: navigateToDetail,
-              onEdit: (teacher) => openTeacherFormDialog(teacher: teacher),
-              onDelete: deleteTeacher,
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: _buildFloatingActionButton(),
+    final activeFilters = TeacherFilterHelper.buildFilterChips(
+      selectedHomeroomFilter: _selectedHomeroomFilter,
+      selectedGender: _selectedGender,
+      selectedEmploymentStatus: _selectedEmploymentStatus,
+      selectedTeachingClassId: _selectedTeachingClassId,
+      availableClass: _availableClass,
+      availableEmploymentStatus: _availableEmploymentStatus,
+      languageProvider: lang,
+      onClearHomeroom: _removeHomeroomFilter,
+      onClearGender: _removeGenderFilter,
+      onClearEmploymentStatus: _removeEmploymentFilter,
+      onClearTeachingClass: _removeTeachingClassFilter,
     );
-  }
 
-  Widget? _buildFloatingActionButton() {
-    if (ref.read(academicYearRiverpod).isReadOnly) {
-      return null;
-    }
-    return FloatingActionButton(
-      key: _fabKey,
-      onPressed: openTeacherFormDialog,
-      backgroundColor: _getPrimaryColor(),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
+    return AdminCrudScaffold(
+      title: lang.getTranslatedText(const {
+        'en': 'Teacher Management',
+        'id': 'Manajemen Guru',
+      }),
+      subtitle: lang.getTranslatedText(const {
+        'en': 'Manage and monitor teachers',
+        'id': 'Kelola dan pantau guru',
+      }),
+      primaryColor: primaryColor,
+      searchController: _searchController,
+      searchHint: lang.getTranslatedText(const {
+        'en': 'Search teachers...',
+        'id': 'Cari guru...',
+      }),
+      onSearchChanged: (_) => _refreshHasActiveFilter(),
+      onSearchSubmitted: (_) => _loadData(),
+      onFilterTap: _openFilterSheet,
+      hasActiveFilter: _hasActiveFilter,
+      activeFilters: activeFilters,
+      onClearAllFilters: _clearAllFilters,
+      actionMenu: AdminDataMenu(
+        languageProvider: lang,
+        onRefresh: _forceRefresh,
+        onExport: _exportToExcel,
+        onImport: _importFromExcel,
+        onDownloadTemplate: _downloadTemplate,
       ),
-      child: const Icon(Icons.add, color: Colors.white, size: 20),
+      isLoading: _isLoading,
+      errorMessage: _errorMessage,
+      isEmpty: _teachers.isEmpty,
+      onRefresh: _onRefresh,
+      emptyTitle: lang.getTranslatedText(const {
+        'en': 'No teachers',
+        'id': 'Tidak ada guru',
+      }),
+      emptySubtitle: _searchController.text.isEmpty && !_hasActiveFilter
+          ? lang.getTranslatedText(const {
+              'en': 'Tap + to add a teacher',
+              'id': 'Tap + untuk menambah guru',
+            })
+          : lang.getTranslatedText(const {
+              'en': 'No search results found',
+              'id': 'Tidak ditemukan hasil pencarian',
+            }),
+      emptyIcon: Icons.person_outline,
+      childBuilder: () => PaginatedListView<Map<String, dynamic>>(
+        items: _teachers.cast<Map<String, dynamic>>(),
+        itemBuilder: (context, teacher, index) {
+          return TeacherCard(
+            teacher: teacher,
+            index: index,
+            onTap: () => _openTeacherDetail(teacher),
+            onEdit: () => _openAddEditSheet(teacher: teacher),
+            onDelete: () => _deleteTeacher(teacher),
+          );
+        },
+        onLoadMore: _loadMoreData,
+        hasMore: _hasMoreData,
+        isLoadingMore: _isLoadingMore,
+        padding: const EdgeInsets.only(top: 8, bottom: 16),
+      ),
+      onFabTap: academicYear.isReadOnly ? null : _openAddEditSheet,
+      fabKey: _fabKey,
+      hideFab: academicYear.isReadOnly,
     );
-  }
-
-  @override
-  Future<void> checkAndShowTour() async {
-    try {
-      await super.checkAndShowTour();
-    } catch (e) {
-      AppLogger.error('teacher', 'Error in tour check: $e');
-    }
   }
 }

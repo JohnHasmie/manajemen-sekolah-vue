@@ -1,6 +1,11 @@
 // Class-level finance report screen - shows billing/payment status
 // per student. Supports filtering by student name, payment type,
 // month, and payment status.
+//
+// Used both as a stand-alone route AND as an embedded drill-down inside
+// the admin finance hub's Class Report tab. When [embedded] is true,
+// the outer [Scaffold] is dropped and [onBack] replaces route-pop so the
+// hub keeps its header + tab-bar visible during the drill-down.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -25,11 +30,25 @@ import 'package:manajemensekolah/features/finance/presentation/widgets/finance_r
 class ClassFinanceReportScreen extends StatefulWidget {
   final String classId;
   final String className;
+  final String? academicYearId;
+
+  /// Whether this widget is embedded inside the admin finance hub.
+  ///
+  /// When `true`, the outer [Scaffold] + gradient hero are dropped in favour
+  /// of a compact back-bar so the hub's header and tab-bar stay visible.
+  final bool embedded;
+
+  /// Called when the user taps the back chevron. Only used when [embedded] is
+  /// true — outside the hub the screen falls back to [AppNavigator.pop].
+  final VoidCallback? onBack;
 
   const ClassFinanceReportScreen({
     super.key,
     required this.classId,
     required this.className,
+    this.academicYearId,
+    this.embedded = false,
+    this.onBack,
   });
 
   @override
@@ -72,14 +91,17 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
       return _buildLoadingScreen();
     }
     if (_errorMessage?.isNotEmpty == true) {
-      return ErrorScreen(errorMessage: _errorMessage!, onRetry: loadData);
+      final errorChild = ErrorScreen(
+        errorMessage: _errorMessage!,
+        onRetry: loadData,
+      );
+      return widget.embedded ? errorChild : errorChild;
     }
     return _buildMainContent();
   }
 
-  Widget _buildLoadingScreen() => Scaffold(
-    backgroundColor: ColorUtils.slate50,
-    body: Column(
+  Widget _buildLoadingScreen() {
+    final column = Column(
       children: [
         _buildHeader(),
         Expanded(
@@ -90,32 +112,35 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
           ),
         ),
       ],
-    ),
-  );
+    );
+
+    if (widget.embedded) return column;
+    return Scaffold(backgroundColor: ColorUtils.slate50, body: column);
+  }
 
   Widget _buildMainContent() {
-    return Scaffold(
-      backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHeader(),
-          if (_hasActiveFilters()) _buildActiveFiltersRow(),
-          Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: _students.isEmpty
-                  ? const EmptyState(
-                      title: 'Tidak ada siswa',
-                      subtitle: 'Kelas ini belum memiliki siswa',
-                      icon: Icons.people_outline,
-                    )
-                  : _buildTableContent(),
-            ),
+    final column = Column(
+      children: [
+        _buildHeader(),
+        if (_hasActiveFilters()) _buildActiveFiltersRow(),
+        Expanded(
+          child: MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: _students.isEmpty
+                ? const EmptyState(
+                    title: 'Tidak ada siswa',
+                    subtitle: 'Kelas ini belum memiliki siswa',
+                    icon: Icons.people_outline,
+                  )
+                : _buildTableContent(),
           ),
-        ],
-      ),
+        ),
+      ],
     );
+
+    if (widget.embedded) return column;
+    return Scaffold(backgroundColor: ColorUtils.slate50, body: column);
   }
 
   Widget _buildTableContent() {
@@ -135,6 +160,8 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
   }
 
   Widget _buildHeader() {
+    if (widget.embedded) return _buildEmbeddedHeader();
+
     final c = getPrimaryColor();
     return Container(
       padding: EdgeInsets.only(
@@ -168,10 +195,137 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
     );
   }
 
+  /// Compact back-bar used when rendered inside the admin finance hub.
+  ///
+  /// Keeps the hub's own gradient header + tab-bar visible above and falls
+  /// back to a white tile with a back chevron, class name, and the shared
+  /// search + filter row.
+  Widget _buildEmbeddedHeader() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: _onBackPressed,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate100,
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  ),
+                  child: Icon(
+                    Icons.arrow_back_rounded,
+                    color: ColorUtils.slate700,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.className,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: ColorUtils.slate900,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'Laporan Keuangan',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ColorUtils.slate500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildEmbeddedSearchRow(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmbeddedSearchRow() {
+    final active = _hasActiveFilters();
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: ColorUtils.slate50,
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              border: Border.all(color: ColorUtils.slate200),
+            ),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Cari siswa...',
+                hintStyle: TextStyle(color: ColorUtils.slate400),
+                prefixIcon: Icon(Icons.search, color: ColorUtils.slate400),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+              ),
+              onChanged: (val) =>
+                  setState(() => _searchQuery = val.toLowerCase()),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        GestureDetector(
+          onTap: () => showFilterSheet(
+            _monthGroups,
+            _selectedStatus,
+            _selectedMonthKey,
+            _selectedPaymentTypeId,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: active ? getPrimaryColor() : ColorUtils.slate50,
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              border: Border.all(
+                color: active ? getPrimaryColor() : ColorUtils.slate200,
+              ),
+            ),
+            child: Icon(
+              Icons.tune,
+              color: active ? Colors.white : ColorUtils.slate700,
+              size: 20,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _onBackPressed() {
+    if (widget.embedded && widget.onBack != null) {
+      widget.onBack!.call();
+    } else {
+      AppNavigator.pop(context);
+    }
+  }
+
   Widget _buildHeaderTop() => Row(
     children: [
       GestureDetector(
-        onTap: () => AppNavigator.pop(context),
+        onTap: _onBackPressed,
         child: Container(
           width: 40,
           height: 40,
@@ -272,22 +426,28 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
   Widget _buildActiveFiltersRow() {
     final filters = <ActiveFilter>[];
     if (_selectedStatus != 'Semua') {
-      filters.add(ActiveFilter(
-        label: 'Status: $_selectedStatus',
-        onRemove: () => setState(() => _selectedStatus = 'Semua'),
-      ));
+      filters.add(
+        ActiveFilter(
+          label: 'Status: $_selectedStatus',
+          onRemove: () => setState(() => _selectedStatus = 'Semua'),
+        ),
+      );
     }
     if (_selectedMonthKey != null) {
-      filters.add(ActiveFilter(
-        label: 'Bulan: ${_getSelectedMonthName()}',
-        onRemove: () => setState(() => _selectedMonthKey = null),
-      ));
+      filters.add(
+        ActiveFilter(
+          label: 'Bulan: ${_getSelectedMonthName()}',
+          onRemove: () => setState(() => _selectedMonthKey = null),
+        ),
+      );
     }
     if (_selectedPaymentTypeId != null) {
-      filters.add(ActiveFilter(
-        label: 'Jenis: Pembayaran Terpilih',
-        onRemove: () => setState(() => _selectedPaymentTypeId = null),
-      ));
+      filters.add(
+        ActiveFilter(
+          label: 'Jenis: Pembayaran Terpilih',
+          onRemove: () => setState(() => _selectedPaymentTypeId = null),
+        ),
+      );
     }
     return Container(
       width: double.infinity,

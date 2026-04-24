@@ -16,6 +16,7 @@ class TeacherAttendanceParams {
   final DateTime date;
   final String teacherId;
   final String? lessonHourId;
+  final String? academicYearId;
 
   const TeacherAttendanceParams({
     required this.subjectId,
@@ -23,6 +24,7 @@ class TeacherAttendanceParams {
     required this.date,
     required this.teacherId,
     this.lessonHourId,
+    this.academicYearId,
   });
 
   @override
@@ -34,7 +36,8 @@ class TeacherAttendanceParams {
           classId == other.classId &&
           date == other.date &&
           teacherId == other.teacherId &&
-          lessonHourId == other.lessonHourId;
+          lessonHourId == other.lessonHourId &&
+          academicYearId == other.academicYearId;
 
   @override
   int get hashCode =>
@@ -42,7 +45,8 @@ class TeacherAttendanceParams {
       classId.hashCode ^
       date.hashCode ^
       teacherId.hashCode ^
-      lessonHourId.hashCode;
+      lessonHourId.hashCode ^
+      academicYearId.hashCode;
 }
 
 /// Controller for Teacher Attendance Detail.
@@ -75,6 +79,7 @@ class TeacherAttendanceController
       // 2. Load students by class ID
       final studentData = await getIt<ApiStudentService>().getStudentByClass(
         arg.classId,
+        academicYearId: arg.academicYearId,
       );
       final students = studentData.map((s) => Student.fromJson(s)).toList();
 

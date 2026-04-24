@@ -133,10 +133,15 @@ class FinanceDataLoader {
     String? statusFilter,
   }) async {
     try {
+      final ayId = _ref
+          .read(academicYearRiverpod)
+          .selectedAcademicYear?['id']
+          ?.toString();
       final res = await FinanceService.getBillsPaginated(
         page: page,
         limit: perPage,
         status: statusFilter,
+        academicYearId: ayId,
       );
 
       final List<dynamic> pageData;
@@ -287,7 +292,14 @@ class FinanceDataLoader {
       // Fallback: compute batches client-side if API returns none
       final List<dynamic> batches = data['generated_batches'] ?? [];
       if (batches.isEmpty) {
-        final res = await FinanceService.getBillsPaginated(limit: 500);
+        final ayId2 = _ref
+            .read(academicYearRiverpod)
+            .selectedAcademicYear?['id']
+            ?.toString();
+        final res = await FinanceService.getBillsPaginated(
+          limit: 500,
+          academicYearId: ayId2,
+        );
         final List<dynamic>? billsData = res['data'] is List
             ? res['data']
             : (res is List ? res : null);

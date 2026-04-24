@@ -128,10 +128,12 @@ class SubjectMaterialService {
   Future<List<dynamic>> getMaterials({
     String? teacherId,
     String? subjectId,
+    String? academicYearId,
   }) async {
     String url = '/materials?';
     if (teacherId != null) url += 'teacher_id=$teacherId&';
     if (subjectId != null) url += 'subject_id=$subjectId&';
+    if (academicYearId != null) url += 'academic_year_id=$academicYearId&';
 
     final response = await dioClient.get(url);
 

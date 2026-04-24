@@ -11,7 +11,6 @@ import 'package:manajemensekolah/features/finance/presentation/widgets/finance_n
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_header.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_tab_content.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_fab.dart';
-import 'package:manajemensekolah/features/finance/presentation/mixins/finance_tour_mixin.dart';
 import 'package:manajemensekolah/features/finance/presentation/mixins/finance_filter_mixin.dart';
 import 'package:manajemensekolah/features/finance/presentation/mixins/finance_data_mixin.dart';
 import 'package:manajemensekolah/features/finance/presentation/mixins/finance_action_mixin.dart';
@@ -30,11 +29,7 @@ class FinanceScreen extends ConsumerStatefulWidget {
 
 /// State for FinanceScreen with mixins.
 class FinanceScreenState extends ConsumerState<FinanceScreen>
-    with
-        FinanceTourMixin,
-        FinanceFilterMixin,
-        FinanceDataMixin,
-        FinanceActionMixin {
+    with FinanceFilterMixin, FinanceDataMixin, FinanceActionMixin {
   AdminFinanceController get _ctrl => ref.read(adminFinanceControllerProvider);
 
   // Core state
@@ -50,9 +45,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   bool _isLoading = true;
   String _errorMessage = '';
   int _currentTabIndex = 0;
-
-  final GlobalKey _tabBarKey = GlobalKey();
-  final GlobalKey _addButtonKey = GlobalKey();
 
   final ScrollController _billScrollController = ScrollController();
   final ScrollController _pendingScrollController = ScrollController();
@@ -77,9 +69,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
     super.initState();
     _setupScrollListeners();
     loadData();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) checkAndShowTour();
-    });
   }
 
   void _setupScrollListeners() {
@@ -111,10 +100,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   }
 
   // FinanceFilterMixin overrides
-  @override
-  GlobalKey get tabBarKey => _tabBarKey;
-  @override
-  GlobalKey get addButtonKey => _addButtonKey;
   @override
   TextEditingController get searchController => _searchController;
   @override
@@ -326,7 +311,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
           ),
           FinanceNavigationBar(
             currentIndex: _currentTabIndex,
-            tabBarKey: _tabBarKey,
             pendingCount: _totalPendingPayments,
             primaryColor: getPrimaryColor(),
             onTabSelected: (index) => setState(() => _currentTabIndex = index),

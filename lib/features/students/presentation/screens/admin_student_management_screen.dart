@@ -1,26 +1,34 @@
 // Admin student management screen - full CRUD for students.
 //
-// Like `pages/admin/students.vue` - manages school students with create,
-// edit, delete, search, multi-filter (class, gender, grade level, guardian
-// status), infinite scroll pagination, and Excel import/export.
+// Wraps [AdminCrudScaffold] with a Siswa-specific data layer:
+//   • header       → AdminCrudScaffold (SchoolPill + AdminDataMenu trailing)
+//   • body         → paginated student list
+//   • add/edit     → AppEditBottomSheet via showStudentAddEditDialog()
+//   • filter       → AppFilterBottomSheet via showStudentFilterSheet()
+//   • bulk actions → none yet (Phase 2 scope if ever needed for Siswa)
+//
+// Refactored from 354 lines + 5 mixins (data_loading / filter_helper /
+// excel_operations / student_actions / tour_helper) into a single
+// flattened ConsumerState that delegates all data work to
+// [AdminStudentController]. The per-feature gradient header and tour
+// plumbing are retired — every admin CRUD screen now shares the same
+// shell.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/widgets/empty_state.dart';
-import 'package:manajemensekolah/core/widgets/error_screen.dart';
-import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
+import 'package:manajemensekolah/core/widgets/admin_data_menu.dart';
 import 'package:manajemensekolah/core/widgets/paginated_list_view.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/features/students/presentation/controllers/admin_student_controller.dart';
-import 'package:manajemensekolah/features/students/presentation/mixins/data_loading_mixin.dart';
-import 'package:manajemensekolah/features/students/presentation/mixins/excel_operations_mixin.dart';
-import 'package:manajemensekolah/features/students/presentation/mixins/filter_helper_mixin.dart';
-import 'package:manajemensekolah/features/students/presentation/mixins/student_actions_mixin.dart';
-import 'package:manajemensekolah/features/students/presentation/mixins/tour_helper_mixin.dart';
-import 'package:manajemensekolah/features/students/presentation/widgets/student_card.dart';
-import 'package:manajemensekolah/features/students/presentation/widgets/student_management_header.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
+import 'package:manajemensekolah/features/students/presentation/controllers/admin_student_controller.dart';
+import 'package:manajemensekolah/features/students/presentation/screens/student_detail_screen.dart';
+import 'package:manajemensekolah/features/students/presentation/widgets/student_add_edit_dialog.dart';
+import 'package:manajemensekolah/features/students/presentation/widgets/student_card.dart';
+import 'package:manajemensekolah/features/students/presentation/widgets/student_filter_sheet.dart';
 
 /// Admin student management screen with full CRUD, search, filters, and
 /// Excel import/export.
@@ -38,160 +46,73 @@ class StudentManagementScreen extends ConsumerStatefulWidget {
 
 /// Mutable state for [StudentManagementScreen].
 ///
-/// Key state (like Vue `data()`):
-/// - [_students] - paginated student list from API
-/// - [_classList] - available classes for filtering
-/// - Filter states: [_selectedStatusFilter], [_selectedClassIds], etc.
-/// - Pagination: [_currentPage], [_hasMoreData], [_isLoadingMore]
-///
-/// Listens to [AcademicYearProvider] changes to reload data when year
-/// changes. setState() triggers re-render like Vue's reactivity system.
+/// Everything lives here now — no more mixin-based state smuggling. The
+/// controller ([AdminStudentController]) owns data fetching, cache
+/// invalidation, Excel flows, and deletion; this State owns only the UI
+/// flags (loading / error / filters / pagination cursor) and the
+/// dispatch glue.
 class StudentManagementScreenState
-    extends ConsumerState<StudentManagementScreen>
-    with
-        SingleTickerProviderStateMixin,
-        DataLoadingMixin,
-        FilterHelperMixin,
-        ExcelOperationsMixin,
-        StudentActionsMixin,
-        TourHelperMixin {
+    extends ConsumerState<StudentManagementScreen> {
+  // Search field controller — reused across rebuilds and disposed in
+  // [dispose]. The AdminCrudScaffold wires it into its header.
   final TextEditingController _searchController = TextEditingController();
 
+  // Data loaded from the API.
   List<dynamic> _students = [];
   List<dynamic> _classList = [];
   bool _isLoading = true;
   String? _errorMessage;
 
-  final ScrollController _scrollController = ScrollController();
-
+  // Infinite-scroll pagination cursor.
   int _currentPage = 1;
-  int _perPage = 10;
+  static const int _perPage = 10;
   bool _isLoadingMore = false;
   bool _hasMoreData = true;
 
+  // Active filters. `_hasActiveFilter` is the denormalized OR of these +
+  // the search text — kept as a field so the filter-icon badge rebuilds
+  // without re-traversing the state each frame.
   String? _selectedStatusFilter;
   List<String> _selectedClassIds = [];
   String? _selectedGenderFilter;
-  String? _selectedGradeLevel;
   String? _selectedGuardian;
   bool _hasActiveFilter = false;
 
-  final GlobalKey _menuKey = GlobalKey();
-  final GlobalKey _searchKey = GlobalKey();
-  final GlobalKey _filterKey = GlobalKey();
+  // FAB key kept for potential reintroduction of onboarding tour later;
+  // the per-header menu/search/filter keys are intentionally retired.
   final GlobalKey _fabKey = GlobalKey();
 
-  // Public property accessors for mixin access
-  @override
-  ScrollController get scrollController => _scrollController;
-  @override
-  int get currentPage => _currentPage;
-  @override
-  set currentPage(int value) => _currentPage = value;
-  @override
-  int get perPage => _perPage;
-  @override
-  set perPage(int value) => _perPage = value;
-  @override
-  bool get isLoadingMore => _isLoadingMore;
-  @override
-  set isLoadingMore(bool value) => _isLoadingMore = value;
-  @override
-  bool get hasMoreData => _hasMoreData;
-  @override
-  set hasMoreData(bool value) => _hasMoreData = value;
-  @override
-  List<dynamic> get students => _students;
-  @override
-  set students(List<dynamic> value) => _students = value;
-  @override
-  List<String> get selectedClassIds => _selectedClassIds;
-  @override
-  set selectedClassIds(List<String> value) => _selectedClassIds = value;
-  @override
-  String? get selectedGradeLevel => _selectedGradeLevel;
-  @override
-  set selectedGradeLevel(String? value) => _selectedGradeLevel = value;
-  @override
-  String? get selectedGenderFilter => _selectedGenderFilter;
-  @override
-  set selectedGenderFilter(String? value) => _selectedGenderFilter = value;
-  @override
-  String? get selectedGuardian => _selectedGuardian;
-  @override
-  set selectedGuardian(String? value) => _selectedGuardian = value;
-  @override
-  String? get selectedStatusFilter => _selectedStatusFilter;
-  @override
-  set selectedStatusFilter(String? value) => _selectedStatusFilter = value;
-  @override
-  String get searchText => _searchController.text;
-  @override
-  set searchText(String value) => _searchController.text = value;
-  @override
-  TextEditingController get searchController => _searchController;
-  @override
-  bool get isLoading => _isLoading;
-  @override
-  List<dynamic> get classList => _classList;
-  @override
-  set classList(List<dynamic> value) => _classList = value;
-  @override
-  bool get hasActiveFilter => _hasActiveFilter;
-  @override
-  set hasActiveFilter(bool value) => _hasActiveFilter = value;
-  @override
-  GlobalKey get menuKey => _menuKey;
-  @override
-  set menuKey(GlobalKey value) =>
-      throw UnsupportedError('menuKey cannot be set');
-  @override
-  GlobalKey get searchKey => _searchKey;
-  @override
-  set searchKey(GlobalKey value) =>
-      throw UnsupportedError('searchKey cannot be set');
-  @override
-  GlobalKey get filterKey => _filterKey;
-  @override
-  set filterKey(GlobalKey value) =>
-      throw UnsupportedError('filterKey cannot be set');
-  @override
-  GlobalKey get fabKey => _fabKey;
-  @override
-  set fabKey(GlobalKey value) => throw UnsupportedError('fabKey cannot be set');
-
-  /// Like Vue's `mounted()` - sets up academic year listener, applies
-  /// initial class filter if provided, and loads data.
   @override
   void initState() {
     super.initState();
 
-    final academicYearProvider = ref.read(academicYearRiverpod);
-    academicYearProvider.addListener(onAcademicYearChanged);
+    // Reload data whenever the active academic year changes in the header.
+    ref.read(academicYearRiverpod).addListener(_onAcademicYearChanged);
 
+    // If we arrived from a class detail screen, pre-apply that class id as
+    // the only filter.
     if (widget.initialClassId != null) {
       _selectedClassIds = [widget.initialClassId!];
       _hasActiveFilter = true;
     }
 
-    loadData();
+    _loadData();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _scrollController.dispose();
+    ref.read(academicYearRiverpod).removeListener(_onAcademicYearChanged);
     super.dispose();
   }
 
-  /// Implementation of abstract loadData for mixin contracts.
-  @override
-  Future<void> loadData({bool resetPage = true}) =>
-      _loadData(resetPage: resetPage);
+  // ── Data loading ────────────────────────────────────────────────────
 
-  /// Internal load data implementation - called by loadData().
+  /// Loads the first page of students and the class list for filters.
+  /// Any user-driven reload (search submit, filter apply, pull-to-refresh)
+  /// calls this with `resetPage: true`.
   Future<void> _loadData({bool resetPage = true, bool useCache = true}) async {
-    final ctrl = ref.read(adminStudentControllerProvider);
+    final controller = ref.read(adminStudentControllerProvider);
 
     if (resetPage) {
       _currentPage = 1;
@@ -204,13 +125,13 @@ class StudentManagementScreenState
       }
     }
 
-    final result = await ctrl.loadData(
+    final result = await controller.loadData(
       resetPage: resetPage,
       useCache: useCache,
       currentPage: _currentPage,
       perPage: _perPage,
       selectedClassIds: _selectedClassIds,
-      selectedGradeLevel: _selectedGradeLevel,
+      selectedGradeLevel: null,
       selectedGenderFilter: _selectedGenderFilter,
       selectedGuardian: _selectedGuardian,
       selectedStatusFilter: _selectedStatusFilter,
@@ -224,131 +145,336 @@ class StudentManagementScreenState
         _isLoading = false;
         _errorMessage = result.errorMessage;
       });
-    } else {
-      setState(() {
-        _students = result.students;
-        _classList = result.classList;
-        _hasMoreData = result.hasMoreData;
-        _isLoading = false;
-        _errorMessage = null;
-      });
+      return;
     }
 
-    checkAndShowTour();
+    setState(() {
+      _students = result.students;
+      _classList = result.classList;
+      _hasMoreData = result.hasMoreData;
+      _isLoading = false;
+      _errorMessage = null;
+    });
   }
+
+  /// Appends the next page of students. Called by [PaginatedListView]'s
+  /// scroll-near-bottom callback.
+  Future<void> _loadMoreData() async {
+    if (_isLoadingMore || !_hasMoreData) return;
+    setState(() => _isLoadingMore = true);
+
+    final result = await ref
+        .read(adminStudentControllerProvider)
+        .loadMoreData(
+          nextPage: _currentPage + 1,
+          perPage: _perPage,
+          selectedClassIds: _selectedClassIds,
+          selectedGradeLevel: null,
+          selectedGenderFilter: _selectedGenderFilter,
+          selectedGuardian: _selectedGuardian,
+          selectedStatusFilter: _selectedStatusFilter,
+          searchText: _searchController.text,
+        );
+
+    if (!mounted) return;
+
+    if (result == null) {
+      setState(() => _isLoadingMore = false);
+      return;
+    }
+
+    _currentPage++;
+    setState(() {
+      _students = [..._students, ...result.additionalStudents];
+      _hasMoreData = result.hasMoreData;
+      _isLoadingMore = false;
+    });
+  }
+
+  /// Pull-to-refresh handler. Skips the cache so users see fresh data.
+  Future<void> _onRefresh() => _loadData(resetPage: true, useCache: false);
+
+  /// Force-refresh handler for the "Refresh Data" overflow menu item —
+  /// also evicts the server-side cache.
+  Future<void> _forceRefresh() async {
+    await ref
+        .read(adminStudentControllerProvider)
+        .forceRefreshCaches(
+          currentPage: _currentPage,
+          selectedClassIds: _selectedClassIds,
+          selectedGradeLevel: null,
+          selectedGenderFilter: _selectedGenderFilter,
+          selectedGuardian: _selectedGuardian,
+          selectedStatusFilter: _selectedStatusFilter,
+          searchText: _searchController.text,
+        );
+    await _loadData(resetPage: true, useCache: false);
+  }
+
+  void _onAcademicYearChanged() {
+    if (mounted) _loadData();
+  }
+
+  // ── Filter state ────────────────────────────────────────────────────
+
+  /// Recomputes the `_hasActiveFilter` flag after any filter mutation.
+  void _refreshHasActiveFilter() {
+    setState(() {
+      _hasActiveFilter = ref
+          .read(adminStudentControllerProvider)
+          .checkActiveFilter(
+            selectedStatusFilter: _selectedStatusFilter,
+            selectedClassIds: _selectedClassIds,
+            selectedGenderFilter: _selectedGenderFilter,
+            selectedGradeLevel: null,
+            selectedGuardian: _selectedGuardian,
+            searchText: _searchController.text,
+          );
+    });
+  }
+
+  void _openFilterSheet() {
+    showStudentFilterSheet(
+      context: context,
+      classList: _classList,
+      primaryColor: ColorUtils.getRoleColor('admin'),
+      initialStatus: _selectedStatusFilter,
+      initialClassIds: _selectedClassIds,
+      initialGender: _selectedGenderFilter,
+      initialGuardian: _selectedGuardian,
+      translate: ref.read(languageRiverpod).getTranslatedText,
+      onApply:
+          ({
+            required String? status,
+            required List<String> classIds,
+            required String? gender,
+            required String? guardian,
+          }) {
+            setState(() {
+              _selectedStatusFilter = status;
+              _selectedClassIds = classIds;
+              _selectedGenderFilter = gender;
+              _selectedGuardian = guardian;
+            });
+            _refreshHasActiveFilter();
+            _loadData();
+          },
+    );
+  }
+
+  /// Clears every filter and search and reloads from scratch.
+  void _clearAllFilters() {
+    _searchController.clear();
+    setState(() {
+      _selectedStatusFilter = null;
+      _selectedClassIds = [];
+      _selectedGenderFilter = null;
+      _selectedGuardian = null;
+      _currentPage = 1;
+      _hasActiveFilter = false;
+    });
+    _loadData();
+  }
+
+  // Per-chip removal callbacks — each chip in the header carries its own
+  // targeted callback so the × on a specific class chip removes only that
+  // class id, not every active filter. (Fixed the pre-existing bug where
+  // every chip's × fired the same generic callback.)
+
+  void _removeStatusFilter() {
+    setState(() => _selectedStatusFilter = null);
+    _refreshHasActiveFilter();
+    _loadData();
+  }
+
+  void _removeClassFilter(String classId) {
+    setState(
+      () => _selectedClassIds = _selectedClassIds
+          .where((id) => id != classId)
+          .toList(),
+    );
+    _refreshHasActiveFilter();
+    _loadData();
+  }
+
+  void _removeGenderFilter() {
+    setState(() => _selectedGenderFilter = null);
+    _refreshHasActiveFilter();
+    _loadData();
+  }
+
+  void _removeGuardianFilter() {
+    setState(() => _selectedGuardian = null);
+    _refreshHasActiveFilter();
+    _loadData();
+  }
+
+  // ── Row-level actions ───────────────────────────────────────────────
+
+  void _openStudentDetail(Map<String, dynamic> student) {
+    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
+    AppNavigator.push(
+      context,
+      StudentDetailScreen(
+        student: student,
+        onEdit: isReadOnly ? null : () => _openAddEditSheet(student: student),
+      ),
+    );
+  }
+
+  void _openAddEditSheet({Map<String, dynamic>? student}) {
+    showStudentAddEditDialog(
+      context: context,
+      ref: ref,
+      classList: _classList,
+      primaryColor: ColorUtils.getRoleColor('admin'),
+      student: student,
+      onSave: _loadData,
+    );
+  }
+
+  Future<void> _deleteStudent(Map<String, dynamic> student) async {
+    final deleted = await ref
+        .read(adminStudentControllerProvider)
+        .deleteStudent(student, context);
+    if (!deleted || !mounted) return;
+    await _loadData();
+    if (!mounted) return;
+    SnackBarUtils.showSuccess(
+      context,
+      ref.read(languageRiverpod).getTranslatedText(const {
+        'en': 'Student successfully deleted',
+        'id': 'Siswa berhasil dihapus',
+      }),
+    );
+  }
+
+  // ── Excel flows ─────────────────────────────────────────────────────
+
+  Future<void> _exportToExcel() {
+    return ref
+        .read(adminStudentControllerProvider)
+        .exportToExcel(
+          context: context,
+          selectedClassIds: _selectedClassIds,
+          selectedGradeLevel: null,
+          selectedGenderFilter: _selectedGenderFilter,
+          searchText: _searchController.text,
+        );
+  }
+
+  Future<void> _importFromExcel() async {
+    final imported = await ref
+        .read(adminStudentControllerProvider)
+        .importFromExcel(context);
+    if (!imported || !mounted) return;
+    await _loadData();
+    if (!mounted) return;
+    SnackBarUtils.showSuccess(
+      context,
+      ref.read(languageRiverpod).getTranslatedText(const {
+        'en': 'Students imported successfully',
+        'id': 'Data siswa berhasil diimpor',
+      }),
+    );
+  }
+
+  Future<void> _downloadTemplate() {
+    return ref.read(adminStudentControllerProvider).downloadTemplate(context);
+  }
+
+  // ── Build ───────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = ref.watch(languageRiverpod);
+    final lang = ref.watch(languageRiverpod);
+    final academicYear = ref.watch(academicYearRiverpod);
+    final primaryColor = ColorUtils.getRoleColor('admin');
 
-    if (_errorMessage != null) {
-      return ErrorScreen(errorMessage: _errorMessage!, onRetry: loadData);
-    }
+    final controller = ref.read(adminStudentControllerProvider);
+    final activeFilters = controller.buildFilterChips(
+      selectedStatusFilter: _selectedStatusFilter,
+      selectedClassIds: _selectedClassIds,
+      selectedGenderFilter: _selectedGenderFilter,
+      selectedGuardian: _selectedGuardian,
+      classList: _classList,
+      languageProvider: lang,
+      onClearStatus: _removeStatusFilter,
+      onClearClass: _removeClassFilter,
+      onClearGender: _removeGenderFilter,
+      onClearGuardian: _removeGuardianFilter,
+    );
 
-    final filteredStudents = _students;
-
-    return Scaffold(
-      backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          StudentManagementHeader(
-            primaryColor: ColorUtils.getRoleColor('admin'),
-            languageProvider: languageProvider,
-            searchController: _searchController,
-            hasActiveFilter: _hasActiveFilter,
-            filterChips: buildFilterChips(languageProvider),
-            menuKey: _menuKey,
-            searchKey: _searchKey,
-            filterKey: _filterKey,
-            onSearch: () {
-              setState(() {
-                _currentPage = 1;
-              });
-              loadData();
-            },
-            onMenuSelected: (value) {
-              switch (value) {
-                case 'refresh':
-                  forceRefresh();
-                  break;
-                case 'export':
-                  exportToExcel();
-                  break;
-                case 'import':
-                  importFromExcel();
-                  break;
-                case 'template':
-                  downloadTemplate();
-                  break;
-              }
-            },
-            onFilterTap: showFilterSheet,
-            onClearFilters: clearAllFilters,
-          ),
-          Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: PaginatedListView<Map<String, dynamic>>(
-                items: filteredStudents.cast<Map<String, dynamic>>(),
-                itemBuilder: (context, student, index) {
-                  return StudentCard(
-                    student: student,
-                    index: index,
-                    isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
-                    primaryColor: ColorUtils.getRoleColor('admin'),
-                    genderText: getGenderText(
-                      Student.fromJson(student).gender,
-                      ref.read(languageRiverpod),
-                    ),
-                    onTap: () => navigateToStudentDetail(student),
-                    onEdit: () => showStudentDialog(student: student),
-                    onDelete: () => deleteStudent(student),
-                  );
-                },
-                onLoadMore: loadMoreData,
-                hasMore: _hasMoreData,
-                isLoadingMore: _isLoadingMore,
-                isInitialLoading: _isLoading && filteredStudents.isEmpty,
-                loadingState: const SkeletonListLoading(
-                  itemCount: 6,
-                  infoTagCount: 1,
-                ),
-                emptyState: EmptyState(
-                  title: languageProvider.getTranslatedText({
-                    'en': 'No students',
-                    'id': 'Tidak ada siswa',
-                  }),
-                  subtitle: _searchController.text.isEmpty && !_hasActiveFilter
-                      ? languageProvider.getTranslatedText({
-                          'en': 'Tap + to add a student',
-                          'id': 'Tap + untuk menambah siswa',
-                        })
-                      : languageProvider.getTranslatedText({
-                          'en': 'No search results found',
-                          'id': 'Tidak ditemukan hasil pencarian',
-                        }),
-                  icon: Icons.people_outline,
-                ),
-                controller: _scrollController,
-                padding: const EdgeInsets.only(top: 8, bottom: 16),
-                onRefresh: onRefresh,
-              ),
-            ),
-          ),
-        ],
+    return AdminCrudScaffold(
+      title: lang.getTranslatedText(const {
+        'en': 'Student Management',
+        'id': 'Manajemen Siswa',
+      }),
+      subtitle: lang.getTranslatedText(const {
+        'en': 'Manage and monitor students',
+        'id': 'Kelola dan pantau siswa',
+      }),
+      primaryColor: primaryColor,
+      searchController: _searchController,
+      searchHint: lang.getTranslatedText(const {
+        'en': 'Search students...',
+        'id': 'Cari siswa...',
+      }),
+      onSearchChanged: (_) => _refreshHasActiveFilter(),
+      onSearchSubmitted: (_) => _loadData(),
+      onFilterTap: _openFilterSheet,
+      hasActiveFilter: _hasActiveFilter,
+      activeFilters: activeFilters,
+      onClearAllFilters: _clearAllFilters,
+      actionMenu: AdminDataMenu(
+        languageProvider: lang,
+        onRefresh: _forceRefresh,
+        onExport: _exportToExcel,
+        onImport: _importFromExcel,
+        onDownloadTemplate: _downloadTemplate,
       ),
-      floatingActionButton: ref.read(academicYearRiverpod).isReadOnly
-          ? null
-          : FloatingActionButton(
-              key: _fabKey,
-              onPressed: showStudentDialog,
-              backgroundColor: ColorUtils.getRoleColor('admin'),
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(16)),
-              ),
-              child: const Icon(Icons.add, color: Colors.white, size: 20),
-            ),
+      isLoading: _isLoading,
+      errorMessage: _errorMessage,
+      isEmpty: _students.isEmpty,
+      onRefresh: _onRefresh,
+      emptyTitle: lang.getTranslatedText(const {
+        'en': 'No students',
+        'id': 'Tidak ada siswa',
+      }),
+      emptySubtitle: _searchController.text.isEmpty && !_hasActiveFilter
+          ? lang.getTranslatedText(const {
+              'en': 'Tap + to add a student',
+              'id': 'Tap + untuk menambah siswa',
+            })
+          : lang.getTranslatedText(const {
+              'en': 'No search results found',
+              'id': 'Tidak ditemukan hasil pencarian',
+            }),
+      emptyIcon: Icons.people_outline,
+      childBuilder: () => PaginatedListView<Map<String, dynamic>>(
+        items: _students.cast<Map<String, dynamic>>(),
+        itemBuilder: (context, student, index) {
+          return StudentCard(
+            student: student,
+            index: index,
+            isReadOnly: academicYear.isReadOnly,
+            primaryColor: primaryColor,
+            genderText: ref
+                .read(adminStudentControllerProvider)
+                .getGenderText(Student.fromJson(student).gender, lang),
+            onTap: () => _openStudentDetail(student),
+            onEdit: () => _openAddEditSheet(student: student),
+            onDelete: () => _deleteStudent(student),
+          );
+        },
+        onLoadMore: _loadMoreData,
+        hasMore: _hasMoreData,
+        isLoadingMore: _isLoadingMore,
+        padding: const EdgeInsets.only(top: 8, bottom: 16),
+      ),
+      onFabTap: academicYear.isReadOnly ? null : _openAddEditSheet,
+      fabKey: _fabKey,
+      hideFab: academicYear.isReadOnly,
     );
   }
 }

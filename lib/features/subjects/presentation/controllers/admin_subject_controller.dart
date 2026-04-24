@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/subjects/presentation/controllers/subject_data_helper.dart';
 import 'package:manajemensekolah/features/subjects/presentation/controllers/subject_export_helper.dart';
@@ -125,6 +126,35 @@ class AdminSubjectController {
     );
   }
 
+  /// Builds typed [ActiveFilter] chips for [AdminCrudScaffold]'s header.
+  ///
+  /// Phase-1 chip builder — one chip per active filter, each with its own
+  /// × removal callback. Preferred over [buildFilterChips] (map-based,
+  /// kept only for backwards compat).
+  List<ActiveFilter> buildActiveFilterChips({
+    required String? selectedStatusFilter,
+    required String? selectedClassesStatusFilter,
+    required String? selectedGradeLevelFilter,
+    required String? selectedClassNameFilter,
+    required LanguageProvider languageProvider,
+    required VoidCallback onClearStatus,
+    required VoidCallback onClearClassesStatus,
+    required VoidCallback onClearGradeLevel,
+    required VoidCallback onClearClassName,
+  }) {
+    return SubjectFilterHelper.buildActiveFilterChips(
+      selectedStatusFilter: selectedStatusFilter,
+      selectedClassesStatusFilter: selectedClassesStatusFilter,
+      selectedGradeLevelFilter: selectedGradeLevelFilter,
+      selectedClassNameFilter: selectedClassNameFilter,
+      languageProvider: languageProvider,
+      onClearStatus: onClearStatus,
+      onClearClassesStatus: onClearClassesStatus,
+      onClearGradeLevel: onClearGradeLevel,
+      onClearClassName: onClearClassName,
+    );
+  }
+
   // ─── Data extraction helpers ──────────────────────────────────────────────
 
   /// Extracts unique class names and grade levels from a subject list.
@@ -168,6 +198,7 @@ class AdminSubjectController {
     required String searchText,
     required List<String> existingClassNames,
     required List<String> existingGradeLevels,
+    String? academicYearId,
   }) {
     return SubjectDataHelper.loadMoreSubjects(
       nextPage: nextPage,
@@ -177,6 +208,7 @@ class AdminSubjectController {
       searchText: searchText,
       existingClassNames: existingClassNames,
       existingGradeLevels: existingGradeLevels,
+      academicYearId: academicYearId,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 
 /// Encapsulates filter-related helper methods for classroom management.
 ///
@@ -55,6 +56,55 @@ class ClassroomFilterHelper {
     }
 
     return filterChips;
+  }
+
+  /// Builds typed [ActiveFilter] chips for [AdminCrudScaffold]'s header.
+  ///
+  /// Phase-1 version of [buildFilterChips] that returns one chip per
+  /// active filter, each with its own × removal callback. Fixes the
+  /// shared-callback bug the map-based version had.
+  List<ActiveFilter> buildActiveFilterChips({
+    required String? selectedGradeFilter,
+    required String? selectedHomeroomFilter,
+    required LanguageProvider languageProvider,
+    required VoidCallback onClearGrade,
+    required VoidCallback onClearHomeroom,
+  }) {
+    final chips = <ActiveFilter>[];
+
+    if (selectedGradeFilter != null) {
+      final prefix = languageProvider.getTranslatedText(const {
+        'en': 'Grade',
+        'id': 'Kelas',
+      });
+      chips.add(
+        ActiveFilter(
+          label: '$prefix: $selectedGradeFilter',
+          onRemove: onClearGrade,
+          icon: Icons.school_outlined,
+        ),
+      );
+    }
+
+    if (selectedHomeroomFilter != null) {
+      final statusPrefix = languageProvider.getTranslatedText(const {
+        'en': 'Status',
+        'id': 'Status',
+      });
+      final homeroomLabel = _buildHomeroomLabel(
+        selectedHomeroomFilter,
+        languageProvider,
+      );
+      chips.add(
+        ActiveFilter(
+          label: '$statusPrefix: $homeroomLabel',
+          onRemove: onClearHomeroom,
+          icon: Icons.home_work_outlined,
+        ),
+      );
+    }
+
+    return chips;
   }
 
   /// Converts a numeric grade level to human-readable string.

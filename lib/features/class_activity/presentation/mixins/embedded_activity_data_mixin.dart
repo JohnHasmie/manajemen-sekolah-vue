@@ -130,7 +130,11 @@ mixin EmbeddedActivityDataMixin on ConsumerState<EmbeddedActivityListScreen> {
 
   Future<void> loadMaterials(String subjectId) async {
     try {
-      final materials = await getIt<ApiSubjectService>().getMaterials();
+      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+      final materials = await getIt<ApiSubjectService>().getMaterials(
+        subjectId: subjectId,
+        academicYearId: ayId,
+      );
       setState(() {
         chapterList = materials;
         subChapterList = [];
