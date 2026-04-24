@@ -268,30 +268,31 @@ Principle: **satu implementasi, tiga role**. Mirror the teacher-role refactor th
 ## Phase 5 — Cleanup, Docs, QA
 
 ### T5.1 — Redundancy sweep
-- [ ] `grep -r "showDialog(" lib/features/admin` — should return 0 results for add/edit/filter use cases
-- [ ] `grep -r "showModalBottomSheet(" lib/features/admin` — should only appear inside `AppFilterBottomSheet.show()` / `AppEditBottomSheet.show()` wrappers
-- [ ] Delete every `*_mixin.dart` file under `lib/features/admin/**/mixins/` that's no longer imported
-- [ ] `dart fix --apply` + `dart format .`
+- [x] `grep -r "showDialog(" lib/features/**/admin_*.dart` — 5 remaining, all acceptable (read-only detail dialogs, loading spinner, shared `ConfirmationDialog`); one edge case (`UpdateStatusDialog` for RPP approval) deferred to a future sheet migration — not a simple add/edit field form
+- [x] `grep -r "showModalBottomSheet(" lib/features/**/admin_*.dart` — no bare calls outside `AppBottomSheet` / `AppEditBottomSheet` / `AppFilterBottomSheet` wrappers
+- [x] Three mixin files stubbed as deprecated (sandbox FS blocks physical `unlink`; files have `// Deprecated.` marker and no importers). Follow-up can `git rm` on a dev machine: `announcement_form_header_mixin.dart`, `announcement_form_footer_mixin.dart`, `lesson_plan_regen_dialogs.dart`.
+- [x] `dart format` applied to every file touched across Phases 0–4
+- [x] `dart analyze lib/` clean — no errors, no new warnings
 
 ### T5.2 — Component library docs
-- [ ] Create `lib/core/widgets/README.md` listing all 10+ shared components with usage snippet
-- [ ] Link each component back to its teacher + admin consumers
-- [ ] Screenshots of each component in both teacher and admin context
+- [x] `lib/core/widgets/README.md` created — lists every shared component (scaffolds, sheet blocks, dialogs, inputs, cards, state renderers, chrome), groups by role, and calls out the don't-dos
+- [x] Linked to `Admin_Refactor_TODOs.md` for the migration plan
+- [ ] Screenshots of each component — deferred; requires a simulator pass. Tracked separately as a QA pass.
 
 ### T5.3 — Visual regression test
-- [ ] Re-capture screenshots of all 11 admin screens → `_after/`
+- [ ] Re-capture screenshots of all 11 admin screens → `_after/` *(requires simulator, out of scope for sandbox)*
 - [ ] Diff `_baseline/` vs `_after/` — every screen must look visually consistent with its teacher equivalent
 - [ ] Manual QA checklist: filter apply/reset, edit save/cancel, bulk select/action/cancel, search typing, pull-to-refresh
 
 ### T5.4 — Update CLAUDE.md
-- [ ] Add "Admin role uses the same shared-component patterns as teacher" to the conventions doc
-- [ ] Document `AdminCrudScaffold` in the Flutter-side section (if one exists) or note in the backend CLAUDE.md
+- [x] Shared-component conventions captured in `lib/core/widgets/README.md` (functions as the Flutter-side conventions doc).
+- [ ] Top-level `CLAUDE.md` conventions update — backlog; not present in this repo yet.
 
 ### T5.5 — Metrics report
-- [ ] LOC delta per feature (target: ~60% net reduction)
-- [ ] New shared components added: 5 (AdminCrudScaffold, BulkActionBar, SchoolPill, HeroStatsCard, PendingInboxCard, QuickActionGrid, ExportActionMenu)
-- [ ] Non-compliant screens: 11 → 0
-- [ ] `flutter analyze` warnings: before vs after
+- [ ] LOC delta per feature (target: ~60% net reduction) *(run `git log --shortstat release/teacher-refactor-2026-04-22` for totals)*
+- [x] New shared components added: `AdminCrudScaffold`, `BulkActionBar`, `SchoolPill`, `HeroStatsCard`, `PendingInboxCard`, `QuickActionGrid`
+- [ ] Non-compliant screens: 11 → 0 *(remaining: RPP approval status dialog, class-activity admin migration T4.3, Jadwal matrix T4.1, System settings T4.5 — deferred)*
+- [x] `dart analyze` — clean across lib/
 - [ ] Deliver to stakeholders as Markdown report in `/docs/`
 
 ---
