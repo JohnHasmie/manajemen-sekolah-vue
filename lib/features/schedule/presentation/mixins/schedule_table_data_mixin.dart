@@ -50,10 +50,7 @@ mixin ScheduleTableDataMixin on State<TeacherScheduleTableView> {
     return s is Map<String, dynamic> ? s : null;
   }
 
-  bool hasAttendance(
-    Map<String, dynamic>? summary,
-    Map<String, dynamic> schedule,
-  ) {
+  bool hasAttendance(Map<String, dynamic>? summary, Map<String, dynamic> schedule) {
     if (summary == null) return false;
     final hourNum = Schedule.fromJson(schedule).lessonHour;
     if (hourNum != null) {
@@ -67,10 +64,7 @@ mixin ScheduleTableDataMixin on State<TeacherScheduleTableView> {
     return summary['attendance']?['filled'] == true;
   }
 
-  bool hasActivity(
-    Map<String, dynamic>? summary,
-    Map<String, dynamic> schedule,
-  ) {
+  bool hasActivity(Map<String, dynamic>? summary, Map<String, dynamic> schedule) {
     if (summary == null) return false;
     final hourNum = Schedule.fromJson(schedule).lessonHour;
     if (hourNum != null) {
@@ -84,10 +78,7 @@ mixin ScheduleTableDataMixin on State<TeacherScheduleTableView> {
     return summary['class_activity']?['filled'] == true;
   }
 
-  bool hasMaterial(
-    Map<String, dynamic>? summary,
-    Map<String, dynamic> schedule,
-  ) {
+  bool hasMaterial(Map<String, dynamic>? summary, Map<String, dynamic> schedule) {
     if (summary == null) return false;
     final hourNum = Schedule.fromJson(schedule).lessonHour;
     if (hourNum != null) {

@@ -51,12 +51,10 @@ class TeacherGenderSection extends StatelessWidget {
                 'id': 'Semua',
               }),
             ),
-            ...availableGenders.map(
-              (gender) => FilterOption(
-                value: gender['value'].toString(),
-                label: gender['label'],
-              ),
-            ),
+            ...availableGenders.map((gender) => FilterOption(
+                  value: gender['value'].toString(),
+                  label: gender['label'],
+                )),
           ],
           selectedValue: selectedValue,
           onSelected: onSelected,
@@ -115,12 +113,10 @@ class TeacherEmploymentStatusSection extends StatelessWidget {
                 'id': 'Semua',
               }),
             ),
-            ...availableEmploymentStatus.map(
-              (status) => FilterOption(
-                value: status['value'].toString(),
-                label: status['label'],
-              ),
-            ),
+            ...availableEmploymentStatus.map((status) => FilterOption(
+                  value: status['value'].toString(),
+                  label: status['label'],
+                )),
           ],
           selectedValue: selectedValue,
           onSelected: onSelected,
@@ -180,9 +176,7 @@ class TeacherClassSection extends StatelessWidget {
               }),
             ),
             ...availableClass.map((classItem) {
-              final model = Classroom.fromJson(
-                classItem as Map<String, dynamic>,
-              );
+              final model = Classroom.fromJson(classItem as Map<String, dynamic>);
               return FilterOption(value: model.id, label: model.name);
             }),
           ],

@@ -37,7 +37,9 @@ mixin FinanceFilterMixin on ConsumerState<FinanceScreen> {
     checkActiveFilter();
   }
 
-  List<ActiveFilter> buildFilterChips(LanguageProvider languageProvider) {
+  List<ActiveFilter> buildFilterChips(
+    LanguageProvider languageProvider,
+  ) {
     final List<ActiveFilter> filterChips = [];
 
     if (selectedStatusFilter != null) {
@@ -51,16 +53,14 @@ mixin FinanceFilterMixin on ConsumerState<FinanceScreen> {
         'en': 'Status',
         'id': 'Status',
       });
-      filterChips.add(
-        ActiveFilter(
-          label: '$statusLabel: $statusText',
-          onRemove: () {
-            updateStatusFilter(null);
-            checkActiveFilter();
-            loadDataAfterFilter();
-          },
-        ),
-      );
+      filterChips.add(ActiveFilter(
+        label: '$statusLabel: $statusText',
+        onRemove: () {
+          updateStatusFilter(null);
+          checkActiveFilter();
+          loadDataAfterFilter();
+        },
+      ));
     }
 
     if (selectedPeriodFilter != null) {
@@ -77,16 +77,14 @@ mixin FinanceFilterMixin on ConsumerState<FinanceScreen> {
         'en': 'Period',
         'id': 'Periode',
       });
-      filterChips.add(
-        ActiveFilter(
-          label: '$periodLabel: $periodText',
-          onRemove: () {
-            updatePeriodFilter(null);
-            checkActiveFilter();
-            loadDataAfterFilter();
-          },
-        ),
-      );
+      filterChips.add(ActiveFilter(
+        label: '$periodLabel: $periodText',
+        onRemove: () {
+          updatePeriodFilter(null);
+          checkActiveFilter();
+          loadDataAfterFilter();
+        },
+      ));
     }
 
     return filterChips;

@@ -20,6 +20,9 @@ class FinanceNavigationBar extends StatelessWidget {
   /// Index of the currently active tab (0–3).
   final int currentIndex;
 
+  /// Key applied to the currently selected tab item (used by the coach-mark tour).
+  final GlobalKey tabBarKey;
+
   /// Number of pending payments — displayed as a red badge on tab 2.
   final int pendingCount;
 
@@ -32,6 +35,7 @@ class FinanceNavigationBar extends StatelessWidget {
   const FinanceNavigationBar({
     super.key,
     required this.currentIndex,
+    required this.tabBarKey,
     required this.pendingCount,
     required this.primaryColor,
     required this.onTabSelected,
@@ -39,152 +43,128 @@ class FinanceNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = <_NavItem>[
-      _NavItem(
-        icon: Icons.dashboard_rounded,
-        label: AppLocalizations.dashboard.tr,
-      ),
-      _NavItem(
-        icon: Icons.payments_rounded,
-        label: AppLocalizations.paymentTypes.tr,
-      ),
-      _NavItem(
-        icon: Icons.verified_rounded,
-        label: AppLocalizations.verification.tr,
-        badge: pendingCount,
-      ),
-      _NavItem(
-        icon: Icons.school_rounded,
-        label: AppLocalizations.classReport.tr,
-      ),
+    final items = [
+      {
+        'icon': Icons.dashboard_rounded,
+        'label': AppLocalizations.dashboard.tr,
+        'index': 0,
+      },
+      {
+        'icon': Icons.payment_rounded,
+        'label': AppLocalizations.paymentTypes.tr,
+        'index': 1,
+      },
+      {
+        'icon': Icons.verified_rounded,
+        'label': AppLocalizations.verification.tr,
+        'index': 2,
+        'badge': pendingCount,
+      },
+      {
+        'icon': Icons.school_rounded,
+        'label': AppLocalizations.classReport.tr,
+        'index': 3,
+      },
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.sm,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: ColorUtils.slate200, width: 1),
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
-        children: List.generate(items.length, (index) {
-          final item = items[index];
+        children: items.map((item) {
+          final index = item['index'] as int;
           final isSelected = currentIndex == index;
+          final badge = item['badge'] as int? ?? 0;
+
           return Expanded(
-            child: _TabPill(
-              item: item,
-              isSelected: isSelected,
-              primaryColor: primaryColor,
+            child: GestureDetector(
+              // Attach the tour key to whichever tab is currently selected.
+              key: isSelected ? tabBarKey : null,
               onTap: () => onTabSelected(index),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? primaryColor.withValues(alpha: 0.1)
+                      : Colors.transparent,
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  border: Border.all(
+                    color: isSelected
+                        ? primaryColor.withValues(alpha: 0.2)
+                        : Colors.transparent,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(
+                          item['icon'] as IconData,
+                          size: 22,
+                          color: isSelected
+                              ? primaryColor
+                              : ColorUtils.slate400,
+                        ),
+                        if (badge > 0)
+                          Positioned(
+                            right: -8,
+                            top: -4,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: badge > 9 ? 4 : 5,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: ColorUtils.error600,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
+                              ),
+                              child: Text(
+                                badge > 99 ? '99+' : '$badge',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      item['label'] as String,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isSelected ? primaryColor : ColorUtils.slate500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
             ),
           );
-        }),
-      ),
-    );
-  }
-}
-
-class _NavItem {
-  final IconData icon;
-  final String label;
-  final int badge;
-
-  const _NavItem({required this.icon, required this.label, this.badge = 0});
-}
-
-class _TabPill extends StatelessWidget {
-  final _NavItem item;
-  final bool isSelected;
-  final Color primaryColor;
-  final VoidCallback onTap;
-
-  const _TabPill({
-    required this.item,
-    required this.isSelected,
-    required this.primaryColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.symmetric(
-          vertical: AppSpacing.sm + 2,
-          horizontal: AppSpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? primaryColor.withValues(alpha: 0.08)
-              : Colors.transparent,
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  item.icon,
-                  size: 22,
-                  color: isSelected ? primaryColor : ColorUtils.slate500,
-                ),
-                if (item.badge > 0)
-                  Positioned(
-                    right: -8,
-                    top: -4,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: item.badge > 9 ? 4 : 5,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: ColorUtils.error600,
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(10),
-                        ),
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
-                      child: Text(
-                        item.badge > 99 ? '99+' : '${item.badge}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          height: 1.1,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            Text(
-              item.label,
-              style: TextStyle(
-                fontSize: 10.5,
-                color: isSelected ? primaryColor : ColorUtils.slate600,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                letterSpacing: 0.1,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+        }).toList(),
       ),
     );
   }

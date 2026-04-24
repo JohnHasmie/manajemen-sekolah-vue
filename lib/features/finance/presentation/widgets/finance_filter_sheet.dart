@@ -60,10 +60,7 @@ class _FinanceFilterSheetState extends State<FinanceFilterSheet> {
     final primary = widget.primaryColor ?? ColorUtils.primary;
 
     return AppFilterBottomSheet(
-      title: lang.getTranslatedText({
-        'en': 'Filter Finance',
-        'id': 'Filter Keuangan',
-      }),
+      title: lang.getTranslatedText({'en': 'Filter Finance', 'id': 'Filter Keuangan'}),
       icon: Icons.tune_rounded,
       primaryColor: primary,
       maxHeightFactor: 0.75,
@@ -81,17 +78,14 @@ class _FinanceFilterSheetState extends State<FinanceFilterSheet> {
                 options: [
                   FilterOption(
                     value: 'aktif',
-                    label: lang.getTranslatedText({
-                      'en': 'Active',
-                      'id': 'Aktif',
-                    }),
+                    label: lang
+                        .getTranslatedText({'en': 'Active', 'id': 'Aktif'}),
                   ),
                   FilterOption(
                     value: 'non_aktif',
-                    label: lang.getTranslatedText({
-                      'en': 'Inactive',
-                      'id': 'Non-Aktif',
-                    }),
+                    label: lang.getTranslatedText(
+                      {'en': 'Inactive', 'id': 'Non-Aktif'},
+                    ),
                   ),
                 ],
                 selectedValue: _tempStatus,
@@ -115,17 +109,15 @@ class _FinanceFilterSheetState extends State<FinanceFilterSheet> {
                 options: [
                   FilterOption(
                     value: 'bulanan',
-                    label: lang.getTranslatedText({
-                      'en': 'Monthly',
-                      'id': 'Bulanan',
-                    }),
+                    label: lang.getTranslatedText(
+                      {'en': 'Monthly', 'id': 'Bulanan'},
+                    ),
                   ),
                   FilterOption(
                     value: 'tahunan',
-                    label: lang.getTranslatedText({
-                      'en': 'Yearly',
-                      'id': 'Tahunan',
-                    }),
+                    label: lang.getTranslatedText(
+                      {'en': 'Yearly', 'id': 'Tahunan'},
+                    ),
                   ),
                 ],
                 selectedValue: _tempPeriod,

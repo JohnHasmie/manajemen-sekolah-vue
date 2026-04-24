@@ -80,8 +80,7 @@ class TeacherDetailScreenState extends ConsumerState<TeacherDetailScreen>
 
     final displaySubjectNames = getNamesList(
       effectiveTeacher['subjects'],
-      effectiveTeacher['subject_ids'] ??
-          Teacher.fromJson(widget.teacher).subjectIds,
+      effectiveTeacher['subject_ids'] ?? Teacher.fromJson(widget.teacher).subjectIds,
       _subjects,
     );
 

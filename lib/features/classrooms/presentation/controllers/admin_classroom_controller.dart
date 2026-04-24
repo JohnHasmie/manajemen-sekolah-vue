@@ -14,7 +14,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/'
     'controllers/helpers/classroom_cache_helper.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/'
@@ -99,27 +98,6 @@ class AdminClassroomController {
       languageProvider: languageProvider,
       onRemoveGrade: onRemoveGrade,
       onRemoveHomeroom: onRemoveHomeroom,
-    );
-  }
-
-  /// Builds typed [ActiveFilter] chips for [AdminCrudScaffold]'s header.
-  ///
-  /// Phase-1 chip builder — one chip per active filter, each with its own
-  /// × removal callback. Preferred over [buildFilterChips] (map-based,
-  /// kept only for backwards compat).
-  List<ActiveFilter> buildActiveFilterChips({
-    required String? selectedGradeFilter,
-    required String? selectedHomeroomFilter,
-    required LanguageProvider languageProvider,
-    required VoidCallback onClearGrade,
-    required VoidCallback onClearHomeroom,
-  }) {
-    return _filterHelper.buildActiveFilterChips(
-      selectedGradeFilter: selectedGradeFilter,
-      selectedHomeroomFilter: selectedHomeroomFilter,
-      languageProvider: languageProvider,
-      onClearGrade: onClearGrade,
-      onClearHomeroom: onClearHomeroom,
     );
   }
 

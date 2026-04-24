@@ -77,12 +77,10 @@ mixin TeacherScheduleUiMixin {
             FilterChipGrid<String>(
               options: dayOptions
                   .where((d) => d != 'Semua Hari')
-                  .map(
-                    (day) => FilterOption(
-                      value: dayIdMap[day] ?? '',
-                      label: getLocalizedDay(day),
-                    ),
-                  )
+                  .map((day) => FilterOption(
+                        value: dayIdMap[day] ?? '',
+                        label: getLocalizedDay(day),
+                      ))
                   .toList(),
               selectedValues: Set<String>.from(tempDayIds),
               onMultiSelected: (values) => setState(() {
@@ -108,12 +106,10 @@ mixin TeacherScheduleUiMixin {
               ),
               FilterChipGrid<String>(
                 options: availableClasses
-                    .map(
-                      (cls) => FilterOption(
-                        value: cls['id'] ?? '',
-                        label: cls['name'] ?? '',
-                      ),
-                    )
+                    .map((cls) => FilterOption(
+                          value: cls['id'] ?? '',
+                          label: cls['name'] ?? '',
+                        ))
                     .toList(),
                 selectedValue: tempClassId,
                 onSelected: (val) => setState(() => tempClassId = val),

@@ -1,7 +1,6 @@
 // Mixin for schedule timing helpers and day/hour calculations.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart'
-    as sched;
+import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart' as sched;
 
 /// Mixin providing time and day helper methods.
 mixin ScheduleTimingMixin {

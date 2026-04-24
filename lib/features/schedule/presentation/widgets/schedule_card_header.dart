@@ -104,15 +104,18 @@ class ScheduleCardHeader extends StatelessWidget {
   Widget _buildInfo() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [_buildTopRow(), const SizedBox(height: 4), _buildBottomRow()],
+      children: [
+        _buildTopRow(),
+        const SizedBox(height: 4),
+        _buildBottomRow(),
+      ],
     );
   }
 
   /// Subject name + class badge.
   Widget _buildTopRow() {
-    final className = (_model.className ?? '').isNotEmpty
-        ? _model.className!
-        : '-';
+    final className =
+        (_model.className ?? '').isNotEmpty ? _model.className! : '-';
 
     return Row(
       children: [
@@ -160,12 +163,16 @@ class ScheduleCardHeader extends StatelessWidget {
 
   /// Time range + teacher name (teacher only shown in Wali Kelas mode).
   Widget _buildBottomRow() {
-    final hasTeacher = isHomeroomView && (_model.teacherName ?? '').isNotEmpty;
+    final hasTeacher =
+        isHomeroomView && (_model.teacherName ?? '').isNotEmpty;
 
     return Row(
       children: [
         _buildTimeText(),
-        if (hasTeacher) ...[_buildDot(), Expanded(child: _buildTeacherText())],
+        if (hasTeacher) ...[
+          _buildDot(),
+          Expanded(child: _buildTeacherText()),
+        ],
       ],
     );
   }

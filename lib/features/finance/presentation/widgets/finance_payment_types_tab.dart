@@ -3,15 +3,9 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
-import 'package:manajemensekolah/core/widgets/paginated_list_view.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/payment_type_card.dart';
 
 /// Widget for the payment types tab.
-///
-/// Renders a search + filter row, active filter chips, result count, and a
-/// [PaginatedListView] of [PaymentTypeCard] tiles. Payment types load in one
-/// shot (no server pagination), so the paginated list is used purely for
-/// empty-state, refresh, and layout consistency with the other admin screens.
 class FinancePaymentTypesTab extends StatelessWidget {
   const FinancePaymentTypesTab({
     required this.filteredPaymentTypes,
@@ -27,7 +21,6 @@ class FinancePaymentTypesTab extends StatelessWidget {
     required this.onGenerateBills,
     required this.onEdit,
     required this.onDelete,
-    this.onRefresh,
     this.languageProvider,
     super.key,
   });
@@ -45,7 +38,6 @@ class FinancePaymentTypesTab extends StatelessWidget {
   final Function(int) onGenerateBills;
   final Function(int) onEdit;
   final Function(int) onDelete;
-  final Future<void> Function()? onRefresh;
   final dynamic languageProvider;
 
   @override
@@ -60,29 +52,9 @@ class FinancePaymentTypesTab extends StatelessWidget {
         if (filteredPaymentTypes.isNotEmpty) _buildResultCount(),
         const SizedBox(height: AppSpacing.xs),
         Expanded(
-          child: PaginatedListView<dynamic>(
-            items: filteredPaymentTypes,
-            onLoadMore: () async {},
-            hasMore: false,
-            isLoadingMore: false,
-            onRefresh: onRefresh,
-            refreshRole: 'admin',
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 80),
-            emptyState: _buildEmptyState(),
-            itemBuilder: (context, item, index) {
-              return PaymentTypeCard(
-                item: item,
-                index: index,
-                formatCurrency: formatCurrency,
-                primaryColor: primaryColor,
-                getGoalDescription: getGoalDescription,
-                getTranslatedPeriod: getTranslatedPeriod,
-                onGenerateBills: () => onGenerateBills(index),
-                onEdit: () => onEdit(index),
-                onDelete: () => onDelete(index),
-              );
-            },
-          ),
+          child: filteredPaymentTypes.isEmpty
+              ? _buildEmptyState()
+              : _buildPaymentTypesList(),
         ),
       ],
     );
@@ -215,6 +187,25 @@ class FinancePaymentTypesTab extends StatelessWidget {
           : 'Tidak ditemukan hasil '
                 'pencarian',
       icon: Icons.payment,
+    );
+  }
+
+  Widget _buildPaymentTypesList() {
+    return ListView.builder(
+      itemCount: filteredPaymentTypes.length,
+      itemBuilder: (context, index) {
+        return PaymentTypeCard(
+          item: filteredPaymentTypes[index],
+          index: index,
+          formatCurrency: formatCurrency,
+          primaryColor: primaryColor,
+          getGoalDescription: getGoalDescription,
+          getTranslatedPeriod: getTranslatedPeriod,
+          onGenerateBills: () => onGenerateBills(index),
+          onEdit: () => onEdit(index),
+          onDelete: () => onDelete(index),
+        );
+      },
     );
   }
 }

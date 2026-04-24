@@ -38,7 +38,8 @@ mixin TeacherDetailUIHelpersMixin {
       final schedules = teacher['teaching_schedules'] as List;
       final uniqueClassNames = <String>{};
       for (final schedule in schedules) {
-        final model = Schedule.fromJson(schedule as Map<String, dynamic>);
+        final model =
+            Schedule.fromJson(schedule as Map<String, dynamic>);
         if (model.className != null) {
           uniqueClassNames.add(model.className!);
         }

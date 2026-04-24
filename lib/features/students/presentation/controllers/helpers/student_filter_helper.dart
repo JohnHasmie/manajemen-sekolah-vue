@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 
 /// Helper class for student filter operations.
-///
-/// Pure functions — no side effects beyond assembling UI models. Consumers
-/// pass in screen state and typed per-filter-type callbacks; the helper
-/// never reads or mutates controller state directly.
+/// Handles filter chip building, active filter checking, and gender text
+/// translation.
 class StudentFilterHelper {
   /// Returns true if any filter or search text is currently active.
-  /// Screen calls this and stores the result in `_hasActiveFilter` via
+  /// Screen calls this and stores the result in [_hasActiveFilter] via
   /// setState.
   static bool checkActiveFilter({
     required String? selectedStatusFilter,
@@ -27,133 +24,126 @@ class StudentFilterHelper {
         searchText.trim().isNotEmpty;
   }
 
-  /// Builds the typed active-filter chip list for the header bar.
-  ///
-  /// Each chip carries its own targeted removal callback — tapping the ×
-  /// on a class chip removes that specific class, not "all filters".
-  ///
-  /// Callbacks:
-  /// - [onClearStatus]   — status filter (Active/Inactive)
-  /// - [onClearClass]    — remove a single class id from the multi-select
-  /// - [onClearGender]   — gender filter (M/F)
-  /// - [onClearGuardian] — guardian name contains filter
-  static List<ActiveFilter> buildFilterChips({
+  /// Builds the filter chip list for the header bar.
+  /// Returns a list of {label, onRemove} maps — the screen renders them.
+  /// Callbacks inside onRemove call setState on the screen then trigger
+  /// loadData.
+  static List<Map<String, dynamic>> buildFilterChips({
     required String? selectedStatusFilter,
     required List<String> selectedClassIds,
     required String? selectedGenderFilter,
     required String? selectedGuardian,
     required List<dynamic> classList,
     required LanguageProvider languageProvider,
-    required VoidCallback onClearStatus,
-    required void Function(String classId) onClearClass,
-    required VoidCallback onClearGender,
-    required VoidCallback onClearGuardian,
+    required VoidCallback onFilterChanged,
   }) {
-    final chips = <ActiveFilter>[];
+    final List<Map<String, dynamic>> filterChips = [];
 
     if (selectedStatusFilter != null) {
-      chips.add(
-        _statusChip(selectedStatusFilter, languageProvider, onClearStatus),
+      _addStatusFilterChip(
+        filterChips,
+        selectedStatusFilter,
+        languageProvider,
+        onFilterChanged,
       );
     }
 
-    for (final classId in selectedClassIds) {
-      chips.add(
-        _classChip(classId, classList, languageProvider, () {
-          onClearClass(classId);
-        }),
+    if (selectedClassIds.isNotEmpty) {
+      _addClassFilterChips(
+        filterChips,
+        selectedClassIds,
+        classList,
+        languageProvider,
+        onFilterChanged,
       );
     }
 
     if (selectedGenderFilter != null) {
-      chips.add(
-        _genderChip(selectedGenderFilter, languageProvider, onClearGender),
+      _addGenderFilterChip(
+        filterChips,
+        selectedGenderFilter,
+        languageProvider,
+        onFilterChanged,
       );
     }
 
     if (selectedGuardian != null) {
-      chips.add(
-        _guardianChip(selectedGuardian, languageProvider, onClearGuardian),
+      _addGuardianFilterChip(
+        filterChips,
+        selectedGuardian,
+        languageProvider,
+        onFilterChanged,
       );
     }
 
-    return chips;
+    return filterChips;
   }
 
-  static ActiveFilter _statusChip(
+  static void _addStatusFilterChip(
+    List<Map<String, dynamic>> chips,
     String selectedStatus,
     LanguageProvider lang,
     VoidCallback onRemove,
   ) {
     final statusText = selectedStatus == 'active'
-        ? lang.getTranslatedText(const {'en': 'Active', 'id': 'Aktif'})
-        : lang.getTranslatedText(const {'en': 'Inactive', 'id': 'Tidak Aktif'});
-    final statusLabel = lang.getTranslatedText(const {
+        ? lang.getTranslatedText({'en': 'Active', 'id': 'Aktif'})
+        : lang.getTranslatedText({'en': 'Inactive', 'id': 'Tidak Aktif'});
+    final statusLabel = lang.getTranslatedText({
       'en': 'Status',
       'id': 'Status',
     });
-    return ActiveFilter(
-      label: '$statusLabel: $statusText',
-      onRemove: onRemove,
-      icon: Icons.check_circle_outline,
-    );
+    final label = '$statusLabel: $statusText';
+    chips.add({'label': label, 'onRemove': onRemove});
   }
 
-  static ActiveFilter _classChip(
-    String classId,
+  static void _addClassFilterChips(
+    List<Map<String, dynamic>> chips,
+    List<String> classIds,
     List<dynamic> classList,
     LanguageProvider lang,
     VoidCallback onRemove,
   ) {
-    final classInfo = classList.firstWhere(
-      (k) => k['id'].toString() == classId,
-      orElse: () => {'name': classId},
-    );
-    final className = classInfo['name'] ?? classInfo['nama'] ?? 'Unknown';
-    final classLabel = lang.getTranslatedText(const {
-      'en': 'Class',
-      'id': 'Kelas',
-    });
-    return ActiveFilter(
-      label: '$classLabel: $className',
-      onRemove: onRemove,
-      icon: Icons.class_outlined,
-    );
+    for (final classId in classIds) {
+      final classInfo = classList.firstWhere(
+        (k) => k['id'].toString() == classId,
+        orElse: () => {'name': classId},
+      );
+      final className = classInfo['name'] ?? classInfo['nama'] ?? 'Unknown';
+      final classLabel = lang.getTranslatedText({'en': 'Class', 'id': 'Kelas'});
+      final label = '$classLabel: $className';
+      chips.add({'label': label, 'onRemove': onRemove});
+    }
   }
 
-  static ActiveFilter _genderChip(
+  static void _addGenderFilterChip(
+    List<Map<String, dynamic>> chips,
     String selectedGender,
     LanguageProvider lang,
     VoidCallback onRemove,
   ) {
     final genderText = selectedGender == 'M'
-        ? lang.getTranslatedText(const {'en': 'Male', 'id': 'Laki-laki'})
-        : lang.getTranslatedText(const {'en': 'Female', 'id': 'Perempuan'});
-    final genderLabel = lang.getTranslatedText(const {
+        ? lang.getTranslatedText({'en': 'Male', 'id': 'Laki-laki'})
+        : lang.getTranslatedText({'en': 'Female', 'id': 'Perempuan'});
+    final genderLabel = lang.getTranslatedText({
       'en': 'Gender',
       'id': 'Jenis Kelamin',
     });
-    return ActiveFilter(
-      label: '$genderLabel: $genderText',
-      onRemove: onRemove,
-      icon: Icons.wc_outlined,
-    );
+    final label = '$genderLabel: $genderText';
+    chips.add({'label': label, 'onRemove': onRemove});
   }
 
-  static ActiveFilter _guardianChip(
+  static void _addGuardianFilterChip(
+    List<Map<String, dynamic>> chips,
     String guardian,
     LanguageProvider lang,
     VoidCallback onRemove,
   ) {
-    final guardianLabel = lang.getTranslatedText(const {
+    final guardianLabel = lang.getTranslatedText({
       'en': 'Guardian',
       'id': 'Wali',
     });
-    return ActiveFilter(
-      label: '$guardianLabel: $guardian',
-      onRemove: onRemove,
-      icon: Icons.person_outline,
-    );
+    final label = '$guardianLabel: $guardian';
+    chips.add({'label': label, 'onRemove': onRemove});
   }
 
   /// Returns translated gender display text for a gender code.
@@ -165,18 +155,18 @@ class StudentFilterHelper {
     switch (gender) {
       case 'M':
       case 'L':
-        return languageProvider.getTranslatedText(const {
+        return languageProvider.getTranslatedText({
           'en': 'Male',
           'id': 'Laki-laki',
         });
       case 'F':
       case 'P':
-        return languageProvider.getTranslatedText(const {
+        return languageProvider.getTranslatedText({
           'en': 'Female',
           'id': 'Perempuan',
         });
       default:
-        return languageProvider.getTranslatedText(const {
+        return languageProvider.getTranslatedText({
           'en': 'Unknown',
           'id': 'Tidak Diketahui',
         });

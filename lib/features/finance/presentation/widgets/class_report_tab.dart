@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -10,11 +11,10 @@ import 'package:manajemensekolah/features/finance/presentation/screens/class_fin
 
 /// Displays a scrollable list of class cards for the Finance → Class Report tab.
 ///
-/// Unlike the previous push-based drill-down, tapping a class card now renders
-/// [ClassFinanceReportScreen] inline (embedded mode), keeping the hub's header
-/// and bottom tab-bar visible. Back navigation clears the selected class and
-/// returns the tab to the list view.
-class ClassReportTab extends ConsumerStatefulWidget {
+/// Like a Vue `<ClassReportTab>` component that receives its data as props.
+/// Uses [ConsumerWidget] because [_buildClassSummary] needs to read
+/// [academicYearRiverpod] to filter bills by the active academic year.
+class ClassReportTab extends ConsumerWidget {
   const ClassReportTab({
     super.key,
     required this.isLoading,
@@ -36,33 +36,12 @@ class ClassReportTab extends ConsumerStatefulWidget {
   final Map<String, List<dynamic>> billsByStudent;
 
   @override
-  ConsumerState<ClassReportTab> createState() => _ClassReportTabState();
-}
-
-class _ClassReportTabState extends ConsumerState<ClassReportTab> {
-  Classroom? _selectedClass;
-
-  @override
-  Widget build(BuildContext context) {
-    if (_selectedClass != null) {
-      return ClassFinanceReportScreen(
-        key: ValueKey('class_report_${_selectedClass!.id}'),
-        classId: _selectedClass!.id,
-        className: _selectedClass!.name,
-        academicYearId: ref
-            .read(academicYearRiverpod)
-            .selectedAcademicYear?['id']
-            ?.toString(),
-        embedded: true,
-        onBack: () => setState(() => _selectedClass = null),
-      );
-    }
-
-    if (widget.isLoading) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (isLoading) {
       return const SkeletonListLoading(itemCount: 6, infoTagCount: 1);
     }
 
-    if (widget.classList.isEmpty) {
+    if (classList.isEmpty) {
       return const EmptyState(
         title: 'Belum ada data kelas',
         subtitle: 'Data kelas akan muncul di sini',
@@ -71,13 +50,13 @@ class _ClassReportTabState extends ConsumerState<ClassReportTab> {
     }
 
     return ListView.builder(
-      itemCount: widget.classList.length,
+      itemCount: classList.length,
       itemBuilder: (context, index) {
-        final classItem = widget.classList[index];
+        final classItem = classList[index];
         final classId = classItem['id']?.toString();
-        final studentList = widget.studentsByClass[classId] ?? [];
+        final studentList = studentsByClass[classId] ?? [];
 
-        return _buildClassCard(classItem, studentList, index);
+        return _buildClassCard(context, ref, classItem, studentList, index);
       },
     );
   }
@@ -87,17 +66,27 @@ class _ClassReportTabState extends ConsumerState<ClassReportTab> {
   // ---------------------------------------------------------------------------
 
   Widget _buildClassCard(
+    BuildContext context,
+    WidgetRef ref,
     Map<String, dynamic> classItem,
     List<dynamic> studentList,
     int index,
   ) {
     final primaryColor = ColorUtils.getRoleColor('admin');
-    final classModel = Classroom.fromJson(classItem);
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: const BorderRadius.all(Radius.circular(16)),
-        onTap: () => setState(() => _selectedClass = classModel),
+        onTap: () {
+          final classModel = Classroom.fromJson(classItem);
+          AppNavigator.push(
+            context,
+            ClassFinanceReportScreen(
+              classId: classModel.id,
+              className: classModel.name,
+            ),
+          );
+        },
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -127,7 +116,7 @@ class _ClassReportTabState extends ConsumerState<ClassReportTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      classModel.name,
+                      Classroom.fromJson(classItem).name,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
@@ -136,7 +125,7 @@ class _ClassReportTabState extends ConsumerState<ClassReportTab> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${classModel.studentCount} siswa',
+                      '${Classroom.fromJson(classItem).studentCount} siswa',
                       style: TextStyle(
                         color: ColorUtils.slate500,
                         fontSize: 12,
@@ -145,7 +134,7 @@ class _ClassReportTabState extends ConsumerState<ClassReportTab> {
                   ],
                 ),
               ),
-              _buildClassSummary(studentList),
+              _buildClassSummary(ref, studentList),
               const SizedBox(width: AppSpacing.sm),
               Container(
                 width: 32,
@@ -167,7 +156,7 @@ class _ClassReportTabState extends ConsumerState<ClassReportTab> {
     );
   }
 
-  Widget _buildClassSummary(List<dynamic> studentList) {
+  Widget _buildClassSummary(WidgetRef ref, List<dynamic> studentList) {
     int totalLunas = 0;
     int totalPending = 0;
     int totalBelumBayar = 0;
@@ -179,7 +168,7 @@ class _ClassReportTabState extends ConsumerState<ClassReportTab> {
 
     for (final student in studentList) {
       final studentId = student['id']?.toString();
-      final billList = widget.billsByStudent[studentId] ?? [];
+      final billList = billsByStudent[studentId] ?? [];
 
       for (final bill in billList) {
         // Filter based on academic year

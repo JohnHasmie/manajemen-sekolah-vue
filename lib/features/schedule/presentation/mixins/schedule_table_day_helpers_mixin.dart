@@ -18,7 +18,9 @@ mixin ScheduleTableDayHelpersMixin on State<TeacherScheduleTableView> {
 
   String? resolveDayName(dynamic schedule) {
     final dayIdMap = (this as dynamic).widget.dayIdMap as Map<String, String>;
-    final model = Schedule.fromJson(Map<String, dynamic>.from(schedule as Map));
+    final model = Schedule.fromJson(
+      Map<String, dynamic>.from(schedule as Map),
+    );
     final dayId = model.dayId;
     if (dayId != null && dayId.isNotEmpty) {
       final entry = dayIdMap.entries.firstWhere(

@@ -13,15 +13,12 @@ mixin SessionActionButtonsMixin on State<TeacherScheduleTableView> {
     Color primary,
   ) {
     final model = Schedule.fromJson(schedule);
-    final subjectName = (model.subjectName ?? '').isEmpty
-        ? '-'
-        : model.subjectName!;
+    final subjectName = (model.subjectName ?? '').isEmpty ? '-' : model.subjectName!;
     final className = (model.className ?? '').isEmpty ? '-' : model.className!;
     final summary =
         (this as dynamic).getSummary(schedule, dayName)
             as Map<String, dynamic>?;
-    final attFilled =
-        (this as dynamic).hasAttendance(summary, schedule) as bool;
+    final attFilled = (this as dynamic).hasAttendance(summary, schedule) as bool;
     final matFilled = (this as dynamic).hasMaterial(summary, schedule) as bool;
     final actFilled = (this as dynamic).hasActivity(summary, schedule) as bool;
 

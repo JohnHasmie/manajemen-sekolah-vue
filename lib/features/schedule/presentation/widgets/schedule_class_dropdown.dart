@@ -28,7 +28,8 @@ class ScheduleClassDropdown extends StatelessWidget {
       items: classes
           .where((c) => (c['id']?.toString() ?? '').isNotEmpty)
           .map<DropdownMenuItem<String>>((classItem) {
-            final model = Classroom.fromJson(classItem as Map<String, dynamic>);
+            final model =
+                Classroom.fromJson(classItem as Map<String, dynamic>);
             return DropdownMenuItem<String>(
               value: model.id,
               child: Text(model.name),

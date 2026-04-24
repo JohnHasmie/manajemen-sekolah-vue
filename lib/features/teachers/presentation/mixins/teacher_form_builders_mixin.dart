@@ -176,7 +176,10 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
         .map(
           (model) => CheckboxListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(model.name, style: const TextStyle(fontSize: 14)),
+            title: Text(
+              model.name,
+              style: const TextStyle(fontSize: 14),
+            ),
             value: selectedSubjectIds.contains(model.id),
             onChanged: (value) => _toggleSubject(model, value),
             controlAffinity: ListTileControlAffinity.leading,
