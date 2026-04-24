@@ -174,9 +174,7 @@ class TeacherScheduleFilterHelper {
 
       bool dayMatchesById() {
         return selectedDayIds.any((selectedId) {
-          return daysIds.any(
-            (dId) => dId.toString() == selectedId.toString(),
-          );
+          return daysIds.any((dId) => dId.toString() == selectedId.toString());
         });
       }
 
@@ -205,9 +203,9 @@ class TeacherScheduleFilterHelper {
 
       bool belongsToToday(dynamic item, List<String> ids) {
         // Tier 1: Direct day_name field via model
-        final dayName = Schedule.fromJson(
-          Map<String, dynamic>.from(item as Map),
-        ).dayName ?? '';
+        final dayName =
+            Schedule.fromJson(Map<String, dynamic>.from(item as Map)).dayName ??
+            '';
         if (dayName.isNotEmpty && normalizeDayName(dayName) == currentDayIndo) {
           return true;
         }
@@ -264,12 +262,12 @@ class TeacherScheduleFilterHelper {
         return dayIdA.length.compareTo(dayIdB.length);
       }
 
-      final timeA = Schedule.fromJson(
-        Map<String, dynamic>.from(a as Map),
-      ).startTime ?? '00:00';
-      final timeB = Schedule.fromJson(
-        Map<String, dynamic>.from(b as Map),
-      ).startTime ?? '00:00';
+      final timeA =
+          Schedule.fromJson(Map<String, dynamic>.from(a as Map)).startTime ??
+          '00:00';
+      final timeB =
+          Schedule.fromJson(Map<String, dynamic>.from(b as Map)).startTime ??
+          '00:00';
       return timeA.compareTo(timeB);
     });
 

@@ -172,8 +172,9 @@ mixin ScheduleCardActionMixin {
               initialSubjectName: subjectName,
               initialclassId: classId,
               initialClassName: className,
-              initialLessonHourNumber:
-                  sched.Schedule.fromJson(schedule).lessonHour,
+              initialLessonHourNumber: sched.Schedule.fromJson(
+                schedule,
+              ).lessonHour,
               initialTabIndex: tabIndex,
               embedded: true,
               scrollController: scrollController,

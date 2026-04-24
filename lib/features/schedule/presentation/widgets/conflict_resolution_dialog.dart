@@ -176,9 +176,7 @@ class ConflictResolutionDialogState
     dynamic schedule,
     LanguageProvider languageProvider,
   ) {
-    final model = Schedule.fromJson(
-      Map<String, dynamic>.from(schedule as Map),
-    );
+    final model = Schedule.fromJson(Map<String, dynamic>.from(schedule as Map));
     final scheduleId = model.id;
     final isSelected = _selectedScheduleToDelete == scheduleId;
     final startTime = (model.startTime ?? '');
