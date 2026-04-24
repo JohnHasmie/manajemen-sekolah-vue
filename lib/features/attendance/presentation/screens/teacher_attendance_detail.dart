@@ -28,6 +28,8 @@ class TeacherAttendanceDetailPage extends ConsumerStatefulWidget {
     required this.teacher,
     this.lessonHourId,
     this.lessonHourName,
+    this.canEdit = true,
+    this.filterTeacherId,
   });
 
   final String subjectId;
@@ -38,6 +40,8 @@ class TeacherAttendanceDetailPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final String? lessonHourId;
   final String? lessonHourName;
+  final bool canEdit;
+  final String? filterTeacherId;
 
   @override
   ConsumerState<TeacherAttendanceDetailPage> createState() =>
@@ -56,7 +60,7 @@ class _TeacherAttendanceDetailPageState
     subjectId: widget.subjectId,
     classId: widget.classId,
     date: widget.date,
-    teacherId: Teacher.fromJson(widget.teacher).id,
+    teacherId: widget.filterTeacherId ?? (widget.canEdit ? Teacher.fromJson(widget.teacher).id : null),
     lessonHourId: widget.lessonHourId,
   );
 
@@ -227,7 +231,7 @@ class _TeacherAttendanceDetailPageState
                 ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: widget.canEdit ? FloatingActionButton.extended(
         onPressed: openEditSheet,
         backgroundColor: getPrimaryColor(),
         elevation: 3,
@@ -246,7 +250,7 @@ class _TeacherAttendanceDetailPageState
             letterSpacing: 0.2,
           ),
         ),
-      ),
+      ) : null,
     );
   }
 }

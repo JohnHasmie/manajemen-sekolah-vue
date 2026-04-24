@@ -263,7 +263,7 @@ class HeroStatsRow extends StatelessWidget {
     return Padding(
       padding: padding,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (int i = 0; i < cards.length; i++) ...[
             Expanded(child: cards[i]),

@@ -57,6 +57,7 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
     required String className,
     required String subjectId,
     required String subjectName,
+    String? teacherId,
   }) {
     showModalBottomSheet(
       context: context,
@@ -68,12 +69,13 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
         maxChildSize: 0.96,
         expand: false,
         builder: (context, sc) => AttendanceDetailSheet(
-          teacherId: teacherId,
-          teacherNama: teacherNama,
+          teacherId: this.teacherId,
+          teacherNama: this.teacherNama,
           classId: classId,
           className: className,
           subjectId: subjectId,
           subjectName: subjectName,
+          filterTeacherId: teacherId ?? (isHomeroomView ? null : this.teacherId),
           lessonHours: lessonHours,
           classList: classList,
           primaryColor: primaryColor,

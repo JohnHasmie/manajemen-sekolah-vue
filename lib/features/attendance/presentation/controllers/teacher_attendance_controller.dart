@@ -14,7 +14,7 @@ class TeacherAttendanceParams {
   final String subjectId;
   final String classId;
   final DateTime date;
-  final String teacherId;
+  final String? teacherId;
   final String? lessonHourId;
   final String? academicYearId;
 
@@ -22,7 +22,7 @@ class TeacherAttendanceParams {
     required this.subjectId,
     required this.classId,
     required this.date,
-    required this.teacherId,
+    this.teacherId,
     this.lessonHourId,
     this.academicYearId,
   });
