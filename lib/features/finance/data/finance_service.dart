@@ -14,6 +14,7 @@ class FinanceService {
     String? studentId,
     String? paymentTypeId,
     String? classId,
+    String? academicYearId,
   }) async {
     final Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -29,6 +30,9 @@ class FinanceService {
     }
     if (classId != null && classId.isNotEmpty) {
       queryParams['class_id'] = classId;
+    }
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
     }
 
     final response = await dioClient.get(

@@ -58,6 +58,7 @@ class ApiSubjectService {
     String? search,
     String? gradeLevel,
     List<String>? subjectIds,
+    String? academicYearId,
   }) => _crudService.getSubjectsPaginated(
     page: page,
     limit: limit,
@@ -65,6 +66,7 @@ class ApiSubjectService {
     search: search,
     gradeLevel: gradeLevel,
     subjectIds: subjectIds,
+    academicYearId: academicYearId,
   );
 
   Future<List<dynamic>> getSubject({String? status}) =>
@@ -132,8 +134,8 @@ class ApiSubjectService {
   Future<void> deleteContentMaterial(String id) =>
       _materialService.deleteContentMaterial(id);
 
-  Future<List<dynamic>> getMaterials({String? teacherId, String? subjectId}) =>
-      _materialService.getMaterials(teacherId: teacherId, subjectId: subjectId);
+  Future<List<dynamic>> getMaterials({String? teacherId, String? subjectId, String? academicYearId}) =>
+      _materialService.getMaterials(teacherId: teacherId, subjectId: subjectId, academicYearId: academicYearId);
 
   Future<dynamic> addMaterial(Map<String, dynamic> data) =>
       _materialService.addMaterial(data);

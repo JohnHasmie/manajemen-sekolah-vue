@@ -66,6 +66,7 @@ class SubjectCrudService {
     String? search,
     String? gradeLevel,
     List<String>? subjectIds,
+    String? academicYearId,
   }) async {
     final queryString = _buildSubjectQueryString(
       page,
@@ -74,6 +75,7 @@ class SubjectCrudService {
       search,
       gradeLevel,
       subjectIds,
+      academicYearId,
     );
     final schoolId = _getSchoolIdForCache();
     final cacheKey = CacheKeyBuilder.custom('subject', schoolId, queryString);
@@ -98,8 +100,9 @@ class SubjectCrudService {
     String? status,
     String? search,
     String? gradeLevel,
-    List<String>? subjectIds,
-  ) {
+    List<String>? subjectIds, [
+    String? academicYearId,
+  ]) {
     final queryParams = <String, dynamic>{
       'page': page.toString(),
       'limit': limit.toString(),
@@ -116,6 +119,9 @@ class SubjectCrudService {
     }
     if (subjectIds != null && subjectIds.isNotEmpty) {
       queryParams['subject_ids'] = subjectIds.join(',');
+    }
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      queryParams['academic_year_id'] = academicYearId;
     }
 
     return Uri(queryParameters: queryParams).query;

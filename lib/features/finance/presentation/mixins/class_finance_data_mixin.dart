@@ -77,6 +77,7 @@ mixin ClassFinanceDataMixin on State<ClassFinanceReportScreen> {
     final response = await FinanceService.getBillsPaginated(
       limit: 1000,
       classId: getClassId(),
+      academicYearId: widget.academicYearId,
     );
     return response['data'] ?? [];
   }
