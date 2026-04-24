@@ -233,12 +233,14 @@ Principle: **satu implementasi, tiga role**. Mirror the teacher-role refactor th
 - [ ] Primary button dynamically shows recipient count: "Kirim ke 524 OT"
 - [ ] Draft save via existing API
 
-### T4.3 — Migrate `admin_class_activity_screen.dart`
-**Non-compliance:** custom `filter_bottom_sheet.dart` + `activity_dialog_shell.dart` + `ActivitySearchFilterBar`.
+### T4.3 — Retire class_activity legacy widgets ✅
+**Non-compliance (resolved):** custom `filter_bottom_sheet.dart` + `activity_dialog_shell.dart` + `ActivitySearchFilterBar` duplicated shared-widget behaviour.
+**Scope note:** the admin drill-down screen (`admin_class_activity_screen.dart`) is a Teacher→Subject→Activity monitoring surface, not CRUD, so it does **not** migrate to `AdminCrudScaffold`. Instead, the three legacy files (consumed by the teacher flow) were retired so every role now routes through the shared sheets.
 **Subtasks:**
-- [ ] Delete all 3 custom files
-- [ ] Migrate to `AdminCrudScaffold` + `AppFilterBottomSheet` + `AppEditBottomSheet`
-- [ ] Teacher reference: `teacher_class_activity` feature
+- [x] Delete `filter_bottom_sheet.dart` — wrapped `AppFilterBottomSheet`; inlined the date-range sheet as `_ActivityDateFilterSheet` inside `embedded_activity_filter_mixin.dart` composing `AppFilterBottomSheet` + `FilterChipGrid` + `FilterSectionHeader` directly.
+- [x] Delete `activity_search_filter_bar.dart` — collapsed into the caller (`activity_list_view.dart`) as a plain Padding + Row with the 48-px search field and tune button, keeping the existing `searchFilterKey` onboarding anchor.
+- [x] Delete `activity_dialog_shell.dart` — `add_activity_dialog.dart` now builds the sheet via `AppBottomSheet(title/subtitle/icon/primaryColor/content/footer)` + `BottomSheetFooter`, and `activity_form_content.dart` drops its internal `Expanded + SingleChildScrollView` wrapper so the sheet owns scrolling/flex sizing. "Batal" + primary action pair matches the shared pattern used by `update_status_sheet.dart`.
+- [x] `dart format` + `dart analyze lib/` — clean
 
 ### T4.4 — `admin_attendance_report_screen.dart` filter migration
 - [ ] Remove legacy `AttendanceReportFilterSheet` `showModalBottomSheet` wrapper
@@ -292,7 +294,7 @@ Principle: **satu implementasi, tiga role**. Mirror the teacher-role refactor th
 ### T5.5 — Metrics report
 - [ ] LOC delta per feature (target: ~60% net reduction) *(run `git log --shortstat release/teacher-refactor-2026-04-22` for totals)*
 - [x] New shared components added: `AdminCrudScaffold`, `BulkActionBar`, `SchoolPill`, `HeroStatsCard`, `PendingInboxCard`, `QuickActionGrid`
-- [ ] Non-compliant screens: 11 → 0 *(remaining: class-activity admin migration T4.3, Jadwal matrix T4.1. System settings T4.5 ✅ done. RPP approval status dialog ✅ done.)*
+- [ ] Non-compliant screens: 11 → 0 *(remaining: Jadwal matrix T4.1. class-activity T4.3 ✅ done — three legacy widgets retired, teacher consumers migrated to shared `AppBottomSheet` / `AppFilterBottomSheet`. System settings T4.5 ✅ done. RPP approval status dialog ✅ done.)*
 - [x] `dart analyze` — clean across lib/
 - [ ] Deliver to stakeholders as Markdown report in `/docs/`
 

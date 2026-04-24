@@ -9,7 +9,6 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_card.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_search_filter_bar.dart';
 
 /// The scrollable activity list displayed in Step 2 of the teacher wizard.
 ///
@@ -127,14 +126,121 @@ class ActivityListView extends ConsumerWidget {
     return Column(
       children: [
         // ── Search & Filter bar ───────────────────────────────────────────
-        ActivitySearchFilterBar(
-          searchController: searchController,
-          searchFilterKey: searchFilterKey,
-          primaryColor: primaryColor,
-          hasActiveFilter: hasActiveFilter,
-          languageProvider: languageProvider,
-          onSearchSubmitted: onSearchSubmitted,
-          onFilterPressed: onFilterPressed,
+        // Inlined from the legacy `ActivitySearchFilterBar` widget: a 48-px
+        // white search field plus a 48×48 filter button with an active-state
+        // badge dot. Matches the "Jadwal Mengajar" bar style.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            key: searchFilterKey,
+            children: [
+              Expanded(
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: ColorUtils.slate200),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: searchController,
+                          textAlignVertical: TextAlignVertical.center,
+                          style: TextStyle(
+                            color: ColorUtils.slate800,
+                            fontSize: 13,
+                          ),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            hintText: languageProvider.getTranslatedText({
+                              'en': 'Search activities...',
+                              'id': 'Cari kegiatan...',
+                            }),
+                            hintStyle: TextStyle(
+                              color: ColorUtils.slate400,
+                              fontSize: 13,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                            ),
+                          ),
+                          onSubmitted: (_) {
+                            onSearchSubmitted();
+                            FocusScope.of(context).unfocus();
+                          },
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(right: 4),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.search,
+                            color: primaryColor,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            onSearchSubmitted();
+                            FocusScope.of(context).unfocus();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Container(
+                height: 48,
+                width: 48,
+                decoration: BoxDecoration(
+                  color: hasActiveFilter
+                      ? primaryColor.withValues(alpha: 0.12)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: hasActiveFilter ? primaryColor : ColorUtils.slate200,
+                    width: hasActiveFilter ? 1.5 : 1,
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: onFilterPressed,
+                      icon: Icon(
+                        Icons.tune,
+                        color: hasActiveFilter
+                            ? primaryColor
+                            : ColorUtils.slate600,
+                        size: 20,
+                      ),
+                      tooltip: languageProvider.getTranslatedText({
+                        'en': 'Filter',
+                        'id': 'Filter',
+                      }),
+                    ),
+                    if (hasActiveFilter)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: ColorUtils.error600,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
 
         // ── Active filter chips ───────────────────────────────────────────

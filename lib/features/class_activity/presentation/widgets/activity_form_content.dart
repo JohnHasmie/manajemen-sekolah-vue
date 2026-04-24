@@ -75,100 +75,99 @@ class ActivityFormContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              ActivityFormBuilder.buildSectionLabel(
-                icon: Icons.auto_stories_rounded,
-                label: 'Sumber Judul',
-                color: accentColor,
-              ),
-              const SizedBox(height: 8),
-              ActivityMaterialSelector(
-                useMaterialTitle: useMaterialTitle,
-                selectedSubjectId: selectedSubjectId,
-                onMaterialModeToggle: () {},
-                onMaterialModeChanged: onMaterialModeChanged,
-              ),
-              ActivityFormBuilder.buildMaterialSelectionSection(
-                accentColor: accentColor,
-                useMaterialTitle: useMaterialTitle,
-                chapters: chapters,
-                isLoadingChapters: isLoadingChapters,
-                selectedChapterId: selectedChapterId,
-                subChapters: subChapters,
-                selectedSubChapterIds: selectedSubChapterIds,
-                getChapterName: getChapterName,
-                getSubChapterName: getSubChapterName,
-                onChapterSelected: onChapterSelected,
-                onSubChapterToggled: onSubChapterToggled,
-                languageProvider: languageProvider,
-                onViewAllPressed: onViewAllSubChapters,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Divider(color: ColorUtils.slate100, height: 1),
-              ),
-              ActivityFormBuilder.buildTitleField(
-                controller: titleController,
-                accentColor: accentColor,
-                isAssignment: isAssignment,
-                useMaterialTitle: useMaterialTitle,
-                selectedChapterId: selectedChapterId,
-              ),
-              const SizedBox(height: 10),
-              ActivityFormBuilder.buildDescriptionField(
-                controller: descriptionController,
-                accentColor: accentColor,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Divider(color: ColorUtils.slate100, height: 1),
-              ),
-              ActivityFormBuilder.buildDateCard(
-                icon: Icons.calendar_today_rounded,
-                iconColor: accentColor,
-                label: 'Tanggal Kegiatan',
-                value: selectedDate != null
-                    ? ActivityFormBuilder.formatDate(selectedDate!)
-                    : null,
-                placeholder: 'Pilih tanggal',
-                onTap: onShowDatePicker,
-              ),
-              if (isAssignment) ...[
-                const SizedBox(height: 10),
-                ActivityFormBuilder.buildDateCard(
-                  icon: Icons.access_time_rounded,
-                  iconColor: ColorUtils.warning600,
-                  label: 'Batas Waktu',
-                  value: deadline != null
-                      ? ActivityFormBuilder.formatDateTime(deadline!)
-                      : null,
-                  placeholder: 'Belum ditentukan (opsional)',
-                  onTap: onShowDateTimePicker,
-                  onClear: deadline != null ? onClearDeadline : null,
-                ),
-              ],
-              ActivityFormBuilder.buildStudentSelectorSection(
-                studentList: studentList,
-                selectedStudents: selectedStudents,
-                isLoading: isLoadingStudents,
-                initialTarget: initialTarget,
-                selectedClassId: selectedClassId,
-                languageProvider: languageProvider,
-                onRefresh: onRefreshStudents,
-                onToggleStudent: onToggleStudent,
-              ),
-              const SizedBox(height: 24),
-            ],
+    // Previously self-wrapped in `Expanded + SingleChildScrollView`, but the
+    // parent `AppBottomSheet` now owns scrolling + flex sizing — we return a
+    // plain Form so the sheet's SingleChildScrollView can host it correctly.
+    return Form(
+      key: formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 4),
+          ActivityFormBuilder.buildSectionLabel(
+            icon: Icons.auto_stories_rounded,
+            label: 'Sumber Judul',
+            color: accentColor,
           ),
-        ),
+          const SizedBox(height: 8),
+          ActivityMaterialSelector(
+            useMaterialTitle: useMaterialTitle,
+            selectedSubjectId: selectedSubjectId,
+            onMaterialModeToggle: () {},
+            onMaterialModeChanged: onMaterialModeChanged,
+          ),
+          ActivityFormBuilder.buildMaterialSelectionSection(
+            accentColor: accentColor,
+            useMaterialTitle: useMaterialTitle,
+            chapters: chapters,
+            isLoadingChapters: isLoadingChapters,
+            selectedChapterId: selectedChapterId,
+            subChapters: subChapters,
+            selectedSubChapterIds: selectedSubChapterIds,
+            getChapterName: getChapterName,
+            getSubChapterName: getSubChapterName,
+            onChapterSelected: onChapterSelected,
+            onSubChapterToggled: onSubChapterToggled,
+            languageProvider: languageProvider,
+            onViewAllPressed: onViewAllSubChapters,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Divider(color: ColorUtils.slate100, height: 1),
+          ),
+          ActivityFormBuilder.buildTitleField(
+            controller: titleController,
+            accentColor: accentColor,
+            isAssignment: isAssignment,
+            useMaterialTitle: useMaterialTitle,
+            selectedChapterId: selectedChapterId,
+          ),
+          const SizedBox(height: 10),
+          ActivityFormBuilder.buildDescriptionField(
+            controller: descriptionController,
+            accentColor: accentColor,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Divider(color: ColorUtils.slate100, height: 1),
+          ),
+          ActivityFormBuilder.buildDateCard(
+            icon: Icons.calendar_today_rounded,
+            iconColor: accentColor,
+            label: 'Tanggal Kegiatan',
+            value: selectedDate != null
+                ? ActivityFormBuilder.formatDate(selectedDate!)
+                : null,
+            placeholder: 'Pilih tanggal',
+            onTap: onShowDatePicker,
+          ),
+          if (isAssignment) ...[
+            const SizedBox(height: 10),
+            ActivityFormBuilder.buildDateCard(
+              icon: Icons.access_time_rounded,
+              iconColor: ColorUtils.warning600,
+              label: 'Batas Waktu',
+              value: deadline != null
+                  ? ActivityFormBuilder.formatDateTime(deadline!)
+                  : null,
+              placeholder: 'Belum ditentukan (opsional)',
+              onTap: onShowDateTimePicker,
+              onClear: deadline != null ? onClearDeadline : null,
+            ),
+          ],
+          ActivityFormBuilder.buildStudentSelectorSection(
+            studentList: studentList,
+            selectedStudents: selectedStudents,
+            isLoading: isLoadingStudents,
+            initialTarget: initialTarget,
+            selectedClassId: selectedClassId,
+            languageProvider: languageProvider,
+            onRefresh: onRefreshStudents,
+            onToggleStudent: onToggleStudent,
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }
