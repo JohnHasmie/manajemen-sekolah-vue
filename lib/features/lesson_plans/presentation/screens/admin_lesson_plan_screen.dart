@@ -17,7 +17,7 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/filte
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/navigation_helper_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/build_helper_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/admin_lesson_plan_header.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/update_status_dialog.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/update_status_sheet.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_admin_detail_page.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_card.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/teacher_select_card.dart';
@@ -147,14 +147,12 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen>
 
   void _updateStatus(String id, String status) {
     final lp = lessonPlanList.firstWhere((p) => p['id'] == id);
-    showDialog(
+    showUpdateStatusSheet(
       context: context,
-      builder: (_) => UpdateStatusDialog(
-        lessonPlanId: id,
-        currentStatus: lp['status'],
-        currentNote: lp['catatan'],
-        onStatusUpdated: loadAllLessonPlans,
-      ),
+      lessonPlanId: id,
+      currentStatus: lp['status'],
+      currentNote: lp['catatan'],
+      onStatusUpdated: loadAllLessonPlans,
     );
   }
 
