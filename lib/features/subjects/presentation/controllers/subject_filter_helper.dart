@@ -4,6 +4,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 
 /// Pure filter helper — no state, no API calls.
@@ -101,6 +102,107 @@ class SubjectFilterHelper {
     }
 
     return filterChips;
+  }
+
+  /// Builds typed [ActiveFilter] chips for [AdminCrudScaffold]'s header.
+  ///
+  /// Phase-1 version of [buildFilterChips] that returns one chip per active
+  /// filter, each carrying its own × removal callback. Preferred over the
+  /// map-based builder — fixes the shared-callback bug where every chip's
+  /// close tap would clear the same filter.
+  static List<ActiveFilter> buildActiveFilterChips({
+    required String? selectedStatusFilter,
+    required String? selectedClassesStatusFilter,
+    required String? selectedGradeLevelFilter,
+    required String? selectedClassNameFilter,
+    required LanguageProvider languageProvider,
+    required VoidCallback onClearStatus,
+    required VoidCallback onClearClassesStatus,
+    required VoidCallback onClearGradeLevel,
+    required VoidCallback onClearClassName,
+  }) {
+    final chips = <ActiveFilter>[];
+
+    if (selectedStatusFilter != null) {
+      final statusText = selectedStatusFilter == 'active'
+          ? languageProvider.getTranslatedText(const {
+              'en': 'Active',
+              'id': 'Aktif',
+            })
+          : selectedStatusFilter == 'inactive'
+          ? languageProvider.getTranslatedText(const {
+              'en': 'Inactive',
+              'id': 'Tidak Aktif',
+            })
+          : languageProvider.getTranslatedText(const {
+              'en': 'All',
+              'id': 'Semua',
+            });
+      final prefix = languageProvider.getTranslatedText(const {
+        'en': 'Status',
+        'id': 'Status',
+      });
+      chips.add(
+        ActiveFilter(
+          label: '$prefix: $statusText',
+          onRemove: onClearStatus,
+          icon: Icons.toggle_on_outlined,
+        ),
+      );
+    }
+
+    if (selectedClassesStatusFilter != null) {
+      final statusText = selectedClassesStatusFilter == 'ada'
+          ? languageProvider.getTranslatedText(const {
+              'en': 'Has Classes',
+              'id': 'Ada Kelas',
+            })
+          : languageProvider.getTranslatedText(const {
+              'en': 'No Classes',
+              'id': 'Tidak Ada Kelas',
+            });
+      final prefix = languageProvider.getTranslatedText(const {
+        'en': 'Classes',
+        'id': 'Kelas',
+      });
+      chips.add(
+        ActiveFilter(
+          label: '$prefix: $statusText',
+          onRemove: onClearClassesStatus,
+          icon: Icons.class_outlined,
+        ),
+      );
+    }
+
+    if (selectedGradeLevelFilter != null) {
+      final prefix = languageProvider.getTranslatedText(const {
+        'en': 'Grade',
+        'id': 'Tingkat Kelas',
+      });
+      chips.add(
+        ActiveFilter(
+          label: '$prefix: $selectedGradeLevelFilter',
+          onRemove: onClearGradeLevel,
+          icon: Icons.school_outlined,
+        ),
+      );
+    }
+
+    if (selectedClassNameFilter != null) {
+      final prefix = languageProvider.getTranslatedText(const {
+        'en': 'Class',
+        'id': 'Nama Kelas',
+      });
+      chips.add(
+        ActiveFilter(
+          label: '$prefix: $selectedClassNameFilter',
+          onRemove: onClearClassName,
+          icon: Icons.grid_view_outlined,
+        ),
+      );
+    }
+
+    return chips;
   }
 
   /// Applies client-side filtering on top of the server-filtered list.
