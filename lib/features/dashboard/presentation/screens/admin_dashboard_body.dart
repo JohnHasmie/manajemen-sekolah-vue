@@ -62,7 +62,7 @@ import 'package:manajemensekolah/features/grades/presentation/screens/admin_grad
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
-import 'package:manajemensekolah/features/settings/presentation/screens/school_settings_screen.dart';
+import 'package:manajemensekolah/features/settings/presentation/screens/system_settings_screen.dart';
 
 /// Admin navy accent used across hero widgets and the header gradient.
 const Color _adminNavy = Color(0xFF0F172A);
@@ -276,8 +276,22 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
       AppNavigator.push(context, const AdminGradeOverviewScreen());
   void _openLaporanRaport() =>
       AppNavigator.push(context, const AdminReportCardScreen());
-  void _openPengaturan() =>
-      AppNavigator.push(context, const SchoolSettingsScreen());
+  void _openPengaturan() => AppNavigator.push(
+    context,
+    SystemSettingsScreen(
+      schoolName: widget.state.userData['nama_sekolah']?.toString(),
+      schoolLogoUrl: widget.state.userData['school_logo_url']?.toString(),
+      subtitle: _pengaturanSubtitle,
+    ),
+  );
+
+  /// Subtitle shown under the school name on the Pengaturan hub's hero.
+  /// Mirrors the dashboard hero so the same context carries across surfaces.
+  String get _pengaturanSubtitle {
+    final year = widget.state.userData['academic_year']?.toString();
+    if (year == null || year.isEmpty) return 'Admin sekolah';
+    return '$year · Admin sekolah';
+  }
 
   // ── Build ────────────────────────────────────
 

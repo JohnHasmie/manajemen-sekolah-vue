@@ -244,14 +244,15 @@ Principle: **satu implementasi, tiga role**. Mirror the teacher-role refactor th
 - [ ] Remove legacy `AttendanceReportFilterSheet` `showModalBottomSheet` wrapper
 - [ ] Call `AppFilterBottomSheet` directly with `TeacherFilterContent.classesAndDateRange`
 
-### T4.5 — Build `SystemSettingsScreen` (pengaturan hub)
+### T4.5 — Build `SystemSettingsScreen` (pengaturan hub) ✅
 **Reference:** `Admin_Refactor_Wireframe_05_Sistem` frame D3.
+**Shipped in** `lib/features/settings/presentation/screens/system_settings_screen.dart`; wired into `admin_dashboard_body._openPengaturan` and `admin_menu_items_mixin` so both the dashboard QuickActionGrid tile and the "Modul lain" Pengaturan item route here.
 **Subtasks:**
-- [ ] Hero card = expanded `SchoolPill` (T0.3)
-- [ ] Sections: Manajemen Sistem · Notifikasi & Akun
-- [ ] Menu items reuse `list-card` pattern (same as CRUD)
-- [ ] Entries: Profil sekolah · Ekspor laporan · Naik kelas & kelulusan · Data management · Pengaturan notifikasi · Pengguna sistem
-- [ ] Each menu item opens its own detail screen or `AppEditBottomSheet`
+- [x] Hero card = expanded `SchoolPill` (T0.3) — takes `schoolName`/`schoolLogoUrl`/`subtitle` from dashboard state so no extra fetch
+- [x] Sections: **Manajemen Sistem** · **Notifikasi & Akun** using shared `SectionHeader`
+- [x] Menu items reuse `list-card` pattern (44 px accent icon tile + title + subtitle + chevron; navy admin accent)
+- [x] Entries wired: Profil sekolah → `SchoolLevelSettingsScreen`, Waktu pembelajaran → `TimeSettingsScreen`, Manajemen data → `AdminDataManagementScreen`, Profil akun → `SettingsScreen`
+- [x] Stubbed entries with "Segera" pill + `SnackBarUtils.showInfo`: Naik kelas & kelulusan, Pengaturan notifikasi, Pengguna sistem — drop-in ready when destinations land
 
 ### T4.6 — Retire legacy report_card dialogs
 **Non-compliance:** `admin_report_card_actions_mixin.dart`
@@ -291,7 +292,7 @@ Principle: **satu implementasi, tiga role**. Mirror the teacher-role refactor th
 ### T5.5 — Metrics report
 - [ ] LOC delta per feature (target: ~60% net reduction) *(run `git log --shortstat release/teacher-refactor-2026-04-22` for totals)*
 - [x] New shared components added: `AdminCrudScaffold`, `BulkActionBar`, `SchoolPill`, `HeroStatsCard`, `PendingInboxCard`, `QuickActionGrid`
-- [ ] Non-compliant screens: 11 → 0 *(remaining: class-activity admin migration T4.3, Jadwal matrix T4.1, System settings T4.5 — deferred. RPP approval status dialog ✅ done.)*
+- [ ] Non-compliant screens: 11 → 0 *(remaining: class-activity admin migration T4.3, Jadwal matrix T4.1. System settings T4.5 ✅ done. RPP approval status dialog ✅ done.)*
 - [x] `dart analyze` — clean across lib/
 - [ ] Deliver to stakeholders as Markdown report in `/docs/`
 

@@ -14,7 +14,7 @@ import 'package:manajemensekolah/features/grades/presentation/screens/admin_grad
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/admin_schedule_management_screen.dart';
-import 'package:manajemensekolah/features/settings/presentation/screens/school_settings_screen.dart';
+import 'package:manajemensekolah/features/settings/presentation/screens/system_settings_screen.dart';
 
 mixin AdminMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
   List<MenuItem> getAdminDataManagementItems(BuildContext context) {
@@ -93,7 +93,16 @@ mixin AdminMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
       MenuItem(
         title: AppLocalizations.schoolSettings.tr,
         icon: Icons.settings_applications,
-        onTap: () => AppNavigator.push(context, const SchoolSettingsScreen()),
+        // Routes to the admin-only Pengaturan hub (SystemSettingsScreen) so
+        // the "Modul lain" surface matches the primary Pengaturan tile in
+        // the QuickActionGrid above it — one destination, one hub.
+        onTap: () => AppNavigator.push(
+          context,
+          SystemSettingsScreen(
+            schoolName: widget.state.userData['nama_sekolah']?.toString(),
+            schoolLogoUrl: widget.state.userData['school_logo_url']?.toString(),
+          ),
+        ),
       ),
     ];
   }
