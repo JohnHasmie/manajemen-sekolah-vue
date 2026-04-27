@@ -266,19 +266,11 @@ class PaymentTypeCard extends StatelessWidget {
                       tooltip: 'Generate Tagihan',
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    CircleActionButton(
-                      icon: Icons.edit_rounded,
-                      color: primaryColor,
-                      onPressed: onEdit,
-                      tooltip: AppLocalizations.edit.tr,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    CircleActionButton(
-                      icon: Icons.delete_rounded,
-                      color: ColorUtils.error600,
-                      onPressed: onDelete,
-                      tooltip: AppLocalizations.delete.tr,
-                    ),
+                    // Per-row edit/delete affordances removed (PR-7 / Audit
+                    // Theme 7). The "Generate Tagihan" autorenew button stays
+                    // — it's a primary domain action, not a CRUD affordance.
+                    // Tap-to-edit / bulk-mode / overflow handle the rest.
+                    // `onEdit` and `onDelete` props kept on the constructor.
                   ],
                 ),
               ],

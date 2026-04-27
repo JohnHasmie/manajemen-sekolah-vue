@@ -164,36 +164,10 @@ class ClassroomCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     _buildStudentCountChip(studentCount, languageProvider),
-                    Builder(
-                      builder: (context) {
-                        final academicYearProvider = ref.watch(
-                          academicYearRiverpod,
-                        );
-                        if (academicYearProvider.isReadOnly) {
-                          return const SizedBox.shrink();
-                        }
-                        return Column(
-                          children: [
-                            const SizedBox(height: AppSpacing.sm),
-                            Row(
-                              children: [
-                                _buildIconButton(
-                                  icon: Icons.edit_outlined,
-                                  color: ColorUtils.corporateBlue600,
-                                  onTap: onEdit,
-                                ),
-                                const SizedBox(width: 6),
-                                _buildIconButton(
-                                  icon: Icons.delete_outline,
-                                  color: ColorUtils.error600,
-                                  onTap: onDelete,
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                    // Per-row edit/delete affordances removed (PR-7 / Audit
+                    // Theme 7). Outer InkWell handles tap-to-detail; bulk
+                    // mode + 3-dot overflow are the destructive action paths.
+                    // `onEdit` and `onDelete` props kept on the constructor.
                   ],
                 ),
               ],

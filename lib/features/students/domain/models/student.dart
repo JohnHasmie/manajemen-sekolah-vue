@@ -37,10 +37,41 @@ abstract class Student with _$Student {
     // 1. Resolve Name
     mapped['name'] ??= mapped['nama'];
 
-    // 2. Resolve Class Name (handles: class_name, kelas_nama, or nested class.name)
+    // 2. Resolve Class Name. The API surfaces this in *six* shapes depending
+    //    on which endpoint produces the row. Normalize them all so
+    //    `Student.className` is reliable for the parent dropdown / detail
+    //    cards (P2/P3 were rendering "Kelas: -" because the parent-grade and
+    //    parent-attendance endpoints return the nested-relation shape, while
+    //    parent-class-activity returns the flat shape — see PR-9 in
+    //    P0_PR_Plan.md).
+    //
+    //   a. flat English          : { class_name: "7A" }
+    //   b. flat Indonesian       : { kelas_nama: "7A" }
+    //   c. nested relation       : { class: { name: "7A" } }
+    //   d. nested relation (id)  : { kelas: { nama: "7A" } }
+    //   e. nested enrollment     : { student_classes: [{ class: { name: "7A" } }] }
+    //   f. nested enrollment (id): { siswa_kelas:    [{ kelas: { nama: "7A" } }] }
     mapped['class_name'] ??= mapped['kelas_nama'];
     if (mapped['class'] is Map && mapped['class']['name'] != null) {
       mapped['class_name'] ??= mapped['class']['name'];
+    }
+    if (mapped['kelas'] is Map && mapped['kelas']['nama'] != null) {
+      mapped['class_name'] ??= mapped['kelas']['nama'];
+    }
+    if (mapped['class_name'] == null) {
+      final enrollments = mapped['student_classes'] ?? mapped['siswa_kelas'];
+      if (enrollments is List && enrollments.isNotEmpty) {
+        final first = enrollments.first;
+        if (first is Map) {
+          final cls = first['class'] ?? first['kelas'];
+          if (cls is Map) {
+            mapped['class_name'] = cls['name'] ?? cls['nama'];
+          }
+          // Some payloads put the class name directly on the enrollment row
+          // instead of nesting a `class`/`kelas` object.
+          mapped['class_name'] ??= first['class_name'] ?? first['kelas_nama'];
+        }
+      }
     }
 
     // 3. Resolve Other Fields

@@ -141,25 +141,11 @@ class TeacherCard extends ConsumerWidget {
                         color: ColorUtils.success600,
                       ),
 
-                    // Edit / Delete buttons — hidden in read-only mode
-                    if (!isReadOnly) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          _ActionIcon(
-                            icon: Icons.edit_outlined,
-                            color: ColorUtils.corporateBlue600,
-                            onTap: onEdit,
-                          ),
-                          const SizedBox(width: 6),
-                          _ActionIcon(
-                            icon: Icons.delete_outline,
-                            color: ColorUtils.error600,
-                            onTap: onDelete,
-                          ),
-                        ],
-                      ),
-                    ],
+                    // Per-row edit/delete affordances removed (PR-7 / Audit
+                    // Theme 7). Outer InkWell already wires tap-to-detail;
+                    // bulk-mode + 3-dot overflow surface destructive actions.
+                    // `onEdit` and `onDelete` constructor props are kept so
+                    // callers stay unchanged.
                   ],
                 ),
               ],
