@@ -14,6 +14,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
+import 'package:manajemensekolah/core/shell/role_shell.dart';
+import 'package:manajemensekolah/core/shell/shell_flag.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
+import 'package:manajemensekolah/core/shell/tabs/admin/admin_academic_hub.dart';
+import 'package:manajemensekolah/core/shell/tabs/admin/admin_finance_tab.dart';
+import 'package:manajemensekolah/core/shell/tabs/admin/admin_people_hub.dart';
+import 'package:manajemensekolah/core/shell/tabs/admin/admin_system_tab.dart';
+import 'package:manajemensekolah/core/shell/tabs/parent/parent_academic_hub.dart';
+import 'package:manajemensekolah/core/shell/tabs/parent/parent_attendance_tab.dart';
+import 'package:manajemensekolah/core/shell/tabs/parent/parent_finance_tab.dart';
+import 'package:manajemensekolah/core/shell/tabs/teacher/teacher_grades_hub.dart';
+import 'package:manajemensekolah/core/shell/tabs/teacher/teacher_other_hub.dart';
+import 'package:manajemensekolah/core/shell/tabs/teacher/teacher_teaching_hub.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/helpers_mixin.dart';
@@ -32,6 +45,10 @@ export 'package:manajemensekolah/features/dashboard/presentation/widgets/finance
     show FinancePopupDialog;
 export 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_popup_dialog.dart'
     show AttendancePopupDialog;
+
+// Feature flag `kEnableShell` is now defined in
+// `lib/core/shell/shell_flag.dart` so non-UI services can import it
+// without depending on this presentation-layer file. Imported above.
 
 /// The main dashboard widget. Like a Vue page component
 /// (`pages/dashboard.vue`).
@@ -126,8 +143,21 @@ class _DashboardState extends ConsumerState<Dashboard>
   /// app bar, hero stats, quick actions, overview cards, and menu grid.
   /// Uses `ref.watch(languageRiverpod)` to react to language changes
   /// (like a Vue `computed` property depending on an i18n store).
+  ///
+  /// When `kEnableShell` is true (P1 rollout), the dashboard body is
+  /// wrapped in a [RoleShell] that provides the bottom-nav tab strip.
+  /// Tab roots are stub builders for now (Sub-PR 1); Sub-PR 2/3/4 wire
+  /// real per-role tab content. The legacy path stays intact under the
+  /// `else` branch so production users see no change until the flag flips.
   @override
   Widget build(BuildContext context) {
+    if (kEnableShell) {
+      return RoleShell(
+        role: effectiveRole,
+        tabBuilder: _buildShellTabRoot,
+      );
+    }
+
     final languageProvider = ref.watch(languageRiverpod);
     final dashboardState = ref.watch(dashboardProvider);
 
@@ -136,6 +166,74 @@ class _DashboardState extends ConsumerState<Dashboard>
       error: (e, st) => buildErrorState(e),
       loading: () => _buildLoadingStateWrapper(context, languageProvider),
     );
+  }
+
+  /// Tab-root dispatcher used by [RoleShell.tabBuilder].
+  ///
+  /// Home tab always renders the legacy dashboard tree (preserves the
+  /// existing FCM listener, dialog wiring, and state — Sub-PR 6 will
+  /// refactor this in place). Other tabs dispatch to per-role tab files
+  /// in `lib/core/shell/tabs/<role>/`. Tabs not yet wired for the role
+  /// fall through to a "segera hadir" placeholder.
+  Widget _buildShellTabRoot(BuildContext context, ShellTab tab) {
+    if (tab == ShellTab.home) {
+      // Re-enter the legacy dashboard render path.
+      final languageProvider = ref.watch(languageRiverpod);
+      final dashboardState = ref.watch(dashboardProvider);
+      return dashboardState.when(
+        data: (state) => _buildLoadedState(context, languageProvider, state),
+        error: (e, st) => buildErrorState(e),
+        loading: () => _buildLoadingStateWrapper(context, languageProvider),
+      );
+    }
+
+    // Sub-PR 2 — admin tab roots.
+    if (effectiveRole == 'admin') {
+      switch (tab) {
+        case ShellTab.people:
+          return const AdminPeopleHub();
+        case ShellTab.academic:
+          return const AdminAcademicHub();
+        case ShellTab.finance:
+          return const AdminFinanceTab();
+        case ShellTab.system:
+          return const AdminSystemTab();
+        default:
+          break;
+      }
+    }
+
+    // Sub-PR 3 — teacher tab roots.
+    if (effectiveRole == 'guru') {
+      switch (tab) {
+        case ShellTab.teaching:
+          return const TeacherTeachingHub();
+        case ShellTab.grades:
+          return const TeacherGradesHub();
+        case ShellTab.other:
+          return const TeacherOtherHub();
+        default:
+          break;
+      }
+    }
+
+    // Sub-PR 4 — parent tab roots. After this lands, the placeholder
+    // fallback below is essentially dead code — kept as a safety net for
+    // role/tab combinations the dispatcher misses.
+    if (effectiveRole == 'wali') {
+      switch (tab) {
+        case ShellTab.academic:
+          return const ParentAcademicHub();
+        case ShellTab.attendance:
+          return const ParentAttendanceTab();
+        case ShellTab.finance:
+          return const ParentFinanceTab();
+        default:
+          break;
+      }
+    }
+
+    return _ShellTabPlaceholder(tab: tab);
   }
 
   Widget _buildLoadedState(
@@ -270,6 +368,40 @@ class _DashboardState extends ConsumerState<Dashboard>
       (state) =>
           showAccountBottomSheet(context, state, primaryColor, effectiveRole),
       () => showAcademicYearDialog(context),
+    );
+  }
+}
+
+/// Temporary "Coming soon" surface for tabs whose real screens land in
+/// later P1 sub-PRs (Sub-PR 2: admin tabs, 3: teacher, 4: parent).
+/// Only visible when `kEnableShell` is true — production builds with the
+/// flag off never render this.
+class _ShellTabPlaceholder extends StatelessWidget {
+  final ShellTab tab;
+  const _ShellTabPlaceholder({required this.tab});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(tab.label)),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(tab.icon, size: 56, color: Colors.grey),
+            const SizedBox(height: 12),
+            Text(
+              '${tab.label} — segera hadir',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Tab ini akan diisi pada Sub-PR berikutnya.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

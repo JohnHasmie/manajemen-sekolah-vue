@@ -276,37 +276,14 @@ class PendingPaymentCard extends StatelessWidget {
                   ),
                 ],
 
-                // Verifikasi button — only shown when not in read-only mode
-                if (!isReadOnly) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: onVerify,
-                      icon: const Icon(
-                        Icons.verified_rounded,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                      label: const Text(
-                        'Verifikasi',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        elevation: 0,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                    ),
-                  ),
-                ],
+                // Per PR-8 (UI_Redesign_Audit P0 #12): the full-width
+                // "Verifikasi" mega-button used to live here, which didn't
+                // scale beyond 1-2 pending rows (5 stacked mega-buttons).
+                // The whole card is already wrapped in `InkWell(onTap:
+                // onVerify)` (see Material above), so tap-anywhere-on-row
+                // opens the verification dialog — same handler, much
+                // tighter density. The dialog itself surfaces Approve +
+                // Reject so no separate `onReject` plumbing is needed.
               ],
             ),
           ),

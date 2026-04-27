@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/shell_flag.dart';
+import 'package:manajemensekolah/core/shell/shell_nav.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
@@ -15,6 +18,17 @@ import 'package:manajemensekolah/features/report_cards/presentation/screens/pare
 import 'package:manajemensekolah/features/students/data/student_service.dart';
 
 mixin ParentMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
+  /// When `kEnableShell` is true, dispatch via `ShellNav.goTo` so the
+  /// menu tile jumps to the canonical tab. When false, fall back to
+  /// legacy `AppNavigator.push`.
+  void _navAware({required ShellTab tab, required Widget screen}) {
+    if (kEnableShell) {
+      ShellNav.goTo(ref, role: 'wali', tab: tab, pushOnTop: screen);
+    } else {
+      AppNavigator.push(context, screen);
+    }
+  }
+
   List<MenuItem> getParentMenuItems(BuildContext context) {
     return [
       MenuItem(
@@ -56,7 +70,16 @@ mixin ParentMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
   }
 
   Future<void> _handleParentAnnouncementsTap(BuildContext context) async {
-    await AppNavigator.push(context, const ParentAnnouncementScreen());
+    if (kEnableShell) {
+      ShellNav.goTo(
+        ref,
+        role: 'wali',
+        tab: ShellTab.academic,
+        pushOnTop: const ParentAnnouncementScreen(),
+      );
+    } else {
+      await AppNavigator.push(context, const ParentAnnouncementScreen());
+    }
     ref.read(dashboardProvider.notifier).refreshStats();
   }
 
@@ -65,10 +88,17 @@ mixin ParentMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
         .read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString();
-    await AppNavigator.push(
-      context,
-      ParentClassActivityScreen(academicYearId: academicYearId),
-    );
+    final screen = ParentClassActivityScreen(academicYearId: academicYearId);
+    if (kEnableShell) {
+      ShellNav.goTo(
+        ref,
+        role: 'wali',
+        tab: ShellTab.academic,
+        pushOnTop: screen,
+      );
+    } else {
+      await AppNavigator.push(context, screen);
+    }
     ref.read(dashboardProvider.notifier).refreshStats();
   }
 
@@ -77,14 +107,32 @@ mixin ParentMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
         .read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString();
-    await AppNavigator.push(
-      context,
-      ParentGradeScreen(academicYearId: academicYearId),
-    );
+    final screen = ParentGradeScreen(academicYearId: academicYearId);
+    if (kEnableShell) {
+      ShellNav.goTo(
+        ref,
+        role: 'wali',
+        tab: ShellTab.academic,
+        pushOnTop: screen,
+      );
+    } else {
+      await AppNavigator.push(context, screen);
+    }
     ref.read(dashboardProvider.notifier).refreshStats();
   }
 
   Future<void> _handleParentPresenceTap(BuildContext context) async {
+    // Shell mode: the Attendance tab IS the ParentAttendanceTab which
+    // already handles the load-students flow (0 / 1 / multi-anak).
+    // Just switch tabs and let it do its own loading — no manual
+    // dialog plumbing needed.
+    if (kEnableShell) {
+      ShellNav.goTo(ref, role: 'wali', tab: ShellTab.attendance);
+      ref.read(dashboardProvider.notifier).refreshStats();
+      return;
+    }
+
+    // Legacy mode: keep the existing manual student-resolution flow.
     final academicYearId = ref
         .read(academicYearRiverpod)
         .selectedAcademicYear?['id']
@@ -122,7 +170,13 @@ mixin ParentMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
   }
 
   Future<void> _handleParentBillingTap(BuildContext context) async {
-    await AppNavigator.push(context, const ParentBillingScreen());
+    // ParentBillingScreen IS the Finance tab root — switch tabs,
+    // no push. Legacy mode keeps pushing it onto the current Navigator.
+    if (kEnableShell) {
+      ShellNav.goTo(ref, role: 'wali', tab: ShellTab.finance);
+    } else {
+      await AppNavigator.push(context, const ParentBillingScreen());
+    }
     ref.read(dashboardProvider.notifier).refreshStats();
   }
 
@@ -131,11 +185,17 @@ mixin ParentMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
         .read(academicYearRiverpod)
         .selectedAcademicYear?['id']
         ?.toString();
-
-    await AppNavigator.push(
-      context,
-      ParentReportCardScreen(academicYearId: academicYearId),
-    );
+    final screen = ParentReportCardScreen(academicYearId: academicYearId);
+    if (kEnableShell) {
+      ShellNav.goTo(
+        ref,
+        role: 'wali',
+        tab: ShellTab.academic,
+        pushOnTop: screen,
+      );
+    } else {
+      await AppNavigator.push(context, screen);
+    }
   }
 
   Future<List<dynamic>> getStudentDataForParent(String guardianEmail) async {
