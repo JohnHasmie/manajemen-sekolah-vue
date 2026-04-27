@@ -16,6 +16,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/shell/role_shell.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
+import 'package:manajemensekolah/core/shell/tabs/admin/admin_academic_hub.dart';
+import 'package:manajemensekolah/core/shell/tabs/admin/admin_finance_tab.dart';
+import 'package:manajemensekolah/core/shell/tabs/admin/admin_people_hub.dart';
+import 'package:manajemensekolah/core/shell/tabs/admin/admin_system_tab.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/helpers_mixin.dart';
@@ -170,14 +174,15 @@ class _DashboardState extends ConsumerState<Dashboard>
     );
   }
 
-  /// Tab-root stub builder for P1 Sub-PR 1.
+  /// Tab-root dispatcher used by [RoleShell.tabBuilder].
   ///
-  /// Beranda intentionally renders the legacy dashboard tree verbatim so
-  /// the existing screen state, FCM listener, and dialog wiring keep
-  /// working — Sub-PR 2 will refactor admin's Beranda specifically.
-  /// Other tabs render a placeholder until Sub-PR 2/3/4 wire them.
+  /// Home tab always renders the legacy dashboard tree (preserves the
+  /// existing FCM listener, dialog wiring, and state — Sub-PR 6 will
+  /// refactor this in place). Other tabs dispatch to per-role tab files
+  /// in `lib/core/shell/tabs/<role>/`. Tabs not yet wired for the role
+  /// fall through to a "segera hadir" placeholder.
   Widget _buildShellTabRoot(BuildContext context, ShellTab tab) {
-    if (tab == ShellTab.beranda) {
+    if (tab == ShellTab.home) {
       // Re-enter the legacy dashboard render path.
       final languageProvider = ref.watch(languageRiverpod);
       final dashboardState = ref.watch(dashboardProvider);
@@ -187,6 +192,25 @@ class _DashboardState extends ConsumerState<Dashboard>
         loading: () => _buildLoadingStateWrapper(context, languageProvider),
       );
     }
+
+    // Sub-PR 2 — admin tab roots. Sub-PR 3 will add teacher cases,
+    // Sub-PR 4 will add parent cases, then this becomes a pure dispatch
+    // table without role gating.
+    if (effectiveRole == 'admin') {
+      switch (tab) {
+        case ShellTab.people:
+          return const AdminPeopleHub();
+        case ShellTab.academic:
+          return const AdminAcademicHub();
+        case ShellTab.finance:
+          return const AdminFinanceTab();
+        case ShellTab.system:
+          return const AdminSystemTab();
+        default:
+          break;
+      }
+    }
+
     return _ShellTabPlaceholder(tab: tab);
   }
 

@@ -1,13 +1,15 @@
 // Bottom-nav tab identifiers shared across roles.
 //
-// Not every role uses every value — see [kRoleTabs] in `role_tabs.dart` for
-// the per-role enabled set. Each role is gated to the tabs that make sense
+// Code identifiers are English; user-facing labels are Indonesian (per
+// CLAUDE.md "Bahasa Indonesia for every user-visible string"). Not every
+// role uses every value — see [kRoleTabs] in `role_tabs.dart` for the
+// per-role enabled set. Each role is gated to the tabs that make sense
 // for its product surface; this enum is the union.
 //
 // Per `P1_BottomNav_Spec.md` § 2:
-//   admin : beranda · orang · akademik · keuangan · sistem
-//   guru  : beranda · mengajar · nilai · lainnya
-//   wali  : beranda · akademik · kehadiran · keuangan
+//   admin : home · people · academic · finance · system
+//   guru  : home · teaching · grades · other
+//   wali  : home · academic · attendance · finance
 //
 // Order in the enum is the union order; rendering order is determined by
 // each role's `kRoleTabs` list, not by enum index.
@@ -15,25 +17,25 @@
 import 'package:flutter/material.dart';
 
 /// Identifies a single bottom-nav tab. Distinct tabs across roles
-/// (e.g. admin's `orang` vs guru's `mengajar`) live as separate values
+/// (e.g. admin's `people` vs guru's `teaching`) live as separate values
 /// rather than re-using a generic "tab1/tab2" so call sites stay readable.
 enum ShellTab {
   // Common to all 3 roles
-  beranda,
+  home,
 
   // Admin
-  orang,
-  akademik,
-  keuangan,
-  sistem,
+  people,
+  academic,
+  finance,
+  system,
 
   // Teacher
-  mengajar,
-  nilai,
-  lainnya,
+  teaching,
+  grades,
+  other,
 
   // Parent
-  kehadiran,
+  attendance,
 }
 
 /// Static metadata for [ShellTab]: icon + Indonesian label. Lives next to
@@ -45,23 +47,23 @@ extension ShellTabMeta on ShellTab {
   /// (admin dashboard menu uses `Icons.*_outlined`).
   IconData get icon {
     switch (this) {
-      case ShellTab.beranda:
+      case ShellTab.home:
         return Icons.home_outlined;
-      case ShellTab.orang:
+      case ShellTab.people:
         return Icons.people_outline;
-      case ShellTab.akademik:
+      case ShellTab.academic:
         return Icons.menu_book_outlined;
-      case ShellTab.keuangan:
+      case ShellTab.finance:
         return Icons.account_balance_wallet_outlined;
-      case ShellTab.sistem:
+      case ShellTab.system:
         return Icons.settings_outlined;
-      case ShellTab.mengajar:
+      case ShellTab.teaching:
         return Icons.school_outlined;
-      case ShellTab.nilai:
+      case ShellTab.grades:
         return Icons.fact_check_outlined;
-      case ShellTab.lainnya:
+      case ShellTab.other:
         return Icons.more_horiz;
-      case ShellTab.kehadiran:
+      case ShellTab.attendance:
         return Icons.event_available_outlined;
     }
   }
@@ -72,23 +74,23 @@ extension ShellTabMeta on ShellTab {
   /// the cautionary tale here.
   String get label {
     switch (this) {
-      case ShellTab.beranda:
+      case ShellTab.home:
         return 'Beranda';
-      case ShellTab.orang:
+      case ShellTab.people:
         return 'Orang';
-      case ShellTab.akademik:
+      case ShellTab.academic:
         return 'Akademik';
-      case ShellTab.keuangan:
+      case ShellTab.finance:
         return 'Keuangan';
-      case ShellTab.sistem:
+      case ShellTab.system:
         return 'Sistem';
-      case ShellTab.mengajar:
+      case ShellTab.teaching:
         return 'Mengajar';
-      case ShellTab.nilai:
+      case ShellTab.grades:
         return 'Nilai';
-      case ShellTab.lainnya:
+      case ShellTab.other:
         return 'Lainnya';
-      case ShellTab.kehadiran:
+      case ShellTab.attendance:
         return 'Kehadiran';
     }
   }

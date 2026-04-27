@@ -5,9 +5,9 @@
 // references — not the underlying [ShellTab] enum index.
 //
 // Per `P1_BottomNav_Spec.md` § 2:
-//   admin : 5 tabs (Beranda, Orang, Akademik, Keuangan, Sistem)
-//   guru  : 4 tabs (Beranda, Mengajar, Nilai, Lainnya)
-//   wali  : 4 tabs (Beranda, Akademik, Kehadiran, Keuangan)
+//   admin : 5 tabs (Home, People, Academic, Finance, System)
+//   guru  : 4 tabs (Home, Teaching, Grades, Other)
+//   wali  : 4 tabs (Home, Academic, Attendance, Finance)
 
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
@@ -19,44 +19,44 @@ import 'package:manajemensekolah/core/shell/shell_tab.dart';
 /// at least sees a navigable UI rather than crashing).
 const Map<String, List<ShellTab>> kRoleTabs = {
   'admin': [
-    ShellTab.beranda,
-    ShellTab.orang,
-    ShellTab.akademik,
-    ShellTab.keuangan,
-    ShellTab.sistem,
+    ShellTab.home,
+    ShellTab.people,
+    ShellTab.academic,
+    ShellTab.finance,
+    ShellTab.system,
   ],
   'guru': [
-    ShellTab.beranda,
-    ShellTab.mengajar,
-    ShellTab.nilai,
-    ShellTab.lainnya,
+    ShellTab.home,
+    ShellTab.teaching,
+    ShellTab.grades,
+    ShellTab.other,
   ],
   // Some legacy code paths use 'teacher' for guru — accept both so callers
   // don't have to translate first.
   'teacher': [
-    ShellTab.beranda,
-    ShellTab.mengajar,
-    ShellTab.nilai,
-    ShellTab.lainnya,
+    ShellTab.home,
+    ShellTab.teaching,
+    ShellTab.grades,
+    ShellTab.other,
   ],
   'wali': [
-    ShellTab.beranda,
-    ShellTab.akademik,
-    ShellTab.kehadiran,
-    ShellTab.keuangan,
+    ShellTab.home,
+    ShellTab.academic,
+    ShellTab.attendance,
+    ShellTab.finance,
   ],
   // Same compatibility shim for parent / orang_tua.
   'parent': [
-    ShellTab.beranda,
-    ShellTab.akademik,
-    ShellTab.kehadiran,
-    ShellTab.keuangan,
+    ShellTab.home,
+    ShellTab.academic,
+    ShellTab.attendance,
+    ShellTab.finance,
   ],
   'orang_tua': [
-    ShellTab.beranda,
-    ShellTab.akademik,
-    ShellTab.kehadiran,
-    ShellTab.keuangan,
+    ShellTab.home,
+    ShellTab.academic,
+    ShellTab.attendance,
+    ShellTab.finance,
   ],
 };
 

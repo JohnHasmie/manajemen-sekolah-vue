@@ -126,9 +126,9 @@ class ShellNotifier extends Notifier<ShellState> {
       navKey!.currentState!.pop();
       return true;
     }
-    if (state.activeTab != ShellTab.beranda &&
-        state.tabs.contains(ShellTab.beranda)) {
-      setTab(ShellTab.beranda);
+    if (state.activeTab != ShellTab.home &&
+        state.tabs.contains(ShellTab.home)) {
+      setTab(ShellTab.home);
       return true;
     }
     return false;
