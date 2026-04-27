@@ -54,9 +54,7 @@ mixin FilterMixin on ConsumerState<StudentManagementScreen> {
     loadData();
   }
 
-  List<ActiveFilter> buildFilterChips(
-    LanguageProvider languageProvider,
-  ) {
+  List<ActiveFilter> buildFilterChips(LanguageProvider languageProvider) {
     void onChanged() {
       _checkActiveFilter();
       loadData();

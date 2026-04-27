@@ -220,10 +220,7 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog>
             children: [
               // Title
               FormTextField(
-                label: lang.getTranslatedText({
-                  'en': 'Title',
-                  'id': 'Judul',
-                }),
+                label: lang.getTranslatedText({'en': 'Title', 'id': 'Judul'}),
                 isRequired: true,
                 controller: _titleController,
                 hintText: lang.getTranslatedText({
@@ -250,16 +247,16 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog>
                 padding: const EdgeInsets.only(top: 8, bottom: 12),
               ),
               if (subjectList.isEmpty)
-                _buildLoadingChip(lang.getTranslatedText({
-                  'en': 'Loading subjects...',
-                  'id': 'Memuat mata pelajaran...',
-                }))
+                _buildLoadingChip(
+                  lang.getTranslatedText({
+                    'en': 'Loading subjects...',
+                    'id': 'Memuat mata pelajaran...',
+                  }),
+                )
               else
                 FilterChipGrid<String>(
                   options: subjectList.map((mp) {
-                    final subj = Subject.fromJson(
-                      mp as Map<String, dynamic>,
-                    );
+                    final subj = Subject.fromJson(mp as Map<String, dynamic>);
                     return FilterOption(value: subj.id, label: subj.name);
                   }).toList(),
                   selectedValue: _selectedSubjectId,
@@ -278,29 +275,25 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog>
               // Class (chip select, shown after subject selected)
               if (_selectedSubjectId != null) ...[
                 FilterSectionHeader(
-                  title: lang.getTranslatedText({
-                    'en': 'Class',
-                    'id': 'Kelas',
-                  }),
+                  title: lang.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
                   icon: Icons.class_outlined,
                   primaryColor: color,
                   padding: const EdgeInsets.only(top: 16, bottom: 12),
                 ),
                 if (classList.isEmpty)
-                  _buildLoadingChip(lang.getTranslatedText({
-                    'en': 'Loading classes...',
-                    'id': 'Memuat kelas...',
-                  }))
+                  _buildLoadingChip(
+                    lang.getTranslatedText({
+                      'en': 'Loading classes...',
+                      'id': 'Memuat kelas...',
+                    }),
+                  )
                 else
                   FilterChipGrid<String>(
                     options: classList.map((classItem) {
                       final model = Classroom.fromJson(
                         classItem as Map<String, dynamic>,
                       );
-                      return FilterOption(
-                        value: model.id,
-                        label: model.name,
-                      );
+                      return FilterOption(value: model.id, label: model.name);
                     }).toList(),
                     selectedValue: _selectedClassId,
                     onSelected: (value) {

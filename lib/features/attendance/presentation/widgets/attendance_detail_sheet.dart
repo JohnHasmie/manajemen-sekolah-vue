@@ -21,6 +21,7 @@ class AttendanceDetailSheet extends StatefulWidget {
   final String className;
   final String subjectId;
   final String subjectName;
+  final String? filterTeacherId;
   final List<dynamic> lessonHours;
   final List<dynamic> classList;
   final Color primaryColor;
@@ -35,6 +36,7 @@ class AttendanceDetailSheet extends StatefulWidget {
     required this.className,
     required this.subjectId,
     required this.subjectName,
+    this.filterTeacherId,
     required this.lessonHours,
     required this.classList,
     required this.primaryColor,
@@ -59,7 +61,7 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
   Future<void> _loadSessions() async {
     try {
       final data = await AttendanceService.getAttendanceSummary(
-        teacherId: widget.teacherId,
+        teacherId: widget.filterTeacherId,
         classId: widget.classId,
         subjectId: widget.subjectId,
       );
@@ -260,6 +262,8 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
           teacher: {'id': widget.teacherId, 'nama': widget.teacherNama},
           lessonHourId: s.lessonHourId,
           lessonHourName: s.lessonHourName,
+          canEdit: widget.canEdit,
+          filterTeacherId: widget.filterTeacherId,
         ),
       ),
     );

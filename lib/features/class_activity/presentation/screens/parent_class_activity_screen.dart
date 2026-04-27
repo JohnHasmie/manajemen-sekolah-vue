@@ -46,20 +46,20 @@ class ParentClassActivityScreenState
         ParentActivityUIBuilderMixin,
         ParentActivityListBuilderMixin {
   // State
-  List<dynamic> _activityList = [];
-  final List<dynamic> _studentList = [];
-  String? _selectedStudentId;
-  final String _parentName = '';
-  final bool _isLoading = true;
-  bool _hasFreshData = false;
+  List<dynamic> activityList = [];
+  final List<dynamic> studentList = [];
+  String? selectedStudentId;
+  final String parentName = '';
+  bool isLoading = true;
+  bool hasFreshData = false;
 
-  final GlobalKey _studentSelectorKey = GlobalKey();
-  final GlobalKey _activityListKey = GlobalKey();
+  final GlobalKey studentSelectorKey = GlobalKey();
+  final GlobalKey activityListKey = GlobalKey();
 
   // Visibility Tracking
-  final Set<String> _processedIds = {};
-  final Set<String> _pendingReadIds = {};
-  Timer? _markReadDebounce;
+  final Set<String> processedIds = {};
+  final Set<String> pendingReadIds = {};
+  Timer? markReadDebounce;
 
   @override
   void initState() {
@@ -69,20 +69,20 @@ class ParentClassActivityScreenState
 
   @override
   void dispose() {
-    _markReadDebounce?.cancel();
-    if (_pendingReadIds.isNotEmpty) {
-      flushMarkReadSilently(List.from(_pendingReadIds));
-      _pendingReadIds.clear();
+    markReadDebounce?.cancel();
+    if (pendingReadIds.isNotEmpty) {
+      flushMarkReadSilently(List.from(pendingReadIds));
+      pendingReadIds.clear();
     }
     super.dispose();
   }
 
-  String get _studentsCacheKey =>
+  String get studentsCacheKey =>
       'parent_activity_students_'
       '${widget.academicYearId ?? 'default'}';
 
   String buildActivitiesCacheKey() {
-    return 'parent_activity_list_${_selectedStudentId}_'
+    return 'parent_activity_list_${selectedStudentId}_'
         '${widget.academicYearId ?? 'default'}';
   }
 
@@ -93,21 +93,21 @@ class ParentClassActivityScreenState
       body: Column(
         children: [
           ParentClassActivityHeader(
-            parentName: _parentName,
-            studentCount: _studentList.length,
+            parentName: parentName,
+            studentCount: studentList.length,
             gradient: getCardGradient(),
             primaryColor: getPrimaryColor(),
             onRefresh: forceRefresh,
           ),
           ParentStudentSelector(
-            studentList: _studentList,
-            selectedStudentId: _selectedStudentId,
-            selectorKey: _studentSelectorKey,
+            studentList: studentList,
+            selectedStudentId: selectedStudentId,
+            selectorKey: studentSelectorKey,
             onStudentChanged: (value) {
               setState(() {
-                _selectedStudentId = value;
-                _activityList = [];
-                _hasFreshData = false;
+                selectedStudentId = value;
+                activityList = [];
+                hasFreshData = false;
               });
               loadActivities();
             },

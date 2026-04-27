@@ -14,7 +14,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_editor_view.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_detail_header.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_detail_preview.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_regen_dialogs.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_regen_sheet.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_ai_regeneration_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_export_mixin.dart';
@@ -47,10 +47,8 @@ class RPPDetailPage extends StatefulWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black54,
-      builder: (_) => RPPDetailPage(
-        lessonPlanData: lessonPlanData,
-        isNew: isNew,
-      ),
+      builder: (_) =>
+          RPPDetailPage(lessonPlanData: lessonPlanData, isNew: isNew),
     );
   }
 
@@ -132,8 +130,7 @@ class RPPDetailPageState extends State<RPPDetailPage>
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: ClipRRect(
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           child: SafeArea(
             top: false,
             child: Column(
@@ -176,7 +173,10 @@ class RPPDetailPageState extends State<RPPDetailPage>
         : LessonPlanDetailPreview(
             lessonPlanData: _lessonPlanData,
             editedContent: _editedContent,
-            canRegen: hasAiAdditionalData && lessonPlanId != null && !_contentWasEdited,
+            canRegen:
+                hasAiAdditionalData &&
+                lessonPlanId != null &&
+                !_contentWasEdited,
             isRegeneratingAll: _regeneratingField == 'all',
             isLoadingLimits: _isLoadingLimits,
             primaryColor: primaryColor,
@@ -336,14 +336,14 @@ class RPPDetailPageState extends State<RPPDetailPage>
     await showRegenFieldDialog(
       fieldKey,
       fieldLabel,
-      LessonPlanRegenDialogs.getAdditionalInstructions,
+      LessonPlanRegenSheet.getAdditionalInstructions,
       regenerateField,
     );
   }
 
   Future<void> _showRegenAllDialog() async {
     await showRegenAllDialog(
-      LessonPlanRegenDialogs.showRegenAllDialog,
+      LessonPlanRegenSheet.showRegenAllDialog,
       regenerateAllFields,
     );
   }

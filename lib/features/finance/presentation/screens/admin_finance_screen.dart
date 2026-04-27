@@ -21,7 +21,15 @@ import 'package:manajemensekolah/features/finance/presentation/mixins/finance_ac
 
 /// Admin finance management screen.
 class FinanceScreen extends ConsumerStatefulWidget {
-  const FinanceScreen({super.key});
+  /// Optional deep-link entry point. Valid values: 0 Dashboard, 1 Payment
+  /// Types, 2 Verification, 3 Class Report. Defaults to 0.
+  ///
+  /// Used by admin dashboard PendingInboxCard to route "Verifikasi pembayaran"
+  /// straight into tab 2 and "Tagihan menunggak" into tab 3 without the user
+  /// tapping through the hub first.
+  final int initialTabIndex;
+
+  const FinanceScreen({super.key, this.initialTabIndex = 0});
 
   @override
   FinanceScreenState createState() => FinanceScreenState();
@@ -44,7 +52,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   Map<String, dynamic> _dashboardData = {};
   bool _isLoading = true;
   String _errorMessage = '';
-  int _currentTabIndex = 0;
+  late int _currentTabIndex = widget.initialTabIndex.clamp(0, 3);
 
   final ScrollController _billScrollController = ScrollController();
   final ScrollController _pendingScrollController = ScrollController();

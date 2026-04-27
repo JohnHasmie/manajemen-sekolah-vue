@@ -195,16 +195,16 @@ class _GenerateLessonPlanFormDialogState
                 padding: const EdgeInsets.only(top: 8, bottom: 12),
               ),
               if (_subjectList.isEmpty)
-                _buildLoadingChip(languageProvider.getTranslatedText({
-                  'en': 'Loading subjects...',
-                  'id': 'Memuat mata pelajaran...',
-                }))
+                _buildLoadingChip(
+                  languageProvider.getTranslatedText({
+                    'en': 'Loading subjects...',
+                    'id': 'Memuat mata pelajaran...',
+                  }),
+                )
               else
                 FilterChipGrid<String>(
                   options: _subjectList.map((mp) {
-                    final subj = Subject.fromJson(
-                      mp as Map<String, dynamic>,
-                    );
+                    final subj = Subject.fromJson(mp as Map<String, dynamic>);
                     return FilterOption(value: subj.id, label: subj.name);
                   }).toList(),
                   selectedValue: _selectedSubjectId,
@@ -238,20 +238,23 @@ class _GenerateLessonPlanFormDialogState
                   padding: const EdgeInsets.only(top: 16, bottom: 12),
                 ),
                 if (_classList.isEmpty)
-                  _buildLoadingChip(languageProvider.getTranslatedText({
-                    'en': 'Loading classes...',
-                    'id': 'Memuat kelas...',
-                  }))
+                  _buildLoadingChip(
+                    languageProvider.getTranslatedText({
+                      'en': 'Loading classes...',
+                      'id': 'Memuat kelas...',
+                    }),
+                  )
                 else
                   FilterChipGrid<String>(
                     options: _classList.map((c) {
                       final map = c as Map<String, dynamic>;
                       final id = map['id']?.toString() ?? '';
-                      final name = (map['name'] ??
-                              map['nama'] ??
-                              map['class_name'] ??
-                              'Tanpa Nama')
-                          .toString();
+                      final name =
+                          (map['name'] ??
+                                  map['nama'] ??
+                                  map['class_name'] ??
+                                  'Tanpa Nama')
+                              .toString();
                       return FilterOption(value: id, label: name);
                     }).toList(),
                     selectedValue: _selectedClassId,
@@ -308,20 +311,23 @@ class _GenerateLessonPlanFormDialogState
                   padding: const EdgeInsets.only(top: 16, bottom: 12),
                 ),
                 if (_chapterList.isEmpty)
-                  _buildLoadingChip(languageProvider.getTranslatedText({
-                    'en': 'Loading chapters...',
-                    'id': 'Memuat bab...',
-                  }))
+                  _buildLoadingChip(
+                    languageProvider.getTranslatedText({
+                      'en': 'Loading chapters...',
+                      'id': 'Memuat bab...',
+                    }),
+                  )
                 else
                   FilterChipGrid<String>(
                     options: _chapterList.map((c) {
                       final map = c as Map<String, dynamic>;
                       final id = map['id']?.toString() ?? '';
-                      final name = (map['judul_bab'] ??
-                              map['title'] ??
-                              map['judul'] ??
-                              'Tanpa Nama')
-                          .toString();
+                      final name =
+                          (map['judul_bab'] ??
+                                  map['title'] ??
+                                  map['judul'] ??
+                                  'Tanpa Nama')
+                              .toString();
                       return FilterOption(value: id, label: name);
                     }).toList(),
                     selectedValue: _selectedChapterId,
@@ -340,8 +346,7 @@ class _GenerateLessonPlanFormDialogState
               ],
 
               // Sub Chapter (chip select, shown after chapter selected)
-              if (_selectedChapterId != null &&
-                  _subChapterList.isNotEmpty) ...[
+              if (_selectedChapterId != null && _subChapterList.isNotEmpty) ...[
                 FilterSectionHeader(
                   title: languageProvider.getTranslatedText({
                     'en': 'Sub Chapter (optional)',
@@ -355,11 +360,12 @@ class _GenerateLessonPlanFormDialogState
                   options: _subChapterList.map((s) {
                     final map = s as Map<String, dynamic>;
                     final id = map['id']?.toString() ?? '';
-                    final name = (map['judul_sub_bab'] ??
-                            map['title'] ??
-                            map['judul'] ??
-                            'Tanpa Nama')
-                        .toString();
+                    final name =
+                        (map['judul_sub_bab'] ??
+                                map['title'] ??
+                                map['judul'] ??
+                                'Tanpa Nama')
+                            .toString();
                     return FilterOption(value: id, label: name);
                   }).toList(),
                   selectedValue: _selectedSubChapterId,

@@ -27,7 +27,7 @@ class GradeRecapTableView extends StatelessWidget {
   /// Builds an editable cell for a given type/chapter.
   /// Types: 'bab' (chapterIndex required), 'uts', 'uas', 'skill_score'.
   final Widget Function(String studentClassId, String type, int? chapterIndex)
-      cellBuilder;
+  cellBuilder;
 
   /// Fires when a bab, UTS, or UAS header is tapped (bulk select).
   final void Function(String type, int? chapterIndex) onBulkSelect;
@@ -244,10 +244,7 @@ class GradeRecapTableView extends StatelessWidget {
   }
 
   Widget _tappableHeader(String label, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: _plainHeader(label),
-    );
+    return InkWell(onTap: onTap, child: _plainHeader(label));
   }
 
   Widget _babHeader(int i) {

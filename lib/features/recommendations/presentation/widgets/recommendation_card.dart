@@ -66,8 +66,9 @@ class RecommendationCard extends StatelessWidget {
     }
 
     // Left accent color: green if completed, priority color otherwise
-    final accentColor =
-        isCompleted ? ColorUtils.emerald500 : priorityInfo.color;
+    final accentColor = isCompleted
+        ? ColorUtils.emerald500
+        : priorityInfo.color;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -149,8 +150,9 @@ class RecommendationCard extends StatelessWidget {
                             : ColorUtils.slate800,
                         letterSpacing: -0.3,
                         height: 1.3,
-                        decoration:
-                            isCompleted ? TextDecoration.lineThrough : null,
+                        decoration: isCompleted
+                            ? TextDecoration.lineThrough
+                            : null,
                         decorationColor: ColorUtils.slate400,
                       ),
                     ),
@@ -216,8 +218,9 @@ class RecommendationCard extends StatelessWidget {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: ColorUtils.slate50,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(10)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(10),
+                          ),
                           border: Border.all(color: ColorUtils.slate100),
                         ),
                         child: Column(
@@ -334,10 +337,11 @@ class RecommendationCard extends StatelessWidget {
               borderRadius: const BorderRadius.all(Radius.circular(10)),
               boxShadow: [
                 BoxShadow(
-                  color: (isCompleted
-                          ? ColorUtils.emerald500
-                          : ColorUtils.corporateBlue500)
-                      .withValues(alpha: 0.25),
+                  color:
+                      (isCompleted
+                              ? ColorUtils.emerald500
+                              : ColorUtils.corporateBlue500)
+                          .withValues(alpha: 0.25),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -368,8 +372,8 @@ class RecommendationCard extends StatelessWidget {
                   isUpdatingStatus
                       ? 'Memperbarui...'
                       : isCompleted
-                          ? 'Sudah Diterapkan'
-                          : 'Tandai Sudah Diterapkan',
+                      ? 'Sudah Diterapkan'
+                      : 'Tandai Sudah Diterapkan',
                   style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
@@ -406,8 +410,7 @@ class _Badge extends StatelessWidget {
       decoration: BoxDecoration(
         color: filled ? color.withValues(alpha: 0.08) : Colors.transparent,
         borderRadius: const BorderRadius.all(Radius.circular(6)),
-        border:
-            filled ? null : Border.all(color: color.withValues(alpha: 0.2)),
+        border: filled ? null : Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -43,6 +43,17 @@ class SnackBarUtils {
     _show(context, message, backgroundColor: Colors.blue);
   }
 
+  /// Clears any in-flight snackbars on the nearest [ScaffoldMessenger].
+  ///
+  /// Use this before kicking off a flow that transitions between
+  /// inline-multi-step states on the same Scaffold (e.g. login →
+  /// school picker → role picker), so a stale error toast from the
+  /// previous step doesn't leak into the next.
+  static void dismiss(BuildContext context) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
+  }
+
   static void _show(
     BuildContext context,
     String message, {

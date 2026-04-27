@@ -191,11 +191,7 @@ class _MiniFab extends StatelessWidget {
   Widget build(BuildContext context) {
     final curved = CurvedAnimation(
       parent: controller,
-      curve: Interval(
-        intervalStart,
-        intervalEnd,
-        curve: Curves.easeOutCubic,
-      ),
+      curve: Interval(intervalStart, intervalEnd, curve: Curves.easeOutCubic),
       reverseCurve: Interval(
         intervalStart,
         intervalEnd,
@@ -231,8 +227,10 @@ class _MiniFab extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               onTap: isLoading ? null : onTap,
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: Text(
                   label,
                   style: TextStyle(

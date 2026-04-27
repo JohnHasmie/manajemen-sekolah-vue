@@ -75,10 +75,12 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
   // FAB GlobalKey reserved for potential reintroduction of tour plumbing.
   final GlobalKey _fabKey = GlobalKey();
 
+  late final _academicYearProvider = ref.read(academicYearRiverpod);
+
   @override
   void initState() {
     super.initState();
-    ref.read(academicYearRiverpod).addListener(_onAcademicYearChanged);
+    _academicYearProvider.addListener(_onAcademicYearChanged);
     FCMService().syncTrigger.addListener(_onSyncTriggered);
     _loadFilterOptions();
     _loadData();
@@ -88,7 +90,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
   void dispose() {
     _searchController.dispose();
     FCMService().syncTrigger.removeListener(_onSyncTriggered);
-    ref.read(academicYearRiverpod).removeListener(_onAcademicYearChanged);
+    _academicYearProvider.removeListener(_onAcademicYearChanged);
     super.dispose();
   }
 

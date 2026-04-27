@@ -83,7 +83,6 @@ class LessonPlanAdminCard extends StatelessWidget {
     }
   }
 
-
   /// Circular icon button — like a small action button component.
   Widget _buildCircleActionButton({
     required IconData icon,

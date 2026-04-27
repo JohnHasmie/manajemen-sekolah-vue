@@ -103,10 +103,12 @@ class BottomSheetFooter extends StatelessWidget {
   }
 
   Widget _secondaryButton() {
-    final borderColor =
-        secondaryDestructive ? Colors.red.shade300 : Colors.grey.shade300;
-    final textColor =
-        secondaryDestructive ? Colors.red.shade700 : Colors.grey.shade700;
+    final borderColor = secondaryDestructive
+        ? Colors.red.shade300
+        : Colors.grey.shade300;
+    final textColor = secondaryDestructive
+        ? Colors.red.shade700
+        : Colors.grey.shade700;
     return OutlinedButton(
       onPressed: onSecondary,
       style: OutlinedButton.styleFrom(
@@ -116,10 +118,7 @@ class BottomSheetFooter extends StatelessWidget {
       ),
       child: Text(
         secondaryLabel,
-        style: TextStyle(
-          color: textColor,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
       ),
     );
   }

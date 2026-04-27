@@ -114,11 +114,10 @@ class ParentGradeStudentSelector extends StatelessWidget {
                 color: ColorUtils.slate500,
               ),
               items: studentList.map((student) {
-                final model = Student.fromJson(
-                  student as Map<String, dynamic>,
-                );
-                final className =
-                    model.className.isNotEmpty ? model.className : '-';
+                final model = Student.fromJson(student as Map<String, dynamic>);
+                final className = model.className.isNotEmpty
+                    ? model.className
+                    : '-';
                 final nis = model.studentNumber.isNotEmpty
                     ? model.studentNumber
                     : '-';

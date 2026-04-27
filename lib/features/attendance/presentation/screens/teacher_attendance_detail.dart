@@ -28,6 +28,8 @@ class TeacherAttendanceDetailPage extends ConsumerStatefulWidget {
     required this.teacher,
     this.lessonHourId,
     this.lessonHourName,
+    this.canEdit = true,
+    this.filterTeacherId,
   });
 
   final String subjectId;
@@ -38,6 +40,8 @@ class TeacherAttendanceDetailPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   final String? lessonHourId;
   final String? lessonHourName;
+  final bool canEdit;
+  final String? filterTeacherId;
 
   @override
   ConsumerState<TeacherAttendanceDetailPage> createState() =>
@@ -56,7 +60,9 @@ class _TeacherAttendanceDetailPageState
     subjectId: widget.subjectId,
     classId: widget.classId,
     date: widget.date,
-    teacherId: Teacher.fromJson(widget.teacher).id,
+    teacherId:
+        widget.filterTeacherId ??
+        (widget.canEdit ? Teacher.fromJson(widget.teacher).id : null),
     lessonHourId: widget.lessonHourId,
   );
 
@@ -227,26 +233,34 @@ class _TeacherAttendanceDetailPageState
                 ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: openEditSheet,
-        backgroundColor: getPrimaryColor(),
-        elevation: 3,
-        highlightElevation: 6,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        icon: const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
-        label: Text(
-          languageProvider.getTranslatedText({
-            'en': 'Edit Attendance',
-            'id': 'Update Kehadiran',
-          }),
-          style: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ),
+      floatingActionButton: widget.canEdit
+          ? FloatingActionButton.extended(
+              onPressed: openEditSheet,
+              backgroundColor: getPrimaryColor(),
+              elevation: 3,
+              highlightElevation: 6,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              icon: const Icon(
+                Icons.edit_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+              label: Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Edit Attendance',
+                  'id': 'Update Kehadiran',
+                }),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            )
+          : null,
     );
   }
 }

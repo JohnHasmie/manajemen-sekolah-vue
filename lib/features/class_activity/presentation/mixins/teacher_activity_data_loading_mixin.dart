@@ -132,14 +132,14 @@ mixin TeacherActivityDataLoadingMixin
       }
 
       // 2. Always fetch fresh data from API
-      final summaryResult =
-          await getIt<ApiClassActivityService>().getTeacherActivitySummary(
-        teacherId: teacherId,
-        academicYearId: ayId,
-        page: 1,
-        perPage: 20,
-        includeContext: true,
-      );
+      final summaryResult = await getIt<ApiClassActivityService>()
+          .getTeacherActivitySummary(
+            teacherId: teacherId,
+            academicYearId: ayId,
+            page: 1,
+            perPage: 20,
+            includeContext: true,
+          );
 
       if (!mounted) return;
 
@@ -164,16 +164,10 @@ mixin TeacherActivityDataLoadingMixin
   void _applyLoadedData(Map<String, dynamic> summaryResult) {
     final classes = (summaryResult['class_list'] as List?) ?? [];
     final schedules = (summaryResult['schedules'] as List?) ?? [];
-    final homeroomClasses =
-        (summaryResult['homeroom_classes'] as List?) ?? [];
+    final homeroomClasses = (summaryResult['homeroom_classes'] as List?) ?? [];
 
     setActivityError(null);
-    onInitialDataLoaded(
-      classes,
-      schedules,
-      summaryResult,
-      homeroomClasses,
-    );
+    onInitialDataLoaded(classes, schedules, summaryResult, homeroomClasses);
   }
 
   /// Handles auto-open logic after data is first loaded.

@@ -28,7 +28,7 @@ class LessonPlanSummaryView extends StatefulWidget {
 
   /// Called when a group is expanded and needs all its items.
   final Future<List<Map<String, dynamic>>> Function(String subjectId)?
-      onLoadSubjectItems;
+  onLoadSubjectItems;
 
   const LessonPlanSummaryView({
     super.key,
@@ -89,8 +89,9 @@ class _LessonPlanSummaryViewState extends State<LessonPlanSummaryView> {
     for (final item in widget.lessonPlans) {
       final lp = item as Map<String, dynamic>;
       final model = LessonPlan.fromJson(lp);
-      final subject =
-          (model.subjectName ?? '').isNotEmpty ? model.subjectName! : 'Lainnya';
+      final subject = (model.subjectName ?? '').isNotEmpty
+          ? model.subjectName!
+          : 'Lainnya';
       groups.putIfAbsent(subject, () => []).add(lp);
     }
     return groups;
@@ -105,8 +106,8 @@ class _LessonPlanSummaryViewState extends State<LessonPlanSummaryView> {
         final subjectId = entry['subject_id']?.toString() ?? '';
         final subjectName =
             (entry['subject_name'] as String?)?.isNotEmpty == true
-                ? entry['subject_name'] as String
-                : 'Lainnya';
+            ? entry['subject_name'] as String
+            : 'Lainnya';
         final total = (entry['total'] as int?) ?? 0;
         final rawStatuses = entry['statuses'];
         final statuses = <String, int>{};
@@ -116,9 +117,8 @@ class _LessonPlanSummaryViewState extends State<LessonPlanSummaryView> {
           }
         }
 
-        final items = _loadedSubjectItems[subjectId] ??
-            itemsBySubject[subjectName] ??
-            [];
+        final items =
+            _loadedSubjectItems[subjectId] ?? itemsBySubject[subjectName] ?? [];
 
         return _SummaryGroup(
           subjectId: subjectId,
@@ -153,13 +153,15 @@ class _LessonPlanSummaryViewState extends State<LessonPlanSummaryView> {
         final label = status.isNotEmpty ? status : 'draft';
         statuses[label] = (statuses[label] ?? 0) + 1;
       }
-      groups.add(_SummaryGroup(
-        subjectId: '',
-        subjectName: subject,
-        total: items.length,
-        statusCounts: statuses,
-        items: items,
-      ));
+      groups.add(
+        _SummaryGroup(
+          subjectId: '',
+          subjectName: subject,
+          total: items.length,
+          statusCounts: statuses,
+          items: items,
+        ),
+      );
     }
     return groups;
   }
@@ -290,8 +292,7 @@ class _SubjectGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final previewItems =
-        group.items.take(previewCount).toList();
+    final previewItems = group.items.take(previewCount).toList();
     final allItems = group.items;
     final hasMore = group.total > previewCount;
 
@@ -524,15 +525,15 @@ class _SubjectGroupCard extends StatelessWidget {
               borderRadius: isLast && entry.key == 0
                   ? const BorderRadius.all(Radius.circular(10))
                   : entry.key == 0
-                      ? const BorderRadius.vertical(
-                          top: Radius.circular(10))
-                      : isLast
-                          ? const BorderRadius.vertical(
-                              bottom: Radius.circular(10))
-                          : BorderRadius.zero,
+                  ? const BorderRadius.vertical(top: Radius.circular(10))
+                  : isLast
+                  ? const BorderRadius.vertical(bottom: Radius.circular(10))
+                  : BorderRadius.zero,
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 9),
+                  horizontal: 10,
+                  vertical: 9,
+                ),
                 decoration: BoxDecoration(
                   border: isLast
                       ? null
@@ -550,8 +551,9 @@ class _SubjectGroupCard extends StatelessWidget {
                       height: 28,
                       decoration: BoxDecoration(
                         color: sColor,
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(2)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(2),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -586,7 +588,8 @@ class _SubjectGroupCard extends StatelessWidget {
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 4),
+                                    horizontal: 4,
+                                  ),
                                   child: Text(
                                     '·',
                                     style: TextStyle(
@@ -612,11 +615,14 @@ class _SubjectGroupCard extends StatelessWidget {
                     // Status badge
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: sColor.withValues(alpha: 0.08),
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(4)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(4),
+                        ),
                       ),
                       child: Text(
                         statusLabel(model.status),
@@ -640,27 +646,18 @@ class _SubjectGroupCard extends StatelessWidget {
   Widget _buildFooter() {
     return InkWell(
       onTap: onExpand,
-      borderRadius: const BorderRadius.vertical(
-        bottom: Radius.circular(14),
-      ),
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
         child: Row(
           children: [
             if (!isExpanded) ...[
-              Icon(
-                Icons.update_rounded,
-                size: 13,
-                color: ColorUtils.slate400,
-              ),
+              Icon(Icons.update_rounded, size: 13, color: ColorUtils.slate400),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   '${group.total - previewCount} RPP lainnya',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: ColorUtils.slate400,
-                  ),
+                  style: TextStyle(fontSize: 11, color: ColorUtils.slate400),
                 ),
               ),
             ] else

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/activity_data_loading_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/activity_date_picker_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/activity_name_helper_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/activity_submission_mixin.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_dialog_shell.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_form_content.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_material_selector.dart';
 
@@ -252,6 +254,17 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog>
     super.dispose();
   }
 
+  /// Combines `initialClassName` + `initialSubjectName` into the single
+  /// subtitle slot that `AppBottomSheet`'s gradient header exposes. Mirrors
+  /// the old hand-rolled "Class · Subject" row inside `ActivityDialogShell`.
+  String? _buildSubtitle() {
+    final c = widget.initialClassName;
+    final s = widget.initialSubjectName;
+    if (c == null && s == null) return null;
+    if (c != null && s != null) return '$c · $s';
+    return c ?? s;
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.read(languageRiverpod);
@@ -267,63 +280,101 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog>
     }
     final chapters = uniqueChapters.values.toList();
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      height: MediaQuery.of(context).size.height * 0.88,
-      child: Column(
-        children: [
-          ActivityDialogShell.buildHeader(
-            accentColor: p,
-            isAssignment: isAssignment,
-            isEditMode: widget.isEditMode,
-            initialClassName: widget.initialClassName,
-            initialSubjectName: widget.initialSubjectName,
-            onClose: () => Navigator.pop(context),
-          ),
-          ActivityFormContent(
-            formKey: _formKey,
-            titleController: _titleController,
-            descriptionController: _descriptionController,
-            accentColor: p,
-            isAssignment: isAssignment,
-            useMaterialTitle: _useMaterialTitle,
-            selectedSubjectId: _selectedSubjectId,
-            selectedChapterId: _selectedChapterId,
-            isLoadingChapters: _isLoadingChapters,
-            chapters: chapters,
+    final title = widget.isEditMode
+        ? (isAssignment ? 'Edit Tugas' : 'Edit Materi')
+        : (isAssignment ? 'Tambah Tugas' : 'Tambah Materi');
+    final submitLabel = _isSubmitting
+        ? 'Menyimpan...'
+        : (widget.isEditMode
+              ? 'Simpan Perubahan'
+              : (isAssignment ? 'Tambah Tugas' : 'Tambah Materi'));
+
+    return AppBottomSheet(
+      title: title,
+      subtitle: _buildSubtitle(),
+      icon: isAssignment ? Icons.assignment_rounded : Icons.menu_book_rounded,
+      primaryColor: p,
+      contentPadding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+      content: ActivityFormContent(
+        formKey: _formKey,
+        titleController: _titleController,
+        descriptionController: _descriptionController,
+        accentColor: p,
+        isAssignment: isAssignment,
+        useMaterialTitle: _useMaterialTitle,
+        selectedSubjectId: _selectedSubjectId,
+        selectedChapterId: _selectedChapterId,
+        isLoadingChapters: _isLoadingChapters,
+        chapters: chapters,
+        subChapters: _subChapterMaterialList,
+        selectedSubChapterIds: _selectedSubChapterIds,
+        selectedDate: _selectedDate,
+        deadline: _deadline,
+        selectedClassId: _selectedClassId,
+        initialTarget: widget.initialTarget,
+        studentList: _studentList,
+        selectedStudents: _selectedStudents,
+        isLoadingStudents: _isLoadingStudents,
+        languageProvider: languageProvider,
+        getChapterName: getChapterName,
+        getSubChapterName: getSubChapterName,
+        onMaterialModeChanged: (val) {
+          setState(() {
+            _useMaterialTitle = val;
+            if (!_useMaterialTitle) {
+              _selectedChapterId = null;
+              _selectedSubChapterId = null;
+              _selectedSubChapterIds.clear();
+            }
+          });
+        },
+        onChapterSelected: (id) {
+          setState(() {
+            _selectedChapterId = id;
+            _selectedSubChapterId = null;
+            _selectedSubChapterIds.clear();
+          });
+          loadSubChapterContent(id).then((_) => _updateTitleFromMaterial());
+        },
+        onSubChapterToggled: (subId, isSelected) {
+          setState(() {
+            if (isSelected) {
+              if (!_selectedSubChapterIds.contains(subId)) {
+                _selectedSubChapterIds.add(subId);
+              }
+            } else {
+              _selectedSubChapterIds.remove(subId);
+            }
+            _selectedSubChapterId = _selectedSubChapterIds.isNotEmpty
+                ? _selectedSubChapterIds.first
+                : null;
+          });
+          _updateTitleFromMaterial();
+        },
+        onShowDatePicker: () => showActivityDatePicker(
+          context: context,
+          initialDate: _selectedDate ?? DateTime.now(),
+          onDateSelected: (date) {
+            setState(() {
+              _selectedDate = date;
+              _selectedDay = getDayName(date);
+            });
+          },
+        ),
+        onShowDateTimePicker: () => showDeadlinePicker(
+          context: context,
+          initialDateTime: _deadline ?? DateTime.now(),
+          onDateTimeSelected: (dateTime) =>
+              setState(() => _deadline = dateTime),
+        ),
+        onClearDeadline: () => setState(() => _deadline = null),
+        onViewAllSubChapters: () {
+          showMultiSelectSubBabDialog(
+            context: context,
+            languageProvider: languageProvider,
             subChapters: _subChapterMaterialList,
             selectedSubChapterIds: _selectedSubChapterIds,
-            selectedDate: _selectedDate,
-            deadline: _deadline,
-            selectedClassId: _selectedClassId,
-            initialTarget: widget.initialTarget,
-            studentList: _studentList,
-            selectedStudents: _selectedStudents,
-            isLoadingStudents: _isLoadingStudents,
-            languageProvider: languageProvider,
-            getChapterName: getChapterName,
             getSubChapterName: getSubChapterName,
-            onMaterialModeChanged: (val) {
-              setState(() {
-                _useMaterialTitle = val;
-                if (!_useMaterialTitle) {
-                  _selectedChapterId = null;
-                  _selectedSubChapterId = null;
-                  _selectedSubChapterIds.clear();
-                }
-              });
-            },
-            onChapterSelected: (id) {
-              setState(() {
-                _selectedChapterId = id;
-                _selectedSubChapterId = null;
-                _selectedSubChapterIds.clear();
-              });
-              loadSubChapterContent(id).then((_) => _updateTitleFromMaterial());
-            },
             onSubChapterToggled: (subId, isSelected) {
               setState(() {
                 if (isSelected) {
@@ -339,66 +390,25 @@ class _AddActivityDialogState extends ConsumerState<AddActivityDialog>
               });
               _updateTitleFromMaterial();
             },
-            onShowDatePicker: () => showActivityDatePicker(
-              context: context,
-              initialDate: _selectedDate ?? DateTime.now(),
-              onDateSelected: (date) {
-                setState(() {
-                  _selectedDate = date;
-                  _selectedDay = getDayName(date);
-                });
-              },
-            ),
-            onShowDateTimePicker: () => showDeadlinePicker(
-              context: context,
-              initialDateTime: _deadline ?? DateTime.now(),
-              onDateTimeSelected: (dateTime) =>
-                  setState(() => _deadline = dateTime),
-            ),
-            onClearDeadline: () => setState(() => _deadline = null),
-            onViewAllSubChapters: () {
-              showMultiSelectSubBabDialog(
-                context: context,
-                languageProvider: languageProvider,
-                subChapters: _subChapterMaterialList,
-                selectedSubChapterIds: _selectedSubChapterIds,
-                getSubChapterName: getSubChapterName,
-                onSubChapterToggled: (subId, isSelected) {
-                  setState(() {
-                    if (isSelected) {
-                      if (!_selectedSubChapterIds.contains(subId)) {
-                        _selectedSubChapterIds.add(subId);
-                      }
-                    } else {
-                      _selectedSubChapterIds.remove(subId);
-                    }
-                    _selectedSubChapterId = _selectedSubChapterIds.isNotEmpty
-                        ? _selectedSubChapterIds.first
-                        : null;
-                  });
-                  _updateTitleFromMaterial();
-                },
-              );
-            },
-            onRefreshStudents: () => loadStudents(_selectedClassId!),
-            onToggleStudent: (id, sel) {
-              setState(() {
-                if (sel) {
-                  _selectedStudents.add(id);
-                } else {
-                  _selectedStudents.remove(id);
-                }
-              });
-            },
-          ),
-          ActivityDialogShell.buildFooter(
-            accentColor: p,
-            isAssignment: isAssignment,
-            isEditMode: widget.isEditMode,
-            isSubmitting: _isSubmitting,
-            onSubmit: submitForm,
-          ),
-        ],
+          );
+        },
+        onRefreshStudents: () => loadStudents(_selectedClassId!),
+        onToggleStudent: (id, sel) {
+          setState(() {
+            if (sel) {
+              _selectedStudents.add(id);
+            } else {
+              _selectedStudents.remove(id);
+            }
+          });
+        },
+      ),
+      footer: BottomSheetFooter(
+        primaryLabel: submitLabel,
+        primaryColor: p,
+        primaryEnabled: !_isSubmitting,
+        onPrimary: submitForm,
+        onSecondary: _isSubmitting ? () {} : () => AppNavigator.pop(context),
       ),
     );
   }

@@ -43,8 +43,7 @@ mixin StudentListMixin {
     final name = model.name.isNotEmpty ? model.name : 'Siswa';
     final hasRaport = student['has_raport'] ?? false;
     final status = student['raport_status'] ?? 'Belum ada';
-    final nis =
-        model.studentNumber.isNotEmpty ? model.studentNumber : '-';
+    final nis = model.studentNumber.isNotEmpty ? model.studentNumber : '-';
     final isFinal =
         status.toLowerCase() == 'final' || status.toLowerCase() == 'published';
     final statusInfo = _getStatusInfo(hasRaport, status);

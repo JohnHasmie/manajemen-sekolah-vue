@@ -18,7 +18,7 @@ class AnnouncementSummaryView extends StatefulWidget {
   final Color Function(String priority) priorityColor;
   final void Function(Map<String, dynamic> item) onView;
   final Future<List<Map<String, dynamic>>> Function(String monthKey)?
-      onLoadMonthItems;
+  onLoadMonthItems;
 
   const AnnouncementSummaryView({
     super.key,
@@ -47,8 +47,9 @@ class _AnnouncementSummaryViewState extends State<AnnouncementSummaryView> {
     for (final item in widget.announcements) {
       final lp = item as Map<String, dynamic>;
       final createdAt = lp['created_at']?.toString() ?? '';
-      final monthKey =
-          createdAt.length >= 7 ? createdAt.substring(0, 7) : 'unknown';
+      final monthKey = createdAt.length >= 7
+          ? createdAt.substring(0, 7)
+          : 'unknown';
       groups.putIfAbsent(monthKey, () => []).add(lp);
     }
     return groups;
@@ -90,12 +91,14 @@ class _AnnouncementSummaryViewState extends State<AnnouncementSummaryView> {
         final p = (item['priority'] ?? 'biasa').toString().toLowerCase();
         priorities[p] = (priorities[p] ?? 0) + 1;
       }
-      groups.add(_MonthGroup(
-        monthKey: monthKey,
-        total: items.length,
-        priorities: priorities,
-        items: items,
-      ));
+      groups.add(
+        _MonthGroup(
+          monthKey: monthKey,
+          total: items.length,
+          priorities: priorities,
+          items: items,
+        ),
+      );
     }
     return groups;
   }
@@ -152,8 +155,7 @@ class _AnnouncementSummaryViewState extends State<AnnouncementSummaryView> {
 
   bool _isCurrentMonth(String monthKey) {
     final now = DateTime.now();
-    final currentKey =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    final currentKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
     return monthKey == currentKey;
   }
 
@@ -309,9 +311,7 @@ class _MonthHeader extends StatelessWidget {
         color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(10)),
         border: Border.all(
-          color: isCurrent
-              ? color.withValues(alpha: 0.3)
-              : ColorUtils.slate200,
+          color: isCurrent ? color.withValues(alpha: 0.3) : ColorUtils.slate200,
         ),
         boxShadow: [
           BoxShadow(
@@ -324,9 +324,7 @@ class _MonthHeader extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            isCurrent
-                ? Icons.today_rounded
-                : Icons.calendar_month_rounded,
+            isCurrent ? Icons.today_rounded : Icons.calendar_month_rounded,
             size: 15,
             color: color,
           ),
@@ -342,12 +340,10 @@ class _MonthHeader extends StatelessWidget {
           if (isCurrent) ...[
             const SizedBox(width: 6),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.15),
-                borderRadius:
-                    const BorderRadius.all(Radius.circular(4)),
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
               ),
               child: Text(
                 'Bulan Ini',
@@ -366,12 +362,10 @@ class _MonthHeader extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: c.withValues(alpha: 0.08),
-                  borderRadius:
-                      const BorderRadius.all(Radius.circular(5)),
+                  borderRadius: const BorderRadius.all(Radius.circular(5)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -400,12 +394,10 @@ class _MonthHeader extends StatelessWidget {
           }),
           // Total count badge
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
               color: ColorUtils.slate100,
-              borderRadius:
-                  const BorderRadius.all(Radius.circular(6)),
+              borderRadius: const BorderRadius.all(Radius.circular(6)),
             ),
             child: Text(
               '$total',
@@ -439,8 +431,10 @@ class _AnnouncementItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Announcement.fromJson(item);
-    final isImportant = ['penting', 'important']
-        .contains((item['priority'] ?? '').toString().toLowerCase());
+    final isImportant = [
+      'penting',
+      'important',
+    ].contains((item['priority'] ?? '').toString().toLowerCase());
     final accentColor = isImportant ? ColorUtils.warning600 : primaryColor;
     final isUnread = !model.isRead;
 
@@ -452,8 +446,7 @@ class _AnnouncementItemCard extends StatelessWidget {
       dateStr = '';
     }
 
-    final roleTarget =
-        (item['role_target'] ?? '').toString().toLowerCase();
+    final roleTarget = (item['role_target'] ?? '').toString().toLowerCase();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -467,8 +460,7 @@ class _AnnouncementItemCard extends StatelessWidget {
             borderRadius: const BorderRadius.all(Radius.circular(10)),
             child: Container(
               decoration: BoxDecoration(
-                borderRadius:
-                    const BorderRadius.all(Radius.circular(10)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
                 border: Border.all(color: ColorUtils.slate200),
               ),
               child: IntrinsicHeight(
@@ -489,7 +481,9 @@ class _AnnouncementItemCard extends StatelessWidget {
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -500,8 +494,7 @@ class _AnnouncementItemCard extends StatelessWidget {
                                   Container(
                                     width: 6,
                                     height: 6,
-                                    margin:
-                                        const EdgeInsets.only(right: 6),
+                                    margin: const EdgeInsets.only(right: 6),
                                     decoration: BoxDecoration(
                                       color: ColorUtils.error600,
                                       shape: BoxShape.circle,
@@ -525,16 +518,18 @@ class _AnnouncementItemCard extends StatelessWidget {
                                 ),
                                 if (isImportant)
                                   Container(
-                                    margin:
-                                        const EdgeInsets.only(left: 6),
+                                    margin: const EdgeInsets.only(left: 6),
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 2),
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: ColorUtils.warning600
-                                          .withValues(alpha: 0.1),
-                                      borderRadius:
-                                          const BorderRadius.all(
-                                              Radius.circular(4)),
+                                      color: ColorUtils.warning600.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: const BorderRadius.all(
+                                        Radius.circular(4),
+                                      ),
                                     ),
                                     child: Text(
                                       'Penting',
@@ -568,8 +563,11 @@ class _AnnouncementItemCard extends StatelessWidget {
                             // Meta row: date · target
                             Row(
                               children: [
-                                Icon(Icons.access_time_outlined,
-                                    size: 11, color: ColorUtils.slate400),
+                                Icon(
+                                  Icons.access_time_outlined,
+                                  size: 11,
+                                  color: ColorUtils.slate400,
+                                ),
                                 const SizedBox(width: 3),
                                 Text(
                                   dateStr,
@@ -579,8 +577,11 @@ class _AnnouncementItemCard extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 10),
-                                Icon(Icons.people_outline,
-                                    size: 11, color: ColorUtils.slate400),
+                                Icon(
+                                  Icons.people_outline,
+                                  size: 11,
+                                  color: ColorUtils.slate400,
+                                ),
                                 const SizedBox(width: 3),
                                 Text(
                                   _getTargetLabel(roleTarget),

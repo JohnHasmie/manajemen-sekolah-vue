@@ -145,16 +145,10 @@ class RecommendationHistoryItem extends StatelessWidget {
                     // Inline stats
                     Row(
                       children: [
-                        _InlineStat(
-                          '$count rekomendasi',
-                          ColorUtils.slate500,
-                        ),
+                        _InlineStat('$count rekomendasi', ColorUtils.slate500),
                         if (highCount > 0) ...[
                           _dot(),
-                          _InlineStat(
-                            '$highCount penting',
-                            ColorUtils.red500,
-                          ),
+                          _InlineStat('$highCount penting', ColorUtils.red500),
                         ],
                         if (completedCount > 0) ...[
                           _dot(),

@@ -67,7 +67,8 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
       context: context,
       title: 'Filter Nilai',
       primaryColor: primaryColor,
-      onApply: () => _applyFilter(context, tClassId, tClassName, tSubjectId, tSubjectName),
+      onApply: () =>
+          _applyFilter(context, tClassId, tClassName, tSubjectId, tSubjectName),
       onReset: () => setState(() {
         filterClassId = null;
         filterClassName = null;
@@ -77,19 +78,20 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
       content: StatefulBuilder(
         builder: (ctx, setSS) {
           final classes = getAvailableClasses()
-              .map((c) => FilterOption<String>(
-                    value: c['id']!,
-                    label: c['name']!,
-                  ))
+              .map(
+                (c) => FilterOption<String>(value: c['id']!, label: c['name']!),
+              )
               .toList();
 
           final subjects = tSubjectList.isNotEmpty
               ? tSubjectList
-                  .map((s) => FilterOption<String>(
+                    .map(
+                      (s) => FilterOption<String>(
                         value: s['id']?.toString() ?? '',
                         label: s['name']?.toString() ?? '-',
-                      ))
-                  .toList()
+                      ),
+                    )
+                    .toList()
               : <FilterOption<String>>[];
 
           return TeacherFilterContent(

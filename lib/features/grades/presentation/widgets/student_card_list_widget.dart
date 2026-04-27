@@ -348,8 +348,7 @@ class StudentCardListWidget extends StatelessWidget {
                                               child: Text(
                                                 displayTitle,
                                                 maxLines: 1,
-                                                overflow:
-                                                    TextOverflow.ellipsis,
+                                                overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
                                                   fontSize: 12,
                                                   color: ColorUtils.slate700,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -85,6 +87,11 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
   }
 
   Widget _buildListContent() {
+    // Group announcements by month for section-header rendering — matches
+    // the teacher version (T11) which already groups by month with priority
+    // counts. P0 #10 from UI_Redesign_Audit.md: parent was a flat list.
+    final grouped = _groupByMonth(filteredAnnouncement);
+
     return RefreshIndicator(
       onRefresh: forceRefresh,
       color: getPrimaryColor(),
@@ -92,20 +99,116 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
       child: ListView.builder(
         key: listKey,
         padding: const EdgeInsets.only(top: 8, bottom: 16),
-        itemCount: filteredAnnouncement.length,
+        itemCount: grouped.length,
         itemBuilder: (context, index) {
+          final entry = grouped[index];
+          if (entry is _MonthSectionHeader) {
+            return _buildMonthHeader(entry.label, entry.count);
+          }
+          final item = (entry as _MonthAnnouncementItem).announcement;
           return Builder(
             builder: (context) {
-              onItemVisible(filteredAnnouncement[index]);
-              return buildAnnouncementCard(
-                filteredAnnouncement[index],
-                index,
-                showAnnouncementDetail,
-              );
+              onItemVisible(item);
+              // Original list-index isn't preserved across grouping; pass 0
+              // since downstream usage is cosmetic (animation stagger only).
+              return buildAnnouncementCard(item, 0, showAnnouncementDetail);
             },
           );
         },
       ),
     );
   }
+
+  /// Walks [items] and emits an interleaved list of section headers + cards.
+  /// Section header format: "MMMM yyyy" in Indonesian (e.g. "April 2026"),
+  /// with the count of items in that month.
+  List<_MonthListEntry> _groupByMonth(List<dynamic> items) {
+    if (items.isEmpty) return const [];
+    const monthsId = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    ];
+    final byMonth = <String, List<Map<String, dynamic>>>{};
+    final monthOrder = <String>[];
+    for (final raw in items) {
+      if (raw is! Map) continue;
+      final map = Map<String, dynamic>.from(raw);
+      final dateStr = (map['created_at'] ?? map['tanggal'] ?? map['date'])
+          ?.toString();
+      String key;
+      if (dateStr == null || dateStr.isEmpty) {
+        key = 'Lainnya';
+      } else {
+        final dt = DateTime.tryParse(dateStr);
+        key = dt == null
+            ? 'Lainnya'
+            : '${monthsId[dt.month - 1]} ${dt.year}';
+      }
+      if (!byMonth.containsKey(key)) {
+        monthOrder.add(key);
+      }
+      (byMonth[key] ??= []).add(map);
+    }
+
+    final result = <_MonthListEntry>[];
+    for (final month in monthOrder) {
+      final bucket = byMonth[month]!;
+      result.add(_MonthSectionHeader(label: month, count: bucket.length));
+      for (final item in bucket) {
+        result.add(_MonthAnnouncementItem(item));
+      }
+    }
+    return result;
+  }
+
+  Widget _buildMonthHeader(String label, int count) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate700,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+            decoration: BoxDecoration(
+              color: ColorUtils.slate100,
+              borderRadius: const BorderRadius.all(Radius.circular(999)),
+            ),
+            child: Text(
+              count.toString(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: ColorUtils.slate600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tagged union for the interleaved month-grouped list.
+sealed class _MonthListEntry {
+  const _MonthListEntry();
+}
+
+class _MonthSectionHeader extends _MonthListEntry {
+  final String label;
+  final int count;
+  const _MonthSectionHeader({required this.label, required this.count});
+}
+
+class _MonthAnnouncementItem extends _MonthListEntry {
+  final Map<String, dynamic> announcement;
+  const _MonthAnnouncementItem(this.announcement);
 }

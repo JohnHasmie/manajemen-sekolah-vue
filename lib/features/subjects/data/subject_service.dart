@@ -98,11 +98,10 @@ class ApiSubjectService {
   Future<List<dynamic>> getChapterMaterials({
     String? subjectId,
     String? search,
-  }) =>
-      _materialService.getChapterMaterials(
-        subjectId: subjectId,
-        search: search,
-      );
+  }) => _materialService.getChapterMaterials(
+    subjectId: subjectId,
+    search: search,
+  );
 
   Future<List<dynamic>> getSubChapterMaterials({required String chapterId}) =>
       _materialService.getSubChapterMaterials(chapterId: chapterId);
@@ -134,8 +133,15 @@ class ApiSubjectService {
   Future<void> deleteContentMaterial(String id) =>
       _materialService.deleteContentMaterial(id);
 
-  Future<List<dynamic>> getMaterials({String? teacherId, String? subjectId, String? academicYearId}) =>
-      _materialService.getMaterials(teacherId: teacherId, subjectId: subjectId, academicYearId: academicYearId);
+  Future<List<dynamic>> getMaterials({
+    String? teacherId,
+    String? subjectId,
+    String? academicYearId,
+  }) => _materialService.getMaterials(
+    teacherId: teacherId,
+    subjectId: subjectId,
+    academicYearId: academicYearId,
+  );
 
   Future<dynamic> addMaterial(Map<String, dynamic> data) =>
       _materialService.addMaterial(data);

@@ -189,7 +189,10 @@ class SubjectDataHelper {
       }
 
       // Step 2: Fetch fresh data from API
-      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+      final ayId = ref
+          .read(academicYearRiverpod)
+          .selectedAcademicYear?['id']
+          ?.toString();
       final response = await getIt<ApiSubjectService>().getSubjectsPaginated(
         page: 1,
         limit: perPage,

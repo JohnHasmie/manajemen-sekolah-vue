@@ -108,18 +108,51 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
 
   Widget _buildCardContent(Map<String, dynamic> announcementData) {
     final model = Announcement.fromJson(announcementData);
+    final isImportant = _isImportant(announcementData);
+    final dateLabel = _formatRelativeDate(model.createdAt);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          model.title.isNotEmpty ? model.title : 'No Title',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: ColorUtils.slate900,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        // Title row — title + optional "Penting" pill (matches teacher version)
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                model.title.isNotEmpty ? model.title : 'No Title',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: ColorUtils.slate900,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (isImportant) ...[
+              const SizedBox(width: AppSpacing.xs),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: ColorUtils.warning600.withValues(alpha: 0.12),
+                  borderRadius: const BorderRadius.all(Radius.circular(6)),
+                  border: Border.all(
+                    color: ColorUtils.warning600.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Text(
+                  'Penting',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    color: ColorUtils.warning600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: 3),
         Text(
@@ -132,8 +165,54 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
+        // Date / time-since meta — added per UI_Redesign_Audit P0 #10.
+        // Teacher version (T11) already shows this; bringing parent in line.
+        if (dateLabel.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(
+                Icons.access_time_rounded,
+                size: 11,
+                color: ColorUtils.slate400,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                dateLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: ColorUtils.slate500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
+  }
+
+  /// Compact relative date for the meta row.
+  /// Examples: "Baru saja", "30 menit lalu", "3 jam lalu", "Kemarin",
+  /// "13 Apr 14:32" (older than a week).
+  String _formatRelativeDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) return '';
+    final parsed = DateTime.tryParse(dateString);
+    if (parsed == null) return '';
+    final now = DateTime.now();
+    final diff = now.difference(parsed);
+    if (diff.inMinutes < 1) return 'Baru saja';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
+    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
+    if (diff.inDays == 1) return 'Kemarin';
+    if (diff.inDays < 7) return '${diff.inDays} hari lalu';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    ];
+    return '${parsed.day} ${months[parsed.month - 1]} '
+        '${parsed.hour.toString().padLeft(2, '0')}:'
+        '${parsed.minute.toString().padLeft(2, '0')}';
   }
 
   Widget _buildUnreadDot() {

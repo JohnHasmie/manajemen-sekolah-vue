@@ -12,9 +12,10 @@
 // years, lesson hours), and dispatch glue that hands state down to the
 // controller + sheets. Everything else has moved out.
 //
-// Phase 1 scope carve-out: list view only. The prior dual-view toggle
-// (calendar grid vs card list via `_showTableView`) is deferred to
-// Phase 4 (#189) per the Admin Refactor plan.
+// Dual-view: a list (card) view and a matrix (timetable) view share one
+// filter state. Toggle lives in the gradient-header trailing slot via the
+// shared [ViewToggleButton]; matrix rendering delegates to
+// [AdminScheduleMatrixView] which wraps [FrozenColumnTable].
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -30,9 +31,11 @@ import 'package:manajemensekolah/core/widgets/action_confirm_sheet.dart';
 import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
 import 'package:manajemensekolah/core/widgets/admin_data_menu.dart';
 import 'package:manajemensekolah/core/widgets/paginated_list_view.dart';
+import 'package:manajemensekolah/core/widgets/view_toggle_button.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/schedule/presentation/controllers/admin_schedule_controller.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_card.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_matrix_view.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_detail_dialog.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_filter_sheet.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_dialog.dart';
@@ -82,6 +85,11 @@ class TeachingScheduleManagementScreenState
   // UI flags.
   bool _isLoading = true;
   String? _errorMessage;
+
+  // View mode — `false` renders the paginated card list, `true` renders the
+  // [AdminScheduleMatrixView] timetable grid. Toggled from the header
+  // trailing slot via [ViewToggleButton].
+  bool _showMatrixView = false;
 
   // Pagination cursor.
   int _currentPage = 1;
@@ -752,16 +760,31 @@ class TeachingScheduleManagementScreenState
       hasActiveFilter: _hasActiveFilter,
       activeFilters: activeFilters,
       onClearAllFilters: _clearAllFilters,
-      actionMenu: AdminDataMenu(
-        languageProvider: lang,
-        onRefresh: _forceRefresh,
-        onExport: _exportToExcel,
-        onImport: academicYear.isReadOnly ? null : _importFromExcel,
-        onDownloadTemplate: _downloadTemplate,
+      actionMenu: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ViewToggleButton(
+            currentMode: _showMatrixView ? ViewMode.table : ViewMode.card,
+            availableModes: const [ViewMode.card, ViewMode.table],
+            onChanged: (mode) =>
+                setState(() => _showMatrixView = mode == ViewMode.table),
+          ),
+          const SizedBox(width: 8),
+          AdminDataMenu(
+            languageProvider: lang,
+            onRefresh: _forceRefresh,
+            onExport: _exportToExcel,
+            onImport: academicYear.isReadOnly ? null : _importFromExcel,
+            onDownloadTemplate: _downloadTemplate,
+          ),
+        ],
       ),
       isLoading: _isLoading,
       errorMessage: _errorMessage,
-      isEmpty: filteredSchedules.isEmpty,
+      // Matrix mode always renders (even with 0 schedules) so the time-slot
+      // grid stays visible and the toggle isn't swallowed by an empty state.
+      // Card mode keeps the existing empty-state behaviour.
+      isEmpty: !_showMatrixView && filteredSchedules.isEmpty,
       onRefresh: _onRefresh,
       emptyTitle: lang.getTranslatedText(const {
         'en': 'No schedules',
@@ -777,31 +800,42 @@ class TeachingScheduleManagementScreenState
               'id': 'Tidak ditemukan hasil pencarian',
             }),
       emptyIcon: Icons.calendar_today_outlined,
-      childBuilder: () => PaginatedListView<dynamic>(
-        items: filteredSchedules,
-        itemBuilder: (context, schedule, index) {
-          final scheduleMap = Map<String, dynamic>.from(schedule as Map);
-          return AdminScheduleCard(
-            schedule: scheduleMap,
-            index: index,
-            isReadOnly: academicYear.isReadOnly,
-            primaryColor: primaryColor,
-            dayLabel: ctrl.formatScheduleDays(
-              scheduleMap,
-              _dayList,
-              lang.currentLanguage,
+      childBuilder: () => _showMatrixView
+          ? AdminScheduleMatrixView(
+              scheduleList: filteredSchedules,
+              dayList: _dayList.isNotEmpty ? _dayList : _availableDays,
+              lessonHourList: _lessonHourList,
+              selectedDayId: _selectedDayId,
+              selectedLessonHour: _selectedLessonHour,
+              primaryColor: primaryColor,
+              languageProvider: lang,
+              onScheduleTap: _showScheduleDetail,
+            )
+          : PaginatedListView<dynamic>(
+              items: filteredSchedules,
+              itemBuilder: (context, schedule, index) {
+                final scheduleMap = Map<String, dynamic>.from(schedule as Map);
+                return AdminScheduleCard(
+                  schedule: scheduleMap,
+                  index: index,
+                  isReadOnly: academicYear.isReadOnly,
+                  primaryColor: primaryColor,
+                  dayLabel: ctrl.formatScheduleDays(
+                    scheduleMap,
+                    _dayList,
+                    lang.currentLanguage,
+                  ),
+                  timeLabel: ctrl.formatTime(scheduleMap),
+                  onTap: () => _showScheduleDetail(scheduleMap),
+                  onEdit: () => _openAddEditSheet(schedule: scheduleMap),
+                  onDelete: () => _deleteSchedule(scheduleMap),
+                );
+              },
+              onLoadMore: _loadMoreSchedules,
+              hasMore: _hasMoreData,
+              isLoadingMore: _isLoadingMore,
+              padding: const EdgeInsets.only(top: 8, bottom: 16),
             ),
-            timeLabel: ctrl.formatTime(scheduleMap),
-            onTap: () => _showScheduleDetail(scheduleMap),
-            onEdit: () => _openAddEditSheet(schedule: scheduleMap),
-            onDelete: () => _deleteSchedule(scheduleMap),
-          );
-        },
-        onLoadMore: _loadMoreSchedules,
-        hasMore: _hasMoreData,
-        isLoadingMore: _isLoadingMore,
-        padding: const EdgeInsets.only(top: 8, bottom: 16),
-      ),
       onFabTap: () => _openAddEditSheet(),
       fabIcon: Icons.add,
       hideFab: academicYear.isReadOnly,

@@ -71,9 +71,7 @@ mixin GenerateFlowMixin on ConsumerState<LearningRecommendationClassScreen> {
                 ],
               ),
             ),
-            SizedBox(
-              height: MediaQuery.of(ctx).padding.bottom + 8,
-            ),
+            SizedBox(height: MediaQuery.of(ctx).padding.bottom + 8),
           ],
         ),
       ),

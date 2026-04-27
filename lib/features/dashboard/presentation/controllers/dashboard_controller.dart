@@ -241,9 +241,7 @@ class DashboardNotifier extends AsyncNotifier<DashboardState> {
       // 1. Show skeletons in content areas while keeping page structure
       final currentState = state.value;
       if (currentState != null) {
-        state = AsyncValue.data(
-          currentState.copyWith(isStatsLoaded: false),
-        );
+        state = AsyncValue.data(currentState.copyWith(isStatsLoaded: false));
       }
 
       // 2. Clear all feature caches
@@ -256,9 +254,7 @@ class DashboardNotifier extends AsyncNotifier<DashboardState> {
       // Restore loaded state on error so UI doesn't stay in skeleton
       final currentState = state.value;
       if (currentState != null) {
-        state = AsyncValue.data(
-          currentState.copyWith(isStatsLoaded: true),
-        );
+        state = AsyncValue.data(currentState.copyWith(isStatsLoaded: true));
       }
     }
   }

@@ -13,35 +13,35 @@ mixin ParentActivityListBuilderMixin
     on ConsumerState<ParentClassActivityScreen> {
   Widget buildActivityList() {
     final languageProvider = ref.read(languageRiverpod);
-    final state = this as dynamic;
+    final state = this as ParentClassActivityScreenState;
 
-    if (state._selectedStudentId == null) {
+    if (state.selectedStudentId == null) {
       return ActivityEmptyState(
         message: AppLocalizations.selectChildToViewActivity.tr,
       );
     }
 
-    if (state._isLoading) {
+    if (state.isLoading) {
       return buildLoadingState();
     }
 
-    if (state._activityList.isEmpty) {
+    if (state.activityList.isEmpty) {
       return ActivityEmptyState(
         message: AppLocalizations.noActivityForChild.tr,
       );
     }
 
     return ListView.builder(
-      key: state._activityListKey,
+      key: state.activityListKey,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: state._activityList.length,
+      itemCount: state.activityList.length,
       itemBuilder: (context, index) {
-        final activity = state._activityList[index];
+        final activity = state.activityList[index];
         final isAssignment = activity['jenis'] == 'tugas';
         final isSpecificTarget = activity['target'] == 'khusus';
         final isForThisStudent = activity['untuk_siswa_ini'] == true;
         final isRead =
-            !state._hasFreshData ||
+            !state.hasFreshData ||
             activity['is_read'] == true ||
             activity['is_read'] == 1 ||
             activity['is_read'] == '1';
@@ -149,7 +149,11 @@ mixin ParentActivityListBuilderMixin
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
-                              if ((activity['judul_bab'] ?? (activity['chapter'] is Map ? activity['chapter']['title'] : null)) != null) ...[
+                              if ((activity['judul_bab'] ??
+                                      (activity['chapter'] is Map
+                                          ? activity['chapter']['title']
+                                          : null)) !=
+                                  null) ...[
                                 const SizedBox(height: 6),
                                 Row(
                                   children: [
@@ -162,8 +166,17 @@ mixin ParentActivityListBuilderMixin
                                     Expanded(
                                       child: Text(
                                         () {
-                                          final bab = activity['judul_bab'] ?? (activity['chapter'] is Map ? activity['chapter']['title'] : null) ?? '';
-                                          final subBab = activity['judul_sub_bab'] ?? (activity['subChapter'] is Map ? activity['subChapter']['title'] : null);
+                                          final bab =
+                                              activity['judul_bab'] ??
+                                              (activity['chapter'] is Map
+                                                  ? activity['chapter']['title']
+                                                  : null) ??
+                                              '';
+                                          final subBab =
+                                              activity['judul_sub_bab'] ??
+                                              (activity['subChapter'] is Map
+                                                  ? activity['subChapter']['title']
+                                                  : null);
                                           return '$bab${subBab != null ? ' • $subBab' : ''}';
                                         }(),
                                         style: TextStyle(

@@ -152,11 +152,7 @@ class FilterSectionHeader extends StatelessWidget {
               color: primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              resolvedIcon,
-              size: 16,
-              color: primaryColor,
-            ),
+            child: Icon(resolvedIcon, size: 16, color: primaryColor),
           ),
           const SizedBox(width: 10),
           Text(

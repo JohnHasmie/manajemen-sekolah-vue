@@ -105,7 +105,9 @@ mixin ParentActivityUIBuilderMixin on ConsumerState<ParentClassActivityScreen> {
                       value:
                           activity['teacher_name'] ??
                           activity['guru_nama'] ??
-                          (activity['teacher'] is Map ? activity['teacher']['name'] : null) ??
+                          (activity['teacher'] is Map
+                              ? activity['teacher']['name']
+                              : null) ??
                           AppLocalizations.unknown.tr,
                       primaryColor: getPrimaryColor(),
                     ),
@@ -118,7 +120,9 @@ mixin ParentActivityUIBuilderMixin on ConsumerState<ParentClassActivityScreen> {
                       value:
                           activity['subject_name'] ??
                           activity['mata_pelajaran_nama'] ??
-                          (activity['subject'] is Map ? activity['subject']['name'] : null) ??
+                          (activity['subject'] is Map
+                              ? activity['subject']['name']
+                              : null) ??
                           '-',
                       primaryColor: getPrimaryColor(),
                     ),
@@ -153,7 +157,11 @@ mixin ParentActivityUIBuilderMixin on ConsumerState<ParentClassActivityScreen> {
                         value: activity['deskripsi'].toString(),
                         primaryColor: getPrimaryColor(),
                       ),
-                    if ((activity['judul_bab'] ?? (activity['chapter'] is Map ? activity['chapter']['title'] : null)) != null)
+                    if ((activity['judul_bab'] ??
+                            (activity['chapter'] is Map
+                                ? activity['chapter']['title']
+                                : null)) !=
+                        null)
                       ActivityDetailRow(
                         icon: Icons.auto_stories_rounded,
                         label: languageProvider.getTranslatedText({
@@ -161,8 +169,17 @@ mixin ParentActivityUIBuilderMixin on ConsumerState<ParentClassActivityScreen> {
                           'id': 'Materi',
                         }),
                         value: () {
-                          final bab = activity['judul_bab'] ?? (activity['chapter'] is Map ? activity['chapter']['title'] : null) ?? '';
-                          final subBab = activity['judul_sub_bab'] ?? (activity['subChapter'] is Map ? activity['subChapter']['title'] : null);
+                          final bab =
+                              activity['judul_bab'] ??
+                              (activity['chapter'] is Map
+                                  ? activity['chapter']['title']
+                                  : null) ??
+                              '';
+                          final subBab =
+                              activity['judul_sub_bab'] ??
+                              (activity['subChapter'] is Map
+                                  ? activity['subChapter']['title']
+                                  : null);
                           return '$bab${subBab != null ? '\n• $subBab' : ''}';
                         }(),
                         primaryColor: getPrimaryColor(),

@@ -204,14 +204,14 @@ class _ModernGradeEditorSheetState
   /// grade recap screen so teachers see the same letter grade in both places.
   ({String letter, Color color, String label}) _predikat(int? score) {
     if (score == null) {
-      return (
-        letter: '—',
-        color: ColorUtils.slate300,
-        label: 'Masukkan nilai',
-      );
+      return (letter: '—', color: ColorUtils.slate300, label: 'Masukkan nilai');
     }
     if (score >= 90) {
-      return (letter: 'A', color: const Color(0xFF16A34A), label: 'Sangat Baik');
+      return (
+        letter: 'A',
+        color: const Color(0xFF16A34A),
+        label: 'Sangat Baik',
+      );
     }
     if (score >= 80) {
       return (letter: 'B', color: const Color(0xFF2563EB), label: 'Baik');
@@ -222,7 +222,11 @@ class _ModernGradeEditorSheetState
     if (score >= 60) {
       return (letter: 'D', color: const Color(0xFFEA580C), label: 'Kurang');
     }
-    return (letter: 'E', color: const Color(0xFFDC2626), label: 'Perlu Bimbingan');
+    return (
+      letter: 'E',
+      color: const Color(0xFFDC2626),
+      label: 'Perlu Bimbingan',
+    );
   }
 
   void _bumpScore(int delta) {
@@ -290,7 +294,8 @@ class _ModernGradeEditorSheetState
         context,
         lang.getTranslatedText({
           'en': 'Cannot save grades for an inactive academic year',
-          'id': 'Tidak dapat menyimpan nilai untuk tahun ajaran yang tidak aktif',
+          'id':
+              'Tidak dapat menyimpan nilai untuk tahun ajaran yang tidak aktif',
         }),
       );
       return;
@@ -308,7 +313,8 @@ class _ModernGradeEditorSheetState
         context,
         lang.getTranslatedText({
           'en': 'Student data is outdated. Pull to refresh and try again.',
-          'id': 'Data siswa kadaluarsa. Tarik untuk memuat ulang dan coba lagi.',
+          'id':
+              'Data siswa kadaluarsa. Tarik untuk memuat ulang dan coba lagi.',
         }),
       );
       return;
@@ -344,7 +350,9 @@ class _ModernGradeEditorSheetState
         context,
         lang.getTranslatedText({
           'en': _isEditing ? 'Grade updated' : 'Grade saved',
-          'id': _isEditing ? 'Nilai berhasil diupdate' : 'Nilai berhasil disimpan',
+          'id': _isEditing
+              ? 'Nilai berhasil diupdate'
+              : 'Nilai berhasil disimpan',
         }),
       );
       Navigator.of(context).pop(const GradeEditorResult(saved: true));
@@ -362,9 +370,7 @@ class _ModernGradeEditorSheetState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           lang.getTranslatedText({
             'en': 'Delete this grade?',
@@ -414,10 +420,7 @@ class _ModernGradeEditorSheetState
       if (!mounted) return;
       SnackBarUtils.showSuccess(
         context,
-        lang.getTranslatedText({
-          'en': 'Grade cleared',
-          'id': 'Nilai dihapus',
-        }),
+        lang.getTranslatedText({'en': 'Grade cleared', 'id': 'Nilai dihapus'}),
       );
       Navigator.of(context).pop(const GradeEditorResult(saved: true));
     } catch (e) {
@@ -599,10 +602,7 @@ class _ModernGradeEditorSheetState
                   '${widget.student.studentNumber.isNotEmpty ? "${widget.student.studentNumber} · " : ""}$subject',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: ColorUtils.slate500,
-                  ),
+                  style: TextStyle(fontSize: 11.5, color: ColorUtils.slate500),
                 ),
               ],
             ),
@@ -681,7 +681,10 @@ class _ModernGradeEditorSheetState
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: predikat.color,
                   borderRadius: BorderRadius.circular(10),
@@ -823,10 +826,7 @@ class _ModernGradeEditorSheetState
           ),
           child: Text(
             label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           ),
         ),
       ),
@@ -951,7 +951,10 @@ class _ModernGradeEditorSheetState
     );
   }
 
-  InputDecoration _inputDecoration({required String hint, required Color primary}) {
+  InputDecoration _inputDecoration({
+    required String hint,
+    required Color primary,
+  }) {
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),

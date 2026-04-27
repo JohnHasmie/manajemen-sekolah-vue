@@ -20,16 +20,19 @@ class AnnouncementDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Announcement.fromJson(announcementData);
-    final isImportant = ['penting', 'important']
-        .contains((announcementData['priority'] ?? '').toString().toLowerCase());
+    final isImportant = [
+      'penting',
+      'important',
+    ].contains((announcementData['priority'] ?? '').toString().toLowerCase());
     final creatorName =
         announcementData['pembuat_nama'] ??
         (announcementData['creator'] is Map
             ? (announcementData['creator'] as Map)['name']
             : null) ??
         '-';
-    final roleTarget =
-        (announcementData['role_target'] ?? '').toString().toLowerCase();
+    final roleTarget = (announcementData['role_target'] ?? '')
+        .toString()
+        .toLowerCase();
     final dateStr = _formatDate(announcementData['created_at']?.toString());
     final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 
@@ -50,8 +53,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
             icon: isImportant
                 ? Icons.campaign_rounded
                 : Icons.announcement_outlined,
-            primaryColor:
-                isImportant ? ColorUtils.warning600 : primaryColor,
+            primaryColor: isImportant ? ColorUtils.warning600 : primaryColor,
           ),
 
           // Content
@@ -120,14 +122,18 @@ class AnnouncementDetailSheet extends StatelessWidget {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: ColorUtils.slate50,
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(10)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(10),
+                        ),
                         border: Border.all(color: ColorUtils.slate200),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.attach_file_rounded,
-                              size: 18, color: primaryColor),
+                          Icon(
+                            Icons.attach_file_rounded,
+                            size: 18,
+                            color: primaryColor,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(

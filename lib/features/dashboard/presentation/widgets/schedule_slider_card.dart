@@ -126,8 +126,7 @@ class _ScheduleSliderCardState extends State<ScheduleSliderCard> {
   /// Builds the content for a single schedule slide: icon, time badge,
   /// subject name, and class name. Like a Vue `<ScheduleSlide>` template.
   Widget _buildScheduleContent(dynamic schedule) {
-    final model =
-        Schedule.fromJson(schedule as Map<String, dynamic>);
+    final model = Schedule.fromJson(schedule as Map<String, dynamic>);
     final subjectName = model.subjectName ?? 'Unknown Subject';
     final className = model.className ?? '-';
     final startTime = model.startTime ?? '--:--';

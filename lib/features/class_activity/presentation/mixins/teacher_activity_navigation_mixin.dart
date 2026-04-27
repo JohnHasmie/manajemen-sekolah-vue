@@ -189,8 +189,8 @@ mixin TeacherActivityNavigationMixin
               final list = raw is List
                   ? raw
                   : (raw is Map && raw['data'] is List
-                      ? raw['data'] as List
-                      : <dynamic>[]);
+                        ? raw['data'] as List
+                        : <dynamic>[]);
               setSS(() => setSubjectList(list));
             } catch (_) {}
           }

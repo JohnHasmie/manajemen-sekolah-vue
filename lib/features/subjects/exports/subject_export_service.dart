@@ -198,8 +198,10 @@ class ExcelSubjectService {
     final classList = subject['class_list'] ?? subject['classes'] ?? [];
     if (classList is List) {
       return classList
-          .map((classItem) =>
-              Classroom.fromJson(classItem as Map<String, dynamic>).name)
+          .map(
+            (classItem) =>
+                Classroom.fromJson(classItem as Map<String, dynamic>).name,
+          )
           .join(', ');
     }
 

@@ -15,6 +15,19 @@ mixin FilterManagementMixin {
   BuildContext get context;
   WidgetRef get ref;
 
+  /// Seeds the status filter before the first build.
+  ///
+  /// Called from `initState` when the admin dashboard PendingInboxCard routes
+  /// directly into this screen with a scoped filter (e.g., `pending_review`
+  /// for the "5 RPP menunggu review" inbox entry). Because this runs before
+  /// mount, it deliberately skips `setState` — assigning inside `initState`
+  /// would throw "setState() called in constructor".
+  void initStatusFilter(String? status) {
+    if (status == null || status.isEmpty) return;
+    _selectedStatusFilter = status;
+    _hasActiveFilter = true;
+  }
+
   void showFilterSheetLocal() {
     final lp = ref.read(languageRiverpod);
     showLessonPlanFilterSheet(

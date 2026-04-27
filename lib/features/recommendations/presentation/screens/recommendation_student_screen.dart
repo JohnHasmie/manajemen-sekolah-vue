@@ -131,9 +131,7 @@ class _LearningRecommendationStudentScreenState
       ColorUtils.getRoleColor(widget.teacher['role'] ?? 'guru');
 
   String get _className =>
-      widget.classData['name'] ??
-      widget.classData['nama'] ??
-      'Daftar Siswa';
+      widget.classData['name'] ?? widget.classData['nama'] ?? 'Daftar Siswa';
 
   List<dynamic> get _filteredStudents {
     var filtered = _students.toList();
@@ -151,8 +149,7 @@ class _LearningRecommendationStudentScreenState
     // Status filter
     if (_statusFilter != 'all') {
       filtered = filtered.where((s) {
-        final studentId =
-            (s as Map<String, dynamic>)['id']?.toString() ?? '';
+        final studentId = (s as Map<String, dynamic>)['id']?.toString() ?? '';
         final counts = _statusCounts[studentId];
         final total = counts?['total'] ?? 0;
         final completed = counts?['completed'] ?? 0;
@@ -210,14 +207,17 @@ class _LearningRecommendationStudentScreenState
       // aggregate recs from every authoring teacher in the homeroom. In
       // mengajar mode scope by teacher so the counts reflect only the
       // current teacher's authored recs.
-      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+      final ayId = ref
+          .read(academicYearRiverpod)
+          .selectedAcademicYear?['id']
+          ?.toString();
       final counts = await getIt<ApiRecommendationService>()
           .getStudentStatusCounts(
-        classId: classId,
-        teacherId: widget.isHomeroomView ? null : teacherId,
-        homeroomClassId: widget.isHomeroomView ? classId : null,
-        academicYearId: ayId,
-      );
+            classId: classId,
+            teacherId: widget.isHomeroomView ? null : teacherId,
+            homeroomClassId: widget.isHomeroomView ? classId : null,
+            academicYearId: ayId,
+          );
       if (mounted) {
         setState(() {
           _statusCounts = counts;
@@ -231,10 +231,7 @@ class _LearningRecommendationStudentScreenState
   }
 
   Future<void> _refreshAll() async {
-    await Future.wait([
-      forceRefresh(),
-      _loadStatusCounts(),
-    ]);
+    await Future.wait([forceRefresh(), _loadStatusCounts()]);
   }
 
   /// Summary counts across all students
@@ -263,9 +260,7 @@ class _LearningRecommendationStudentScreenState
   }
 
   int get _studentsWithRecommendations {
-    return _statusCounts.values
-        .where((c) => (c['total'] ?? 0) > 0)
-        .length;
+    return _statusCounts.values.where((c) => (c['total'] ?? 0) > 0).length;
   }
 
   @override
@@ -305,8 +300,7 @@ class _LearningRecommendationStudentScreenState
                     primaryColor: _primaryColor,
                     // Pass _statusChanged back so the class screen can decide
                     // whether to force-refresh its summary + history caches.
-                    onClose: () =>
-                        AppNavigator.pop(context, _statusChanged),
+                    onClose: () => AppNavigator.pop(context, _statusChanged),
                   ),
                   Flexible(
                     child: Container(
@@ -373,15 +367,18 @@ class _LearningRecommendationStudentScreenState
                     // room so the last tile doesn't butt against the
                     // sheet's safe-area edge.
                     padding: const EdgeInsets.only(
-                        top: 0, bottom: 16, left: 16, right: 16),
+                      top: 0,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
                     itemCount: filtered.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 1),
                     itemBuilder: (context, index) {
                       final student = filtered[index];
                       final isFirst = index == 0;
                       final isLast = index == filtered.length - 1;
-                      return _buildStudentTile(
-                          student, index, isFirst, isLast);
+                      return _buildStudentTile(student, index, isFirst, isLast);
                     },
                   ),
           ),
@@ -512,16 +509,10 @@ class _LearningRecommendationStudentScreenState
         child: TextField(
           focusNode: _searchFocus,
           onChanged: (val) => setState(() => _searchQuery = val),
-          style: TextStyle(
-            fontSize: 12.5,
-            color: ColorUtils.slate700,
-          ),
+          style: TextStyle(fontSize: 12.5, color: ColorUtils.slate700),
           decoration: InputDecoration(
             hintText: 'Cari nama atau NIS...',
-            hintStyle: TextStyle(
-              fontSize: 12.5,
-              color: ColorUtils.slate400,
-            ),
+            hintStyle: TextStyle(fontSize: 12.5, color: ColorUtils.slate400),
             prefixIcon: Padding(
               padding: const EdgeInsets.only(left: 10, right: 6),
               child: Icon(
@@ -532,8 +523,10 @@ class _LearningRecommendationStudentScreenState
                     : ColorUtils.slate400,
               ),
             ),
-            prefixIconConstraints:
-                const BoxConstraints(minWidth: 36, minHeight: 0),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 36,
+              minHeight: 0,
+            ),
             suffixIcon: _searchQuery.isNotEmpty
                 ? GestureDetector(
                     onTap: () => setState(() => _searchQuery = ''),
@@ -545,8 +538,10 @@ class _LearningRecommendationStudentScreenState
                   )
                 : null,
             border: InputBorder.none,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 0, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 0,
+              vertical: 10,
+            ),
           ),
         ),
       ),
@@ -596,20 +591,14 @@ class _LearningRecommendationStudentScreenState
                 const SizedBox(width: 4),
                 Text(
                   'Memuat status...',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: ColorUtils.slate400,
-                  ),
+                  style: TextStyle(fontSize: 10, color: ColorUtils.slate400),
                 ),
               ],
             )
           else if (_searchQuery.isEmpty)
             Text(
               'Ketuk untuk lihat rekomendasi',
-              style: TextStyle(
-                fontSize: 10,
-                color: ColorUtils.slate400,
-              ),
+              style: TextStyle(fontSize: 10, color: ColorUtils.slate400),
             ),
         ],
       ),
@@ -640,10 +629,7 @@ class _LearningRecommendationStudentScreenState
             const SizedBox(height: 3),
             Text(
               'Coba kata kunci atau filter lain',
-              style: TextStyle(
-                fontSize: 11.5,
-                color: ColorUtils.slate400,
-              ),
+              style: TextStyle(fontSize: 11.5, color: ColorUtils.slate400),
             ),
           ],
         ),
@@ -652,7 +638,11 @@ class _LearningRecommendationStudentScreenState
   }
 
   Widget _buildStudentTile(
-      dynamic student, int index, bool isFirst, bool isLast) {
+    dynamic student,
+    int index,
+    bool isFirst,
+    bool isLast,
+  ) {
     final model = Student.fromJson(student as Map<String, dynamic>);
     final studentId = model.id;
     final counts = _statusCounts[studentId];
@@ -674,8 +664,7 @@ class _LearningRecommendationStudentScreenState
       borderRadius: borderRadius,
       child: InkWell(
         onTap: () async {
-          final statusChanged =
-              await LearningRecommendationResultScreen.show(
+          final statusChanged = await LearningRecommendationResultScreen.show(
             context: context,
             teacher: widget.teacher,
             student: student,
@@ -706,8 +695,7 @@ class _LearningRecommendationStudentScreenState
             ),
           ),
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
             child: Row(
               children: [
                 // Numbered position
@@ -733,9 +721,7 @@ class _LearningRecommendationStudentScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        model.name.isNotEmpty
-                            ? model.name
-                            : 'Siswa Tanpa Nama',
+                        model.name.isNotEmpty ? model.name : 'Siswa Tanpa Nama',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -756,8 +742,7 @@ class _LearningRecommendationStudentScreenState
                       ),
                       // Status row — always visible
                       const SizedBox(height: 3),
-                      _buildInlineStatus(
-                          total, completed, pending, allDone),
+                      _buildInlineStatus(total, completed, pending, allDone),
                     ],
                   ),
                 ),
@@ -792,10 +777,7 @@ class _LearningRecommendationStudentScreenState
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            ColorUtils.slate200,
-            ColorUtils.slate100,
-          ],
+          colors: [ColorUtils.slate200, ColorUtils.slate100],
         ),
         borderRadius: const BorderRadius.all(Radius.circular(10)),
         border: hasRecs
@@ -821,7 +803,11 @@ class _LearningRecommendationStudentScreenState
   }
 
   Widget _buildInlineStatus(
-      int total, int completed, int pending, bool allDone) {
+    int total,
+    int completed,
+    int pending,
+    bool allDone,
+  ) {
     // No recommendations yet
     if (total == 0) {
       if (_isLoadingStatus) {
@@ -839,10 +825,7 @@ class _LearningRecommendationStudentScreenState
             const SizedBox(width: 4),
             Text(
               'Memuat...',
-              style: TextStyle(
-                fontSize: 10,
-                color: ColorUtils.slate400,
-              ),
+              style: TextStyle(fontSize: 10, color: ColorUtils.slate400),
             ),
           ],
         );
@@ -850,8 +833,11 @@ class _LearningRecommendationStudentScreenState
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.lightbulb_outline_rounded,
-              size: 11, color: ColorUtils.slate400),
+          Icon(
+            Icons.lightbulb_outline_rounded,
+            size: 11,
+            color: ColorUtils.slate400,
+          ),
           const SizedBox(width: 3),
           Text(
             'Belum ada rekomendasi',
@@ -870,8 +856,11 @@ class _LearningRecommendationStudentScreenState
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle_rounded,
-              size: 11, color: ColorUtils.emerald500),
+          Icon(
+            Icons.check_circle_rounded,
+            size: 11,
+            color: ColorUtils.emerald500,
+          ),
           const SizedBox(width: 3),
           Text(
             '$total rekomendasi • Semua diterapkan',
@@ -889,9 +878,11 @@ class _LearningRecommendationStudentScreenState
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.auto_awesome_rounded,
-            size: 11,
-            color: pending > 0 ? ColorUtils.amber500 : ColorUtils.slate400),
+        Icon(
+          Icons.auto_awesome_rounded,
+          size: 11,
+          color: pending > 0 ? ColorUtils.amber500 : ColorUtils.slate400,
+        ),
         const SizedBox(width: 3),
         Text(
           '$completed/$total diterapkan',
@@ -928,9 +919,7 @@ class _LearningRecommendationStudentScreenState
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
-                  color: allDone
-                      ? ColorUtils.emerald500
-                      : ColorUtils.amber500,
+                  color: allDone ? ColorUtils.emerald500 : ColorUtils.amber500,
                 ),
               ),
             ],
@@ -1011,9 +1000,7 @@ class _FilterChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? color : Colors.white,
             borderRadius: const BorderRadius.all(Radius.circular(8)),
-            border: Border.all(
-              color: isActive ? color : ColorUtils.slate200,
-            ),
+            border: Border.all(color: isActive ? color : ColorUtils.slate200),
           ),
           child: Text(
             label,

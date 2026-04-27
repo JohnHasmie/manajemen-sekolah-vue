@@ -131,18 +131,21 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
     setState(() => isLoading = true);
     try {
       final provider = ref.read(academicYearRiverpod);
-      final ayId = (provider.selectedAcademicYear?['id'] ??
+      final ayId =
+          (provider.selectedAcademicYear?['id'] ??
                   provider.activeAcademicYear?['id'])
               ?.toString() ??
           '';
 
       final classId =
           (_selectedClass!['id'] ?? _selectedClass!['class_id'])?.toString() ??
-              '';
+          '';
       final subjectId = _selectedSubject!['id']?.toString() ?? '';
 
-      AppLogger.debug('grade_recap',
-          'Loading recap: class=$classId, subject=$subjectId, ay=$ayId');
+      AppLogger.debug(
+        'grade_recap',
+        'Loading recap: class=$classId, subject=$subjectId, ay=$ayId',
+      );
 
       final teacherId = widget.teacher['id']?.toString() ?? '';
 
@@ -241,8 +244,9 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
       // Use growable list — JSON decode returns fixed-length lists
       final babScores = row['bab_scores'] is List
           ? List<double?>.from(
-              (row['bab_scores'] as List)
-                  .map((v) => v is num ? v.toDouble() : null),
+              (row['bab_scores'] as List).map(
+                (v) => v is num ? v.toDouble() : null,
+              ),
             )
           : List<double?>.generate(maxBabs, (_) => null);
 
@@ -265,10 +269,12 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
           : null;
 
       // Create controllers
-      predikatControllers[scId] =
-          TextEditingController(text: row['predikat']?.toString() ?? '');
-      descriptionControllers[scId] =
-          TextEditingController(text: row['deskripsi']?.toString() ?? '');
+      predikatControllers[scId] = TextEditingController(
+        text: row['predikat']?.toString() ?? '',
+      );
+      descriptionControllers[scId] = TextEditingController(
+        text: row['deskripsi']?.toString() ?? '',
+      );
 
       // Score controllers + focus nodes keyed as "scId|type|chapterIndex".
       // Keeping both maps in lock-step lets the cell builder look up its
@@ -285,14 +291,8 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
           babScores[i] != null ? babScores[i]!.toStringAsFixed(0) : '',
         );
       }
-      registerCell(
-        '$scId|uts|null',
-        uts != null ? uts.toStringAsFixed(0) : '',
-      );
-      registerCell(
-        '$scId|uas|null',
-        uas != null ? uas.toStringAsFixed(0) : '',
-      );
+      registerCell('$scId|uts|null', uts != null ? uts.toStringAsFixed(0) : '');
+      registerCell('$scId|uas|null', uas != null ? uas.toStringAsFixed(0) : '');
       registerCell(
         '$scId|skill_score|null',
         skillScore != null ? skillScore.toStringAsFixed(0) : '',
@@ -457,7 +457,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
       String type,
       int? chapterIndex,
     )?
-        getController,
+    getController,
   }) {
     // Weighted average across three buckets: bab (40%), UTS (20%),
     // UAS (40%). We only include a bucket in the weight denominator if
@@ -510,10 +510,10 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
     final predikat = finalScore >= 90
         ? 'A'
         : finalScore >= 80
-            ? 'B'
-            : finalScore >= 70
-                ? 'C'
-                : 'D';
+        ? 'B'
+        : finalScore >= 70
+        ? 'C'
+        : 'D';
     predikatControllers[scId]?.text = predikat;
     return null;
   }
@@ -845,10 +845,12 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
               // Modal-style entry: custom header with Export + Close on the
               // right, matching the app's "Buku Nilai" UX.
               GradeRecapModalHeader(
-                title: widget.initialSubject?['nama'] ??
+                title:
+                    widget.initialSubject?['nama'] ??
                     widget.initialSubject?['name'] ??
                     'Subject',
-                subtitle: widget.initialClass?['nama'] ??
+                subtitle:
+                    widget.initialClass?['nama'] ??
                     widget.initialClass?['name'] ??
                     'Class',
                 primaryColor: getPrimaryColor(),
@@ -864,26 +866,24 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
             Expanded(child: _buildBody(lp)),
           ],
         ),
-        bottomNavigationBar:
-            (_currentStep == 2 && tableData.isNotEmpty)
-                ? _buildBottomBar(lp)
-                : null,
-        floatingActionButton:
-            (_currentStep == 2 && tableData.isNotEmpty)
-                ? FloatingActionButton(
-                    key: _addChapterKey,
-                    heroTag: 'grade_recap_add_chapter_fab',
-                    onPressed: addChapter,
-                    backgroundColor: getPrimaryColor(),
-                    foregroundColor: Colors.white,
-                    elevation: 4,
-                    tooltip: 'Tambah kolom / bab',
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(Icons.add_rounded, size: 28),
-                  )
-                : null,
+        bottomNavigationBar: (_currentStep == 2 && tableData.isNotEmpty)
+            ? _buildBottomBar(lp)
+            : null,
+        floatingActionButton: (_currentStep == 2 && tableData.isNotEmpty)
+            ? FloatingActionButton(
+                key: _addChapterKey,
+                heroTag: 'grade_recap_add_chapter_fab',
+                onPressed: addChapter,
+                backgroundColor: getPrimaryColor(),
+                foregroundColor: Colors.white,
+                elevation: 4,
+                tooltip: 'Tambah kolom / bab',
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(Icons.add_rounded, size: 28),
+              )
+            : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
@@ -951,10 +951,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
                         'en': 'Saving...',
                         'id': 'Menyimpan...',
                       })
-                    : lp.getTranslatedText({
-                        'en': 'Save',
-                        'id': 'Simpan',
-                      }),
+                    : lp.getTranslatedText({'en': 'Save', 'id': 'Simpan'}),
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -1028,8 +1025,10 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
         primaryColor: getPrimaryColor(),
         labels: {
           'finalLabel': lp.getTranslatedText({'en': 'Final', 'id': 'NA'}),
-          'skillLabel': lp
-              .getTranslatedText({'en': 'Skill', 'id': 'Keterampilan'}),
+          'skillLabel': lp.getTranslatedText({
+            'en': 'Skill',
+            'id': 'Keterampilan',
+          }),
           'gradeLabel': lp.getTranslatedText({'en': 'Grade', 'id': 'Nilai'}),
           'descLabel': lp.getTranslatedText({'en': 'Desc.', 'id': 'Desk.'}),
         },

@@ -34,9 +34,7 @@ class LessonPlanPollingSkeletonBody extends StatelessWidget {
                 offset: const Offset(0, 10),
               ),
             ],
-            border: Border.all(
-              color: primaryColor.withValues(alpha: 0.1),
-            ),
+            border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

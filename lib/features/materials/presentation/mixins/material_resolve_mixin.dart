@@ -98,9 +98,13 @@ mixin MaterialResolveMixin
     final profileCK = CacheKeyBuilder.teacherProfile(teacherId);
     final api = getIt<ApiTeacherService>();
 
-    final earlyAyId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+    final earlyAyId = ref
+        .read(academicYearRiverpod)
+        .selectedAcademicYear?['id']
+        ?.toString();
     final futures = <Future<dynamic>>[
-      if (needClasses) api.getTeacherClasses(teacherId, academicYearId: earlyAyId),
+      if (needClasses)
+        api.getTeacherClasses(teacherId, academicYearId: earlyAyId),
       if (needProfile) api.getTeacherById(teacherId),
     ];
     final results = await Future.wait(futures);
@@ -157,7 +161,10 @@ mixin MaterialResolveMixin
 
     final results = await Future.wait([
       api.getSubjectByTeacher(teacherId, classId: sel.id),
-      getIt<ApiSubjectService>().getMaterials(teacherId: teacherId, academicYearId: ayId),
+      getIt<ApiSubjectService>().getMaterials(
+        teacherId: teacherId,
+        academicYearId: ayId,
+      ),
       getIt<ApiScheduleService>().getScheduleByTeacher(
         teacherId: teacherId,
         academicYear: ayId,
@@ -217,19 +224,17 @@ mixin MaterialResolveMixin
           .selectedAcademicYear?['id']
           ?.toString();
       // Single API call — schedules are piggy-backed in the response
-      final result =
-          await getIt<ApiSubjectService>().getMaterialTeacherSummaryWithSchedules(
-        teacherId: teacherId,
-        academicYearId: ayId,
-        view: isHomeroomView ? 'wali_kelas' : 'mengajar',
-        search: search,
-      );
+      final result = await getIt<ApiSubjectService>()
+          .getMaterialTeacherSummaryWithSchedules(
+            teacherId: teacherId,
+            academicYearId: ayId,
+            view: isHomeroomView ? 'wali_kelas' : 'mengajar',
+            search: search,
+          );
       if (!mounted) return;
       setState(() {
-        overviewSummary =
-            (result['data'] as List<dynamic>?) ?? [];
-        schedules =
-            (result['schedules'] as List<dynamic>?) ?? [];
+        overviewSummary = (result['data'] as List<dynamic>?) ?? [];
+        schedules = (result['schedules'] as List<dynamic>?) ?? [];
         isLoadingOverview = false;
       });
     } catch (e) {

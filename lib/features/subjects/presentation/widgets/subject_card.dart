@@ -202,24 +202,9 @@ class SubjectCard extends ConsumerWidget {
                   ),
                 ),
 
-                // Action buttons column
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    SubjectCircleActionButton(
-                      icon: Icons.edit_outlined,
-                      color: primaryColor,
-                      onPressed: onEdit,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    SubjectCircleActionButton(
-                      icon: Icons.delete_outline,
-                      color: ColorUtils.error600,
-                      onPressed: onDelete,
-                    ),
-                  ],
-                ),
+                // Per-row edit/delete affordances removed (PR-7 / Audit
+                // Theme 7). Tap-to-detail / bulk-mode / 3-dot overflow take
+                // over. `onEdit` and `onDelete` props kept on the constructor.
               ],
             ),
           ),

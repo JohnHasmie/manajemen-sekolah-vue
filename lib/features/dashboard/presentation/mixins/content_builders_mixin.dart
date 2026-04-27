@@ -44,60 +44,60 @@ mixin ContentBuildersMixin on ConsumerState<Dashboard> {
         role: effectiveRole,
         edgeOffset: MediaQuery.of(context).padding.top + kToolbarHeight,
         child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
-        ),
-        slivers: [
-          DashboardAppBar(
-            schoolName: state.userData['nama_sekolah'],
-            primaryColor: primaryColor,
-            unreadNotifications: state.stats['unread_notifications'],
-            unreadAnnouncements: state.stats['unread_announcements'],
-            profileHeaderKey: profileHeaderKey,
-            onLanguageTap: onLanguageTap,
-            onNotificationTap: onNotificationTap,
-            onAccountTap: () => onAccountTap(state),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
           ),
-          SliverToBoxAdapter(
-            child: DashboardHeroSection(
+          slivers: [
+            DashboardAppBar(
+              schoolName: state.userData['nama_sekolah'],
               primaryColor: primaryColor,
-              effectiveRole: effectiveRole,
-              state: state,
-              heroSectionKey: heroSectionKey,
-              onAcademicYearTap: onAcademicYearTap,
+              unreadNotifications: state.stats['unread_notifications'],
+              unreadAnnouncements: state.stats['unread_announcements'],
+              profileHeaderKey: profileHeaderKey,
+              onLanguageTap: onLanguageTap,
+              onNotificationTap: onNotificationTap,
+              onAccountTap: () => onAccountTap(state),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: DashboardQuickActionsSection(
-              actions: getQuickActions(state),
-              isLoaded: state.isStatsLoaded,
-              quickActionsKey: quickActionsKey,
+            SliverToBoxAdapter(
+              child: DashboardHeroSection(
+                primaryColor: primaryColor,
+                effectiveRole: effectiveRole,
+                state: state,
+                heroSectionKey: heroSectionKey,
+                onAcademicYearTap: onAcademicYearTap,
+              ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: DashboardTodaysOverview(
-              cards: getTodaysOverviewCards(state),
-              isLoaded: state.isStatsLoaded,
-              statsSectionKey: statsSectionKey,
+            SliverToBoxAdapter(
+              child: DashboardQuickActionsSection(
+                actions: getQuickActions(state),
+                isLoaded: state.isStatsLoaded,
+                quickActionsKey: quickActionsKey,
+              ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-              child: Text(
-                AppLocalizations.menu.tr,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: ColorUtils.slate900,
+            SliverToBoxAdapter(
+              child: DashboardTodaysOverview(
+                cards: getTodaysOverviewCards(state),
+                isLoaded: state.isStatsLoaded,
+                statsSectionKey: statsSectionKey,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                child: Text(
+                  AppLocalizations.menu.tr,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: ColorUtils.slate900,
+                  ),
                 ),
               ),
             ),
-          ),
-          buildSliverGridMenu(context, state),
-          const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-        ],
-      ),
+            buildSliverGridMenu(context, state),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+          ],
+        ),
       ),
     );
   }

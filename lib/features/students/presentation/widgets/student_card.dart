@@ -190,58 +190,11 @@ class StudentCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (!isReadOnly) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          // Edit button
-                          InkWell(
-                            onTap: onEdit,
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(8),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: primaryColor.withValues(alpha: 0.1),
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(8),
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.edit_outlined,
-                                size: 16,
-                                color: primaryColor,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          // Delete button
-                          InkWell(
-                            onTap: onDelete,
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(8),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: ColorUtils.error600.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(8),
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.delete_outline,
-                                size: 16,
-                                color: ColorUtils.error600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    // Per-row edit/delete affordances removed (P0_PR_Plan
+                    // PR-7 / Audit Theme 7). The outer InkWell already wires
+                    // tap-to-detail; bulk-mode + 3-dot overflow surface the
+                    // destructive actions. `onEdit` and `onDelete` are kept
+                    // on the constructor so callers stay unchanged.
                   ],
                 ),
               ],

@@ -73,10 +73,8 @@ class ScheduleTeacherService {
     String? date,
     String? academicYearId,
   }) async {
-    final dateStr = date ??
-        DateTime.now().toIso8601String().split('T').first;
-    final cacheKey =
-        'schedule_daily_summary_${teacherId}_$dateStr';
+    final dateStr = date ?? DateTime.now().toIso8601String().split('T').first;
+    final cacheKey = 'schedule_daily_summary_${teacherId}_$dateStr';
 
     // Try cache first
     final cached = await LocalCacheService.load(
@@ -84,10 +82,7 @@ class ScheduleTeacherService {
       ttl: const Duration(minutes: 5),
     );
     if (cached != null && cached is Map) {
-      AppLogger.debug(
-        'schedule',
-        'Daily summary loaded from cache',
-      );
+      AppLogger.debug('schedule', 'Daily summary loaded from cache');
       return Map<String, dynamic>.from(cached);
     }
 
@@ -148,8 +143,7 @@ class ScheduleTeacherService {
         queryParameters: {
           'teacher_id': teacherId,
           'week_start': weekStartStr,
-          if (academicYearId != null)
-            'academic_year_id': academicYearId,
+          if (academicYearId != null) 'academic_year_id': academicYearId,
         },
       );
 

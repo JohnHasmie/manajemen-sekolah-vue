@@ -48,8 +48,7 @@ class LessonPlanDetailHeader extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
         ),
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.2),
@@ -129,10 +128,7 @@ class LessonPlanDetailHeader extends StatelessWidget {
       _HeaderButton(icon: Icons.edit_outlined, onTap: onEditTap),
       const SizedBox(width: AppSpacing.sm),
       if (onExportTap != null)
-        _MoreActionsButton(
-          onExport: onExportTap!,
-          onCopy: onCopyTap ?? () {},
-        ),
+        _MoreActionsButton(onExport: onExportTap!, onCopy: onCopyTap ?? () {}),
     ];
   }
 }

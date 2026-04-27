@@ -55,6 +55,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
     required String className,
     required String subjectId,
     required String subjectName,
+    String? teacherId,
   });
 
   void filterStudents();
@@ -116,6 +117,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
             className: g['class_name']?.toString() ?? '',
             subjectId: g['subject_id']?.toString() ?? '',
             subjectName: g['subject_name']?.toString() ?? '',
+            teacherId: g['teacher_id']?.toString(),
           ),
         );
       },
@@ -223,6 +225,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
             className: (r['class_name'] ?? r['subject_name'] ?? '').toString(),
             subjectId: (r['subject_id'] ?? '').toString(),
             subjectName: (r['subject_name'] ?? '').toString(),
+            teacherId: r['teacher_id']?.toString(),
           ),
         );
       },

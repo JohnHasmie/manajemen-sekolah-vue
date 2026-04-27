@@ -9,17 +9,14 @@ import 'package:manajemensekolah/features/report_cards/'
     'parent_report_card_detail_screen.dart';
 
 /// Mixin for UI builder methods (header, filter, content states).
-mixin ReportCardUIBuilderMixin {
-  // Abstract state access
-  void setState(VoidCallback fn);
-  BuildContext get context;
-
-  // State fields
-  late bool isLoading;
-  late String errorMessage;
-  late List<dynamic> studentsData;
-  late Map<String, dynamic> parentData;
-  late String selectedTermId;
+mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
+  // State fields (from implementation state)
+  bool get isLoading;
+  String get errorMessage;
+  List<dynamic> get studentsData;
+  Map<String, dynamic> get parentData;
+  String get selectedTermId;
+  set selectedTermId(String value);
 
   // Data access methods (from ReportCardDataMixin)
   Color getPrimaryColor();

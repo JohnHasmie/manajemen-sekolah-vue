@@ -120,7 +120,10 @@ mixin TeacherScheduleCacheMixin on ConsumerState<TeachingScheduleScreen> {
       final service = getIt<ApiScheduleService>();
 
       // Single API call replaces N separate getDailySummary calls
-      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+      final ayId = ref
+          .read(academicYearRiverpod)
+          .selectedAcademicYear?['id']
+          ?.toString();
       final weekResult = await service.getWeekSummary(
         teacherId: teacherIdInternal,
         academicYearId: ayId,

@@ -114,18 +114,14 @@ mixin SubjectClassActionsMixin {
         ),
         title: Text(
           (() {
-            final model = Classroom.fromJson(
-              classItem,
-            );
+            final model = Classroom.fromJson(classItem);
             return model.name.isEmpty ? 'Kelas' : model.name;
           })(),
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
         subtitle: Builder(
           builder: (context) {
-            final model = Classroom.fromJson(
-              classItem,
-            );
+            final model = Classroom.fromJson(classItem);
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -137,10 +133,7 @@ mixin SubjectClassActionsMixin {
                 if ((model.homeroomTeacherName ?? '').isNotEmpty)
                   Text(
                     'Wali: ${model.homeroomTeacherName}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: ColorUtils.slate500,
-                    ),
+                    style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
                   ),
               ],
             );

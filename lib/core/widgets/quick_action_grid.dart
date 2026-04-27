@@ -118,18 +118,20 @@ class QuickActionGrid extends StatelessWidget {
       child: Column(
         children: [
           for (var r = 0; r < rows.length; r++) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var c = 0; c < rows[r].length; c++) ...[
-                  Expanded(
-                    child: rows[r][c] == null
-                        ? const SizedBox.shrink()
-                        : _QuickActionTile(action: rows[r][c]!),
-                  ),
-                  if (c < rows[r].length - 1) SizedBox(width: spacing),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var c = 0; c < rows[r].length; c++) ...[
+                    Expanded(
+                      child: rows[r][c] == null
+                          ? const SizedBox.shrink()
+                          : _QuickActionTile(action: rows[r][c]!),
+                    ),
+                    if (c < rows[r].length - 1) SizedBox(width: spacing),
+                  ],
                 ],
-              ],
+              ),
             ),
             if (r < rows.length - 1) SizedBox(height: spacing),
           ],

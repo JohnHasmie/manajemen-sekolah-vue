@@ -221,7 +221,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: ColorUtils.primary,
+        backgroundColor: ColorUtils.getRoleColor('wali'),
         elevation: 0,
         actions: [
           IconButton(

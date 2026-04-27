@@ -148,7 +148,8 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
       if (!mounted) return;
 
       // Extract classes from the combined response.
-      final classes = (summaryResult['teacher_classes'] as List?)
+      final classes =
+          (summaryResult['teacher_classes'] as List?)
               ?.map((c) => Map<String, dynamic>.from(c as Map))
               .toList() ??
           [];

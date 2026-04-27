@@ -158,30 +158,11 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  // Delete button
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: onDelete,
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: ColorUtils.error600.withValues(alpha: 0.08),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: ColorUtils.error600.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.delete_outline,
-                          size: 16,
-                          color: ColorUtils.error600,
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Per-row delete affordance removed: attendance records are
+                  // an audit trail; admins must not delete individual entries
+                  // from the report list. The `onDelete` callback is kept on
+                  // the constructor (still passed by the screen) for use by a
+                  // future bulk-mode / overflow-menu surface.
                 ],
               ),
 
@@ -277,4 +258,3 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
     );
   }
 }
-

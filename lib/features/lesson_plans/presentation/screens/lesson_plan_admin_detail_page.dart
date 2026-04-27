@@ -76,8 +76,7 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: ClipRRect(
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           child: SafeArea(
             top: false,
             child: Column(

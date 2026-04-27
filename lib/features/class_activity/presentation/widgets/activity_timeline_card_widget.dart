@@ -19,7 +19,8 @@ class ActivityTimelineCardWidget extends StatelessWidget {
   });
 
   String? _authorName() {
-    final raw = activity['guru_nama'] ??
+    final raw =
+        activity['guru_nama'] ??
         activity['teacher_name'] ??
         activity['teacher']?['name'];
     final str = raw?.toString().trim();

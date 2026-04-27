@@ -62,8 +62,10 @@ class FilterDialogContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FilterSectionHeader(
-                title: languageProvider
-                    .getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+                title: languageProvider.getTranslatedText({
+                  'en': 'Class',
+                  'id': 'Kelas',
+                }),
                 icon: Icons.class_outlined,
                 primaryColor: primaryColor,
               ),
@@ -78,10 +80,12 @@ class FilterDialogContent extends StatelessWidget {
                 onSelected: (classId) {
                   final isSelected = classId == selectedClassId;
                   onClassIdChanged(isSelected ? null : classId);
-                  final match =
-                      availableClasses.where((c) => c['id'] == classId);
-                  final className =
-                      match.isNotEmpty ? match.first['name'] : null;
+                  final match = availableClasses.where(
+                    (c) => c['id'] == classId,
+                  );
+                  final className = match.isNotEmpty
+                      ? match.first['name']
+                      : null;
                   onClassNameChanged(isSelected ? null : className);
                   onSubjectIdChanged(null);
                   onSubjectNameChanged(null);
@@ -96,8 +100,10 @@ class FilterDialogContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 FilterSectionHeader(
-                  title: languageProvider
-                      .getTranslatedText({'en': 'Subject', 'id': 'Mapel'}),
+                  title: languageProvider.getTranslatedText({
+                    'en': 'Subject',
+                    'id': 'Mapel',
+                  }),
                   icon: Icons.book_outlined,
                   primaryColor: primaryColor,
                 ),
@@ -119,18 +125,15 @@ class FilterDialogContent extends StatelessWidget {
                   FilterChipGrid<String>(
                     options: subjectList.map((s) {
                       final sid = s['id']?.toString() ?? '';
-                      final sname =
-                          (s['name'] ?? s['nama'] ?? '-').toString();
-                      return FilterOption<String>(
-                        value: sid,
-                        label: sname,
-                      );
+                      final sname = (s['name'] ?? s['nama'] ?? '-').toString();
+                      return FilterOption<String>(value: sid, label: sname);
                     }).toList(),
                     selectedValue: selectedSubjectId,
                     onSelected: (subjectId) {
                       final isSelected = subjectId == selectedSubjectId;
                       onSubjectIdChanged(isSelected ? null : subjectId);
-                      final subjectName = subjectList.firstWhere(
+                      final subjectName =
+                          subjectList.firstWhere(
                             (s) => s['id']?.toString() == subjectId,
                             orElse: () => {'name': null, 'nama': null},
                           )['name'] ??

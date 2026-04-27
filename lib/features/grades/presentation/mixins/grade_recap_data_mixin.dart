@@ -40,10 +40,12 @@ mixin GradeRecapDataMixin {
   }
 
   String _buildRecapCacheKey() {
-    final ayId = ref
-        .read(academicYearRiverpod)
-        .selectedAcademicYear?['id']
-        ?.toString() ?? 'default';
+    final ayId =
+        ref
+            .read(academicYearRiverpod)
+            .selectedAcademicYear?['id']
+            ?.toString() ??
+        'default';
     final view = isHomeroomView ? 'wali_kelas' : 'mengajar';
     return 'rekap_nilai_${teacherId}_${view}_$ayId';
   }

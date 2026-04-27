@@ -55,6 +55,13 @@ mixin LoginAuthHandlerMixin on ConsumerState<LoginScreen> {
       return;
     }
 
+    // Clear any prior error snackbar (e.g. stale "Email atau password
+    // salah") so it doesn't persist into the school/role picker step
+    // when login succeeds. The login screen, school picker, and role
+    // picker are inline state transitions on the same Scaffold —
+    // snackbars from earlier steps don't auto-dismiss across them.
+    SnackBarUtils.dismiss(context);
+
     final email = emailController.text.trim();
     final password = passwordController.text;
 
@@ -68,6 +75,7 @@ mixin LoginAuthHandlerMixin on ConsumerState<LoginScreen> {
       return;
     }
 
+    SnackBarUtils.dismiss(context);
     await ref.read(authProvider.notifier).signInWithGoogle();
   }
 
@@ -78,6 +86,7 @@ mixin LoginAuthHandlerMixin on ConsumerState<LoginScreen> {
       return;
     }
 
+    SnackBarUtils.dismiss(context);
     await ref.read(authProvider.notifier).verifyOtp(otp);
   }
 

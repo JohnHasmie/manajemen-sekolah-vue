@@ -58,11 +58,13 @@ class AttendanceFilterHelper {
               'en': 'This Month',
               'id': 'Bulan Ini',
             });
-      filterChips.add(ActiveFilter(
-        label:
-            '${languageProvider.getTranslatedText({'en': 'Date', 'id': 'Tanggal'})}: $label',
-        onRemove: () => onRemoveSideEffect(() => selectedDateFilter = null),
-      ));
+      filterChips.add(
+        ActiveFilter(
+          label:
+              '${languageProvider.getTranslatedText({'en': 'Date', 'id': 'Tanggal'})}: $label',
+          onRemove: () => onRemoveSideEffect(() => selectedDateFilter = null),
+        ),
+      );
     }
 
     for (final subjectId in selectedSubjectIds) {
@@ -71,12 +73,14 @@ class AttendanceFilterHelper {
         orElse: () => {'name': 'Subject #$subjectId'},
       );
       final subjectName = Subject.fromJson(raw as Map<String, dynamic>).name;
-      filterChips.add(ActiveFilter(
-        label:
-            '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mapel'})}: $subjectName',
-        onRemove: () =>
-            onRemoveSideEffect(() => selectedSubjectIds.remove(subjectId)),
-      ));
+      filterChips.add(
+        ActiveFilter(
+          label:
+              '${languageProvider.getTranslatedText({'en': 'Subject', 'id': 'Mapel'})}: $subjectName',
+          onRemove: () =>
+              onRemoveSideEffect(() => selectedSubjectIds.remove(subjectId)),
+        ),
+      );
     }
 
     for (final classId in selectedClassIds) {
@@ -84,31 +88,38 @@ class AttendanceFilterHelper {
         (k) => k['id'].toString() == classId,
         orElse: () => {'name': 'Class #$classId'},
       );
-      final className =
-          Classroom.fromJson(classItem as Map<String, dynamic>).name;
-      filterChips.add(ActiveFilter(
-        label:
-            '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: $className',
-        onRemove: () =>
-            onRemoveSideEffect(() => selectedClassIds.remove(classId)),
-      ));
+      final className = Classroom.fromJson(
+        classItem as Map<String, dynamic>,
+      ).name;
+      filterChips.add(
+        ActiveFilter(
+          label:
+              '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: $className',
+          onRemove: () =>
+              onRemoveSideEffect(() => selectedClassIds.remove(classId)),
+        ),
+      );
     }
 
     if (selectedDayIds.isNotEmpty) {
-      filterChips.add(ActiveFilter(
-        label:
-            '${languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'})}: ${selectedDayIds.length}',
-        onRemove: () => onRemoveSideEffect(() => selectedDayIds.clear()),
-      ));
+      filterChips.add(
+        ActiveFilter(
+          label:
+              '${languageProvider.getTranslatedText({'en': 'Day', 'id': 'Hari'})}: ${selectedDayIds.length}',
+          onRemove: () => onRemoveSideEffect(() => selectedDayIds.clear()),
+        ),
+      );
     }
 
     if (selectedLessonHourIds.isNotEmpty) {
-      filterChips.add(ActiveFilter(
-        label:
-            '${languageProvider.getTranslatedText({'en': 'Hour', 'id': 'Jam'})}: ${selectedLessonHourIds.length}',
-        onRemove: () =>
-            onRemoveSideEffect(() => selectedLessonHourIds.clear()),
-      ));
+      filterChips.add(
+        ActiveFilter(
+          label:
+              '${languageProvider.getTranslatedText({'en': 'Hour', 'id': 'Jam'})}: ${selectedLessonHourIds.length}',
+          onRemove: () =>
+              onRemoveSideEffect(() => selectedLessonHourIds.clear()),
+        ),
+      );
     }
 
     return filterChips;

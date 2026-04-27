@@ -75,8 +75,7 @@ class AppEditBottomSheet {
     // When a destructive action is provided, the left button acts as "Hapus"
     // (red outlined) and the right button is the primary save. Otherwise the
     // left button is a plain "Batal" that dismisses the sheet.
-    final hasDestructive =
-        destructiveLabel != null && onDestructive != null;
+    final hasDestructive = destructiveLabel != null && onDestructive != null;
 
     return AppBottomSheet.show<T>(
       context: context,

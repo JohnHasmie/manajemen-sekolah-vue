@@ -213,10 +213,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
 
     try {
       // Load paginated list and summary counts concurrently
-      await Future.wait([
-        loadPage(1),
-        _loadSummaryData(),
-      ]);
+      await Future.wait([loadPage(1), _loadSummaryData()]);
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -285,8 +282,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
             filterSummary: buildFilterSummary(languageProvider),
             onClearFilters: clearAllFilters,
             trailing: ViewToggleButton(
-              currentMode:
-                  _isSummaryView ? ViewMode.grid : ViewMode.list,
+              currentMode: _isSummaryView ? ViewMode.grid : ViewMode.list,
               availableModes: const [ViewMode.grid, ViewMode.list],
               onChanged: (mode) => setState(() {
                 _isSummaryView = mode == ViewMode.grid;
@@ -351,15 +347,13 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
   }
 
   /// Fetches all RPPs for a given subject (no page limit) for expanded view.
-  Future<List<Map<String, dynamic>>> _loadSubjectItems(
-      String subjectId) async {
+  Future<List<Map<String, dynamic>>> _loadSubjectItems(String subjectId) async {
     final result = await LessonPlanService.getLessonPlansPaginated(
       teacherId: widget.teacherId,
       subjectId: subjectId,
       academicYearId: _getAcademicYearId(),
       status: _selectedStatusFilter,
-      search:
-          _searchController.text.isNotEmpty ? _searchController.text : null,
+      search: _searchController.text.isNotEmpty ? _searchController.text : null,
       page: 1,
       limit: 200, // Fetch all items for this subject
     );

@@ -80,7 +80,14 @@ mixin AttendanceDialogFilterMixin
         'id': 'Filter Presensi',
       }),
       primaryColor: primaryColor,
-      onApply: () => _applyFilter(context, tClassId, tSubjectId, tDateOption, tSubjectList, lp),
+      onApply: () => _applyFilter(
+        context,
+        tClassId,
+        tSubjectId,
+        tDateOption,
+        tSubjectList,
+        lp,
+      ),
       onReset: () => setState(() {
         filterClassId = null;
         filterSubjectId = null;
@@ -90,19 +97,26 @@ mixin AttendanceDialogFilterMixin
       content: StatefulBuilder(
         builder: (ctx, setSS) {
           final classes = classList
-              .map((c) => FilterOption<String>(
-                    value: c['id']?.toString() ?? '',
-                    label: c['name']?.toString() ?? c['nama']?.toString() ?? '-',
-                  ))
+              .map(
+                (c) => FilterOption<String>(
+                  value: c['id']?.toString() ?? '',
+                  label: c['name']?.toString() ?? c['nama']?.toString() ?? '-',
+                ),
+              )
               .toList();
 
           final subjects = tSubjectList.isNotEmpty
               ? tSubjectList
-                  .map((s) => FilterOption<String>(
+                    .map(
+                      (s) => FilterOption<String>(
                         value: s['id']?.toString() ?? '',
-                        label: s['name']?.toString() ?? s['nama']?.toString() ?? '-',
-                      ))
-                  .toList()
+                        label:
+                            s['name']?.toString() ??
+                            s['nama']?.toString() ??
+                            '-',
+                      ),
+                    )
+                    .toList()
               : <FilterOption<String>>[];
 
           final dateOptions = [
@@ -112,11 +126,17 @@ mixin AttendanceDialogFilterMixin
             ),
             FilterOption<String>(
               value: 'week',
-              label: lp.getTranslatedText({'en': 'This Week', 'id': 'Minggu Ini'}),
+              label: lp.getTranslatedText({
+                'en': 'This Week',
+                'id': 'Minggu Ini',
+              }),
             ),
             FilterOption<String>(
               value: 'month',
-              label: lp.getTranslatedText({'en': 'This Month', 'id': 'Bulan Ini'}),
+              label: lp.getTranslatedText({
+                'en': 'This Month',
+                'id': 'Bulan Ini',
+              }),
             ),
           ];
 
@@ -126,10 +146,7 @@ mixin AttendanceDialogFilterMixin
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   FilterSectionHeader(
-                    title: lp.getTranslatedText({
-                      'en': 'Class',
-                      'id': 'Kelas',
-                    }),
+                    title: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
                     icon: Icons.class_outlined,
                     primaryColor: primaryColor,
                   ),
@@ -225,5 +242,4 @@ mixin AttendanceDialogFilterMixin
     });
     forceRefresh();
   }
-
 }

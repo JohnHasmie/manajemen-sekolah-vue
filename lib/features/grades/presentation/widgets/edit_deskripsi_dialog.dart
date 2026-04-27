@@ -37,10 +37,7 @@ void showEditDeskripsiDialog({
       style: const TextStyle(fontSize: 14),
       decoration: InputDecoration(
         hintText: translations['hint'] ?? 'Masukkan deskripsi...',
-        hintStyle: TextStyle(
-          fontSize: 13,
-          color: ColorUtils.slate400,
-        ),
+        hintStyle: TextStyle(fontSize: 13, color: ColorUtils.slate400),
         filled: true,
         fillColor: ColorUtils.slate50,
         border: OutlineInputBorder(

@@ -106,8 +106,7 @@ class _LessonPlanEditorViewState extends State<LessonPlanEditorView> {
     }
   }
 
-  String _getFieldValue(
-      Map<String, dynamic> data, String key, String altKey) {
+  String _getFieldValue(Map<String, dynamic> data, String key, String altKey) {
     final val = data[key];
     if (val != null && val.toString().trim().isNotEmpty) {
       return val.toString().trim();
@@ -195,18 +194,20 @@ class _LessonPlanEditorViewState extends State<LessonPlanEditorView> {
         const SizedBox(height: 10),
 
         // Section cards with content
-        ...nonEmptyFields.asMap().entries.map((entry) =>
-            _buildSectionCard(entry.value, entry.key)),
+        ...nonEmptyFields.asMap().entries.map(
+          (entry) => _buildSectionCard(entry.value, entry.key),
+        ),
 
         // Empty sections (collapsed, for adding new content)
         if (emptyFields.isNotEmpty) ...[
           _buildEmptySectionsHeader(emptyFields.length),
-          ...emptyFields.asMap().entries.map((entry) =>
-              _buildSectionCard(
-                entry.value,
-                nonEmptyFields.length + entry.key,
-                isEmpty: true,
-              )),
+          ...emptyFields.asMap().entries.map(
+            (entry) => _buildSectionCard(
+              entry.value,
+              nonEmptyFields.length + entry.key,
+              isEmpty: true,
+            ),
+          ),
         ],
       ],
     );
@@ -218,17 +219,11 @@ class _LessonPlanEditorViewState extends State<LessonPlanEditorView> {
       decoration: BoxDecoration(
         color: widget.primaryColor.withValues(alpha: 0.05),
         borderRadius: const BorderRadius.all(Radius.circular(10)),
-        border: Border.all(
-          color: widget.primaryColor.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: widget.primaryColor.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.edit_note_rounded,
-            size: 18,
-            color: widget.primaryColor,
-          ),
+          Icon(Icons.edit_note_rounded, size: 18, color: widget.primaryColor),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -273,8 +268,7 @@ class _LessonPlanEditorViewState extends State<LessonPlanEditorView> {
               child: Padding(
                 padding: const EdgeInsets.all(4),
                 child: Icon(
-                  _expandedSections.length ==
-                          widget.fieldDefinitions!.length
+                  _expandedSections.length == widget.fieldDefinitions!.length
                       ? Icons.unfold_less_rounded
                       : Icons.unfold_more_rounded,
                   size: 18,
@@ -376,14 +370,16 @@ class _LessonPlanEditorViewState extends State<LessonPlanEditorView> {
                         color: isExpanded
                             ? sectionColor
                             : isEmpty
-                                ? ColorUtils.slate200
-                                : sectionColor.withValues(alpha: 0.4),
+                            ? ColorUtils.slate200
+                            : sectionColor.withValues(alpha: 0.4),
                       ),
                     ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         child: Row(
                           children: [
                             Container(
@@ -394,7 +390,8 @@ class _LessonPlanEditorViewState extends State<LessonPlanEditorView> {
                                     ? sectionColor.withValues(alpha: 0.12)
                                     : ColorUtils.slate50,
                                 borderRadius: const BorderRadius.all(
-                                    Radius.circular(8)),
+                                  Radius.circular(8),
+                                ),
                               ),
                               child: Icon(
                                 sectionIcon,
@@ -407,8 +404,7 @@ class _LessonPlanEditorViewState extends State<LessonPlanEditorView> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     label,
@@ -492,12 +488,12 @@ class _LessonPlanEditorViewState extends State<LessonPlanEditorView> {
   }
 
   Widget _buildSectionQuillEditor(
-      quill.QuillController controller, Color accentColor) {
+    quill.QuillController controller,
+    Color accentColor,
+  ) {
     return Container(
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: ColorUtils.slate100),
-        ),
+        border: Border(top: BorderSide(color: ColorUtils.slate100)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),

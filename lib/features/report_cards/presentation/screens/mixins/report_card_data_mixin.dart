@@ -10,11 +10,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 
 /// Mixin for data loading, caching, and styling logic.
-mixin ReportCardDataMixin {
-  // Abstract state access
-  void setState(VoidCallback fn);
-  BuildContext get context;
-
+mixin ReportCardDataMixin<T extends StatefulWidget> on State<T> {
   // State fields
   late bool isLoading;
   late String errorMessage;
@@ -24,8 +20,7 @@ mixin ReportCardDataMixin {
   late String? academicYearId;
 
   /// Returns Riverpod provider accessor.
-  dynamic getAcademicYearProvider() =>
-      throw UnimplementedError('Implement in state');
+  dynamic getAcademicYearProvider();
 
   String buildCacheKey() {
     final provider = getAcademicYearProvider();
@@ -126,7 +121,6 @@ mixin ReportCardDataMixin {
     }
   }
 
-  bool get mounted => throw UnimplementedError('Implement in state');
 
   Future<void> fetchParentReportCards() async {
     final provider = getAcademicYearProvider();

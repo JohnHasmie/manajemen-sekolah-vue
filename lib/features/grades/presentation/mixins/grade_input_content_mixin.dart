@@ -48,10 +48,11 @@ mixin GradeInputContentMixin on ConsumerState<GradePage> {
               'id': 'Tidak ada jadwal mengajar ditemukan',
             }),
       emptyIcon: isHomeroomView ? Icons.class_outlined : Icons.grade_outlined,
-      childBuilder: () => isTableView ? buildTableView(getFilteredData()) : _buildListView(getFilteredData()),
+      childBuilder: () => isTableView
+          ? buildTableView(getFilteredData())
+          : _buildListView(getFilteredData()),
     );
   }
-
 
   Widget _buildListView(List<dynamic> data) {
     return ListView.builder(

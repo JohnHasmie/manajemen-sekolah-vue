@@ -47,25 +47,22 @@ mixin MaterialUIHelpersMixin on ConsumerState<TeacherMaterialScreen> {
     return chapterMaterialList.where((ch) {
       final matchTitle =
           ch['judul_bab']?.toString().toLowerCase().contains(term) ?? false;
-      final matchNumber =
-          ch['urutan']?.toString().contains(term) ?? false;
+      final matchNumber = ch['urutan']?.toString().contains(term) ?? false;
       final matchDesc =
-          ch['deskripsi_bab']?.toString().toLowerCase().contains(term) ??
-              false;
+          ch['deskripsi_bab']?.toString().toLowerCase().contains(term) ?? false;
       final matchSub = subChapterMaterialList
           .where((sc) => sc['bab_id'] == ch['id'])
           .any((sc) {
-        final subTitle =
-            sc['judul_sub_bab']?.toString().toLowerCase().contains(term) ??
+            final subTitle =
+                sc['judul_sub_bab']?.toString().toLowerCase().contains(term) ??
                 false;
-        final subDesc =
-            sc['deskripsi_sub_bab']
-                ?.toString()
-                .toLowerCase()
-                .contains(term) ??
-            false;
-        return subTitle || subDesc;
-      });
+            final subDesc =
+                sc['deskripsi_sub_bab']?.toString().toLowerCase().contains(
+                  term,
+                ) ??
+                false;
+            return subTitle || subDesc;
+          });
       return matchTitle || matchNumber || matchDesc || matchSub;
     }).toList();
   }

@@ -49,7 +49,8 @@ abstract class Announcement with _$Announcement {
     } else if (rawRead is num) {
       mapped['is_read'] = rawRead != 0;
     } else {
-      mapped['is_read'] = rawRead.toString() == '1' ||
+      mapped['is_read'] =
+          rawRead.toString() == '1' ||
           rawRead.toString().toLowerCase() == 'true';
     }
 

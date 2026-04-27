@@ -41,7 +41,10 @@ class DashboardDataFetcher {
       }
       return {};
     } catch (e) {
-      AppLogger.error('dashboard_data_fetcher', 'Error fetching /dashboard/full: $e');
+      AppLogger.error(
+        'dashboard_data_fetcher',
+        'Error fetching /dashboard/full: $e',
+      );
       return {};
     }
   }
@@ -77,14 +80,16 @@ class DashboardDataFetcher {
       );
 
       // Update TeacherProvider
-      ref.read(teacherRiverpod).setTeacherData(
-        userId: userId,
-        teacherId: teacherId,
-        teacherName: updatedUserData['nama'] ?? 'Guru',
-        teacherData: updatedUserData,
-        allClasses: allClasses,
-        homeroomClasses: homeroomClasses,
-      );
+      ref
+          .read(teacherRiverpod)
+          .setTeacherData(
+            userId: userId,
+            teacherId: teacherId,
+            teacherName: updatedUserData['nama'] ?? 'Guru',
+            teacherData: updatedUserData,
+            allClasses: allClasses,
+            homeroomClasses: homeroomClasses,
+          );
 
       return {'userData': updatedUserData, 'homeroomClasses': homeroomClasses};
     } catch (e) {

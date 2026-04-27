@@ -82,12 +82,15 @@ class StudentManagementScreenState
   // the per-header menu/search/filter keys are intentionally retired.
   final GlobalKey _fabKey = GlobalKey();
 
+  // Cache the provider reference so dispose() doesn't call ref after unmount.
+  late final _academicYearProvider = ref.read(academicYearRiverpod);
+
   @override
   void initState() {
     super.initState();
 
     // Reload data whenever the active academic year changes in the header.
-    ref.read(academicYearRiverpod).addListener(_onAcademicYearChanged);
+    _academicYearProvider.addListener(_onAcademicYearChanged);
 
     // If we arrived from a class detail screen, pre-apply that class id as
     // the only filter.
@@ -102,7 +105,7 @@ class StudentManagementScreenState
   @override
   void dispose() {
     _searchController.dispose();
-    ref.read(academicYearRiverpod).removeListener(_onAcademicYearChanged);
+    _academicYearProvider.removeListener(_onAcademicYearChanged);
     super.dispose();
   }
 

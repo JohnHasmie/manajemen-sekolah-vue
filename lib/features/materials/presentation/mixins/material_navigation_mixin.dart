@@ -36,7 +36,11 @@ mixin MaterialNavigationMixin on ConsumerState<TeacherMaterialScreen> {
   String getSelectedSubjectName();
 
   /// Reload chapter content after activity generation.
-  Future<void> loadChapterContent(String subjectId, {bool useCache, String? search});
+  Future<void> loadChapterContent(
+    String subjectId, {
+    bool useCache,
+    String? search,
+  });
 
   // ── Navigation ──
 

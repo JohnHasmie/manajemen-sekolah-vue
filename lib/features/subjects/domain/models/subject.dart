@@ -84,8 +84,7 @@ abstract class Subject with _$Subject {
     } else if (active is num) {
       m['is_active'] = active != 0;
     } else if (active is String) {
-      m['is_active'] =
-          active.toLowerCase() == 'true' || active == '1';
+      m['is_active'] = active.toLowerCase() == 'true' || active == '1';
     } else {
       m['is_active'] = true;
     }

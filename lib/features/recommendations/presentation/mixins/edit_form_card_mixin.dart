@@ -15,8 +15,7 @@ mixin EditFormCardMixin {
   BuildContext get context;
   void setState(VoidCallback fn);
 
-  Color get _editAccent =>
-      ColorUtils.getRoleColor('guru');
+  Color get _editAccent => ColorUtils.getRoleColor('guru');
 
   /// Builds edit card for a single recommendation.
   Widget buildEditCard(Map<String, dynamic> rec, int index) {
@@ -100,14 +99,9 @@ mixin EditFormCardMixin {
         gradient: LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
-          colors: [
-            accentColor.withValues(alpha: 0.06),
-            Colors.white,
-          ],
+          colors: [accentColor.withValues(alpha: 0.06), Colors.white],
         ),
-        border: Border(
-          bottom: BorderSide(color: ColorUtils.slate100),
-        ),
+        border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -125,7 +119,9 @@ mixin EditFormCardMixin {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -133,8 +129,9 @@ mixin EditFormCardMixin {
                       height: 28,
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.12),
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
                       ),
                       child: Center(
                         child: Text(
@@ -208,11 +205,7 @@ mixin EditFormCardMixin {
   }
 
   Widget _sectionDivider() {
-    return Divider(
-      height: 1,
-      thickness: 1,
-      color: ColorUtils.slate100,
-    );
+    return Divider(height: 1, thickness: 1, color: ColorUtils.slate100);
   }
 
   Widget _buildTitleField(String recId) {
@@ -243,10 +236,15 @@ mixin EditFormCardMixin {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: const BorderRadius.all(Radius.circular(10)),
-          borderSide: BorderSide(color: _editAccent.withValues(alpha: 0.5), width: 1.5),
+          borderSide: BorderSide(
+            color: _editAccent.withValues(alpha: 0.5),
+            width: 1.5,
+          ),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         isDense: true,
       ),
     );

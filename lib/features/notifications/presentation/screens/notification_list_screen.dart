@@ -57,6 +57,15 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
         NotificationNavigationMixin,
         NotificationWidgetBuilderMixin,
         NotificationScaffoldMixin {
+  // Mixin getters — ConsumerState already provides ref and context.
+  @override
+  String get role => widget.role;
+
+  @override
+  Color get primaryColor => ColorUtils.getRoleColor(widget.role);
+
+  LanguageProvider get languageProvider => ref.watch(languageRiverpod);
+
   @override
   void initState() {
     super.initState();
@@ -65,15 +74,8 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
     });
   }
 
-  Color _getPrimaryColor() {
-    return ColorUtils.getRoleColor(widget.role);
-  }
-
   @override
   Widget build(BuildContext context) {
-    ref; // Ensure ref is accessible to mixins
-    role = widget.role;
-    primaryColor = _getPrimaryColor();
 
     final notificationAsyncValue = ref.watch(notificationProvider);
 

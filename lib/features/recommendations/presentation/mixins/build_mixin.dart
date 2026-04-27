@@ -150,8 +150,9 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
     final query = _searchQuery.trim().toLowerCase();
     return _sourceClasses.where((cls) {
       if (query.isNotEmpty) {
-        final name =
-            (cls['name'] ?? cls['nama'] ?? '').toString().toLowerCase();
+        final name = (cls['name'] ?? cls['nama'] ?? '')
+            .toString()
+            .toLowerCase();
         if (!name.contains(query)) return false;
       }
       if (_statusFilter != null) {
@@ -270,7 +271,9 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
   }
 
   Widget _buildBody(BuildContext context) {
-    final emptyTitle = isHomeroomView ? 'Belum Ada Kelas Perwalian' : 'Belum Ada Kelas';
+    final emptyTitle = isHomeroomView
+        ? 'Belum Ada Kelas Perwalian'
+        : 'Belum Ada Kelas';
     final emptySubtitle = isHomeroomView
         ? 'Anda belum ditugaskan sebagai wali kelas'
         : 'Tidak ada kelas mengajar yang ditugaskan';
@@ -428,8 +431,7 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
         isLoadingHistory: isLoadingHistory,
         onGenerate: () => generateForClass(classId, className),
         onViewStudents: () => _navigateToStudentScreen(context, cls),
-        onHistoryItemTap: (entry) =>
-            _navigateToStudentScreen(context, cls),
+        onHistoryItemTap: (entry) => _navigateToStudentScreen(context, cls),
       ),
     );
   }
@@ -556,11 +558,7 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: ColorUtils.slate100,
-                ),
+                Divider(height: 1, thickness: 1, color: ColorUtils.slate100),
                 const SizedBox(height: 10),
                 Expanded(
                   child: _buildGridSummaryBlock(
@@ -613,11 +611,7 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
             ),
             borderRadius: const BorderRadius.all(Radius.circular(10)),
           ),
-          child: Icon(
-            Icons.school_rounded,
-            size: 18,
-            color: primaryColor,
-          ),
+          child: Icon(Icons.school_rounded, size: 18, color: primaryColor),
         ),
         const Spacer(),
         if (isLoadingSummary)
@@ -631,8 +625,7 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
           )
         else if (hasActivity)
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.12),
               borderRadius: const BorderRadius.all(Radius.circular(6)),
@@ -640,11 +633,7 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.auto_awesome_rounded,
-                  size: 10,
-                  color: primaryColor,
-                ),
+                Icon(Icons.auto_awesome_rounded, size: 10, color: primaryColor),
                 const SizedBox(width: 4),
                 Text(
                   '$total',
@@ -758,11 +747,7 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
         if (lastRun != null)
           Row(
             children: [
-              Icon(
-                Icons.event_rounded,
-                size: 11,
-                color: ColorUtils.slate400,
-              ),
+              Icon(Icons.event_rounded, size: 11, color: ColorUtils.slate400),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
@@ -876,19 +861,14 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
               ? LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    primaryColor,
-                    primaryColor.withValues(alpha: 0.9),
-                  ],
+                  colors: [primaryColor, primaryColor.withValues(alpha: 0.9)],
                 )
               : null,
           color: hasActivity ? null : primaryColor.withValues(alpha: 0.08),
           borderRadius: const BorderRadius.all(Radius.circular(8)),
           border: hasActivity
               ? null
-              : Border.all(
-                  color: primaryColor.withValues(alpha: 0.25),
-                ),
+              : Border.all(color: primaryColor.withValues(alpha: 0.25)),
         ),
         child: child,
       ),

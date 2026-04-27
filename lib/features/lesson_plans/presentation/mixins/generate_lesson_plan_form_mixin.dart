@@ -186,23 +186,19 @@ mixin GenerateLessonPlanFormMixin
       orElse: () => {'name': 'Mata Pelajaran'},
     );
     final lpModel = LessonPlan.fromJson(lessonPlanResponse);
-    final subjectName =
-        (lpModel.subjectName ?? '').isNotEmpty
-            ? lpModel.subjectName!
-            : (selectedSubject['name'] ??
-                selectedSubject['nama'] ??
-                'Mata Pelajaran');
+    final subjectName = (lpModel.subjectName ?? '').isNotEmpty
+        ? lpModel.subjectName!
+        : (selectedSubject['name'] ??
+              selectedSubject['nama'] ??
+              'Mata Pelajaran');
 
     final selectedClass = classList.firstWhere(
       (k) => k['id'].toString() == selectedClassId,
       orElse: () => {'name': 'Kelas'},
     );
-    final className =
-        (lpModel.className ?? '').isNotEmpty
-            ? lpModel.className!
-            : (selectedClass['name'] ??
-                selectedClass['nama'] ??
-                'Kelas');
+    final className = (lpModel.className ?? '').isNotEmpty
+        ? lpModel.className!
+        : (selectedClass['name'] ?? selectedClass['nama'] ?? 'Kelas');
 
     final chapterMap = selectedChapterId != null
         ? chapterList.firstWhere(

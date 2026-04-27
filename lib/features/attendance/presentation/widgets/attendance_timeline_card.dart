@@ -24,9 +24,11 @@ class AttendanceTimelineCard extends StatelessWidget {
     final classObj = record['class'];
     final subjectObj = record['subject'];
     final lhObj = record['lesson_hour'] ?? record['lessonHour'];
-    final cn = record['class_name']?.toString() ??
+    final cn =
+        record['class_name']?.toString() ??
         (classObj is Map ? classObj['name']?.toString() : null) ??
-        record['kelas_nama']?.toString() ?? '-';
+        record['kelas_nama']?.toString() ??
+        '-';
     final sn =
         record['subject_name']?.toString() ??
         (subjectObj is Map ? subjectObj['name']?.toString() : null) ??
@@ -35,7 +37,8 @@ class AttendanceTimelineCard extends StatelessWidget {
     final dateStr = _fmtFullDate(record['date']?.toString());
     final present = _parseInt(record['present'] ?? record['present_count']);
     final total = _parseInt(record['total_students']);
-    final lhName = record['lesson_hour_name']?.toString() ??
+    final lhName =
+        record['lesson_hour_name']?.toString() ??
         (lhObj is Map ? lhObj['name']?.toString() : null);
     final pctColor = _resolveColor(present, total);
 

@@ -188,9 +188,7 @@ mixin DialogMixin on ConsumerState<Dashboard> {
             itemCount: studentData.length,
             itemBuilder: (context, index) {
               final student = studentData[index];
-              final model = Student.fromJson(
-                student as Map<String, dynamic>,
-              );
+              final model = Student.fromJson(student as Map<String, dynamic>);
               return Material(
                 color: Colors.transparent,
                 child: ListTile(

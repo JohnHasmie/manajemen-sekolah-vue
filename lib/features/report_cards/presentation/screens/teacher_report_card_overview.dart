@@ -84,10 +84,12 @@ class _ReportCardOverviewPageState extends ConsumerState<ReportCardOverviewPage>
   }
 
   String get _raportCacheKey {
-    final ayId = ref
-        .read(academicYearRiverpod)
-        .selectedAcademicYear?['id']
-        ?.toString() ?? 'default';
+    final ayId =
+        ref
+            .read(academicYearRiverpod)
+            .selectedAcademicYear?['id']
+            ?.toString() ??
+        'default';
     return 'raport_overview_${_teacherId}_$ayId';
   }
 

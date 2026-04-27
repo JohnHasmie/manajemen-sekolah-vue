@@ -10,8 +10,8 @@ import 'package:manajemensekolah/features/notifications/presentation/mixins/date
 /// Mixin for building header, empty state, and card widgets.
 mixin NotificationWidgetBuilderMixin
     on NotificationTypeMixin, NotificationReadStateMixin, DateFormattingMixin {
-  late BuildContext context;
-  late String role;
+  BuildContext get context;
+  String get role;
 
   // These methods are provided by NotificationActionsMixin
   Future<void> markAsRead(String id);

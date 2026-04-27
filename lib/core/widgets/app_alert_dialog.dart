@@ -172,12 +172,7 @@ class AppAlertDialog extends StatelessWidget {
 
   Widget _buildBody() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl,
-        24,
-        AppSpacing.xl,
-        8,
-      ),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 24, AppSpacing.xl, 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

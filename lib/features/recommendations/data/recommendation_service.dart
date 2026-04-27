@@ -177,8 +177,7 @@ class ApiRecommendationService {
     final params = <String, dynamic>{
       'page': page.toString(),
       'per_page': perPage.toString(),
-      if (academicYearId != null)
-        'academic_year_id': academicYearId,
+      if (academicYearId != null) 'academic_year_id': academicYearId,
     };
     // The backend requires teacher_id XOR homeroom_class_id. Prefer the
     // homeroom scope when both are supplied — the homeroom scope is the
@@ -269,9 +268,7 @@ class ApiRecommendationService {
       final response = await _aiDio.get(
         '/recommendations/class/$classId/summary',
         queryParameters: params.isNotEmpty ? params : null,
-        options: Options(
-          receiveTimeout: const Duration(seconds: 30),
-        ),
+        options: Options(receiveTimeout: const Duration(seconds: 30)),
       );
 
       AppLogger.debug(
@@ -330,7 +327,10 @@ class ApiRecommendationService {
         // Check if there are more pages
         final meta = result['meta'] as Map?;
         final lastPage = meta?['last_page'] ?? 1;
-        if (page >= (lastPage is int ? lastPage : int.tryParse(lastPage.toString()) ?? 1)) {
+        if (page >=
+            (lastPage is int
+                ? lastPage
+                : int.tryParse(lastPage.toString()) ?? 1)) {
           break;
         }
         page++;

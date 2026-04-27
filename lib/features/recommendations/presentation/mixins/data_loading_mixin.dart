@@ -64,9 +64,7 @@ mixin DataLoadingMixin on ConsumerState<LearningRecommendationClassScreen> {
       final scopedClasses = isHomeroomView
           ? provider.homeroomClasses
           : provider.allClasses;
-      final classes = scopedClasses.isNotEmpty
-          ? scopedClasses
-          : widget.classes;
+      final classes = scopedClasses.isNotEmpty ? scopedClasses : widget.classes;
 
       // Fire all loads concurrently
       final futures = <Future>[];
@@ -144,7 +142,10 @@ mixin DataLoadingMixin on ConsumerState<LearningRecommendationClassScreen> {
     }
 
     try {
-      final ayId = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+      final ayId = ref
+          .read(academicYearRiverpod)
+          .selectedAcademicYear?['id']
+          ?.toString();
       final summary = await getIt<ApiRecommendationService>().getClassSummary(
         classId,
         academicYearId: ayId,
@@ -169,7 +170,8 @@ mixin DataLoadingMixin on ConsumerState<LearningRecommendationClassScreen> {
     // Segment the cache by scope — wali kelas data (cross-teacher) must
     // not leak into the mengajar cache when the user flips roles.
     final scopeTag = isHomeroomView ? 'wali' : 'mengajar';
-    final cacheKey = 'recommendation_history_${classId}_${effectiveTeacherId}_$scopeTag';
+    final cacheKey =
+        'recommendation_history_${classId}_${effectiveTeacherId}_$scopeTag';
 
     // Try cache — return early
     if (useCache) {
@@ -197,7 +199,10 @@ mixin DataLoadingMixin on ConsumerState<LearningRecommendationClassScreen> {
       // recommendations from ALL teachers in that homeroom — the whole
       // point of the Wali Kelas tab. In mengajar mode, scope by teacher
       // so we only see the current teacher's own authored recs.
-      final ayId2 = ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+      final ayId2 = ref
+          .read(academicYearRiverpod)
+          .selectedAcademicYear?['id']
+          ?.toString();
       final result = await getIt<ApiRecommendationService>().getRecommendations(
         teacherId: isHomeroomView ? null : effectiveTeacherId,
         homeroomClassId: isHomeroomView ? classId : null,
@@ -321,8 +326,7 @@ mixin DataLoadingMixin on ConsumerState<LearningRecommendationClassScreen> {
     final subjects = <Map<String, String>>[];
 
     for (final schedule in teacherSchedules) {
-      final model =
-          Schedule.fromJson(schedule as Map<String, dynamic>);
+      final model = Schedule.fromJson(schedule as Map<String, dynamic>);
       if (model.classId != classId) continue;
 
       final subjectId = model.subjectId;

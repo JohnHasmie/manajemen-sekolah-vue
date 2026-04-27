@@ -31,7 +31,9 @@ mixin GradeRecapContentMixin on ConsumerState<GradeRecapOverviewPage> {
         'en': 'No teaching assignments found',
         'id': 'Tidak ada jadwal mengajar',
       }),
-      emptyIcon: isHomeroomView ? Icons.class_outlined : Icons.assessment_outlined,
+      emptyIcon: isHomeroomView
+          ? Icons.class_outlined
+          : Icons.assessment_outlined,
       childBuilder: () {
         final data = filteredData;
         return isListView ? _buildListView(data) : _buildCardView(data);
@@ -238,11 +240,9 @@ mixin GradeRecapContentMixin on ConsumerState<GradeRecapOverviewPage> {
       final cn = g['class_name']?.toString() ?? '-';
       final subjects = (g['subjects'] as List?) ?? [];
       for (final sub in subjects) {
-        flatItems.add(_FlatRecapItem(
-          classData: g,
-          subject: sub,
-          className: cn,
-        ));
+        flatItems.add(
+          _FlatRecapItem(classData: g, subject: sub, className: cn),
+        );
       }
     }
 
@@ -259,15 +259,17 @@ mixin GradeRecapContentMixin on ConsumerState<GradeRecapOverviewPage> {
   Widget _buildListItem(_FlatRecapItem item) {
     final sn = Subject.fromJson(item.subject as Map<String, dynamic>).name;
     final recapCount = ((item.subject['recap_count'] ?? 0) as num).toInt();
-    final totalStudents =
-        ((item.subject['total_students'] ?? 0) as num).toInt();
-    final completionPct =
-        ((item.subject['completion_pct'] ?? 0) as num).toDouble();
+    final totalStudents = ((item.subject['total_students'] ?? 0) as num)
+        .toInt();
+    final completionPct = ((item.subject['completion_pct'] ?? 0) as num)
+        .toDouble();
     final avgScore = item.subject['avg_final_score'] is num
         ? (item.subject['avg_final_score'] as num).toDouble()
         : null;
     final babCount = ((item.subject['bab_count'] ?? 0) as num).toInt();
-    final teacherName = isHomeroomView ? _subjectTeacherName(item.subject) : null;
+    final teacherName = isHomeroomView
+        ? _subjectTeacherName(item.subject)
+        : null;
 
     return Container(
       margin: const EdgeInsets.only(top: 10),
@@ -361,10 +363,7 @@ mixin GradeRecapContentMixin on ConsumerState<GradeRecapOverviewPage> {
                             Icons.people_outline,
                           ),
                           if (babCount > 0)
-                            _infoBadge(
-                              '$babCount bab',
-                              Icons.bookmark_outline,
-                            ),
+                            _infoBadge('$babCount bab', Icons.bookmark_outline),
                         ],
                       ),
                     ],
@@ -457,8 +456,7 @@ mixin GradeRecapContentMixin on ConsumerState<GradeRecapOverviewPage> {
     final sn = Subject.fromJson(subject as Map<String, dynamic>).name;
     final recapCount = ((subject['recap_count'] ?? 0) as num).toInt();
     final totalStudents = ((subject['total_students'] ?? 0) as num).toInt();
-    final completionPct =
-        ((subject['completion_pct'] ?? 0) as num).toDouble();
+    final completionPct = ((subject['completion_pct'] ?? 0) as num).toDouble();
     final avgScore = subject['avg_final_score'] is num
         ? (subject['avg_final_score'] as num).toDouble()
         : null;
@@ -595,7 +593,8 @@ mixin GradeRecapContentMixin on ConsumerState<GradeRecapOverviewPage> {
   /// `teacher_name` in wali-kelas view; fall back to common aliases in case
   /// the response is served from an older cached entry or a different shape.
   String? _subjectTeacherName(dynamic subject) {
-    final raw = subject['teacher_name'] ??
+    final raw =
+        subject['teacher_name'] ??
         subject['guru_nama'] ??
         (subject['teacher'] is Map ? subject['teacher']['name'] : null);
     final str = raw?.toString().trim();

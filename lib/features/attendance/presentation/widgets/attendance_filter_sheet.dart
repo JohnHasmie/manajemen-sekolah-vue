@@ -14,11 +14,7 @@ class AttendanceFilterResult {
   final String? classId;
   final String? subjectId;
 
-  const AttendanceFilterResult({
-    this.dateRange,
-    this.classId,
-    this.subjectId,
-  });
+  const AttendanceFilterResult({this.dateRange, this.classId, this.subjectId});
 }
 
 /// A premium bottom sheet for filtering attendance records.
@@ -70,7 +66,8 @@ class AttendanceFilterSheet extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<AttendanceFilterSheet> createState() => _AttendanceFilterSheetState();
+  ConsumerState<AttendanceFilterSheet> createState() =>
+      _AttendanceFilterSheetState();
 }
 
 class _AttendanceFilterSheetState extends ConsumerState<AttendanceFilterSheet> {
@@ -91,16 +88,21 @@ class _AttendanceFilterSheetState extends ConsumerState<AttendanceFilterSheet> {
     final lp = ref.read(languageRiverpod);
 
     return AppFilterBottomSheet(
-      title: lp.getTranslatedText({'en': 'Filter Attendance', 'id': 'Filter Presensi'}),
+      title: lp.getTranslatedText({
+        'en': 'Filter Attendance',
+        'id': 'Filter Presensi',
+      }),
       icon: Icons.tune_rounded,
       primaryColor: widget.primaryColor,
       onApply: () {
         Navigator.pop(context);
-        widget.onApply(AttendanceFilterResult(
-          dateRange: _tempDateRange,
-          classId: _tempClassId,
-          subjectId: _tempSubjectId,
-        ));
+        widget.onApply(
+          AttendanceFilterResult(
+            dateRange: _tempDateRange,
+            classId: _tempClassId,
+            subjectId: _tempSubjectId,
+          ),
+        );
       },
       onReset: () {
         setState(() {
@@ -164,20 +166,24 @@ class _AttendanceFilterSheetState extends ConsumerState<AttendanceFilterSheet> {
                 options: [
                   FilterOption(
                     value: 'today',
-                    label: lp
-                        .getTranslatedText({'en': 'Today', 'id': 'Hari Ini'}),
+                    label: lp.getTranslatedText({
+                      'en': 'Today',
+                      'id': 'Hari Ini',
+                    }),
                   ),
                   FilterOption(
                     value: 'week',
-                    label: lp.getTranslatedText(
-                      {'en': 'This Week', 'id': 'Minggu Ini'},
-                    ),
+                    label: lp.getTranslatedText({
+                      'en': 'This Week',
+                      'id': 'Minggu Ini',
+                    }),
                   ),
                   FilterOption(
                     value: 'month',
-                    label: lp.getTranslatedText(
-                      {'en': 'This Month', 'id': 'Bulan Ini'},
-                    ),
+                    label: lp.getTranslatedText({
+                      'en': 'This Month',
+                      'id': 'Bulan Ini',
+                    }),
                   ),
                 ],
                 selectedValue: _tempDateRange,

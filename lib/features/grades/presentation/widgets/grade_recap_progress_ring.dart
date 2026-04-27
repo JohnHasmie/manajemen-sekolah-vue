@@ -56,7 +56,8 @@ class GradeRecapProgressRing extends StatelessWidget {
             : Center(
                 child: Text(
                   label!,
-                  style: labelStyle ??
+                  style:
+                      labelStyle ??
                       TextStyle(
                         fontSize: size * 0.28,
                         fontWeight: FontWeight.w700,

@@ -24,8 +24,7 @@ class SubjectRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subjectModel =
-        Subject.fromJson(subject as Map<String, dynamic>);
+    final subjectModel = Subject.fromJson(subject as Map<String, dynamic>);
     final sn = subjectModel.name;
     final rawAvg = subject['avg_score'];
     final avg = rawAvg is num ? rawAvg.toDouble() : null;

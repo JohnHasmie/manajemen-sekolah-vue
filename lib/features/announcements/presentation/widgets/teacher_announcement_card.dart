@@ -21,13 +21,16 @@ class TeacherAnnouncementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Announcement.fromJson(announcementData);
-    final isImportant = ['penting', 'important']
-        .contains((announcementData['priority'] ?? '').toString().toLowerCase());
+    final isImportant = [
+      'penting',
+      'important',
+    ].contains((announcementData['priority'] ?? '').toString().toLowerCase());
     final isUnread = !model.isRead;
     final accentColor = isImportant ? ColorUtils.warning600 : primaryColor;
 
-    final roleTarget =
-        (announcementData['role_target'] ?? '').toString().toLowerCase();
+    final roleTarget = (announcementData['role_target'] ?? '')
+        .toString()
+        .toLowerCase();
     final targetLabel = _getTargetLabel(roleTarget);
     final dateStr = _formatDate(announcementData['created_at']?.toString());
 
@@ -62,7 +65,9 @@ class TeacherAnnouncementCard extends StatelessWidget {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -99,12 +104,16 @@ class TeacherAnnouncementCard extends StatelessWidget {
                                 Container(
                                   margin: const EdgeInsets.only(left: 8),
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color:
-                                        ColorUtils.warning600.withValues(alpha: 0.1),
+                                    color: ColorUtils.warning600.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: const BorderRadius.all(
-                                        Radius.circular(4)),
+                                      Radius.circular(4),
+                                    ),
                                   ),
                                   child: Text(
                                     'Penting',
@@ -135,8 +144,11 @@ class TeacherAnnouncementCard extends StatelessWidget {
                           // Meta row: date · target
                           Row(
                             children: [
-                              Icon(Icons.access_time_outlined,
-                                  size: 12, color: ColorUtils.slate400),
+                              Icon(
+                                Icons.access_time_outlined,
+                                size: 12,
+                                color: ColorUtils.slate400,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 dateStr,
@@ -146,8 +158,11 @@ class TeacherAnnouncementCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              Icon(Icons.people_outline,
-                                  size: 12, color: ColorUtils.slate400),
+                              Icon(
+                                Icons.people_outline,
+                                size: 12,
+                                color: ColorUtils.slate400,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 targetLabel,

@@ -156,12 +156,10 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen>
           constraints: BoxConstraints(maxHeight: mediaHeight * 0.95),
           decoration: BoxDecoration(
             color: Colors.grey.shade50,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: ClipRRect(
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             child: SafeArea(
               top: false,
               child: Column(
@@ -172,15 +170,18 @@ class _LessonPlanAiResultScreenState extends State<LessonPlanAiResultScreen>
                     subtitle: isPolling
                         ? 'AI sedang bekerja…'
                         : (pollingError != null
-                            ? 'Gagal menghasilkan RPP'
-                            : 'Hasil siap ditinjau'),
+                              ? 'Gagal menghasilkan RPP'
+                              : 'Hasil siap ditinjau'),
                     icon: Icons.auto_awesome_rounded,
                     primaryColor: primaryColor,
                   ),
                   Expanded(
                     child: isPolling || pollingError != null
                         ? buildPollingBody(
-                            isPolling, pollingStatus, pollingError)
+                            isPolling,
+                            pollingStatus,
+                            pollingError,
+                          )
                         : buildMainContent(),
                   ),
                 ],

@@ -76,7 +76,10 @@ mixin StudentFilterSheetFiltersMixin on State<StudentFilterSheetContent> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: const BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: widget.primaryColor, width: 2),
+                      borderSide: BorderSide(
+                        color: widget.primaryColor,
+                        width: 2,
+                      ),
                     ),
                     prefixIcon: Icon(
                       Icons.person_search_rounded,
@@ -114,8 +117,14 @@ mixin StudentFilterSheetFiltersMixin on State<StudentFilterSheetContent> {
         FilterChipGrid<String?>(
           options: [
             FilterOption(value: null, label: t({'en': 'All', 'id': 'Semua'})),
-            FilterOption(value: 'active', label: t({'en': 'Active', 'id': 'Aktif'})),
-            FilterOption(value: 'inactive', label: t({'en': 'Inactive', 'id': 'Tidak Aktif'})),
+            FilterOption(
+              value: 'active',
+              label: t({'en': 'Active', 'id': 'Aktif'}),
+            ),
+            FilterOption(
+              value: 'inactive',
+              label: t({'en': 'Inactive', 'id': 'Tidak Aktif'}),
+            ),
           ],
           selectedValue: tempStatus,
           onSelected: updateStatus,
@@ -166,8 +175,14 @@ mixin StudentFilterSheetFiltersMixin on State<StudentFilterSheetContent> {
         FilterChipGrid<String?>(
           options: [
             FilterOption(value: null, label: t({'en': 'All', 'id': 'Semua'})),
-            FilterOption(value: 'M', label: t({'en': 'Male', 'id': 'Laki-laki'})),
-            FilterOption(value: 'F', label: t({'en': 'Female', 'id': 'Perempuan'})),
+            FilterOption(
+              value: 'M',
+              label: t({'en': 'Male', 'id': 'Laki-laki'}),
+            ),
+            FilterOption(
+              value: 'F',
+              label: t({'en': 'Female', 'id': 'Perempuan'}),
+            ),
           ],
           selectedValue: tempGender,
           onSelected: updateGender,

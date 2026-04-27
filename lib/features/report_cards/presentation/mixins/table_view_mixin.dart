@@ -45,16 +45,20 @@ mixin TableViewMixin on ConsumerState<ReportCardOverviewPage> {
           leftColumns: [
             FrozenTableColumn(
               width: _leftWidth,
-              header:
-                  _buildHeaderCell('Kelas', alignment: Alignment.centerLeft),
+              header: _buildHeaderCell(
+                'Kelas',
+                alignment: Alignment.centerLeft,
+              ),
               cellBuilder: (i) => _buildClassCell(data[i]),
             ),
           ],
           rightColumns: [
             FrozenTableColumn(
               width: _progressWidth,
-              header: _buildHeaderCell('Progress',
-                  alignment: Alignment.centerLeft),
+              header: _buildHeaderCell(
+                'Progress',
+                alignment: Alignment.centerLeft,
+              ),
               cellBuilder: (i) => _buildProgressCell(data[i]),
             ),
             FrozenTableColumn(
