@@ -33,6 +33,8 @@ import 'package:manajemensekolah/features/dashboard/presentation/mixins/content_
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/cards_mixin.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/dialog_mixin.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/screens/admin_dashboard_body.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/screens/teacher_dashboard_body.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/screens/parent_dashboard_body.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/finance_popup_dialog.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_popup_dialog.dart';
 import 'package:manajemensekolah/features/notifications/presentation/screens/notification_list_screen.dart';
@@ -219,8 +221,7 @@ class _DashboardState extends ConsumerState<Dashboard>
   ) {
     final primaryColor = getPrimaryColor();
 
-    // Admin fork (Phase 3 redesign). Guru and wali still go through the
-    // shared content builder so their dashboards remain unchanged.
+    // Sub-PR 7 — unified Beranda for all roles. Each has its own redesigned body.
     if (effectiveRole == 'admin') {
       return AdminDashboardBody(
         primaryColor: primaryColor,
@@ -245,6 +246,55 @@ class _DashboardState extends ConsumerState<Dashboard>
       );
     }
 
+    if (effectiveRole == 'guru') {
+      return TeacherDashboardBody(
+        primaryColor: primaryColor,
+        state: state,
+        profileHeaderKey: _profileHeaderKey,
+        heroSectionKey: _heroSectionKey,
+        quickActionsKey: _quickActionsKey,
+        statsSectionKey: _statsSectionKey,
+        onLanguageTap: () =>
+            showLanguageDialog(context, languageProvider, primaryColor),
+        onNotificationTap: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => NotificationListScreen(role: widget.role),
+            ),
+          );
+          ref.read(dashboardProvider.notifier).refreshStats();
+        },
+        onAccountTap: () =>
+            showAccountBottomSheet(context, state, primaryColor, effectiveRole),
+        onSchoolSwitchTap: () => showAcademicYearDialog(context),
+      );
+    }
+
+    if (effectiveRole == 'wali') {
+      return ParentDashboardBody(
+        primaryColor: primaryColor,
+        state: state,
+        profileHeaderKey: _profileHeaderKey,
+        heroSectionKey: _heroSectionKey,
+        quickActionsKey: _quickActionsKey,
+        statsSectionKey: _statsSectionKey,
+        onLanguageTap: () =>
+            showLanguageDialog(context, languageProvider, primaryColor),
+        onNotificationTap: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => NotificationListScreen(role: widget.role),
+            ),
+          );
+          ref.read(dashboardProvider.notifier).refreshStats();
+        },
+        onAccountTap: () =>
+            showAccountBottomSheet(context, state, primaryColor, effectiveRole),
+        onSchoolSwitchTap: () => showAcademicYearDialog(context),
+      );
+    }
+
+    // Fallback (should not reach here)
     return buildDashboardContent(
       context,
       languageProvider,
