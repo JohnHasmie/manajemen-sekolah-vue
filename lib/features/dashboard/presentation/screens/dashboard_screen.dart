@@ -98,7 +98,6 @@ class _DashboardState extends ConsumerState<Dashboard>
   final GlobalKey _quickActionsKey = GlobalKey();
   final GlobalKey _statsSectionKey = GlobalKey();
   final GlobalKey _scheduleSectionKey = GlobalKey();
-  final GlobalKey _menuGridKey = GlobalKey();
 
   /// Like Vue's `mounted()` lifecycle hook.
   /// Sets up animation controllers, listens for FCM sync triggers,
@@ -230,7 +229,6 @@ class _DashboardState extends ConsumerState<Dashboard>
         heroSectionKey: _heroSectionKey,
         quickActionsKey: _quickActionsKey,
         statsSectionKey: _statsSectionKey,
-        menuGridKey: _menuGridKey,
         onLanguageTap: () =>
             showLanguageDialog(context, languageProvider, primaryColor),
         onNotificationTap: () async {
@@ -244,14 +242,6 @@ class _DashboardState extends ConsumerState<Dashboard>
         onAccountTap: () =>
             showAccountBottomSheet(context, state, primaryColor, effectiveRole),
         onSchoolSwitchTap: () => showAcademicYearDialog(context),
-        onShowNoStudentsDialog: () => showNoStudentsDialog(context),
-        onShowStudentSelectionDialog: (parent, students, {academicYearId}) =>
-            showStudentSelectionDialog(
-              context,
-              parent,
-              students,
-              academicYearId: academicYearId,
-            ),
       );
     }
 
@@ -263,7 +253,6 @@ class _DashboardState extends ConsumerState<Dashboard>
       _heroSectionKey,
       _quickActionsKey,
       _statsSectionKey,
-      _menuGridKey,
       primaryColor,
       effectiveRole,
       () => showLanguageDialog(context, languageProvider, primaryColor),
@@ -302,20 +291,6 @@ class _DashboardState extends ConsumerState<Dashboard>
         },
       ),
       (state) => getQuickActions(state, effectiveRole, primaryColor),
-      (ctx, state) => buildSliverGridMenu(
-        ctx,
-        state,
-        _menuGridKey,
-        effectiveRole,
-        primaryColor,
-        () => showNoStudentsDialog(ctx),
-        (parent, students, {academicYearId}) => showStudentSelectionDialog(
-          ctx,
-          parent,
-          students,
-          academicYearId: academicYearId,
-        ),
-      ),
       onRefresh: () => ref.read(dashboardProvider.notifier).pullToRefresh(),
     );
   }
