@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/shell/role_shell.dart';
+import 'package:manajemensekolah/core/shell/shell_flag.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/shell/tabs/admin/admin_academic_hub.dart';
 import 'package:manajemensekolah/core/shell/tabs/admin/admin_finance_tab.dart';
@@ -45,22 +46,9 @@ export 'package:manajemensekolah/features/dashboard/presentation/widgets/finance
 export 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_popup_dialog.dart'
     show AttendancePopupDialog;
 
-/// Feature flag for the P1 bottom-nav shell rollout.
-///
-/// When `false` (default), `Dashboard.build` returns the legacy
-/// per-role dashboard body unchanged — zero behavior delta in
-/// production until we flip this on.
-///
-/// When `true`, `Dashboard` is wrapped in a `RoleShell` whose tab roots
-/// are stubs (Sub-PR 1) → real screens (Sub-PR 2/3/4) → cleaned-up
-/// landing surface (Sub-PR 5/6).
-///
-/// Wire to `--dart-define=ENABLE_SHELL=true` once we want internal
-/// builds to flip it without source edits.
-const bool kEnableShell = bool.fromEnvironment(
-  'ENABLE_SHELL',
-  defaultValue: false,
-);
+// Feature flag `kEnableShell` is now defined in
+// `lib/core/shell/shell_flag.dart` so non-UI services can import it
+// without depending on this presentation-layer file. Imported above.
 
 /// The main dashboard widget. Like a Vue page component
 /// (`pages/dashboard.vue`).

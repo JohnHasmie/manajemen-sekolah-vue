@@ -54,7 +54,9 @@ class FCMNotificationHandler {
       case 'grade':
         _router.navigateToGradeScreen();
       case 'tagihan':
-        AppLogger.info('fcm', 'Navigate to tagihan: ${data['bill_id']}');
+        // Per P1_BottomNav_Spec § 6 — tagihan was previously logged-only.
+        // The router now routes it to the role-appropriate Finance tab.
+        _router.navigateToBillingScreen();
     }
   }
 

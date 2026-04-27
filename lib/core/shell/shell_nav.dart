@@ -22,6 +22,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/shell/shell_controller.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/main.dart' show navigatorKey;
 
 class ShellNav {
   ShellNav._();
@@ -65,5 +67,44 @@ class ShellNav {
   static void popActiveTabToRoot(WidgetRef ref, {required String role}) {
     final state = ref.read(shellProvider(role));
     ref.read(shellProvider(role).notifier).popToRoot(state.activeTab);
+  }
+
+  /// Variant of [goTo] for callers without a [WidgetRef] — typically
+  /// background services like the FCM router.
+  ///
+  /// Resolves the [ProviderContainer] via `ProviderScope.containerOf`
+  /// using the global [navigatorKey]'s current context, then drives the
+  /// shell the same way [goTo] does. Returns `false` (and logs) when
+  /// either the navigator isn't mounted yet (terminated-state cold
+  /// boot) or the shell provider hasn't been initialized for the role.
+  ///
+  /// Caller is responsible for checking `kEnableShell` first — when the
+  /// shell is off, fall back to a direct `navigatorKey.currentState.push`.
+  static bool goToGlobal({
+    required String role,
+    required ShellTab tab,
+    Widget? pushOnTop,
+  }) {
+    final navContext = navigatorKey.currentContext;
+    if (navContext == null) {
+      AppLogger.error(
+        'shell_nav',
+        'goToGlobal called before navigator mounted',
+      );
+      return false;
+    }
+    final container = ProviderScope.containerOf(navContext, listen: false);
+    container.read(shellProvider(role).notifier).setTab(tab);
+
+    if (pushOnTop != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final state = container.read(shellProvider(role));
+        final navKey = state.navigatorKeys[tab];
+        navKey?.currentState?.push(
+          MaterialPageRoute(builder: (_) => pushOnTop),
+        );
+      });
+    }
+    return true;
   }
 }
