@@ -14,6 +14,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
+import 'package:manajemensekolah/core/shell/role_shell.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/helpers_mixin.dart';
@@ -32,6 +34,23 @@ export 'package:manajemensekolah/features/dashboard/presentation/widgets/finance
     show FinancePopupDialog;
 export 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_popup_dialog.dart'
     show AttendancePopupDialog;
+
+/// Feature flag for the P1 bottom-nav shell rollout.
+///
+/// When `false` (default), `Dashboard.build` returns the legacy
+/// per-role dashboard body unchanged — zero behavior delta in
+/// production until we flip this on.
+///
+/// When `true`, `Dashboard` is wrapped in a `RoleShell` whose tab roots
+/// are stubs (Sub-PR 1) → real screens (Sub-PR 2/3/4) → cleaned-up
+/// landing surface (Sub-PR 5/6).
+///
+/// Wire to `--dart-define=ENABLE_SHELL=true` once we want internal
+/// builds to flip it without source edits.
+const bool kEnableShell = bool.fromEnvironment(
+  'ENABLE_SHELL',
+  defaultValue: false,
+);
 
 /// The main dashboard widget. Like a Vue page component
 /// (`pages/dashboard.vue`).
@@ -126,8 +145,21 @@ class _DashboardState extends ConsumerState<Dashboard>
   /// app bar, hero stats, quick actions, overview cards, and menu grid.
   /// Uses `ref.watch(languageRiverpod)` to react to language changes
   /// (like a Vue `computed` property depending on an i18n store).
+  ///
+  /// When `kEnableShell` is true (P1 rollout), the dashboard body is
+  /// wrapped in a [RoleShell] that provides the bottom-nav tab strip.
+  /// Tab roots are stub builders for now (Sub-PR 1); Sub-PR 2/3/4 wire
+  /// real per-role tab content. The legacy path stays intact under the
+  /// `else` branch so production users see no change until the flag flips.
   @override
   Widget build(BuildContext context) {
+    if (kEnableShell) {
+      return RoleShell(
+        role: effectiveRole,
+        tabBuilder: _buildShellTabRoot,
+      );
+    }
+
     final languageProvider = ref.watch(languageRiverpod);
     final dashboardState = ref.watch(dashboardProvider);
 
@@ -136,6 +168,26 @@ class _DashboardState extends ConsumerState<Dashboard>
       error: (e, st) => buildErrorState(e),
       loading: () => _buildLoadingStateWrapper(context, languageProvider),
     );
+  }
+
+  /// Tab-root stub builder for P1 Sub-PR 1.
+  ///
+  /// Beranda intentionally renders the legacy dashboard tree verbatim so
+  /// the existing screen state, FCM listener, and dialog wiring keep
+  /// working — Sub-PR 2 will refactor admin's Beranda specifically.
+  /// Other tabs render a placeholder until Sub-PR 2/3/4 wire them.
+  Widget _buildShellTabRoot(BuildContext context, ShellTab tab) {
+    if (tab == ShellTab.beranda) {
+      // Re-enter the legacy dashboard render path.
+      final languageProvider = ref.watch(languageRiverpod);
+      final dashboardState = ref.watch(dashboardProvider);
+      return dashboardState.when(
+        data: (state) => _buildLoadedState(context, languageProvider, state),
+        error: (e, st) => buildErrorState(e),
+        loading: () => _buildLoadingStateWrapper(context, languageProvider),
+      );
+    }
+    return _ShellTabPlaceholder(tab: tab);
   }
 
   Widget _buildLoadedState(
@@ -270,6 +322,40 @@ class _DashboardState extends ConsumerState<Dashboard>
       (state) =>
           showAccountBottomSheet(context, state, primaryColor, effectiveRole),
       () => showAcademicYearDialog(context),
+    );
+  }
+}
+
+/// Temporary "Coming soon" surface for tabs whose real screens land in
+/// later P1 sub-PRs (Sub-PR 2: admin tabs, 3: teacher, 4: parent).
+/// Only visible when `kEnableShell` is true — production builds with the
+/// flag off never render this.
+class _ShellTabPlaceholder extends StatelessWidget {
+  final ShellTab tab;
+  const _ShellTabPlaceholder({required this.tab});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(tab.label)),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(tab.icon, size: 56, color: Colors.grey),
+            const SizedBox(height: 12),
+            Text(
+              '${tab.label} — segera hadir',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Tab ini akan diisi pada Sub-PR berikutnya.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

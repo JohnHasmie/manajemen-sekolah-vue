@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/widgets/app_alert_dialog.dart';
 import 'package:manajemensekolah/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:manajemensekolah/features/auth/presentation/screens/login_screen.dart';
 
@@ -27,16 +28,74 @@ mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
       children: [
         Image.asset('assets/icon/KamilEdu.png', height: 80),
         AppSpacing.v20,
+        // Brand string standardized: "KamilEdu" (no space) on the login
+        // surface; in-app AppBars keep the "Manajemen Sekolah" feature label.
+        // See P0 #17 in UI_Redesign_Audit.md.
         const Text(
-          'Kamil Edu',
+          'KamilEdu',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         if (!authState.isServerConnected) _buildServerWarning(),
         const SizedBox(height: 30),
         _buildLoginFormFields(authState),
+        _buildForgotPasswordLink(),
         AppSpacing.v20,
         _buildLoginButtons(authState),
       ],
+    );
+  }
+
+  /// Right-aligned "Lupa Kata Sandi?" link directly under the password
+  /// field. P0 #18: the form previously had no recovery path, forcing
+  /// password-reset to happen out-of-app. Until a backend reset endpoint
+  /// ships, the link opens an [AppAlertDialog] explaining that the school
+  /// admin handles password resets — which matches the actual flow today.
+  Widget _buildForgotPasswordLink() {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm, right: 4),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: TextButton(
+          onPressed: _showForgotPasswordDialog,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: 4,
+            ),
+            minimumSize: const Size(0, 32),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            AppLocalizations.forgotPassword.tr,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: ColorUtils.darkBlue,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final lp = ref.read(languageRiverpod);
+    AppAlertDialog.show(
+      context: context,
+      title: AppLocalizations.forgotPassword.tr,
+      message: lp.getTranslatedText({
+        'en':
+            'Password resets are handled by your school administrator. '
+                'Please contact them to reset your password. A self-service '
+                'reset flow is on the roadmap.',
+        'id':
+            'Reset kata sandi dilakukan oleh admin sekolah Anda. Silakan '
+                'hubungi admin untuk reset kata sandi. Fitur reset mandiri '
+                'sedang direncanakan.',
+      }),
+      icon: Icons.lock_reset_rounded,
+      confirmText: AppLocalizations.understand.tr,
+      showCancel: false,
     );
   }
 
