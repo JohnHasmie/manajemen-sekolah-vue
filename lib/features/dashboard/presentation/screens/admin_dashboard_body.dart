@@ -390,7 +390,11 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
             schoolName: _schoolName,
             subtitle: _greetingSubtitle,
             onTap: widget.onSchoolSwitchTap,
-            accentColor: Colors.white,
+            // accentColor must be a *dark* color: SchoolPill.expanded renders
+            // the school name as `color: accentColor` inside a white card.
+            // Passing Colors.white made the school name invisible
+            // (white-on-white). Use the navy that matches the gradient bg.
+            accentColor: _adminNavy,
             actionLabel: 'Ganti',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -535,7 +539,10 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
         ),
         QuickAction(
           icon: Icons.settings_outlined,
-          label: 'Pengaturan',
+          // Shortened from "Pengaturan" → "Setelan" so the label fits the
+          // 4-column tile width on Samsung portrait without wrapping to
+          // two lines ("Pengatura\nn").
+          label: 'Setelan',
           color: ColorUtils.slate700,
           caption: 'Sekolah',
           onTap: _openPengaturan,

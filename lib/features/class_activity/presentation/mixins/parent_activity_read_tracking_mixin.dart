@@ -11,7 +11,7 @@ mixin ParentActivityReadTrackingMixin
     on ConsumerState<ParentClassActivityScreen> {
   void onItemVisible(Map<String, dynamic> activity) {
     final state = this as dynamic;
-    if (!state._hasFreshData) return;
+    if (!state.hasFreshData) return;
 
     final id = activity['id'].toString();
     final isRead =
@@ -19,21 +19,21 @@ mixin ParentActivityReadTrackingMixin
         activity['is_read'] == 1 ||
         activity['is_read'] == '1';
 
-    if (!isRead && !state._processedIds.contains(id)) {
-      state._processedIds.add(id);
-      state._pendingReadIds.add(id);
+    if (!isRead && !state.processedIds.contains(id)) {
+      state.processedIds.add(id);
+      state.pendingReadIds.add(id);
       scheduleMarkRead();
     }
   }
 
   void scheduleMarkRead() {
     final state = this as dynamic;
-    if (state._markReadDebounce?.isActive ?? false) return;
+    if (state.markReadDebounce?.isActive ?? false) return;
 
-    state._markReadDebounce = Timer(const Duration(seconds: 1), () {
-      if (state._pendingReadIds.isNotEmpty) {
-        final idsToMark = state._pendingReadIds.toList();
-        state._pendingReadIds.clear();
+    state.markReadDebounce = Timer(const Duration(seconds: 1), () {
+      if (state.pendingReadIds.isNotEmpty) {
+        final idsToMark = state.pendingReadIds.toList();
+        state.pendingReadIds.clear();
         flushMarkRead(idsToMark);
       }
     });
@@ -48,7 +48,7 @@ mixin ParentActivityReadTrackingMixin
 
       final state = this as dynamic;
       setState(() {
-        for (final item in state._activityList) {
+        for (final item in state.activityList) {
           if (ids.contains(item['id'].toString())) {
             item['is_read'] = true;
           }
@@ -56,7 +56,7 @@ mixin ParentActivityReadTrackingMixin
       });
 
       final cacheKey = (this as dynamic).buildActivitiesCacheKey();
-      await LocalCacheService.save(cacheKey, state._activityList);
+      await LocalCacheService.save(cacheKey, state.activityList);
 
       await getIt<ApiClassActivityService>().markAsRead(ids);
     } catch (e) {

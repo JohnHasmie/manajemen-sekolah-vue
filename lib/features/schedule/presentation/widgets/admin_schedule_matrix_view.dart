@@ -89,6 +89,14 @@ class AdminScheduleMatrixView extends StatelessWidget {
   }
 
   /// Row axes (lesson-hour time-slots), sorted by start time.
+  ///
+  /// The API may return [lessonHourList] entries duplicated across days /
+  /// semesters / academic-year scopes (one row per (day, hour) join), but
+  /// the matrix only wants one *unique* time-slot row per
+  /// (hourNumber, startTime, endTime). Without deduping, every "Jam 1
+  /// 07:00–07:45" row repeats N times in the left column with the same
+  /// schedules drawn next to each — the bug captured in
+  /// `_baseline/admin/06_schedule_matrix.png`. Dedupe before sorting.
   List<_TimeSlotAxis> _buildTimeSlotAxes() {
     final filtered = selectedLessonHour == null
         ? lessonHourList
@@ -97,20 +105,23 @@ class AdminScheduleMatrixView extends StatelessWidget {
             return h == selectedLessonHour;
           }).toList();
 
-    final axes = filtered
-        .map<_TimeSlotAxis>(
-          (jp) => _TimeSlotAxis(
-            hourNumber: (jp['hour_number'] ?? jp['jam_ke'] ?? '').toString(),
-            startTime: _trimTime(
-              (jp['start_time'] ?? jp['jam_mulai'] ?? '').toString(),
-            ),
-            endTime: _trimTime(
-              (jp['end_time'] ?? jp['jam_selesai'] ?? '').toString(),
-            ),
-          ),
-        )
-        .where((a) => a.startTime.isNotEmpty)
-        .toList();
+    final seen = <String>{};
+    final axes = <_TimeSlotAxis>[];
+    for (final jp in filtered) {
+      final hour = (jp['hour_number'] ?? jp['jam_ke'] ?? '').toString();
+      final start = _trimTime(
+        (jp['start_time'] ?? jp['jam_mulai'] ?? '').toString(),
+      );
+      final end = _trimTime(
+        (jp['end_time'] ?? jp['jam_selesai'] ?? '').toString(),
+      );
+      if (start.isEmpty) continue;
+      final dedupeKey = '$hour|$start|$end';
+      if (!seen.add(dedupeKey)) continue;
+      axes.add(
+        _TimeSlotAxis(hourNumber: hour, startTime: start, endTime: end),
+      );
+    }
     axes.sort((a, b) => a.startTime.compareTo(b.startTime));
     return axes;
   }

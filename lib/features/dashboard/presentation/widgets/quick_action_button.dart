@@ -96,9 +96,10 @@ class QuickActionButton extends StatelessWidget {
             ),
             const SizedBox(height: 6),
 
-            // Label
+            // Label — width bumped 72 → 80 so 10-char labels like
+            // "Pengumuman" don't truncate to "Pengumum…" on Samsung portrait.
             SizedBox(
-              width: 72,
+              width: 80,
               child: Text(
                 label,
                 style: TextStyle(

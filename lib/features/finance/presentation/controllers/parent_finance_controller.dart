@@ -101,17 +101,22 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
     final currentState = state.value;
     if (currentState == null) return;
     if (!isRead && !currentState.processedReadIds.contains(id)) {
-      final newProcessed = {...currentState.processedReadIds, id};
-      final newPending = {...currentState.pendingReadIds, id};
+      Future.microtask(() {
+        final current = state.value;
+        if (current == null) return;
 
-      state = AsyncData(
-        currentState.copyWith(
-          processedReadIds: newProcessed,
-          pendingReadIds: newPending,
-        ),
-      );
+        final newProcessed = {...current.processedReadIds, id};
+        final newPending = {...current.pendingReadIds, id};
 
-      _scheduleMarkRead();
+        state = AsyncData(
+          current.copyWith(
+            processedReadIds: newProcessed,
+            pendingReadIds: newPending,
+          ),
+        );
+
+        _scheduleMarkRead();
+      });
     }
   }
 

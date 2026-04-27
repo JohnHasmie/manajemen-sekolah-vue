@@ -31,7 +31,7 @@ class ParentReportCardScreen extends ConsumerStatefulWidget {
 /// `data() { return { isLoading, studentsData, selectedTermId } }`.
 /// Auto-resolves the current semester and loads student raport data.
 class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
-    with ReportCardDataMixin, ReportCardUIBuilderMixin {
+    with ReportCardDataMixin<ParentReportCardScreen>, ReportCardUIBuilderMixin<ParentReportCardScreen> {
   @override
   bool isLoading = true;
   @override
