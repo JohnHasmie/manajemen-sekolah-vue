@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
@@ -31,7 +32,7 @@ class ParentAcademicHub extends ConsumerWidget {
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          _ShellTabHeader(
+          ShellTabHeader(
             title: 'Akademik',
             subtitle: 'Nilai, raport, kegiatan kelas, dan pengumuman',
             accentColor: accent,
@@ -108,62 +109,3 @@ class ParentAcademicHub extends ConsumerWidget {
   }
 }
 
-class _ShellTabHeader extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Color accentColor;
-
-  const _ShellTabHeader({
-    required this.title,
-    required this.subtitle,
-    required this.accentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [accentColor, accentColor.withValues(alpha: 0.85)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withValues(alpha: 0.25),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/screens/admin_classroom_management_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
@@ -28,7 +29,7 @@ class AdminPeopleHub extends StatelessWidget {
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          _ShellTabHeader(
+          ShellTabHeader(
             title: 'Orang',
             subtitle: 'Kelola data siswa, guru, dan kelas',
             accentColor: accent,
@@ -74,64 +75,3 @@ class AdminPeopleHub extends StatelessWidget {
   }
 }
 
-/// Reusable header for shell tab roots. No back button — the shell's
-/// `PopScope` handles back via the per-tab Navigator.
-class _ShellTabHeader extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Color accentColor;
-
-  const _ShellTabHeader({
-    required this.title,
-    required this.subtitle,
-    required this.accentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [accentColor, accentColor.withValues(alpha: 0.85)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withValues(alpha: 0.25),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
