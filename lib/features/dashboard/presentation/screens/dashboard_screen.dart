@@ -20,6 +20,12 @@ import 'package:manajemensekolah/core/shell/tabs/admin/admin_academic_hub.dart';
 import 'package:manajemensekolah/core/shell/tabs/admin/admin_finance_tab.dart';
 import 'package:manajemensekolah/core/shell/tabs/admin/admin_people_hub.dart';
 import 'package:manajemensekolah/core/shell/tabs/admin/admin_system_tab.dart';
+import 'package:manajemensekolah/core/shell/tabs/parent/parent_academic_hub.dart';
+import 'package:manajemensekolah/core/shell/tabs/parent/parent_attendance_tab.dart';
+import 'package:manajemensekolah/core/shell/tabs/parent/parent_finance_tab.dart';
+import 'package:manajemensekolah/core/shell/tabs/teacher/teacher_grades_hub.dart';
+import 'package:manajemensekolah/core/shell/tabs/teacher/teacher_other_hub.dart';
+import 'package:manajemensekolah/core/shell/tabs/teacher/teacher_teaching_hub.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/helpers_mixin.dart';
@@ -193,9 +199,7 @@ class _DashboardState extends ConsumerState<Dashboard>
       );
     }
 
-    // Sub-PR 2 — admin tab roots. Sub-PR 3 will add teacher cases,
-    // Sub-PR 4 will add parent cases, then this becomes a pure dispatch
-    // table without role gating.
+    // Sub-PR 2 — admin tab roots.
     if (effectiveRole == 'admin') {
       switch (tab) {
         case ShellTab.people:
@@ -206,6 +210,36 @@ class _DashboardState extends ConsumerState<Dashboard>
           return const AdminFinanceTab();
         case ShellTab.system:
           return const AdminSystemTab();
+        default:
+          break;
+      }
+    }
+
+    // Sub-PR 3 — teacher tab roots.
+    if (effectiveRole == 'guru') {
+      switch (tab) {
+        case ShellTab.teaching:
+          return const TeacherTeachingHub();
+        case ShellTab.grades:
+          return const TeacherGradesHub();
+        case ShellTab.other:
+          return const TeacherOtherHub();
+        default:
+          break;
+      }
+    }
+
+    // Sub-PR 4 — parent tab roots. After this lands, the placeholder
+    // fallback below is essentially dead code — kept as a safety net for
+    // role/tab combinations the dispatcher misses.
+    if (effectiveRole == 'wali') {
+      switch (tab) {
+        case ShellTab.academic:
+          return const ParentAcademicHub();
+        case ShellTab.attendance:
+          return const ParentAttendanceTab();
+        case ShellTab.finance:
+          return const ParentFinanceTab();
         default:
           break;
       }
