@@ -77,9 +77,6 @@ class ShellNav {
   /// shell the same way [goTo] does. Returns `false` (and logs) when
   /// either the navigator isn't mounted yet (terminated-state cold
   /// boot) or the shell provider hasn't been initialized for the role.
-  ///
-  /// Caller is responsible for checking `kEnableShell` first — when the
-  /// shell is off, fall back to a direct `navigatorKey.currentState.push`.
   static bool goToGlobal({
     required String role,
     required ShellTab tab,

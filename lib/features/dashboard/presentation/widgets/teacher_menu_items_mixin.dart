@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/shell/shell_flag.dart';
 import 'package:manajemensekolah/core/shell/shell_nav.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -21,16 +19,10 @@ import 'package:manajemensekolah/features/report_cards/presentation/screens/teac
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
 
 mixin TeacherMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
-  /// When `kEnableShell` is true, dispatch via `ShellNav.goTo` so the
-  /// menu tile jumps to the canonical tab (and pushes the destination
-  /// on that tab's stack). When false, fall back to legacy
-  /// `AppNavigator.push` so the screen stacks on the current Navigator.
+  /// Dispatch via `ShellNav.goTo` so the menu tile jumps to the
+  /// canonical tab and pushes the destination on that tab's stack.
   void _navAware({required ShellTab tab, required Widget screen}) {
-    if (kEnableShell) {
-      ShellNav.goTo(ref, role: 'guru', tab: tab, pushOnTop: screen);
-    } else {
-      AppNavigator.push(context, screen);
-    }
+    ShellNav.goTo(ref, role: 'guru', tab: tab, pushOnTop: screen);
   }
 
   List<MenuItem> getTeacherTeachingItems(BuildContext context) {
@@ -220,16 +212,12 @@ mixin TeacherMenuItemsMixin on ConsumerState<DashboardCategorizedMenu> {
   }
 
   Future<void> _handleTeacherAnnouncementsTap(BuildContext context) async {
-    if (kEnableShell) {
-      ShellNav.goTo(
-        ref,
-        role: 'guru',
-        tab: ShellTab.other,
-        pushOnTop: const TeacherAnnouncementScreen(),
-      );
-    } else {
-      await AppNavigator.push(context, const TeacherAnnouncementScreen());
-    }
+    ShellNav.goTo(
+      ref,
+      role: 'guru',
+      tab: ShellTab.other,
+      pushOnTop: const TeacherAnnouncementScreen(),
+    );
     ref.read(dashboardProvider.notifier).refreshStats();
   }
 
