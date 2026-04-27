@@ -299,14 +299,9 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
             ),
             SliverToBoxAdapter(
               key: widget.heroSectionKey,
-              child: _buildGradientHeader(),
+              child: _buildHeroWithKpiOverlay(),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
-            SliverToBoxAdapter(
-              key: widget.statsSectionKey,
-              child: _buildHeroStats(),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
+            const SliverToBoxAdapter(child: SizedBox(height: 56)),
             SliverToBoxAdapter(child: _buildInboxCard()),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
             SliverToBoxAdapter(
@@ -320,50 +315,68 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     );
   }
 
-  // ── Header — navy gradient + realtime pill ───
+  // ── Header — navy gradient + realtime pill + KPI overlay ───
 
-  Widget _buildGradientHeader() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        0,
-      ),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_adminNavy, _adminNavyFade],
+  /// Combined hero and KPI section with floating card overlay effect.
+  /// The gradient hero sits at the top with extra bottom padding (56dp);
+  /// the KPI row is positioned at bottom: 0 to sit at the bottom of that padding,
+  /// creating the visual overlap where cards float onto the lower edge of gradient.
+  Widget _buildHeroWithKpiOverlay() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Gradient hero — with extra bottom padding for KPI overlap
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            56,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [_adminNavy, _adminNavyFade],
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(18)),
+              boxShadow: [
+                BoxShadow(
+                  color: _adminNavy.withValues(alpha: 0.18),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SchoolPill.expanded(
+                    schoolName: _schoolName,
+                    subtitle: _greetingSubtitle,
+                    onTap: widget.onSchoolSwitchTap,
+                    accentColor: _adminNavy,
+                    actionLabel: 'Ganti',
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
+                ],
+              ),
+            ),
+          ),
         ),
-        borderRadius: const BorderRadius.all(Radius.circular(18)),
-        boxShadow: [
-          BoxShadow(
-            color: _adminNavy.withValues(alpha: 0.18),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SchoolPill.expanded(
-            schoolName: _schoolName,
-            subtitle: _greetingSubtitle,
-            onTap: widget.onSchoolSwitchTap,
-            // accentColor must be a *dark* color: SchoolPill.expanded renders
-            // the school name as `color: accentColor` inside a white card.
-            // Passing Colors.white made the school name invisible
-            // (white-on-white). Use the navy that matches the gradient bg.
-            accentColor: _adminNavy,
-            actionLabel: 'Ganti',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
-        ],
-      ),
+        // KPI strip floating at the bottom of the gradient
+        Positioned(
+          key: widget.statsSectionKey,
+          left: 16,
+          right: 16,
+          bottom: 0,
+          child: _buildHeroStats(),
+        ),
+      ],
     );
   }
 

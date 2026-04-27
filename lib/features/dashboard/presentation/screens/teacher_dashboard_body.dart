@@ -32,6 +32,7 @@ import 'package:manajemensekolah/core/widgets/school_pill.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 
 import 'package:manajemensekolah/features/announcements/presentation/screens/teacher_announcement_screen.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
@@ -177,6 +178,9 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
       teacherId:
           (widget.state.userData['teacher_id'] ?? widget.state.userData['id'])
               .toString(),
+      teacherName:
+          (widget.state.userData['nama'] ?? widget.state.userData['name'] ?? 'Guru')
+              .toString(),
     ),
   );
 
@@ -204,7 +208,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   );
 
   void _openAnnouncementDrafts() =>
-      AppNavigator.push(context, const TeacherAnnouncementScreen(initialStatusFilter: 'draft'));
+      AppNavigator.push(context, const TeacherAnnouncementScreen());
 
   @override
   Widget build(BuildContext context) {
@@ -231,14 +235,9 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
             ),
             SliverToBoxAdapter(
               key: widget.heroSectionKey,
-              child: _buildGradientHeader(),
+              child: _buildHeroWithKpiOverlay(),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
-            SliverToBoxAdapter(
-              key: widget.statsSectionKey,
-              child: _buildKpiCards(),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
+            const SliverToBoxAdapter(child: SizedBox(height: 56)),
             SliverToBoxAdapter(child: _buildInboxCard()),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
             SliverToBoxAdapter(
@@ -254,107 +253,98 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     );
   }
 
-  Widget _buildGradientHeader() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        0,
-      ),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_teacherTeal, _teacherTealFade],
+  /// Combined hero and KPI section with floating card overlay effect.
+  Widget _buildHeroWithKpiOverlay() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            56,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [_teacherTeal, _teacherTealFade],
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(18)),
+              boxShadow: [
+                BoxShadow(
+                  color: _teacherTeal.withValues(alpha: 0.18),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SchoolPill.expanded(
+                    schoolName: _schoolName,
+                    subtitle: _greetingSubtitle,
+                    onTap: widget.onSchoolSwitchTap,
+                    accentColor: _teacherTeal,
+                    actionLabel: 'Ganti',
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
+                ],
+              ),
+            ),
+          ),
         ),
-        borderRadius: const BorderRadius.all(Radius.circular(18)),
-        boxShadow: [
-          BoxShadow(
-            color: _teacherTeal.withValues(alpha: 0.18),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SchoolPill.expanded(
-            schoolName: _schoolName,
-            subtitle: _greetingSubtitle,
-            onTap: widget.onSchoolSwitchTap,
-            accentColor: _teacherTeal,
-            actionLabel: 'Ganti',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
-        ],
-      ),
+        Positioned(
+          key: widget.statsSectionKey,
+          left: 16,
+          right: 16,
+          bottom: 0,
+          child: _buildKpiCards(),
+        ),
+      ],
     );
   }
 
+  /// Build 3 KPI cards in a single horizontal row (unified for all roles).
   Widget _buildKpiCards() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: Column(
-        children: [
-          // First row of 2 cards
-          Row(
-            children: [
-              Expanded(
-                child: HeroStatsCard(
-                  label: 'Siswa diampu',
-                  value: _formatNumber(_studentCount),
-                  icon: Icons.people_alt_outlined,
-                  accentColor: widget.primaryColor,
-                  caption: 'terdaftar',
-                  onTap: () {},
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: HeroStatsCard(
-                  label: 'Kelas',
-                  value: _formatNumber(_classCount),
-                  icon: Icons.class_outlined,
-                  accentColor: ColorUtils.success600,
-                  caption: 'mengajar',
-                  onTap: () {},
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          // Second row of 2 cards
-          Row(
-            children: [
-              Expanded(
-                child: HeroStatsCard(
-                  label: 'Sesi hari ini',
-                  value: _formatNumber(_sessionsTodayCount),
-                  icon: Icons.schedule_outlined,
-                  accentColor: ColorUtils.info600,
-                  caption: 'terjadwal',
-                  onTap: () {},
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: HeroStatsCard(
-                  label: 'RPP',
-                  value: _formatNumber(_totalRppCount),
-                  icon: Icons.description_outlined,
-                  accentColor: ColorUtils.warning600,
-                  caption: 'tersimpan',
-                  onTap: () {},
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    // Count helpers for caption values
+    final approvedRppCount = _asInt(
+      widget.state.stats['approved_lesson_plans'] ?? 0,
+    );
+
+    return HeroStatsRow(
+      cards: [
+        HeroStatsCard(
+          label: 'Siswa diampu',
+          value: _formatNumber(_studentCount),
+          icon: Icons.school_outlined,
+          accentColor: widget.primaryColor,
+          caption: '${_classCount} kelas',
+          onTap: () {},
+        ),
+        HeroStatsCard(
+          label: 'Sesi hari ini',
+          value: _formatNumber(_sessionsTodayCount),
+          icon: Icons.schedule_outlined,
+          accentColor: ColorUtils.success600,
+          caption: 'jadwal',
+          onTap: () {},
+        ),
+        HeroStatsCard(
+          label: 'RPP',
+          value: _formatNumber(_totalRppCount),
+          icon: Icons.description_outlined,
+          accentColor: ColorUtils.warning600,
+          caption: '$approvedRppCount disetujui',
+          onTap: () {},
+        ),
+      ],
     );
   }
 

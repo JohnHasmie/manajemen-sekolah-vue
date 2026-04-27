@@ -200,14 +200,9 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             ),
             SliverToBoxAdapter(
               key: widget.heroSectionKey,
-              child: _buildGradientHeader(),
+              child: _buildHeroWithKpiOverlay(),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
-            SliverToBoxAdapter(
-              key: widget.statsSectionKey,
-              child: _buildKpiCards(),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
+            const SliverToBoxAdapter(child: SizedBox(height: 56)),
             SliverToBoxAdapter(child: _buildInboxCard()),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
             SliverToBoxAdapter(
@@ -223,107 +218,96 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     );
   }
 
-  Widget _buildGradientHeader() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        0,
-      ),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_parentViolet, _parentVioletFade],
+  /// Combined hero and KPI section with floating card overlay effect.
+  Widget _buildHeroWithKpiOverlay() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            56,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [_parentViolet, _parentVioletFade],
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(18)),
+              boxShadow: [
+                BoxShadow(
+                  color: _parentViolet.withValues(alpha: 0.18),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SchoolPill.expanded(
+                    schoolName: _schoolName,
+                    subtitle: _greetingSubtitle,
+                    onTap: widget.onSchoolSwitchTap,
+                    accentColor: _parentViolet,
+                    actionLabel: 'Ganti',
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
+                ],
+              ),
+            ),
+          ),
         ),
-        borderRadius: const BorderRadius.all(Radius.circular(18)),
-        boxShadow: [
-          BoxShadow(
-            color: _parentViolet.withValues(alpha: 0.18),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SchoolPill.expanded(
-            schoolName: _schoolName,
-            subtitle: _greetingSubtitle,
-            onTap: widget.onSchoolSwitchTap,
-            accentColor: _parentViolet,
-            actionLabel: 'Ganti',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
-        ],
-      ),
+        Positioned(
+          key: widget.statsSectionKey,
+          left: 16,
+          right: 16,
+          bottom: 0,
+          child: _buildKpiCards(),
+        ),
+      ],
     );
   }
 
+  /// Build 3 KPI cards in a single horizontal row (unified for all roles).
   Widget _buildKpiCards() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: Column(
-        children: [
-          // First row of 2 cards
-          Row(
-            children: [
-              Expanded(
-                child: HeroStatsCard(
-                  label: 'Anak terdaftar',
-                  value: _formatNumber(_childrenCount),
-                  icon: Icons.family_restroom_outlined,
-                  accentColor: widget.primaryColor,
-                  caption: 'di sekolah',
-                  onTap: () {},
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: HeroStatsCard(
-                  label: 'Kehadiran',
-                  value: '$_attendanceRate%',
-                  icon: Icons.check_circle_outline,
-                  accentColor: ColorUtils.warning600,
-                  caption: 'hari ini',
-                  onTap: () {},
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          // Second row of 2 cards
-          Row(
-            children: [
-              Expanded(
-                child: HeroStatsCard(
-                  label: 'Nilai baru',
-                  value: _formatNumber(_newGradesCount),
-                  icon: Icons.grade_outlined,
-                  accentColor: ColorUtils.success600,
-                  caption: '7 hari terakhir',
-                  onTap: () {},
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: HeroStatsCard(
-                  label: 'Tagihan',
-                  value: _formatNumber(_overdueBillsCount),
-                  icon: Icons.warning_amber_outlined,
-                  accentColor: ColorUtils.error600,
-                  caption: 'jatuh tempo',
-                  onTap: () {},
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    // Count helpers for caption values
+    final alphaCount = _asInt(widget.state.stats['unread_presence'] ?? 0);
+
+    return HeroStatsRow(
+      cards: [
+        HeroStatsCard(
+          label: 'Anak',
+          value: _formatNumber(_childrenCount),
+          icon: Icons.family_restroom_outlined,
+          accentColor: widget.primaryColor,
+          caption: 'terdaftar',
+          onTap: () {},
+        ),
+        HeroStatsCard(
+          label: 'Kehadiran',
+          value: '$_attendanceRate%',
+          icon: Icons.check_circle_outline,
+          accentColor: ColorUtils.success600,
+          caption: '$alphaCount alpha',
+          onTap: () {},
+        ),
+        HeroStatsCard(
+          label: 'Tagihan',
+          value: _formatNumber(_overdueBillsCount),
+          icon: Icons.account_balance_wallet_outlined,
+          accentColor: ColorUtils.error600,
+          caption: 'jatuh tempo',
+          onTap: () {},
+        ),
+      ],
     );
   }
 
@@ -402,7 +386,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           label: 'Pengumuman',
           color: widget.primaryColor,
           caption: 'Informasi',
-          badgeCount: _newAnnouncements > 0 ? _newAnnouncements : null,
+          showBadge: _newAnnouncements > 0,
           onTap: _openAnnouncements,
         ),
         QuickAction(
@@ -410,7 +394,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           label: 'Tagihan',
           color: ColorUtils.error600,
           caption: 'Pembayaran',
-          badgeCount: _overdueBills > 0 ? _overdueBills : null,
+          showBadge: _overdueBills > 0,
           onTap: _openBilling,
         ),
         QuickAction(
@@ -418,7 +402,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           label: 'Nilai',
           color: ColorUtils.success600,
           caption: 'Akademik',
-          badgeCount: _newGrades > 0 ? _newGrades : null,
+          showBadge: _newGrades > 0,
           onTap: _openGrades,
         ),
         QuickAction(
@@ -426,7 +410,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           label: 'Kehadiran',
           color: ColorUtils.warning600,
           caption: 'Presensi',
-          badgeCount: _attendanceAlpha > 0 ? _attendanceAlpha : null,
+          showBadge: _attendanceAlpha > 0,
           onTap: _openAttendance,
         ),
       ],
