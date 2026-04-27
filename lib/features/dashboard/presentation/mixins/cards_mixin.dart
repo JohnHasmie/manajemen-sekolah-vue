@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/shell_flag.dart';
+import 'package:manajemensekolah/core/shell/shell_nav.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
@@ -237,6 +240,23 @@ mixin CardsMixin on ConsumerState<Dashboard> {
     }
   }
 
+  /// Shell-aware nav helper: when `kEnableShell` is true, jump to the
+  /// canonical [tab] (optionally pushing [screen] on top). When false,
+  /// fall back to legacy `AppNavigator.push` so the screen stacks on
+  /// the current Navigator. Pass [screen] = null to land on a tab root.
+  void _navAware({
+    required String role,
+    required ShellTab tab,
+    Widget? screen,
+    Widget? legacyScreen,
+  }) {
+    if (kEnableShell) {
+      ShellNav.goTo(ref, role: role, tab: tab, pushOnTop: screen);
+    } else if ((legacyScreen ?? screen) != null) {
+      AppNavigator.push(context, legacyScreen ?? screen!);
+    }
+  }
+
   /// Admin quick actions: data, schedule, finance, announcements.
   List<Widget> _getAdminQuickActions(DashboardState state, Color primaryColor) {
     return [
@@ -244,16 +264,21 @@ mixin CardsMixin on ConsumerState<Dashboard> {
         label: AppLocalizations.data.tr,
         icon: Icons.folder_outlined,
         color: primaryColor,
-        onTap: () =>
-            AppNavigator.push(context, const AdminDataManagementScreen()),
+        // Data hub IS the People tab — switch tabs, no push in shell mode.
+        onTap: () => _navAware(
+          role: 'admin',
+          tab: ShellTab.people,
+          legacyScreen: const AdminDataManagementScreen(),
+        ),
       ),
       QuickActionButton(
         label: AppLocalizations.schedule.tr,
         icon: Icons.schedule_outlined,
         color: ColorUtils.info600,
-        onTap: () => AppNavigator.push(
-          context,
-          const TeachingScheduleManagementScreen(),
+        onTap: () => _navAware(
+          role: 'admin',
+          tab: ShellTab.academic,
+          screen: const TeachingScheduleManagementScreen(),
         ),
       ),
       QuickActionButton(
@@ -263,7 +288,12 @@ mixin CardsMixin on ConsumerState<Dashboard> {
         badgeCount: state.unverifiedPaymentCount > 0
             ? state.unverifiedPaymentCount
             : null,
-        onTap: () => AppNavigator.push(context, const FinanceScreen()),
+        // FinanceScreen IS the Finance tab — switch tabs, no push.
+        onTap: () => _navAware(
+          role: 'admin',
+          tab: ShellTab.finance,
+          legacyScreen: const FinanceScreen(),
+        ),
       ),
       QuickActionButton(
         label: AppLocalizations.announcements.tr,
@@ -271,7 +301,16 @@ mixin CardsMixin on ConsumerState<Dashboard> {
         color: ColorUtils.warning600,
         badgeCount: state.stats['unread_announcements'],
         onTap: () async {
-          await AppNavigator.push(context, const AdminAnnouncementScreen());
+          if (kEnableShell) {
+            ShellNav.goTo(
+              ref,
+              role: 'admin',
+              tab: ShellTab.academic,
+              pushOnTop: const AdminAnnouncementScreen(),
+            );
+          } else {
+            await AppNavigator.push(context, const AdminAnnouncementScreen());
+          }
           ref.read(dashboardProvider.notifier).refreshStats();
         },
       ),
@@ -288,22 +327,30 @@ mixin CardsMixin on ConsumerState<Dashboard> {
         label: AppLocalizations.schedule.tr,
         icon: Icons.schedule_outlined,
         color: primaryColor,
-        onTap: () => AppNavigator.push(context, const TeachingScheduleScreen()),
+        onTap: () => _navAware(
+          role: 'guru',
+          tab: ShellTab.teaching,
+          screen: const TeachingScheduleScreen(),
+        ),
       ),
       QuickActionButton(
         label: AppLocalizations.attendance.tr,
         icon: Icons.how_to_reg_outlined,
         color: ColorUtils.warning600,
-        onTap: () =>
-            AppNavigator.push(context, AttendancePage(teacher: state.userData)),
+        onTap: () => _navAware(
+          role: 'guru',
+          tab: ShellTab.grades,
+          screen: AttendancePage(teacher: state.userData),
+        ),
       ),
       QuickActionButton(
         label: AppLocalizations.activity.tr,
         icon: Icons.local_activity_outlined,
         color: ColorUtils.info600,
-        onTap: () => AppNavigator.push(
-          context,
-          const TeacherClassActivityScreen(autoShowActivityDialog: true),
+        onTap: () => _navAware(
+          role: 'guru',
+          tab: ShellTab.teaching,
+          screen: const TeacherClassActivityScreen(autoShowActivityDialog: true),
         ),
       ),
       QuickActionButton(
@@ -322,7 +369,11 @@ mixin CardsMixin on ConsumerState<Dashboard> {
           };
           if (teacherData['id']!.isEmpty) return;
           if (!context.mounted) return;
-          AppNavigator.push(context, GradePage(teacher: teacherData));
+          _navAware(
+            role: 'guru',
+            tab: ShellTab.grades,
+            screen: GradePage(teacher: teacherData),
+          );
         },
       ),
     ];
@@ -340,7 +391,16 @@ mixin CardsMixin on ConsumerState<Dashboard> {
         color: primaryColor,
         badgeCount: state.stats['unread_announcements'],
         onTap: () async {
-          await AppNavigator.push(context, const ParentAnnouncementScreen());
+          if (kEnableShell) {
+            ShellNav.goTo(
+              ref,
+              role: 'wali',
+              tab: ShellTab.academic,
+              pushOnTop: const ParentAnnouncementScreen(),
+            );
+          } else {
+            await AppNavigator.push(context, const ParentAnnouncementScreen());
+          }
           ref.read(dashboardProvider.notifier).refreshStats();
         },
       ),
@@ -350,7 +410,12 @@ mixin CardsMixin on ConsumerState<Dashboard> {
         color: ColorUtils.error600,
         badgeCount: state.stats['unread_billings'],
         onTap: () async {
-          await AppNavigator.push(context, const ParentBillingScreen());
+          // ParentBillingScreen IS the Finance tab root — switch tabs.
+          if (kEnableShell) {
+            ShellNav.goTo(ref, role: 'wali', tab: ShellTab.finance);
+          } else {
+            await AppNavigator.push(context, const ParentBillingScreen());
+          }
           ref.read(dashboardProvider.notifier).refreshStats();
         },
       ),
