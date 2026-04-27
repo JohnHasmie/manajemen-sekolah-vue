@@ -15,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/shell/role_shell.dart';
-import 'package:manajemensekolah/core/shell/shell_flag.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/shell/tabs/admin/admin_academic_hub.dart';
 import 'package:manajemensekolah/core/shell/tabs/admin/admin_finance_tab.dart';
@@ -45,10 +44,6 @@ export 'package:manajemensekolah/features/dashboard/presentation/widgets/finance
     show FinancePopupDialog;
 export 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_popup_dialog.dart'
     show AttendancePopupDialog;
-
-// Feature flag `kEnableShell` is now defined in
-// `lib/core/shell/shell_flag.dart` so non-UI services can import it
-// without depending on this presentation-layer file. Imported above.
 
 /// The main dashboard widget. Like a Vue page component
 /// (`pages/dashboard.vue`).
@@ -138,43 +133,25 @@ class _DashboardState extends ConsumerState<Dashboard>
     super.dispose();
   }
 
-  /// Main build method - like Vue's `<template>` section.
-  /// Renders a CustomScrollView with role-specific sliver sections:
-  /// app bar, hero stats, quick actions, overview cards, and menu grid.
-  /// Uses `ref.watch(languageRiverpod)` to react to language changes
-  /// (like a Vue `computed` property depending on an i18n store).
-  ///
-  /// When `kEnableShell` is true (P1 rollout), the dashboard body is
-  /// wrapped in a [RoleShell] that provides the bottom-nav tab strip.
-  /// Tab roots are stub builders for now (Sub-PR 1); Sub-PR 2/3/4 wire
-  /// real per-role tab content. The legacy path stays intact under the
-  /// `else` branch so production users see no change until the flag flips.
+  /// Main build method. The dashboard is wrapped in a [RoleShell] which
+  /// provides the bottom-nav tab strip. The Beranda (home) tab renders
+  /// the dashboard content; the other tabs dispatch to per-role tab roots
+  /// under `lib/core/shell/tabs/<role>/`.
   @override
   Widget build(BuildContext context) {
-    if (kEnableShell) {
-      return RoleShell(
-        role: effectiveRole,
-        tabBuilder: _buildShellTabRoot,
-      );
-    }
-
-    final languageProvider = ref.watch(languageRiverpod);
-    final dashboardState = ref.watch(dashboardProvider);
-
-    return dashboardState.when(
-      data: (state) => _buildLoadedState(context, languageProvider, state),
-      error: (e, st) => buildErrorState(e),
-      loading: () => _buildLoadingStateWrapper(context, languageProvider),
+    return RoleShell(
+      role: effectiveRole,
+      tabBuilder: _buildShellTabRoot,
     );
   }
 
   /// Tab-root dispatcher used by [RoleShell.tabBuilder].
   ///
-  /// Home tab always renders the legacy dashboard tree (preserves the
-  /// existing FCM listener, dialog wiring, and state — Sub-PR 6 will
-  /// refactor this in place). Other tabs dispatch to per-role tab files
-  /// in `lib/core/shell/tabs/<role>/`. Tabs not yet wired for the role
-  /// fall through to a "segera hadir" placeholder.
+  /// The Home tab renders the dashboard content tree (preserves the
+  /// existing FCM listener, dialog wiring, and state). Other tabs
+  /// dispatch to per-role tab files in `lib/core/shell/tabs/<role>/`.
+  /// Tabs not wired for the role fall through to a "segera hadir"
+  /// placeholder as a safety net.
   Widget _buildShellTabRoot(BuildContext context, ShellTab tab) {
     if (tab == ShellTab.home) {
       // Re-enter the legacy dashboard render path.
@@ -372,10 +349,10 @@ class _DashboardState extends ConsumerState<Dashboard>
   }
 }
 
-/// Temporary "Coming soon" surface for tabs whose real screens land in
-/// later P1 sub-PRs (Sub-PR 2: admin tabs, 3: teacher, 4: parent).
-/// Only visible when `kEnableShell` is true — production builds with the
-/// flag off never render this.
+/// Safety-net "Coming soon" surface for any role/tab combo that the
+/// dispatcher misses. With the per-role tab roots fully wired this is
+/// effectively unreachable, but it keeps the shell from crashing if a
+/// new tab lands without its root.
 class _ShellTabPlaceholder extends StatelessWidget {
   final ShellTab tab;
   const _ShellTabPlaceholder({required this.tab});
