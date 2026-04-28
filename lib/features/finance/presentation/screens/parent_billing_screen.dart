@@ -252,47 +252,52 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     final languageProvider = ref.watch(languageRiverpod);
     final financeAsync = ref.watch(parentFinanceProvider);
 
+    final header = financeAsync.when(
+      data: (state) => _buildHeader(
+        languageProvider,
+        state.students,
+        state.selectedStudent?.id,
+        state.statusFilter,
+        state.periodFilter,
+      ),
+      loading: () => _buildHeader(
+        languageProvider,
+        const [],
+        null,
+        null,
+        null,
+      ),
+      error: (_, __) => _buildHeader(
+        languageProvider,
+        const [],
+        null,
+        null,
+        null,
+      ),
+    );
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          financeAsync.when(
-            data: (state) => _buildHeader(
-              languageProvider,
-              state.students,
-              state.selectedStudent?.id,
-              state.statusFilter,
-              state.periodFilter,
+      body: RefreshIndicator(
+        color: ColorUtils.brandAzureDeep,
+        onRefresh: () async {
+          await ref.read(parentFinanceProvider.notifier).forceRefresh();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        // Single outer ListView so the gradient hero scrolls with
+        // the billing list — matches the dashboard / Kehadiran
+        // hero idiom (not pinned).
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          children: [
+            header,
+            BillingList(
+              key: _billingListKey,
+              languageProvider: languageProvider,
             ),
-            loading: () => _buildHeader(
-              languageProvider,
-              const [],
-              null,
-              null,
-              null,
-            ),
-            error: (_, __) => _buildHeader(
-              languageProvider,
-              const [],
-              null,
-              null,
-              null,
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              onRefresh: () async {
-                await ref.read(parentFinanceProvider.notifier).forceRefresh();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: BillingList(
-                key: _billingListKey,
-                languageProvider: languageProvider,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

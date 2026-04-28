@@ -164,20 +164,23 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHeader(lang),
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              onRefresh: () async {
-                await onRefreshRequested();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: buildGradeList(),
-            ),
-          ),
-        ],
+      body: RefreshIndicator(
+        color: ColorUtils.brandAzureDeep,
+        onRefresh: () async {
+          await onRefreshRequested();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        // Single outer ListView so the gradient hero scrolls with
+        // the grade list — matches the dashboard / Kehadiran hero
+        // idiom (not pinned).
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          children: [
+            _buildHeader(lang),
+            buildGradeList(),
+          ],
+        ),
       ),
     );
   }

@@ -123,6 +123,11 @@ class ParentGradeListView extends StatelessWidget {
     return ListView.builder(
       key: listKey,
       controller: controller,
+      // The parent screen now hosts a single outer ListView so the
+      // gradient hero scrolls with the body. shrinkWrap +
+      // NeverScrollable defers scrolling to the outer list.
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: gradeList.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {

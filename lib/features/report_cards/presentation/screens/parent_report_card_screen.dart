@@ -71,20 +71,23 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildBrandHeader(lang),
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              onRefresh: () async {
-                await forceRefresh();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: buildContentArea(),
-            ),
-          ),
-        ],
+      body: RefreshIndicator(
+        color: ColorUtils.brandAzureDeep,
+        onRefresh: () async {
+          await forceRefresh();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        // Single outer ListView so the gradient hero scrolls with
+        // the report-card list — matches the dashboard / Kehadiran
+        // hero idiom (not pinned).
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          children: [
+            _buildBrandHeader(lang),
+            buildContentArea(),
+          ],
+        ),
       ),
     );
   }

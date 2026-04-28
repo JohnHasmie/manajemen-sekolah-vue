@@ -92,12 +92,15 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
     // counts. P0 #10 from UI_Redesign_Audit.md: parent was a flat list.
     final grouped = _groupByMonth(filteredAnnouncement);
 
-    return RefreshIndicator(
-      onRefresh: forceRefresh,
-      color: getPrimaryColor(),
-      backgroundColor: Colors.white,
-      child: ListView.builder(
+    // The parent screen now wraps body in an outer ListView so the
+    // gradient hero scrolls with content. shrinkWrap + Never-
+    // ScrollableScrollPhysics let this inner list size to its
+    // content and defer scrolling to the outer list — and the
+    // RefreshIndicator now lives one level up in the screen.
+    return ListView.builder(
         key: listKey,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 8, bottom: 16),
         itemCount: grouped.length,
         itemBuilder: (context, index) {
@@ -115,8 +118,7 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
             },
           );
         },
-      ),
-    );
+      );
   }
 
   /// Walks [items] and emits an interleaved list of section headers + cards.
