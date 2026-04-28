@@ -11,7 +11,7 @@ mixin DashboardAccountSheetHeaderMixin {
   Color get primaryColor;
 
   /// Build the user info header row with avatar, name, email, school.
-  Widget buildUserInfoRow() {
+  Widget buildUserInfoRow(BuildContext context) {
     return Row(
       children: [
         _buildUserAvatar(),

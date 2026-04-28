@@ -71,35 +71,53 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.fromLTRB(
-        AppSpacing.xl,
-        AppSpacing.xl,
-        AppSpacing.xl,
-        MediaQuery.of(context).padding.bottom + AppSpacing.xl,
-      ),
-      child: Wrap(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(25),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, -5),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.of(context).pop(),
+      child: Container(
+        margin: EdgeInsets.fromLTRB(
+          AppSpacing.xl,
+          AppSpacing.xl,
+          AppSpacing.xl,
+          MediaQuery.of(context).padding.bottom + AppSpacing.xl,
+        ),
+        child: GestureDetector(
+          onTap: () {},
+          child: Wrap(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.all(Radius.circular(25)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xxl),
-              child: _buildSheetContent(context),
-            ),
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xxl),
+                      child: _buildSheetContent(context),
+                    ),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: IconButton(
+                        icon: const Icon(Icons.close),
+                        color: Colors.grey.shade500,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -114,7 +132,7 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
         AppSpacing.v20,
 
         // User info row
-        buildUserInfoRow(),
+        buildUserInfoRow(context),
         AppSpacing.v24,
 
         // Role switcher section
