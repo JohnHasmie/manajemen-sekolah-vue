@@ -219,28 +219,42 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   // ----------------------------------------------------- hero + KPI overlay
 
-  /// Combined hero + floating KPI card. Uses `Column` + a
-  /// `Transform.translate(-18)` on the KPI so the card visually
-  /// overlaps the hero's bottom edge without using a Stack with
-  /// `clipBehavior: Clip.none`. The Stack approach trips Flutter's
-  /// intrinsic-check inside a CustomScrollView when the hero
-  /// contains horizontal viewports (`ChildSelectorChipRow`,
-  /// `BrandFilterChipStrip`); Transform.translate is a paint-only
-  /// shift, so layout stays simple and no viewport ever gets asked
-  /// for intrinsics.
+  /// Combined hero + floating KPI card. The whole composition lives
+  /// inside the outer `ListView` as a single child so the gradient
+  /// hero scrolls up off-screen with the rest of the body — exactly
+  /// the dashboard "hero scrolls away" idiom; *not* pinned.
+  ///
+  /// The KPI sits inside a Stack that reserves an explicit overhang
+  /// below the gradient. The Padding gives the gradient extra
+  /// vertical space at its bottom, and the Positioned KPI anchors
+  /// to the Stack's bottom edge — that pulls the KPI up so a
+  /// significant portion of it overlaps the gradient.
+  ///
+  /// Stack(clipBehavior: Clip.none) is safe here because we're
+  /// inside a regular `ListView`, not a `SliverFillRemaining`/
+  /// `SliverToBoxAdapter` that would query intrinsics on the child.
   Widget _buildHeroAndKpi(LanguageProvider lang) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    // Empirically: the AttendanceRingKpi (donut + 4 legend rows +
+    // trend chip footer) renders ~210 px tall. We want the KPI to
+    // sit roughly half-into the gradient, so reserve ~120 px of
+    // overhang in the Stack. That puts the KPI's top edge ~90 px
+    // above the gradient's bottom edge — clearly "on" the gradient
+    // rather than "below" it.
+    const kpiOverhang = 120.0;
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        _buildHeader(lang),
-        Transform.translate(
-          offset: const Offset(0, -18),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: KeyedSubtree(
-              key: _monthlySummaryKey,
-              child: _buildKpiCard(lang),
-            ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: kpiOverhang),
+          child: _buildHeader(lang),
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 0,
+          child: KeyedSubtree(
+            key: _monthlySummaryKey,
+            child: _buildKpiCard(lang),
           ),
         ),
       ],
