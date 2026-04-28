@@ -210,66 +210,10 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      appBar: AppBar(
-        title: Text(
-          languageProvider.getTranslatedText({
-            'en': 'School Billing',
-            'id': 'Tagihan Sekolah',
-          }),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: ColorUtils.getRoleColor('wali'),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.white),
-            onPressed: () => _showFilterSheet(languageProvider),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () =>
-                ref.read(parentFinanceProvider.notifier).forceRefresh(),
-          ),
-        ],
-      ),
       body: Column(
         children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) {
-                _searchDebounce?.cancel();
-                _searchDebounce = Timer(const Duration(milliseconds: 500), () {
-                  ref.read(parentFinanceProvider.notifier).updateSearch(val);
-                });
-              },
-              decoration: InputDecoration(
-                hintText: languageProvider.getTranslatedText({
-                  'en': 'Search billing...',
-                  'id': 'Cari tagihan...',
-                }),
-                prefixIcon: Icon(Icons.search, color: ColorUtils.slate400),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: ColorUtils.slate200),
-                ),
-              ),
-            ),
-          ),
-
-          // Student Selector
+          _buildHero(languageProvider),
+          // Student Selector — stays directly under hero, on slate-50.
           financeAsync.when(
             data: (state) => StudentSelector(
               key: _studentSelectorKey,
@@ -282,9 +226,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
             loading: () => const SizedBox(height: 90),
             error: (_, __) => const SizedBox.shrink(),
           ),
-
           Divider(height: 1, color: ColorUtils.slate200),
-
           // Billing List
           Expanded(
             child: BillingList(
@@ -293,6 +235,165 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Phase-3 azure gradient hero for the parent Billing tab.
+  ///
+  /// Mirrors the dashboard's hero composition (gradient + icon-row +
+  /// title block + inline search) so the parent-role surfaces share a
+  /// visual language. The gradient comes from
+  /// `ColorUtils.brandGradient('wali')`, the same source the parent
+  /// Beranda uses, so a brand refresh here flows through automatically.
+  Widget _buildHero(LanguageProvider lp) {
+    final statusBarHeight = MediaQuery.of(context).viewPadding.top;
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: ColorUtils.brandGradient('wali'),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.brandAzure.withValues(alpha: 0.18),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        statusBarHeight + 12,
+        16,
+        16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      lp.getTranslatedText({
+                        'en': 'School Billing',
+                        'id': 'Tagihan Sekolah',
+                      }),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      lp.getTranslatedText({
+                        'en': 'Track and pay your child\'s bills',
+                        'id': 'Pantau dan bayar tagihan anak Anda',
+                      }),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.82),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _buildHeroIconButton(
+                icon: Icons.filter_list,
+                onTap: () => _showFilterSheet(lp),
+              ),
+              const SizedBox(width: 6),
+              _buildHeroIconButton(
+                icon: Icons.refresh,
+                onTap: () =>
+                    ref.read(parentFinanceProvider.notifier).forceRefresh(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Inline search field in the hero — same idiom as the dashboard
+          // SchoolPill: white-translucent fill, white text, slate-200 hint.
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (val) {
+                _searchDebounce?.cancel();
+                _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+                  ref.read(parentFinanceProvider.notifier).updateSearch(val);
+                });
+              },
+              decoration: InputDecoration(
+                hintText: lp.getTranslatedText({
+                  'en': 'Search billing...',
+                  'id': 'Cari tagihan...',
+                }),
+                hintStyle: TextStyle(color: ColorUtils.slate400),
+                prefixIcon: Icon(Icons.search, color: ColorUtils.slate400),
+                filled: false,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 14,
+                ),
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 36×36 white-translucent icon button used in the hero's top row;
+  /// same idiom as `_HeroIconButton` in the dashboard bodies.
+  Widget _buildHeroIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.18),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+      ),
+      child: InkWell(
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        onTap: onTap,
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(icon, size: 18, color: Colors.white),
+        ),
       ),
     );
   }

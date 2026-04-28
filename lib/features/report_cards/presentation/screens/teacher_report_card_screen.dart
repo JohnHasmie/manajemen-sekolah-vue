@@ -92,9 +92,19 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen>
 
   @override
   void onClassesLoaded(List<dynamic> classes) {
+    Map<String, dynamic>? matched;
+    // In dialog mode (opened from overview), auto-select the class
+    // matching initialClassId so students load immediately.
+    final targetId = widget.initialClassId;
+    if (targetId != null && classes.isNotEmpty) {
+      matched = classes.cast<Map<String, dynamic>>().firstWhere(
+        (c) => c['id']?.toString() == targetId,
+        orElse: () => classes.first as Map<String, dynamic>,
+      );
+    }
     setState(() {
       _classes = classes;
-      _selectedClass = _classes.isNotEmpty ? _classes.first : null;
+      _selectedClass = matched;
       _errorMessage = '';
     });
   }
