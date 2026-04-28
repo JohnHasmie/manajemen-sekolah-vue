@@ -11,9 +11,22 @@ mixin ParentAttendanceStateMixin on ConsumerState<ParentAttendanceScreen> {
   late bool isLoading;
   late String? selectedMonthFilter;
   late String? selectedSemesterFilter;
+  late String? selectedStatusFilter;
   late bool hasActiveFilter;
   late TextEditingController searchController;
   late Map<String, int> monthlySummary;
+
+  /// The student id currently rendered. Defaults to [widget.studentId]
+  /// (the value the screen was constructed with) but the screen can
+  /// override this getter to support in-place sibling switching via
+  /// the chip selector — bumping this value + reloading swaps the
+  /// body without a Navigator.pushReplacement.
+  String get currentStudentId => widget.studentId;
+
+  /// The academic year currently rendered. Same rationale as
+  /// [currentStudentId] — the screen overrides this to react to
+  /// in-place academic-year changes without a navigation roundtrip.
+  String? get currentAcademicYearId => widget.academicYearId;
 
   @override
   void initState() {
@@ -23,6 +36,7 @@ mixin ParentAttendanceStateMixin on ConsumerState<ParentAttendanceScreen> {
     isLoading = true;
     selectedMonthFilter = null;
     selectedSemesterFilter = null;
+    selectedStatusFilter = null;
     hasActiveFilter = false;
     searchController = TextEditingController();
     monthlySummary = {

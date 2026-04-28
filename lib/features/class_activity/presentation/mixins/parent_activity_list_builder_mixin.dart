@@ -33,6 +33,12 @@ mixin ParentActivityListBuilderMixin
 
     return ListView.builder(
       key: state.activityListKey,
+      // The parent screen now wraps the body in an outer ListView so
+      // the gradient hero scrolls with the content. shrinkWrap +
+      // NeverScrollable lets this inner list size to its content
+      // and defer scrolling to the outer list.
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: state.activityList.length,
       itemBuilder: (context, index) {

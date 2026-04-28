@@ -94,13 +94,18 @@ mixin ParentActivityDataLoadingMixin
       });
 
       if (_state.studentList.isNotEmpty) {
-        if (_state.studentList.length == 1) {
+        // Always auto-pick the first child as default — the chip
+        // selector in the screen lets the parent switch in-place,
+        // so there's no point making them tap a picker first. Only
+        // skip auto-pick if a previous selection survived (e.g.
+        // parent navigated back).
+        if (_state.selectedStudentId == null) {
           _state.selectedStudentId = _state.studentList[0]['id'];
-          if (!hadCacheHit) {
-            await loadActivities(useCache: useCache);
-          } else {
-            await loadActivities(useCache: false);
-          }
+        }
+        if (!hadCacheHit) {
+          await loadActivities(useCache: useCache);
+        } else {
+          await loadActivities(useCache: false);
         }
       } else {
         setState(() => _state.isLoading = false);

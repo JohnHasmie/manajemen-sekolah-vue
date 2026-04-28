@@ -212,9 +212,13 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
   }
 
   Widget _buildStudentsList() {
-    return RefreshIndicator(
-      onRefresh: loadData,
-      child: ListView.builder(
+    // The parent screen now hosts a single outer ListView so the
+    // gradient hero scrolls with the body. shrinkWrap +
+    // NeverScrollable defers scrolling to the outer list. The
+    // pull-to-refresh wrapper now lives one level up.
+    return ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.all(AppSpacing.lg),
         itemCount: studentsData.length,
         itemBuilder: (context, index) {
@@ -228,8 +232,7 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
 
           return _buildStudentCard(student, reportCard);
         },
-      ),
-    );
+      );
   }
 
   Widget _buildStudentCard(

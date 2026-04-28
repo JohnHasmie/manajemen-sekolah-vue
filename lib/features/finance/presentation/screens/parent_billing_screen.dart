@@ -1,18 +1,37 @@
-import 'dart:async';
+// Parent billing screen — Phase 3 brand-aligned redesign.
+//
+// Replaces the bespoke gradient hero (with inline search + filter +
+// refresh icons) with the canonical Phase-3 stack:
+//
+//   • BrandPageHeader (role 'wali') — title/kicker, BrandRealtimePill,
+//     ChildSelectorChipRow as the childSelector slot, and a
+//     BrandFilterChipStrip in the bottomSlot showing the active
+//     Periode + Status filters (matches Nilai's chip-only pattern, per
+//     the user's brief).
+//   • Body wrapped in RefreshIndicator → BillingList.
+//
+// The previous inline search input is gone (parents tap chips, not
+// type bill names). The status + period filters are still authored
+// via the existing FinanceFilterSheet — tapping any chip in the
+// strip opens it.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+
+import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/services/tour_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
+import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/parent_finance_controller.dart';
-import 'package:manajemensekolah/features/finance/presentation/widgets/student_selector.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/billing_list.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_filter_sheet.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
-import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
-import 'package:manajemensekolah/core/services/cache_service.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
-import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 class ParentBillingScreen extends ConsumerStatefulWidget {
   const ParentBillingScreen({super.key});
@@ -23,22 +42,14 @@ class ParentBillingScreen extends ConsumerStatefulWidget {
 }
 
 class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
-  final TextEditingController _searchController = TextEditingController();
   final GlobalKey _studentSelectorKey = GlobalKey();
   final GlobalKey _billingListKey = GlobalKey();
-  Timer? _searchDebounce;
+  DateTime _lastSync = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     _checkAndShowTour();
-  }
-
-  @override
-  void dispose() {
-    _searchDebounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
   }
 
   Future<void> _checkAndShowTour() async {
@@ -130,7 +141,8 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                       'id':
                           'Pilih anak Anda untuk melihat tagihan dan pembayaran mereka.',
                     }),
-                    style: const TextStyle(color: Colors.white, fontSize: 14.0),
+                    style:
+                        const TextStyle(color: Colors.white, fontSize: 14.0),
                   ),
                 ),
               ],
@@ -167,11 +179,12 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                   child: Text(
                     languageProvider.getTranslatedText({
                       'en':
-                          'See your child\'s bill status here, pay bills, and view history.',
+                          "See your child's bill status here, pay bills, and view history.",
                       'id':
                           'Lihat status tagihan anak Anda di sini, bayar tagihan, dan lihat riwayat.',
                     }),
-                    style: const TextStyle(color: Colors.white, fontSize: 14.0),
+                    style:
+                        const TextStyle(color: Colors.white, fontSize: 14.0),
                   ),
                 ),
               ],
@@ -194,6 +207,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         currentStatus: state.statusFilter,
         currentPeriod: state.periodFilter,
         languageProvider: lp,
+        primaryColor: ColorUtils.brandAzureDeep,
         onApply: (status, period) {
           ref
               .read(parentFinanceProvider.notifier)
@@ -203,197 +217,174 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     );
   }
 
+  // ---------- Filter chip helpers --------------------------------------
+
+  String? _periodChipValue(LanguageProvider lp, String? period) {
+    if (period == null) return null;
+    return lp.getTranslatedText(switch (period) {
+      'bulanan' => {'en': 'Monthly', 'id': 'Bulanan'},
+      'tahunan' => {'en': 'Yearly', 'id': 'Tahunan'},
+      _ => {'en': period, 'id': period},
+    });
+  }
+
+  String? _statusChipValue(LanguageProvider lp, String? status) {
+    if (status == null) return null;
+    return lp.getTranslatedText(switch (status) {
+      'unpaid' => {'en': 'Unpaid', 'id': 'Belum lunas'},
+      'pending' => {'en': 'Pending', 'id': 'Menunggu'},
+      'verified' => {'en': 'Verified', 'id': 'Lunas'},
+      _ => {'en': status, 'id': status},
+    });
+  }
+
+  int _activeFilterCount(String? status, String? period) {
+    var n = 0;
+    if (status != null) n++;
+    if (period != null) n++;
+    return n;
+  }
+
+  // ---------- Build -----------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
     final financeAsync = ref.watch(parentFinanceProvider);
 
+    final header = financeAsync.when(
+      data: (state) => _buildHeader(
+        languageProvider,
+        state.students,
+        state.selectedStudent?.id,
+        state.statusFilter,
+        state.periodFilter,
+      ),
+      loading: () => _buildHeader(
+        languageProvider,
+        const [],
+        null,
+        null,
+        null,
+      ),
+      error: (_, __) => _buildHeader(
+        languageProvider,
+        const [],
+        null,
+        null,
+        null,
+      ),
+    );
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHero(languageProvider),
-          // Student Selector — stays directly under hero, on slate-50.
-          financeAsync.when(
-            data: (state) => StudentSelector(
-              key: _studentSelectorKey,
-              students: state.students,
-              selectedStudent: state.selectedStudent,
-              onSelected: (student) => ref
-                  .read(parentFinanceProvider.notifier)
-                  .selectStudent(student),
-            ),
-            loading: () => const SizedBox(height: 90),
-            error: (_, __) => const SizedBox.shrink(),
-          ),
-          Divider(height: 1, color: ColorUtils.slate200),
-          // Billing List
-          Expanded(
-            child: BillingList(
+      body: RefreshIndicator(
+        color: ColorUtils.brandAzureDeep,
+        onRefresh: () async {
+          await ref.read(parentFinanceProvider.notifier).forceRefresh();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        // Single outer ListView so the gradient hero scrolls with
+        // the billing list — matches the dashboard / Kehadiran
+        // hero idiom (not pinned).
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          children: [
+            header,
+            BillingList(
               key: _billingListKey,
               languageProvider: languageProvider,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  /// Phase-3 azure gradient hero for the parent Billing tab.
-  ///
-  /// Mirrors the dashboard's hero composition (gradient + icon-row +
-  /// title block + inline search) so the parent-role surfaces share a
-  /// visual language. The gradient comes from
-  /// `ColorUtils.brandGradient('wali')`, the same source the parent
-  /// Beranda uses, so a brand refresh here flows through automatically.
-  Widget _buildHero(LanguageProvider lp) {
-    final statusBarHeight = MediaQuery.of(context).viewPadding.top;
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: ColorUtils.brandGradient('wali'),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+  Widget _buildHeader(
+    LanguageProvider lp,
+    List<dynamic> students,
+    String? selectedStudentId,
+    String? statusFilter,
+    String? periodFilter,
+  ) {
+    final summaries = students
+        .map<ChildSummary>((s) {
+          final id = s.id?.toString() ?? '';
+          final name = (s.name as String?) ?? '';
+          final klass = (s.className as String?) ?? '';
+          return ChildSummary(
+            id: id,
+            shortName: name.isEmpty ? '?' : name,
+            klass: klass.isEmpty ? '-' : 'Kelas $klass',
+          );
+        })
+        .toList(growable: false);
+
+    final activeCount = _activeFilterCount(statusFilter, periodFilter);
+
+    return BrandPageHeader(
+      role: 'wali',
+      subtitle: lp.getTranslatedText({
+        'en': 'Finance · Child',
+        'id': 'Keuangan · Anak',
+      }),
+      title: lp.getTranslatedText({
+        'en': 'Billing',
+        'id': 'Tagihan',
+      }),
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: Icons.tune_rounded,
+          onTap: () => _showFilterSheet(lp),
+          badgeCount: activeCount > 0 ? activeCount : null,
+          badgeBorderColor: ColorUtils.brandAzureDeep,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: ColorUtils.brandAzure.withValues(alpha: 0.18),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      ],
+      realtimeIndicator: BrandRealtimePill(
+        isFresh: true,
+        lastSync: _lastSync,
       ),
-      padding: EdgeInsets.fromLTRB(
-        16,
-        statusBarHeight + 12,
-        16,
-        16,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      lp.getTranslatedText({
-                        'en': 'School Billing',
-                        'id': 'Tagihan Sekolah',
-                      }),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        letterSpacing: 0.1,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      lp.getTranslatedText({
-                        'en': 'Track and pay your child\'s bills',
-                        'id': 'Pantau dan bayar tagihan anak Anda',
-                      }),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.82),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              _buildHeroIconButton(
-                icon: Icons.filter_list,
-                onTap: () => _showFilterSheet(lp),
-              ),
-              const SizedBox(width: 6),
-              _buildHeroIconButton(
-                icon: Icons.refresh,
-                onTap: () =>
-                    ref.read(parentFinanceProvider.notifier).forceRefresh(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Inline search field in the hero — same idiom as the dashboard
-          // SchoolPill: white-translucent fill, white text, slate-200 hint.
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) {
-                _searchDebounce?.cancel();
-                _searchDebounce = Timer(const Duration(milliseconds: 500), () {
-                  ref.read(parentFinanceProvider.notifier).updateSearch(val);
-                });
+      childSelector: summaries.length < 2
+          ? null
+          : ChildSelectorChipRow(
+              key: _studentSelectorKey,
+              children: summaries,
+              selectedChildId: selectedStudentId ?? summaries.first.id,
+              onSelected: (id) {
+                final picked = students.cast<dynamic>().firstWhere(
+                  (s) => s.id?.toString() == id,
+                  orElse: () => null,
+                );
+                if (picked != null) {
+                  ref
+                      .read(parentFinanceProvider.notifier)
+                      .selectStudent(picked);
+                }
               },
-              decoration: InputDecoration(
-                hintText: lp.getTranslatedText({
-                  'en': 'Search billing...',
-                  'id': 'Cari tagihan...',
-                }),
-                hintStyle: TextStyle(color: ColorUtils.slate400),
-                prefixIcon: Icon(Icons.search, color: ColorUtils.slate400),
-                filled: false,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 14,
-                ),
-                border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide.none,
-                ),
-              ),
+              accentColor: ColorUtils.brandAzureDeep,
             ),
+      bottomSlot: BrandFilterChipStrip(
+        chips: [
+          BrandFilterChip(
+            label: lp.getTranslatedText({
+              'en': 'Period',
+              'id': 'Periode',
+            }),
+            value: _periodChipValue(lp, periodFilter),
+            onTap: () => _showFilterSheet(lp),
+            width: 172,
+          ),
+          BrandFilterChip(
+            label: lp.getTranslatedText({
+              'en': 'Status',
+              'id': 'Status',
+            }),
+            value: _statusChipValue(lp, statusFilter),
+            onTap: () => _showFilterSheet(lp),
           ),
         ],
-      ),
-    );
-  }
-
-  /// 36×36 white-translucent icon button used in the hero's top row;
-  /// same idiom as `_HeroIconButton` in the dashboard bodies.
-  Widget _buildHeroIconButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.18),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(10)),
-      ),
-      child: InkWell(
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
-        onTap: onTap,
-        child: SizedBox(
-          width: 36,
-          height: 36,
-          child: Icon(icon, size: 18, color: Colors.white),
-        ),
       ),
     );
   }

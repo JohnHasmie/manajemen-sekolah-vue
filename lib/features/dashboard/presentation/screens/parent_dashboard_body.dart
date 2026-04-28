@@ -22,7 +22,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/shell_nav.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
@@ -33,6 +34,7 @@ import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
 
@@ -177,21 +179,41 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     return int.tryParse(v.toString()) ?? 0;
   }
 
-  // Navigation handlers
-  void _openAnnouncements() =>
-      AppNavigator.push(context, const ParentAnnouncementScreen());
+  // Navigation handlers — every parent quick-action / inbox row routes
+  // through `ShellNav.goTo` so the bottom-nav shell highlights the
+  // correct tab AND pushes the deep screen on top. Mirrors the
+  // `cards_mixin` pattern so dashboard and worklist links behave
+  // identically.
 
-  void _openGrades() => AppNavigator.push(
-    context,
-    ParentGradeScreen(academicYearId: widget.state.userData['academic_year_id']?.toString()),
-  );
+  String? get _academicYearId =>
+      ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+
+  void _openAnnouncements() {
+    ShellNav.goTo(
+      ref,
+      role: 'wali',
+      tab: ShellTab.academic,
+      pushOnTop: const ParentAnnouncementScreen(),
+    );
+  }
+
+  void _openGrades() {
+    ShellNav.goTo(
+      ref,
+      role: 'wali',
+      tab: ShellTab.academic,
+      pushOnTop: ParentGradeScreen(academicYearId: _academicYearId),
+    );
+  }
 
   void _openAttendance() {
-    // TODO: wire to parent attendance screen
+    // ParentAttendanceTab handles 0 / 1 / multi-anak resolution itself.
+    ShellNav.goTo(ref, role: 'wali', tab: ShellTab.attendance);
   }
 
   void _openBilling() {
-    // TODO: wire to parent billing screen
+    // ParentBillingScreen IS the Finance tab root — switch tabs.
+    ShellNav.goTo(ref, role: 'wali', tab: ShellTab.finance);
   }
 
   @override

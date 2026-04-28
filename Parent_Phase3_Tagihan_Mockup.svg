@@ -1,0 +1,153 @@
+<svg viewBox="0 0 400 960" xmlns="http://www.w3.org/2000/svg" role="img" style="display:block;margin:0 auto;max-width:400px;width:100%;background:#F8FAFC;border-radius:24px;border:0.5px solid rgba(0,0,0,0.08)">
+  <title>Parent Tagihan (Billing) - Phase 3 v3</title>
+  <desc>Per-child billing list. Azure gradient hero with multi-child chip row, chip-only filter strip (Periode + Status + "+Filter" placeholder) — same pattern as Nilai. KPI strip showing total bills, paid, outstanding (with overdue delta); bills grouped by month with status-coded cards and a primary "Bayar VA" CTA at the bottom when there's outstanding balance.</desc>
+  <defs>
+    <linearGradient id="azT" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#21AFE6"/>
+      <stop offset="100%" stop-color="#1A8FBE"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="400" height="288" fill="url(#azT)"/>
+  <text x="24" y="28" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.7" font-weight="500">08:14</text>
+  <g transform="translate(352,22)" fill="#FFFFFF" opacity="0.8">
+    <rect x="0" y="0" width="14" height="9" rx="2"/><rect x="16" y="2" width="10" height="5" rx="1"/>
+  </g>
+  <rect x="20" y="58" width="36" height="36" rx="10" fill="#FFFFFF" fill-opacity="0.18"/>
+  <path d="M37 70 l-6 6 l6 6" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="68" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.78" font-weight="500">Keuangan · Anak</text>
+  <text x="68" y="96" font-family="system-ui,sans-serif" font-size="20" fill="#FFFFFF" font-weight="700">Tagihan</text>
+  <rect x="348" y="60" width="36" height="36" rx="10" fill="#FFFFFF" fill-opacity="0.18"/>
+  <g transform="translate(358,70)" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 4h12M4 9h8M6 14h4"/>
+  </g>
+  <circle cx="370" cy="64" r="5" fill="#EF4444" stroke="#1A8FBE" stroke-width="1.5"/>
+  <text x="370" y="68" font-family="system-ui,sans-serif" font-size="8" fill="#FFFFFF" font-weight="700" text-anchor="middle">3</text>
+  <circle cx="31" cy="120" r="3" fill="#4ADE80"/>
+  <text x="40" y="123" font-family="system-ui,sans-serif" font-size="10.5" fill="#FFFFFF" opacity="0.78" font-weight="500">Terhubung realtime · 08:14</text>
+  <text x="20" y="156" font-family="system-ui,sans-serif" font-size="10.5" fill="#FFFFFF" opacity="0.7" font-weight="600" letter-spacing="0.6">PILIH ANAK</text>
+  <rect x="20" y="166" width="120" height="46" rx="14" fill="#FFFFFF"/>
+  <circle cx="44" cy="189" r="14" fill="#1A8FBE"/>
+  <text x="44" y="194" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="700" text-anchor="middle">RA</text>
+  <text x="64" y="186" font-family="system-ui,sans-serif" font-size="12" fill="#0F172A" font-weight="700">Rania</text>
+  <text x="64" y="200" font-family="system-ui,sans-serif" font-size="10" fill="#64748B" font-weight="500">Kelas 8B</text>
+  <rect x="148" y="166" width="120" height="46" rx="14" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.28"/>
+  <circle cx="172" cy="189" r="14" fill="#FFFFFF" fill-opacity="0.28"/>
+  <text x="172" y="194" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="700" text-anchor="middle">FA</text>
+  <text x="192" y="186" font-family="system-ui,sans-serif" font-size="12" fill="#FFFFFF" font-weight="700">Faiz</text>
+  <text x="192" y="200" font-family="system-ui,sans-serif" font-size="10" fill="#FFFFFF" opacity="0.78" font-weight="500">Kelas 5A</text>
+  <rect x="276" y="166" width="120" height="46" rx="14" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.28"/>
+  <circle cx="300" cy="189" r="14" fill="#FFFFFF" fill-opacity="0.28"/>
+  <text x="300" y="194" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="700" text-anchor="middle">NU</text>
+  <text x="320" y="186" font-family="system-ui,sans-serif" font-size="12" fill="#FFFFFF" font-weight="700">Nuha</text>
+  <text x="320" y="200" font-family="system-ui,sans-serif" font-size="10" fill="#FFFFFF" opacity="0.78" font-weight="500">Kelas 2C</text>
+
+  <!-- Chip-only filter strip (matches Parent_Phase3_Nilai_Mockup pattern) -->
+  <rect x="20" y="232" width="172" height="36" rx="12" fill="#FFFFFF" fill-opacity="0.18"/>
+  <text x="106" y="254" font-family="system-ui,sans-serif" font-size="12" fill="#FFFFFF" font-weight="600" text-anchor="middle">Periode · Oktober 2025</text>
+  <path d="M180 247 l5 5 l5 -5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="200" y="232" width="100" height="36" rx="12" fill="#FFFFFF" fill-opacity="0.18"/>
+  <text x="240" y="254" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="600" text-anchor="middle">Belum lunas</text>
+  <path d="M280 247 l5 5 l5 -5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="308" y="232" width="76" height="36" rx="12" fill="#FFFFFF" fill-opacity="0.14" stroke="#FFFFFF" stroke-opacity="0.28" stroke-dasharray="3 3"/>
+  <text x="320" y="254" font-family="system-ui,sans-serif" font-size="14" fill="#FFFFFF" font-weight="800">+</text>
+  <text x="350" y="254" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.78" font-weight="600" text-anchor="middle">Jenis</text>
+
+  <rect x="16" y="278" width="368" height="92" rx="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <text x="78" y="306" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Total bulan ini</text>
+  <text x="78" y="332" font-family="system-ui,sans-serif" font-size="20" fill="#0F172A" font-weight="800" text-anchor="middle">Rp 1,8jt</text>
+  <text x="78" y="352" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">4 tagihan</text>
+  <line x1="138" y1="298" x2="138" y2="356" stroke="#F1F5F9" stroke-width="1"/>
+  <text x="200" y="306" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Sudah lunas</text>
+  <text x="200" y="332" font-family="system-ui,sans-serif" font-size="20" fill="#0F172A" font-weight="800" text-anchor="middle">Rp 1,1jt</text>
+  <rect x="166" y="342" width="68" height="18" rx="9" fill="#DCFCE7"/>
+  <path d="M176 354 l4 -4 l3 2 l5 -5" fill="none" stroke="#15803D" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="194" y="355" font-family="system-ui,sans-serif" font-size="10.5" fill="#15803D" font-weight="700">2 tagihan</text>
+  <line x1="260" y1="298" x2="260" y2="356" stroke="#F1F5F9" stroke-width="1"/>
+  <text x="322" y="306" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Belum lunas</text>
+  <text x="322" y="332" font-family="system-ui,sans-serif" font-size="20" fill="#DC2626" font-weight="800" text-anchor="middle">Rp 750rb</text>
+  <rect x="288" y="342" width="68" height="18" rx="9" fill="#FEE2E2"/>
+  <circle cx="300" cy="351" r="3" fill="#DC2626"/>
+  <text x="322" y="355" font-family="system-ui,sans-serif" font-size="10.5" fill="#991B1B" font-weight="700" text-anchor="middle">1 telat</text>
+
+  <text x="24" y="402" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="600" letter-spacing="0.4">PERLU PERHATIAN</text>
+  <rect x="16" y="414" width="368" height="92" rx="16" fill="#FFFFFF" stroke="#FCA5A5" stroke-width="1.2"/>
+  <rect x="28" y="426" width="44" height="44" rx="12" fill="#FEE2E2"/>
+  <g transform="translate(38,436)" fill="none" stroke="#DC2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 0v14M12 18h0"/><circle cx="12" cy="12" r="12"/>
+  </g>
+  <text x="84" y="438" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">SPP September 2025</text>
+  <text x="368" y="438" font-family="system-ui,sans-serif" font-size="11" fill="#DC2626" font-weight="700" text-anchor="end">Telat 28 hari</text>
+  <text x="84" y="458" font-family="system-ui,sans-serif" font-size="14" fill="#0F172A" font-weight="700">Rp 450.000</text>
+  <text x="368" y="458" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="end">Jatuh tempo 30/09</text>
+  <rect x="84" y="472" width="56" height="22" rx="11" fill="#FEE2E2"/>
+  <text x="112" y="486" font-family="system-ui,sans-serif" font-size="10.5" fill="#991B1B" font-weight="700" text-anchor="middle">Telat</text>
+  <rect x="316" y="472" width="50" height="22" rx="11" fill="#1A8FBE"/>
+  <text x="341" y="486" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="700" text-anchor="middle">Bayar</text>
+
+  <text x="24" y="538" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="600" letter-spacing="0.4">OKTOBER 2025</text>
+
+  <rect x="16" y="550" width="368" height="76" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="562" width="44" height="44" rx="12" fill="#DBEAFE"/>
+  <g transform="translate(40,574)" fill="none" stroke="#1D4ED8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 4h16M2 8h12M2 12h8"/>
+  </g>
+  <text x="84" y="574" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">SPP Oktober 2025</text>
+  <text x="368" y="574" font-family="system-ui,sans-serif" font-size="11" fill="#94A3B8" font-weight="500" text-anchor="end">Jatuh tempo 30/10</text>
+  <text x="84" y="594" font-family="system-ui,sans-serif" font-size="14" fill="#0F172A" font-weight="700">Rp 450.000</text>
+  <rect x="84" y="604" width="68" height="22" rx="11" fill="#FEF3C7"/>
+  <circle cx="94" cy="615" r="3" fill="#F59E0B"/>
+  <text x="142" y="619" font-family="system-ui,sans-serif" font-size="10.5" fill="#B45309" font-weight="700" text-anchor="end">Belum lunas</text>
+  <text x="368" y="618" font-family="system-ui,sans-serif" font-size="11" fill="#1A8FBE" font-weight="700" text-anchor="end">Bayar →</text>
+
+  <rect x="16" y="634" width="368" height="76" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="646" width="44" height="44" rx="12" fill="#FEF3C7"/>
+  <g transform="translate(40,658)" fill="none" stroke="#B45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 14V2h16v12z"/><circle cx="10" cy="8" r="2"/>
+  </g>
+  <text x="84" y="658" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Field Trip Museum Geologi</text>
+  <text x="368" y="658" font-family="system-ui,sans-serif" font-size="11" fill="#94A3B8" font-weight="500" text-anchor="end">Untuk Faiz</text>
+  <text x="84" y="678" font-family="system-ui,sans-serif" font-size="14" fill="#0F172A" font-weight="700">Rp 300.000</text>
+  <rect x="84" y="688" width="64" height="22" rx="11" fill="#FEF3C7"/>
+  <circle cx="94" cy="699" r="3" fill="#F59E0B"/>
+  <text x="138" y="703" font-family="system-ui,sans-serif" font-size="10.5" fill="#B45309" font-weight="700" text-anchor="end">Opsional</text>
+  <text x="368" y="702" font-family="system-ui,sans-serif" font-size="11" fill="#1A8FBE" font-weight="700" text-anchor="end">Bayar →</text>
+
+  <rect x="16" y="718" width="368" height="76" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="730" width="44" height="44" rx="12" fill="#DCFCE7"/>
+  <g transform="translate(40,742)" fill="none" stroke="#15803D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 8l4 4l8 -8"/>
+  </g>
+  <text x="84" y="742" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Buku Paket Sem. Ganjil</text>
+  <text x="368" y="742" font-family="system-ui,sans-serif" font-size="11" fill="#94A3B8" font-weight="500" text-anchor="end">Lunas 18/10</text>
+  <text x="84" y="762" font-family="system-ui,sans-serif" font-size="14" fill="#475569" font-weight="700">Rp 600.000</text>
+  <rect x="84" y="772" width="50" height="22" rx="11" fill="#DCFCE7"/>
+  <circle cx="94" cy="783" r="3" fill="#16A34A"/>
+  <text x="124" y="787" font-family="system-ui,sans-serif" font-size="10.5" fill="#15803D" font-weight="700" text-anchor="end">Lunas</text>
+  <text x="368" y="786" font-family="system-ui,sans-serif" font-size="11" fill="#94A3B8" font-weight="600" text-anchor="end">Lihat bukti →</text>
+
+  <rect x="16" y="808" width="368" height="38" rx="14" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="1"/>
+  <text x="200" y="832" font-family="system-ui,sans-serif" font-size="12" fill="#1A8FBE" font-weight="700" text-anchor="middle">Lihat 8 tagihan lainnya →</text>
+
+  <rect x="0" y="876" width="400" height="84" fill="#FFFFFF"/>
+  <line x1="0" y1="876" x2="400" y2="876" stroke="#E2E8F0" stroke-width="1"/>
+  <g transform="translate(40,894)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 12 L12 2 L22 12 v10 a2 2 0 0 1 -2 2 H4 a2 2 0 0 1 -2 -2 z"/>
+  </g>
+  <text x="50" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Beranda</text>
+  <g transform="translate(120,894)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 6 L12 0 L24 6 L12 12 z"/><path d="M5 9 v6 c0 2 3 3 7 3 s7 -1 7 -3 v-6"/>
+  </g>
+  <text x="132" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Akademik</text>
+  <g transform="translate(200,894)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0.5" y="2" width="22" height="20" rx="3"/><path d="M0 8h23M6 0v4M17 0v4"/><path d="M7 14l3 3l6 -7"/>
+  </g>
+  <text x="212" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Kehadiran</text>
+  <g transform="translate(280,894)" fill="none" stroke="#1A8FBE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="1" y="3" width="22" height="18" rx="3"/><path d="M1 9h22"/><circle cx="18" cy="15" r="2"/>
+  </g>
+  <text x="292" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#1A8FBE" font-weight="700" text-anchor="middle">Keuangan</text>
+  <g transform="translate(360,898)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="7" r="4"/><path d="M2 20c1.5-4 5.5-6 9-6s7.5 2 9 6"/>
+  </g>
+  <text x="371" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Profil</text>
+</svg>

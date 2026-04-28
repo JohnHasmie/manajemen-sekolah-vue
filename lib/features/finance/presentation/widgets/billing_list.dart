@@ -20,6 +20,7 @@ class BillingList extends ConsumerWidget {
         if (state.isLoading && state.billingItems.isEmpty) {
           return const SkeletonListLoading(
             padding: EdgeInsets.only(top: 8, bottom: 80),
+            shrinkWrap: true,
           );
         }
 
@@ -37,10 +38,14 @@ class BillingList extends ConsumerWidget {
           );
         }
 
-        return RefreshIndicator(
-          onRefresh: () =>
-              ref.read(parentFinanceProvider.notifier).refreshBilling(),
-          child: ListView.builder(
+        // The parent screen now hosts a single outer ListView so the
+        // gradient hero scrolls with the body. shrinkWrap +
+        // NeverScrollable lets this inner list size to its content
+        // and defer scrolling to the outer list. RefreshIndicator
+        // also lives on the screen now.
+        return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.only(top: 8, bottom: 80),
             itemCount: state.billingItems.length,
             itemBuilder: (context, index) {
@@ -65,11 +70,11 @@ class BillingList extends ConsumerWidget {
                 },
               );
             },
-          ),
-        );
+          );
       },
       loading: () => const SkeletonListLoading(
         padding: EdgeInsets.only(top: 8, bottom: 80),
+        shrinkWrap: true,
       ),
       error: (error, _) =>
           Center(child: Text('${AppLocalizations.error.tr}: $error')),
