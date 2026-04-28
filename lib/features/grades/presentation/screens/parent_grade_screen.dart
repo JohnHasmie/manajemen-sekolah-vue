@@ -1,19 +1,28 @@
-// Parent view of student grades.
-// Like `pages/parent/Grades.vue` in a Vue app.
+// Parent view of student grades — Phase 3 brand-aligned redesign.
 //
-// Read-only view of a child's grades with student selector,
+// Read-only view of a child's grades with multi-anak chip selector,
 // auto-marking grades as read when scrolled into view, and caching.
 // In Laravel terms: `GradeController@parentIndex`.
+//
+// The data layer (5 mixins: read tracking / data loading / tour /
+// detail / UI builder) is unchanged; only the screen's build()
+// composition moved over to the canonical Phase-3 stack
+// (BrandPageHeader + ChildSelectorChipRow + RefreshIndicator).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/mixins/pagination_mixin.dart';
-import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_read_tracking_mixin.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
+import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_data_loading_mixin.dart';
-import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_tour_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_detail_mixin.dart';
+import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_read_tracking_mixin.dart';
+import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_tour_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_ui_mixin.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Parent's read-only view of student grades.
 ///
@@ -147,17 +156,69 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
   @override
   Future<void> onRefreshRequested() => forceRefresh();
 
+  // Drives the realtime pill — bumped after every successful refresh.
+  DateTime _lastSync = DateTime.now();
+
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          buildHeader(),
-          buildStudentSelector(),
-          Expanded(child: buildGradeList()),
+          _buildHeader(lang),
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              onRefresh: () async {
+                await onRefreshRequested();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: buildGradeList(),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeader(LanguageProvider lang) {
+    final summaries = _studentList.map<ChildSummary>((raw) {
+      final model = Student.fromJson(raw as Map<String, dynamic>);
+      return ChildSummary(
+        id: model.id,
+        shortName: model.name.isEmpty
+            ? '?'
+            : model.name.split(RegExp(r'\s+')).first,
+        klass: model.className.isEmpty
+            ? '-'
+            : 'Kelas ${model.className}',
+      );
+    }).toList(growable: false);
+
+    return BrandPageHeader(
+      role: 'wali',
+      subtitle: lang.getTranslatedText({
+        'en': 'Academic · Child',
+        'id': 'Akademik · Anak',
+      }),
+      title: lang.getTranslatedText({
+        'en': 'Grades',
+        'id': 'Nilai',
+      }),
+      realtimeIndicator: BrandRealtimePill(
+        isFresh: !isLoading,
+        lastSync: _lastSync,
+      ),
+      childSelector: summaries.isEmpty
+          ? null
+          : ChildSelectorChipRow(
+              key: _studentSelectorKey,
+              children: summaries,
+              selectedChildId: _selectedStudentId ?? summaries.first.id,
+              onSelected: onStudentChanged,
+              accentColor: ColorUtils.brandAzureDeep,
+            ),
     );
   }
 }
