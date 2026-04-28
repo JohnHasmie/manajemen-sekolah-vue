@@ -113,10 +113,10 @@ class ChildSelectorChipRow extends StatelessWidget {
         if (sectionLabel != null) ...[
           Text(
             sectionLabel!,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
               letterSpacing: 0.6,
             ),
           ),
@@ -160,18 +160,21 @@ class _ChildChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Hard colors only — no semi-transparent whites. The active chip
+    // is solid white with dark text; the inactive chip is a solid
+    // 22%-fill pill with solid-white text and a hairline white border
+    // for definition. Reads cleanly on the brand-azure gradient.
     final pillColor = isActive
         ? Colors.white
-        : Colors.white.withValues(alpha: 0.16);
-    final borderColor = isActive
-        ? Colors.transparent
-        : Colors.white.withValues(alpha: 0.28);
-    final avatarColor = isActive ? accentColor : Colors.white.withValues(alpha: 0.28);
-    final avatarTextColor = isActive ? Colors.white : Colors.white;
+        : const Color(0x38FFFFFF); // 22% white, solid
+    final borderColor =
+        isActive ? Colors.transparent : Colors.white;
+    final avatarColor =
+        isActive ? accentColor : const Color(0x66FFFFFF); // 40% white
+    const avatarTextColor = Colors.white;
     final nameColor = isActive ? const Color(0xFF0F172A) : Colors.white;
-    final klassColor = isActive
-        ? const Color(0xFF64748B)
-        : Colors.white.withValues(alpha: 0.78);
+    final klassColor =
+        isActive ? const Color(0xFF475569) : Colors.white;
 
     return InkWell(
       borderRadius: const BorderRadius.all(Radius.circular(14)),
@@ -206,11 +209,11 @@ class _ChildChip extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             ConstrainedBox(
-              // Cap the name+class column so a very long full name
-              // (e.g. "Muhammad Faiz Al-Hakim") doesn't push the
-              // chip to triple-wide. Ellipsis still kicks in beyond
-              // this cap so the layout never breaks.
-              constraints: const BoxConstraints(maxWidth: 180),
+              // Cap the name+class column so two chips comfortably
+              // fit on a 375 px-wide screen. Ellipsis kicks in beyond
+              // this cap so very long names ("Anak Mas Yahya 1") get
+              // truncated rather than blowing up the chip width.
+              constraints: const BoxConstraints(maxWidth: 100),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,

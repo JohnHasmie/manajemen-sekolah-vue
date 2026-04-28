@@ -51,10 +51,11 @@ class BrandRealtimePill extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           _buildLabel(),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: Colors.white.withValues(alpha: 0.72),
+            fontWeight: FontWeight.w600,
+            // Solid white — hard color for readability on the gradient.
+            color: Colors.white,
             letterSpacing: 0.1,
           ),
         ),

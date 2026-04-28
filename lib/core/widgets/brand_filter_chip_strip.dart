@@ -151,14 +151,16 @@ class _ChipView extends StatelessWidget {
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
+        // Hard colors only. Applied chip = 25%-fill solid white;
+        // placeholder = 18%-fill with a 1px hairline white border.
         color: isApplied
-            ? Colors.white.withValues(alpha: 0.18)
-            : Colors.white.withValues(alpha: 0.14),
+            ? const Color(0x40FFFFFF)
+            : const Color(0x2EFFFFFF),
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: isApplied
             ? null
             : Border.all(
-                color: Colors.white.withValues(alpha: 0.28),
+                color: Colors.white,
                 width: 1,
                 strokeAlign: BorderSide.strokeAlignInside,
               ),
@@ -220,10 +222,12 @@ class _ChipView extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           chip.label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Colors.white.withValues(alpha: 0.78),
+            fontWeight: FontWeight.w700,
+            // Solid white — placeholder text reads as a clear
+            // affordance on the gradient.
+            color: Colors.white,
             height: 1.0,
           ),
         ),

@@ -164,10 +164,12 @@ class BrandPageHeader extends StatelessWidget {
                         subtitle!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.78),
+                          fontWeight: FontWeight.w600,
+                          // Solid white — hard color, no semi-transparent
+                          // greys. Reads cleanly on the brand gradient.
+                          color: Colors.white,
                           letterSpacing: 0.1,
                         ),
                       ),

@@ -73,7 +73,9 @@ mixin ParentGradeDataLoadingMixin
           studentList = cached;
           isLoading = false;
         });
-        if (studentList.length == 1 && selectedStudentId == null) {
+        // Auto-pick the first child as default — the chip selector
+        // in the screen lets the parent switch in-place.
+        if (studentList.isNotEmpty && selectedStudentId == null) {
           selectedStudentId = studentList[0]['id'];
           await loadGrades(useCache: true);
         }
@@ -125,14 +127,15 @@ mixin ParentGradeDataLoadingMixin
       });
 
       if (studentList.isNotEmpty) {
-        if (studentList.length == 1) {
+        // Always auto-pick the first child if nothing is selected;
+        // the chip selector handles in-place switching.
+        if (selectedStudentId == null) {
           selectedStudentId = studentList[0]['id'];
-          // If cache already showed grades, silently refresh from API
-          if (!hadCacheHit) {
-            await loadGrades(useCache: useCache);
-          } else {
-            await loadGrades(useCache: false);
-          }
+        }
+        if (!hadCacheHit) {
+          await loadGrades(useCache: useCache);
+        } else {
+          await loadGrades(useCache: false);
         }
       } else {
         setState(() => isLoading = false);

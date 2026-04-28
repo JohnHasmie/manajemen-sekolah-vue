@@ -108,8 +108,25 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
   @override
   void initState() {
     super.initState();
+    // Auto-select the current month so the KPI lands on "Bulan ini"
+    // by default — matches the mockup. The data mixin's
+    // `calculateMonthlySummary` then computes only the current
+    // month's stats. `_isExplicitFilter` excludes this default from
+    // the badge count and from the "adjust filters" empty-state
+    // copy so users don't see a phantom filter badge on first open.
+    selectedMonthFilter = DateTime.now().month.toString();
     loadData();
     _loadSiblings();
+  }
+
+  /// True only when the user has explicitly narrowed filters beyond
+  /// the auto-selected current month. Drives the filter icon's
+  /// badge counter and the "Periode terpilih" KPI label.
+  bool get _isExplicitFilter {
+    final currentMonth = DateTime.now().month.toString();
+    return (selectedMonthFilter != null &&
+            selectedMonthFilter != currentMonth) ||
+        selectedSemesterFilter != null;
   }
 
   /// Loads the parent's full sibling list once for the chip selector.
@@ -184,10 +201,9 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
   /// the card — same idiom the dashboards use.
   Widget _buildHeroAndKpi(LanguageProvider lang) {
     // Reserve space inside the Stack for the part of the KPI that
-    // extends below the hero. ~130 px is empirically right for the
-    // 4-row legend variant (donut 116 + 16 padding); if the trend
-    // chip is enabled later, bump this to ~180.
-    const kpiOverhang = 130.0;
+    // extends below the hero. 180 px covers the 4-row legend +
+    // "vs bulan lalu" trend chip footer.
+    const kpiOverhang = 180.0;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -221,7 +237,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
       sickDays: monthlySummary['sakit'] ?? 0,
       alphaDays: monthlySummary['alpha'] ?? 0,
       schoolDays: totalDays,
-      periodLabel: hasActiveFilter
+      periodLabel: _isExplicitFilter
           ? lang.getTranslatedText({
               'en': 'Selected period',
               'id': 'Periode terpilih',
@@ -230,8 +246,42 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
               'en': 'This month',
               'id': 'Bulan ini',
             }),
+      deltaPct: _computeDeltaPct(),
       brandColor: ColorUtils.brandAzureDeep,
     );
+  }
+
+  /// Computes the attendance-rate delta between the currently-shown
+  /// month and the month before it. Returns null when the previous
+  /// month has no recorded attendance — there's nothing meaningful
+  /// to compare against, so the trend chip stays hidden.
+  double? _computeDeltaPct() {
+    // The currently-shown month is whatever `selectedMonthFilter`
+    // points at (defaults to current month on init).
+    final monthInt = int.tryParse(selectedMonthFilter ?? '');
+    if (monthInt == null) return null;
+    final now = DateTime.now();
+    final shownYear = now.year;
+    final prevMonth = monthInt == 1 ? 12 : monthInt - 1;
+    final prevYear = monthInt == 1 ? shownYear - 1 : shownYear;
+
+    double rateOf(int year, int month) {
+      final records = attendanceData
+          .where((r) => r.date.year == year && r.date.month == month)
+          .toList();
+      if (records.isEmpty) return double.nan;
+      final present = records.where((r) {
+        final s = parseAttendanceStatus(r.status);
+        return s == AttendanceStatus.present || s == AttendanceStatus.late;
+      }).length;
+      return (present / records.length) * 100;
+    }
+
+    final prev = rateOf(prevYear, prevMonth);
+    if (prev.isNaN) return null;
+    final cur = rateOf(shownYear, monthInt);
+    if (cur.isNaN) return null;
+    return cur - prev;
   }
 
   // ---------------------------------------------------------------- header
@@ -252,7 +302,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
         BrandHeaderIconButton(
           icon: Icons.tune_rounded,
           onTap: showFilterSheet,
-          badgeCount: hasActiveFilter ? _activeFilterCount() : null,
+          badgeCount: _isExplicitFilter ? _activeFilterCount() : null,
           badgeBorderColor: ColorUtils.brandAzureDeep,
         ),
       ],
@@ -335,7 +385,13 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   int _activeFilterCount() {
     var n = 0;
-    if (selectedMonthFilter != null) n++;
+    final currentMonth = DateTime.now().month.toString();
+    // Don't count the auto-selected current month — only when the
+    // parent picked a *different* month does it count as a filter.
+    if (selectedMonthFilter != null &&
+        selectedMonthFilter != currentMonth) {
+      n++;
+    }
     if (selectedSemesterFilter != null) n++;
     return n;
   }
@@ -376,8 +432,8 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
               }),
               style: TextStyle(
                 fontSize: 11.5,
-                fontWeight: FontWeight.w500,
-                color: ColorUtils.slate500,
+                fontWeight: FontWeight.w600,
+                color: ColorUtils.slate700,
               ),
             ),
           ],
@@ -454,20 +510,20 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            hasActiveFilter
+            _isExplicitFilter
                 ? lang.getTranslatedText({
                     'en': 'Try adjusting the active filters.',
                     'id': 'Coba sesuaikan filter yang aktif.',
                   })
                 : lang.getTranslatedText({
-                    'en':
-                        'No records yet for the selected academic year.',
-                    'id': 'Belum ada catatan untuk tahun ajaran ini.',
+                    'en': 'No records yet for this month.',
+                    'id': 'Belum ada catatan untuk bulan ini.',
                   }),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
-              color: ColorUtils.slate500,
+              fontWeight: FontWeight.w500,
+              color: ColorUtils.slate700,
             ),
           ),
         ],
