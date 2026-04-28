@@ -41,8 +41,18 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teac
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
 
-const Color _teacherTeal = Color(0xFF0F6E56);
-const Color _teacherTealFade = Color(0xFF1B7A65);
+// Teacher = "between admin and parent" in the brand. The hero gradient
+// literally combines both brand colors (Dark Blue → Azzure Blue), which
+// echoes the role's job: managing data like admin, day-to-day with
+// students/parents like the parent role.
+//
+// Solid-color accents (Lihat semua link, "+N Lainnya" tile, school pill,
+// inbox header) use the brand's HSL midpoint — a "Cobalt Blue" — so the
+// teacher reads as its OWN identity rather than borrowing admin's dark
+// blue or parent's azure. This matches `ColorUtils.getRoleColor('guru')`.
+const Color _teacherBrandDark = Color(0xFF143068); // gradient start (brand Dark Blue)
+const Color _teacherBrandAzure = Color(0xFF21AFE6); // gradient end (brand Azzure Blue)
+const Color _teacherCobalt = Color(0xFF1B6FB8); // accent / identity
 const Duration _pollInterval = Duration(seconds: 60);
 
 /// Teacher dashboard body.
@@ -132,15 +142,29 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   }
 
   String get _schoolName {
-    final raw = widget.state.userData['nama_sekolah']?.toString();
+    final ud = widget.state.userData;
+    final raw = (ud['school_name'] ?? ud['nama_sekolah'])?.toString().trim();
     if (raw == null || raw.isEmpty) return 'Sekolah';
     return raw;
   }
 
   String get _greetingSubtitle {
+    final year = widget.state.userData['academic_year']?.toString();
+    if (year == null || year.isEmpty) return 'Guru';
+    return 'Guru · TP $year';
+  }
+
+  String get _userName {
     final raw = widget.state.userData['name']?.toString().trim();
-    final first = (raw == null || raw.isEmpty) ? 'Guru' : raw.split(' ').first;
-    return 'Halo, $first · Guru';
+    return (raw == null || raw.isEmpty) ? 'Guru' : raw;
+  }
+
+  String _greetingPart() {
+    final hour = DateTime.now().hour;
+    if (hour < 11) return 'pagi';
+    if (hour < 15) return 'siang';
+    if (hour < 18) return 'sore';
+    return 'malam';
   }
 
   // Count helpers — read from the live stats map with 0 fallback
@@ -217,27 +241,17 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
       body: AppRefreshIndicator(
         onRefresh: _manualRefresh,
         color: widget.primaryColor,
-        edgeOffset: MediaQuery.of(context).padding.top + kToolbarHeight,
+        edgeOffset: MediaQuery.of(context).padding.top,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
           slivers: [
-            DashboardAppBar(
-              schoolName: widget.state.userData['nama_sekolah'],
-              primaryColor: widget.primaryColor,
-              unreadNotifications: widget.state.stats['unread_notifications'],
-              unreadAnnouncements: widget.state.stats['unread_announcements'],
-              profileHeaderKey: widget.profileHeaderKey,
-              onLanguageTap: widget.onLanguageTap,
-              onNotificationTap: widget.onNotificationTap,
-              onAccountTap: widget.onAccountTap,
-            ),
             SliverToBoxAdapter(
               key: widget.heroSectionKey,
-              child: _buildHeroWithKpiOverlay(),
+              child: _buildHeroWithKpiOverlay(context),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 56)),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
             SliverToBoxAdapter(child: _buildInboxCard()),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
             SliverToBoxAdapter(
@@ -253,48 +267,115 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     );
   }
 
-  /// Combined hero and KPI section with floating card overlay effect.
-  Widget _buildHeroWithKpiOverlay() {
+  /// Combined hero + KPI section matching the Phase 3 mockup pattern.
+  /// Edge-to-edge teal gradient under the system status bar with rounded
+  /// bottom corners; greeting + name + icon row at top, then realtime,
+  /// school pill, and KPI cards floating onto the bottom edge.
+  Widget _buildHeroWithKpiOverlay(BuildContext context) {
+    final statusBarHeight = MediaQuery.of(context).viewPadding.top;
+    final notifBadge = _asInt(widget.state.stats['unread_notifications']) +
+        _asInt(widget.state.stats['unread_announcements']);
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.md,
-            AppSpacing.md,
-            56,
-          ),
+          padding: const EdgeInsets.only(bottom: 70),
           child: Container(
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [_teacherTeal, _teacherTealFade],
+                colors: [_teacherBrandDark, _teacherBrandAzure],
               ),
-              borderRadius: const BorderRadius.all(Radius.circular(18)),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: _teacherTeal.withValues(alpha: 0.18),
+                  color: _teacherBrandDark.withValues(alpha: 0.18),
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                statusBarHeight + AppSpacing.md,
+                AppSpacing.md,
+                // Extra space below the school pill so the floating KPI
+                // cards overlap an empty teal band rather than the pill.
+                48,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Selamat ${_greetingPart()}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withValues(alpha: 0.72),
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _userName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 0.1,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      _HeroIconButton(
+                        icon: Icons.language_outlined,
+                        onTap: widget.onLanguageTap,
+                        gradientBg: _teacherBrandDark,
+                      ),
+                      const SizedBox(width: 6),
+                      _HeroIconButton(
+                        icon: Icons.notifications_outlined,
+                        onTap: widget.onNotificationTap,
+                        gradientBg: _teacherBrandDark,
+                        showDot: notifBadge > 0,
+                      ),
+                      const SizedBox(width: 6),
+                      _HeroIconButton(
+                        icon: Icons.person_outline,
+                        onTap: widget.onAccountTap,
+                        gradientBg: _teacherBrandDark,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
+                  const SizedBox(height: AppSpacing.md),
                   SchoolPill.expanded(
                     schoolName: _schoolName,
                     subtitle: _greetingSubtitle,
                     onTap: widget.onSchoolSwitchTap,
-                    accentColor: _teacherTeal,
+                    accentColor: _teacherCobalt,
                     actionLabel: 'Ganti',
+                    onDarkSurface: true,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
                 ],
               ),
             ),
@@ -367,7 +448,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         onSeeAll: _openLessonPlans,
         seeAllLabel: 'Lihat semua',
         totalLabel: 'total menunggu',
-        accentColor: _teacherTeal,
+        accentColor: _teacherCobalt,
         entries: [
           PendingInboxEntry(
             icon: Icons.description_outlined,
@@ -451,52 +532,49 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   }
 
   Widget _buildModulLain() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: ModulLainStrip(
-        title: 'Modul lain',
-        totalLabel: '7 modul',
-        accentColor: _teacherTeal,
-        visibleItems: [
-          ModulLainStripItem(
-            label: 'Materi',
-            icon: Icons.article_outlined,
-            onTap: _openMaterials,
-          ),
-          ModulLainStripItem(
-            label: 'RPP',
-            icon: Icons.description_outlined,
-            onTap: _openLessonPlans,
-          ),
-          ModulLainStripItem(
-            label: 'Rekap Nilai',
-            icon: Icons.assessment_outlined,
-            onTap: _openGrades,
-          ),
-          ModulLainStripItem(
-            label: 'Rapor',
-            icon: Icons.school_outlined,
-            onTap: () {}, // TODO: wire to report card screen
-          ),
-        ],
-        overflowItems: [
-          ModulLainStripItem(
-            label: 'Pengumuman',
-            icon: Icons.announcement_outlined,
-            onTap: _openAnnouncementDrafts,
-          ),
-          ModulLainStripItem(
-            label: 'Rekomendasi',
-            icon: Icons.lightbulb_outline,
-            onTap: () {}, // TODO: wire to recommendation screen
-          ),
-          ModulLainStripItem(
-            label: 'Akun',
-            icon: Icons.account_circle_outlined,
-            onTap: () {}, // TODO: wire to account settings
-          ),
-        ],
-      ),
+    return ModulLainStrip(
+      title: 'Modul lain',
+      totalLabel: '7 modul',
+      accentColor: _teacherCobalt,
+      visibleItems: [
+        ModulLainStripItem(
+          label: 'Materi',
+          icon: Icons.article_outlined,
+          onTap: _openMaterials,
+        ),
+        ModulLainStripItem(
+          label: 'RPP',
+          icon: Icons.description_outlined,
+          onTap: _openLessonPlans,
+        ),
+        ModulLainStripItem(
+          label: 'Rekap Nilai',
+          icon: Icons.assessment_outlined,
+          onTap: _openGrades,
+        ),
+        ModulLainStripItem(
+          label: 'Rapor',
+          icon: Icons.school_outlined,
+          onTap: () {}, // TODO: wire to report card screen
+        ),
+      ],
+      overflowItems: [
+        ModulLainStripItem(
+          label: 'Pengumuman',
+          icon: Icons.announcement_outlined,
+          onTap: _openAnnouncementDrafts,
+        ),
+        ModulLainStripItem(
+          label: 'Rekomendasi',
+          icon: Icons.lightbulb_outline,
+          onTap: () {}, // TODO: wire to recommendation screen
+        ),
+        ModulLainStripItem(
+          label: 'Akun',
+          icon: Icons.account_circle_outlined,
+          onTap: () {}, // TODO: wire to account settings
+        ),
+      ],
     );
   }
 }
@@ -509,31 +587,22 @@ class _RealtimePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dotColor = isFresh ? const Color(0xFF22C55E) : Colors.grey.shade400;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: const BorderRadius.all(Radius.circular(999)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _PulsingDot(color: dotColor, animate: isFresh),
-          const SizedBox(width: 6),
-          Text(
-            _buildLabel(),
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              letterSpacing: 0.1,
-            ),
+    final dotColor = isFresh ? const Color(0xFF4ADE80) : Colors.grey.shade400;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _PulsingDot(color: dotColor, animate: isFresh),
+        const SizedBox(width: 8),
+        Text(
+          _buildLabel(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.72),
+            letterSpacing: 0.1,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -614,6 +683,60 @@ class _PulsingDotState extends State<_PulsingDot>
           ),
         );
       },
+    );
+  }
+}
+
+/// 36x36 white-translucent button rendered inside the teal gradient hero.
+/// [showDot] paints a small red dot at top-right (notification badge).
+class _HeroIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color gradientBg;
+  final bool showDot;
+
+  const _HeroIconButton({
+    required this.icon,
+    required this.onTap,
+    required this.gradientBg,
+    this.showDot = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Material(
+          color: Colors.white.withValues(alpha: 0.14),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+          ),
+          child: InkWell(
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
+            onTap: onTap,
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Icon(icon, size: 18, color: Colors.white),
+            ),
+          ),
+        ),
+        if (showDot)
+          Positioned(
+            right: 4,
+            top: 4,
+            child: Container(
+              width: 9,
+              height: 9,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444),
+                shape: BoxShape.circle,
+                border: Border.all(color: gradientBg, width: 1.5),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

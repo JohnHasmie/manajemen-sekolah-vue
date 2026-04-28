@@ -36,8 +36,11 @@ import 'package:manajemensekolah/features/dashboard/presentation/controllers/das
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
 
-const Color _parentViolet = Color(0xFF534AB7);
-const Color _parentVioletFade = Color(0xFF6B5AC9);
+// Parent role uses the Kamil Edu brand Azzure Blue. The hero gradient
+// goes from brand azure → a slightly darker shade so the gradient still
+// reads as "depth" while staying inside the brand swatch.
+const Color _parentBrandAzure = Color(0xFF21AFE6); // brand Azzure Blue
+const Color _parentBrandAzureDeep = Color(0xFF1A8FBE); // brand-aligned deeper shade
 const Duration _pollInterval = Duration(seconds: 60);
 
 /// Parent dashboard body.
@@ -127,15 +130,29 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   }
 
   String get _schoolName {
-    final raw = widget.state.userData['nama_sekolah']?.toString();
+    final ud = widget.state.userData;
+    final raw = (ud['school_name'] ?? ud['nama_sekolah'])?.toString().trim();
     if (raw == null || raw.isEmpty) return 'Sekolah';
     return raw;
   }
 
   String get _greetingSubtitle {
+    final year = widget.state.userData['academic_year']?.toString();
+    if (year == null || year.isEmpty) return 'Orang Tua';
+    return 'Orang Tua · TP $year';
+  }
+
+  String get _userName {
     final raw = widget.state.userData['name']?.toString().trim();
-    final first = (raw == null || raw.isEmpty) ? 'Orang Tua' : raw.split(' ').first;
-    return 'Halo, $first · Orang Tua';
+    return (raw == null || raw.isEmpty) ? 'Orang Tua' : raw;
+  }
+
+  String _greetingPart() {
+    final hour = DateTime.now().hour;
+    if (hour < 11) return 'pagi';
+    if (hour < 15) return 'siang';
+    if (hour < 18) return 'sore';
+    return 'malam';
   }
 
   // KPI counts
@@ -182,27 +199,17 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       body: AppRefreshIndicator(
         onRefresh: _manualRefresh,
         color: widget.primaryColor,
-        edgeOffset: MediaQuery.of(context).padding.top + kToolbarHeight,
+        edgeOffset: MediaQuery.of(context).padding.top,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
           slivers: [
-            DashboardAppBar(
-              schoolName: widget.state.userData['nama_sekolah'],
-              primaryColor: widget.primaryColor,
-              unreadNotifications: widget.state.stats['unread_notifications'],
-              unreadAnnouncements: widget.state.stats['unread_announcements'],
-              profileHeaderKey: widget.profileHeaderKey,
-              onLanguageTap: widget.onLanguageTap,
-              onNotificationTap: widget.onNotificationTap,
-              onAccountTap: widget.onAccountTap,
-            ),
             SliverToBoxAdapter(
               key: widget.heroSectionKey,
-              child: _buildHeroWithKpiOverlay(),
+              child: _buildHeroWithKpiOverlay(context),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 56)),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
             SliverToBoxAdapter(child: _buildInboxCard()),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
             SliverToBoxAdapter(
@@ -218,48 +225,115 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     );
   }
 
-  /// Combined hero and KPI section with floating card overlay effect.
-  Widget _buildHeroWithKpiOverlay() {
+  /// Combined hero + KPI section matching the Phase 3 mockup pattern.
+  /// Edge-to-edge violet gradient under the system status bar with rounded
+  /// bottom corners; greeting + name + icon row at top, then realtime,
+  /// school pill, and KPI cards floating onto the bottom edge.
+  Widget _buildHeroWithKpiOverlay(BuildContext context) {
+    final statusBarHeight = MediaQuery.of(context).viewPadding.top;
+    final notifBadge = _asInt(widget.state.stats['unread_notifications']) +
+        _asInt(widget.state.stats['unread_announcements']);
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.md,
-            AppSpacing.md,
-            56,
-          ),
+          padding: const EdgeInsets.only(bottom: 70),
           child: Container(
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [_parentViolet, _parentVioletFade],
+                colors: [_parentBrandAzure, _parentBrandAzureDeep],
               ),
-              borderRadius: const BorderRadius.all(Radius.circular(18)),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: _parentViolet.withValues(alpha: 0.18),
+                  color: _parentBrandAzure.withValues(alpha: 0.18),
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                statusBarHeight + AppSpacing.md,
+                AppSpacing.md,
+                // Extra space below the school pill so the floating KPI
+                // cards overlap an empty violet band rather than the pill.
+                48,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Selamat ${_greetingPart()}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withValues(alpha: 0.72),
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _userName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 0.1,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      _HeroIconButton(
+                        icon: Icons.language_outlined,
+                        onTap: widget.onLanguageTap,
+                        gradientBg: _parentBrandAzure,
+                      ),
+                      const SizedBox(width: 6),
+                      _HeroIconButton(
+                        icon: Icons.notifications_outlined,
+                        onTap: widget.onNotificationTap,
+                        gradientBg: _parentBrandAzure,
+                        showDot: notifBadge > 0,
+                      ),
+                      const SizedBox(width: 6),
+                      _HeroIconButton(
+                        icon: Icons.person_outline,
+                        onTap: widget.onAccountTap,
+                        gradientBg: _parentBrandAzure,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
+                  const SizedBox(height: AppSpacing.md),
                   SchoolPill.expanded(
                     schoolName: _schoolName,
                     subtitle: _greetingSubtitle,
                     onTap: widget.onSchoolSwitchTap,
-                    accentColor: _parentViolet,
+                    accentColor: _parentBrandAzure,
                     actionLabel: 'Ganti',
+                    onDarkSurface: true,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
                 ],
               ),
             ),
@@ -330,7 +404,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
         onSeeAll: _openBilling,
         seeAllLabel: 'Lihat semua',
         totalLabel: 'total menunggu',
-        accentColor: _parentViolet,
+        accentColor: _parentBrandAzure,
         entries: [
           PendingInboxEntry(
             icon: Icons.warning_amber_outlined,
@@ -418,36 +492,33 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   }
 
   Widget _buildModulLain() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: ModulLainStrip(
-        title: 'Modul lain',
-        totalLabel: '7 modul',
-        accentColor: _parentViolet,
-        visibleItems: [
-          ModulLainStripItem(
-            label: 'Raport',
-            icon: Icons.school_outlined,
-            onTap: () {}, // TODO: wire to report card screen
-          ),
-          ModulLainStripItem(
-            label: 'Kegiatan Kelas',
-            icon: Icons.event_outlined,
-            onTap: () {}, // TODO: wire to class activity screen
-          ),
-          ModulLainStripItem(
-            label: 'Akun',
-            icon: Icons.account_circle_outlined,
-            onTap: () {}, // TODO: wire to account settings
-          ),
-          ModulLainStripItem(
-            label: 'Placeholder',
-            icon: Icons.more_horiz,
-            onTap: () {},
-          ),
-        ],
-        overflowItems: const [],
-      ),
+    return ModulLainStrip(
+      title: 'Modul lain',
+      totalLabel: '7 modul',
+      accentColor: _parentBrandAzure,
+      visibleItems: [
+        ModulLainStripItem(
+          label: 'Raport',
+          icon: Icons.school_outlined,
+          onTap: () {}, // TODO: wire to report card screen
+        ),
+        ModulLainStripItem(
+          label: 'Kegiatan Kelas',
+          icon: Icons.event_outlined,
+          onTap: () {}, // TODO: wire to class activity screen
+        ),
+        ModulLainStripItem(
+          label: 'Akun',
+          icon: Icons.account_circle_outlined,
+          onTap: () {}, // TODO: wire to account settings
+        ),
+        ModulLainStripItem(
+          label: 'Placeholder',
+          icon: Icons.more_horiz,
+          onTap: () {},
+        ),
+      ],
+      overflowItems: const [],
     );
   }
 }
@@ -460,31 +531,22 @@ class _RealtimePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dotColor = isFresh ? const Color(0xFF22C55E) : Colors.grey.shade400;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: const BorderRadius.all(Radius.circular(999)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _PulsingDot(color: dotColor, animate: isFresh),
-          const SizedBox(width: 6),
-          Text(
-            _buildLabel(),
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              letterSpacing: 0.1,
-            ),
+    final dotColor = isFresh ? const Color(0xFF4ADE80) : Colors.grey.shade400;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _PulsingDot(color: dotColor, animate: isFresh),
+        const SizedBox(width: 8),
+        Text(
+          _buildLabel(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.72),
+            letterSpacing: 0.1,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -565,6 +627,60 @@ class _PulsingDotState extends State<_PulsingDot>
           ),
         );
       },
+    );
+  }
+}
+
+/// 36x36 white-translucent button rendered inside the violet gradient hero.
+/// [showDot] paints a small red dot at top-right (notification badge).
+class _HeroIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color gradientBg;
+  final bool showDot;
+
+  const _HeroIconButton({
+    required this.icon,
+    required this.onTap,
+    required this.gradientBg,
+    this.showDot = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Material(
+          color: Colors.white.withValues(alpha: 0.14),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+          ),
+          child: InkWell(
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
+            onTap: onTap,
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Icon(icon, size: 18, color: Colors.white),
+            ),
+          ),
+        ),
+        if (showDot)
+          Positioned(
+            right: 4,
+            top: 4,
+            child: Container(
+              width: 9,
+              height: 9,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444),
+                shape: BoxShape.circle,
+                border: Border.all(color: gradientBg, width: 1.5),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

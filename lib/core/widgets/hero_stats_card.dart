@@ -81,8 +81,8 @@ class HeroStatsCard extends StatelessWidget {
   /// Tap handler — typically navigates to a detail view.
   final VoidCallback? onTap;
 
-  /// Padding inside the card. Default: 14 px all around (a touch tighter
-  /// than [AppSpacing.lg] so three tiles still fit a 360 px viewport).
+  /// Padding inside the card. Default: 12 px all around (compact so three
+  /// tiles fit a 360 px viewport with the value+label inline format).
   final EdgeInsets padding;
 
   const HeroStatsCard({
@@ -94,7 +94,7 @@ class HeroStatsCard extends StatelessWidget {
     this.caption,
     this.trend,
     this.onTap,
-    this.padding = const EdgeInsets.all(14),
+    this.padding = const EdgeInsets.all(12),
   });
 
   @override
@@ -104,7 +104,7 @@ class HeroStatsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: accentColor.withValues(alpha: 0.15)),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.75),
         boxShadow: [
           BoxShadow(
             color: accentColor.withValues(alpha: 0.06),
@@ -115,58 +115,76 @@ class HeroStatsCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          // Icon + optional trend chip
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.12),
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                ),
-                alignment: Alignment.center,
-                child: Icon(icon, size: 18, color: accentColor),
-              ),
-              const Spacer(),
-              if (trend != null) _TrendChip(trend: trend!),
-            ],
-          ),
-          AppSpacing.v12,
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: accentColor,
-              height: 1.1,
+          // Icon badge top-left (mockup line 39-42)
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.12),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
             ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 18, color: accentColor),
           ),
-          const SizedBox(height: 2),
+          const Spacer(),
+          // Small label above the value (mockup line 43)
           Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF64748B),
             ),
           ),
-          if (caption != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              caption!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-            ),
-          ],
+          const SizedBox(height: 6),
+          // Big value + inline trend chip or caption (mockup line 44-56).
+          // Caption ("· 42 kelas") and trend chip sit inline after the
+          // value, bottom-aligned to the text baseline.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Flexible(
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                    height: 1.0,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+              if (caption != null) ...[
+                const SizedBox(width: 6),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 3),
+                  child: Text(
+                    caption!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
+              ],
+              if (trend != null) ...[
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: _TrendChip(trend: trend!),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );
@@ -262,14 +280,16 @@ class HeroStatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: padding,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (int i = 0; i < cards.length; i++) ...[
-            Expanded(child: cards[i]),
-            if (i < cards.length - 1) SizedBox(width: spacing),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (int i = 0; i < cards.length; i++) ...[
+              Expanded(child: cards[i]),
+              if (i < cards.length - 1) SizedBox(width: spacing),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

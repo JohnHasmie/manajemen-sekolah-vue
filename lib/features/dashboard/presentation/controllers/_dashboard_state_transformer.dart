@@ -81,6 +81,12 @@ class DashboardStateTransformer {
       ..['total_subjects'] = toInt(
         data['total_subjects'] ?? data['total_mapel'],
       )
+      // Phase 3 hero KPI + inbox aggregates
+      ..['attendance_rate_today'] = toInt(data['attendance_rate_today'])
+      ..['attendance_delta_pct'] = toInt(data['attendance_delta_pct'])
+      ..['pending_lesson_plans'] = toInt(data['pending_lesson_plans'])
+      ..['draft_announcements'] = toInt(data['draft_announcements'])
+      ..['overdue_bills'] = toInt(data['overdue_bills'])
       ..['unread_notifications'] = toInt(data['unread_notifications'])
       ..['unread_announcements'] = toInt(data['unread_announcements'])
       ..['unread_class_activities'] = toInt(data['unread_class_activities']);
