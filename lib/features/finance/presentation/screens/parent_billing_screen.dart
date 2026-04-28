@@ -353,7 +353,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
               children: summaries,
               selectedChildId: selectedStudentId ?? summaries.first.id,
               onSelected: (id) {
-                final picked = students.firstWhere(
+                final picked = students.cast<dynamic>().firstWhere(
                   (s) => s.id?.toString() == id,
                   orElse: () => null,
                 );
