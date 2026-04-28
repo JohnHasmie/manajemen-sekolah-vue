@@ -8,7 +8,6 @@ import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboa
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_hero_section.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_quick_actions_section.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_todays_overview.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_categorized_menu.dart';
 
 /// Provides content building methods for Dashboard UI.
 /// Handles scaffold construction, scrollable content layout, and state
@@ -16,7 +15,10 @@ import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboa
 mixin ContentBuildersMixin on ConsumerState<Dashboard> {
   /// Builds the main dashboard content when data is loaded.
   /// Returns a Scaffold with CustomScrollView containing app bar,
-  /// hero section, quick actions, overview cards, and menu grid.
+  /// hero section, quick actions, and overview cards. The legacy
+  /// categorized menu grid was retired in P1 closeout — tab roots
+  /// (Mengajar / Nilai / Lainnya for guru, Akademik / Kehadiran /
+  /// Keuangan for wali) are the canonical destinations now.
   Widget buildDashboardContent(
     BuildContext context,
     LanguageProvider languageProvider,
@@ -25,7 +27,6 @@ mixin ContentBuildersMixin on ConsumerState<Dashboard> {
     GlobalKey heroSectionKey,
     GlobalKey quickActionsKey,
     GlobalKey statsSectionKey,
-    GlobalKey menuGridKey,
     Color primaryColor,
     String effectiveRole,
     void Function() onLanguageTap,
@@ -33,8 +34,7 @@ mixin ContentBuildersMixin on ConsumerState<Dashboard> {
     void Function(DashboardState) onAccountTap,
     void Function() onAcademicYearTap,
     List<Widget> Function(DashboardState) getTodaysOverviewCards,
-    List<Widget> Function(DashboardState) getQuickActions,
-    Widget Function(BuildContext, DashboardState) buildSliverGridMenu, {
+    List<Widget> Function(DashboardState) getQuickActions, {
     Future<void> Function()? onRefresh,
   }) {
     return Scaffold(
@@ -81,20 +81,6 @@ mixin ContentBuildersMixin on ConsumerState<Dashboard> {
                 statsSectionKey: statsSectionKey,
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-                child: Text(
-                  AppLocalizations.menu.tr,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: ColorUtils.slate900,
-                  ),
-                ),
-              ),
-            ),
-            buildSliverGridMenu(context, state),
             const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
           ],
         ),
@@ -169,35 +155,4 @@ mixin ContentBuildersMixin on ConsumerState<Dashboard> {
     );
   }
 
-  /// Builds the main navigation menu grid with role-specific items.
-  /// Delegates to [DashboardCategorizedMenu] which owns all
-  /// menu-item logic.
-  Widget buildSliverGridMenu(
-    BuildContext context,
-    DashboardState state,
-    GlobalKey menuGridKey,
-    String effectiveRole,
-    Color primaryColor,
-    void Function() onShowNoStudentsDialog,
-    Future<void> Function(
-      Map<String, dynamic>,
-      List<dynamic>, {
-      String? academicYearId,
-    })
-    onShowStudentSelectionDialog,
-  ) {
-    return SliverPadding(
-      key: menuGridKey,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverToBoxAdapter(
-        child: DashboardCategorizedMenu(
-          effectiveRole: effectiveRole,
-          state: state,
-          primaryColor: primaryColor,
-          onShowNoStudentsDialog: onShowNoStudentsDialog,
-          onShowStudentSelectionDialog: onShowStudentSelectionDialog,
-        ),
-      ),
-    );
-  }
 }

@@ -1,16 +1,16 @@
-// Admin-only dashboard body (Phase 3 redesign).
+// Admin-only dashboard body (Phase 3 redesign + P1 closeout).
 //
 // Why this exists
 // ---------------
 // The shared `buildDashboardContent` from ContentBuildersMixin was optimized
 // around the guru/wali mental model: "what's on my plate today" (hero ribbon
-// of stats → quick actions → today's overview → menu grid). That shape does
-// not fit the admin's daily loop — they come in every morning to triage
-// worklists (verifikasi pembayaran, RPP menunggu review, draft pengumuman,
-// tagihan menunggak) and only drill into individual modules when an item
-// demands it. Phase 0 shipped the shared widgets (HeroStatsRow,
-// PendingInboxCard, QuickActionGrid, SchoolPill.expanded); this body wires
-// them into the admin dashboard without disturbing the guru/wali flow.
+// of stats → quick actions → today's overview). That shape does not fit
+// the admin's daily loop — they come in every morning to triage worklists
+// (verifikasi pembayaran, RPP menunggu review, draft pengumuman, tagihan
+// menunggak) and only drill into individual modules when an item demands it.
+// Phase 0 shipped the shared widgets (HeroStatsRow, PendingInboxCard,
+// QuickActionGrid, SchoolPill.expanded); this body wires them into the
+// admin dashboard without disturbing the guru/wali flow.
 //
 // Shape of the screen (top-to-bottom)
 // -----------------------------------
@@ -25,8 +25,10 @@
 //                           tab 2, AdminLessonPlanScreen(pending_review),
 //                           AdminAnnouncementScreen(draft), Finance tab 3).
 //   5. QuickActionGrid    — 4 tiles: Siswa, Keuangan, Laporan, Pengaturan.
-//   6. "Modul lain"       — the existing DashboardCategorizedMenu so nothing
-//                           becomes unreachable during the phased rollout.
+//
+// The legacy "Modul lain" categorized menu was retired in P1 closeout —
+// its destinations are reachable via the Orang / Akademik / Keuangan /
+// Sistem bottom-nav tabs.
 //
 // Realtime + refresh (T3.3)
 // -------------------------
@@ -56,9 +58,7 @@ import 'package:manajemensekolah/core/widgets/school_pill.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_categorized_menu.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/admin_finance_screen.dart';
-import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_overview_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
@@ -96,7 +96,6 @@ class AdminDashboardBody extends ConsumerStatefulWidget {
   final GlobalKey heroSectionKey;
   final GlobalKey quickActionsKey;
   final GlobalKey statsSectionKey;
-  final GlobalKey menuGridKey;
 
   /// Callbacks for the [DashboardAppBar] icons. The parent forwards these
   /// so the app bar keeps the same behaviour across every role.
@@ -104,21 +103,6 @@ class AdminDashboardBody extends ConsumerStatefulWidget {
   final VoidCallback onNotificationTap;
   final VoidCallback onAccountTap;
   final VoidCallback onSchoolSwitchTap;
-
-  /// Dialog handler for the "no students" state that the CategorizedMenu
-  /// can surface when a teacher menu item is tapped without a class bound.
-  /// Harmless for admin but required by the embedded menu widget.
-  final VoidCallback onShowNoStudentsDialog;
-
-  /// Dialog handler for the multi-student selection sheet. Forwarded verbatim
-  /// to [DashboardCategorizedMenu]; admin rarely hits this path but the
-  /// widget's API requires it.
-  final Future<void> Function(
-    Map<String, dynamic> parent,
-    List<dynamic> students, {
-    String? academicYearId,
-  })
-  onShowStudentSelectionDialog;
 
   const AdminDashboardBody({
     super.key,
@@ -128,13 +112,10 @@ class AdminDashboardBody extends ConsumerStatefulWidget {
     required this.heroSectionKey,
     required this.quickActionsKey,
     required this.statsSectionKey,
-    required this.menuGridKey,
     required this.onLanguageTap,
     required this.onNotificationTap,
     required this.onAccountTap,
     required this.onSchoolSwitchTap,
-    required this.onShowNoStudentsDialog,
-    required this.onShowStudentSelectionDialog,
   });
 
   @override
@@ -272,8 +253,6 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   void _openSiswa() =>
       AppNavigator.push(context, const AdminDataManagementScreen());
   void _openKeuangan() => AppNavigator.push(context, const FinanceScreen());
-  void _openLaporanNilai() =>
-      AppNavigator.push(context, const AdminGradeOverviewScreen());
   void _openLaporanRaport() =>
       AppNavigator.push(context, const AdminReportCardScreen());
   void _openPengaturan() => AppNavigator.push(
@@ -333,22 +312,6 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
             SliverToBoxAdapter(
               key: widget.quickActionsKey,
               child: _buildQuickActions(),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
-            SliverToBoxAdapter(child: _buildModulLainHeader()),
-            SliverPadding(
-              key: widget.menuGridKey,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverToBoxAdapter(
-                child: DashboardCategorizedMenu(
-                  effectiveRole: 'admin',
-                  state: widget.state,
-                  primaryColor: widget.primaryColor,
-                  onShowNoStudentsDialog: widget.onShowNoStudentsDialog,
-                  onShowStudentSelectionDialog:
-                      widget.onShowStudentSelectionDialog,
-                ),
-              ),
             ),
             const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
           ],
@@ -551,42 +514,6 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     );
   }
 
-  // ── "Modul lain" strip ───────────────────────
-
-  Widget _buildModulLainHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 16, 8),
-      child: Row(
-        children: [
-          Text(
-            'Modul lain',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: ColorUtils.slate700,
-              letterSpacing: 0.2,
-            ),
-          ),
-          const Spacer(),
-          TextButton.icon(
-            onPressed: _openLaporanNilai,
-            icon: const Icon(Icons.edit_note_outlined, size: 16),
-            label: const Text('Input nilai'),
-            style: TextButton.styleFrom(
-              foregroundColor: ColorUtils.slate600,
-              textStyle: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ── Realtime indicator pill (T3.3) ────────────

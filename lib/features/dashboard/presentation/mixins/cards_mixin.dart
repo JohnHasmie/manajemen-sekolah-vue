@@ -18,6 +18,7 @@ import 'package:manajemensekolah/features/dashboard/presentation/widgets/schedul
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
+import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teacher_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
@@ -359,7 +360,12 @@ mixin CardsMixin on ConsumerState<Dashboard> {
     ];
   }
 
-  /// Parent quick actions: announcements, billing.
+  /// Parent quick actions: announcements, billing, grades, attendance.
+  ///
+  /// Nilai and Kehadiran also live as bottom-nav tabs (Akademik / Kehadiran)
+  /// — having them here gives a 4-action grid that feels balanced against
+  /// admin / teacher Akses Cepat rows, and lets parents who landed on
+  /// Beranda first jump straight in without going via the tab.
   List<Widget> _getParentQuickActions(
     DashboardState state,
     Color primaryColor,
@@ -388,6 +394,37 @@ mixin CardsMixin on ConsumerState<Dashboard> {
         onTap: () async {
           // ParentBillingScreen IS the Finance tab root — switch tabs.
           ShellNav.goTo(ref, role: 'wali', tab: ShellTab.finance);
+          ref.read(dashboardProvider.notifier).refreshStats();
+        },
+      ),
+      QuickActionButton(
+        label: AppLocalizations.inputGrades.tr,
+        icon: Icons.grade_outlined,
+        color: ColorUtils.success600,
+        badgeCount: state.stats['unread_grades'],
+        onTap: () async {
+          final academicYearId = ref
+              .read(academicYearRiverpod)
+              .selectedAcademicYear?['id']
+              ?.toString();
+          ShellNav.goTo(
+            ref,
+            role: 'wali',
+            tab: ShellTab.academic,
+            pushOnTop: ParentGradeScreen(academicYearId: academicYearId),
+          );
+          ref.read(dashboardProvider.notifier).refreshStats();
+        },
+      ),
+      QuickActionButton(
+        label: AppLocalizations.presence.tr,
+        icon: Icons.check_circle_outline,
+        color: ColorUtils.warning600,
+        badgeCount: state.stats['unread_presence'],
+        onTap: () async {
+          // ParentAttendanceTab handles 0 / 1 / multi-anak resolution
+          // itself — just switch to the tab.
+          ShellNav.goTo(ref, role: 'wali', tab: ShellTab.attendance);
           ref.read(dashboardProvider.notifier).refreshStats();
         },
       ),
