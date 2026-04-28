@@ -70,13 +70,14 @@ import 'package:manajemensekolah/features/settings/presentation/screens/data_man
 import 'package:manajemensekolah/features/settings/presentation/screens/system_settings_screen.dart';
 
 /// Admin brand-dark accent used across hero widgets and the header gradient.
-/// Sourced from the Kamil Edu brand guide (Dark Blue, hex `#143068`).
-const Color _adminNavy = Color(0xFF143068);
+/// Sourced from `ColorUtils.brandDarkBlue` so any future brand refresh
+/// updates one place.
+final Color _adminNavy = ColorUtils.brandDarkBlue;
 
 /// Second stop of the admin header gradient — same hue lightened ~16%
 /// in HSL space so the gradient reads as "depth" without stepping outside
-/// the brand. Roughly equivalent to a slate-overlay on the brand dark.
-const Color _adminNavyFade = Color(0xFF1F4A8F);
+/// the brand. See `ColorUtils.brandDarkBlueDeep`.
+final Color _adminNavyFade = ColorUtils.brandDarkBlueDeep;
 
 /// Polling cadence for the realtime indicator. Not configurable yet — Phase
 /// 3 keeps it fixed at 60 s; Phase 4 may expose it if analytics shows the
@@ -358,7 +359,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
           padding: const EdgeInsets.only(bottom: 70),
           child: Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [_adminNavy, _adminNavyFade],
