@@ -114,14 +114,8 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
       () => ColorUtils.getRoleColor('wali');
 
   @override
-  LinearGradient Function() get getCardGradient => () {
-    final primaryColor = ColorUtils.getRoleColor('wali');
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
-    );
-  };
+  LinearGradient Function() get getCardGradient =>
+      () => ColorUtils.brandGradient('wali');
 
   @override
   void Function(String?) get onStudentChanged => (value) {

@@ -38,9 +38,11 @@ import 'package:manajemensekolah/features/grades/presentation/screens/parent_gra
 
 // Parent role uses the Kamil Edu brand Azzure Blue. The hero gradient
 // goes from brand azure → a slightly darker shade so the gradient still
-// reads as "depth" while staying inside the brand swatch.
-const Color _parentBrandAzure = Color(0xFF21AFE6); // brand Azzure Blue
-const Color _parentBrandAzureDeep = Color(0xFF1A8FBE); // brand-aligned deeper shade
+// reads as "depth" while staying inside the brand swatch. Tokens live in
+// `ColorUtils.brandAzure` / `ColorUtils.brandAzureDeep` so deep-tab parent
+// screens share the same gradient endpoints via `ColorUtils.brandGradient('wali')`.
+final Color _parentBrandAzure = ColorUtils.brandAzure;
+final Color _parentBrandAzureDeep = ColorUtils.brandAzureDeep;
 const Duration _pollInterval = Duration(seconds: 60);
 
 /// Parent dashboard body.
@@ -240,7 +242,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           padding: const EdgeInsets.only(bottom: 70),
           child: Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [_parentBrandAzure, _parentBrandAzureDeep],

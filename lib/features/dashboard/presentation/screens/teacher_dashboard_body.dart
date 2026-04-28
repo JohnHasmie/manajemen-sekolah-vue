@@ -39,6 +39,7 @@ import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboa
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teacher_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_overview.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
 
 // Teacher = "between admin and parent" in the brand. The hero gradient
@@ -49,10 +50,11 @@ import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_
 // Solid-color accents (Lihat semua link, "+N Lainnya" tile, school pill,
 // inbox header) use the brand's HSL midpoint — a "Cobalt Blue" — so the
 // teacher reads as its OWN identity rather than borrowing admin's dark
-// blue or parent's azure. This matches `ColorUtils.getRoleColor('guru')`.
-const Color _teacherBrandDark = Color(0xFF143068); // gradient start (brand Dark Blue)
-const Color _teacherBrandAzure = Color(0xFF21AFE6); // gradient end (brand Azzure Blue)
-const Color _teacherCobalt = Color(0xFF1B6FB8); // accent / identity
+// blue or parent's azure. Tokens live in `ColorUtils` so a brand refresh
+// updates one place; `ColorUtils.getRoleColor('guru')` returns cobalt.
+final Color _teacherBrandDark = ColorUtils.brandDarkBlue;
+final Color _teacherBrandAzure = ColorUtils.brandAzure;
+final Color _teacherCobalt = ColorUtils.brandCobalt;
 const Duration _pollInterval = Duration(seconds: 60);
 
 /// Teacher dashboard body.
@@ -234,6 +236,21 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   void _openAnnouncementDrafts() =>
       AppNavigator.push(context, const TeacherAnnouncementScreen());
 
+  void _openReportCards() => AppNavigator.push(
+    context,
+    ReportCardOverviewPage(
+      teacher: {
+        'id': (widget.state.userData['teacher_id'] ??
+                widget.state.userData['id'])
+            ?.toString() ??
+            '',
+        'nama': widget.state.userData['nama']?.toString() ?? 'Guru',
+        'email': widget.state.userData['email']?.toString() ?? '',
+        'role': 'guru',
+      },
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -282,7 +299,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
           padding: const EdgeInsets.only(bottom: 70),
           child: Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [_teacherBrandDark, _teacherBrandAzure],
@@ -555,7 +572,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         ModulLainStripItem(
           label: 'Rapor',
           icon: Icons.school_outlined,
-          onTap: () {}, // TODO: wire to report card screen
+          onTap: _openReportCards,
         ),
       ],
       overflowItems: [

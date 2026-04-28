@@ -29,14 +29,7 @@ class ParentReportCardDetailScreen extends StatelessWidget {
     return ColorUtils.getRoleColor(userRole);
   }
 
-  LinearGradient getCardGradient() {
-    final primaryColor = getPrimaryColor();
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
-    );
-  }
+  LinearGradient getCardGradient() => ColorUtils.brandGradient(userRole);
 
   @override
   Widget build(BuildContext context) {

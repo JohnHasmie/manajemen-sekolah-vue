@@ -115,6 +115,53 @@ class ColorUtils {
       const Color(0xFFDBEAFE); // Light backgrounds
   static Color get corporateBlue50 => const Color(0xFFEFF6FF);
 
+  // ── Kamil Edu brand palette ──
+  // Sourced from `Kamil Edu - Brand Colour Guide.pdf`. Use these instead
+  // of inline hex literals so a future brand refresh changes one file.
+  // For role-aware lookup prefer [getRoleColor] + [brandGradient].
+
+  /// Brand Dark Blue — admin primary, teacher gradient start.
+  static Color get brandDarkBlue => const Color(0xFF143068);
+
+  /// Slightly lightened Dark Blue used as the second stop on the admin
+  /// hero gradient (~+16% HSL lightness off [brandDarkBlue]).
+  static Color get brandDarkBlueDeep => const Color(0xFF1F4A8F);
+
+  /// Brand Azzure Blue — parent primary, teacher gradient end.
+  static Color get brandAzure => const Color(0xFF21AFE6);
+
+  /// Deeper Azzure — second stop on the parent hero gradient so the
+  /// gradient still reads as "depth" while staying inside the brand swatch.
+  static Color get brandAzureDeep => const Color(0xFF1A8FBE);
+
+  /// Cobalt Blue — teacher accent. The HSL midpoint of [brandDarkBlue]
+  /// and [brandAzure]; gives the teacher its own identity rather than
+  /// borrowing admin's dark blue or parent's azure.
+  static Color get brandCobalt => const Color(0xFF1B6FB8);
+
+  /// Returns the canonical hero gradient for [role]. Used by every
+  /// role-themed page header so the visual identity is consistent
+  /// between dashboard and deep tabs.
+  ///
+  ///   • admin  → Dark Blue → its lightened variant
+  ///   • guru   → Dark Blue → Azzure Blue (literal brand pair, since
+  ///                          teacher bridges admin & parent)
+  ///   • wali   → Azzure → its deeper variant
+  static LinearGradient brandGradient(String role) {
+    final normalized = role.toLowerCase();
+    final stops = switch (normalized) {
+      'admin' || 'administrator' => (brandDarkBlue, brandDarkBlueDeep),
+      'guru' || 'teacher' => (brandDarkBlue, brandAzure),
+      'wali' || 'parent' || 'orang_tua' => (brandAzure, brandAzureDeep),
+      _ => (brandDarkBlue, brandDarkBlueDeep),
+    };
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [stops.$1, stops.$2],
+    );
+  }
+
   /// Semantic dashboard colors at the 600 weight for consistent contrast.
   static Color get success600 => const Color(0xFF059669);
   static Color get warning600 => const Color(0xFFD97706);
