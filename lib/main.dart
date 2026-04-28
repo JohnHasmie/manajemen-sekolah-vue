@@ -329,31 +329,36 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
         'id': 'Manajemen Sekolah',
       }),
       theme: ThemeData(
-        primarySwatch: Colors.green,
+        // Global Material theme is seeded from the Kamil Edu brand
+        // Dark Blue (`#143068`). Per-role widgets still pick their own
+        // primary via `ColorUtils.getRoleColor`, but anywhere the
+        // platform falls back to the theme primary — Material date /
+        // time pickers, default ripple, etc. — uses brand instead of
+        // the legacy green.
         visualDensity: VisualDensity.adaptivePlatformDensity,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF16A34A),
+          seedColor: const Color(0xFF143068), // brand Dark Blue
           brightness: Brightness.light,
         ),
         datePickerTheme: DatePickerThemeData(
-          headerBackgroundColor: const Color(0xFF16A34A),
+          headerBackgroundColor: const Color(0xFF143068),
           headerForegroundColor: Colors.white,
           dayOverlayColor: WidgetStatePropertyAll(
-            const Color(0xFF16A34A).withValues(alpha: 0.1),
+            const Color(0xFF143068).withValues(alpha: 0.1),
           ),
-          todayBorder: const BorderSide(color: Color(0xFF16A34A)),
-          todayForegroundColor: const WidgetStatePropertyAll(Color(0xFF16A34A)),
+          todayBorder: const BorderSide(color: Color(0xFF143068)),
+          todayForegroundColor: const WidgetStatePropertyAll(Color(0xFF143068)),
         ),
         timePickerTheme: TimePickerThemeData(
-          dialHandColor: const Color(0xFF16A34A),
+          dialHandColor: const Color(0xFF143068),
           hourMinuteColor: WidgetStateColor.resolveWith(
             (states) => states.contains(WidgetState.selected)
-                ? const Color(0xFF16A34A).withValues(alpha: 0.1)
+                ? const Color(0xFF143068).withValues(alpha: 0.1)
                 : Colors.grey.shade200,
           ),
           hourMinuteTextColor: WidgetStateColor.resolveWith(
             (states) => states.contains(WidgetState.selected)
-                ? const Color(0xFF16A34A)
+                ? const Color(0xFF143068)
                 : Colors.black87,
           ),
         ),
