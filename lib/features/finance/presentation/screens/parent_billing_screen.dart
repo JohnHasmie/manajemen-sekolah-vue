@@ -311,7 +311,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
           final klass = (s.className as String?) ?? '';
           return ChildSummary(
             id: id,
-            shortName: name.isEmpty ? '?' : name.split(RegExp(r'\s+')).first,
+            shortName: name.isEmpty ? '?' : name,
             klass: klass.isEmpty ? '-' : 'Kelas $klass',
           );
         })
@@ -341,7 +341,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         isFresh: true,
         lastSync: _lastSync,
       ),
-      childSelector: summaries.isEmpty
+      childSelector: summaries.length < 2
           ? null
           : ChildSelectorChipRow(
               key: _studentSelectorKey,

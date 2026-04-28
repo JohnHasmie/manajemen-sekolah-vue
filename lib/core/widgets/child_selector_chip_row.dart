@@ -205,35 +205,42 @@ class _ChildChip extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  child.shortName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: nameColor,
-                    height: 1.1,
+            ConstrainedBox(
+              // Cap the name+class column so a very long full name
+              // (e.g. "Muhammad Faiz Al-Hakim") doesn't push the
+              // chip to triple-wide. Ellipsis still kicks in beyond
+              // this cap so the layout never breaks.
+              constraints: const BoxConstraints(maxWidth: 180),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    child.shortName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: nameColor,
+                      height: 1.1,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  child.klass,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: klassColor,
-                    height: 1.1,
+                  const SizedBox(height: 2),
+                  Text(
+                    child.klass,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: klassColor,
+                      height: 1.1,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

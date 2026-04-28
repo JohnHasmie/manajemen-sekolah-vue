@@ -145,7 +145,7 @@ class ParentClassActivityScreenState
         isFresh: !isLoading,
         lastSync: _lastSync,
       ),
-      childSelector: children.isEmpty
+      childSelector: children.length < 2
           ? null
           : ChildSelectorChipRow(
               key: studentSelectorKey,
@@ -169,9 +169,7 @@ class ParentClassActivityScreenState
       final model = Student.fromJson(raw as Map<String, dynamic>);
       return ChildSummary(
         id: model.id,
-        shortName: model.name.isEmpty
-            ? '?'
-            : model.name.split(RegExp(r'\s+')).first,
+        shortName: model.name.isEmpty ? '?' : model.name,
         klass: model.className.isEmpty
             ? '-'
             : 'Kelas ${model.className}',

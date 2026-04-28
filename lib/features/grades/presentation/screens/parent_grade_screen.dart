@@ -187,9 +187,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
       final model = Student.fromJson(raw as Map<String, dynamic>);
       return ChildSummary(
         id: model.id,
-        shortName: model.name.isEmpty
-            ? '?'
-            : model.name.split(RegExp(r'\s+')).first,
+        shortName: model.name.isEmpty ? '?' : model.name,
         klass: model.className.isEmpty
             ? '-'
             : 'Kelas ${model.className}',
@@ -210,7 +208,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
         isFresh: !isLoading,
         lastSync: _lastSync,
       ),
-      childSelector: summaries.isEmpty
+      childSelector: summaries.length < 2
           ? null
           : ChildSelectorChipRow(
               key: _studentSelectorKey,

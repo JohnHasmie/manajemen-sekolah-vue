@@ -6,13 +6,23 @@
 // header + search bar + skeletal list, we now use the canonical
 // Phase-3 stack of shared widgets:
 //
-//   • [BrandPageHeader] (role 'wali') — gradient hero with title, child
-//     name in the subtitle, single filter icon, realtime pill, and a
-//     [BrandFilterChipStrip] showing the active Bulan / Semester filters.
-//   • [AttendanceRingKpi] — donut + 4-row legend KPI card driven by
-//     `monthlySummary`.
+//   • [BrandPageHeader] (role 'wali') — gradient hero with title,
+//     "Akademik · Anak" kicker subtitle, single filter icon, realtime
+//     pill, and a [ChildSelectorChipRow] when the parent has 2+
+//     children so they can switch between them in-screen (no need to
+//     bounce back to the picker).
+//   • [BrandFilterChipStrip] sits in the bottom slot showing the
+//     active Bulan / Semester filters.
+//   • [AttendanceRingKpi] is rendered as a *floating* card that
+//     overlaps the bottom edge of the gradient hero by 18 px — same
+//     "card on hero" idiom the dashboards use.
 //   • [AttendanceDayCard] — per-record list rows with status-tinted
 //     date badge + status pill.
+//
+// Multi-anak switching uses [AppNavigator.pushReplacement] to swap
+// the screen with a new studentId — that lets every existing data
+// mixin keep using `widget.studentId` as the source of truth without
+// rewiring the cache layer.
 //
 // The inline search input is gone (matches the Nilai/Tagihan pattern —
 // parents don't type subject names; they tap chips). Filtering goes
@@ -21,11 +31,16 @@
 //
 // Pull-to-refresh wraps the body so the manual "refresh" overflow menu
 // item from the old header is no longer needed.
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:intl/intl.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/attendance/attendance_day_card.dart';
@@ -34,6 +49,7 @@ import 'package:manajemensekolah/core/widgets/attendance/attendance_status.dart'
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
+import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_data_mixin.dart';
@@ -42,6 +58,8 @@ import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_status_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_tour_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_visibility_mixin.dart';
+import 'package:manajemensekolah/features/students/data/student_service.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Parent's read-only view of a child's attendance.
 class ParentAttendanceScreen extends ConsumerStatefulWidget {
@@ -71,6 +89,11 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
   final GlobalKey _monthlySummaryKey = GlobalKey();
   final GlobalKey _attendanceListKey = GlobalKey();
 
+  // All siblings linked to this parent. Drives the
+  // [ChildSelectorChipRow] when the parent has 2+ children so the
+  // user can switch between them without bouncing back to the picker.
+  List<Student> _siblings = const [];
+
   // Track when the cached/fresh data was last loaded so the realtime
   // pill can show "Terhubung realtime · HH:MM" or
   // "Terakhir diperbarui N menit lalu".
@@ -86,21 +109,53 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
   void initState() {
     super.initState();
     loadData();
+    _loadSiblings();
+  }
+
+  /// Loads the parent's full sibling list once for the chip selector.
+  /// Independent of [loadData] which only fetches the active child's
+  /// attendance — keeps the data mixin's cache invariants intact.
+  Future<void> _loadSiblings() async {
+    try {
+      final raw = PreferencesService().getString('user');
+      final userData = raw == null
+          ? <String, dynamic>{}
+          : Map<String, dynamic>.from(json.decode(raw) as Map);
+      final email = (userData['email'] ?? widget.parent['email'] ?? '')
+          .toString();
+      final userId = (userData['id'] ?? widget.parent['id'] ?? '').toString();
+      if (email.isEmpty && userId.isEmpty) return;
+
+      final allStudents = await getIt<ApiStudentService>().getStudent(
+        userId: userId.isNotEmpty ? userId : null,
+        guardianEmail: email.isNotEmpty ? email : null,
+      );
+      if (!mounted) return;
+      setState(() {
+        _siblings = allStudents
+            .map((m) => Student.fromJson(m as Map<String, dynamic>))
+            .toList(growable: false);
+      });
+    } catch (_) {
+      // Sibling list is a UX nicety; if it fails the chip row simply
+      // hides itself and the rest of the screen still works.
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.read(languageRiverpod);
+    final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          _buildHeader(lang),
+          _buildHeroAndKpi(lang),
           Expanded(
             child: RefreshIndicator(
               color: ColorUtils.brandAzureDeep,
               onRefresh: () async {
                 await forceRefresh();
+                await _loadSiblings();
                 if (mounted) {
                   setState(() => _lastSync = DateTime.now());
                 }
@@ -122,26 +177,73 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     );
   }
 
+  // ----------------------------------------------------- hero + KPI overlay
+
+  /// Combined hero + floating KPI card. The Stack lets the KPI poke
+  /// 18 px above the hero's bottom edge so the gradient bleeds into
+  /// the card — same idiom the dashboards use.
+  Widget _buildHeroAndKpi(LanguageProvider lang) {
+    // Reserve space inside the Stack for the part of the KPI that
+    // extends below the hero. ~130 px is empirically right for the
+    // 4-row legend variant (donut 116 + 16 padding); if the trend
+    // chip is enabled later, bump this to ~180.
+    const kpiOverhang = 130.0;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: kpiOverhang),
+          child: _buildHeader(lang),
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 0,
+          child: KeyedSubtree(
+            key: _monthlySummaryKey,
+            child: _buildKpiCard(lang),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildKpiCard(LanguageProvider lang) {
+    final totalDays = monthlySummary.values.fold<int>(0, (a, b) => a + b);
+    final presentDays = (monthlySummary['hadir'] ?? 0) +
+        (monthlySummary['terlambat'] ?? 0);
+    final rate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0.0;
+    return AttendanceRingKpi(
+      rate: rate,
+      presentDays: presentDays,
+      excusedDays: monthlySummary['izin'] ?? 0,
+      sickDays: monthlySummary['sakit'] ?? 0,
+      alphaDays: monthlySummary['alpha'] ?? 0,
+      schoolDays: totalDays,
+      periodLabel: hasActiveFilter
+          ? lang.getTranslatedText({
+              'en': 'Selected period',
+              'id': 'Periode terpilih',
+            })
+          : lang.getTranslatedText({
+              'en': 'This month',
+              'id': 'Bulan ini',
+            }),
+      brandColor: ColorUtils.brandAzureDeep,
+    );
+  }
+
   // ---------------------------------------------------------------- header
 
   Widget _buildHeader(LanguageProvider lang) {
-    final subtitleParts = <String>[];
-    if (student?.name != null && student!.name.isNotEmpty) {
-      subtitleParts.add(student!.name);
-    }
-    if (student?.className != null && student!.className!.isNotEmpty) {
-      subtitleParts.add(student!.className!);
-    }
-    final subtitle = subtitleParts.isEmpty
-        ? lang.getTranslatedText({
-            'en': 'Academic · Child',
-            'id': 'Akademik · Anak',
-          })
-        : subtitleParts.join(' · ');
-
+    final children = _buildChildSummaries();
     return BrandPageHeader(
       role: 'wali',
-      subtitle: subtitle,
+      subtitle: lang.getTranslatedText({
+        'en': 'Academic · Child',
+        'id': 'Akademik · Anak',
+      }),
       title: lang.getTranslatedText({
         'en': 'Attendance',
         'id': 'Kehadiran',
@@ -158,6 +260,14 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
         isFresh: !isLoading,
         lastSync: _lastSync,
       ),
+      childSelector: children.length < 2
+          ? null
+          : ChildSelectorChipRow(
+              children: children,
+              selectedChildId: widget.studentId,
+              onSelected: _switchChild,
+              accentColor: ColorUtils.brandAzureDeep,
+            ),
       bottomSlot: BrandFilterChipStrip(
         chips: [
           BrandFilterChip(
@@ -175,6 +285,28 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
             onTap: showFilterSheet,
           ),
         ],
+      ),
+    );
+  }
+
+  List<ChildSummary> _buildChildSummaries() {
+    return _siblings
+        .map((s) => ChildSummary(
+              id: s.id,
+              shortName: s.name.isEmpty ? '?' : s.name,
+              klass: s.className.isEmpty ? '-' : 'Kelas ${s.className}',
+            ))
+        .toList(growable: false);
+  }
+
+  void _switchChild(String newStudentId) {
+    if (newStudentId == widget.studentId) return;
+    AppNavigator.pushReplacement(
+      context,
+      ParentAttendanceScreen(
+        parent: widget.parent,
+        studentId: newStudentId,
+        academicYearId: widget.academicYearId,
       ),
     );
   }
@@ -212,10 +344,6 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   Widget _buildBody(LanguageProvider lang) {
     final filtered = _filteredRecords();
-    final totalDays = monthlySummary.values.fold<int>(0, (a, b) => a + b);
-    final presentDays = (monthlySummary['hadir'] ?? 0) +
-        (monthlySummary['terlambat'] ?? 0);
-    final rate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0.0;
 
     return ListView(
       // physics: ensures pull-to-refresh fires even when content fits.
@@ -227,28 +355,6 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
         AppSpacing.xl,
       ),
       children: [
-        KeyedSubtree(
-          key: _monthlySummaryKey,
-          child: AttendanceRingKpi(
-            rate: rate,
-            presentDays: presentDays,
-            excusedDays: monthlySummary['izin'] ?? 0,
-            sickDays: monthlySummary['sakit'] ?? 0,
-            alphaDays: monthlySummary['alpha'] ?? 0,
-            schoolDays: totalDays,
-            periodLabel: hasActiveFilter
-                ? lang.getTranslatedText({
-                    'en': 'Selected period',
-                    'id': 'Periode terpilih',
-                  })
-                : lang.getTranslatedText({
-                    'en': 'This month',
-                    'id': 'Bulan ini',
-                  }),
-            brandColor: ColorUtils.brandAzureDeep,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
