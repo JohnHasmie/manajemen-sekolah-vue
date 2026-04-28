@@ -1,15 +1,22 @@
-// Parent report card list screen -- shows children and their
-// raport status.
-// Like `pages/parent/Raport/Index.vue` in a Vue app.
+// Parent report card list screen — Phase 3 brand-aligned redesign.
 //
 // Displays the parent's children with their report card
 // availability per semester. Tapping a student navigates to the
-// detail screen. Auto-detects current semester based on school
-// calendar. In Laravel terms: `RaportController@parentIndex`.
+// detail screen.
+//
+// The data mixin (load + cache + force refresh) is unchanged. The
+// presentation overrides the generic UI mixin's `buildHeader()` and
+// `buildFilterSection()` so the screen renders the canonical Phase-3
+// stack: BrandPageHeader (role 'wali') + BrandFilterChipStrip in the
+// bottomSlot for the Semester chip + RefreshIndicator-wrapped list.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/mixins/report_card_data_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/mixins/report_card_ui_builder_mixin.dart';
 
@@ -56,17 +63,71 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
   @override
   dynamic getAcademicYearProvider() => ref.read(academicYearRiverpod);
 
+  // Drives the realtime pill — bumped after every successful refresh.
+  DateTime _lastSync = DateTime.now();
+
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          buildHeader(),
-          buildFilterSection(),
-          Expanded(child: buildContentArea()),
+          _buildBrandHeader(lang),
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              onRefresh: () async {
+                await forceRefresh();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: buildContentArea(),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildBrandHeader(LanguageProvider lang) {
+    final semesterLabel = selectedTermId == '2'
+        ? lang.getTranslatedText({'en': 'Genap', 'id': 'Genap'})
+        : lang.getTranslatedText({'en': 'Ganjil', 'id': 'Ganjil'});
+
+    return BrandPageHeader(
+      role: 'wali',
+      subtitle: lang.getTranslatedText({
+        'en': 'Academic · Child',
+        'id': 'Akademik · Anak',
+      }),
+      title: lang.getTranslatedText({
+        'en': 'Report Card',
+        'id': 'E-Raport',
+      }),
+      realtimeIndicator: BrandRealtimePill(
+        isFresh: !isLoading,
+        lastSync: _lastSync,
+      ),
+      bottomSlot: BrandFilterChipStrip(
+        chips: [
+          BrandFilterChip(
+            label: lang.getTranslatedText({
+              'en': 'Semester',
+              'id': 'Semester',
+            }),
+            value: semesterLabel,
+            onTap: _toggleSemester,
+            width: 172,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _toggleSemester() {
+    setState(() {
+      selectedTermId = selectedTermId == '1' ? '2' : '1';
+    });
+    loadData();
   }
 }
