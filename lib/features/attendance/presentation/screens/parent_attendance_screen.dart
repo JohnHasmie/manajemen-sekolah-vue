@@ -208,29 +208,28 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   // ----------------------------------------------------- hero + KPI overlay
 
-  /// Combined hero + floating KPI card. The Stack lets the KPI poke
-  /// 18 px above the hero's bottom edge so the gradient bleeds into
-  /// the card — same idiom the dashboards use.
+  /// Combined hero + floating KPI card. Uses `Column` + a
+  /// `Transform.translate(-18)` on the KPI so the card visually
+  /// overlaps the hero's bottom edge without using a Stack with
+  /// `clipBehavior: Clip.none`. The Stack approach trips Flutter's
+  /// intrinsic-check inside a CustomScrollView when the hero
+  /// contains horizontal viewports (`ChildSelectorChipRow`,
+  /// `BrandFilterChipStrip`); Transform.translate is a paint-only
+  /// shift, so layout stays simple and no viewport ever gets asked
+  /// for intrinsics.
   Widget _buildHeroAndKpi(LanguageProvider lang) {
-    // Reserve space inside the Stack for the part of the KPI that
-    // extends below the hero. 180 px covers the 4-row legend +
-    // "vs bulan lalu" trend chip footer.
-    const kpiOverhang = 180.0;
-
-    return Stack(
-      clipBehavior: Clip.none,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: kpiOverhang),
-          child: _buildHeader(lang),
-        ),
-        Positioned(
-          left: 16,
-          right: 16,
-          bottom: 0,
-          child: KeyedSubtree(
-            key: _monthlySummaryKey,
-            child: _buildKpiCard(lang),
+        _buildHeader(lang),
+        Transform.translate(
+          offset: const Offset(0, -18),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: KeyedSubtree(
+              key: _monthlySummaryKey,
+              child: _buildKpiCard(lang),
+            ),
           ),
         ),
       ],
