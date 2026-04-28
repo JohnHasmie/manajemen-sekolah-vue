@@ -84,7 +84,13 @@ class ParentAnnouncementScreenState
         body: Column(
           children: [
             buildHeader(languageProvider),
-            Expanded(child: buildContent(languageProvider)),
+            Expanded(
+              child: RefreshIndicator(
+                color: ColorUtils.brandAzureDeep,
+                onRefresh: forceRefresh,
+                child: buildContent(languageProvider),
+              ),
+            ),
           ],
         ),
       ),
