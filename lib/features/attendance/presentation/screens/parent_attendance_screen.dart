@@ -51,8 +51,10 @@ import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_status_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_tour_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_visibility_mixin.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_calendar_screen.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Parent's read-only view of a child's attendance.
 class ParentAttendanceScreen extends ConsumerStatefulWidget {
@@ -165,34 +167,43 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
-        onRefresh: () async {
-          await forceRefresh();
-          await _loadSiblings();
-          if (mounted) setState(() => _lastSync = DateTime.now());
-        },
-        // ListView (not CustomScrollView) so the hero + KPI + body
-        // all scroll together as one surface, *and* so no Sliver
-        // intermediate ever asks for the child's intrinsic
-        // dimensions. Both `SliverFillRemaining(hasScrollBody:false)`
-        // and `SliverToBoxAdapter` (in some Flutter versions) request
-        // the child's `getMaxIntrinsicHeight`, which throws when the
-        // child contains a horizontal viewport (ChildSelectorChipRow
-        // / BrandFilterChipStrip). Plain ListView passes bounded
-        // constraints to its children — no intrinsic queries.
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          children: _buildScrollChildren(lang),
-        ),
+      body: Column(
+        children: [
+          // Sticky header — stays pinned like the billing screen
+          _buildHeader(lang),
+          // Scrollable body with KPI + day list
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              onRefresh: () async {
+                await forceRefresh();
+                await _loadSiblings();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                children: _buildScrollChildren(lang),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   List<Widget> _buildScrollChildren(LanguageProvider lang) {
     return [
-      _buildHeroAndKpi(lang),
+      Transform.translate(
+        offset: const Offset(0, -10),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
+          child: KeyedSubtree(
+            key: _monthlySummaryKey,
+            child: _buildKpiCard(lang),
+          ),
+        ),
+      ),
       if (isLoading)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -217,49 +228,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     ];
   }
 
-  // ----------------------------------------------------- hero + KPI overlay
-
-  /// Combined hero + floating KPI card. The whole composition lives
-  /// inside the outer `ListView` as a single child so the gradient
-  /// hero scrolls up off-screen with the rest of the body — exactly
-  /// the dashboard "hero scrolls away" idiom; *not* pinned.
-  ///
-  /// The KPI sits inside a Stack that reserves an explicit overhang
-  /// below the gradient. The Padding gives the gradient extra
-  /// vertical space at its bottom, and the Positioned KPI anchors
-  /// to the Stack's bottom edge — that pulls the KPI up so a
-  /// significant portion of it overlaps the gradient.
-  ///
-  /// Stack(clipBehavior: Clip.none) is safe here because we're
-  /// inside a regular `ListView`, not a `SliverFillRemaining`/
-  /// `SliverToBoxAdapter` that would query intrinsics on the child.
-  Widget _buildHeroAndKpi(LanguageProvider lang) {
-    // Empirically: the AttendanceRingKpi (donut + 4 legend rows +
-    // trend chip footer) renders ~210 px tall. We want the KPI to
-    // sit roughly half-into the gradient, so reserve ~120 px of
-    // overhang in the Stack. That puts the KPI's top edge ~90 px
-    // above the gradient's bottom edge — clearly "on" the gradient
-    // rather than "below" it.
-    const kpiOverhang = 120.0;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: kpiOverhang),
-          child: _buildHeader(lang),
-        ),
-        Positioned(
-          left: 16,
-          right: 16,
-          bottom: 0,
-          child: KeyedSubtree(
-            key: _monthlySummaryKey,
-            child: _buildKpiCard(lang),
-          ),
-        ),
-      ],
-    );
-  }
+  // ----------------------------------------------------- KPI card
 
   Widget _buildKpiCard(LanguageProvider lang) {
     final totalDays = monthlySummary.values.fold<int>(0, (a, b) => a + b);
@@ -511,9 +480,18 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
             'id': 'Lihat kalender penuh →',
           }),
           onTap: () {
-            // TODO(parent-kehadiran): wire up the full-month calendar
-            // screen once it lands. The shared
-            // `AttendanceCalendarGrid` widget is already in place.
+            final monthInt = int.tryParse(selectedMonthFilter ?? '');
+            final initial = monthInt == null
+                ? null
+                : DateTime(DateTime.now().year, monthInt);
+            AppNavigator.push(
+              context,
+              ParentAttendanceCalendarScreen(
+                studentName: student?.name ?? '',
+                attendanceData: attendanceData,
+                initialMonth: initial,
+              ),
+            );
           },
         ),
       ],
