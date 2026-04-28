@@ -6,17 +6,20 @@ import 'package:manajemensekolah/features/auth/presentation/screens/login_screen
 
 mixin RoleManagementMixin on State<LoginScreen> {
   Widget getRoleIcon(String role) {
+    // Tint role icons with the canonical role color from
+    // ColorUtils.getRoleColor so brand updates flow through here too.
+    final color = ColorUtils.getRoleColor(role);
     switch (role) {
       case 'admin':
-        return Icon(Icons.admin_panel_settings, color: ColorUtils.darkBlue);
+        return Icon(Icons.admin_panel_settings, color: color);
       case 'guru':
-        return const Icon(Icons.school, color: Colors.green);
+        return Icon(Icons.school, color: color);
       case 'wali':
-        return const Icon(Icons.family_restroom, color: Colors.purple);
+        return Icon(Icons.family_restroom, color: color);
       case 'staff':
-        return const Icon(Icons.work, color: Colors.orange);
+        return Icon(Icons.work, color: color);
       default:
-        return const Icon(Icons.person, color: Colors.grey);
+        return Icon(Icons.person, color: color);
     }
   }
 

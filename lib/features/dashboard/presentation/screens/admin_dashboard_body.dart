@@ -51,24 +51,32 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
+import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 import 'package:manajemensekolah/core/widgets/pending_inbox_card.dart';
 import 'package:manajemensekolah/core/widgets/quick_action_grid.dart';
 import 'package:manajemensekolah/core/widgets/school_pill.dart';
 
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_report_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/admin_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/admin_finance_screen.dart';
+import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_overview_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
+import 'package:manajemensekolah/features/schedule/presentation/screens/admin_schedule_management_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/system_settings_screen.dart';
 
-/// Admin navy accent used across hero widgets and the header gradient.
-const Color _adminNavy = Color(0xFF0F172A);
+/// Admin brand-dark accent used across hero widgets and the header gradient.
+/// Sourced from the Kamil Edu brand guide (Dark Blue, hex `#143068`).
+const Color _adminNavy = Color(0xFF143068);
 
-/// Second stop of the admin header gradient — slate-800 for a subtle fade.
-const Color _adminNavyFade = Color(0xFF1E293B);
+/// Second stop of the admin header gradient — same hue lightened ~16%
+/// in HSL space so the gradient reads as "depth" without stepping outside
+/// the brand. Roughly equivalent to a slate-overlay on the brand dark.
+const Color _adminNavyFade = Color(0xFF1F4A8F);
 
 /// Polling cadence for the realtime indicator. Not configurable yet — Phase
 /// 3 keeps it fixed at 60 s; Phase 4 may expose it if analytics shows the
@@ -196,17 +204,34 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   /// School name with a sensible fallback so the pill never renders blank
   /// during the tiny window between login and the first data fetch.
   String get _schoolName {
-    final raw = widget.state.userData['nama_sekolah']?.toString();
+    final ud = widget.state.userData;
+    final raw = (ud['school_name'] ?? ud['nama_sekolah'])?.toString().trim();
     if (raw == null || raw.isEmpty) return 'Sekolah';
     return raw;
   }
 
-  /// Friendly user greeting for the hero subtitle, e.g. "Halo, Yahya".
-  /// Missing-name fallback is "Halo, Admin".
+  /// Hero subtitle: "Admin Sekolah · TP 2025/2026" (role + academic year).
+  /// Mirrors the SVG mockup line 33 format.
   String get _greetingSubtitle {
+    final year = widget.state.userData['academic_year']?.toString();
+    if (year == null || year.isEmpty) return 'Admin Sekolah';
+    return 'Admin Sekolah · TP $year';
+  }
+
+  /// Full display name shown under the time-of-day greeting in the hero.
+  String get _userName {
     final raw = widget.state.userData['name']?.toString().trim();
-    final first = (raw == null || raw.isEmpty) ? 'Admin' : raw.split(' ').first;
-    return 'Halo, $first · Admin sekolah';
+    return (raw == null || raw.isEmpty) ? 'Admin Sekolah' : raw;
+  }
+
+  /// "pagi" / "siang" / "sore" / "malam" by local hour. Used for the
+  /// Phase 3 hero greeting line "Selamat ${greetingPart()}".
+  String _greetingPart() {
+    final hour = DateTime.now().hour;
+    if (hour < 11) return 'pagi';
+    if (hour < 15) return 'siang';
+    if (hour < 18) return 'sore';
+    return 'malam';
   }
 
   /// Count helpers — read from the live stats map with 0 fallback so if the
@@ -281,30 +306,15 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
       body: AppRefreshIndicator(
         onRefresh: _manualRefresh,
         color: widget.primaryColor,
-        edgeOffset: MediaQuery.of(context).padding.top + kToolbarHeight,
+        edgeOffset: MediaQuery.of(context).padding.top,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
           slivers: [
-            DashboardAppBar(
-              schoolName: widget.state.userData['nama_sekolah'],
-              primaryColor: widget.primaryColor,
-              unreadNotifications: widget.state.stats['unread_notifications'],
-              unreadAnnouncements: widget.state.stats['unread_announcements'],
-              profileHeaderKey: widget.profileHeaderKey,
-              onLanguageTap: widget.onLanguageTap,
-              onNotificationTap: widget.onNotificationTap,
-              onAccountTap: widget.onAccountTap,
-            ),
             SliverToBoxAdapter(
               key: widget.heroSectionKey,
-              child: _buildGradientHeader(),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
-            SliverToBoxAdapter(
-              key: widget.statsSectionKey,
-              child: _buildHeroStats(),
+              child: _buildHeroWithKpiOverlay(context),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
             SliverToBoxAdapter(child: _buildInboxCard()),
@@ -313,6 +323,8 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
               key: widget.quickActionsKey,
               child: _buildQuickActions(),
             ),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+            SliverToBoxAdapter(child: _buildModulLain()),
             const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
           ],
         ),
@@ -320,82 +332,183 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     );
   }
 
-  // ── Header — navy gradient + realtime pill ───
+  // ── Header — navy gradient + realtime pill + KPI overlay ───
 
-  Widget _buildGradientHeader() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        0,
-      ),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_adminNavy, _adminNavyFade],
+  /// Combined hero + KPI section matching `Admin_Refactor_Phase3_Dashboard_Mockup.svg`.
+  ///
+  /// The navy gradient extends edge-to-edge from the top of the screen
+  /// (under the system status bar), with rounded bottom corners. Inside,
+  /// top-to-bottom:
+  ///   1. icon row (globe, bell with red-dot, profile) on right; greeting
+  ///      "Selamat pagi" + user name on left
+  ///   2. green dot + "Terhubung realtime · HH:MM"
+  ///   3. expanded school pill
+  ///
+  /// The KPI row is `Positioned(bottom: 0)` of an outer 92dp padding zone —
+  /// cards float onto the gradient's lower edge, then extend onto the page bg.
+  Widget _buildHeroWithKpiOverlay(BuildContext context) {
+    final statusBarHeight = MediaQuery.of(context).viewPadding.top;
+    final notifBadge = _asInt(widget.state.stats['unread_notifications']) +
+        _asInt(widget.state.stats['unread_announcements']);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Gradient hero — full width, edge-to-edge, rounded bottom corners
+        Padding(
+          padding: const EdgeInsets.only(bottom: 70),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [_adminNavy, _adminNavyFade],
+              ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _adminNavy.withValues(alpha: 0.18),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                statusBarHeight + AppSpacing.md,
+                AppSpacing.md,
+                // Extra space below the school pill so the floating KPI
+                // cards overlap an empty navy band rather than the pill
+                // itself — matches the Phase 3 mockup where the gradient
+                // extends 24dp past the pill (line 200 → 248).
+                48,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top row: greeting + name on left, icon buttons on right
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Selamat ${_greetingPart()}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withValues(alpha: 0.72),
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _userName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 0.1,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      _HeroIconButton(
+                        icon: Icons.language_outlined,
+                        onTap: widget.onLanguageTap,
+                        gradientBg: _adminNavy,
+                      ),
+                      const SizedBox(width: 6),
+                      _HeroIconButton(
+                        icon: Icons.notifications_outlined,
+                        onTap: widget.onNotificationTap,
+                        gradientBg: _adminNavy,
+                        showDot: notifBadge > 0,
+                      ),
+                      const SizedBox(width: 6),
+                      _HeroIconButton(
+                        icon: Icons.person_outline,
+                        onTap: widget.onAccountTap,
+                        gradientBg: _adminNavy,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  // Realtime indicator (mockup line 27-28): green/grey dot
+                  // + faint white label, sits between greeting and school pill.
+                  _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
+                  const SizedBox(height: AppSpacing.md),
+                  SchoolPill.expanded(
+                    schoolName: _schoolName,
+                    subtitle: _greetingSubtitle,
+                    onTap: widget.onSchoolSwitchTap,
+                    accentColor: _adminNavy,
+                    actionLabel: 'Ganti',
+                    onDarkSurface: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        borderRadius: const BorderRadius.all(Radius.circular(18)),
-        boxShadow: [
-          BoxShadow(
-            color: _adminNavy.withValues(alpha: 0.18),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SchoolPill.expanded(
-            schoolName: _schoolName,
-            subtitle: _greetingSubtitle,
-            onTap: widget.onSchoolSwitchTap,
-            // accentColor must be a *dark* color: SchoolPill.expanded renders
-            // the school name as `color: accentColor` inside a white card.
-            // Passing Colors.white made the school name invisible
-            // (white-on-white). Use the navy that matches the gradient bg.
-            accentColor: _adminNavy,
-            actionLabel: 'Ganti',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
-        ],
-      ),
+        // KPI strip floating at the bottom of the gradient
+        Positioned(
+          key: widget.statsSectionKey,
+          left: 16,
+          right: 16,
+          bottom: 0,
+          child: _buildHeroStats(),
+        ),
+      ],
     );
   }
 
-  // ── Hero stats — 3 cards in a row ────────────
+  // ── Hero stats — 2 cards in a row, matching the Phase 3 mockup ────
 
   Widget _buildHeroStats() {
     final stats = widget.state.stats;
+    final attendanceRate = _asInt(stats['attendance_rate_today']);
+    final attendanceDelta = _asInt(stats['attendance_delta_pct']);
+    final classCount = _asInt(stats['total_classes']);
     return HeroStatsRow(
       cards: [
         HeroStatsCard(
-          label: 'Siswa Aktif',
-          value: _formatNumber(_asInt(stats['total_students'])),
-          icon: Icons.school_outlined,
-          accentColor: ColorUtils.corporateBlue600,
-          caption: 'total terdaftar',
-          onTap: _openSiswa,
-        ),
-        HeroStatsCard(
-          label: 'Guru',
-          value: _formatNumber(_asInt(stats['total_teachers'])),
-          icon: Icons.groups_2_outlined,
+          // TODO(backend): wire stats['attendance_rate_today'] (today's
+          // school-wide attendance %) and stats['attendance_delta_pct']
+          // (signed delta vs yesterday). Until then both default to 0.
+          label: 'Kehadiran hari ini',
+          value: '$attendanceRate%',
+          icon: Icons.check_rounded,
           accentColor: ColorUtils.success600,
-          caption: 'aktif mengajar',
+          trend: attendanceDelta == 0
+              ? null
+              : StatTrend(
+                  direction: attendanceDelta > 0
+                      ? StatTrendDirection.up
+                      : StatTrendDirection.down,
+                  label:
+                      '${attendanceDelta > 0 ? '+' : ''}$attendanceDelta%',
+                ),
           onTap: _openSiswa,
         ),
         HeroStatsCard(
-          label: 'Verifikasi',
-          value: _formatNumber(_pendingVerifyCount),
-          icon: Icons.receipt_long_outlined,
-          accentColor: ColorUtils.warning600,
-          caption: 'menunggu',
-          onTap: _openFinanceVerification,
+          label: 'Siswa aktif',
+          value: _formatNumber(_asInt(stats['total_students'])),
+          icon: Icons.people_outline_rounded,
+          accentColor: ColorUtils.corporateBlue600,
+          caption: classCount > 0 ? '· $classCount kelas' : null,
+          onTap: _openSiswa,
         ),
       ],
     );
@@ -421,7 +534,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: PendingInboxCard(
-        title: 'Perlu tindakan',
+        title: 'Perlu perhatian',
         onSeeAll: _openFinanceVerification,
         seeAllLabel: 'Lihat semua',
         totalLabel: 'total menunggu',
@@ -514,6 +627,74 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     );
   }
 
+  // ── Modul Lain strip ─────────────────────
+
+  void _openJadwal() =>
+      AppNavigator.push(context, const TeachingScheduleManagementScreen());
+
+  void _openNilai() =>
+      AppNavigator.push(context, const AdminGradeOverviewScreen());
+
+  void _openPresensi() =>
+      AppNavigator.push(context, const AdminAttendanceReportScreen());
+
+  void _openAktivitasKelas() =>
+      AppNavigator.push(context, const AdminClassActivityScreen());
+
+  Widget _buildModulLain() {
+    return ModulLainStrip(
+      title: 'Modul lain',
+      totalLabel: '8 modul',
+      accentColor: _adminNavy,
+      visibleItems: [
+        ModulLainStripItem(
+          label: 'Jadwal',
+          icon: Icons.schedule_outlined,
+          onTap: _openJadwal,
+        ),
+        ModulLainStripItem(
+          label: 'Nilai',
+          icon: Icons.edit_note_outlined,
+          onTap: _openNilai,
+        ),
+        ModulLainStripItem(
+          label: 'Presensi',
+          icon: Icons.check_circle_outline,
+          onTap: _openPresensi,
+        ),
+        ModulLainStripItem(
+          label: 'Rapor',
+          icon: Icons.assignment_turned_in_outlined,
+          onTap: _openLaporanRaport,
+        ),
+      ],
+      overflowItems: [
+        ModulLainStripItem(
+          label: 'Pengumuman',
+          icon: Icons.announcement_outlined,
+          onTap: () =>
+              AppNavigator.push(context, const AdminAnnouncementScreen()),
+        ),
+        ModulLainStripItem(
+          label: 'Aktivitas Kelas',
+          icon: Icons.local_activity_outlined,
+          onTap: _openAktivitasKelas,
+        ),
+        ModulLainStripItem(
+          label: 'RPP',
+          icon: Icons.description_outlined,
+          onTap: () =>
+              AppNavigator.push(context, const AdminLessonPlanScreen()),
+        ),
+        ModulLainStripItem(
+          label: 'Akun',
+          icon: Icons.person_outline,
+          onTap: widget.onAccountTap,
+        ),
+      ],
+    );
+  }
+
 }
 
 // ── Realtime indicator pill (T3.3) ────────────
@@ -532,31 +713,25 @@ class _RealtimePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dotColor = isFresh ? const Color(0xFF22C55E) : Colors.grey.shade400;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: const BorderRadius.all(Radius.circular(999)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _PulsingDot(color: dotColor, animate: isFresh),
-          const SizedBox(width: 6),
-          Text(
-            _buildLabel(),
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              letterSpacing: 0.1,
-            ),
+    // Match SVG mockup line 27-28: small green dot (no pill bg) + faint
+    // 10.5pt white-72% text inline. Goes UNDER the greeting/name row, ABOVE
+    // the school pill.
+    final dotColor = isFresh ? const Color(0xFF4ADE80) : Colors.grey.shade400;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _PulsingDot(color: dotColor, animate: isFresh),
+        const SizedBox(width: 8),
+        Text(
+          _buildLabel(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.72),
+            letterSpacing: 0.1,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -639,6 +814,63 @@ class _PulsingDotState extends State<_PulsingDot>
           ),
         );
       },
+    );
+  }
+}
+
+// ── Top-row icon button used inside the navy gradient hero ──
+
+/// A 36×36 white-translucent button used in the hero's top row (replaces
+/// the old DashboardAppBar icons). Optional [showDot] paints a small red
+/// dot at top-right (matches the mockup's notification badge).
+class _HeroIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color gradientBg;
+  final bool showDot;
+
+  const _HeroIconButton({
+    required this.icon,
+    required this.onTap,
+    required this.gradientBg,
+    this.showDot = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Material(
+          color: Colors.white.withValues(alpha: 0.14),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+          ),
+          child: InkWell(
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
+            onTap: onTap,
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Icon(icon, size: 18, color: Colors.white),
+            ),
+          ),
+        ),
+        if (showDot)
+          Positioned(
+            right: 4,
+            top: 4,
+            child: Container(
+              width: 9,
+              height: 9,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444),
+                shape: BoxShape.circle,
+                border: Border.all(color: gradientBg, width: 1.5),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

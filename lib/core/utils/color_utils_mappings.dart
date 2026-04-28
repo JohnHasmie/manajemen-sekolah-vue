@@ -92,6 +92,16 @@ extension ColorMappings on ColorUtils {
   }
 
   /// Returns a color associated with a user role.
+  ///
+  /// Aligned with the Kamil Edu brand palette (see
+  /// `Kamil Edu - Brand Colour Guide.pdf`):
+  ///   • Dark Blue   `#143068` — admin (authority)
+  ///   • Cobalt Blue `#1B6FB8` — teacher (HSL midpoint of the two brand
+  ///                              colors; bridges admin & parent visually,
+  ///                              mirroring the role's "manage data + face
+  ///                              students/parents" job)
+  ///   • Azzure Blue `#21AFE6` — parent (friendly, end-user)
+  ///
   /// Supports both Indonesian ("guru", "wali", "siswa") and English
   /// role names. Like mapping Laravel Spatie roles to badge colors.
   ///
@@ -99,19 +109,19 @@ extension ColorMappings on ColorUtils {
   static Color getRoleColor(String role) {
     switch (role.toLowerCase()) {
       case 'admin':
-        return const Color(0xFF2563EB); // Blue
+        return const Color(0xFF143068); // Brand Dark Blue
       case 'guru':
       case 'teacher':
-        return const Color(0xFF16A34A); // Green
+        return const Color(0xFF1B6FB8); // Brand Cobalt (midpoint)
       case 'staff':
         return const Color(0xFFFF9F1C); // Orange
       case 'wali':
       case 'parent':
       case 'orang_tua':
-        return const Color(0xFF9333EA); // Purple
+        return const Color(0xFF21AFE6); // Brand Azzure Blue
       case 'siswa':
       case 'student':
-        return const Color(0xFF3B82F6); // Blue
+        return const Color(0xFF21AFE6); // Brand Azzure Blue (same family)
       default:
         return const Color.fromARGB(255, 17, 19, 29);
     }

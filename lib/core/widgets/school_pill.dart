@@ -78,6 +78,10 @@ class SchoolPill extends StatelessWidget {
 
   /// Builds the Settings-hero variant: full-width row with logo, name,
   /// subtitle, and a trailing "Ganti" button.
+  ///
+  /// When [onDarkSurface] is true the pill renders with a translucent white
+  /// background and white text — matching the Phase 3 mockup where the pill
+  /// sits inside the navy gradient header.
   static Widget expanded({
     Key? key,
     required String schoolName,
@@ -86,6 +90,7 @@ class SchoolPill extends StatelessWidget {
     VoidCallback? onTap,
     String actionLabel = 'Ganti',
     Color accentColor = const Color(0xFF0F172A),
+    bool onDarkSurface = false,
   }) {
     return _ExpandedSchoolPill(
       key: key,
@@ -95,6 +100,7 @@ class SchoolPill extends StatelessWidget {
       onTap: onTap,
       actionLabel: actionLabel,
       accentColor: accentColor,
+      onDarkSurface: onDarkSurface,
     );
   }
 
@@ -189,6 +195,7 @@ class _ExpandedSchoolPill extends StatelessWidget {
   final VoidCallback? onTap;
   final String actionLabel;
   final Color accentColor;
+  final bool onDarkSurface;
 
   const _ExpandedSchoolPill({
     super.key,
@@ -198,21 +205,38 @@ class _ExpandedSchoolPill extends StatelessWidget {
     this.onTap,
     required this.actionLabel,
     required this.accentColor,
+    this.onDarkSurface = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    // On-dark: translucent white bg + white text (mockup SVG line 29-35).
+    // On-light (default): solid white bg + accent-colored text.
+    final bg = onDarkSurface
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.white;
+    final fg = onDarkSurface ? Colors.white : accentColor;
+    final subtitleColor = onDarkSurface
+        ? Colors.white.withValues(alpha: 0.72)
+        : Colors.grey.shade600;
+    final borderColor = onDarkSurface
+        ? Colors.white.withValues(alpha: 0.14)
+        : accentColor.withValues(alpha: 0.12);
+    final actionBg = onDarkSurface
+        ? Colors.white.withValues(alpha: 0.18)
+        : accentColor.withValues(alpha: 0.1);
+
     return Material(
-      color: Colors.white,
-      borderRadius: const BorderRadius.all(Radius.circular(16)),
+      color: bg,
+      borderRadius: const BorderRadius.all(Radius.circular(14)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(Radius.circular(16)),
-            border: Border.all(color: accentColor.withValues(alpha: 0.12)),
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
+            border: Border.all(color: borderColor),
           ),
           child: Row(
             children: [
@@ -221,7 +245,7 @@ class _ExpandedSchoolPill extends StatelessWidget {
                 logoUrl: logoUrl,
                 size: 44,
                 accentColor: accentColor,
-                onDarkSurface: false,
+                onDarkSurface: onDarkSurface,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -233,9 +257,9 @@ class _ExpandedSchoolPill extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: accentColor,
+                        color: fg,
                       ),
                     ),
                     if (subtitle != null) ...[
@@ -245,8 +269,9 @@ class _ExpandedSchoolPill extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: subtitleColor,
                         ),
                       ),
                     ],
@@ -256,31 +281,20 @@ class _ExpandedSchoolPill extends StatelessWidget {
               if (onTap != null)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
+                    horizontal: 12,
+                    vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.1),
-                    borderRadius: const BorderRadius.all(Radius.circular(999)),
+                    color: actionBg,
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.swap_horiz_rounded,
-                        size: 14,
-                        color: accentColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        actionLabel,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: accentColor,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    actionLabel,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: fg,
+                    ),
                   ),
                 ),
             ],

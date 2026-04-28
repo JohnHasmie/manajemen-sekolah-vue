@@ -16,24 +16,13 @@ mixin HelpersMixin on ConsumerState<Dashboard> {
   }
 
   /// Gets the primary color based on the current effective role.
-  /// - admin: Blue
-  /// - guru/teacher: Teal
-  /// - staff: Orange
-  /// - wali/parent: Purple
-  Color getPrimaryColor() {
-    switch (effectiveRole) {
-      case 'admin':
-        return ColorUtils.corporateBlue600;
-      case 'guru':
-        return const Color(0xFF16A34A);
-      case 'staff':
-        return const Color(0xFFFF9F1C);
-      case 'wali':
-        return const Color(0xFF9333EA);
-      default:
-        return const Color.fromARGB(255, 17, 19, 29);
-    }
-  }
+  ///
+  /// Delegates to the single source of truth at
+  /// [ColorUtils.getRoleColor]. Per the Kamil Edu brand guide, those are:
+  ///   • admin → Dark Blue   `#143068`
+  ///   • guru  → Cobalt Blue `#1B6FB8` (HSL midpoint of the brand pair)
+  ///   • wali  → Azzure Blue `#21AFE6`
+  Color getPrimaryColor() => ColorUtils.getRoleColor(effectiveRole);
 
   /// Handles FCM sync triggers to refresh dashboard data.
   /// Triggered when background/foreground sync events occur
