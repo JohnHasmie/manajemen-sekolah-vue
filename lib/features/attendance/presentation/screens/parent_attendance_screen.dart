@@ -1,36 +1,30 @@
 // Parent view of a child's attendance — Phase 3 brand-aligned redesign.
 //
-// The screen still composes its data layer from the existing six mixins
-// (state / data / visibility / tour / filter / status) — that part hasn't
-// moved. What changed is the presentation: instead of a custom gradient
-// header + search bar + skeletal list, we now use the canonical
-// Phase-3 stack of shared widgets:
+// Layout shape
+// ------------
+// Single scroll surface (CustomScrollView). The brand-azure gradient
+// hero + the KPI ring card are the *first sliver* — they scroll up
+// off-screen with the body, matching the dashboard's hero idiom (not
+// pinned). The KPI overlaps the bottom edge of the gradient by 18 px
+// so the gradient "bleeds" into the card.
 //
-//   • [BrandPageHeader] (role 'wali') — gradient hero with title,
-//     "Akademik · Anak" kicker subtitle, single filter icon, realtime
-//     pill, and a [ChildSelectorChipRow] when the parent has 2+
-//     children so they can switch between them in-screen (no need to
-//     bounce back to the picker).
-//   • [BrandFilterChipStrip] sits in the bottom slot showing the
-//     active Bulan / Semester filters.
-//   • [AttendanceRingKpi] is rendered as a *floating* card that
-//     overlaps the bottom edge of the gradient hero by 18 px — same
-//     "card on hero" idiom the dashboards use.
-//   • [AttendanceDayCard] — per-record list rows with status-tinted
-//     date badge + status pill.
-//
-// Multi-anak switching uses [AppNavigator.pushReplacement] to swap
-// the screen with a new studentId — that lets every existing data
-// mixin keep using `widget.studentId` as the source of truth without
-// rewiring the cache layer.
-//
-// The inline search input is gone (matches the Nilai/Tagihan pattern —
-// parents don't type subject names; they tap chips). Filtering goes
-// through the bottom sheet from [ParentAttendanceFilterMixin] and is
-// surfaced in the chip strip.
-//
-// Pull-to-refresh wraps the body so the manual "refresh" overflow menu
-// item from the old header is no longer needed.
+// What's special on this screen
+// -----------------------------
+//   • In-place sibling switching. Tapping a different chip in the
+//     `ChildSelectorChipRow` doesn't navigate — it bumps a state
+//     override (`_overrideStudentId`) and re-runs `loadData`. The
+//     data mixin reads from `currentStudentId` (a getter on the
+//     state mixin) so cache keys swap to the new child cleanly.
+//   • Auto-current-month. `selectedMonthFilter` is seeded to the
+//     current calendar month so the KPI lands on "Bulan ini" by
+//     default. Semester is *derived* from the month (Jul-Dec =
+//     Ganjil, Jan-Jun = Genap) — there's no longer a separate
+//     semester filter UI.
+//   • Combined Periode chip showing "Bulan YYYY · Genap/Ganjil".
+//   • Status chip filters the day list to a single
+//     [AttendanceStatus] (Hadir / Terlambat / Izin / Sakit / Alpha).
+//   • `vs Bulan lalu` trend chip: deltaPct = current month rate −
+//     previous month rate. Hides when prev month has no records.
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -39,7 +33,6 @@ import 'package:intl/intl.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -89,15 +82,28 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
   final GlobalKey _monthlySummaryKey = GlobalKey();
   final GlobalKey _attendanceListKey = GlobalKey();
 
-  // All siblings linked to this parent. Drives the
-  // [ChildSelectorChipRow] when the parent has 2+ children so the
-  // user can switch between them without bouncing back to the picker.
+  /// Runtime override for the active student id. `null` means we
+  /// keep showing whatever `widget.studentId` was constructed with
+  /// (the initial child the screen was opened for). Set this via
+  /// `_switchChild` to swap siblings without pushReplacement.
+  String? _overrideStudentId;
+
+  /// All siblings linked to this parent. Drives the
+  /// [ChildSelectorChipRow]; loaded once on init and refreshed on
+  /// pull-to-refresh.
   List<Student> _siblings = const [];
 
-  // Track when the cached/fresh data was last loaded so the realtime
-  // pill can show "Terhubung realtime · HH:MM" or
-  // "Terakhir diperbarui N menit lalu".
+  /// Track when the cached/fresh data was last loaded so the realtime
+  /// pill can show "Terhubung realtime · HH:MM" or
+  /// "Terakhir diperbarui N menit lalu".
   DateTime _lastSync = DateTime.now();
+
+  // ------- Data-mixin overrides for in-place child switching ------
+
+  @override
+  String get currentStudentId => _overrideStudentId ?? widget.studentId;
+
+  // ----------------------------------------------------------------
 
   @override
   GlobalKey get monthlySummaryKey => _monthlySummaryKey;
@@ -109,29 +115,14 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
   void initState() {
     super.initState();
     // Auto-select the current month so the KPI lands on "Bulan ini"
-    // by default — matches the mockup. The data mixin's
-    // `calculateMonthlySummary` then computes only the current
-    // month's stats. `_isExplicitFilter` excludes this default from
-    // the badge count and from the "adjust filters" empty-state
-    // copy so users don't see a phantom filter badge on first open.
+    // by default. `_isExplicitFilter` excludes this default from the
+    // badge counter and the "adjust filters" empty-state copy.
     selectedMonthFilter = DateTime.now().month.toString();
     loadData();
     _loadSiblings();
   }
 
-  /// True only when the user has explicitly narrowed filters beyond
-  /// the auto-selected current month. Drives the filter icon's
-  /// badge counter and the "Periode terpilih" KPI label.
-  bool get _isExplicitFilter {
-    final currentMonth = DateTime.now().month.toString();
-    return (selectedMonthFilter != null &&
-            selectedMonthFilter != currentMonth) ||
-        selectedSemesterFilter != null;
-  }
-
-  /// Loads the parent's full sibling list once for the chip selector.
-  /// Independent of [loadData] which only fetches the active child's
-  /// attendance — keeps the data mixin's cache invariants intact.
+  /// Loads the parent's full sibling list for the chip selector.
   Future<void> _loadSiblings() async {
     try {
       final raw = PreferencesService().getString('user');
@@ -159,37 +150,58 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     }
   }
 
+  /// True only when the user has explicitly narrowed filters beyond
+  /// the auto-selected current month. Drives the filter icon's
+  /// badge counter and the "Periode terpilih" KPI label.
+  bool get _isExplicitFilter {
+    final currentMonth = DateTime.now().month.toString();
+    return (selectedMonthFilter != null &&
+            selectedMonthFilter != currentMonth) ||
+        selectedStatusFilter != null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHeroAndKpi(lang),
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              onRefresh: () async {
-                await forceRefresh();
-                await _loadSiblings();
-                if (mounted) {
-                  setState(() => _lastSync = DateTime.now());
-                }
-              },
-              child: isLoading
-                  ? SkeletonListLoading(
-                      itemCount: 6,
-                      infoTagCount: 2,
-                      baseColor:
-                          ColorUtils.brandAzure.withValues(alpha: 0.15),
-                      highlightColor:
-                          ColorUtils.brandAzure.withValues(alpha: 0.05),
-                    )
-                  : _buildBody(lang),
-            ),
-          ),
-        ],
+      body: RefreshIndicator(
+        color: ColorUtils.brandAzureDeep,
+        onRefresh: () async {
+          await forceRefresh();
+          await _loadSiblings();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            // Hero + floating KPI scrolls together with the body —
+            // not pinned. Matches the dashboard pattern.
+            SliverToBoxAdapter(child: _buildHeroAndKpi(lang)),
+            if (isLoading)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: SkeletonListLoading(
+                  itemCount: 6,
+                  infoTagCount: 2,
+                  baseColor:
+                      ColorUtils.brandAzure.withValues(alpha: 0.15),
+                  highlightColor:
+                      ColorUtils.brandAzure.withValues(alpha: 0.05),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.xl,
+                ),
+                sliver: _buildBodySliver(lang),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -253,11 +265,8 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   /// Computes the attendance-rate delta between the currently-shown
   /// month and the month before it. Returns null when the previous
-  /// month has no recorded attendance — there's nothing meaningful
-  /// to compare against, so the trend chip stays hidden.
+  /// month has no recorded attendance.
   double? _computeDeltaPct() {
-    // The currently-shown month is whatever `selectedMonthFilter`
-    // points at (defaults to current month on init).
     final monthInt = int.tryParse(selectedMonthFilter ?? '');
     if (monthInt == null) return null;
     final now = DateTime.now();
@@ -314,24 +323,24 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
           ? null
           : ChildSelectorChipRow(
               children: children,
-              selectedChildId: widget.studentId,
+              selectedChildId: currentStudentId,
               onSelected: _switchChild,
               accentColor: ColorUtils.brandAzureDeep,
             ),
       bottomSlot: BrandFilterChipStrip(
         chips: [
           BrandFilterChip(
-            label: lang.getTranslatedText({'en': 'Month', 'id': 'Bulan'}),
-            value: _monthChipValue(lang),
+            label: lang.getTranslatedText({
+              'en': 'Period',
+              'id': 'Periode',
+            }),
+            value: _periodChipValue(lang),
             onTap: showFilterSheet,
-            width: 172,
+            width: 220,
           ),
           BrandFilterChip(
-            label: lang.getTranslatedText({
-              'en': 'Semester',
-              'id': 'Semester',
-            }),
-            value: _semesterChipValue(lang),
+            label: lang.getTranslatedText({'en': 'Status', 'id': 'Status'}),
+            value: _statusChipValue(lang),
             onTap: showFilterSheet,
           ),
         ],
@@ -349,23 +358,56 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
         .toList(growable: false);
   }
 
+  /// Switches the active child without re-pushing the route. Bumps
+  /// the override and re-runs the data load — the data mixin reads
+  /// `currentStudentId` so the cache key naturally updates.
   void _switchChild(String newStudentId) {
-    if (newStudentId == widget.studentId) return;
-    AppNavigator.pushReplacement(
-      context,
-      ParentAttendanceScreen(
-        parent: widget.parent,
-        studentId: newStudentId,
-        academicYearId: widget.academicYearId,
-      ),
-    );
+    if (newStudentId == currentStudentId) return;
+    setState(() {
+      _overrideStudentId = newStudentId;
+      // Reset the visible body so the skeleton shows during the
+      // refetch instead of stale rows from the previous child.
+      attendanceData = [];
+      monthlySummary.updateAll((_, _) => 0);
+      isLoading = true;
+    });
+    loadData();
   }
 
-  String? _monthChipValue(LanguageProvider lang) {
-    if (selectedMonthFilter == null) return null;
+  /// Periode chip value combining month + year + derived semester,
+  /// e.g. "April 2026 · Genap". Returns null when the parent has
+  /// somehow cleared the month filter (in practice never, since we
+  /// auto-seed it).
+  String? _periodChipValue(LanguageProvider lang) {
+    final monthInt = int.tryParse(selectedMonthFilter ?? '');
+    if (monthInt == null) return null;
     final months = getMonthsList();
     final match = months.firstWhere(
       (m) => m['val'] == selectedMonthFilter,
+      orElse: () => const {},
+    );
+    if (match.isEmpty) return null;
+    final monthLabel = lang.getTranslatedText({
+      'en': match['en']!,
+      'id': match['id']!,
+    });
+    // Year — same calendar year as today; users only navigate
+    // backwards within the active academic year so this matches
+    // expectations for the typical "browse last few months" flow.
+    final year = DateTime.now().year;
+    // Semester — derived. ID semester convention: Ganjil = Jul-Dec,
+    // Genap = Jan-Jun.
+    final semester = monthInt >= 7
+        ? lang.getTranslatedText({'en': 'Odd', 'id': 'Ganjil'})
+        : lang.getTranslatedText({'en': 'Even', 'id': 'Genap'});
+    return '$monthLabel $year · $semester';
+  }
+
+  String? _statusChipValue(LanguageProvider lang) {
+    if (selectedStatusFilter == null) return null;
+    final list = getStatusList();
+    final match = list.firstWhere(
+      (s) => s['val'] == selectedStatusFilter,
       orElse: () => const {},
     );
     if (match.isEmpty) return null;
@@ -375,42 +417,23 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     });
   }
 
-  String? _semesterChipValue(LanguageProvider lang) {
-    if (selectedSemesterFilter == null) return null;
-    return lang.getTranslatedText({
-      'en': 'Semester $selectedSemesterFilter',
-      'id': 'Semester $selectedSemesterFilter',
-    });
-  }
-
   int _activeFilterCount() {
     var n = 0;
     final currentMonth = DateTime.now().month.toString();
-    // Don't count the auto-selected current month — only when the
-    // parent picked a *different* month does it count as a filter.
     if (selectedMonthFilter != null &&
         selectedMonthFilter != currentMonth) {
       n++;
     }
-    if (selectedSemesterFilter != null) n++;
+    if (selectedStatusFilter != null) n++;
     return n;
   }
 
   // ------------------------------------------------------------------ body
 
-  Widget _buildBody(LanguageProvider lang) {
+  Widget _buildBodySliver(LanguageProvider lang) {
     final filtered = _filteredRecords();
-
-    return ListView(
-      // physics: ensures pull-to-refresh fires even when content fits.
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.xl,
-      ),
-      children: [
+    return SliverList(
+      delegate: SliverChildListDelegate([
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -467,7 +490,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
             // `AttendanceCalendarGrid` widget is already in place.
           },
         ),
-      ],
+      ]),
     );
   }
 
@@ -533,9 +556,10 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   // -------------------------------------------------------------- filters
 
-  /// Apply the current month + semester filters (and the never-set
-  /// search query — kept for back-compat with the data mixin) to the
-  /// raw `attendanceData` list and return the result newest-first.
+  /// Apply the current month + status filters to `attendanceData`.
+  /// `selectedMonthFilter` and `selectedSemesterFilter` are also
+  /// applied by the data mixin's `calculateMonthlySummary`, which
+  /// keeps the KPI counts in sync with the visible day list.
   List<Attendance> _filteredRecords() {
     final query = searchController.text.toLowerCase();
     final filtered = attendanceData.where((record) {
@@ -547,6 +571,10 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
       if (selectedSemesterFilter != null) {
         final sem = date.month >= 7 ? '1' : '2';
         if (sem != selectedSemesterFilter) return false;
+      }
+      if (selectedStatusFilter != null) {
+        final normalized = normalizeStatus(record.status);
+        if (normalized != selectedStatusFilter) return false;
       }
       if (query.isNotEmpty) {
         final subject = (record.subjectName ?? '').toLowerCase();

@@ -21,14 +21,18 @@ mixin ParentAttendanceFilterMixin
       hasActiveFilter =
           selectedMonthFilter != null ||
           selectedSemesterFilter != null ||
+          selectedStatusFilter != null ||
           searchController.text.isNotEmpty;
     });
   }
 
   void clearAllFilters() {
     setState(() {
-      selectedMonthFilter = null;
+      // Re-seed Bulan to current month so the screen always shows
+      // "Bulan ini" by default, never an unfiltered all-year view.
+      selectedMonthFilter = DateTime.now().month.toString();
       selectedSemesterFilter = null;
+      selectedStatusFilter = null;
       searchController.clear();
       hasActiveFilter = false;
     });
@@ -39,10 +43,10 @@ mixin ParentAttendanceFilterMixin
     final primaryColor = getPrimaryColor();
 
     String? tempMonthFilter = selectedMonthFilter;
-    String? tempSemesterFilter = selectedSemesterFilter;
+    String? tempStatusFilter = selectedStatusFilter;
 
     final months = getMonthsList();
-    final semesters = getSemestersList();
+    final statuses = getStatusList();
 
     showModalBottomSheet<void>(
       context: context,
@@ -61,13 +65,18 @@ mixin ParentAttendanceFilterMixin
               Navigator.pop(ctx);
               setState(() {
                 selectedMonthFilter = tempMonthFilter;
-                selectedSemesterFilter = tempSemesterFilter;
+                selectedStatusFilter = tempStatusFilter;
+                // Semester is always derived from month — there is
+                // no longer a user-facing semester filter, but the
+                // legacy field stays in state for back-compat with
+                // the data mixin's calculateMonthlySummary.
+                selectedSemesterFilter = null;
                 checkActiveFilter();
               });
             },
             onReset: () => setSS(() {
-              tempMonthFilter = null;
-              tempSemesterFilter = null;
+              tempMonthFilter = DateTime.now().month.toString();
+              tempStatusFilter = null;
             }),
             content: TeacherFilterContent(
               sections: [
@@ -105,14 +114,14 @@ mixin ParentAttendanceFilterMixin
                   children: [
                     FilterSectionHeader(
                       title: languageProvider.getTranslatedText({
-                        'en': 'Semester',
-                        'id': 'Semester',
+                        'en': 'Status',
+                        'id': 'Status',
                       }),
-                      icon: Icons.event_note_rounded,
+                      icon: Icons.check_circle_outline_rounded,
                       primaryColor: primaryColor,
                     ),
                     FilterChipGrid<String>(
-                      options: semesters.map((s) {
+                      options: statuses.map((s) {
                         return FilterOption<String>(
                           value: s['val']!,
                           label: languageProvider.getTranslatedText({
@@ -121,11 +130,10 @@ mixin ParentAttendanceFilterMixin
                           }),
                         );
                       }).toList(),
-                      selectedValue: tempSemesterFilter,
+                      selectedValue: tempStatusFilter,
                       onSelected: (val) => setSS(() {
-                        tempSemesterFilter = val == tempSemesterFilter
-                            ? null
-                            : val;
+                        tempStatusFilter =
+                            val == tempStatusFilter ? null : val;
                       }),
                       selectedColor: primaryColor,
                     ),
@@ -160,6 +168,19 @@ mixin ParentAttendanceFilterMixin
     return [
       {'en': 'Semester 1', 'id': 'Semester 1', 'val': '1'},
       {'en': 'Semester 2', 'id': 'Semester 2', 'val': '2'},
+    ];
+  }
+
+  /// Status options available in the filter sheet. Values are the
+  /// canonical lowercase Indonesian keys consumed by
+  /// [ParentAttendanceStatusMixin.normalizeStatus].
+  List<Map<String, String>> getStatusList() {
+    return [
+      {'en': 'Present', 'id': 'Hadir', 'val': 'hadir'},
+      {'en': 'Late', 'id': 'Terlambat', 'val': 'terlambat'},
+      {'en': 'Permission', 'id': 'Izin', 'val': 'izin'},
+      {'en': 'Sick', 'id': 'Sakit', 'val': 'sakit'},
+      {'en': 'Alpha', 'id': 'Alpha', 'val': 'alpha'},
     ];
   }
 

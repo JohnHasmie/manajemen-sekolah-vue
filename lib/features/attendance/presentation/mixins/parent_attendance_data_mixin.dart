@@ -69,11 +69,11 @@ mixin ParentAttendanceDataMixin
       );
       final s = studentData
           .map((sd) => Student.fromJson(sd))
-          .firstWhere((sd) => sd.id == widget.studentId);
+          .firstWhere((sd) => sd.id == currentStudentId);
 
       final attendance = await AttendanceService.getAttendance(
-        studentId: widget.studentId,
-        academicYearId: widget.academicYearId,
+        studentId: currentStudentId,
+        academicYearId: currentAcademicYearId,
       );
 
       if (!mounted) return;
@@ -89,7 +89,7 @@ mixin ParentAttendanceDataMixin
 
       final hasUnread = attendance.any((a) => !a.isRead);
       if (hasUnread) {
-        AttendanceService.markAttendanceRead(studentId: widget.studentId);
+        AttendanceService.markAttendanceRead(studentId: currentStudentId);
       }
     } catch (e) {
       AppLogger.error('attendance', e);
@@ -140,8 +140,8 @@ mixin ParentAttendanceDataMixin
   void showTour();
 
   String _getCacheKey() =>
-      'parent_presence_${widget.studentId}_'
-      '${widget.academicYearId ?? "default"}';
+      'parent_presence_${currentStudentId}_'
+      '${currentAcademicYearId ?? "default"}';
 
   void calculateMonthlySummary() {
     monthlySummary.updateAll((key, value) => 0);
