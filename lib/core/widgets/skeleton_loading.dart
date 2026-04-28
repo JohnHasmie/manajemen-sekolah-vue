@@ -180,6 +180,12 @@ class SkeletonListLoading extends StatelessWidget {
   /// Custom highlight color for shimmer
   final Color? highlightColor;
 
+  /// Render with `shrinkWrap: true` so the list fits its content
+  /// height — required when this widget is itself a child of another
+  /// scrollable (e.g. an outer `ListView`) where unbounded vertical
+  /// space would otherwise blow up layout.
+  final bool shrinkWrap;
+
   const SkeletonListLoading({
     super.key,
     this.itemCount = 6,
@@ -188,12 +194,14 @@ class SkeletonListLoading extends StatelessWidget {
     this.padding = const EdgeInsets.only(top: 8, bottom: 16),
     this.baseColor,
     this.highlightColor,
+    this.shrinkWrap = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       padding: padding,
+      shrinkWrap: shrinkWrap,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: itemCount,
       itemBuilder: (context, index) => SkeletonListCard(

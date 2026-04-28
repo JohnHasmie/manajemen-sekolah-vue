@@ -172,38 +172,49 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
           await _loadSiblings();
           if (mounted) setState(() => _lastSync = DateTime.now());
         },
-        child: CustomScrollView(
+        // ListView (not CustomScrollView) so the hero + KPI + body
+        // all scroll together as one surface, *and* so no Sliver
+        // intermediate ever asks for the child's intrinsic
+        // dimensions. Both `SliverFillRemaining(hasScrollBody:false)`
+        // and `SliverToBoxAdapter` (in some Flutter versions) request
+        // the child's `getMaxIntrinsicHeight`, which throws when the
+        // child contains a horizontal viewport (ChildSelectorChipRow
+        // / BrandFilterChipStrip). Plain ListView passes bounded
+        // constraints to its children — no intrinsic queries.
+        child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            // Hero + floating KPI scrolls together with the body —
-            // not pinned. Matches the dashboard pattern.
-            SliverToBoxAdapter(child: _buildHeroAndKpi(lang)),
-            if (isLoading)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: SkeletonListLoading(
-                  itemCount: 6,
-                  infoTagCount: 2,
-                  baseColor:
-                      ColorUtils.brandAzure.withValues(alpha: 0.15),
-                  highlightColor:
-                      ColorUtils.brandAzure.withValues(alpha: 0.05),
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                  AppSpacing.xl,
-                ),
-                sliver: _buildBodySliver(lang),
-              ),
-          ],
+          padding: EdgeInsets.zero,
+          children: _buildScrollChildren(lang),
         ),
       ),
     );
+  }
+
+  List<Widget> _buildScrollChildren(LanguageProvider lang) {
+    return [
+      _buildHeroAndKpi(lang),
+      if (isLoading)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: SkeletonListLoading(
+            itemCount: 6,
+            infoTagCount: 2,
+            shrinkWrap: true,
+            baseColor: ColorUtils.brandAzure.withValues(alpha: 0.15),
+            highlightColor: ColorUtils.brandAzure.withValues(alpha: 0.05),
+          ),
+        )
+      else
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.xl,
+          ),
+          child: _buildBodyColumn(lang),
+        ),
+    ];
   }
 
   // ----------------------------------------------------- hero + KPI overlay
@@ -429,10 +440,12 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   // ------------------------------------------------------------------ body
 
-  Widget _buildBodySliver(LanguageProvider lang) {
+  Widget _buildBodyColumn(LanguageProvider lang) {
     final filtered = _filteredRecords();
-    return SliverList(
-      delegate: SliverChildListDelegate([
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -489,7 +502,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
             // `AttendanceCalendarGrid` widget is already in place.
           },
         ),
-      ]),
+      ],
     );
   }
 
