@@ -94,10 +94,7 @@ class ParentAnnouncementScreenState
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.only(bottom: 24),
                   children: [
-                    Transform.translate(
-                      offset: const Offset(0, -14),
-                      child: buildContent(languageProvider),
-                    ),
+                    buildContent(languageProvider),
                   ],
                 ),
               ),

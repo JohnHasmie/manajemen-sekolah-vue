@@ -150,12 +150,9 @@ class ParentClassActivityScreenState
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
-                  Transform.translate(
-                    offset: const Offset(0, -14),
-                    child: KeyedSubtree(
-                      key: activityListKey,
-                      child: buildActivityList(),
-                    ),
+                  KeyedSubtree(
+                    key: activityListKey,
+                    child: buildActivityList(),
                   ),
                 ],
               ),
