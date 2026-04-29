@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/widgets/empty_state.dart';
+import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/parent_finance_controller.dart';
 
@@ -38,16 +38,34 @@ class BillingList extends ConsumerWidget {
         }
 
         if (state.billingItems.isEmpty) {
-          return EmptyState(
+          return BrandEmptyState(
             icon: Icons.receipt_long_outlined,
+            tone: BrandEmptyStateTone.info,
+            kicker: languageProvider.getTranslatedText({
+              'en': 'No bills',
+              'id': 'Belum ada tagihan',
+            }),
             title: languageProvider.getTranslatedText({
-              'en': 'No Billing Found',
-              'id': 'Tagihan Tidak Ditemukan',
+              'en': 'No billing yet',
+              'id': 'Belum ada tagihan',
             }),
-            subtitle: languageProvider.getTranslatedText({
-              'en': 'No billing records found for this student.',
-              'id': 'Tidak ada catatan tagihan untuk siswa ini.',
+            message: languageProvider.getTranslatedText({
+              'en':
+                  'Bills issued by the school will appear here. '
+                  'Check back later or pull to refresh.',
+              'id':
+                  'Tagihan yang diterbitkan sekolah akan muncul di sini. '
+                  'Periksa kembali nanti atau tarik untuk segarkan.',
             }),
+            secondaryAction: BrandEmptyStateAction(
+              label: languageProvider.getTranslatedText({
+                'en': 'Refresh',
+                'id': 'Muat ulang',
+              }),
+              icon: Icons.refresh_rounded,
+              onTap: () =>
+                  ref.read(parentFinanceProvider.notifier).forceRefresh(),
+            ),
           );
         }
 
@@ -87,7 +105,12 @@ class _BillingBody extends StatelessWidget {
   /// Bucket every item:
   ///   - overdue: status == 'unpaid' AND due_date < today
   ///   - byMonth: keyed by 'YYYY-MM' of due_date (or created_at fallback)
-  ({List<Map<String, dynamic>> overdue, Map<String, List<Map<String, dynamic>>> byMonth, List<String> monthsOrdered}) _bucketize() {
+  ({
+    List<Map<String, dynamic>> overdue,
+    Map<String, List<Map<String, dynamic>>> byMonth,
+    List<String> monthsOrdered,
+  })
+  _bucketize() {
     final overdue = <Map<String, dynamic>>[];
     final byMonth = <String, List<Map<String, dynamic>>>{};
     final monthsOrdered = <String>[];
@@ -96,9 +119,15 @@ class _BillingBody extends StatelessWidget {
 
     for (final raw in items) {
       final m = Map<String, dynamic>.from(raw as Map);
-      final due = _parseDate(m['due_date'] ?? m['jatuh_tempo'] ?? m['created_at']);
+      final due = _parseDate(
+        m['due_date'] ?? m['jatuh_tempo'] ?? m['created_at'],
+      );
       final status = (m['status'] ?? '').toString().toLowerCase();
-      final isUnpaid = status == 'unpaid' || status == 'belum_lunas' || status == '' || status == 'pending';
+      final isUnpaid =
+          status == 'unpaid' ||
+          status == 'belum_lunas' ||
+          status == '' ||
+          status == 'pending';
       if (due != null && isUnpaid && due.isBefore(today)) {
         overdue.add(m);
         continue;
@@ -129,7 +158,15 @@ class _BillingBody extends StatelessWidget {
   }
 
   /// Aggregate stats for the top KPI card.
-  ({double totalThisMonth, int countThisMonth, double paid, int paidCount, double unpaid, int overdueCount}) _aggregate(List<Map<String, dynamic>> overdue) {
+  ({
+    double totalThisMonth,
+    int countThisMonth,
+    double paid,
+    int paidCount,
+    double unpaid,
+    int overdueCount,
+  })
+  _aggregate(List<Map<String, dynamic>> overdue) {
     final now = DateTime.now();
     var totalThisMonth = 0.0;
     var countThisMonth = 0;
@@ -140,8 +177,11 @@ class _BillingBody extends StatelessWidget {
       final m = Map<String, dynamic>.from(raw as Map);
       final amount = _toDouble(m['amount'] ?? m['nominal'] ?? 0);
       final status = (m['status'] ?? '').toString().toLowerCase();
-      final due = _parseDate(m['due_date'] ?? m['jatuh_tempo'] ?? m['created_at']);
-      final isPaid = status == 'verified' || status == 'lunas' || status == 'paid';
+      final due = _parseDate(
+        m['due_date'] ?? m['jatuh_tempo'] ?? m['created_at'],
+      );
+      final isPaid =
+          status == 'verified' || status == 'lunas' || status == 'paid';
 
       if (due != null && due.year == now.year && due.month == now.month) {
         totalThisMonth += amount;
@@ -191,8 +231,19 @@ class _BillingBody extends StatelessWidget {
     final year = int.tryParse(parts[0]) ?? 0;
     final month = int.tryParse(parts[1]) ?? 0;
     const months = [
-      '', 'JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI',
-      'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER',
+      '',
+      'JANUARI',
+      'FEBRUARI',
+      'MARET',
+      'APRIL',
+      'MEI',
+      'JUNI',
+      'JULI',
+      'AGUSTUS',
+      'SEPTEMBER',
+      'OKTOBER',
+      'NOVEMBER',
+      'DESEMBER',
     ];
     if (month < 1 || month > 12) return yyyymm.toUpperCase();
     return '${months[month]} $year';
@@ -208,9 +259,8 @@ class _BillingBody extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       for (final raw in items) {
         final m = Map<String, dynamic>.from(raw as Map);
-        final isRead = m['is_read'] == true ||
-            m['is_read'] == 1 ||
-            m['is_read'] == '1';
+        final isRead =
+            m['is_read'] == true || m['is_read'] == 1 || m['is_read'] == '1';
         if (!isRead) {
           onMarkVisible(m['id'].toString(), isRead);
         }
@@ -316,17 +366,18 @@ class _KpiStripCard extends StatelessWidget {
                 'id': 'Total bulan ini',
               }),
               value: formatRupiah(totalThisMonth),
-              caption: '$countThisMonth ${lang.getTranslatedText({
-                'en': 'bills',
-                'id': 'tagihan',
-              })}',
+              caption:
+                  '$countThisMonth ${lang.getTranslatedText({'en': 'bills', 'id': 'tagihan'})}',
               valueColor: ColorUtils.slate900,
             ),
           ),
           Container(width: 1, height: 56, color: const Color(0xFFF1F5F9)),
           Expanded(
             child: _kpiColumn(
-              label: lang.getTranslatedText({'en': 'Paid', 'id': 'Sudah lunas'}),
+              label: lang.getTranslatedText({
+                'en': 'Paid',
+                'id': 'Sudah lunas',
+              }),
               value: formatRupiah(paid),
               valueColor: ColorUtils.slate900,
               chip: paidCount > 0
@@ -334,10 +385,8 @@ class _KpiStripCard extends StatelessWidget {
                       icon: Icons.check_rounded,
                       bg: const Color(0xFFDCFCE7),
                       fg: const Color(0xFF15803D),
-                      label: '$paidCount ${lang.getTranslatedText({
-                        'en': 'bills',
-                        'id': 'tagihan',
-                      })}',
+                      label:
+                          '$paidCount ${lang.getTranslatedText({'en': 'bills', 'id': 'tagihan'})}',
                     )
                   : null,
             ),
@@ -358,10 +407,8 @@ class _KpiStripCard extends StatelessWidget {
                       icon: Icons.priority_high_rounded,
                       bg: const Color(0xFFFEE2E2),
                       fg: const Color(0xFF991B1B),
-                      label: '$overdueCount ${lang.getTranslatedText({
-                        'en': 'late',
-                        'id': 'telat',
-                      })}',
+                      label:
+                          '$overdueCount ${lang.getTranslatedText({'en': 'late', 'id': 'telat'})}',
                     )
                   : null,
             ),
@@ -402,7 +449,8 @@ class _KpiStripCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        if (chip != null) chip
+        if (chip != null)
+          chip
         else if (caption != null)
           Text(
             caption,
@@ -534,10 +582,7 @@ class _BillingRow extends StatelessWidget {
           bg: const Color(0xFFFEF3C7),
           fg: const Color(0xFFB45309),
           icon: Icons.account_balance_wallet_outlined,
-          label: lang.getTranslatedText({
-            'en': 'Unpaid',
-            'id': 'Belum lunas',
-          }),
+          label: lang.getTranslatedText({'en': 'Unpaid', 'id': 'Belum lunas'}),
         );
     }
   }
@@ -569,19 +614,20 @@ class _BillingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final a = _appearance();
-    final title = (data['name'] ??
-            data['title'] ??
-            data['jenis_pembayaran_nama'] ??
-            '-')
-        .toString();
-    final amount = double.tryParse(
-            (data['amount'] ?? data['nominal'] ?? '0').toString()) ??
+    final title =
+        (data['name'] ?? data['title'] ?? data['jenis_pembayaran_nama'] ?? '-')
+            .toString();
+    final amount =
+        double.tryParse(
+          (data['amount'] ?? data['nominal'] ?? '0').toString(),
+        ) ??
         0;
     final due = data['due_date'] ?? data['jatuh_tempo'];
     final dueLabel = _formatDateShort(due);
     final overdueLabel = _overdueDays(due);
     final status = (data['status'] ?? '').toString().toLowerCase();
-    final isPaid = status == 'verified' || status == 'lunas' || status == 'paid';
+    final isPaid =
+        status == 'verified' || status == 'lunas' || status == 'paid';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -597,8 +643,9 @@ class _BillingRow extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               border: Border.all(
-                color:
-                    isOverdue ? const Color(0xFFFCA5A5) : ColorUtils.slate200,
+                color: isOverdue
+                    ? const Color(0xFFFCA5A5)
+                    : ColorUtils.slate200,
                 width: isOverdue ? 1.2 : 0.75,
               ),
               borderRadius: const BorderRadius.all(Radius.circular(14)),
@@ -647,10 +694,7 @@ class _BillingRow extends StatelessWidget {
                             )
                           else if (dueLabel.isNotEmpty)
                             Text(
-                              '${lang.getTranslatedText({
-                                'en': 'Due',
-                                'id': 'Jatuh tempo',
-                              })} $dueLabel',
+                              '${lang.getTranslatedText({'en': 'Due', 'id': 'Jatuh tempo'})} $dueLabel',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
@@ -680,8 +724,9 @@ class _BillingRow extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: a.bg,
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(11)),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(11),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -709,10 +754,7 @@ class _BillingRow extends StatelessWidget {
                           const Spacer(),
                           if (!isPaid)
                             Text(
-                              '${lang.getTranslatedText({
-                                'en': 'Pay',
-                                'id': 'Bayar',
-                              })} →',
+                              '${lang.getTranslatedText({'en': 'Pay', 'id': 'Bayar'})} →',
                               style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
@@ -721,10 +763,7 @@ class _BillingRow extends StatelessWidget {
                             )
                           else
                             Text(
-                              '${lang.getTranslatedText({
-                                'en': 'View receipt',
-                                'id': 'Lihat bukti',
-                              })} →',
+                              '${lang.getTranslatedText({'en': 'View receipt', 'id': 'Lihat bukti'})} →',
                               style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w600,

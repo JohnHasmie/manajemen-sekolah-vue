@@ -29,9 +29,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_empty_state.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
 
 mixin ParentActivityListBuilderMixin
@@ -41,7 +41,11 @@ mixin ParentActivityListBuilderMixin
     final state = this as ParentClassActivityScreenState;
 
     if (state.selectedStudentId == null) {
-      return ActivityEmptyState(
+      return BrandEmptyState(
+        icon: Icons.face_retouching_natural_rounded,
+        tone: BrandEmptyStateTone.info,
+        kicker: 'Pilih anak',
+        title: 'Pilih anak terlebih dahulu',
         message: AppLocalizations.selectChildToViewActivity.tr,
       );
     }
@@ -51,8 +55,17 @@ mixin ParentActivityListBuilderMixin
     }
 
     if (state.activityList.isEmpty) {
-      return ActivityEmptyState(
+      return BrandEmptyState(
+        icon: Icons.event_note_outlined,
+        tone: BrandEmptyStateTone.info,
+        kicker: 'Belum ada data',
+        title: 'Belum ada aktivitas',
         message: AppLocalizations.noActivityForChild.tr,
+        secondaryAction: BrandEmptyStateAction(
+          label: 'Muat ulang',
+          icon: Icons.refresh_rounded,
+          onTap: () => state.forceRefresh(),
+        ),
       );
     }
 

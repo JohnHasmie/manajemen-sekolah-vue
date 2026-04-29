@@ -31,6 +31,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/report_cards/'
     'presentation/screens/'
@@ -78,49 +79,35 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
   }
 
   Widget _buildErrorState() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-      child: Column(
-        children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            size: 48,
-            color: ColorUtils.warning600.withValues(alpha: 0.6),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            errorMessage,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: ColorUtils.slate700),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          ElevatedButton(
-            onPressed: loadData,
-            child: Text(AppLocalizations.tryAgain.tr),
-          ),
-        ],
+    return BrandEmptyState(
+      icon: Icons.cloud_off_rounded,
+      tone: BrandEmptyStateTone.danger,
+      kicker: 'Sambungan bermasalah',
+      title: 'Tidak dapat memuat rapor',
+      message: errorMessage.isEmpty
+          ? 'Periksa koneksi internet, lalu coba muat ulang.'
+          : errorMessage,
+      primaryAction: BrandEmptyStateAction(
+        label: AppLocalizations.tryAgain.tr,
+        icon: Icons.refresh_rounded,
+        onTap: loadData,
       ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-      child: Column(
-        children: [
-          Icon(
-            Icons.description_outlined,
-            size: 60,
-            color: ColorUtils.slate300,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'Belum ada E-Raport yang dipublikasikan\n'
-            'pada semester ini.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: ColorUtils.slate500, fontSize: 14),
-          ),
-        ],
+    return BrandEmptyState(
+      icon: Icons.description_outlined,
+      tone: BrandEmptyStateTone.info,
+      kicker: 'Belum ada data',
+      title: 'Belum ada rapor terbit',
+      message:
+          'Belum ada E-Raport yang dipublikasikan pada semester ini. '
+          'Periksa kembali setelah sekolah menerbitkannya.',
+      secondaryAction: BrandEmptyStateAction(
+        label: 'Muat ulang',
+        icon: Icons.refresh_rounded,
+        onTap: loadData,
       ),
     );
   }
