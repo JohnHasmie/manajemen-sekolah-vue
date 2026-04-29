@@ -1,3 +1,28 @@
+// Phase 3 brand-aligned announcement card.
+//
+// Layout (per Parent_Phase3_Pengumuman_Mockup.svg):
+//   ┌─────────────────────────────────────────────┐
+//   │  ⊙   Sekolah · Kepala Sekolah    2 jam lalu │  ← top row (caption + ago)
+//   │      Libur HUT Sekolah · 30 Oktober         │  ← title (slate-900 700)
+//   │      Kegiatan belajar diliburkan…           │  ← preview (slate-600, 2 lines)
+//   │      ▮Penting  📎 Surat-edaran.pdf          │  ← chips row (optional)
+//   └─────────────────────────────────────────────┘
+//                                              • ← unread dot (azure)
+//
+// The avatar is a round 36×36 tinted circle:
+//   • Penting     → red bg, warning icon
+//   • Sekolah     → blue bg, creator initials text
+//   • Kelas       → emerald bg, creator initials text
+//   • Default     → violet bg, creator initials text
+//
+// Source caption is parsed from `role_target` + creator name:
+//   • role_target=='all'  → "Sekolah · {creator name or role}"
+//   • class_id != null    → "Kelas {class name} · {creator name}"
+//   • else                → "{role_target} · {creator name}"
+//
+// Attachment indicator (📎 + filename) appears whenever the announcement
+// has a `file_path` / `file_name`. Status pill ("Penting") still appears
+// for high-priority items.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
@@ -16,21 +41,15 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
   ) {
     final isUnread = _isUnread(announcementData);
     final isImportant = _isImportant(announcementData);
-    final accentColor = isImportant ? ColorUtils.warning600 : getPrimaryColor();
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => onTap(announcementData),
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
-          child: _buildCardInner(
-            announcementData,
-            accentColor,
-            isImportant,
-            isUnread,
-          ),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          child: _buildCardInner(announcementData, isImportant, isUnread),
         ),
       ),
     );
@@ -38,45 +57,41 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
 
   Widget _buildCardInner(
     Map<String, dynamic> announcementData,
-    Color accentColor,
     bool isImportant,
     bool isUnread,
   ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: _cardDecoration(),
-      child: _buildCardRow(
-        announcementData,
-        accentColor,
-        isImportant,
-        isUnread,
-      ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+          decoration: _cardDecoration(),
+          child: _buildCardRow(announcementData, isImportant),
+        ),
+        if (isUnread) Positioned(top: 12, right: 12, child: _buildUnreadDot()),
+      ],
     );
   }
 
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
       color: Colors.white,
-      borderRadius: const BorderRadius.all(Radius.circular(14)),
-      border: Border.all(color: ColorUtils.slate200, width: 1),
+      borderRadius: const BorderRadius.all(Radius.circular(16)),
+      border: Border.all(color: ColorUtils.slate200, width: 0.75),
       boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
     );
   }
 
   Widget _buildCardRow(
     Map<String, dynamic> announcementData,
-    Color accentColor,
     bool isImportant,
-    bool isUnread,
   ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildIconContainer(accentColor, isImportant),
+        _buildAvatar(announcementData, isImportant),
         const SizedBox(width: AppSpacing.md),
-        Expanded(child: _buildCardContent(announcementData)),
-        const SizedBox(width: AppSpacing.sm),
-        if (isUnread) _buildUnreadDot(),
+        Expanded(child: _buildCardContent(announcementData, isImportant)),
       ],
     );
   }
@@ -89,107 +104,266 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
     return ['penting', 'important'].contains(data['priority']);
   }
 
-  Widget _buildIconContainer(Color accentColor, bool isImportant) {
+  /// Round 36-px avatar tinted by source category. Penting items get a
+  /// red warning icon; everything else gets the creator's initials.
+  Widget _buildAvatar(Map<String, dynamic> data, bool isImportant) {
+    final palette = _avatarPalette(data, isImportant);
+    final initials = _initials(_creatorName(data));
+
     return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.1),
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        border: Border.all(color: accentColor.withValues(alpha: 0.25)),
-      ),
-      child: Icon(
-        isImportant ? Icons.campaign_rounded : Icons.announcement_outlined,
-        color: accentColor,
-        size: 22,
-      ),
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(color: palette.bg, shape: BoxShape.circle),
+      alignment: Alignment.center,
+      child: isImportant
+          ? Icon(Icons.priority_high_rounded, color: palette.fg, size: 18)
+          : Text(
+              initials,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: palette.fg,
+                height: 1.0,
+                letterSpacing: 0.2,
+              ),
+            ),
     );
   }
 
-  Widget _buildCardContent(Map<String, dynamic> announcementData) {
+  ({Color bg, Color fg}) _avatarPalette(
+    Map<String, dynamic> data,
+    bool isImportant,
+  ) {
+    if (isImportant) {
+      return (bg: const Color(0xFFFEE2E2), fg: const Color(0xFFDC2626));
+    }
+    final hasClass = (data['class_id'] ?? '').toString().isNotEmpty;
+    final roleTarget = (data['role_target'] ?? '').toString().toLowerCase();
+
+    if (hasClass) {
+      return (bg: const Color(0xFFDCFCE7), fg: const Color(0xFF15803D));
+    }
+    if (roleTarget == 'all' ||
+        roleTarget == 'wali' ||
+        roleTarget == 'orang_tua') {
+      return (bg: const Color(0xFFDBEAFE), fg: const Color(0xFF1D4ED8));
+    }
+    return (bg: const Color(0xFFEDE9FE), fg: const Color(0xFF6D28D9));
+  }
+
+  Widget _buildCardContent(
+    Map<String, dynamic> announcementData,
+    bool isImportant,
+  ) {
     final model = Announcement.fromJson(announcementData);
-    final isImportant = _isImportant(announcementData);
     final dateLabel = _formatRelativeDate(model.createdAt);
+    final source = _sourceCaption(announcementData);
+    final attachment = _attachmentName(announcementData);
+    final hasChipRow = isImportant || attachment != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title row — title + optional "Penting" pill (matches teacher version)
+        // Top row: source caption + relative timestamp.
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Text(
-                model.title.isNotEmpty ? model.title : 'No Title',
+                source,
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: ColorUtils.slate900,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: ColorUtils.slate500,
+                  height: 1.2,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (isImportant) ...[
-              const SizedBox(width: AppSpacing.xs),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: ColorUtils.warning600.withValues(alpha: 0.12),
-                  borderRadius: const BorderRadius.all(Radius.circular(6)),
-                  border: Border.all(
-                    color: ColorUtils.warning600.withValues(alpha: 0.35),
-                  ),
-                ),
-                child: Text(
-                  'Penting',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
-                    color: ColorUtils.warning600,
-                    letterSpacing: 0.2,
-                  ),
+            const SizedBox(width: AppSpacing.sm),
+            // Reserve space for the unread dot positioned in the Stack.
+            Padding(
+              padding: const EdgeInsets.only(right: 14),
+              child: Text(
+                dateLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: ColorUtils.slate400,
+                  height: 1.2,
                 ),
               ),
-            ],
+            ),
           ],
         ),
-        const SizedBox(height: 3),
+        const SizedBox(height: 4),
         Text(
-          model.content,
+          model.title.isNotEmpty ? model.title : 'Tanpa judul',
           style: TextStyle(
-            fontSize: 12,
-            color: ColorUtils.slate600,
-            height: 1.4,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: ColorUtils.slate900,
+            height: 1.3,
           ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        // Date / time-since meta — added per UI_Redesign_Audit P0 #10.
-        // Teacher version (T11) already shows this; bringing parent in line.
-        if (dateLabel.isNotEmpty) ...[
-          const SizedBox(height: 6),
+        if (model.content.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            _stripHtml(model.content),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: ColorUtils.slate600,
+              height: 1.4,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+        if (hasChipRow) ...[
+          const SizedBox(height: 8),
           Row(
             children: [
-              Icon(
-                Icons.access_time_rounded,
-                size: 11,
-                color: ColorUtils.slate400,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                dateLabel,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: ColorUtils.slate500,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              if (isImportant) _buildImportantPill(),
+              if (isImportant && attachment != null) const SizedBox(width: 8),
+              if (attachment != null)
+                Flexible(child: _buildAttachmentChip(attachment)),
             ],
           ),
         ],
       ],
     );
+  }
+
+  /// Red dot+label pill matching the mockup ("●Penting").
+  Widget _buildImportantPill() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEE2E2),
+        borderRadius: const BorderRadius.all(Radius.circular(11)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Color(0xFFDC2626),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Penting',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF991B1B),
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Paperclip + filename, slate-500 hairline meta row.
+  Widget _buildAttachmentChip(String fileName) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.attach_file_rounded, size: 13, color: ColorUtils.slate400),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            fileName,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: ColorUtils.slate500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _creatorName(Map<String, dynamic> data) {
+    final raw =
+        data['pembuat_nama'] ??
+        data['creator_name'] ??
+        (data['creator'] is Map ? (data['creator'] as Map)['name'] : null);
+    return (raw ?? '').toString().trim();
+  }
+
+  String _initials(String name) {
+    if (name.isEmpty) return '?';
+    final parts = name
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) {
+      return parts.first
+          .substring(0, parts.first.length >= 2 ? 2 : 1)
+          .toUpperCase();
+    }
+    return (parts.first.substring(0, 1) + parts[1].substring(0, 1))
+        .toUpperCase();
+  }
+
+  /// Composes "Sekolah · Kepala Sekolah" / "Kelas 8B · Bu Sari" caption.
+  String _sourceCaption(Map<String, dynamic> data) {
+    final creator = _creatorName(data);
+    final hasClass = (data['class_id'] ?? '').toString().isNotEmpty;
+    final classLabel =
+        (data['class_name'] ??
+                (data['class'] is Map
+                    ? (data['class'] as Map)['name']
+                    : null) ??
+                '')
+            .toString();
+    final roleTarget = (data['role_target'] ?? '').toString().toLowerCase();
+
+    String prefix;
+    if (hasClass) {
+      prefix = classLabel.isNotEmpty ? 'Kelas $classLabel' : 'Kelas';
+    } else if (roleTarget == 'wali' || roleTarget == 'orang_tua') {
+      prefix = 'Wali';
+    } else if (roleTarget == 'all' || roleTarget.isEmpty) {
+      prefix = 'Sekolah';
+    } else {
+      prefix = roleTarget[0].toUpperCase() + roleTarget.substring(1);
+    }
+
+    if (creator.isEmpty) return prefix;
+    return '$prefix · $creator';
+  }
+
+  String? _attachmentName(Map<String, dynamic> data) {
+    final filePath = (data['file_path'] ?? data['file'] ?? '').toString();
+    if (filePath.isEmpty) return null;
+    final name = (data['file_name'] ?? '').toString();
+    if (name.isNotEmpty) return name;
+    final segments = filePath.split('/');
+    return segments.isNotEmpty ? segments.last : null;
+  }
+
+  /// Strip HTML tags from rich-text content for the preview line.
+  String _stripHtml(String html) {
+    if (html.isEmpty) return html;
+    final stripped = html
+        .replaceAll(RegExp(r'<[^>]+>'), ' ')
+        .replaceAll(RegExp(r'&nbsp;'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    return stripped;
   }
 
   /// Compact relative date for the meta row.
@@ -207,22 +381,42 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
     if (diff.inDays == 1) return 'Kemarin';
     if (diff.inDays < 7) return '${diff.inDays} hari lalu';
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${parsed.day} ${months[parsed.month - 1]} '
         '${parsed.hour.toString().padLeft(2, '0')}:'
         '${parsed.minute.toString().padLeft(2, '0')}';
   }
 
+  /// Azure dot in the top-right corner of the card. Mockup uses
+  /// brand-azure-deep, not error-red — matches every other Phase-3
+  /// unread indicator (notifications, billing, activity feed).
   Widget _buildUnreadDot() {
     return Container(
-      width: 8,
-      height: 8,
-      margin: const EdgeInsets.only(top: 4),
+      width: 10,
+      height: 10,
       decoration: BoxDecoration(
-        color: ColorUtils.error600,
+        color: ColorUtils.brandAzureDeep,
         shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.brandAzureDeep.withValues(alpha: 0.25),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
     );
   }
