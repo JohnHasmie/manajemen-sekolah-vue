@@ -60,6 +60,7 @@ mixin ParentGradeUiMixin on State<ParentGradeScreen> {
     return SkeletonListLoading(
       itemCount: 6,
       infoTagCount: 2,
+      shrinkWrap: true,
       baseColor: getPrimaryColor().withValues(alpha: 0.15),
       highlightColor: getPrimaryColor().withValues(alpha: 0.05),
     );

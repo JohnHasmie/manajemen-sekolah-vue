@@ -81,20 +81,26 @@ class ParentAnnouncementScreenState
       },
       child: Scaffold(
         backgroundColor: ColorUtils.slate50,
-        body: RefreshIndicator(
-          color: ColorUtils.brandAzureDeep,
-          onRefresh: forceRefresh,
-          // Single outer ListView so the gradient hero scrolls with
-          // the announcement list — matches the dashboard / Kehadiran
-          // hero idiom (not pinned).
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
-            children: [
-              buildHeader(languageProvider),
-              buildContent(languageProvider),
-            ],
-          ),
+        body: Column(
+          children: [
+            buildHeader(languageProvider),
+            Expanded(
+              child: RefreshIndicator(
+                color: ColorUtils.brandAzureDeep,
+                onRefresh: forceRefresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  children: [
+                    Transform.translate(
+                      offset: const Offset(0, -10),
+                      child: buildContent(languageProvider),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

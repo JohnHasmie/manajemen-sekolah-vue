@@ -1,0 +1,237 @@
+<svg viewBox="0 0 400 2080" xmlns="http://www.w3.org/2000/svg" role="img" style="display:block;margin:0 auto;max-width:400px;width:100%;background:#F8FAFC;border-radius:24px;border:0.5px solid rgba(0,0,0,0.08)">
+  <title>Parent Rapor Lengkap (Full Report Card detail) - Phase 3</title>
+  <desc>Single-child published report card detail. Azure gradient hero with student name and semester chip, hero KPI strip (Rata-rata, Sikap, Kehadiran), then sequential cards for sikap, per-subject grades with knowledge/skill split, ekstrakurikuler, prestasi, kehadiran breakdown, catatan wali kelas, and a colored promotion-decision banner. Sticky bottom Cetak PDF CTA.</desc>
+  <defs>
+    <linearGradient id="azR" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#21AFE6"/>
+      <stop offset="100%" stop-color="#1A8FBE"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="400" height="244" fill="url(#azR)"/>
+  <text x="24" y="28" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.7" font-weight="500">08:14</text>
+  <g transform="translate(352,22)" fill="#FFFFFF" opacity="0.8">
+    <rect x="0" y="0" width="14" height="9" rx="2"/><rect x="16" y="2" width="10" height="5" rx="1"/>
+  </g>
+
+  <rect x="20" y="58" width="36" height="36" rx="10" fill="#FFFFFF" fill-opacity="0.18"/>
+  <path d="M37 70 l-6 6 l6 6" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="68" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.78" font-weight="500">Akademik · Rapor</text>
+  <text x="68" y="98" font-family="system-ui,sans-serif" font-size="20" fill="#FFFFFF" font-weight="700">Rapor Rania Putri</text>
+
+  <rect x="304" y="60" width="36" height="36" rx="10" fill="#FFFFFF" fill-opacity="0.18"/>
+  <g transform="translate(314,70)" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 10v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><path d="M5 7l5 5l5 -5"/><path d="M10 12V0"/>
+  </g>
+  <rect x="348" y="60" width="36" height="36" rx="10" fill="#FFFFFF" fill-opacity="0.18"/>
+  <g transform="translate(360,70)" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="6" cy="6" r="1.2"/><circle cx="6" cy="12" r="1.2"/><circle cx="6" cy="18" r="1.2"/>
+  </g>
+
+  <circle cx="31" cy="124" r="3" fill="#4ADE80"/>
+  <text x="40" y="127" font-family="system-ui,sans-serif" font-size="10.5" fill="#FFFFFF" opacity="0.78" font-weight="500">Diterbitkan · 24 Okt 2025</text>
+
+  <rect x="20" y="148" width="222" height="36" rx="12" fill="#FFFFFF" fill-opacity="0.18"/>
+  <text x="36" y="170" font-family="system-ui,sans-serif" font-size="12" fill="#FFFFFF" font-weight="600">Kelas 8B · Sem. Ganjil 2025/2026</text>
+
+  <rect x="250" y="148" width="64" height="36" rx="12" fill="#FFFFFF" fill-opacity="0.14" stroke="#FFFFFF" stroke-opacity="0.28"/>
+  <text x="282" y="170" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.86" font-weight="600" text-anchor="middle">UTS</text>
+  <rect x="320" y="148" width="64" height="36" rx="12" fill="#FFFFFF" fill-opacity="0.14" stroke="#FFFFFF" stroke-opacity="0.28"/>
+  <text x="352" y="170" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.86" font-weight="600" text-anchor="middle">UAS</text>
+
+  <rect x="16" y="208" width="368" height="92" rx="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <text x="78" y="236" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Rata-rata</text>
+  <text x="78" y="262" font-family="system-ui,sans-serif" font-size="22" fill="#0F172A" font-weight="800" text-anchor="middle">87,4</text>
+  <rect x="50" y="272" width="56" height="18" rx="9" fill="#DCFCE7"/>
+  <text x="78" y="286" font-family="system-ui,sans-serif" font-size="10" fill="#15803D" font-weight="700" text-anchor="middle">Sangat Baik</text>
+  <line x1="138" y1="228" x2="138" y2="280" stroke="#F1F5F9" stroke-width="1"/>
+
+  <text x="200" y="236" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Sikap</text>
+  <text x="200" y="262" font-family="system-ui,sans-serif" font-size="22" fill="#0F172A" font-weight="800" text-anchor="middle">B</text>
+  <rect x="172" y="272" width="56" height="18" rx="9" fill="#DBEAFE"/>
+  <text x="200" y="286" font-family="system-ui,sans-serif" font-size="10" fill="#1D4ED8" font-weight="700" text-anchor="middle">Baik</text>
+  <line x1="260" y1="228" x2="260" y2="280" stroke="#F1F5F9" stroke-width="1"/>
+
+  <text x="322" y="236" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Kehadiran</text>
+  <text x="322" y="262" font-family="system-ui,sans-serif" font-size="22" fill="#0F172A" font-weight="800" text-anchor="middle">96%</text>
+  <rect x="294" y="272" width="56" height="18" rx="9" fill="#DCFCE7"/>
+  <text x="322" y="286" font-family="system-ui,sans-serif" font-size="10" fill="#15803D" font-weight="700" text-anchor="middle">+1,4%</text>
+
+  <text x="24" y="334" font-family="system-ui,sans-serif" font-size="14" fill="#0F172A" font-weight="700">Sikap</text>
+  <text x="376" y="334" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="end">Wali kelas</text>
+
+  <rect x="16" y="346" width="368" height="146" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <g transform="translate(28,360)" fill="none" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="0" width="22" height="22" rx="6" fill="#EDE9FE" stroke="none"/>
+    <path d="M11 6v10M6 11h10"/>
+  </g>
+  <text x="60" y="368" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Spiritual</text>
+  <text x="60" y="384" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">Sangat Baik</text>
+  <text x="60" y="404" font-family="system-ui,sans-serif" font-size="11" fill="#475569" font-weight="500">Konsisten dalam beribadah dan menunjukkan sikap toleransi terhadap teman.</text>
+
+  <line x1="28" y1="424" x2="372" y2="424" stroke="#F1F5F9" stroke-width="1"/>
+
+  <g transform="translate(28,438)" fill="none" stroke="#1D4ED8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="0" width="22" height="22" rx="6" fill="#DBEAFE" stroke="none"/>
+    <path d="M11 5a3 3 0 1 1 0 6a3 3 0 0 1 0 -6zM4 19c1 -3 4 -4 7 -4s6 1 7 4"/>
+  </g>
+  <text x="60" y="446" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Sosial</text>
+  <text x="60" y="462" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">Baik</text>
+  <text x="60" y="482" font-family="system-ui,sans-serif" font-size="11" fill="#475569" font-weight="500">Aktif dalam diskusi kelompok, perlu meningkatkan kepercayaan diri di depan kelas.</text>
+
+  <text x="24" y="524" font-family="system-ui,sans-serif" font-size="14" fill="#0F172A" font-weight="700">Nilai per mata pelajaran</text>
+  <text x="376" y="524" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="end">10 mapel</text>
+
+  <rect x="16" y="536" width="368" height="118" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="552" width="40" height="40" rx="12" fill="#DCFCE7"/>
+  <text x="48" y="579" font-family="system-ui,sans-serif" font-size="20" fill="#15803D" font-weight="800" text-anchor="middle">A</text>
+  <text x="80" y="566" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">Matematika</text>
+  <text x="80" y="582" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Bu Sari · Sangat Baik</text>
+  <rect x="80" y="594" width="148" height="20" rx="6" fill="#F8FAFC"/>
+  <text x="92" y="608" font-family="system-ui,sans-serif" font-size="10" fill="#64748B" font-weight="600">Pengetahuan</text>
+  <text x="220" y="608" font-family="system-ui,sans-serif" font-size="11" fill="#15803D" font-weight="800" text-anchor="end">93</text>
+  <rect x="232" y="594" width="140" height="20" rx="6" fill="#F8FAFC"/>
+  <text x="244" y="608" font-family="system-ui,sans-serif" font-size="10" fill="#64748B" font-weight="600">Keterampilan</text>
+  <text x="364" y="608" font-family="system-ui,sans-serif" font-size="11" fill="#15803D" font-weight="800" text-anchor="end">91</text>
+  <text x="80" y="634" font-family="system-ui,sans-serif" font-size="10.5" fill="#94A3B8" font-weight="500">KKM 75 · Tuntas</text>
+  <text x="372" y="634" font-family="system-ui,sans-serif" font-size="11" fill="#1A8FBE" font-weight="700" text-anchor="end">Lihat catatan ↓</text>
+
+  <rect x="16" y="666" width="368" height="118" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="682" width="40" height="40" rx="12" fill="#DCFCE7"/>
+  <text x="48" y="709" font-family="system-ui,sans-serif" font-size="20" fill="#15803D" font-weight="800" text-anchor="middle">A</text>
+  <text x="80" y="696" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">B. Indonesia</text>
+  <text x="80" y="712" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Bu Rini · Sangat Baik</text>
+  <rect x="80" y="724" width="148" height="20" rx="6" fill="#F8FAFC"/>
+  <text x="92" y="738" font-family="system-ui,sans-serif" font-size="10" fill="#64748B" font-weight="600">Pengetahuan</text>
+  <text x="220" y="738" font-family="system-ui,sans-serif" font-size="11" fill="#15803D" font-weight="800" text-anchor="end">90</text>
+  <rect x="232" y="724" width="140" height="20" rx="6" fill="#F8FAFC"/>
+  <text x="244" y="738" font-family="system-ui,sans-serif" font-size="10" fill="#64748B" font-weight="600">Keterampilan</text>
+  <text x="364" y="738" font-family="system-ui,sans-serif" font-size="11" fill="#15803D" font-weight="800" text-anchor="end">88</text>
+  <text x="80" y="764" font-family="system-ui,sans-serif" font-size="10.5" fill="#94A3B8" font-weight="500">KKM 75 · Tuntas</text>
+
+  <rect x="16" y="796" width="368" height="118" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="812" width="40" height="40" rx="12" fill="#DBEAFE"/>
+  <text x="48" y="839" font-family="system-ui,sans-serif" font-size="20" fill="#1D4ED8" font-weight="800" text-anchor="middle">B</text>
+  <text x="80" y="826" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">IPA Terpadu</text>
+  <text x="80" y="842" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Bu Sari · Baik</text>
+  <rect x="80" y="854" width="148" height="20" rx="6" fill="#F8FAFC"/>
+  <text x="92" y="868" font-family="system-ui,sans-serif" font-size="10" fill="#64748B" font-weight="600">Pengetahuan</text>
+  <text x="220" y="868" font-family="system-ui,sans-serif" font-size="11" fill="#1D4ED8" font-weight="800" text-anchor="end">85</text>
+  <rect x="232" y="854" width="140" height="20" rx="6" fill="#F8FAFC"/>
+  <text x="244" y="868" font-family="system-ui,sans-serif" font-size="10" fill="#64748B" font-weight="600">Keterampilan</text>
+  <text x="364" y="868" font-family="system-ui,sans-serif" font-size="11" fill="#1D4ED8" font-weight="800" text-anchor="end">83</text>
+  <text x="80" y="894" font-family="system-ui,sans-serif" font-size="10.5" fill="#94A3B8" font-weight="500">KKM 75 · Tuntas</text>
+
+  <rect x="16" y="926" width="368" height="118" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="942" width="40" height="40" rx="12" fill="#FEF3C7"/>
+  <text x="48" y="969" font-family="system-ui,sans-serif" font-size="20" fill="#B45309" font-weight="800" text-anchor="middle">C</text>
+  <text x="80" y="956" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">B. Inggris</text>
+  <text x="80" y="972" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Mr. John · Cukup</text>
+  <rect x="80" y="984" width="148" height="20" rx="6" fill="#F8FAFC"/>
+  <text x="92" y="998" font-family="system-ui,sans-serif" font-size="10" fill="#64748B" font-weight="600">Pengetahuan</text>
+  <text x="220" y="998" font-family="system-ui,sans-serif" font-size="11" fill="#B45309" font-weight="800" text-anchor="end">76</text>
+  <rect x="232" y="984" width="140" height="20" rx="6" fill="#F8FAFC"/>
+  <text x="244" y="998" font-family="system-ui,sans-serif" font-size="10" fill="#64748B" font-weight="600">Keterampilan</text>
+  <text x="364" y="998" font-family="system-ui,sans-serif" font-size="11" fill="#B45309" font-weight="800" text-anchor="end">74</text>
+  <text x="80" y="1024" font-family="system-ui,sans-serif" font-size="10.5" fill="#B91C1C" font-weight="600">KKM 75 · Belum tuntas (skill)</text>
+
+  <rect x="16" y="1056" width="368" height="48" rx="14" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="1"/>
+  <g transform="translate(112,1072)" fill="none" stroke="#1A8FBE" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 8h12M2 4h12M2 12h8"/>
+  </g>
+  <text x="200" y="1085" font-family="system-ui,sans-serif" font-size="13" fill="#1A8FBE" font-weight="700" text-anchor="middle">Lihat 6 mapel lainnya →</text>
+
+  <text x="24" y="1138" font-family="system-ui,sans-serif" font-size="14" fill="#0F172A" font-weight="700">Ekstrakurikuler</text>
+  <text x="376" y="1138" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="end">3 kegiatan</text>
+
+  <rect x="16" y="1150" width="368" height="170" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="1166" width="32" height="32" rx="10" fill="#DCFCE7"/>
+  <text x="44" y="1187" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="800" text-anchor="middle">A</text>
+  <text x="72" y="1180" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">Pramuka</text>
+  <text x="72" y="1196" font-family="system-ui,sans-serif" font-size="11" fill="#475569" font-weight="500">Aktif sebagai ketua regu, mengikuti jambore tingkat kabupaten.</text>
+  <line x1="28" y1="1216" x2="372" y2="1216" stroke="#F1F5F9" stroke-width="1"/>
+
+  <rect x="28" y="1230" width="32" height="32" rx="10" fill="#DBEAFE"/>
+  <text x="44" y="1251" font-family="system-ui,sans-serif" font-size="13" fill="#1D4ED8" font-weight="800" text-anchor="middle">B</text>
+  <text x="72" y="1244" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">Karya Ilmiah Remaja</text>
+  <text x="72" y="1260" font-family="system-ui,sans-serif" font-size="11" fill="#475569" font-weight="500">Tim peneliti kapasitas paru-paru, presentasi tingkat sekolah.</text>
+  <line x1="28" y1="1280" x2="372" y2="1280" stroke="#F1F5F9" stroke-width="1"/>
+
+  <rect x="28" y="1294" width="32" height="32" rx="10" fill="#DBEAFE"/>
+  <text x="44" y="1315" font-family="system-ui,sans-serif" font-size="13" fill="#1D4ED8" font-weight="800" text-anchor="middle">B</text>
+  <text x="72" y="1308" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">Olahraga · Bola Voli</text>
+
+  <text x="24" y="1364" font-family="system-ui,sans-serif" font-size="14" fill="#0F172A" font-weight="700">Prestasi</text>
+  <text x="376" y="1364" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="end">2 prestasi</text>
+
+  <rect x="16" y="1376" width="368" height="120" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <g transform="translate(28,1392)">
+    <rect x="0" y="0" width="32" height="32" rx="10" fill="#FEF3C7"/>
+    <path d="M16 8l3 6h7l-5 4l2 7l-7 -4l-7 4l2 -7l-5 -4h7z" fill="none" stroke="#B45309" stroke-width="1.5" stroke-linejoin="round"/>
+  </g>
+  <rect x="72" y="1392" width="80" height="20" rx="10" fill="#FEF3C7"/>
+  <text x="112" y="1406" font-family="system-ui,sans-serif" font-size="10" fill="#B45309" font-weight="700" text-anchor="middle">Akademik</text>
+  <text x="72" y="1428" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">Juara 2 Olimpiade Matematika</text>
+  <text x="72" y="1444" font-family="system-ui,sans-serif" font-size="11" fill="#475569" font-weight="500">Tingkat kabupaten · September 2025</text>
+  <line x1="28" y1="1462" x2="372" y2="1462" stroke="#F1F5F9" stroke-width="1"/>
+  <text x="72" y="1482" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">Lomba Cerdas Cermat (Kelompok)</text>
+
+  <text x="24" y="1532" font-family="system-ui,sans-serif" font-size="14" fill="#0F172A" font-weight="700">Kehadiran</text>
+  <text x="376" y="1532" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="end">120 hari efektif</text>
+
+  <rect x="16" y="1544" width="368" height="100" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <text x="68" y="1572" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Hadir</text>
+  <text x="68" y="1598" font-family="system-ui,sans-serif" font-size="20" fill="#15803D" font-weight="800" text-anchor="middle">115</text>
+  <text x="68" y="1614" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">hari</text>
+  <line x1="120" y1="1564" x2="120" y2="1622" stroke="#F1F5F9" stroke-width="1"/>
+
+  <text x="166" y="1572" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Sakit</text>
+  <text x="166" y="1598" font-family="system-ui,sans-serif" font-size="20" fill="#0F172A" font-weight="800" text-anchor="middle">3</text>
+  <text x="166" y="1614" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">hari</text>
+  <line x1="218" y1="1564" x2="218" y2="1622" stroke="#F1F5F9" stroke-width="1"/>
+
+  <text x="264" y="1572" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Izin</text>
+  <text x="264" y="1598" font-family="system-ui,sans-serif" font-size="20" fill="#0F172A" font-weight="800" text-anchor="middle">2</text>
+  <text x="264" y="1614" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">hari</text>
+  <line x1="316" y1="1564" x2="316" y2="1622" stroke="#F1F5F9" stroke-width="1"/>
+
+  <text x="346" y="1572" font-family="system-ui,sans-serif" font-size="10.5" fill="#64748B" font-weight="500" text-anchor="middle">Alpa</text>
+  <text x="346" y="1598" font-family="system-ui,sans-serif" font-size="20" fill="#B91C1C" font-weight="800" text-anchor="middle">0</text>
+  <text x="346" y="1614" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">hari</text>
+
+  <text x="24" y="1676" font-family="system-ui,sans-serif" font-size="14" fill="#0F172A" font-weight="700">Catatan Wali Kelas</text>
+  <text x="376" y="1676" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="end">Bu Sari</text>
+
+  <rect x="16" y="1688" width="368" height="106" rx="14" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="1"/>
+  <rect x="20" y="1700" width="3" height="80" rx="1.5" fill="#1A8FBE"/>
+  <text x="34" y="1716" font-family="system-ui,sans-serif" font-size="12" fill="#0F172A" font-weight="500">Rania menunjukkan progres luar biasa di Matematika.</text>
+  <text x="34" y="1736" font-family="system-ui,sans-serif" font-size="12" fill="#0F172A" font-weight="500">Pertahankan ketekunannya, dan kami sarankan mengikuti</text>
+  <text x="34" y="1756" font-family="system-ui,sans-serif" font-size="12" fill="#0F172A" font-weight="500">klub bahasa untuk mendongkrak nilai B. Inggris ke depan.</text>
+  <text x="34" y="1780" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" font-style="italic">— Sari Maulani, Wali Kelas 8B</text>
+
+  <rect x="16" y="1818" width="368" height="74" rx="14" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <g transform="translate(32,1834)" fill="none" stroke="#15803D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="14" cy="14" r="14" fill="#FFFFFF"/>
+    <path d="M7 14l5 5l10 -10"/>
+  </g>
+  <text x="76" y="1846" font-family="system-ui,sans-serif" font-size="11" fill="#15803D" font-weight="700" letter-spacing="0.4">KEPUTUSAN KENAIKAN</text>
+  <text x="76" y="1868" font-family="system-ui,sans-serif" font-size="15" fill="#14532D" font-weight="800">Naik ke Kelas 9</text>
+  <text x="76" y="1886" font-family="system-ui,sans-serif" font-size="11" fill="#15803D" font-weight="500">Diumumkan resmi oleh sekolah · 24 Oktober 2025</text>
+
+  <rect x="16" y="1916" width="368" height="48" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <text x="200" y="1944" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Rapor ini hanya tampilan ringkas. Untuk dokumen resmi sekolah, unduh PDF.</text>
+
+  <rect x="0" y="1988" width="400" height="92" fill="#FFFFFF"/>
+  <line x1="0" y1="1988" x2="400" y2="1988" stroke="#E2E8F0" stroke-width="1"/>
+  <rect x="20" y="2008" width="172" height="48" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <g transform="translate(50,2020)" fill="none" stroke="#475569" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 14h20M6 10l6 -6l6 6M12 4v14"/>
+  </g>
+  <text x="116" y="2038" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700" text-anchor="middle">Bagikan</text>
+
+  <rect x="208" y="2008" width="172" height="48" rx="12" fill="#1A8FBE"/>
+  <g transform="translate(232,2020)" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="2" width="20" height="22" rx="2"/><path d="M6 10h12M6 14h12M6 18h8"/>
+  </g>
+  <text x="304" y="2038" font-family="system-ui,sans-serif" font-size="13" fill="#FFFFFF" font-weight="700" text-anchor="middle">Cetak PDF</text>
+</svg>

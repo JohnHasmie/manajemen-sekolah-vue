@@ -56,6 +56,7 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
       infoTagCount: 3,
       baseColor: getPrimaryColor().withValues(alpha: 0.15),
       highlightColor: getPrimaryColor().withValues(alpha: 0.05),
+      shrinkWrap: true,
     );
   }
 

@@ -38,6 +38,9 @@ import 'package:manajemensekolah/features/class_activity/presentation/mixins/par
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/parent_activity_tour_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/parent_activity_ui_builder_mixin.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/shell_controller.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 /// Parent's read-only view of class activities with read tracking.
 class ParentClassActivityScreen extends ConsumerStatefulWidget {
@@ -131,26 +134,32 @@ class ParentClassActivityScreenState
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
-        onRefresh: () async {
-          await forceRefresh();
-          if (mounted) setState(() => _lastSync = DateTime.now());
-        },
-        // Single outer ListView so the gradient hero scrolls with
-        // the activity list — matches the dashboard / Kehadiran
-        // hero idiom (not pinned).
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          children: [
-            _buildHeader(lang),
-            KeyedSubtree(
-              key: activityListKey,
-              child: buildActivityList(),
+      body: Column(
+        children: [
+          _buildHeader(lang),
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              onRefresh: () async {
+                await forceRefresh();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                children: [
+                  Transform.translate(
+                    offset: const Offset(0, -10),
+                    child: KeyedSubtree(
+                      key: activityListKey,
+                      child: buildActivityList(),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -159,6 +168,8 @@ class ParentClassActivityScreenState
     final children = _buildChildSummaries();
     return BrandPageHeader(
       role: 'wali',
+      showBackButton: true,
+      onBackPressed: () => AppNavigator.pop(context),
       subtitle: lang.getTranslatedText({
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',

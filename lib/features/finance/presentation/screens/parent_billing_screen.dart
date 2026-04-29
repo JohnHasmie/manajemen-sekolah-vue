@@ -32,6 +32,8 @@ import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/parent_finance_controller.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/billing_list.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_filter_sheet.dart';
+import 'package:manajemensekolah/core/shell/shell_controller.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 class ParentBillingScreen extends ConsumerStatefulWidget {
   const ParentBillingScreen({super.key});
@@ -278,26 +280,35 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
-        onRefresh: () async {
-          await ref.read(parentFinanceProvider.notifier).forceRefresh();
-          if (mounted) setState(() => _lastSync = DateTime.now());
-        },
-        // Single outer ListView so the gradient hero scrolls with
-        // the billing list — matches the dashboard / Kehadiran
-        // hero idiom (not pinned).
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          children: [
-            header,
-            BillingList(
-              key: _billingListKey,
-              languageProvider: languageProvider,
+      body: Column(
+        children: [
+          header,
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              onRefresh: () async {
+                await ref.read(parentFinanceProvider.notifier).forceRefresh();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                children: [
+                  Transform.translate(
+                    offset: const Offset(0, -10),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
+                      child: BillingList(
+                        key: _billingListKey,
+                        languageProvider: languageProvider,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

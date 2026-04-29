@@ -14,11 +14,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/mixins/report_card_data_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/mixins/report_card_ui_builder_mixin.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/mixins/parent_report_card_filter_mixin.dart';
+import 'package:manajemensekolah/core/shell/shell_controller.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 /// Parent's report card list -- shows children with semester selector.
 ///
@@ -38,7 +43,7 @@ class ParentReportCardScreen extends ConsumerStatefulWidget {
 /// `data() { return { isLoading, studentsData, selectedTermId } }`.
 /// Auto-resolves the current semester and loads student raport data.
 class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
-    with ReportCardDataMixin<ParentReportCardScreen>, ReportCardUIBuilderMixin<ParentReportCardScreen> {
+    with ReportCardDataMixin<ParentReportCardScreen>, ReportCardUIBuilderMixin<ParentReportCardScreen>, ParentReportCardFilterMixin {
   @override
   bool isLoading = true;
   @override
@@ -71,23 +76,29 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
-        onRefresh: () async {
-          await forceRefresh();
-          if (mounted) setState(() => _lastSync = DateTime.now());
-        },
-        // Single outer ListView so the gradient hero scrolls with
-        // the report-card list — matches the dashboard / Kehadiran
-        // hero idiom (not pinned).
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          children: [
-            _buildBrandHeader(lang),
-            buildContentArea(),
-          ],
-        ),
+      body: Column(
+        children: [
+          _buildBrandHeader(lang),
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              onRefresh: () async {
+                await forceRefresh();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                children: [
+                  Transform.translate(
+                    offset: const Offset(0, -10),
+                    child: buildContentArea(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -99,6 +110,8 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
 
     return BrandPageHeader(
       role: 'wali',
+      showBackButton: true,
+      onBackPressed: () => AppNavigator.pop(context),
       subtitle: lang.getTranslatedText({
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',
@@ -107,6 +120,12 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
         'en': 'Report Card',
         'id': 'E-Raport',
       }),
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: Icons.tune_rounded,
+          onTap: showFilterSheet,
+        ),
+      ],
       realtimeIndicator: BrandRealtimePill(
         isFresh: !isLoading,
         lastSync: _lastSync,
@@ -119,18 +138,11 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
               'id': 'Semester',
             }),
             value: semesterLabel,
-            onTap: _toggleSemester,
+            onTap: showFilterSheet,
             width: 172,
           ),
         ],
       ),
     );
-  }
-
-  void _toggleSemester() {
-    setState(() {
-      selectedTermId = selectedTermId == '1' ? '2' : '1';
-    });
-    loadData();
   }
 }

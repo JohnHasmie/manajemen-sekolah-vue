@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/shell_nav.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -33,10 +34,13 @@ import 'package:manajemensekolah/core/widgets/school_pill.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/screens/parent_report_card_screen.dart';
+import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
 
 // Parent role uses the Kamil Edu brand Azzure Blue. The hero gradient
 // goes from brand azure → a slightly darker shade so the gradient still
@@ -515,34 +519,72 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     );
   }
 
+  void _openReportCard() {
+    ShellNav.goTo(
+      ref,
+      role: 'wali',
+      tab: ShellTab.academic,
+      pushOnTop: ParentReportCardScreen(academicYearId: _academicYearId),
+    );
+  }
+
+  void _openClassActivity() {
+    ShellNav.goTo(
+      ref,
+      role: 'wali',
+      tab: ShellTab.academic,
+      pushOnTop: ParentClassActivityScreen(academicYearId: _academicYearId),
+    );
+  }
+
+  void _openAccount() {
+    AppNavigator.push(context, const SettingsScreen());
+  }
+
   Widget _buildModulLain() {
     return ModulLainStrip(
       title: 'Modul lain',
       totalLabel: '7 modul',
-      accentColor: _parentBrandAzure,
+      accentColor: _parentBrandAzureDeep,
       visibleItems: [
         ModulLainStripItem(
           label: 'Raport',
           icon: Icons.school_outlined,
-          onTap: () {}, // TODO: wire to report card screen
+          onTap: _openReportCard,
         ),
         ModulLainStripItem(
-          label: 'Kegiatan Kelas',
+          label: 'Kegiatan\nKelas',
           icon: Icons.event_outlined,
-          onTap: () {}, // TODO: wire to class activity screen
+          onTap: _openClassActivity,
+        ),
+        ModulLainStripItem(
+          label: 'Kehadiran',
+          icon: Icons.check_circle_outline,
+          onTap: _openAttendance,
+        ),
+      ],
+      overflowItems: [
+        ModulLainStripItem(
+          label: 'Nilai',
+          icon: Icons.grade_outlined,
+          onTap: _openGrades,
+        ),
+        ModulLainStripItem(
+          label: 'Pengumuman',
+          icon: Icons.announcement_outlined,
+          onTap: _openAnnouncements,
+        ),
+        ModulLainStripItem(
+          label: 'Tagihan',
+          icon: Icons.account_balance_wallet_outlined,
+          onTap: _openBilling,
         ),
         ModulLainStripItem(
           label: 'Akun',
           icon: Icons.account_circle_outlined,
-          onTap: () {}, // TODO: wire to account settings
-        ),
-        ModulLainStripItem(
-          label: 'Placeholder',
-          icon: Icons.more_horiz,
-          onTap: () {},
+          onTap: _openAccount,
         ),
       ],
-      overflowItems: const [],
     );
   }
 }

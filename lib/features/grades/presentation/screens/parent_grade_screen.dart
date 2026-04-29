@@ -17,12 +17,18 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_data_loading_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_detail_mixin.dart';
+import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_filter_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_read_tracking_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_tour_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_ui_mixin.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/shell_controller.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 /// Parent's read-only view of student grades.
 ///
@@ -46,6 +52,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
         ParentGradeDataLoadingMixin,
         ParentGradeTourMixin,
         ParentGradeDetailMixin,
+        ParentGradeFilterMixin,
         ParentGradeUiMixin {
   List<dynamic> _gradeList = [];
   List<dynamic> _studentList = [];
@@ -164,22 +171,29 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
-        onRefresh: () async {
-          await onRefreshRequested();
-          if (mounted) setState(() => _lastSync = DateTime.now());
-        },
-        // Single outer ListView so the gradient hero scrolls with
-        // the body — matches the dashboard / Kehadiran hero idiom.
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          children: [
-            _buildHeader(lang),
-            _buildGradesContent(lang),
-          ],
-        ),
+      body: Column(
+        children: [
+          _buildHeader(lang),
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              onRefresh: () async {
+                await onRefreshRequested();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                children: [
+                  Transform.translate(
+                    offset: const Offset(0, -10),
+                    child: _buildGradesContent(lang),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -283,6 +297,8 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
 
     return BrandPageHeader(
       role: 'wali',
+      showBackButton: true,
+      onBackPressed: () => AppNavigator.pop(context),
       subtitle: lang.getTranslatedText({
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',
@@ -291,6 +307,14 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
         'en': 'Grades',
         'id': 'Nilai',
       }),
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: Icons.tune_rounded,
+          onTap: showFilterSheet,
+          badgeCount: hasActiveFilter ? 1 : 0,
+          badgeBorderColor: ColorUtils.brandAzure,
+        ),
+      ],
       realtimeIndicator: BrandRealtimePill(
         isFresh: !isLoading,
         lastSync: _lastSync,
@@ -304,6 +328,20 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
               onSelected: onStudentChanged,
               accentColor: ColorUtils.brandAzureDeep,
             ),
+      bottomSlot: BrandFilterChipStrip(
+        chips: [
+          BrandFilterChip(
+            label: lang.getTranslatedText({
+              'en': 'Grade Type',
+              'id': 'Tipe Nilai',
+            }),
+            value: selectedGradeTypeFilter != null 
+                ? getGradeTypeLabel(selectedGradeTypeFilter!) 
+                : null,
+            onTap: showFilterSheet,
+          ),
+        ],
+      ),
     );
   }
 }

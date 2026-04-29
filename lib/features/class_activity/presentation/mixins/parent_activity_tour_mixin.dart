@@ -78,12 +78,12 @@ mixin ParentActivityTourMixin on ConsumerState<ParentClassActivityScreen> {
   List<TargetFocus> createTourTargets() {
     final List<TargetFocus> targets = [];
     final languageProvider = ref.read(languageRiverpod);
-    final state = this as dynamic;
+    final state = this as ParentClassActivityScreenState;
 
     targets.add(
       TargetFocus(
         identify: 'StudentSelector',
-        keyTarget: state._studentSelectorKey,
+        keyTarget: state.studentSelectorKey,
         alignSkip: Alignment.bottomRight,
         shape: ShapeLightFocus.RRect,
         radius: 12,
@@ -132,7 +132,7 @@ mixin ParentActivityTourMixin on ConsumerState<ParentClassActivityScreen> {
     targets.add(
       TargetFocus(
         identify: 'ActivityList',
-        keyTarget: state._activityListKey,
+        keyTarget: state.activityListKey,
         alignSkip: Alignment.topRight,
         shape: ShapeLightFocus.RRect,
         radius: 12,
