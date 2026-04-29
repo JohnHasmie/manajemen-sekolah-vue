@@ -1,0 +1,115 @@
+<svg viewBox="0 0 400 960" xmlns="http://www.w3.org/2000/svg" role="img" style="display:block;margin:0 auto;max-width:400px;width:100%;background:#F8FAFC;border-radius:24px;border:0.5px solid rgba(0,0,0,0.08)">
+  <title>Parent Akademik hub - Phase 3</title>
+  <desc>Akademik tab landing for the parent role. Phase-3 azure gradient hero with title, subtitle and child-selector chips; below the hero, four feature cards (Nilai, Raport, Kegiatan Kelas, Pengumuman) — each with a tinted icon tile, title + subtitle, and a per-section preview line carrying the most important snapshot stat (latest average, current semester status, fresh activity count, unread announcement headline). Tapping a card pushes the corresponding deep-tab screen.</desc>
+  <defs>
+    <linearGradient id="azAH" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#21AFE6"/>
+      <stop offset="100%" stop-color="#1A8FBE"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Hero -->
+  <rect x="0" y="0" width="400" height="252" fill="url(#azAH)"/>
+  <text x="24" y="28" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.7" font-weight="500">08:14</text>
+  <g transform="translate(352,22)" fill="#FFFFFF" opacity="0.8">
+    <rect x="0" y="0" width="14" height="9" rx="2"/><rect x="16" y="2" width="10" height="5" rx="1"/>
+  </g>
+  <text x="20" y="86" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="600" opacity="0.9">Untuk anak Anda</text>
+  <text x="20" y="116" font-family="system-ui,sans-serif" font-size="26" fill="#FFFFFF" font-weight="800" letter-spacing="0.1">Akademik</text>
+  <text x="20" y="138" font-family="system-ui,sans-serif" font-size="12" fill="#FFFFFF" opacity="0.85" font-weight="500">Pantau nilai, raport, kegiatan, &amp; pengumuman</text>
+
+  <text x="20" y="172" font-family="system-ui,sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="700" letter-spacing="0.6">PILIH ANAK</text>
+  <rect x="20" y="184" width="156" height="46" rx="14" fill="#FFFFFF"/>
+  <circle cx="44" cy="207" r="14" fill="#1A8FBE"/>
+  <text x="44" y="212" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="700" text-anchor="middle">RA</text>
+  <text x="64" y="204" font-family="system-ui,sans-serif" font-size="12" fill="#0F172A" font-weight="700">Rania Ahmad</text>
+  <text x="64" y="220" font-family="system-ui,sans-serif" font-size="10" fill="#475569" font-weight="500">Kelas 8B</text>
+  <rect x="184" y="184" width="156" height="46" rx="14" fill="#38FFFFFF" stroke="#FFFFFF" stroke-width="1"/>
+  <circle cx="208" cy="207" r="14" fill="#66FFFFFF"/>
+  <text x="208" y="212" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="700" text-anchor="middle">FA</text>
+  <text x="228" y="204" font-family="system-ui,sans-serif" font-size="12" fill="#FFFFFF" font-weight="700">Faiz Ahmad</text>
+  <text x="228" y="220" font-family="system-ui,sans-serif" font-size="10" fill="#FFFFFF" font-weight="500">Kelas 5A</text>
+
+  <!-- Card 1: Nilai -->
+  <rect x="16" y="276" width="368" height="92" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="32" y="294" width="56" height="56" rx="14" fill="#DCFCE7"/>
+  <g transform="translate(50,310)" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 2l2.5 5.5l6 0.5l-4.5 4l1.5 6l-5.5 -3l-5.5 3l1.5 -6l-4.5 -4l6 -0.5z"/>
+  </g>
+  <text x="104" y="304" font-family="system-ui,sans-serif" font-size="15" fill="#0F172A" font-weight="700">Nilai</text>
+  <text x="104" y="322" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Daftar penilaian per mapel</text>
+  <rect x="104" y="332" width="116" height="22" rx="11" fill="#DCFCE7"/>
+  <text x="118" y="346" font-family="system-ui,sans-serif" font-size="11" fill="#15803D" font-weight="700">Rata-rata 87,2</text>
+  <text x="220" y="346" font-family="system-ui,sans-serif" font-size="10.5" fill="#64748B" font-weight="500">· 4 menunggu</text>
+  <path d="M348 320 l8 8 l-8 8" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Card 2: Raport -->
+  <rect x="16" y="384" width="368" height="92" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="32" y="402" width="56" height="56" rx="14" fill="#DBEAFE"/>
+  <g transform="translate(48,418)" fill="none" stroke="#1D4ED8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="2" width="20" height="22" rx="2"/>
+    <path d="M6 8h12M6 13h12M6 18h8"/>
+    <circle cx="20" cy="22" r="3" fill="#DBEAFE"/>
+    <path d="M19 22 l1 1 l2 -2"/>
+  </g>
+  <text x="104" y="412" font-family="system-ui,sans-serif" font-size="15" fill="#0F172A" font-weight="700">E-Raport</text>
+  <text x="104" y="430" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Ringkasan rapor tiap semester</text>
+  <rect x="104" y="440" width="148" height="22" rx="11" fill="#DBEAFE"/>
+  <circle cx="116" cy="451" r="3" fill="#1D4ED8"/>
+  <text x="124" y="455" font-family="system-ui,sans-serif" font-size="11" fill="#1D4ED8" font-weight="700">Sem. Ganjil terbit</text>
+  <text x="252" y="455" font-family="system-ui,sans-serif" font-size="10.5" fill="#64748B" font-weight="500">18 Okt</text>
+  <path d="M348 428 l8 8 l-8 8" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Card 3: Kegiatan Kelas -->
+  <rect x="16" y="492" width="368" height="92" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="32" y="510" width="56" height="56" rx="14" fill="#FEF3C7"/>
+  <g transform="translate(48,526)" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 6h20M2 13h14M2 20h10"/>
+    <circle cx="20" cy="20" r="3.5" fill="#FEF3C7"/>
+    <path d="M20 18v2.5l1.5 1"/>
+  </g>
+  <text x="104" y="520" font-family="system-ui,sans-serif" font-size="15" fill="#0F172A" font-weight="700">Kegiatan Kelas</text>
+  <text x="104" y="538" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Tugas &amp; materi yang diberikan guru</text>
+  <rect x="104" y="548" width="84" height="22" rx="11" fill="#FEE2E2"/>
+  <circle cx="114" cy="559" r="3" fill="#DC2626"/>
+  <text x="180" y="563" font-family="system-ui,sans-serif" font-size="11" fill="#991B1B" font-weight="700" text-anchor="end">3 baru</text>
+  <text x="196" y="563" font-family="system-ui,sans-serif" font-size="10.5" fill="#64748B" font-weight="500">· 2 tugas, 1 materi</text>
+  <path d="M348 536 l8 8 l-8 8" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Card 4: Pengumuman -->
+  <rect x="16" y="600" width="368" height="116" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="32" y="618" width="56" height="56" rx="14" fill="#E0F2FE"/>
+  <g transform="translate(48,634)" fill="none" stroke="#0E7490" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 8c0 -3 3 -6 6 -6h8c3 0 6 3 6 6v6c0 3 -3 6 -6 6H10l-5 5v-5H8c-3 0 -6 -3 -6 -6z"/>
+    <circle cx="8" cy="11" r="1" fill="#0E7490"/>
+    <circle cx="13" cy="11" r="1" fill="#0E7490"/>
+    <circle cx="18" cy="11" r="1" fill="#0E7490"/>
+  </g>
+  <text x="104" y="628" font-family="system-ui,sans-serif" font-size="15" fill="#0F172A" font-weight="700">Pengumuman</text>
+  <text x="104" y="646" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Informasi resmi dari sekolah</text>
+  <rect x="104" y="660" width="60" height="20" rx="10" fill="#FEE2E2"/>
+  <text x="134" y="673" font-family="system-ui,sans-serif" font-size="10" fill="#991B1B" font-weight="700" text-anchor="middle">2 baru</text>
+  <text x="170" y="673" font-family="system-ui,sans-serif" font-size="10.5" fill="#64748B" font-weight="500">· 5 jam lalu</text>
+  <text x="32" y="700" font-family="system-ui,sans-serif" font-size="12" fill="#0F172A" font-weight="600">Libur HUT Sekolah · 30 Oktober</text>
+  <path d="M348 644 l8 8 l-8 8" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Bottom nav -->
+  <rect x="0" y="876" width="400" height="84" fill="#FFFFFF"/>
+  <line x1="0" y1="876" x2="400" y2="876" stroke="#E2E8F0" stroke-width="1"/>
+  <g transform="translate(40,894)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 12 L12 2 L22 12 v10 a2 2 0 0 1 -2 2 H4 a2 2 0 0 1 -2 -2 z"/>
+  </g>
+  <text x="50" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Beranda</text>
+  <g transform="translate(120,894)" fill="none" stroke="#1A8FBE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 6 L12 0 L24 6 L12 12 z"/><path d="M5 9 v6 c0 2 3 3 7 3 s7 -1 7 -3 v-6"/>
+  </g>
+  <text x="132" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#1A8FBE" font-weight="700" text-anchor="middle">Akademik</text>
+  <g transform="translate(200,894)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0.5" y="2" width="22" height="20" rx="3"/><path d="M0 8h23M6 0v4M17 0v4"/><path d="M7 14l3 3l6 -7"/>
+  </g>
+  <text x="212" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Kehadiran</text>
+  <g transform="translate(280,894)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="1" y="3" width="22" height="18" rx="3"/><path d="M1 9h22"/><circle cx="18" cy="15" r="2"/>
+  </g>
+  <text x="292" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Keuangan</text>
+</svg>
