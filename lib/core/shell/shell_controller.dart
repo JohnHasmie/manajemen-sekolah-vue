@@ -60,11 +60,14 @@ class ShellState {
   /// the map-read cost).
   List<ShellTab> get tabs => tabsForRole(role);
 
-  ShellState copyWith({ShellTab? activeTab}) {
+  ShellState copyWith({
+    ShellTab? activeTab,
+    Map<ShellTab, GlobalKey<NavigatorState>>? navigatorKeys,
+  }) {
     return ShellState(
       role: role,
       activeTab: activeTab ?? this.activeTab,
-      navigatorKeys: navigatorKeys,
+      navigatorKeys: navigatorKeys ?? this.navigatorKeys,
     );
   }
 }
@@ -132,6 +135,30 @@ class ShellNotifier extends Notifier<ShellState> {
       return true;
     }
     return false;
+  }
+
+  /// Mint a fresh set of `GlobalKey<NavigatorState>` for every tab and
+  /// reset to the role's first tab.
+  ///
+  /// Why this exists: when the user switches school inside the same
+  /// role, the `IndexedStack` subtree gets re-keyed by `RoleShell` via
+  /// `schoolEpochProvider`, but the per-tab Navigators are bound by
+  /// stable [GlobalKey]s. Flutter's GlobalKey reparenting then keeps
+  /// the Navigator's State (and every page underneath it) alive, so
+  /// the parent tabs still show the previous school's data.
+  ///
+  /// Generating fresh keys breaks that identity link — the new
+  /// `_TabBranch.Navigator` widgets create brand-new States, every
+  /// pushed page is dropped, and the screens' `initState` fires
+  /// against the new active school context.
+  void resetNavigatorStacks() {
+    final freshKeys = <ShellTab, GlobalKey<NavigatorState>>{
+      for (final t in state.tabs) t: GlobalKey<NavigatorState>(),
+    };
+    state = state.copyWith(
+      activeTab: state.tabs.first,
+      navigatorKeys: freshKeys,
+    );
   }
 }
 

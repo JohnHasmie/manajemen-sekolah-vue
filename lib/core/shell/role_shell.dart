@@ -28,6 +28,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/providers/school_epoch_provider.dart';
 import 'package:manajemensekolah/core/shell/shell_controller.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -89,6 +90,12 @@ class _RoleShellState extends ConsumerState<RoleShell> {
   Widget build(BuildContext context) {
     final state = ref.watch(shellProvider(widget.role));
     final notifier = ref.read(shellProvider(widget.role).notifier);
+    // Re-key the entire tab subtree on every school switch so the
+    // `IndexedStack` and its per-tab `Navigator` branches unmount +
+    // remount with the new active school context. Without this, screens
+    // like Pengumuman / Tagihan / Aktivitas keep their cached state
+    // from the previous school until a hot-restart wipes them.
+    final schoolEpoch = ref.watch(schoolEpochProvider);
 
     return PopScope(
       // We handle back ourselves so IndexedStack-state is preserved
@@ -107,16 +114,19 @@ class _RoleShellState extends ConsumerState<RoleShell> {
         // keyboard pops up inside a pushed screen, instead of pushing
         // the nav up off-screen.
         resizeToAvoidBottomInset: true,
-        body: IndexedStack(
-          index: state.activeIndex,
-          children: [
-            for (final tab in state.tabs)
-              _TabBranch(
-                key: ValueKey(tab),
-                navigatorKey: state.navigatorKeys[tab]!,
-                rootBuilder: (ctx) => widget.tabBuilder(ctx, tab),
-              ),
-          ],
+        body: KeyedSubtree(
+          key: ValueKey('shell-$schoolEpoch'),
+          child: IndexedStack(
+            index: state.activeIndex,
+            children: [
+              for (final tab in state.tabs)
+                _TabBranch(
+                  key: ValueKey(tab),
+                  navigatorKey: state.navigatorKeys[tab]!,
+                  rootBuilder: (ctx) => widget.tabBuilder(ctx, tab),
+                ),
+            ],
+          ),
         ),
         bottomNavigationBar: _RoleBottomNav(
           tabs: state.tabs,

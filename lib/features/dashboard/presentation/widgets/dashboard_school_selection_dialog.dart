@@ -8,8 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/providers/school_epoch_provider.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/shell/shell_controller.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -143,14 +145,28 @@ class _SchoolSelectionDialog extends StatelessWidget {
       await LocalCacheService.clearAll();
       if (ref.context.mounted) {
         if (newRole == currentRole) {
-          // Same role → widget won't be recreated by router.go (same
-          // const route). Call reinitialize() directly on the existing
-          // notifier to force a full data reload in-place.
+          // Same role → the `IndexedStack` subtree won't be replaced
+          // by router.go (it's the same const route). Two things have
+          // to happen for parent screens to actually refresh:
+          //   1. Reset the per-tab `GlobalKey<NavigatorState>` so the
+          //      Navigator children lose their identity and remount —
+          //      otherwise GlobalKey reparenting keeps every page
+          //      alive across the IndexedStack rebuild.
+          //   2. Bump `schoolEpochProvider` so `RoleShell`'s
+          //      `KeyedSubtree` tears down + rebuilds the IndexedStack.
+          // Both together = clean reload, no hot-restart needed.
+          ref
+              .read(shellProvider(_shellRoleKey(newRole)).notifier)
+              .resetNavigatorStacks();
+          bumpSchoolEpoch(ref);
           await ref
               .read(dashboardProvider.notifier)
               .reinitialize(newRole);
         } else {
           ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
+          // Cross-role switches also benefit from the epoch bump in
+          // case the new role's shell happens to be alive in memory.
+          bumpSchoolEpoch(ref);
           router.go('/$newRole');
         }
       }
@@ -165,6 +181,17 @@ class _SchoolSelectionDialog extends StatelessWidget {
       }
     }
   }
+}
+
+/// Maps a backend role value (`'parent'` / `'teacher'` / `'admin'`) to the
+/// `shellProvider` family key (`'wali'` / `'guru'` / `'admin'`). Mirrors the
+/// normalization done in `DashboardController._effectiveRole` — keep these
+/// two in sync, otherwise the school-switch fix will read the wrong shell
+/// notifier and the GlobalKeys won't actually be regenerated.
+String _shellRoleKey(String role) {
+  if (role == 'teacher') return 'guru';
+  if (role == 'parent') return 'wali';
+  return role;
 }
 
 class _SchoolTile extends StatelessWidget {
@@ -329,11 +356,25 @@ void showDashboardRolePickerDialog({
                     await LocalCacheService.clearAll();
                     if (ref.context.mounted) {
                       if (newRole == currentRole) {
+                        // Reset Navigator GlobalKeys + bump epoch so
+                        // the IndexedStack subtree fully rebuilds with
+                        // fresh per-tab state. (See _onSchoolTap for
+                        // the long-form rationale.)
+                        ref
+                            .read(
+                              shellProvider(_shellRoleKey(newRole))
+                                  .notifier,
+                            )
+                            .resetNavigatorStacks();
+                        bumpSchoolEpoch(ref);
                         await ref
                             .read(dashboardProvider.notifier)
                             .reinitialize(newRole);
                       } else {
-                        ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
+                        ref
+                            .read(dashboardProvider.notifier)
+                            .resetForSchoolSwitch();
+                        bumpSchoolEpoch(ref);
                         router.go('/$newRole');
                       }
                     }
