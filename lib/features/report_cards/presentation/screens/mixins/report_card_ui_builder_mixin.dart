@@ -1,3 +1,31 @@
+// Parent report card list — Phase 3 brand-aligned redesign.
+//
+// Layout (per Parent_Phase3_RingkasanRapor_Mockup.svg):
+//   ┌───────────────────────────────────────────────┐
+//   │  ⊙   Rania Putri · Kelas 8B                   │  ← caption row
+//   │      ┌─────────┬─────────┐                    │
+//   │      │ 87,4    │ 96%     │  ← KPI mini-strip
+//   │      │ Rata-rata│Kehadiran│
+//   │      └─────────┴─────────┘
+//   │      Mapel teratas:                           │  ← per-subject preview
+//   │      • Matematika    A · 93                   │
+//   │      • B. Indonesia  A · 90                   │
+//   │      • IPA Terpadu   B · 85                   │
+//   │      ───────────────────────────              │
+//   │      Lihat rapor lengkap (10 mapel) →         │  ← CTA
+//   └───────────────────────────────────────────────┘
+//
+// The card derives Rata-rata (mean of (knowledge_score+skill_score)/2
+// across raport_subjects) and Kehadiran (1 - (sick+permit+absent)/100)
+// client-side from the existing /parent/raports payload, so no backend
+// change is required. The peringkat (rank) field isn't in the parent
+// payload — we surface attendance + average instead, both of which
+// the backend already computes.
+//
+// The screen-level header (BrandPageHeader, semester chip strip) is
+// owned by ParentReportCardScreen — this mixin only owns
+// `buildContentArea()` and the card visuals so the screen stays a
+// thin shell.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -24,133 +52,17 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
   Future<void> loadData({bool useCache = true});
   Future<void> forceRefresh();
 
-  Widget buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 20,
-      ),
-      decoration: BoxDecoration(
-        gradient: getCardGradient(),
-        boxShadow: [
-          BoxShadow(
-            color: getPrimaryColor().withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          _buildBackButton(),
-          const SizedBox(width: AppSpacing.md),
-          _buildHeaderTitle(),
-          _buildHeaderMenu(),
-        ],
-      ),
-    );
-  }
+  /// Legacy header — kept for tests and any consumer that still calls
+  /// `buildHeader()` directly. New screen wires `BrandPageHeader` at
+  /// the screen level instead.
+  Widget buildHeader() => const SizedBox.shrink();
 
-  Widget _buildBackButton() {
-    return GestureDetector(
-      onTap: () => AppNavigator.pop(context),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
-        ),
-        child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-      ),
-    );
-  }
-
-  Widget _buildHeaderTitle() {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'E-Raport',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Lihat raport akademik siswa',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderMenu() {
-    return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert, color: Colors.white),
-      onSelected: (value) {
-        if (value == 'refresh') forceRefresh();
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'refresh',
-          child: Row(
-            children: [
-              Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-              const SizedBox(width: AppSpacing.sm),
-              Text(AppLocalizations.updateData.tr),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildFilterSection() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          const Text(
-            'Semester:',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: DropdownButton<String>(
-              value: selectedTermId,
-              isExpanded: true,
-              items: const [
-                DropdownMenuItem(value: '1', child: Text('Ganjil')),
-                DropdownMenuItem(value: '2', child: Text('Genap')),
-              ],
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() => selectedTermId = val);
-                  loadData();
-                }
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  /// Legacy filter section. Same retention reason as `buildHeader()`.
+  Widget buildFilterSection() => const SizedBox.shrink();
 
   Widget buildContentArea() {
     if (isLoading) {
-      return const SkeletonListLoading();
+      return const SkeletonListLoading(shrinkWrap: true);
     }
 
     if (errorMessage.isNotEmpty && studentsData.isEmpty) {
@@ -165,46 +77,47 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
   }
 
   Widget _buildErrorState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              size: 48,
-              color: Colors.orange[300],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              errorMessage,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[700]),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            ElevatedButton(
-              onPressed: loadData,
-              child: Text(AppLocalizations.tryAgain.tr),
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+      child: Column(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            size: 48,
+            color: ColorUtils.warning600.withValues(alpha: 0.6),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            errorMessage,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: ColorUtils.slate700),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ElevatedButton(
+            onPressed: loadData,
+            child: Text(AppLocalizations.tryAgain.tr),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.description_outlined, size: 60, color: Colors.grey[300]),
+          Icon(
+            Icons.description_outlined,
+            size: 60,
+            color: ColorUtils.slate300,
+          ),
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Belum ada E-Raport yang dipublikasikan\n'
             'pada semester ini.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            style: TextStyle(color: ColorUtils.slate500, fontSize: 14),
           ),
         ],
       ),
@@ -212,99 +125,489 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
   }
 
   Widget _buildStudentsList() {
-    // The parent screen now hosts a single outer ListView so the
-    // gradient hero scrolls with the body. shrinkWrap +
-    // NeverScrollable defers scrolling to the outer list. The
-    // pull-to-refresh wrapper now lives one level up.
     return ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        itemCount: studentsData.length,
-        itemBuilder: (context, index) {
-          final student = studentsData[index];
-          final reportCard = student['reportCard'];
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      itemCount: studentsData.length,
+      itemBuilder: (context, index) {
+        final student = studentsData[index];
+        final reportCard = student['reportCard'];
 
-          // Parent only sees published raports
-          if (reportCard == null || reportCard['status'] != 'published') {
-            return const SizedBox.shrink();
-          }
+        // Parent only sees published raports.
+        if (reportCard == null || reportCard['status'] != 'published') {
+          return const SizedBox.shrink();
+        }
 
-          return _buildStudentCard(student, reportCard);
-        },
-      );
+        return _buildStudentCard(student, reportCard);
+      },
+    );
   }
 
   Widget _buildStudentCard(
     Map<String, dynamic> student,
     Map<String, dynamic> reportCard,
   ) {
-    final studentName = student['student']['name'] ?? 'Siswa';
-    final studentInitial = studentName[0].toUpperCase();
-    final studentNIS = student['student']['nis'] ?? '-';
+    final studentInfo = (student['student'] as Map?) ?? const {};
+    final studentName = (studentInfo['name'] ?? 'Siswa').toString();
+    final klass =
+        (studentInfo['class_name'] ??
+                studentInfo['class'] ??
+                student['class_name'] ??
+                '')
+            .toString();
+    final initials = _initials(studentName);
+    final palette = _avatarPalette(studentName);
 
-    return Card(
-      elevation: 2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-      ),
-      margin: const EdgeInsets.only(bottom: 16),
-      child: InkWell(
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        onTap: () {
-          AppNavigator.push(
-            context,
-            ParentReportCardDetailScreen(
-              reportCardData: reportCard,
-              studentName: studentName,
-              userRole: 'wali',
-              studentData: student['student'],
+    final subjects =
+        (reportCard['raportSubjects'] ??
+                reportCard['raport_subjects'] ??
+                const [])
+            as List<dynamic>;
+    final subjectCount = subjects.length;
+    final average = _averageScore(subjects);
+    final attendance = _attendancePct(reportCard);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _openDetail(student, reportCard),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
+              border: Border.all(color: ColorUtils.slate200, width: 0.75),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              _buildStudentAvatar(studentInitial),
-              const SizedBox(width: AppSpacing.lg),
-              _buildStudentInfo(studentName, studentNIS),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
-            ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top: avatar + name/class + chevron.
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: palette.bg,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        initials,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: palette.fg,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            studentName,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: ColorUtils.slate900,
+                              height: 1.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (klass.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              klass.startsWith('Kelas')
+                                  ? klass
+                                  : 'Kelas $klass',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: ColorUtils.slate500,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCFCE7),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(10),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 11,
+                            color: const Color(0xFF15803D),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Terbit',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF15803D),
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                // KPI mini-strip: Rata-rata · Kehadiran · Mapel.
+                _kpiStrip(average, attendance, subjectCount),
+                if (subjects.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(height: 1, color: ColorUtils.slate100),
+                  const SizedBox(height: 10),
+                  Text(
+                    'MAPEL TERATAS',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: ColorUtils.slate400,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ..._topSubjectsPreview(subjects),
+                ],
+                const SizedBox(height: 12),
+                Container(height: 1, color: ColorUtils.slate100),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.description_outlined,
+                      size: 14,
+                      color: ColorUtils.brandAzureDeep,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Lihat rapor lengkap',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: ColorUtils.brandAzureDeep,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: ColorUtils.brandAzureDeep,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStudentAvatar(String initial) {
-    return CircleAvatar(
-      radius: 24,
-      backgroundColor: ColorUtils.corporateBlue600.withValues(alpha: 0.1),
-      child: Text(
-        initial,
-        style: TextStyle(
-          color: ColorUtils.corporateBlue600,
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
-        ),
+  void _openDetail(
+    Map<String, dynamic> student,
+    Map<String, dynamic> reportCard,
+  ) {
+    final studentInfo = (student['student'] as Map?) ?? const {};
+    final name = (studentInfo['name'] ?? 'Siswa').toString();
+    AppNavigator.push(
+      context,
+      ParentReportCardDetailScreen(
+        reportCardData: Map<String, dynamic>.from(reportCard),
+        studentName: name,
+        userRole: 'wali',
+        studentData: Map<String, dynamic>.from(studentInfo),
       ),
     );
   }
 
-  Widget _buildStudentInfo(String name, String nis) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _kpiStrip(double? average, double? attendance, int subjectCount) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+      ),
+      child: Row(
         children: [
-          Text(
-            name,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          Expanded(
+            child: _kpiCell(
+              label: 'Rata-rata',
+              value: average == null
+                  ? '–'
+                  : average.toStringAsFixed(1).replaceAll('.', ','),
+              accent: _averageAccent(average),
+            ),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text('NIS: $nis', style: TextStyle(color: Colors.grey[600])),
+          Container(width: 1, height: 36, color: ColorUtils.slate200),
+          Expanded(
+            child: _kpiCell(
+              label: 'Kehadiran',
+              value: attendance == null
+                  ? '–'
+                  : '${attendance.toStringAsFixed(0)}%',
+              accent: _attendanceAccent(attendance),
+            ),
+          ),
+          Container(width: 1, height: 36, color: ColorUtils.slate200),
+          Expanded(
+            child: _kpiCell(
+              label: 'Mapel',
+              value: subjectCount.toString(),
+              accent: const Color(0xFF1D4ED8),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  Widget _kpiCell({
+    required String label,
+    required String value,
+    required Color accent,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: accent,
+            height: 1.1,
+            letterSpacing: -0.3,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w500,
+            color: ColorUtils.slate500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Top 3 subjects ranked by knowledge score, presented as compact rows.
+  List<Widget> _topSubjectsPreview(List<dynamic> subjects) {
+    // Build rows with score then sort desc.
+    final rows = subjects.map((raw) {
+      final s = raw as Map;
+      final subject = (s['subject'] is Map)
+          ? (s['subject'] as Map)['name']?.toString() ?? '-'
+          : '-';
+      final score = _toDouble(
+        s['knowledge_score'] ?? s['knowledgeScore'] ?? s['skill_score'],
+      );
+      return _SubjectRow(subject: subject, score: score);
+    }).toList()..sort((a, b) => (b.score ?? 0).compareTo(a.score ?? 0));
+
+    return rows.take(3).map((row) {
+      final letter = _scoreLetter(row.score);
+      final palette = _letterPalette(letter);
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: palette.bg,
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                letter,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: palette.fg,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                row.subject,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: ColorUtils.slate900,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              row.score == null ? '–' : row.score!.toStringAsFixed(0),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: ColorUtils.slate900,
+                letterSpacing: -0.2,
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  String _initials(String name) {
+    if (name.isEmpty) return '?';
+    final parts = name
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) {
+      final p = parts.first;
+      return p.substring(0, p.length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return (parts.first.substring(0, 1) + parts[1].substring(0, 1))
+        .toUpperCase();
+  }
+
+  /// Stable per-name accent so siblings get distinguishable avatars.
+  ({Color bg, Color fg}) _avatarPalette(String name) {
+    const palettes = [
+      (bg: Color(0xFFDBEAFE), fg: Color(0xFF1D4ED8)),
+      (bg: Color(0xFFDCFCE7), fg: Color(0xFF15803D)),
+      (bg: Color(0xFFFEF3C7), fg: Color(0xFFB45309)),
+      (bg: Color(0xFFEDE9FE), fg: Color(0xFF6D28D9)),
+      (bg: Color(0xFFFCE7F3), fg: Color(0xFFBE185D)),
+    ];
+    if (name.isEmpty) return palettes.first;
+    final idx = name.codeUnits.fold<int>(0, (a, b) => a + b) % palettes.length;
+    return palettes[idx];
+  }
+
+  double? _averageScore(List<dynamic> subjects) {
+    if (subjects.isEmpty) return null;
+    var sum = 0.0;
+    var count = 0;
+    for (final raw in subjects) {
+      final s = raw as Map;
+      final k = _toDouble(s['knowledge_score'] ?? s['knowledgeScore']);
+      final sk = _toDouble(s['skill_score'] ?? s['skillScore']);
+      if (k != null && sk != null) {
+        sum += (k + sk) / 2;
+        count++;
+      } else if (k != null) {
+        sum += k;
+        count++;
+      } else if (sk != null) {
+        sum += sk;
+        count++;
+      }
+    }
+    if (count == 0) return null;
+    return sum / count;
+  }
+
+  double? _attendancePct(Map<String, dynamic> raport) {
+    final sick = _toInt(raport['attendance_sick']);
+    final permit = _toInt(raport['attendance_permit']);
+    final absent = _toInt(raport['attendance_absent']);
+    final present = _toInt(raport['attendance_present']);
+    final total = _toInt(raport['attendance_total']);
+
+    // Prefer explicit total when the backend provides it; otherwise
+    // fall back to sick+permit+absent+present (best-effort).
+    final denom =
+        total ?? ((sick ?? 0) + (permit ?? 0) + (absent ?? 0) + (present ?? 0));
+    if (denom == 0) return null;
+    final missed = (sick ?? 0) + (permit ?? 0) + (absent ?? 0);
+    return ((denom - missed) / denom) * 100;
+  }
+
+  double? _toDouble(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString());
+  }
+
+  int? _toInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse(v.toString());
+  }
+
+  String _scoreLetter(double? score) {
+    if (score == null) return '–';
+    if (score >= 90) return 'A';
+    if (score >= 80) return 'B';
+    if (score >= 70) return 'C';
+    if (score >= 60) return 'D';
+    return 'E';
+  }
+
+  ({Color bg, Color fg}) _letterPalette(String letter) {
+    switch (letter) {
+      case 'A':
+        return (bg: const Color(0xFFDCFCE7), fg: const Color(0xFF15803D));
+      case 'B':
+        return (bg: const Color(0xFFDBEAFE), fg: const Color(0xFF1D4ED8));
+      case 'C':
+        return (bg: const Color(0xFFFEF3C7), fg: const Color(0xFFB45309));
+      case 'D':
+        return (bg: const Color(0xFFFEE2E2), fg: const Color(0xFFB91C1C));
+      default:
+        return (bg: ColorUtils.slate100, fg: ColorUtils.slate500);
+    }
+  }
+
+  Color _averageAccent(double? avg) {
+    if (avg == null) return ColorUtils.slate500;
+    if (avg >= 85) return const Color(0xFF15803D);
+    if (avg >= 75) return const Color(0xFF1D4ED8);
+    if (avg >= 65) return const Color(0xFFB45309);
+    return const Color(0xFFB91C1C);
+  }
+
+  Color _attendanceAccent(double? pct) {
+    if (pct == null) return ColorUtils.slate500;
+    if (pct >= 95) return const Color(0xFF15803D);
+    if (pct >= 85) return const Color(0xFF1D4ED8);
+    if (pct >= 75) return const Color(0xFFB45309);
+    return const Color(0xFFB91C1C);
+  }
+}
+
+class _SubjectRow {
+  const _SubjectRow({required this.subject, required this.score});
+
+  final String subject;
+  final double? score;
 }
