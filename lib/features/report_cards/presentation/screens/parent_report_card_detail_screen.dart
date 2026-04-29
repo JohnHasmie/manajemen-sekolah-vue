@@ -30,7 +30,7 @@ import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
 
-class ParentReportCardDetailScreen extends StatelessWidget {
+class ParentReportCardDetailScreen extends StatefulWidget {
   final Map<String, dynamic> reportCardData;
   final String studentName;
   final Map<String, dynamic> studentData;
@@ -43,6 +43,24 @@ class ParentReportCardDetailScreen extends StatelessWidget {
     required this.studentData,
     this.userRole = 'wali',
   });
+
+  @override
+  State<ParentReportCardDetailScreen> createState() =>
+      _ParentReportCardDetailScreenState();
+}
+
+class _ParentReportCardDetailScreenState
+    extends State<ParentReportCardDetailScreen> {
+  /// Visual-only filter for the assessment phase chip row. The rapor
+  /// payload itself is already a UTS+UAS aggregate, so toggling these
+  /// chips doesn't refetch — it just nudges the screen to remind the
+  /// parent which scoring window is in view via a SnackBar.
+  String? _assessmentFilter; // null | 'uts' | 'uas'
+
+  Map<String, dynamic> get reportCardData => widget.reportCardData;
+  String get studentName => widget.studentName;
+  Map<String, dynamic> get studentData => widget.studentData;
+  String get userRole => widget.userRole;
 
   // ---- Derived getters --------------------------------------------------
 
@@ -103,89 +121,89 @@ class ParentReportCardDetailScreen extends StatelessWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
               children: [
+                // KPI strip sits below the header with a small lift so
+                // it gives a card-on-gradient feel without being clipped
+                // by the ListView viewport.
                 Transform.translate(
-                  offset: const Offset(0, -36),
+                  offset: const Offset(0, -14),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _KpiStrip(reportCardData: reportCardData),
                   ),
                 ),
-                Transform.translate(
-                  offset: const Offset(0, -20),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _SectionHeader(title: 'Sikap', trailing: 'Wali kelas'),
-                        const SizedBox(height: 8),
-                        _SikapCard(reportCardData: reportCardData),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _SectionHeader(title: 'Sikap', trailing: 'Wali kelas'),
+                      const SizedBox(height: 8),
+                      _SikapCard(reportCardData: reportCardData),
+                      const SizedBox(height: 18),
+                      _SectionHeader(
+                        title: 'Nilai per mata pelajaran',
+                        trailing: '${_subjects.length} mapel',
+                      ),
+                      const SizedBox(height: 8),
+                      ..._subjects.map(
+                        (s) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _SubjectCard(subject: s as Map),
+                        ),
+                      ),
+                      if (_subjects.isEmpty)
+                        _EmptyHint(label: 'Belum ada nilai mata pelajaran.'),
+                      if (_extras.isNotEmpty) ...[
                         const SizedBox(height: 18),
                         _SectionHeader(
-                          title: 'Nilai per mata pelajaran',
-                          trailing: '${_subjects.length} mapel',
+                          title: 'Ekstrakurikuler',
+                          trailing: '${_extras.length} kegiatan',
                         ),
                         const SizedBox(height: 8),
-                        ..._subjects.map(
-                          (s) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: _SubjectCard(subject: s as Map),
-                          ),
-                        ),
-                        if (_subjects.isEmpty)
-                          _EmptyHint(label: 'Belum ada nilai mata pelajaran.'),
-                        if (_extras.isNotEmpty) ...[
-                          const SizedBox(height: 18),
-                          _SectionHeader(
-                            title: 'Ekstrakurikuler',
-                            trailing: '${_extras.length} kegiatan',
-                          ),
-                          const SizedBox(height: 8),
-                          _ExtrasCard(extras: _extras),
-                        ],
-                        if (_achievements.isNotEmpty) ...[
-                          const SizedBox(height: 18),
-                          _SectionHeader(
-                            title: 'Prestasi',
-                            trailing: '${_achievements.length} prestasi',
-                          ),
-                          const SizedBox(height: 8),
-                          _AchievementsCard(achievements: _achievements),
-                        ],
-                        const SizedBox(height: 18),
-                        _SectionHeader(
-                          title: 'Kehadiran',
-                          trailing: _attendanceTotalLabel(),
-                        ),
-                        const SizedBox(height: 8),
-                        _AttendanceCard(reportCardData: reportCardData),
-                        if ((reportCardData['homeroom_notes'] ?? '')
-                            .toString()
-                            .trim()
-                            .isNotEmpty) ...[
-                          const SizedBox(height: 18),
-                          _SectionHeader(
-                            title: 'Catatan Wali Kelas',
-                            trailing: _homeroomTeacherName(),
-                          ),
-                          const SizedBox(height: 8),
-                          _NotesCard(
-                            notes: reportCardData['homeroom_notes']
-                                .toString()
-                                .trim(),
-                            teacher: _homeroomTeacherName(),
-                          ),
-                        ],
-                        const SizedBox(height: 18),
-                        if (_isGenap)
-                          _DecisionBanner(reportCardData: reportCardData)
-                        else
-                          const _GanjilDecisionNote(),
-                        const SizedBox(height: 12),
-                        _ExportNote(),
-                        const SizedBox(height: 110),
+                        _ExtrasCard(extras: _extras),
                       ],
-                    ),
+                      if (_achievements.isNotEmpty) ...[
+                        const SizedBox(height: 18),
+                        _SectionHeader(
+                          title: 'Prestasi',
+                          trailing: '${_achievements.length} prestasi',
+                        ),
+                        const SizedBox(height: 8),
+                        _AchievementsCard(achievements: _achievements),
+                      ],
+                      const SizedBox(height: 18),
+                      _SectionHeader(
+                        title: 'Kehadiran',
+                        trailing: _attendanceTotalLabel(),
+                      ),
+                      const SizedBox(height: 8),
+                      _AttendanceCard(reportCardData: reportCardData),
+                      if ((reportCardData['homeroom_notes'] ?? '')
+                          .toString()
+                          .trim()
+                          .isNotEmpty) ...[
+                        const SizedBox(height: 18),
+                        _SectionHeader(
+                          title: 'Catatan Wali Kelas',
+                          trailing: _homeroomTeacherName(),
+                        ),
+                        const SizedBox(height: 8),
+                        _NotesCard(
+                          notes: reportCardData['homeroom_notes']
+                              .toString()
+                              .trim(),
+                          teacher: _homeroomTeacherName(),
+                        ),
+                      ],
+                      const SizedBox(height: 18),
+                      if (_isGenap)
+                        _DecisionBanner(reportCardData: reportCardData)
+                      else
+                        const _GanjilDecisionNote(),
+                      const SizedBox(height: 12),
+                      _ExportNote(),
+                      const SizedBox(height: 110),
+                    ],
                   ),
                 ),
               ],
@@ -224,29 +242,122 @@ class ParentReportCardDetailScreen extends StatelessWidget {
       bottomSlot: Row(
         children: [
           Expanded(
-            child: Container(
-              height: 36,
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: const BorderRadius.all(Radius.circular(12)),
-              ),
-              child: Text(
-                _className.isEmpty
-                    ? _semesterLabel
-                    : 'Kelas $_className · $_semesterLabel',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+            child: _HeroChip(
+              label: _className.isEmpty
+                  ? _semesterLabel
+                  : 'Kelas $_className · $_semesterLabel',
+              filled: true,
+              onTap: () => _showSemesterSheet(context),
+              trailingIcon: Icons.keyboard_arrow_down_rounded,
             ),
           ),
+          const SizedBox(width: 6),
+          _HeroChip(
+            label: 'UTS',
+            filled: false,
+            active: _assessmentFilter == 'uts',
+            onTap: () => _toggleAssessment('uts'),
+            width: 60,
+          ),
+          const SizedBox(width: 6),
+          _HeroChip(
+            label: 'UAS',
+            filled: false,
+            active: _assessmentFilter == 'uas',
+            onTap: () => _toggleAssessment('uas'),
+            width: 60,
+          ),
         ],
+      ),
+    );
+  }
+
+  void _toggleAssessment(String which) {
+    setState(() {
+      _assessmentFilter = _assessmentFilter == which ? null : which;
+    });
+    final label = which == 'uts' ? 'UTS' : 'UAS';
+    SnackBarUtils.showInfo(
+      context,
+      'Rapor ini sudah merangkum capaian UTS + UAS. '
+      'Untuk skor per ujian $label, buka Buku Nilai.',
+    );
+  }
+
+  void _showSemesterSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate200,
+                    borderRadius: const BorderRadius.all(Radius.circular(2)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Pilih semester',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: ColorUtils.slate900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Untuk membuka rapor semester lain, kembali ke daftar '
+                'E-Raport dan pilih semester pada filter di kepala halaman.',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: ColorUtils.slate500,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(sheetCtx);
+                    AppNavigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorUtils.brandAzureDeep,
+                    elevation: 0,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                  ),
+                  child: const Text(
+                    'Kembali ke daftar E-Raport',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -313,6 +424,83 @@ class ParentReportCardDetailScreen extends StatelessWidget {
     SnackBarUtils.showInfo(
       context,
       'Bagikan rapor — fitur ini akan tersedia setelah PDF tersimpan.',
+    );
+  }
+}
+
+// =====================================================================
+// Hero chip — used in the BrandPageHeader bottomSlot
+// =====================================================================
+
+/// Translucent white chip rendered on the brand gradient. The
+/// "filled" variant sits at 18% alpha (used for the semester chip);
+/// the unfilled variant uses 14% bg + dashed white border (used for
+/// UTS / UAS toggle chips). The active state flips the fill so the
+/// chip reads as selected without going opaque.
+class _HeroChip extends StatelessWidget {
+  const _HeroChip({
+    required this.label,
+    required this.onTap,
+    this.filled = false,
+    this.active = false,
+    this.width,
+    this.trailingIcon,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final bool filled;
+  final bool active;
+  final double? width;
+  final IconData? trailingIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    final fillAlpha = filled ? 0.22 : (active ? 0.32 : 0.14);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        child: Container(
+          height: 36,
+          width: width,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: fillAlpha),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
+            border: filled
+                ? null
+                : Border.all(
+                    color: Colors.white.withValues(alpha: active ? 0.6 : 0.32),
+                    width: 1,
+                  ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (trailingIcon != null) ...[
+                const SizedBox(width: 4),
+                Icon(trailingIcon, size: 16, color: Colors.white),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
