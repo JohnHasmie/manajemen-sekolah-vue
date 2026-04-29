@@ -146,7 +146,6 @@ class ParentClassActivityScreenState
                 if (mounted) setState(() => _lastSync = DateTime.now());
               },
               child: ListView(
-                clipBehavior: Clip.none,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [

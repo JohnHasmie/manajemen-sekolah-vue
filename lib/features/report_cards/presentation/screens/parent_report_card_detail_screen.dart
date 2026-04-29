@@ -118,16 +118,12 @@ class _ParentReportCardDetailScreenState
           _buildHeader(context),
           Expanded(
             child: ListView(
-              clipBehavior: Clip.none,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
               children: [
-                Transform.translate(
-                  offset: const Offset(0, -14),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _KpiStrip(reportCardData: reportCardData),
-                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _KpiStrip(reportCardData: reportCardData),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -228,6 +224,7 @@ class _ParentReportCardDetailScreenState
     final published = _publishedAt;
     return BrandPageHeader(
       role: userRole,
+      kpiOverlayHeight: 40,
       showBackButton: true,
       onBackPressed: () => AppNavigator.pop(context),
       subtitle: 'Akademik · Rapor',

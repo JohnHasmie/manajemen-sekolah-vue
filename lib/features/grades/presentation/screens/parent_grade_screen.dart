@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/mixins/pagination_mixin.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
@@ -183,16 +184,10 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
                 if (mounted) setState(() => _lastSync = DateTime.now());
               },
               child: ListView(
-                clipBehavior: Clip.none,
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(top: 0, bottom: 24),
+                padding: const EdgeInsets.only(bottom: 24),
                 children: [
-                  // Negative margin pulls KPI into the header's
-                  // rounded bottom area for the overlap effect.
-                  Transform.translate(
-                    offset: const Offset(0, -14),
-                    child: _buildGradesContent(lang),
-                  ),
+                  _buildGradesContent(lang),
                 ],
               ),
             ),
@@ -251,18 +246,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-          child: _GradeKpiStrip(
-            count: _gradeList.length,
-            scored: scored,
-            pending: pending,
-            avg: avg,
-            minScore: minScore,
-            maxScore: maxScore,
-            lang: lang,
-          ),
-        ),
+        _buildKpiStrip(lang, scored, pending, avg, minScore, maxScore),
         for (final entry in groups.entries) ...[
           _GradeSubjectHeader(
             subject: entry.key,
@@ -293,6 +277,63 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
     return scores.reduce((a, b) => a + b) / scores.length;
   }
 
+  Widget _buildKpiStrip(
+    LanguageProvider lang,
+    int scored,
+    int pending,
+    double avg,
+    double minScore,
+    double maxScore,
+  ) {
+    String fmtScore(double v) {
+      if (v == v.truncateToDouble()) return v.toStringAsFixed(0);
+      return v.toStringAsFixed(1).replaceAll('.', ',');
+    }
+
+    String avgLabel() {
+      if (avg >= 85) return 'Sangat Baik';
+      if (avg >= 75) return 'Baik';
+      if (avg >= 65) return 'Cukup';
+      return 'Perlu perbaikan';
+    }
+
+    Color avgColor() {
+      if (avg >= 85) return const Color(0xFF15803D);
+      if (avg >= 75) return const Color(0xFF1D4ED8);
+      if (avg >= 65) return const Color(0xFFB45309);
+      return const Color(0xFF991B1B);
+    }
+
+    return BrandKpiStrip(
+      columns: [
+        BrandKpiColumn(
+          label: lang.getTranslatedText({
+            'en': 'Assessments',
+            'id': 'Penilaian',
+          }),
+          value: '${_gradeList.length}',
+          sub: '$scored sudah · $pending menunggu',
+        ),
+        BrandKpiColumn(
+          label: lang.getTranslatedText({
+            'en': 'Average',
+            'id': 'Rata-rata',
+          }),
+          value: fmtScore(avg),
+          badge: avgLabel(),
+          badgeColor: avgColor(),
+        ),
+        BrandKpiColumn(
+          label: lang.getTranslatedText({
+            'en': 'Range',
+            'id': 'Rentang',
+          }),
+          value: '${fmtScore(minScore)} — ${fmtScore(maxScore)}',
+        ),
+      ],
+    );
+  }
+
   Widget _buildHeader(LanguageProvider lang) {
     final summaries = _studentList
         .map<ChildSummary>((raw) {
@@ -307,6 +348,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
 
     return BrandPageHeader(
       role: 'wali',
+      kpiOverlayHeight: BrandKpiStrip.defaultOverlap,
       showBackButton: true,
       onBackPressed: () => AppNavigator.pop(context),
       subtitle: lang.getTranslatedText({
@@ -356,171 +398,6 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
 // ===========================================================================
 // Body widgets per Parent_Phase3_Nilai_Mockup.svg
 // ===========================================================================
-
-/// 3-column KPI strip rendered above the grouped subject sections.
-/// Mirrors the mockup's "Penilaian | Rata-rata | Rentang" card.
-class _GradeKpiStrip extends StatelessWidget {
-  final int count;
-  final int scored;
-  final int pending;
-  final double avg;
-  final double minScore;
-  final double maxScore;
-  final LanguageProvider lang;
-
-  const _GradeKpiStrip({
-    required this.count,
-    required this.scored,
-    required this.pending,
-    required this.avg,
-    required this.minScore,
-    required this.maxScore,
-    required this.lang,
-  });
-
-  String _avgLabel() {
-    if (avg >= 85)
-      return lang.getTranslatedText({'en': 'Excellent', 'id': 'Sangat Baik'});
-    if (avg >= 75) return lang.getTranslatedText({'en': 'Good', 'id': 'Baik'});
-    if (avg >= 65)
-      return lang.getTranslatedText({'en': 'Adequate', 'id': 'Cukup'});
-    return lang.getTranslatedText({
-      'en': 'Needs work',
-      'id': 'Perlu perbaikan',
-    });
-  }
-
-  Color _avgPillBg() {
-    if (avg >= 85) return const Color(0xFFDCFCE7); // green
-    if (avg >= 75) return const Color(0xFFDBEAFE); // blue
-    if (avg >= 65) return const Color(0xFFFEF3C7); // amber
-    return const Color(0xFFFEE2E2); // red
-  }
-
-  Color _avgPillFg() {
-    if (avg >= 85) return const Color(0xFF15803D);
-    if (avg >= 75) return const Color(0xFF1D4ED8);
-    if (avg >= 65) return const Color(0xFFB45309);
-    return const Color(0xFF991B1B);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final fmt = (double v) {
-      if (v == v.truncateToDouble()) return v.toStringAsFixed(0);
-      return v.toStringAsFixed(1).replaceAll('.', ',');
-    };
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: ColorUtils.slate200, width: 0.75),
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: _kpiColumn(
-              label: lang.getTranslatedText({
-                'en': 'Assessments',
-                'id': 'Penilaian',
-              }),
-              value: '$count',
-              caption: lang.getTranslatedText({
-                'en': '$scored scored · $pending pending',
-                'id': '$scored sudah · $pending menunggu',
-              }),
-            ),
-          ),
-          Container(width: 1, height: 56, color: const Color(0xFFF1F5F9)),
-          Expanded(
-            child: _kpiColumn(
-              label: lang.getTranslatedText({
-                'en': 'Average',
-                'id': 'Rata-rata',
-              }),
-              value: fmt(avg),
-              pill: _avgLabel(),
-              pillBg: _avgPillBg(),
-              pillFg: _avgPillFg(),
-            ),
-          ),
-          Container(width: 1, height: 56, color: const Color(0xFFF1F5F9)),
-          Expanded(
-            child: _kpiColumn(
-              label: lang.getTranslatedText({'en': 'Range', 'id': 'Rentang'}),
-              value: '${fmt(minScore)} — ${fmt(maxScore)}',
-              valueSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _kpiColumn({
-    required String label,
-    required String value,
-    String? caption,
-    String? pill,
-    Color? pillBg,
-    Color? pillFg,
-    double valueSize = 22,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: ColorUtils.slate600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: valueSize,
-            fontWeight: FontWeight.w800,
-            color: ColorUtils.slate900,
-            height: 1.0,
-          ),
-        ),
-        const SizedBox(height: 6),
-        if (pill != null && pillBg != null && pillFg != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: pillBg,
-              borderRadius: const BorderRadius.all(Radius.circular(9)),
-            ),
-            child: Text(
-              pill,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: pillFg,
-              ),
-            ),
-          )
-        else if (caption != null)
-          Text(
-            caption,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: ColorUtils.slate500,
-            ),
-          ),
-      ],
-    );
-  }
-}
 
 /// Per-subject section header — subject name + average pill on the
 /// right ('A · 91' style). Renders above each subject's grade rows.

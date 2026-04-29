@@ -141,12 +141,16 @@ class _SchoolSelectionDialog extends StatelessWidget {
 
       final newRole = result['user']?['role']?.toString() ?? currentRole;
       await LocalCacheService.clearAll();
-      // Reset so the next dashboard page triggers a fresh initialize
-      ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
       if (ref.context.mounted) {
         if (newRole == currentRole) {
-          ref.invalidate(dashboardProvider);
+          // Same role → widget won't be recreated by router.go (same
+          // const route). Call reinitialize() directly on the existing
+          // notifier to force a full data reload in-place.
+          await ref
+              .read(dashboardProvider.notifier)
+              .reinitialize(newRole);
         } else {
+          ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
           router.go('/$newRole');
         }
       }
@@ -323,11 +327,13 @@ void showDashboardRolePickerDialog({
                     if (!ref.context.mounted) return;
                     final newRole = result['user']?['role']?.toString() ?? role;
                     await LocalCacheService.clearAll();
-                    ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
                     if (ref.context.mounted) {
                       if (newRole == currentRole) {
-                        ref.invalidate(dashboardProvider);
+                        await ref
+                            .read(dashboardProvider.notifier)
+                            .reinitialize(newRole);
                       } else {
+                        ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
                         router.go('/$newRole');
                       }
                     }

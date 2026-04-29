@@ -151,16 +151,10 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
                 if (mounted) setState(() => _lastSync = DateTime.now());
               },
               child: ListView(
-                clipBehavior: Clip.none,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
-                  Transform.translate(
-                    offset: const Offset(0, -14),
-                    child: buildContentArea(
-                      filteredData: _filteredStudents,
-                    ),
-                  ),
+                  buildContentArea(filteredData: _filteredStudents),
                 ],
               ),
             ),
@@ -190,6 +184,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
 
     return BrandPageHeader(
       role: 'wali',
+      kpiOverlayHeight: 40,
       showBackButton: true,
       onBackPressed: () => AppNavigator.pop(context),
       subtitle: lang.getTranslatedText({

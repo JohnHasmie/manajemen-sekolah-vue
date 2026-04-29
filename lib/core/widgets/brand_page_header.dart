@@ -98,6 +98,15 @@ class BrandPageHeader extends StatelessWidget {
   /// `AppNavigator.canPop(context)`.
   final bool? showBackButton;
 
+  /// Extra bottom padding inside the gradient to reserve space for a
+  /// KPI overlay card. The body's scroll view should start with a
+  /// negative top margin (e.g. `padding: EdgeInsets.only(top: 0)` +
+  /// the KPI as the first child) so the KPI sits ON this extended
+  /// gradient area, creating the overlap effect.
+  ///
+  /// When 0 (default), no extra space is added.
+  final double kpiOverlayHeight;
+
   const BrandPageHeader({
     super.key,
     required this.role,
@@ -109,6 +118,7 @@ class BrandPageHeader extends StatelessWidget {
     this.childSelector,
     this.bottomSlot,
     this.showBackButton,
+    this.kpiOverlayHeight = 0,
   });
 
   @override
@@ -138,7 +148,7 @@ class BrandPageHeader extends StatelessWidget {
         AppSpacing.md,
         statusBarHeight + AppSpacing.md,
         AppSpacing.md,
-        AppSpacing.lg,
+        AppSpacing.lg + kpiOverlayHeight,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -180,7 +180,6 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
                 if (mounted) setState(() => _lastSync = DateTime.now());
               },
               child: ListView(
-                clipBehavior: Clip.none,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(bottom: 24),
                 children: _buildScrollChildren(lang),
@@ -194,14 +193,11 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   List<Widget> _buildScrollChildren(LanguageProvider lang) {
     return [
-      Transform.translate(
-        offset: const Offset(0, -14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: KeyedSubtree(
-            key: _monthlySummaryKey,
-            child: _buildKpiCard(lang),
-          ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: KeyedSubtree(
+          key: _monthlySummaryKey,
+          child: _buildKpiCard(lang),
         ),
       ),
       if (isLoading)
@@ -289,6 +285,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     final children = _buildChildSummaries();
     return BrandPageHeader(
       role: 'wali',
+      kpiOverlayHeight: 40,
       subtitle: lang.getTranslatedText({
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',
