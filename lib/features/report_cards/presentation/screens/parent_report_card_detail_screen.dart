@@ -120,15 +120,9 @@ class _ParentReportCardDetailScreenState
           SliverToBoxAdapter(
             child: Column(
               children: [
-                // KPI strip sits below the header with a small lift so
-                // it gives a card-on-gradient feel without being clipped
-                // by the ListView viewport.
-                Transform.translate(
-                  offset: const Offset(0, -14),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _KpiStrip(reportCardData: reportCardData),
-                  ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: _KpiStrip(reportCardData: reportCardData),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),

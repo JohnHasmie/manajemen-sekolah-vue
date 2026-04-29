@@ -189,20 +189,16 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // KPI strip — white card on slate background, lifted up so it
-          // visually overlaps the gradient header.
-          Transform.translate(
-            offset: const Offset(0, -14),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.all(Radius.circular(16)),
-                border: Border.all(color: ColorUtils.slate200, width: 0.75),
-                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-              ),
-              child: _kpiStrip(average, attendance, subjectCount),
+          // KPI strip
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
+              border: Border.all(color: ColorUtils.slate200, width: 0.75),
+              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
+            child: _kpiStrip(average, attendance, subjectCount),
           ),
           // Section header
           Padding(

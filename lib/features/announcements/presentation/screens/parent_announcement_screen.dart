@@ -89,10 +89,7 @@ class ParentAnnouncementScreenState
             slivers: [
               SliverToBoxAdapter(child: buildHeader(languageProvider)),
               SliverToBoxAdapter(
-                child: Transform.translate(
-                  offset: const Offset(0, -10),
-                  child: buildContent(languageProvider),
-                ),
+                child: buildContent(languageProvider),
               ),
               const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
             ],

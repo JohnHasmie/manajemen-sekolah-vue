@@ -145,12 +145,9 @@ class ParentClassActivityScreenState
           slivers: [
             SliverToBoxAdapter(child: _buildHeader(lang)),
             SliverToBoxAdapter(
-              child: Transform.translate(
-                offset: const Offset(0, -10),
-                child: KeyedSubtree(
-                  key: activityListKey,
-                  child: buildActivityList(),
-                ),
+              child: KeyedSubtree(
+                key: activityListKey,
+                child: buildActivityList(),
               ),
             ),
             const SliverPadding(padding: EdgeInsets.only(bottom: 24)),

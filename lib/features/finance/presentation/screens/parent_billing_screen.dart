@@ -278,18 +278,15 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
           slivers: [
             SliverToBoxAdapter(child: header),
             SliverToBoxAdapter(
-              child: Transform.translate(
-                offset: const Offset(0, -10),
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    bottom: 0,
-                  ),
-                  child: BillingList(
-                    key: _billingListKey,
-                    languageProvider: languageProvider,
-                  ),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  bottom: 0,
+                ),
+                child: BillingList(
+                  key: _billingListKey,
+                  languageProvider: languageProvider,
                 ),
               ),
             ),

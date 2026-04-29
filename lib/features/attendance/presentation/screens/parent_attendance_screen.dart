@@ -189,14 +189,11 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   List<Widget> _buildScrollChildren(LanguageProvider lang) {
     return [
-      Transform.translate(
-        offset: const Offset(0, -10),
-        child: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
-          child: KeyedSubtree(
-            key: _monthlySummaryKey,
-            child: _buildKpiCard(lang),
-          ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: KeyedSubtree(
+          key: _monthlySummaryKey,
+          child: _buildKpiCard(lang),
         ),
       ),
       if (isLoading)

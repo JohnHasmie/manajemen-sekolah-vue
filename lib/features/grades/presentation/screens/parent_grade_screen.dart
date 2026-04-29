@@ -182,10 +182,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
           slivers: [
             SliverToBoxAdapter(child: _buildHeader(lang)),
             SliverToBoxAdapter(
-              child: Transform.translate(
-                offset: const Offset(0, -10),
-                child: _buildGradesContent(lang),
-              ),
+              child: _buildGradesContent(lang),
             ),
             const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
           ],
