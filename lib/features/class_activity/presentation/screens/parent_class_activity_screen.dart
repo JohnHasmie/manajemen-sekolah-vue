@@ -134,32 +134,28 @@ class ParentClassActivityScreenState
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHeader(lang),
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              onRefresh: () async {
-                await forceRefresh();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                children: [
-                  Transform.translate(
-                    offset: const Offset(0, -10),
-                    child: KeyedSubtree(
-                      key: activityListKey,
-                      child: buildActivityList(),
-                    ),
-                  ),
-                ],
+      body: RefreshIndicator(
+        color: ColorUtils.brandAzureDeep,
+        onRefresh: () async {
+          await forceRefresh();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader(lang)),
+            SliverToBoxAdapter(
+              child: Transform.translate(
+                offset: const Offset(0, -10),
+                child: KeyedSubtree(
+                  key: activityListKey,
+                  child: buildActivityList(),
+                ),
               ),
             ),
-          ),
-        ],
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+          ],
+        ),
       ),
     );
   }
@@ -209,10 +205,7 @@ class ParentClassActivityScreenState
       bottomSlot: BrandFilterChipStrip(
         chips: [
           BrandFilterChip(
-            label: lang.getTranslatedText({
-              'en': 'Type',
-              'id': 'Jenis',
-            }),
+            label: lang.getTranslatedText({'en': 'Type', 'id': 'Jenis'}),
             value: _typeChipValue(lang),
             onTap: () => _showFilterSheet(lang),
             width: 172,
@@ -303,9 +296,7 @@ class ParentClassActivityScreenState
       return ChildSummary(
         id: model.id,
         shortName: model.name.isEmpty ? '?' : model.name,
-        klass: model.className.isEmpty
-            ? '-'
-            : 'Kelas ${model.className}',
+        klass: model.className.isEmpty ? '-' : 'Kelas ${model.className}',
       );
     }).toList();
   }

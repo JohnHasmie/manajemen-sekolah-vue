@@ -171,29 +171,25 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHeader(lang),
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              onRefresh: () async {
-                await onRefreshRequested();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                children: [
-                  Transform.translate(
-                    offset: const Offset(0, -10),
-                    child: _buildGradesContent(lang),
-                  ),
-                ],
+      body: RefreshIndicator(
+        color: ColorUtils.brandAzureDeep,
+        onRefresh: () async {
+          await onRefreshRequested();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader(lang)),
+            SliverToBoxAdapter(
+              child: Transform.translate(
+                offset: const Offset(0, -10),
+                child: _buildGradesContent(lang),
               ),
             ),
-          ),
-        ],
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+          ],
+        ),
       ),
     );
   }
@@ -224,17 +220,22 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
     final avg = scores.isEmpty
         ? 0.0
         : scores.reduce((a, b) => a + b) / scores.length;
-    final minScore = scores.isEmpty ? 0.0 : scores.reduce((a, b) => a < b ? a : b);
-    final maxScore = scores.isEmpty ? 0.0 : scores.reduce((a, b) => a > b ? a : b);
+    final minScore = scores.isEmpty
+        ? 0.0
+        : scores.reduce((a, b) => a < b ? a : b);
+    final maxScore = scores.isEmpty
+        ? 0.0
+        : scores.reduce((a, b) => a > b ? a : b);
 
     // Group grades by subject preserving insertion order.
     final groups = <String, List<dynamic>>{};
     for (final g in _gradeList) {
       final m = g as Map;
-      final subject = (m['subject_name'] ??
-              m['mata_pelajaran'] ??
-              AppLocalizations.subject.tr)
-          .toString();
+      final subject =
+          (m['subject_name'] ??
+                  m['mata_pelajaran'] ??
+                  AppLocalizations.subject.tr)
+              .toString();
       groups.putIfAbsent(subject, () => <dynamic>[]).add(g);
     }
 
@@ -263,11 +264,12 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
           // subject's grades through `buildGradeList()` would mean
           // overriding the gradeList field temporarily — too fragile.
           // Inline a lighter card row instead.
-          for (final g in entry.value) _GradeCardRow(
-            grade: g as Map<String, dynamic>,
-            onTap: () => showGradeDetail(g),
-            onVisible: () => onItemVisible(g),
-          ),
+          for (final g in entry.value)
+            _GradeCardRow(
+              grade: g as Map<String, dynamic>,
+              onTap: () => showGradeDetail(g),
+              onVisible: () => onItemVisible(g),
+            ),
         ],
         const SizedBox(height: 24),
       ],
@@ -284,16 +286,16 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
   }
 
   Widget _buildHeader(LanguageProvider lang) {
-    final summaries = _studentList.map<ChildSummary>((raw) {
-      final model = Student.fromJson(raw as Map<String, dynamic>);
-      return ChildSummary(
-        id: model.id,
-        shortName: model.name.isEmpty ? '?' : model.name,
-        klass: model.className.isEmpty
-            ? '-'
-            : 'Kelas ${model.className}',
-      );
-    }).toList(growable: false);
+    final summaries = _studentList
+        .map<ChildSummary>((raw) {
+          final model = Student.fromJson(raw as Map<String, dynamic>);
+          return ChildSummary(
+            id: model.id,
+            shortName: model.name.isEmpty ? '?' : model.name,
+            klass: model.className.isEmpty ? '-' : 'Kelas ${model.className}',
+          );
+        })
+        .toList(growable: false);
 
     return BrandPageHeader(
       role: 'wali',
@@ -303,10 +305,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',
       }),
-      title: lang.getTranslatedText({
-        'en': 'Grades',
-        'id': 'Nilai',
-      }),
+      title: lang.getTranslatedText({'en': 'Grades', 'id': 'Nilai'}),
       actionIcons: [
         BrandHeaderIconButton(
           icon: Icons.tune_rounded,
@@ -335,8 +334,8 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
               'en': 'Grade Type',
               'id': 'Tipe Nilai',
             }),
-            value: selectedGradeTypeFilter != null 
-                ? getGradeTypeLabel(selectedGradeTypeFilter!) 
+            value: selectedGradeTypeFilter != null
+                ? getGradeTypeLabel(selectedGradeTypeFilter!)
                 : null,
             onTap: showFilterSheet,
           ),
@@ -372,10 +371,15 @@ class _GradeKpiStrip extends StatelessWidget {
   });
 
   String _avgLabel() {
-    if (avg >= 85) return lang.getTranslatedText({'en': 'Excellent', 'id': 'Sangat Baik'});
+    if (avg >= 85)
+      return lang.getTranslatedText({'en': 'Excellent', 'id': 'Sangat Baik'});
     if (avg >= 75) return lang.getTranslatedText({'en': 'Good', 'id': 'Baik'});
-    if (avg >= 65) return lang.getTranslatedText({'en': 'Adequate', 'id': 'Cukup'});
-    return lang.getTranslatedText({'en': 'Needs work', 'id': 'Perlu perbaikan'});
+    if (avg >= 65)
+      return lang.getTranslatedText({'en': 'Adequate', 'id': 'Cukup'});
+    return lang.getTranslatedText({
+      'en': 'Needs work',
+      'id': 'Perlu perbaikan',
+    });
   }
 
   Color _avgPillBg() {
@@ -437,10 +441,7 @@ class _GradeKpiStrip extends StatelessWidget {
           Container(width: 1, height: 56, color: const Color(0xFFF1F5F9)),
           Expanded(
             child: _kpiColumn(
-              label: lang.getTranslatedText({
-                'en': 'Range',
-                'id': 'Rentang',
-              }),
+              label: lang.getTranslatedText({'en': 'Range', 'id': 'Rentang'}),
               value: '${fmt(minScore)} — ${fmt(maxScore)}',
               valueSize: 14,
             ),
@@ -565,8 +566,7 @@ class _GradeSubjectHeader extends StatelessWidget {
           ),
           if (average > 0)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: _bg(),
                 borderRadius: const BorderRadius.all(Radius.circular(10)),
@@ -698,9 +698,7 @@ class _GradeCardRowState extends State<_GradeCardRow> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               border: Border.all(
-                color: hasScore
-                    ? ColorUtils.slate200
-                    : ColorUtils.slate200,
+                color: hasScore ? ColorUtils.slate200 : ColorUtils.slate200,
                 width: 0.75,
               ),
               borderRadius: const BorderRadius.all(Radius.circular(14)),
@@ -713,9 +711,7 @@ class _GradeCardRowState extends State<_GradeCardRow> {
                   height: 36,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: hasScore
-                        ? _bg(score)
-                        : const Color(0xFFF1F5F9),
+                    color: hasScore ? _bg(score) : const Color(0xFFF1F5F9),
                     borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Text(
@@ -723,9 +719,7 @@ class _GradeCardRowState extends State<_GradeCardRow> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: hasScore
-                          ? _fg(score)
-                          : ColorUtils.slate400,
+                      color: hasScore ? _fg(score) : ColorUtils.slate400,
                     ),
                   ),
                 ),

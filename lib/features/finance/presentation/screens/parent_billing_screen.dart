@@ -143,8 +143,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                       'id':
                           'Pilih anak Anda untuk melihat tagihan dan pembayaran mereka.',
                     }),
-                    style:
-                        const TextStyle(color: Colors.white, fontSize: 14.0),
+                    style: const TextStyle(color: Colors.white, fontSize: 14.0),
                   ),
                 ),
               ],
@@ -185,8 +184,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                       'id':
                           'Lihat status tagihan anak Anda di sini, bayar tagihan, dan lihat riwayat.',
                     }),
-                    style:
-                        const TextStyle(color: Colors.white, fontSize: 14.0),
+                    style: const TextStyle(color: Colors.white, fontSize: 14.0),
                   ),
                 ),
               ],
@@ -262,53 +260,42 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         state.statusFilter,
         state.periodFilter,
       ),
-      loading: () => _buildHeader(
-        languageProvider,
-        const [],
-        null,
-        null,
-        null,
-      ),
-      error: (_, __) => _buildHeader(
-        languageProvider,
-        const [],
-        null,
-        null,
-        null,
-      ),
+      loading: () => _buildHeader(languageProvider, const [], null, null, null),
+      error: (_, __) =>
+          _buildHeader(languageProvider, const [], null, null, null),
     );
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          header,
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              onRefresh: () async {
-                await ref.read(parentFinanceProvider.notifier).forceRefresh();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                children: [
-                  Transform.translate(
-                    offset: const Offset(0, -10),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
-                      child: BillingList(
-                        key: _billingListKey,
-                        languageProvider: languageProvider,
-                      ),
-                    ),
+      body: RefreshIndicator(
+        color: ColorUtils.brandAzureDeep,
+        onRefresh: () async {
+          await ref.read(parentFinanceProvider.notifier).forceRefresh();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: header),
+            SliverToBoxAdapter(
+              child: Transform.translate(
+                offset: const Offset(0, -10),
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    bottom: 0,
                   ),
-                ],
+                  child: BillingList(
+                    key: _billingListKey,
+                    languageProvider: languageProvider,
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+          ],
+        ),
       ),
     );
   }
@@ -341,10 +328,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         'en': 'Finance · Child',
         'id': 'Keuangan · Anak',
       }),
-      title: lp.getTranslatedText({
-        'en': 'Billing',
-        'id': 'Tagihan',
-      }),
+      title: lp.getTranslatedText({'en': 'Billing', 'id': 'Tagihan'}),
       actionIcons: [
         BrandHeaderIconButton(
           icon: Icons.tune_rounded,
@@ -353,10 +337,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
           badgeBorderColor: ColorUtils.brandAzureDeep,
         ),
       ],
-      realtimeIndicator: BrandRealtimePill(
-        isFresh: true,
-        lastSync: _lastSync,
-      ),
+      realtimeIndicator: BrandRealtimePill(isFresh: true, lastSync: _lastSync),
       childSelector: summaries.length < 2
           ? null
           : ChildSelectorChipRow(
@@ -379,19 +360,13 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
       bottomSlot: BrandFilterChipStrip(
         chips: [
           BrandFilterChip(
-            label: lp.getTranslatedText({
-              'en': 'Period',
-              'id': 'Periode',
-            }),
+            label: lp.getTranslatedText({'en': 'Period', 'id': 'Periode'}),
             value: _periodChipValue(lp, periodFilter),
             onTap: () => _showFilterSheet(lp),
             width: 172,
           ),
           BrandFilterChip(
-            label: lp.getTranslatedText({
-              'en': 'Status',
-              'id': 'Status',
-            }),
+            label: lp.getTranslatedText({'en': 'Status', 'id': 'Status'}),
             value: _statusChipValue(lp, statusFilter),
             onTap: () => _showFilterSheet(lp),
           ),

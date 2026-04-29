@@ -71,9 +71,9 @@ class _ParentAttendanceCalendarScreenState
   // ---------- Per-month aggregation ------------------------------------
 
   /// Records that fall inside [_viewMonth].
-  Iterable<Attendance> get _monthRecords => widget.attendanceData
-      .where((r) => r.date.year == _viewMonth.year &&
-          r.date.month == _viewMonth.month);
+  Iterable<Attendance> get _monthRecords => widget.attendanceData.where(
+    (r) => r.date.year == _viewMonth.year && r.date.month == _viewMonth.month,
+  );
 
   /// One AttendanceStatus per calendar day in the visible month.
   /// Aggregation rule: the WORST status of the day wins (alpha >
@@ -86,8 +86,8 @@ class _ParentAttendanceCalendarScreenState
       final key = DateTime(r.date.year, r.date.month, r.date.day);
       final status = parseAttendanceStatus(r.status);
       final existing = result[key];
-      if (existing == null || _statusSeverity(status) >
-          _statusSeverity(existing)) {
+      if (existing == null ||
+          _statusSeverity(status) > _statusSeverity(existing)) {
         result[key] = status;
       }
     }
@@ -141,37 +141,40 @@ class _ParentAttendanceCalendarScreenState
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: ListView(
+      body: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
-        children: [
-          _buildHeader(lang),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.lg,
-              AppSpacing.md,
-              0,
-            ),
-            child: AttendanceCalendarGrid(
-              month: _viewMonth,
-              dayStatuses: _dayStatuses,
-              selectedDate: _selectedDay,
-              onDaySelected: (day) => setState(() => _selectedDay = day),
+        slivers: [
+          SliverToBoxAdapter(child: _buildHeader(lang)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.lg,
+                AppSpacing.md,
+                0,
+              ),
+              child: AttendanceCalendarGrid(
+                month: _viewMonth,
+                dayStatuses: _dayStatuses,
+                selectedDate: _selectedDay,
+                onDaySelected: (day) => setState(() => _selectedDay = day),
+              ),
             ),
           ),
           if (_selectedDay != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.xl,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.xl,
+                ),
+                child: _buildDetailPanel(lang),
               ),
-              child: _buildDetailPanel(lang),
             )
           else
-            const SizedBox(height: AppSpacing.xl),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
         ],
       ),
     );
@@ -182,10 +185,8 @@ class _ParentAttendanceCalendarScreenState
     final c = _counts;
     return BrandPageHeader(
       role: 'wali',
-      subtitle: '${lang.getTranslatedText({
-        'en': 'Attendance',
-        'id': 'Kehadiran',
-      })} · ${widget.studentName}',
+      subtitle:
+          '${lang.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})} · ${widget.studentName}',
       title: monthLabel,
       actionIcons: [
         BrandHeaderIconButton(
@@ -210,10 +211,7 @@ class _ParentAttendanceCalendarScreenState
           const SizedBox(width: 8),
           Expanded(
             child: _MiniKpi(
-              label: lang.getTranslatedText({
-                'en': 'Permission',
-                'id': 'Izin',
-              }),
+              label: lang.getTranslatedText({'en': 'Permission', 'id': 'Izin'}),
               count: c.excused,
             ),
           ),
@@ -254,13 +252,16 @@ class _ParentAttendanceCalendarScreenState
 
   Widget _buildDetailPanel(LanguageProvider lang) {
     final selected = _selectedDay!;
-    final records = widget.attendanceData
-        .where((r) =>
-            r.date.year == selected.year &&
-            r.date.month == selected.month &&
-            r.date.day == selected.day)
-        .toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+    final records =
+        widget.attendanceData
+            .where(
+              (r) =>
+                  r.date.year == selected.year &&
+                  r.date.month == selected.month &&
+                  r.date.day == selected.day,
+            )
+            .toList()
+          ..sort((a, b) => a.date.compareTo(b.date));
 
     final dayLabel = DateFormat('EEEE · d MMM', 'id_ID').format(selected);
 
@@ -276,10 +277,7 @@ class _ParentAttendanceCalendarScreenState
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '${lang.getTranslatedText({
-              'en': 'DETAIL',
-              'id': 'DETAIL',
-            })} ${dayLabel.toUpperCase()}',
+            '${lang.getTranslatedText({'en': 'DETAIL', 'id': 'DETAIL'})} ${dayLabel.toUpperCase()}',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,

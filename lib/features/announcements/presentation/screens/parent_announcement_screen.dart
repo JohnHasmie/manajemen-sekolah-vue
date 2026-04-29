@@ -81,26 +81,22 @@ class ParentAnnouncementScreenState
       },
       child: Scaffold(
         backgroundColor: ColorUtils.slate50,
-        body: Column(
-          children: [
-            buildHeader(languageProvider),
-            Expanded(
-              child: RefreshIndicator(
-                color: ColorUtils.brandAzureDeep,
-                onRefresh: forceRefresh,
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.zero,
-                  children: [
-                    Transform.translate(
-                      offset: const Offset(0, -10),
-                      child: buildContent(languageProvider),
-                    ),
-                  ],
+        body: RefreshIndicator(
+          color: ColorUtils.brandAzureDeep,
+          onRefresh: forceRefresh,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(child: buildHeader(languageProvider)),
+              SliverToBoxAdapter(
+                child: Transform.translate(
+                  offset: const Offset(0, -10),
+                  child: buildContent(languageProvider),
                 ),
               ),
-            ),
-          ],
+              const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+            ],
+          ),
         ),
       ),
     );

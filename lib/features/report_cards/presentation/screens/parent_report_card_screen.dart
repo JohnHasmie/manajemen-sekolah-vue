@@ -50,7 +50,10 @@ class ParentReportCardScreen extends ConsumerStatefulWidget {
 /// `data() { return { isLoading, studentsData, selectedTermId } }`.
 /// Auto-resolves the current semester and loads student raport data.
 class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
-    with ReportCardDataMixin<ParentReportCardScreen>, ReportCardUIBuilderMixin<ParentReportCardScreen>, ParentReportCardFilterMixin {
+    with
+        ReportCardDataMixin<ParentReportCardScreen>,
+        ReportCardUIBuilderMixin<ParentReportCardScreen>,
+        ParentReportCardFilterMixin {
   @override
   bool isLoading = true;
   @override
@@ -101,8 +104,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
             .map((m) => Student.fromJson(m as Map<String, dynamic>))
             .toList(growable: false);
         // Auto-select first child if none selected yet.
-        _selectedChildId ??=
-            _siblings.isNotEmpty ? _siblings.first.id : null;
+        _selectedChildId ??= _siblings.isNotEmpty ? _siblings.first.id : null;
       });
     } catch (_) {}
   }
@@ -136,27 +138,23 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildBrandHeader(lang),
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              onRefresh: () async {
-                await forceRefresh();
-                await _loadSiblings();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                children: [
-                  buildContentArea(filteredData: _filteredStudents),
-                ],
-              ),
+      body: RefreshIndicator(
+        color: ColorUtils.brandAzureDeep,
+        onRefresh: () async {
+          await forceRefresh();
+          await _loadSiblings();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _buildBrandHeader(lang)),
+            SliverToBoxAdapter(
+              child: buildContentArea(filteredData: _filteredStudents),
             ),
-          ),
-        ],
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+          ],
+        ),
       ),
     );
   }
@@ -167,15 +165,17 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
         : lang.getTranslatedText({'en': 'Ganjil', 'id': 'Ganjil'});
 
     final children = _siblings
-        .map((s) => ChildSummary(
-              id: s.id,
-              shortName: s.name.isEmpty ? '?' : s.name,
-              klass: s.className.isEmpty ? '-' : 'Kelas ${s.className}',
-            ))
+        .map(
+          (s) => ChildSummary(
+            id: s.id,
+            shortName: s.name.isEmpty ? '?' : s.name,
+            klass: s.className.isEmpty ? '-' : 'Kelas ${s.className}',
+          ),
+        )
         .toList(growable: false);
 
-    final effectiveChildId = _effectiveChildId ??
-        (children.isNotEmpty ? children.first.id : '');
+    final effectiveChildId =
+        _effectiveChildId ?? (children.isNotEmpty ? children.first.id : '');
 
     return BrandPageHeader(
       role: 'wali',
@@ -185,15 +185,9 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',
       }),
-      title: lang.getTranslatedText({
-        'en': 'Report Card',
-        'id': 'E-Raport',
-      }),
+      title: lang.getTranslatedText({'en': 'Report Card', 'id': 'E-Raport'}),
       actionIcons: [
-        BrandHeaderIconButton(
-          icon: Icons.tune_rounded,
-          onTap: showFilterSheet,
-        ),
+        BrandHeaderIconButton(icon: Icons.tune_rounded, onTap: showFilterSheet),
       ],
       realtimeIndicator: BrandRealtimePill(
         isFresh: !isLoading,
@@ -210,10 +204,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
       bottomSlot: BrandFilterChipStrip(
         chips: [
           BrandFilterChip(
-            label: lang.getTranslatedText({
-              'en': 'Semester',
-              'id': 'Semester',
-            }),
+            label: lang.getTranslatedText({'en': 'Semester', 'id': 'Semester'}),
             value: semesterLabel,
             onTap: showFilterSheet,
             width: 172,

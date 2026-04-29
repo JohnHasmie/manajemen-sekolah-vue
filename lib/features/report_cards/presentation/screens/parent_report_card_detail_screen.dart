@@ -113,13 +113,12 @@ class _ParentReportCardDetailScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHeader(context),
-          Expanded(
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
+      body: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(child: _buildHeader(context)),
+          SliverToBoxAdapter(
+            child: Column(
               children: [
                 // KPI strip sits below the header with a small lift so
                 // it gives a card-on-gradient feel without being clipped

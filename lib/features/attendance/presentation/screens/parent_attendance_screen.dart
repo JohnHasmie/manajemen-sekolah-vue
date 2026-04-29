@@ -167,27 +167,22 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          // Sticky header — stays pinned like the billing screen
-          _buildHeader(lang),
-          // Scrollable body with KPI + day list
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              onRefresh: () async {
-                await forceRefresh();
-                await _loadSiblings();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                children: _buildScrollChildren(lang),
-              ),
-            ),
-          ),
-        ],
+      body: RefreshIndicator(
+        color: ColorUtils.brandAzureDeep,
+        onRefresh: () async {
+          await forceRefresh();
+          await _loadSiblings();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader(lang)),
+            for (final widget in _buildScrollChildren(lang))
+              SliverToBoxAdapter(child: widget),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+          ],
+        ),
       ),
     );
   }
@@ -232,8 +227,8 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   Widget _buildKpiCard(LanguageProvider lang) {
     final totalDays = monthlySummary.values.fold<int>(0, (a, b) => a + b);
-    final presentDays = (monthlySummary['hadir'] ?? 0) +
-        (monthlySummary['terlambat'] ?? 0);
+    final presentDays =
+        (monthlySummary['hadir'] ?? 0) + (monthlySummary['terlambat'] ?? 0);
     final rate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0.0;
     return AttendanceRingKpi(
       rate: rate,
@@ -247,10 +242,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
               'en': 'Selected period',
               'id': 'Periode terpilih',
             })
-          : lang.getTranslatedText({
-              'en': 'This month',
-              'id': 'Bulan ini',
-            }),
+          : lang.getTranslatedText({'en': 'This month', 'id': 'Bulan ini'}),
       deltaPct: _computeDeltaPct(),
       brandColor: ColorUtils.brandAzureDeep,
     );
@@ -296,10 +288,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',
       }),
-      title: lang.getTranslatedText({
-        'en': 'Attendance',
-        'id': 'Kehadiran',
-      }),
+      title: lang.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'}),
       actionIcons: [
         BrandHeaderIconButton(
           icon: Icons.tune_rounded,
@@ -323,10 +312,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
       bottomSlot: BrandFilterChipStrip(
         chips: [
           BrandFilterChip(
-            label: lang.getTranslatedText({
-              'en': 'Period',
-              'id': 'Periode',
-            }),
+            label: lang.getTranslatedText({'en': 'Period', 'id': 'Periode'}),
             value: _periodChipValue(lang),
             onTap: showFilterSheet,
             width: 220,
@@ -343,11 +329,13 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   List<ChildSummary> _buildChildSummaries() {
     return _siblings
-        .map((s) => ChildSummary(
-              id: s.id,
-              shortName: s.name.isEmpty ? '?' : s.name,
-              klass: s.className.isEmpty ? '-' : 'Kelas ${s.className}',
-            ))
+        .map(
+          (s) => ChildSummary(
+            id: s.id,
+            shortName: s.name.isEmpty ? '?' : s.name,
+            klass: s.className.isEmpty ? '-' : 'Kelas ${s.className}',
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -404,17 +392,13 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
       orElse: () => const {},
     );
     if (match.isEmpty) return null;
-    return lang.getTranslatedText({
-      'en': match['en']!,
-      'id': match['id']!,
-    });
+    return lang.getTranslatedText({'en': match['en']!, 'id': match['id']!});
   }
 
   int _activeFilterCount() {
     var n = 0;
     final currentMonth = DateTime.now().month.toString();
-    if (selectedMonthFilter != null &&
-        selectedMonthFilter != currentMonth) {
+    if (selectedMonthFilter != null && selectedMonthFilter != currentMonth) {
       n++;
     }
     if (selectedStatusFilter != null) n++;
@@ -588,8 +572,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
         }
       }
       return true;
-    }).toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
+    }).toList()..sort((a, b) => b.date.compareTo(a.date));
     return filtered;
   }
 }
@@ -600,10 +583,7 @@ class _DayCardForRecord extends StatefulWidget {
   final Attendance record;
   final void Function(Attendance record) onItemVisible;
 
-  const _DayCardForRecord({
-    required this.record,
-    required this.onItemVisible,
-  });
+  const _DayCardForRecord({required this.record, required this.onItemVisible});
 
   @override
   State<_DayCardForRecord> createState() => _DayCardForRecordState();
@@ -636,8 +616,9 @@ class _DayCardForRecordState extends State<_DayCardForRecord> {
     if (lessonHourName != null && lessonHourName.isNotEmpty) {
       secondaryParts.add(lessonHourName);
     }
-    secondaryParts
-        .add(DateFormat('EEEE, d MMM yyyy', 'id_ID').format(widget.record.date));
+    secondaryParts.add(
+      DateFormat('EEEE, d MMM yyyy', 'id_ID').format(widget.record.date),
+    );
     final secondary = secondaryParts.join(' · ');
 
     return AttendanceDayCard(
@@ -668,10 +649,7 @@ class _CalendarCta extends StatelessWidget {
           height: 48,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            border: Border.all(
-              color: const Color(0xFFBAE6FD),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFBAE6FD), width: 1),
             borderRadius: const BorderRadius.all(Radius.circular(14)),
           ),
           child: Row(
