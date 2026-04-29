@@ -144,9 +144,17 @@ class _SchoolSelectionDialog extends StatelessWidget {
       final newRole = result['user']?['role']?.toString() ?? currentRole;
       await LocalCacheService.clearAll();
       if (ref.context.mounted) {
-        if (newRole == currentRole) {
+        // Compare via the *effective* role (the shell-family key) — the
+        // backend uses English ('parent' / 'teacher') while
+        // `widget.role` carries the Indonesian alias ('wali' / 'guru').
+        // Without normalizing, parent → parent looked like a cross-role
+        // switch and we'd `router.go('/parent')`, which GoRouter treats
+        // as a same-route no-op, so the refresh code never ran.
+        final newKey = _shellRoleKey(newRole);
+        final currentKey = _shellRoleKey(currentRole);
+        if (newKey == currentKey) {
           // Same role → the `IndexedStack` subtree won't be replaced
-          // by router.go (it's the same const route). Two things have
+          // by router.go (it's the same const route). Three things have
           // to happen for parent screens to actually refresh:
           //   1. Reset the per-tab `GlobalKey<NavigatorState>` so the
           //      Navigator children lose their identity and remount —
@@ -154,10 +162,9 @@ class _SchoolSelectionDialog extends StatelessWidget {
           //      alive across the IndexedStack rebuild.
           //   2. Bump `schoolEpochProvider` so `RoleShell`'s
           //      `KeyedSubtree` tears down + rebuilds the IndexedStack.
-          // Both together = clean reload, no hot-restart needed.
-          ref
-              .read(shellProvider(_shellRoleKey(newRole)).notifier)
-              .resetNavigatorStacks();
+          //   3. Reinitialize the dashboard provider against the new
+          //      school context.
+          ref.read(shellProvider(newKey).notifier).resetNavigatorStacks();
           bumpSchoolEpoch(ref);
           await ref
               .read(dashboardProvider.notifier)
@@ -355,16 +362,15 @@ void showDashboardRolePickerDialog({
                     final newRole = result['user']?['role']?.toString() ?? role;
                     await LocalCacheService.clearAll();
                     if (ref.context.mounted) {
-                      if (newRole == currentRole) {
+                      final newKey = _shellRoleKey(newRole);
+                      final currentKey = _shellRoleKey(currentRole);
+                      if (newKey == currentKey) {
                         // Reset Navigator GlobalKeys + bump epoch so
                         // the IndexedStack subtree fully rebuilds with
                         // fresh per-tab state. (See _onSchoolTap for
                         // the long-form rationale.)
                         ref
-                            .read(
-                              shellProvider(_shellRoleKey(newRole))
-                                  .notifier,
-                            )
+                            .read(shellProvider(newKey).notifier)
                             .resetNavigatorStacks();
                         bumpSchoolEpoch(ref);
                         await ref
