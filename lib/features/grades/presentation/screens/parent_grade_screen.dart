@@ -243,7 +243,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
           child: _GradeKpiStrip(
             count: _gradeList.length,
             scored: scored,
