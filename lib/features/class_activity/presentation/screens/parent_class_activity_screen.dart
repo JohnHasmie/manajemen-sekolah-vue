@@ -134,25 +134,34 @@ class ParentClassActivityScreenState
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
-        onRefresh: () async {
-          await forceRefresh();
-          if (mounted) setState(() => _lastSync = DateTime.now());
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: _buildHeader(lang)),
-            SliverToBoxAdapter(
-              child: KeyedSubtree(
-                key: activityListKey,
-                child: buildActivityList(),
+      body: Column(
+        children: [
+          _buildHeader(lang),
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              edgeOffset: 20,
+              onRefresh: () async {
+                await forceRefresh();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: ListView(
+                clipBehavior: Clip.none,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 24),
+                children: [
+                  Transform.translate(
+                    offset: const Offset(0, -14),
+                    child: KeyedSubtree(
+                      key: activityListKey,
+                      child: buildActivityList(),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

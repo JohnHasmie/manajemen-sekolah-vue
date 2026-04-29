@@ -267,32 +267,37 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
-        onRefresh: () async {
-          await ref.read(parentFinanceProvider.notifier).forceRefresh();
-          if (mounted) setState(() => _lastSync = DateTime.now());
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: header),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  bottom: 0,
-                ),
-                child: BillingList(
-                  key: _billingListKey,
-                  languageProvider: languageProvider,
-                ),
+      body: Column(
+        children: [
+          header,
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              edgeOffset: 20,
+              onRefresh: () async {
+                await ref.read(parentFinanceProvider.notifier).forceRefresh();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: ListView(
+                clipBehavior: Clip.none,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 24),
+                children: [
+                  Transform.translate(
+                    offset: const Offset(0, -14),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: BillingList(
+                        key: _billingListKey,
+                        languageProvider: languageProvider,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

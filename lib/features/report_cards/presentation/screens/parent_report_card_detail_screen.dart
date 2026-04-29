@@ -113,23 +113,31 @@ class _ParentReportCardDetailScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(child: _buildHeader(context)),
-          SliverToBoxAdapter(
-            child: Column(
+      body: Column(
+        children: [
+          _buildHeader(context),
+          Expanded(
+            child: ListView(
+              clipBehavior: Clip.none,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: _KpiStrip(reportCardData: reportCardData),
+                Transform.translate(
+                  offset: const Offset(0, -14),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _KpiStrip(reportCardData: reportCardData),
+                  ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _SectionHeader(title: 'Sikap', trailing: 'Wali kelas'),
+                      _SectionHeader(
+                        title: 'Sikap',
+                        trailing: 'Wali kelas',
+                      ),
                       const SizedBox(height: 8),
                       _SikapCard(reportCardData: reportCardData),
                       const SizedBox(height: 18),
@@ -145,7 +153,9 @@ class _ParentReportCardDetailScreenState
                         ),
                       ),
                       if (_subjects.isEmpty)
-                        _EmptyHint(label: 'Belum ada nilai mata pelajaran.'),
+                        _EmptyHint(
+                          label: 'Belum ada nilai mata pelajaran.',
+                        ),
                       if (_extras.isNotEmpty) ...[
                         const SizedBox(height: 18),
                         _SectionHeader(

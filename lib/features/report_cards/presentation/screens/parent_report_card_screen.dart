@@ -138,23 +138,34 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
-        onRefresh: () async {
-          await forceRefresh();
-          await _loadSiblings();
-          if (mounted) setState(() => _lastSync = DateTime.now());
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: _buildBrandHeader(lang)),
-            SliverToBoxAdapter(
-              child: buildContentArea(filteredData: _filteredStudents),
+      body: Column(
+        children: [
+          _buildBrandHeader(lang),
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              edgeOffset: 20,
+              onRefresh: () async {
+                await forceRefresh();
+                await _loadSiblings();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: ListView(
+                clipBehavior: Clip.none,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 24),
+                children: [
+                  Transform.translate(
+                    offset: const Offset(0, -14),
+                    child: buildContentArea(
+                      filteredData: _filteredStudents,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

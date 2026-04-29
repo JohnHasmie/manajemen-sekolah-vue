@@ -171,22 +171,33 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
-        onRefresh: () async {
-          await onRefreshRequested();
-          if (mounted) setState(() => _lastSync = DateTime.now());
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: _buildHeader(lang)),
-            SliverToBoxAdapter(
-              child: _buildGradesContent(lang),
+      body: Column(
+        children: [
+          _buildHeader(lang),
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              edgeOffset: 20,
+              onRefresh: () async {
+                await onRefreshRequested();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: ListView(
+                clipBehavior: Clip.none,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(top: 0, bottom: 24),
+                children: [
+                  // Negative margin pulls KPI into the header's
+                  // rounded bottom area for the overlap effect.
+                  Transform.translate(
+                    offset: const Offset(0, -14),
+                    child: _buildGradesContent(lang),
+                  ),
+                ],
+              ),
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

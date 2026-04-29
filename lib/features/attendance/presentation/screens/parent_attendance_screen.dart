@@ -167,33 +167,41 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
-        onRefresh: () async {
-          await forceRefresh();
-          await _loadSiblings();
-          if (mounted) setState(() => _lastSync = DateTime.now());
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: _buildHeader(lang)),
-            for (final widget in _buildScrollChildren(lang))
-              SliverToBoxAdapter(child: widget),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-          ],
-        ),
+      body: Column(
+        children: [
+          _buildHeader(lang),
+          Expanded(
+            child: RefreshIndicator(
+              color: ColorUtils.brandAzureDeep,
+              edgeOffset: 20,
+              onRefresh: () async {
+                await forceRefresh();
+                await _loadSiblings();
+                if (mounted) setState(() => _lastSync = DateTime.now());
+              },
+              child: ListView(
+                clipBehavior: Clip.none,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 24),
+                children: _buildScrollChildren(lang),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   List<Widget> _buildScrollChildren(LanguageProvider lang) {
     return [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-        child: KeyedSubtree(
-          key: _monthlySummaryKey,
-          child: _buildKpiCard(lang),
+      Transform.translate(
+        offset: const Offset(0, -14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: KeyedSubtree(
+            key: _monthlySummaryKey,
+            child: _buildKpiCard(lang),
+          ),
         ),
       ),
       if (isLoading)
