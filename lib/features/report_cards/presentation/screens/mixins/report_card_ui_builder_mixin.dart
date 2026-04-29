@@ -60,7 +60,7 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
   /// Legacy filter section. Same retention reason as `buildHeader()`.
   Widget buildFilterSection() => const SizedBox.shrink();
 
-  Widget buildContentArea() {
+  Widget buildContentArea({List<dynamic>? filteredData}) {
     if (isLoading) {
       return const SkeletonListLoading(shrinkWrap: true);
     }
@@ -69,11 +69,12 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
       return _buildErrorState();
     }
 
-    if (studentsData.isEmpty) {
+    final data = filteredData ?? studentsData;
+    if (data.isEmpty) {
       return _buildEmptyState();
     }
 
-    return _buildStudentsList();
+    return _buildStudentsList(data);
   }
 
   Widget _buildErrorState() {
@@ -124,23 +125,180 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
     );
   }
 
-  Widget _buildStudentsList() {
+  Widget _buildStudentsList(List<dynamic> data) {
+    // The screen pre-filters to a single selected child (via the child
+    // selector chips in the header). When that filter resolves to one
+    // entry, we render the full inline rapor — KPI strip, section
+    // header, per-subject cards, and the "Lihat rapor lengkap" CTA —
+    // matching Parent_Phase3_RingkasanRapor_Mockup.svg.
+    //
+    // When the filter happens to return more than one (unlikely; only
+    // if siblings happen to share a published rapor in the same
+    // request), we fall back to the legacy summary-card stack so we
+    // never crash on an unexpected payload shape.
+    final published = data.where((s) {
+      final rc = (s as Map)['reportCard'];
+      return rc != null && rc['status'] == 'published';
+    }).toList();
+
+    if (published.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    if (published.length == 1) {
+      final entry = published.first as Map<String, dynamic>;
+      return _buildInlineRapor(
+        entry,
+        entry['reportCard'] as Map<String, dynamic>,
+      );
+    }
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-      itemCount: studentsData.length,
+      itemCount: published.length,
       itemBuilder: (context, index) {
-        final student = studentsData[index];
-        final reportCard = student['reportCard'];
-
-        // Parent only sees published raports.
-        if (reportCard == null || reportCard['status'] != 'published') {
-          return const SizedBox.shrink();
-        }
-
-        return _buildStudentCard(student, reportCard);
+        final entry = published[index] as Map<String, dynamic>;
+        return _buildStudentCard(
+          entry,
+          entry['reportCard'] as Map<String, dynamic>,
+        );
       },
+    );
+  }
+
+  /// Inline rapor body for a single child — KPI strip + per-subject
+  /// score cards + "Lihat rapor lengkap" CTA. Matches the list-screen
+  /// mockup intent: one child shown at a time, switch via header chips.
+  Widget _buildInlineRapor(
+    Map<String, dynamic> student,
+    Map<String, dynamic> reportCard,
+  ) {
+    final subjects =
+        (reportCard['raportSubjects'] ??
+                reportCard['raport_subjects'] ??
+                const [])
+            as List<dynamic>;
+    final average = _averageScore(subjects);
+    final attendance = _attendancePct(reportCard);
+    final subjectCount = subjects.length;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // KPI strip — white card on slate background, lifted up so it
+          // visually overlaps the gradient header.
+          Transform.translate(
+            offset: const Offset(0, -14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
+                border: Border.all(color: ColorUtils.slate200, width: 0.75),
+                boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+              ),
+              child: _kpiStrip(average, attendance, subjectCount),
+            ),
+          ),
+          // Section header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Nilai per mata pelajaran',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: ColorUtils.slate900,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$subjectCount mapel',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: ColorUtils.slate500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (subjects.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
+                border: Border.all(color: ColorUtils.slate200, width: 0.75),
+              ),
+              child: Text(
+                'Belum ada nilai mata pelajaran.',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: ColorUtils.slate500,
+                ),
+              ),
+            ),
+          ...subjects.map(
+            (s) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _SubjectMiniCard(subject: s as Map),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // CTA → opens the detail screen with the same payload.
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _openDetail(student, reportCard),
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
+              child: Container(
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F9FF),
+                  borderRadius: const BorderRadius.all(Radius.circular(14)),
+                  border: Border.all(color: const Color(0xFFBAE6FD), width: 1),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.description_outlined,
+                      size: 16,
+                      color: ColorUtils.brandAzureDeep,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Lihat rapor lengkap ($subjectCount mapel)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: ColorUtils.brandAzureDeep,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 16,
+                      color: ColorUtils.brandAzureDeep,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -610,4 +768,176 @@ class _SubjectRow {
 
   final String subject;
   final double? score;
+}
+
+/// Per-subject mini card for the inline rapor body. Single big score
+/// (max of knowledge + skill, since the list screen is a quick
+/// summary), letter-grade avatar tinted by score band, KKM verdict
+/// below. Tap-target-sized so it can be tapped to navigate to the
+/// detail drill-down later.
+class _SubjectMiniCard extends StatelessWidget {
+  const _SubjectMiniCard({required this.subject});
+
+  final Map subject;
+
+  double? _toDouble(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString());
+  }
+
+  String _bandLetter(double v) {
+    if (v >= 90) return 'A';
+    if (v >= 80) return 'B';
+    if (v >= 70) return 'C';
+    if (v >= 60) return 'D';
+    return 'E';
+  }
+
+  ({Color bg, Color fg}) _letterPalette(String letter) {
+    switch (letter) {
+      case 'A':
+        return (bg: const Color(0xFFDCFCE7), fg: const Color(0xFF15803D));
+      case 'B':
+        return (bg: const Color(0xFFDBEAFE), fg: const Color(0xFF1D4ED8));
+      case 'C':
+        return (bg: const Color(0xFFFEF3C7), fg: const Color(0xFFB45309));
+      case 'D':
+        return (bg: const Color(0xFFFEE2E2), fg: const Color(0xFFB91C1C));
+      default:
+        return (bg: ColorUtils.slate100, fg: ColorUtils.slate500);
+    }
+  }
+
+  String _predikatLabel(String letter) {
+    switch (letter) {
+      case 'A':
+        return 'Sangat Baik';
+      case 'B':
+        return 'Baik';
+      case 'C':
+        return 'Cukup';
+      case 'D':
+        return 'Perlu Dukungan';
+      default:
+        return '–';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final subjectName = (subject['subject'] is Map)
+        ? ((subject['subject'] as Map)['name']?.toString() ?? 'Mata Pelajaran')
+        : 'Mata Pelajaran';
+    final teacher =
+        (subject['teacher_name'] ??
+                (subject['subject'] is Map
+                    ? (subject['subject'] as Map)['teacher_name']
+                    : null) ??
+                '')
+            .toString();
+    final knowledge = _toDouble(subject['knowledge_score']);
+    final skill = _toDouble(subject['skill_score']);
+    final headline = (knowledge != null && skill != null)
+        ? (knowledge + skill) / 2
+        : (knowledge ?? skill ?? 0);
+    final letter = _bandLetter(headline);
+    final palette = _letterPalette(letter);
+    final predikat =
+        (subject['knowledge_predicate'] ??
+                subject['skill_predicate'] ??
+                _predikatLabel(letter))
+            .toString();
+    final kkm = _toDouble(subject['kkm']) ?? 75;
+    final tuntas = headline >= kkm;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        border: Border.all(color: ColorUtils.slate200, width: 0.75),
+        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: palette.bg,
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              letter,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: palette.fg,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  subjectName,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: ColorUtils.slate900,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  [
+                    if (teacher.isNotEmpty) teacher,
+                    if (predikat.trim().isNotEmpty && predikat != '–') predikat,
+                  ].join(' · '),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: ColorUtils.slate500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                headline > 0 ? headline.toStringAsFixed(0) : '–',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: tuntas ? palette.fg : const Color(0xFFB91C1C),
+                  height: 1.0,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'KKM ${kkm.toStringAsFixed(0)}',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: ColorUtils.slate400,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
