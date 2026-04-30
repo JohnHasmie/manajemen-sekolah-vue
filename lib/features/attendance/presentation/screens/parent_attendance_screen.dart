@@ -39,8 +39,10 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/attendance/attendance_day_card.dart';
 import 'package:manajemensekolah/core/widgets/attendance/attendance_ring_kpi.dart';
 import 'package:manajemensekolah/core/widgets/attendance/attendance_status.dart';
+import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -61,12 +63,14 @@ class ParentAttendanceScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> parent;
   final String studentId;
   final String? academicYearId;
+  final bool showBackButton;
 
   const ParentAttendanceScreen({
     super.key,
     required this.parent,
     required this.studentId,
     this.academicYearId,
+    this.showBackButton = false,
   });
 
   @override
@@ -167,44 +171,29 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          // Sticky header — stays pinned like the billing screen
-          _buildHeader(lang),
-          // Scrollable body with KPI + day list
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              onRefresh: () async {
-                await forceRefresh();
-                await _loadSiblings();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                children: _buildScrollChildren(lang),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildScrollChildren(LanguageProvider lang) {
-    return [
-      Transform.translate(
-        offset: const Offset(0, -10),
-        child: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
+      body: BrandPageLayout(
+        header: _buildHeader(lang),
+        kpiCard: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: KeyedSubtree(
             key: _monthlySummaryKey,
             child: _buildKpiCard(lang),
           ),
         ),
+        role: 'wali',
+        onRefresh: () async {
+          await forceRefresh();
+          await _loadSiblings();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        bodyChildren: _buildBodyChildren(lang),
       ),
-      if (isLoading)
+    );
+  }
+
+  List<Widget> _buildBodyChildren(LanguageProvider lang) {
+    if (isLoading) {
+      return [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: SkeletonListLoading(
@@ -214,17 +203,19 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
             baseColor: ColorUtils.brandAzure.withValues(alpha: 0.15),
             highlightColor: ColorUtils.brandAzure.withValues(alpha: 0.05),
           ),
-        )
-      else
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.lg,
-            AppSpacing.md,
-            AppSpacing.xl,
-          ),
-          child: _buildBodyColumn(lang),
         ),
+      ];
+    }
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.xl,
+        ),
+        child: _buildBodyColumn(lang),
+      ),
     ];
   }
 
@@ -232,8 +223,8 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   Widget _buildKpiCard(LanguageProvider lang) {
     final totalDays = monthlySummary.values.fold<int>(0, (a, b) => a + b);
-    final presentDays = (monthlySummary['hadir'] ?? 0) +
-        (monthlySummary['terlambat'] ?? 0);
+    final presentDays =
+        (monthlySummary['hadir'] ?? 0) + (monthlySummary['terlambat'] ?? 0);
     final rate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0.0;
     return AttendanceRingKpi(
       rate: rate,
@@ -247,10 +238,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
               'en': 'Selected period',
               'id': 'Periode terpilih',
             })
-          : lang.getTranslatedText({
-              'en': 'This month',
-              'id': 'Bulan ini',
-            }),
+          : lang.getTranslatedText({'en': 'This month', 'id': 'Bulan ini'}),
       deltaPct: _computeDeltaPct(),
       brandColor: ColorUtils.brandAzureDeep,
     );
@@ -292,14 +280,16 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     final children = _buildChildSummaries();
     return BrandPageHeader(
       role: 'wali',
+      kpiOverlayHeight: 40,
+      showBackButton: widget.showBackButton ? true : null,
+      onBackPressed: widget.showBackButton
+          ? () => AppNavigator.pop(context)
+          : null,
       subtitle: lang.getTranslatedText({
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',
       }),
-      title: lang.getTranslatedText({
-        'en': 'Attendance',
-        'id': 'Kehadiran',
-      }),
+      title: lang.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'}),
       actionIcons: [
         BrandHeaderIconButton(
           icon: Icons.tune_rounded,
@@ -323,10 +313,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
       bottomSlot: BrandFilterChipStrip(
         chips: [
           BrandFilterChip(
-            label: lang.getTranslatedText({
-              'en': 'Period',
-              'id': 'Periode',
-            }),
+            label: lang.getTranslatedText({'en': 'Period', 'id': 'Periode'}),
             value: _periodChipValue(lang),
             onTap: showFilterSheet,
             width: 220,
@@ -343,11 +330,13 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   List<ChildSummary> _buildChildSummaries() {
     return _siblings
-        .map((s) => ChildSummary(
-              id: s.id,
-              shortName: s.name.isEmpty ? '?' : s.name,
-              klass: s.className.isEmpty ? '-' : 'Kelas ${s.className}',
-            ))
+        .map(
+          (s) => ChildSummary(
+            id: s.id,
+            shortName: s.name.isEmpty ? '?' : s.name,
+            klass: s.className.isEmpty ? '-' : 'Kelas ${s.className}',
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -404,17 +393,13 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
       orElse: () => const {},
     );
     if (match.isEmpty) return null;
-    return lang.getTranslatedText({
-      'en': match['en']!,
-      'id': match['id']!,
-    });
+    return lang.getTranslatedText({'en': match['en']!, 'id': match['id']!});
   }
 
   int _activeFilterCount() {
     var n = 0;
     final currentMonth = DateTime.now().month.toString();
-    if (selectedMonthFilter != null &&
-        selectedMonthFilter != currentMonth) {
+    if (selectedMonthFilter != null && selectedMonthFilter != currentMonth) {
       n++;
     }
     if (selectedStatusFilter != null) n++;
@@ -499,61 +484,64 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
   }
 
   Widget _buildEmpty(LanguageProvider lang) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: ColorUtils.slate200, width: 0.75),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: ColorUtils.slate100,
-              borderRadius: const BorderRadius.all(Radius.circular(14)),
-            ),
-            child: Icon(
-              Icons.calendar_today_outlined,
-              size: 26,
-              color: ColorUtils.slate400,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            lang.getTranslatedText({
-              'en': 'No attendance records',
-              'id': 'Belum ada data kehadiran',
-            }),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: ColorUtils.slate800,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _isExplicitFilter
-                ? lang.getTranslatedText({
-                    'en': 'Try adjusting the active filters.',
-                    'id': 'Coba sesuaikan filter yang aktif.',
-                  })
-                : lang.getTranslatedText({
-                    'en': 'No records yet for this month.',
-                    'id': 'Belum ada catatan untuk bulan ini.',
-                  }),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: ColorUtils.slate700,
-            ),
-          ),
-        ],
+    if (_isExplicitFilter) {
+      return BrandEmptyState(
+        icon: Icons.filter_alt_outlined,
+        tone: BrandEmptyStateTone.warning,
+        kicker: lang.getTranslatedText({
+          'en': 'Filtered',
+          'id': 'Filter aktif',
+        }),
+        title: lang.getTranslatedText({
+          'en': 'No matching records',
+          'id': 'Tidak ada hasil',
+        }),
+        message: lang.getTranslatedText({
+          'en':
+              'No attendance records match the current filters. '
+              'Try adjusting the period or status.',
+          'id':
+              'Tidak ada data kehadiran yang cocok dengan filter saat ini. '
+              'Coba sesuaikan periode atau status.',
+        }),
+        primaryAction: BrandEmptyStateAction(
+          label: lang.getTranslatedText({
+            'en': 'Reset filter',
+            'id': 'Reset filter',
+          }),
+          icon: Icons.refresh_rounded,
+          onTap: () {
+            setState(() {
+              selectedMonthFilter = DateTime.now().month.toString();
+              selectedStatusFilter = null;
+            });
+          },
+        ),
+      );
+    }
+    return BrandEmptyState(
+      icon: Icons.calendar_today_outlined,
+      tone: BrandEmptyStateTone.info,
+      kicker: lang.getTranslatedText({
+        'en': 'No data yet',
+        'id': 'Belum ada data',
+      }),
+      title: lang.getTranslatedText({
+        'en': 'No attendance records',
+        'id': 'Belum ada data kehadiran',
+      }),
+      message: lang.getTranslatedText({
+        'en':
+            'No records yet for this month. Pull to refresh once '
+            'the school records today\'s attendance.',
+        'id':
+            'Belum ada catatan untuk bulan ini. Tarik untuk segarkan '
+            'setelah sekolah mencatat kehadiran hari ini.',
+      }),
+      secondaryAction: BrandEmptyStateAction(
+        label: lang.getTranslatedText({'en': 'Refresh', 'id': 'Muat ulang'}),
+        icon: Icons.refresh_rounded,
+        onTap: () => forceRefresh(),
       ),
     );
   }
@@ -588,8 +576,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
         }
       }
       return true;
-    }).toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
+    }).toList()..sort((a, b) => b.date.compareTo(a.date));
     return filtered;
   }
 }
@@ -600,10 +587,7 @@ class _DayCardForRecord extends StatefulWidget {
   final Attendance record;
   final void Function(Attendance record) onItemVisible;
 
-  const _DayCardForRecord({
-    required this.record,
-    required this.onItemVisible,
-  });
+  const _DayCardForRecord({required this.record, required this.onItemVisible});
 
   @override
   State<_DayCardForRecord> createState() => _DayCardForRecordState();
@@ -636,8 +620,9 @@ class _DayCardForRecordState extends State<_DayCardForRecord> {
     if (lessonHourName != null && lessonHourName.isNotEmpty) {
       secondaryParts.add(lessonHourName);
     }
-    secondaryParts
-        .add(DateFormat('EEEE, d MMM yyyy', 'id_ID').format(widget.record.date));
+    secondaryParts.add(
+      DateFormat('EEEE, d MMM yyyy', 'id_ID').format(widget.record.date),
+    );
     final secondary = secondaryParts.join(' · ');
 
     return AttendanceDayCard(
@@ -668,10 +653,7 @@ class _CalendarCta extends StatelessWidget {
           height: 48,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            border: Border.all(
-              color: const Color(0xFFBAE6FD),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFBAE6FD), width: 1),
             borderRadius: const BorderRadius.all(Radius.circular(14)),
           ),
           child: Row(

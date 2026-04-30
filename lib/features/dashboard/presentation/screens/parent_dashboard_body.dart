@@ -1,19 +1,17 @@
-// Parent dashboard body (wali) — mirrors admin Phase 3 redesign with violet gradient.
+// Parent dashboard body (wali) — mirrors admin Phase 3 redesign with brand-azure gradient.
 //
 // Shape of the screen (top-to-bottom)
 // -----------------------------------
-//   1. DashboardAppBar   — school name, lang, bell, profile
-//   2. Violet gradient hero — SchoolPill.expanded + realtime indicator
-//   3. KPI row (2x2 grid) — 4 cards: Anak terdaftar, Kehadiran, Nilai baru, Tagihan
-//   4. Perlu perhatian    — 4 inbox rows (Tagihan jatuh tempo, Nilai baru anak, etc.)
-//   5. Aksi cepat         — 4 quick action tiles (Pengumuman, Tagihan, Nilai, Kehadiran)
-//   6. Modul lain strip   — horizontal with overflow sheet
-//
-// TODO (backend): Wire these stats['...'] keys:
-//   - children_count: count of registered children
-//   - attendance_rate: overall attendance percentage
-//   - new_grades_7days: count of new grades in last 7 days
-//   - overdue_bills_count: count of unpaid bills
+//   1. DashboardAppBar         — school name, lang, bell, profile
+//   2. Brand-azure gradient hero — SchoolPill.expanded + realtime indicator
+//   3. KPI carousel (per-anak cycle, 4 cards) — Kehadiran, Tagihan, Rata-rata, Pengumuman
+//      Driven by `BrandKpiCarousel` + `activeSliceProvider('parent_dashboard')`.
+//      Backend payload: `state.stats['slices']` is a list of `_ParentSlice`
+//      bundles (see bottom of file) produced by
+//      `DashboardController::buildParentChildSlices`.
+//   4. Perlu perhatian — 4 inbox rows (Tagihan jatuh tempo, Nilai baru anak, etc.)
+//   5. Aksi cepat      — 4 quick action tiles (Pengumuman, Tagihan, Nilai, Kehadiran)
+//   6. Modul lain strip — horizontal with overflow sheet
 library;
 
 import 'dart:async';
@@ -22,10 +20,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/shell_nav.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
+import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
 import 'package:manajemensekolah/core/widgets/pending_inbox_card.dart';
 import 'package:manajemensekolah/core/widgets/quick_action_grid.dart';
@@ -33,10 +33,15 @@ import 'package:manajemensekolah/core/widgets/school_pill.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/parent_billing_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/screens/parent_report_card_screen.dart';
+import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
 
 // Parent role uses the Kamil Edu brand Azzure Blue. The hero gradient
 // goes from brand azure → a slightly darker shade so the gradient still
@@ -189,31 +194,44 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
   void _openAnnouncements() {
-    ShellNav.goTo(
-      ref,
-      role: 'wali',
-      tab: ShellTab.academic,
-      pushOnTop: const ParentAnnouncementScreen(),
-    );
+    AppNavigator.push(context, const ParentAnnouncementScreen());
   }
 
   void _openGrades() {
-    ShellNav.goTo(
-      ref,
-      role: 'wali',
-      tab: ShellTab.academic,
-      pushOnTop: ParentGradeScreen(academicYearId: _academicYearId),
+    AppNavigator.push(
+      context,
+      ParentGradeScreen(academicYearId: _academicYearId),
     );
   }
 
   void _openAttendance() {
-    // ParentAttendanceTab handles 0 / 1 / multi-anak resolution itself.
-    ShellNav.goTo(ref, role: 'wali', tab: ShellTab.attendance);
+    final ud = widget.state.userData;
+    // Resolve student ID from slices or userData
+    final slices = _parseSlices(widget.state.stats['slices']);
+    final studentId = slices.isNotEmpty
+        ? slices.first.studentId
+        : (ud['student_id'] ?? '').toString();
+    if (studentId.isEmpty) {
+      // Last resort: switch to tab which handles its own resolution
+      ShellNav.goTo(ref, role: 'wali', tab: ShellTab.attendance);
+      return;
+    }
+    AppNavigator.push(
+      context,
+      ParentAttendanceScreen(
+        parent: Map<String, dynamic>.from(ud),
+        studentId: studentId,
+        academicYearId: _academicYearId,
+        showBackButton: true,
+      ),
+    );
   }
 
   void _openBilling() {
-    // ParentBillingScreen IS the Finance tab root — switch tabs.
-    ShellNav.goTo(ref, role: 'wali', tab: ShellTab.finance);
+    AppNavigator.push(
+      context,
+      const ParentBillingScreen(showBackButton: true),
+    );
   }
 
   @override
@@ -261,7 +279,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       clipBehavior: Clip.none,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 70),
+          padding: const EdgeInsets.only(bottom: 100),
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -365,48 +383,162 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
         ),
         Positioned(
           key: widget.statsSectionKey,
-          left: 16,
-          right: 16,
+          left: 0,
+          right: 0,
           bottom: 0,
-          child: _buildKpiCards(),
+          child: _buildKpiCarousel(),
         ),
       ],
     );
   }
 
-  /// Build 3 KPI cards in a single horizontal row (unified for all roles).
-  Widget _buildKpiCards() {
-    // Count helpers for caption values
-    final alphaCount = _asInt(widget.state.stats['unread_presence'] ?? 0);
+  /// Build the KPI carousel. When the parent has multiple anak the
+  /// carousel auto-cycles per `BrandKpiCarousel`'s default 6 s dwell;
+  /// each card renders a Stories-style progress strip on its top edge
+  /// driven by `activeSliceProvider('parent_dashboard')`. Single-anak
+  /// (or no-data) parents see a flat 4-card layout (no progress
+  /// strip, no cycle) — but the four mockup KPIs are always present.
+  ///
+  /// Backend shape — `widget.state.stats['slices']` is a list of
+  /// per-child KPI bundles produced by `DashboardController::buildParentChildSlices`.
+  Widget _buildKpiCarousel() {
+    final parsed = _parseSlices(widget.state.stats['slices']);
 
-    return HeroStatsRow(
-      cards: [
-        HeroStatsCard(
-          label: 'Anak',
-          value: _formatNumber(_childrenCount),
-          icon: Icons.family_restroom_outlined,
-          accentColor: widget.primaryColor,
-          caption: 'terdaftar',
-          onTap: () {},
-        ),
-        HeroStatsCard(
-          label: 'Kehadiran',
-          value: '$_attendanceRate%',
-          icon: Icons.check_circle_outline,
-          accentColor: ColorUtils.success600,
-          caption: '$alphaCount alpha',
-          onTap: () {},
-        ),
-        HeroStatsCard(
-          label: 'Tagihan',
-          value: _formatNumber(_overdueBillsCount),
-          icon: Icons.account_balance_wallet_outlined,
-          accentColor: ColorUtils.error600,
-          caption: 'jatuh tempo',
-          onTap: () {},
-        ),
-      ],
+    // No-data fallback — backend returned an empty list (children not
+    // yet enrolled, or backend pre-deploy). Synthesise a single
+    // placeholder slice with zero/null values so the carousel still
+    // renders the four mockup KPIs (Kehadiran / Tagihan / Rata-rata /
+    // Pengumuman). With sliceCount = 1 the carousel skips the
+    // progress strip and auto-cycle automatically.
+    final slices = parsed.isEmpty ? [_ParentSlice.placeholder()] : parsed;
+
+    return BrandKpiCarousel(
+      scope: 'parent_dashboard',
+      sliceCount: slices.length,
+      autoSlideCards: true,
+      cardBuilder: (sliceIndex) {
+        final s = slices[sliceIndex.clamp(0, slices.length - 1)];
+        final ctxLabel = s.isPlaceholder
+            ? 'Belum ada data'
+            : '${s.name} · ${s.classLabel}';
+
+        return [
+          // 1. Kehadiran 30 hari
+          HeroStatsCard(
+            label: 'KEHADIRAN',
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: s.isPlaceholder,
+            value: s.isPlaceholder ? '—' : '${s.attendanceRate}%',
+            icon: Icons.directions_run_rounded,
+            accentColor: ColorUtils.success600,
+            caption: s.isPlaceholder
+                ? '30 hari'
+                : '${s.attendanceBreakdown['sakit'] ?? 0} sakit · ${s.attendanceBreakdown['izin'] ?? 0} izin · ${s.attendanceBreakdown['alpa'] ?? 0} alpa',
+            trend: (!s.isPlaceholder && s.attendanceDelta != 0)
+                ? StatTrend(
+                    direction: s.attendanceDelta > 0
+                        ? StatTrendDirection.up
+                        : StatTrendDirection.down,
+                    label:
+                        '${s.attendanceDelta > 0 ? '+' : ''}${s.attendanceDelta}% bln ini',
+                  )
+                : null,
+            onTap: s.isPlaceholder ? null : _openAttendance,
+          ),
+          // 2. Tugas
+          HeroStatsCard(
+            label: 'TUGAS',
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: s.isPlaceholder,
+            value: s.isPlaceholder ? '—' : '${s.tugasPending}',
+            icon: Icons.assignment_outlined,
+            accentColor: ColorUtils.warning600,
+            caption: s.isPlaceholder
+                ? 'menunggu'
+                : (s.tugasOverdue > 0
+                    ? '${s.tugasOverdue} belum dikumpul'
+                    : '${s.tugasTotal} total tugas'),
+            trend: (s.tugasOverdue > 0)
+                ? StatTrend(
+                    direction: StatTrendDirection.down,
+                    label: '${s.tugasOverdue} belum dikumpul',
+                    inverse: true,
+                  )
+                : null,
+            onTap: s.isPlaceholder ? null : _openGrades,
+          ),
+          // 3. Tagihan jatuh tempo
+          HeroStatsCard(
+            label: 'TAGIHAN',
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: s.isPlaceholder,
+            value: s.isPlaceholder
+                ? '—'
+                : (s.overdueTotal > 0
+                    ? 'Rp ${_formatRupiahShort(s.overdueTotal)}'
+                    : 'Lunas'),
+            icon: Icons.account_balance_wallet_outlined,
+            accentColor: ColorUtils.error600,
+            caption: s.isPlaceholder
+                ? 'jatuh tempo'
+                : (s.overdueCount > 0
+                    ? '${s.overdueCount} tagihan'
+                    : 'tidak ada tunggakan'),
+            onTap: s.isPlaceholder ? null : _openBilling,
+          ),
+          // 4. Rata-rata nilai
+          HeroStatsCard(
+            label: 'RATA-RATA',
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: s.isPlaceholder,
+            value: s.avgGradeTerm != null
+                ? s.avgGradeTerm!.toStringAsFixed(1)
+                : '—',
+            icon: Icons.bar_chart_rounded,
+            accentColor: const Color(0xFF6366F1),
+            caption: s.avgGradeTerm != null
+                ? '${s.avgGradeSubjectCount} mapel'
+                : (s.isPlaceholder ? 'semester aktif' : 'belum ada'),
+            trend: (s.avgGradeTerm != null && s.avgGradeDelta.abs() >= 0.1)
+                ? StatTrend(
+                    direction: s.avgGradeDelta > 0
+                        ? StatTrendDirection.up
+                        : StatTrendDirection.down,
+                    label:
+                        '${s.avgGradeDelta > 0 ? '+' : ''}${s.avgGradeDelta.toStringAsFixed(1)} sem lalu',
+                  )
+                : null,
+            onTap: s.isPlaceholder ? null : _openGrades,
+          ),
+        ];
+      },
     );
+  }
+
+  /// Parse the raw `slices` array from [DashboardState.stats] into
+  /// strongly-typed [_ParentSlice] entries. Defensive: missing fields
+  /// flatten to safe zero / null defaults so the carousel still
+  /// renders during partial backend rollouts.
+  List<_ParentSlice> _parseSlices(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((m) => _ParentSlice.fromJson(Map<String, dynamic>.from(m)))
+        .toList();
+  }
+
+  /// Format a Rupiah amount to a compact "K"/"jt" suffix used in the
+  /// KPI value field. The full amount lives in the detail screen.
+  String _formatRupiahShort(int amount) {
+    if (amount >= 1000000) {
+      final m = amount / 1000000;
+      return '${m.toStringAsFixed(m % 1 == 0 ? 0 : 1)}jt';
+    }
+    if (amount >= 1000) {
+      final k = amount / 1000;
+      return '${k.toStringAsFixed(k % 1 == 0 ? 0 : 0)}K';
+    }
+    return _formatNumber(amount);
   }
 
   String _formatNumber(int n) {
@@ -515,34 +647,68 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     );
   }
 
+  void _openReportCard() {
+    AppNavigator.push(
+      context,
+      ParentReportCardScreen(academicYearId: _academicYearId),
+    );
+  }
+
+  void _openClassActivity() {
+    AppNavigator.push(
+      context,
+      ParentClassActivityScreen(academicYearId: _academicYearId),
+    );
+  }
+
+  void _openAccount() {
+    AppNavigator.push(context, const SettingsScreen());
+  }
+
   Widget _buildModulLain() {
     return ModulLainStrip(
       title: 'Modul lain',
       totalLabel: '7 modul',
-      accentColor: _parentBrandAzure,
+      accentColor: _parentBrandAzureDeep,
       visibleItems: [
         ModulLainStripItem(
           label: 'Raport',
           icon: Icons.school_outlined,
-          onTap: () {}, // TODO: wire to report card screen
+          onTap: _openReportCard,
         ),
         ModulLainStripItem(
-          label: 'Kegiatan Kelas',
+          label: 'Kegiatan\nKelas',
           icon: Icons.event_outlined,
-          onTap: () {}, // TODO: wire to class activity screen
+          onTap: _openClassActivity,
+        ),
+        ModulLainStripItem(
+          label: 'Kehadiran',
+          icon: Icons.check_circle_outline,
+          onTap: _openAttendance,
+        ),
+      ],
+      overflowItems: [
+        ModulLainStripItem(
+          label: 'Nilai',
+          icon: Icons.grade_outlined,
+          onTap: _openGrades,
+        ),
+        ModulLainStripItem(
+          label: 'Pengumuman',
+          icon: Icons.announcement_outlined,
+          onTap: _openAnnouncements,
+        ),
+        ModulLainStripItem(
+          label: 'Tagihan',
+          icon: Icons.account_balance_wallet_outlined,
+          onTap: _openBilling,
         ),
         ModulLainStripItem(
           label: 'Akun',
           icon: Icons.account_circle_outlined,
-          onTap: () {}, // TODO: wire to account settings
-        ),
-        ModulLainStripItem(
-          label: 'Placeholder',
-          icon: Icons.more_horiz,
-          onTap: () {},
+          onTap: _openAccount,
         ),
       ],
-      overflowItems: const [],
     );
   }
 }
@@ -705,6 +871,113 @@ class _HeroIconButton extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// One per-anak KPI bundle as returned by
+/// `DashboardController::buildParentChildSlices`. Strongly-typed so the
+/// card builder can read fields without repeated null/coercion checks.
+@immutable
+class _ParentSlice {
+  final String studentId;
+  final String name;
+  final String classLabel;
+  final int attendanceRate;
+  final int attendanceDelta;
+  final Map<String, int> attendanceBreakdown;
+  final int overdueTotal;
+  final int overdueCount;
+  final double? avgGradeTerm;
+  final double avgGradeDelta;
+  final int avgGradeSubjectCount;
+  final int tugasTotal;
+  final int tugasPending;
+  final int tugasOverdue;
+  final String? tugasNextTitle;
+
+  /// True when this slice is a synthesised "no data" placeholder used
+  /// to keep the four mockup KPIs visible before the parent has
+  /// children enrolled or before the backend slice payload is wired.
+  /// Cards render `—` for the value and disable taps.
+  final bool isPlaceholder;
+
+  const _ParentSlice({
+    required this.studentId,
+    required this.name,
+    required this.classLabel,
+    required this.attendanceRate,
+    required this.attendanceDelta,
+    required this.attendanceBreakdown,
+    required this.overdueTotal,
+    required this.overdueCount,
+    required this.avgGradeTerm,
+    required this.avgGradeDelta,
+    required this.avgGradeSubjectCount,
+    required this.tugasTotal,
+    required this.tugasPending,
+    required this.tugasOverdue,
+    this.tugasNextTitle,
+    this.isPlaceholder = false,
+  });
+
+  /// Empty-state slice. Carousel renders 4 mockup KPIs with `—`
+  /// values and disabled taps. Used when the parent has no children
+  /// linked yet or the backend hasn't returned a slices array.
+  factory _ParentSlice.placeholder() => const _ParentSlice(
+    studentId: '',
+    name: '',
+    classLabel: '',
+    attendanceRate: 0,
+    attendanceDelta: 0,
+    attendanceBreakdown: {'sakit': 0, 'izin': 0, 'alpa': 0},
+    overdueTotal: 0,
+    overdueCount: 0,
+    avgGradeTerm: null,
+    avgGradeDelta: 0,
+    avgGradeSubjectCount: 0,
+    tugasTotal: 0,
+    tugasPending: 0,
+    tugasOverdue: 0,
+    isPlaceholder: true,
+  );
+
+  factory _ParentSlice.fromJson(Map<String, dynamic> json) {
+    int asInt(dynamic v) {
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) return int.tryParse(v) ?? 0;
+      return 0;
+    }
+
+    double? asDouble(dynamic v) {
+      if (v == null) return null;
+      if (v is double) return v;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v);
+      return null;
+    }
+
+    return _ParentSlice(
+      studentId: json['student_id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      classLabel: json['class_label']?.toString() ?? '',
+      attendanceRate: asInt(json['attendance_rate_30d']),
+      attendanceDelta: asInt(json['attendance_delta_pct']),
+      attendanceBreakdown: {
+        'sakit': asInt((json['attendance_breakdown'] as Map?)?['sakit']),
+        'izin': asInt((json['attendance_breakdown'] as Map?)?['izin']),
+        'alpa': asInt((json['attendance_breakdown'] as Map?)?['alpa']),
+      },
+      overdueTotal: asInt(json['overdue_total']),
+      overdueCount: asInt(json['overdue_count']),
+      avgGradeTerm: asDouble(json['avg_grade_term']),
+      avgGradeDelta: asDouble(json['avg_grade_delta']) ?? 0.0,
+      avgGradeSubjectCount: asInt(json['avg_grade_subject_count']),
+      tugasTotal: asInt(json['tugas_total']),
+      tugasPending: asInt(json['tugas_pending']),
+      tugasOverdue: asInt(json['tugas_overdue']),
+      tugasNextTitle: json['tugas_next_title']?.toString(),
     );
   }
 }

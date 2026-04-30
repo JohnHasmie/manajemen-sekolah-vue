@@ -224,6 +224,7 @@ mixin ParentGradeDataLoadingMixin
       final result = await GradeService.getGradesPaginated(
         studentId: selectedStudentId,
         academicYearId: academicYearId,
+        gradeType: (this as dynamic).selectedGradeTypeFilter, // From ParentGradeFilterMixin
         page: page,
       );
       final newItems = List<dynamic>.from(result['data'] ?? []);

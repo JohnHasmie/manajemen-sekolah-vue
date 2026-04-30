@@ -26,6 +26,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
@@ -38,6 +39,9 @@ import 'package:manajemensekolah/features/class_activity/presentation/mixins/par
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/parent_activity_tour_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/parent_activity_ui_builder_mixin.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/shell_controller.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 /// Parent's read-only view of class activities with read tracking.
 class ParentClassActivityScreen extends ConsumerStatefulWidget {
@@ -131,26 +135,19 @@ class ParentClassActivityScreenState
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
+      body: BrandPageLayout(
+        header: _buildHeader(lang),
+        role: 'wali',
         onRefresh: () async {
           await forceRefresh();
           if (mounted) setState(() => _lastSync = DateTime.now());
         },
-        // Single outer ListView so the gradient hero scrolls with
-        // the activity list — matches the dashboard / Kehadiran
-        // hero idiom (not pinned).
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          children: [
-            _buildHeader(lang),
-            KeyedSubtree(
-              key: activityListKey,
-              child: buildActivityList(),
-            ),
-          ],
-        ),
+        bodyChildren: [
+          KeyedSubtree(
+            key: activityListKey,
+            child: buildActivityList(),
+          ),
+        ],
       ),
     );
   }
@@ -159,6 +156,8 @@ class ParentClassActivityScreenState
     final children = _buildChildSummaries();
     return BrandPageHeader(
       role: 'wali',
+      showBackButton: true,
+      onBackPressed: () => AppNavigator.pop(context),
       subtitle: lang.getTranslatedText({
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',
@@ -198,10 +197,7 @@ class ParentClassActivityScreenState
       bottomSlot: BrandFilterChipStrip(
         chips: [
           BrandFilterChip(
-            label: lang.getTranslatedText({
-              'en': 'Type',
-              'id': 'Jenis',
-            }),
+            label: lang.getTranslatedText({'en': 'Type', 'id': 'Jenis'}),
             value: _typeChipValue(lang),
             onTap: () => _showFilterSheet(lang),
             width: 172,
@@ -236,7 +232,7 @@ class ParentClassActivityScreenState
             primaryColor: primaryColor,
             maxHeightFactor: 0.6,
             onApply: () {
-              Navigator.pop(ctx);
+              AppNavigator.pop(ctx);
               setState(() => _typeFilter = tempType);
             },
             onReset: () => setSS(() => tempType = null),
@@ -292,9 +288,7 @@ class ParentClassActivityScreenState
       return ChildSummary(
         id: model.id,
         shortName: model.name.isEmpty ? '?' : model.name,
-        klass: model.className.isEmpty
-            ? '-'
-            : 'Kelas ${model.className}',
+        klass: model.className.isEmpty ? '-' : 'Kelas ${model.className}',
       );
     }).toList();
   }

@@ -107,7 +107,12 @@ class DashboardStateTransformer {
       ..['unread_presence'] = toInt(data['unread_presence'])
       ..['unread_billings'] = toInt(
         data['unread_billings'] ?? data['unread_billing'],
-      );
+      )
+      // Per-anak KPI slices for `BrandKpiCarousel`. Passed through as
+      // a raw List so `_ParentSlice.fromJson` in the dashboard body
+      // does the typed parsing — keeping this transformer's role
+      // narrow (legacy badge ints only).
+      ..['slices'] = data['slices'] is List ? data['slices'] : const [];
   }
 
   static String _effectiveRoleFromState(DashboardState state) {

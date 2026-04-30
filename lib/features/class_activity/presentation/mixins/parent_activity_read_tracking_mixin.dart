@@ -10,7 +10,7 @@ import 'package:manajemensekolah/features/class_activity/presentation/screens/pa
 mixin ParentActivityReadTrackingMixin
     on ConsumerState<ParentClassActivityScreen> {
   void onItemVisible(Map<String, dynamic> activity) {
-    final state = this as dynamic;
+    final state = this as ParentClassActivityScreenState;
     if (!state.hasFreshData) return;
 
     final id = activity['id'].toString();
@@ -27,7 +27,7 @@ mixin ParentActivityReadTrackingMixin
   }
 
   void scheduleMarkRead() {
-    final state = this as dynamic;
+    final state = this as ParentClassActivityScreenState;
     if (state.markReadDebounce?.isActive ?? false) return;
 
     state.markReadDebounce = Timer(const Duration(seconds: 1), () {
@@ -46,7 +46,7 @@ mixin ParentActivityReadTrackingMixin
         'Auto-marking ${ids.length} visible class activities as read...',
       );
 
-      final state = this as dynamic;
+      final state = this as ParentClassActivityScreenState;
       setState(() {
         for (final item in state.activityList) {
           if (ids.contains(item['id'].toString())) {
@@ -55,7 +55,7 @@ mixin ParentActivityReadTrackingMixin
         }
       });
 
-      final cacheKey = (this as dynamic).buildActivitiesCacheKey();
+      final cacheKey = state.buildActivitiesCacheKey();
       await LocalCacheService.save(cacheKey, state.activityList);
 
       await getIt<ApiClassActivityService>().markAsRead(ids);

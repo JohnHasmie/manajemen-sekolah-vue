@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/widgets/empty_state.dart';
-import 'package:manajemensekolah/core/widgets/error_screen.dart';
+import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
@@ -56,33 +55,86 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
       infoTagCount: 3,
       baseColor: getPrimaryColor().withValues(alpha: 0.15),
       highlightColor: getPrimaryColor().withValues(alpha: 0.05),
+      shrinkWrap: true,
     );
   }
 
   Widget _buildErrorState() {
-    return ErrorScreen(errorMessage: errorMessage!, onRetry: forceRefresh);
+    return BrandEmptyState(
+      icon: Icons.cloud_off_rounded,
+      tone: BrandEmptyStateTone.danger,
+      kicker: 'Sambungan bermasalah',
+      title: 'Tidak dapat memuat pengumuman',
+      message: errorMessage,
+      primaryAction: BrandEmptyStateAction(
+        label: 'Coba lagi',
+        icon: Icons.refresh_rounded,
+        onTap: forceRefresh,
+      ),
+    );
   }
 
   Widget _buildEmptyState(LanguageProvider languageProvider) {
-    return EmptyState(
+    final isFiltered = searchController.text.isNotEmpty;
+    if (isFiltered) {
+      return BrandEmptyState(
+        icon: Icons.filter_alt_outlined,
+        tone: BrandEmptyStateTone.warning,
+        kicker: languageProvider.getTranslatedText({
+          'en': 'Filtered',
+          'id': 'Filter aktif',
+        }),
+        title: languageProvider.getTranslatedText({
+          'en': 'No results',
+          'id': 'Tidak ada hasil',
+        }),
+        message: languageProvider.getTranslatedText({
+          'en':
+              'No announcements match "${searchController.text}". '
+              'Clear the search to see everything again.',
+          'id':
+              'Tidak ada pengumuman yang cocok dengan "${searchController.text}". '
+              'Hapus pencarian untuk melihat semua kembali.',
+        }),
+        primaryAction: BrandEmptyStateAction(
+          label: languageProvider.getTranslatedText({
+            'en': 'Clear search',
+            'id': 'Hapus pencarian',
+          }),
+          icon: Icons.close_rounded,
+          onTap: () {
+            searchController.clear();
+          },
+        ),
+      );
+    }
+    return BrandEmptyState(
       icon: Icons.announcement_outlined,
+      tone: BrandEmptyStateTone.info,
+      kicker: languageProvider.getTranslatedText({
+        'en': 'No data yet',
+        'id': 'Belum ada data',
+      }),
       title: languageProvider.getTranslatedText({
-        'en': 'No Announcements',
-        'id': 'Tidak Ada Pengumuman',
+        'en': 'No announcements yet',
+        'id': 'Belum ada pengumuman',
       }),
-      subtitle: languageProvider.getTranslatedText({
-        'en': searchController.text.isNotEmpty
-            ? 'No results'
-            : 'No announcements',
-        'id': searchController.text.isNotEmpty
-            ? 'Tidak ada hasil'
-            : 'Tidak ada pengumuman',
+      message: languageProvider.getTranslatedText({
+        'en':
+            'Announcements from the school and homeroom teacher '
+            'will appear here when available.',
+        'id':
+            'Pengumuman dari sekolah dan wali kelas '
+            'akan muncul di sini ketika tersedia.',
       }),
-      buttonText: languageProvider.getTranslatedText({
-        'en': 'Refresh',
-        'id': 'Muat Ulang',
-      }),
-      onPressed: forceRefresh,
+      secondaryAction: BrandEmptyStateAction(
+        label: languageProvider.getTranslatedText({
+          'en': 'Refresh',
+          'id': 'Muat ulang',
+        }),
+        icon: Icons.refresh_rounded,
+        onTap: forceRefresh,
+      ),
     );
   }
 
@@ -98,27 +150,27 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
     // content and defer scrolling to the outer list — and the
     // RefreshIndicator now lives one level up in the screen.
     return ListView.builder(
-        key: listKey,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(top: 8, bottom: 16),
-        itemCount: grouped.length,
-        itemBuilder: (context, index) {
-          final entry = grouped[index];
-          if (entry is _MonthSectionHeader) {
-            return _buildMonthHeader(entry.label, entry.count);
-          }
-          final item = (entry as _MonthAnnouncementItem).announcement;
-          return Builder(
-            builder: (context) {
-              onItemVisible(item);
-              // Original list-index isn't preserved across grouping; pass 0
-              // since downstream usage is cosmetic (animation stagger only).
-              return buildAnnouncementCard(item, 0, showAnnouncementDetail);
-            },
-          );
-        },
-      );
+      key: listKey,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(top: 8, bottom: 16),
+      itemCount: grouped.length,
+      itemBuilder: (context, index) {
+        final entry = grouped[index];
+        if (entry is _MonthSectionHeader) {
+          return _buildMonthHeader(entry.label, entry.count);
+        }
+        final item = (entry as _MonthAnnouncementItem).announcement;
+        return Builder(
+          builder: (context) {
+            onItemVisible(item);
+            // Original list-index isn't preserved across grouping; pass 0
+            // since downstream usage is cosmetic (animation stagger only).
+            return buildAnnouncementCard(item, 0, showAnnouncementDetail);
+          },
+        );
+      },
+    );
   }
 
   /// Walks [items] and emits an interleaved list of section headers + cards.
@@ -127,8 +179,18 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
   List<_MonthListEntry> _groupByMonth(List<dynamic> items) {
     if (items.isEmpty) return const [];
     const monthsId = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     final byMonth = <String, List<Map<String, dynamic>>>{};
     final monthOrder = <String>[];
@@ -142,9 +204,7 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
         key = 'Lainnya';
       } else {
         final dt = DateTime.tryParse(dateStr);
-        key = dt == null
-            ? 'Lainnya'
-            : '${monthsId[dt.month - 1]} ${dt.year}';
+        key = dt == null ? 'Lainnya' : '${monthsId[dt.month - 1]} ${dt.year}';
       }
       if (!byMonth.containsKey(key)) {
         monthOrder.add(key);

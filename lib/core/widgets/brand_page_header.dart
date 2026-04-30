@@ -98,6 +98,15 @@ class BrandPageHeader extends StatelessWidget {
   /// `AppNavigator.canPop(context)`.
   final bool? showBackButton;
 
+  /// Extra bottom padding inside the gradient to reserve space for a
+  /// KPI overlay card. The body's scroll view should start with a
+  /// negative top margin (e.g. `padding: EdgeInsets.only(top: 0)` +
+  /// the KPI as the first child) so the KPI sits ON this extended
+  /// gradient area, creating the overlap effect.
+  ///
+  /// When 0 (default), no extra space is added.
+  final double kpiOverlayHeight;
+
   const BrandPageHeader({
     super.key,
     required this.role,
@@ -109,14 +118,18 @@ class BrandPageHeader extends StatelessWidget {
     this.childSelector,
     this.bottomSlot,
     this.showBackButton,
+    this.kpiOverlayHeight = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     final statusBarHeight = MediaQuery.of(context).viewPadding.top;
     final accentColor = ColorUtils.getRoleColor(role);
+    // Use Navigator.canPop (Flutter navigator) instead of context.canPop
+    // (go_router) because screens pushed via AppNavigator.push use
+    // Flutter's Navigator, not go_router's routing.
     final showBack = showBackButton ??
-        (onBackPressed != null || AppNavigator.canPop(context));
+        (onBackPressed != null || Navigator.canPop(context));
 
     return Container(
       width: double.infinity,
@@ -138,7 +151,7 @@ class BrandPageHeader extends StatelessWidget {
         AppSpacing.md,
         statusBarHeight + AppSpacing.md,
         AppSpacing.md,
-        AppSpacing.lg,
+        AppSpacing.lg + kpiOverlayHeight,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

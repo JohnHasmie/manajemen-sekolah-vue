@@ -199,6 +199,25 @@ class SkeletonListLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (shrinkWrap) {
+      return Padding(
+        padding: padding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: List.generate(
+            itemCount,
+            (index) => SkeletonListCard(
+              infoTagCount: infoTagCount,
+              showActions: showActions,
+              baseColor: baseColor,
+              highlightColor: highlightColor,
+            ),
+          ),
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: padding,
       shrinkWrap: shrinkWrap,

@@ -23,6 +23,34 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Direction of a stat's trend indicator.
 enum StatTrendDirection { up, down, flat }
 
+/// Progress descriptor for the optional Stories-style segmented strip
+/// drawn at the top edge of a [HeroStatsCard].
+///
+/// Used by `BrandKpiCarousel` so each card in the strip can render the
+/// same multi-segment "which slice is active" indicator (e.g., one
+/// segment per anak for a parent dashboard, one per kelas for a guru
+/// dashboard). When `total` is 1 the strip is omitted entirely — a
+/// single-slice card looks like a plain stats card.
+@immutable
+class KpiProgress {
+  /// Total number of slices in the cycle (e.g., 3 children).
+  final int total;
+
+  /// 0-based index of the currently-active slice.
+  final int activeIndex;
+
+  /// 0..1 fill of the active segment (0 = just started, 1 = about to
+  /// advance). Sibling cards in the same strip share this value so the
+  /// animation is visually one continuous bar.
+  final double fillFraction;
+
+  const KpiProgress({
+    required this.total,
+    required this.activeIndex,
+    required this.fillFraction,
+  });
+}
+
 /// A single-line, optional trend indicator rendered in the top-right of the
 /// card (e.g., "▲ 12% vs minggu lalu").
 class StatTrend {
@@ -78,8 +106,28 @@ class HeroStatsCard extends StatelessWidget {
   /// Optional trend chip in the top-right of the card.
   final StatTrend? trend;
 
-  /// Tap handler — typically navigates to a detail view.
+  /// Optional secondary line under [label] showing which slice the card
+  /// currently represents (e.g., "Salman · 30 hari", "Kelas 5A · MTK").
+  /// Lives between the label and the value so the user always knows
+  /// whose number they're reading. Pass null when no slice context
+  /// applies (single-anak parent, admin school view, etc.).
+  final String? sliceLabel;
+
+  /// When true the [sliceLabel] is rendered in muted slate instead of
+  /// the card's [accentColor]. Used for placeholder / empty states
+  /// ("Belum ada data") so they don't read as alerts.
+  final bool sliceLabelMuted;
+
+  /// Optional Stories-style segmented progress at the top edge.
+  /// Driven by `BrandKpiCarousel`'s `activeSliceProvider` so all cards
+  /// in the strip animate in sync. Null hides the strip entirely.
+  final KpiProgress? progress;
+
+  /// Short tap handler — in carousel context this pauses/plays.
   final VoidCallback? onTap;
+
+  /// Long press handler — navigates to the detail screen.
+  final VoidCallback? onLongPress;
 
   /// Padding inside the card. Default: 12 px all around (compact so three
   /// tiles fit a 360 px viewport with the value+label inline format).
@@ -93,7 +141,11 @@ class HeroStatsCard extends StatelessWidget {
     required this.accentColor,
     this.caption,
     this.trend,
+    this.sliceLabel,
+    this.sliceLabelMuted = false,
+    this.progress,
     this.onTap,
+    this.onLongPress,
     this.padding = const EdgeInsets.all(12),
   });
 
@@ -116,33 +168,64 @@ class HeroStatsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon badge top-left (mockup line 39-42)
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.12),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            alignment: Alignment.center,
-            child: Icon(icon, size: 18, color: accentColor),
+          // Optional Stories-style progress strip at the top edge.
+          if (progress != null && progress!.total > 1) ...[
+            _SliceProgressStrip(progress: progress!, accentColor: accentColor),
+            const SizedBox(height: 10),
+          ],
+          // Icon badge + label on same row (v3 mockup)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: const BorderRadius.all(Radius.circular(11)),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 18, color: accentColor),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 2),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF64748B),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    if (sliceLabel != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        sliceLabel!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: sliceLabelMuted
+                              ? const Color(0xFF94A3B8)
+                              : accentColor,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
           const Spacer(),
-          // Small label above the value (mockup line 43)
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(height: 6),
-          // Big value + inline trend chip or caption (mockup line 44-56).
-          // Caption ("· 42 kelas") and trend chip sit inline after the
-          // value, bottom-aligned to the text baseline.
+          // Big value + trend badge
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -152,7 +235,7 @@ class HeroStatsCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),
                     height: 1.0,
@@ -160,24 +243,8 @@ class HeroStatsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (caption != null) ...[
-                const SizedBox(width: 6),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 3),
-                  child: Text(
-                    caption!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-              ],
               if (trend != null) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 2),
                   child: _TrendChip(trend: trend!),
@@ -185,16 +252,31 @@ class HeroStatsCard extends StatelessWidget {
               ],
             ],
           ),
+          // Caption below value (separate line)
+          if (caption != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              caption!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
+              ),
+            ),
+          ],
         ],
       ),
     );
 
-    if (onTap == null) return card;
+    if (onTap == null && onLongPress == null) return card;
     return Material(
       color: Colors.transparent,
       borderRadius: const BorderRadius.all(Radius.circular(16)),
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: card,
       ),
@@ -251,6 +333,92 @@ class _TrendChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Stories-style segmented progress bar drawn flush to the top edge
+/// of a [HeroStatsCard]. Each segment represents one slice in the
+/// cycle (e.g., one anak / one kelas). The active segment fills from
+/// 0..1 according to [KpiProgress.fillFraction] driven by
+/// `BrandKpiCarousel`'s active-slice notifier; segments before the
+/// active index are fully filled, segments after are empty.
+class _SliceProgressStrip extends StatelessWidget {
+  final KpiProgress progress;
+  final Color accentColor;
+
+  const _SliceProgressStrip({required this.progress, required this.accentColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 3,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const gap = 4.0;
+          final totalGaps = (progress.total - 1) * gap;
+          final segWidth =
+              (constraints.maxWidth - totalGaps) / progress.total;
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              for (int i = 0; i < progress.total; i++) ...[
+                _Segment(
+                  width: segWidth,
+                  // Segments before active are full, the active one
+                  // animates 0..1, segments after are empty.
+                  fill: i < progress.activeIndex
+                      ? 1.0
+                      : (i == progress.activeIndex
+                            ? progress.fillFraction.clamp(0.0, 1.0)
+                            : 0.0),
+                  color: accentColor,
+                ),
+                if (i < progress.total - 1) const SizedBox(width: gap),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _Segment extends StatelessWidget {
+  final double width;
+  final double fill;
+  final Color color;
+
+  const _Segment({
+    required this.width,
+    required this.fill,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Track
+        Container(
+          width: width,
+          height: 3,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE2E8F0),
+            borderRadius: BorderRadius.circular(1.5),
+          ),
+        ),
+        // Fill
+        Container(
+          width: width * fill,
+          height: 3,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(1.5),
+          ),
+        ),
+      ],
     );
   }
 }

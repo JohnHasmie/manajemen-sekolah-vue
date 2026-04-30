@@ -8,8 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/providers/school_epoch_provider.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/shell/shell_controller.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -141,12 +143,37 @@ class _SchoolSelectionDialog extends StatelessWidget {
 
       final newRole = result['user']?['role']?.toString() ?? currentRole;
       await LocalCacheService.clearAll();
-      // Reset so the next dashboard page triggers a fresh initialize
-      ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
       if (ref.context.mounted) {
-        if (newRole == currentRole) {
-          ref.invalidate(dashboardProvider);
+        // Compare via the *effective* role (the shell-family key) — the
+        // backend uses English ('parent' / 'teacher') while
+        // `widget.role` carries the Indonesian alias ('wali' / 'guru').
+        // Without normalizing, parent → parent looked like a cross-role
+        // switch and we'd `router.go('/parent')`, which GoRouter treats
+        // as a same-route no-op, so the refresh code never ran.
+        final newKey = _shellRoleKey(newRole);
+        final currentKey = _shellRoleKey(currentRole);
+        if (newKey == currentKey) {
+          // Same role → the `IndexedStack` subtree won't be replaced
+          // by router.go (it's the same const route). Three things have
+          // to happen for parent screens to actually refresh:
+          //   1. Reset the per-tab `GlobalKey<NavigatorState>` so the
+          //      Navigator children lose their identity and remount —
+          //      otherwise GlobalKey reparenting keeps every page
+          //      alive across the IndexedStack rebuild.
+          //   2. Bump `schoolEpochProvider` so `RoleShell`'s
+          //      `KeyedSubtree` tears down + rebuilds the IndexedStack.
+          //   3. Reinitialize the dashboard provider against the new
+          //      school context.
+          ref.read(shellProvider(newKey).notifier).resetNavigatorStacks();
+          bumpSchoolEpoch(ref);
+          await ref
+              .read(dashboardProvider.notifier)
+              .reinitialize(newRole);
         } else {
+          ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
+          // Cross-role switches also benefit from the epoch bump in
+          // case the new role's shell happens to be alive in memory.
+          bumpSchoolEpoch(ref);
           router.go('/$newRole');
         }
       }
@@ -161,6 +188,17 @@ class _SchoolSelectionDialog extends StatelessWidget {
       }
     }
   }
+}
+
+/// Maps a backend role value (`'parent'` / `'teacher'` / `'admin'`) to the
+/// `shellProvider` family key (`'wali'` / `'guru'` / `'admin'`). Mirrors the
+/// normalization done in `DashboardController._effectiveRole` — keep these
+/// two in sync, otherwise the school-switch fix will read the wrong shell
+/// notifier and the GlobalKeys won't actually be regenerated.
+String _shellRoleKey(String role) {
+  if (role == 'teacher') return 'guru';
+  if (role == 'parent') return 'wali';
+  return role;
 }
 
 class _SchoolTile extends StatelessWidget {
@@ -323,11 +361,26 @@ void showDashboardRolePickerDialog({
                     if (!ref.context.mounted) return;
                     final newRole = result['user']?['role']?.toString() ?? role;
                     await LocalCacheService.clearAll();
-                    ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
                     if (ref.context.mounted) {
-                      if (newRole == currentRole) {
-                        ref.invalidate(dashboardProvider);
+                      final newKey = _shellRoleKey(newRole);
+                      final currentKey = _shellRoleKey(currentRole);
+                      if (newKey == currentKey) {
+                        // Reset Navigator GlobalKeys + bump epoch so
+                        // the IndexedStack subtree fully rebuilds with
+                        // fresh per-tab state. (See _onSchoolTap for
+                        // the long-form rationale.)
+                        ref
+                            .read(shellProvider(newKey).notifier)
+                            .resetNavigatorStacks();
+                        bumpSchoolEpoch(ref);
+                        await ref
+                            .read(dashboardProvider.notifier)
+                            .reinitialize(newRole);
                       } else {
+                        ref
+                            .read(dashboardProvider.notifier)
+                            .resetForSchoolSwitch();
+                        bumpSchoolEpoch(ref);
                         router.go('/$newRole');
                       }
                     }

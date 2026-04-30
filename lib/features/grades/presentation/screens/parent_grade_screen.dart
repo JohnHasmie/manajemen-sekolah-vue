@@ -14,15 +14,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/mixins/pagination_mixin.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_data_loading_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_detail_mixin.dart';
+import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_filter_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_read_tracking_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_tour_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_ui_mixin.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/shell_controller.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 /// Parent's read-only view of student grades.
 ///
@@ -46,6 +54,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
         ParentGradeDataLoadingMixin,
         ParentGradeTourMixin,
         ParentGradeDetailMixin,
+        ParentGradeFilterMixin,
         ParentGradeUiMixin {
   List<dynamic> _gradeList = [];
   List<dynamic> _studentList = [];
@@ -162,24 +171,18 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageRiverpod);
+    final kpi = _gradeList.isNotEmpty ? _buildKpiWidget(lang) : null;
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
+      body: BrandPageLayout(
+        header: _buildHeader(lang),
+        kpiCard: kpi,
+        role: 'wali',
         onRefresh: () async {
           await onRefreshRequested();
           if (mounted) setState(() => _lastSync = DateTime.now());
         },
-        // Single outer ListView so the gradient hero scrolls with
-        // the body — matches the dashboard / Kehadiran hero idiom.
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          children: [
-            _buildHeader(lang),
-            _buildGradesContent(lang),
-          ],
-        ),
+        bodyChildren: [_buildGradesBody(lang)],
       ),
     );
   }
@@ -192,35 +195,39 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
   ///     the grade cards for that subject.
   /// Falls back to the loading skeleton or empty state via the
   /// existing `buildGradeList()` mixin call when there's no data.
-  Widget _buildGradesContent(LanguageProvider lang) {
+  // Cached aggregates recomputed when grade list changes.
+  ({int scored, int pending, double avg, double min, double max}) _gradeAggregates() {
+    final scores = _gradeList
+        .map((g) => double.tryParse((g as Map)['score']?.toString() ?? ''))
+        .whereType<double>()
+        .toList();
+    return (
+      scored: scores.length,
+      pending: _gradeList.length - scores.length,
+      avg: scores.isEmpty ? 0.0 : scores.reduce((a, b) => a + b) / scores.length,
+      min: scores.isEmpty ? 0.0 : scores.reduce((a, b) => a < b ? a : b),
+      max: scores.isEmpty ? 0.0 : scores.reduce((a, b) => a > b ? a : b),
+    );
+  }
+
+  Widget _buildKpiWidget(LanguageProvider lang) {
+    final s = _gradeAggregates();
+    return _buildKpiStrip(lang, s.scored, s.pending, s.avg, s.min, s.max);
+  }
+
+  Widget _buildGradesBody(LanguageProvider lang) {
     if (_gradeList.isEmpty) {
       return buildGradeList(); // mixin handles loading + empty state
     }
 
-    // Aggregate stats for the KPI strip.
-    final scores = _gradeList
-        .map((g) {
-          final raw = (g as Map)['score']?.toString() ?? '';
-          return double.tryParse(raw);
-        })
-        .whereType<double>()
-        .toList();
-    final scored = scores.length;
-    final pending = _gradeList.length - scored;
-    final avg = scores.isEmpty
-        ? 0.0
-        : scores.reduce((a, b) => a + b) / scores.length;
-    final minScore = scores.isEmpty ? 0.0 : scores.reduce((a, b) => a < b ? a : b);
-    final maxScore = scores.isEmpty ? 0.0 : scores.reduce((a, b) => a > b ? a : b);
-
-    // Group grades by subject preserving insertion order.
     final groups = <String, List<dynamic>>{};
     for (final g in _gradeList) {
       final m = g as Map;
-      final subject = (m['subject_name'] ??
-              m['mata_pelajaran'] ??
-              AppLocalizations.subject.tr)
-          .toString();
+      final subject =
+          (m['subject_name'] ??
+                  m['mata_pelajaran'] ??
+                  AppLocalizations.subject.tr)
+              .toString();
       groups.putIfAbsent(subject, () => <dynamic>[]).add(g);
     }
 
@@ -228,18 +235,6 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: _GradeKpiStrip(
-            count: _gradeList.length,
-            scored: scored,
-            pending: pending,
-            avg: avg,
-            minScore: minScore,
-            maxScore: maxScore,
-            lang: lang,
-          ),
-        ),
         for (final entry in groups.entries) ...[
           _GradeSubjectHeader(
             subject: entry.key,
@@ -249,11 +244,12 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
           // subject's grades through `buildGradeList()` would mean
           // overriding the gradeList field temporarily — too fragile.
           // Inline a lighter card row instead.
-          for (final g in entry.value) _GradeCardRow(
-            grade: g as Map<String, dynamic>,
-            onTap: () => showGradeDetail(g),
-            onVisible: () => onItemVisible(g),
-          ),
+          for (final g in entry.value)
+            _GradeCardRow(
+              grade: g as Map<String, dynamic>,
+              onTap: () => showGradeDetail(g),
+              onVisible: () => onItemVisible(g),
+            ),
         ],
         const SizedBox(height: 24),
       ],
@@ -269,28 +265,93 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
     return scores.reduce((a, b) => a + b) / scores.length;
   }
 
+  Widget _buildKpiStrip(
+    LanguageProvider lang,
+    int scored,
+    int pending,
+    double avg,
+    double minScore,
+    double maxScore,
+  ) {
+    String fmtScore(double v) {
+      if (v == v.truncateToDouble()) return v.toStringAsFixed(0);
+      return v.toStringAsFixed(1).replaceAll('.', ',');
+    }
+
+    String avgLabel() {
+      if (avg >= 85) return 'Sangat Baik';
+      if (avg >= 75) return 'Baik';
+      if (avg >= 65) return 'Cukup';
+      return 'Perlu perbaikan';
+    }
+
+    Color avgColor() {
+      if (avg >= 85) return const Color(0xFF15803D);
+      if (avg >= 75) return const Color(0xFF1D4ED8);
+      if (avg >= 65) return const Color(0xFFB45309);
+      return const Color(0xFF991B1B);
+    }
+
+    return BrandKpiStrip(
+      columns: [
+        BrandKpiColumn(
+          label: lang.getTranslatedText({
+            'en': 'Assessments',
+            'id': 'Penilaian',
+          }),
+          value: '${_gradeList.length}',
+          sub: '$scored sudah · $pending menunggu',
+        ),
+        BrandKpiColumn(
+          label: lang.getTranslatedText({
+            'en': 'Average',
+            'id': 'Rata-rata',
+          }),
+          value: fmtScore(avg),
+          badge: avgLabel(),
+          badgeColor: avgColor(),
+        ),
+        BrandKpiColumn(
+          label: lang.getTranslatedText({
+            'en': 'Range',
+            'id': 'Rentang',
+          }),
+          value: '${fmtScore(minScore)} — ${fmtScore(maxScore)}',
+        ),
+      ],
+    );
+  }
+
   Widget _buildHeader(LanguageProvider lang) {
-    final summaries = _studentList.map<ChildSummary>((raw) {
-      final model = Student.fromJson(raw as Map<String, dynamic>);
-      return ChildSummary(
-        id: model.id,
-        shortName: model.name.isEmpty ? '?' : model.name,
-        klass: model.className.isEmpty
-            ? '-'
-            : 'Kelas ${model.className}',
-      );
-    }).toList(growable: false);
+    final summaries = _studentList
+        .map<ChildSummary>((raw) {
+          final model = Student.fromJson(raw as Map<String, dynamic>);
+          return ChildSummary(
+            id: model.id,
+            shortName: model.name.isEmpty ? '?' : model.name,
+            klass: model.className.isEmpty ? '-' : 'Kelas ${model.className}',
+          );
+        })
+        .toList(growable: false);
 
     return BrandPageHeader(
       role: 'wali',
+      kpiOverlayHeight: BrandKpiStrip.defaultOverlap,
+      showBackButton: true,
+      onBackPressed: () => AppNavigator.pop(context),
       subtitle: lang.getTranslatedText({
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',
       }),
-      title: lang.getTranslatedText({
-        'en': 'Grades',
-        'id': 'Nilai',
-      }),
+      title: lang.getTranslatedText({'en': 'Grades', 'id': 'Nilai'}),
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: Icons.tune_rounded,
+          onTap: showFilterSheet,
+          badgeCount: hasActiveFilter ? 1 : 0,
+          badgeBorderColor: ColorUtils.brandAzure,
+        ),
+      ],
       realtimeIndicator: BrandRealtimePill(
         isFresh: !isLoading,
         lastSync: _lastSync,
@@ -304,6 +365,20 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
               onSelected: onStudentChanged,
               accentColor: ColorUtils.brandAzureDeep,
             ),
+      bottomSlot: BrandFilterChipStrip(
+        chips: [
+          BrandFilterChip(
+            label: lang.getTranslatedText({
+              'en': 'Grade Type',
+              'id': 'Tipe Nilai',
+            }),
+            value: selectedGradeTypeFilter != null
+                ? getGradeTypeLabel(selectedGradeTypeFilter!)
+                : null,
+            onTap: showFilterSheet,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -311,169 +386,6 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
 // ===========================================================================
 // Body widgets per Parent_Phase3_Nilai_Mockup.svg
 // ===========================================================================
-
-/// 3-column KPI strip rendered above the grouped subject sections.
-/// Mirrors the mockup's "Penilaian | Rata-rata | Rentang" card.
-class _GradeKpiStrip extends StatelessWidget {
-  final int count;
-  final int scored;
-  final int pending;
-  final double avg;
-  final double minScore;
-  final double maxScore;
-  final LanguageProvider lang;
-
-  const _GradeKpiStrip({
-    required this.count,
-    required this.scored,
-    required this.pending,
-    required this.avg,
-    required this.minScore,
-    required this.maxScore,
-    required this.lang,
-  });
-
-  String _avgLabel() {
-    if (avg >= 85) return lang.getTranslatedText({'en': 'Excellent', 'id': 'Sangat Baik'});
-    if (avg >= 75) return lang.getTranslatedText({'en': 'Good', 'id': 'Baik'});
-    if (avg >= 65) return lang.getTranslatedText({'en': 'Adequate', 'id': 'Cukup'});
-    return lang.getTranslatedText({'en': 'Needs work', 'id': 'Perlu perbaikan'});
-  }
-
-  Color _avgPillBg() {
-    if (avg >= 85) return const Color(0xFFDCFCE7); // green
-    if (avg >= 75) return const Color(0xFFDBEAFE); // blue
-    if (avg >= 65) return const Color(0xFFFEF3C7); // amber
-    return const Color(0xFFFEE2E2); // red
-  }
-
-  Color _avgPillFg() {
-    if (avg >= 85) return const Color(0xFF15803D);
-    if (avg >= 75) return const Color(0xFF1D4ED8);
-    if (avg >= 65) return const Color(0xFFB45309);
-    return const Color(0xFF991B1B);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final fmt = (double v) {
-      if (v == v.truncateToDouble()) return v.toStringAsFixed(0);
-      return v.toStringAsFixed(1).replaceAll('.', ',');
-    };
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: ColorUtils.slate200, width: 0.75),
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: _kpiColumn(
-              label: lang.getTranslatedText({
-                'en': 'Assessments',
-                'id': 'Penilaian',
-              }),
-              value: '$count',
-              caption: lang.getTranslatedText({
-                'en': '$scored scored · $pending pending',
-                'id': '$scored sudah · $pending menunggu',
-              }),
-            ),
-          ),
-          Container(width: 1, height: 56, color: const Color(0xFFF1F5F9)),
-          Expanded(
-            child: _kpiColumn(
-              label: lang.getTranslatedText({
-                'en': 'Average',
-                'id': 'Rata-rata',
-              }),
-              value: fmt(avg),
-              pill: _avgLabel(),
-              pillBg: _avgPillBg(),
-              pillFg: _avgPillFg(),
-            ),
-          ),
-          Container(width: 1, height: 56, color: const Color(0xFFF1F5F9)),
-          Expanded(
-            child: _kpiColumn(
-              label: lang.getTranslatedText({
-                'en': 'Range',
-                'id': 'Rentang',
-              }),
-              value: '${fmt(minScore)} — ${fmt(maxScore)}',
-              valueSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _kpiColumn({
-    required String label,
-    required String value,
-    String? caption,
-    String? pill,
-    Color? pillBg,
-    Color? pillFg,
-    double valueSize = 22,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: ColorUtils.slate600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: valueSize,
-            fontWeight: FontWeight.w800,
-            color: ColorUtils.slate900,
-            height: 1.0,
-          ),
-        ),
-        const SizedBox(height: 6),
-        if (pill != null && pillBg != null && pillFg != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: pillBg,
-              borderRadius: const BorderRadius.all(Radius.circular(9)),
-            ),
-            child: Text(
-              pill,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: pillFg,
-              ),
-            ),
-          )
-        else if (caption != null)
-          Text(
-            caption,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: ColorUtils.slate500,
-            ),
-          ),
-      ],
-    );
-  }
-}
 
 /// Per-subject section header — subject name + average pill on the
 /// right ('A · 91' style). Renders above each subject's grade rows.
@@ -527,8 +439,7 @@ class _GradeSubjectHeader extends StatelessWidget {
           ),
           if (average > 0)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: _bg(),
                 borderRadius: const BorderRadius.all(Radius.circular(10)),
@@ -660,9 +571,7 @@ class _GradeCardRowState extends State<_GradeCardRow> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               border: Border.all(
-                color: hasScore
-                    ? ColorUtils.slate200
-                    : ColorUtils.slate200,
+                color: hasScore ? ColorUtils.slate200 : ColorUtils.slate200,
                 width: 0.75,
               ),
               borderRadius: const BorderRadius.all(Radius.circular(14)),
@@ -675,9 +584,7 @@ class _GradeCardRowState extends State<_GradeCardRow> {
                   height: 36,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: hasScore
-                        ? _bg(score)
-                        : const Color(0xFFF1F5F9),
+                    color: hasScore ? _bg(score) : const Color(0xFFF1F5F9),
                     borderRadius: const BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Text(
@@ -685,9 +592,7 @@ class _GradeCardRowState extends State<_GradeCardRow> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: hasScore
-                          ? _fg(score)
-                          : ColorUtils.slate400,
+                      color: hasScore ? _fg(score) : ColorUtils.slate400,
                     ),
                   ),
                 ),

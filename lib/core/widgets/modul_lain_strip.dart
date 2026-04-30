@@ -178,6 +178,7 @@ class ModulLainStrip extends StatelessWidget {
           const SizedBox(height: 8),
           SizedBox(
             width: 64,
+            height: 26, // fixed height for 2-line labels
             child: Text(
               item.label,
               textAlign: TextAlign.center,
@@ -226,10 +227,11 @@ class ModulLainStrip extends StatelessWidget {
           const SizedBox(height: 8),
           SizedBox(
             width: 64,
+            height: 26, // match _buildTile label height
             child: Text(
               'Lainnya',
               textAlign: TextAlign.center,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 10,

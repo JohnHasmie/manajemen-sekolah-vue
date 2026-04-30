@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/announcement_card_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/content_state_mixin.dart';
@@ -81,20 +82,13 @@ class ParentAnnouncementScreenState
       },
       child: Scaffold(
         backgroundColor: ColorUtils.slate50,
-        body: RefreshIndicator(
-          color: ColorUtils.brandAzureDeep,
+        body: BrandPageLayout(
+          header: buildHeader(languageProvider),
+          role: 'wali',
           onRefresh: forceRefresh,
-          // Single outer ListView so the gradient hero scrolls with
-          // the announcement list — matches the dashboard / Kehadiran
-          // hero idiom (not pinned).
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
-            children: [
-              buildHeader(languageProvider),
-              buildContent(languageProvider),
-            ],
-          ),
+          bodyChildren: [
+            buildContent(languageProvider),
+          ],
         ),
       ),
     );

@@ -26,15 +26,20 @@ import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/parent_finance_controller.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/billing_list.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_filter_sheet.dart';
+import 'package:manajemensekolah/core/shell/shell_controller.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 class ParentBillingScreen extends ConsumerStatefulWidget {
-  const ParentBillingScreen({super.key});
+  final bool showBackButton;
+  const ParentBillingScreen({super.key, this.showBackButton = false});
 
   @override
   ConsumerState<ParentBillingScreen> createState() =>
@@ -141,8 +146,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                       'id':
                           'Pilih anak Anda untuk melihat tagihan dan pembayaran mereka.',
                     }),
-                    style:
-                        const TextStyle(color: Colors.white, fontSize: 14.0),
+                    style: const TextStyle(color: Colors.white, fontSize: 14.0),
                   ),
                 ),
               ],
@@ -183,8 +187,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
                       'id':
                           'Lihat status tagihan anak Anda di sini, bayar tagihan, dan lihat riwayat.',
                     }),
-                    style:
-                        const TextStyle(color: Colors.white, fontSize: 14.0),
+                    style: const TextStyle(color: Colors.white, fontSize: 14.0),
                   ),
                 ),
               ],
@@ -260,44 +263,32 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         state.statusFilter,
         state.periodFilter,
       ),
-      loading: () => _buildHeader(
-        languageProvider,
-        const [],
-        null,
-        null,
-        null,
-      ),
-      error: (_, __) => _buildHeader(
-        languageProvider,
-        const [],
-        null,
-        null,
-        null,
-      ),
+      loading: () => _buildHeader(languageProvider, const [], null, null, null),
+      error: (_, __) =>
+          _buildHeader(languageProvider, const [], null, null, null),
     );
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: RefreshIndicator(
-        color: ColorUtils.brandAzureDeep,
+      body: BrandPageLayout(
+        header: header,
+        // KPI is embedded inside BillingList — pass it as body content
+        // with kpiCard so the overlap works on the billing KPI strip.
+        kpiCard: const SizedBox.shrink(),
+        role: 'wali',
         onRefresh: () async {
           await ref.read(parentFinanceProvider.notifier).forceRefresh();
           if (mounted) setState(() => _lastSync = DateTime.now());
         },
-        // Single outer ListView so the gradient hero scrolls with
-        // the billing list — matches the dashboard / Kehadiran
-        // hero idiom (not pinned).
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          children: [
-            header,
-            BillingList(
+        bodyChildren: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: BillingList(
               key: _billingListKey,
               languageProvider: languageProvider,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -326,14 +317,16 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
     return BrandPageHeader(
       role: 'wali',
+      kpiOverlayHeight: 40,
+      showBackButton: widget.showBackButton ? true : null,
+      onBackPressed: widget.showBackButton
+          ? () => AppNavigator.pop(context)
+          : null,
       subtitle: lp.getTranslatedText({
         'en': 'Finance · Child',
         'id': 'Keuangan · Anak',
       }),
-      title: lp.getTranslatedText({
-        'en': 'Billing',
-        'id': 'Tagihan',
-      }),
+      title: lp.getTranslatedText({'en': 'Billing', 'id': 'Tagihan'}),
       actionIcons: [
         BrandHeaderIconButton(
           icon: Icons.tune_rounded,
@@ -342,10 +335,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
           badgeBorderColor: ColorUtils.brandAzureDeep,
         ),
       ],
-      realtimeIndicator: BrandRealtimePill(
-        isFresh: true,
-        lastSync: _lastSync,
-      ),
+      realtimeIndicator: BrandRealtimePill(isFresh: true, lastSync: _lastSync),
       childSelector: summaries.length < 2
           ? null
           : ChildSelectorChipRow(
@@ -368,19 +358,13 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
       bottomSlot: BrandFilterChipStrip(
         chips: [
           BrandFilterChip(
-            label: lp.getTranslatedText({
-              'en': 'Period',
-              'id': 'Periode',
-            }),
+            label: lp.getTranslatedText({'en': 'Period', 'id': 'Periode'}),
             value: _periodChipValue(lp, periodFilter),
             onTap: () => _showFilterSheet(lp),
             width: 172,
           ),
           BrandFilterChip(
-            label: lp.getTranslatedText({
-              'en': 'Status',
-              'id': 'Status',
-            }),
+            label: lp.getTranslatedText({'en': 'Status', 'id': 'Status'}),
             value: _statusChipValue(lp, statusFilter),
             onTap: () => _showFilterSheet(lp),
           ),

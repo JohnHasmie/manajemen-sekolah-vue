@@ -16,6 +16,9 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/shell_controller.dart';
+import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 /// Mixin for the parent-announcements gradient header + search slot.
 mixin HeaderSearchMixin on ConsumerState<ParentAnnouncementScreen> {
@@ -32,6 +35,8 @@ mixin HeaderSearchMixin on ConsumerState<ParentAnnouncementScreen> {
   Widget buildHeader(LanguageProvider languageProvider) {
     return BrandPageHeader(
       role: 'wali',
+      showBackButton: true,
+      onBackPressed: () => AppNavigator.pop(context),
       subtitle: languageProvider.getTranslatedText({
         'en': 'Academic',
         'id': 'Akademik',
