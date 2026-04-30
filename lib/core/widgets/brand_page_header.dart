@@ -125,8 +125,11 @@ class BrandPageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusBarHeight = MediaQuery.of(context).viewPadding.top;
     final accentColor = ColorUtils.getRoleColor(role);
+    // Use Navigator.canPop (Flutter navigator) instead of context.canPop
+    // (go_router) because screens pushed via AppNavigator.push use
+    // Flutter's Navigator, not go_router's routing.
     final showBack = showBackButton ??
-        (onBackPressed != null || AppNavigator.canPop(context));
+        (onBackPressed != null || Navigator.canPop(context));
 
     return Container(
       width: double.infinity,

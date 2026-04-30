@@ -26,6 +26,7 @@ import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
@@ -37,7 +38,8 @@ import 'package:manajemensekolah/core/shell/shell_controller.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 class ParentBillingScreen extends ConsumerStatefulWidget {
-  const ParentBillingScreen({super.key});
+  final bool showBackButton;
+  const ParentBillingScreen({super.key, this.showBackButton = false});
 
   @override
   ConsumerState<ParentBillingScreen> createState() =>
@@ -316,6 +318,10 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     return BrandPageHeader(
       role: 'wali',
       kpiOverlayHeight: 40,
+      showBackButton: widget.showBackButton ? true : null,
+      onBackPressed: widget.showBackButton
+          ? () => AppNavigator.pop(context)
+          : null,
       subtitle: lp.getTranslatedText({
         'en': 'Finance · Child',
         'id': 'Keuangan · Anak',

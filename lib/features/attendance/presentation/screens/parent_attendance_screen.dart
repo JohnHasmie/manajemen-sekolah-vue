@@ -63,12 +63,14 @@ class ParentAttendanceScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> parent;
   final String studentId;
   final String? academicYearId;
+  final bool showBackButton;
 
   const ParentAttendanceScreen({
     super.key,
     required this.parent,
     required this.studentId,
     this.academicYearId,
+    this.showBackButton = false,
   });
 
   @override
@@ -279,6 +281,10 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
     return BrandPageHeader(
       role: 'wali',
       kpiOverlayHeight: 40,
+      showBackButton: widget.showBackButton ? true : null,
+      onBackPressed: widget.showBackButton
+          ? () => AppNavigator.pop(context)
+          : null,
       subtitle: lang.getTranslatedText({
         'en': 'Academic · Child',
         'id': 'Akademik · Anak',

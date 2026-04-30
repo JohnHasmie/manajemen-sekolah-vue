@@ -235,7 +235,7 @@ class HeroStatsCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 22,
+                    fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),
                     height: 1.0,

@@ -35,6 +35,8 @@ import 'package:manajemensekolah/core/widgets/school_pill.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/parent_billing_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
@@ -194,31 +196,44 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
 
   void _openAnnouncements() {
-    ShellNav.goTo(
-      ref,
-      role: 'wali',
-      tab: ShellTab.academic,
-      pushOnTop: const ParentAnnouncementScreen(),
-    );
+    AppNavigator.push(context, const ParentAnnouncementScreen());
   }
 
   void _openGrades() {
-    ShellNav.goTo(
-      ref,
-      role: 'wali',
-      tab: ShellTab.academic,
-      pushOnTop: ParentGradeScreen(academicYearId: _academicYearId),
+    AppNavigator.push(
+      context,
+      ParentGradeScreen(academicYearId: _academicYearId),
     );
   }
 
   void _openAttendance() {
-    // ParentAttendanceTab handles 0 / 1 / multi-anak resolution itself.
-    ShellNav.goTo(ref, role: 'wali', tab: ShellTab.attendance);
+    final ud = widget.state.userData;
+    // Resolve student ID from slices or userData
+    final slices = _parseSlices(widget.state.stats['slices']);
+    final studentId = slices.isNotEmpty
+        ? slices.first.studentId
+        : (ud['student_id'] ?? '').toString();
+    if (studentId.isEmpty) {
+      // Last resort: switch to tab which handles its own resolution
+      ShellNav.goTo(ref, role: 'wali', tab: ShellTab.attendance);
+      return;
+    }
+    AppNavigator.push(
+      context,
+      ParentAttendanceScreen(
+        parent: Map<String, dynamic>.from(ud),
+        studentId: studentId,
+        academicYearId: _academicYearId,
+        showBackButton: true,
+      ),
+    );
   }
 
   void _openBilling() {
-    // ParentBillingScreen IS the Finance tab root — switch tabs.
-    ShellNav.goTo(ref, role: 'wali', tab: ShellTab.finance);
+    AppNavigator.push(
+      context,
+      const ParentBillingScreen(showBackButton: true),
+    );
   }
 
   @override
@@ -635,20 +650,16 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   }
 
   void _openReportCard() {
-    ShellNav.goTo(
-      ref,
-      role: 'wali',
-      tab: ShellTab.academic,
-      pushOnTop: ParentReportCardScreen(academicYearId: _academicYearId),
+    AppNavigator.push(
+      context,
+      ParentReportCardScreen(academicYearId: _academicYearId),
     );
   }
 
   void _openClassActivity() {
-    ShellNav.goTo(
-      ref,
-      role: 'wali',
-      tab: ShellTab.academic,
-      pushOnTop: ParentClassActivityScreen(academicYearId: _academicYearId),
+    AppNavigator.push(
+      context,
+      ParentClassActivityScreen(academicYearId: _academicYearId),
     );
   }
 
