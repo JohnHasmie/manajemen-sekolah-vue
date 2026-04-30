@@ -232,7 +232,7 @@ class ParentClassActivityScreenState
             primaryColor: primaryColor,
             maxHeightFactor: 0.6,
             onApply: () {
-              Navigator.pop(ctx);
+              AppNavigator.pop(ctx);
               setState(() => _typeFilter = tempType);
             },
             onReset: () => setSS(() => tempType = null),

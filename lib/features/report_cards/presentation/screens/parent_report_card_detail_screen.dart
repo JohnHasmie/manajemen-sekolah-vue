@@ -323,7 +323,7 @@ class _ParentReportCardDetailScreenState
                 height: 44,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(sheetCtx);
+                    AppNavigator.pop(sheetCtx);
                     AppNavigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(

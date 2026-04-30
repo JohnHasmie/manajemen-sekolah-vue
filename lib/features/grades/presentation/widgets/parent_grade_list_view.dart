@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_empty_state.dart';
+import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 
 /// Scrollable list of grade cards shown in the parent grade screen.
 ///
@@ -107,7 +107,11 @@ class ParentGradeListView extends StatelessWidget {
   Widget build(BuildContext context) {
     // Guard: no student chosen yet.
     if (selectedStudentId == null) {
-      return ParentGradeEmptyState(
+      return BrandEmptyState(
+        icon: Icons.assignment_outlined,
+        tone: BrandEmptyStateTone.info,
+        kicker: 'Belum ada data',
+        title: 'Belum ada nilai',
         message: AppLocalizations.selectChildToViewGrades.tr,
       );
     }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_empty_state.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_header.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_list_view.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_student_selector.dart';
@@ -52,8 +52,13 @@ mixin ParentGradeUiMixin on State<ParentGradeScreen> {
   );
 
   /// Build the empty state widget.
-  Widget buildEmptyState(String message) =>
-      ParentGradeEmptyState(message: message);
+  Widget buildEmptyState(String message) => BrandEmptyState(
+    icon: Icons.assignment_outlined,
+    tone: BrandEmptyStateTone.info,
+    kicker: 'Belum ada data',
+    title: 'Belum ada nilai',
+    message: message,
+  );
 
   /// Build the loading skeleton.
   Widget buildLoadingState() {

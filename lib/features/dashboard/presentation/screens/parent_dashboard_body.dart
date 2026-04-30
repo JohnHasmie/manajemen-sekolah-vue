@@ -1,19 +1,17 @@
-// Parent dashboard body (wali) — mirrors admin Phase 3 redesign with violet gradient.
+// Parent dashboard body (wali) — mirrors admin Phase 3 redesign with brand-azure gradient.
 //
 // Shape of the screen (top-to-bottom)
 // -----------------------------------
-//   1. DashboardAppBar   — school name, lang, bell, profile
-//   2. Violet gradient hero — SchoolPill.expanded + realtime indicator
-//   3. KPI row (2x2 grid) — 4 cards: Anak terdaftar, Kehadiran, Nilai baru, Tagihan
-//   4. Perlu perhatian    — 4 inbox rows (Tagihan jatuh tempo, Nilai baru anak, etc.)
-//   5. Aksi cepat         — 4 quick action tiles (Pengumuman, Tagihan, Nilai, Kehadiran)
-//   6. Modul lain strip   — horizontal with overflow sheet
-//
-// TODO (backend): Wire these stats['...'] keys:
-//   - children_count: count of registered children
-//   - attendance_rate: overall attendance percentage
-//   - new_grades_7days: count of new grades in last 7 days
-//   - overdue_bills_count: count of unpaid bills
+//   1. DashboardAppBar         — school name, lang, bell, profile
+//   2. Brand-azure gradient hero — SchoolPill.expanded + realtime indicator
+//   3. KPI carousel (per-anak cycle, 4 cards) — Kehadiran, Tagihan, Rata-rata, Pengumuman
+//      Driven by `BrandKpiCarousel` + `activeSliceProvider('parent_dashboard')`.
+//      Backend payload: `state.stats['slices']` is a list of `_ParentSlice`
+//      bundles (see bottom of file) produced by
+//      `DashboardController::buildParentChildSlices`.
+//   4. Perlu perhatian — 4 inbox rows (Tagihan jatuh tempo, Nilai baru anak, etc.)
+//   5. Aksi cepat      — 4 quick action tiles (Pengumuman, Tagihan, Nilai, Kehadiran)
+//   6. Modul lain strip — horizontal with overflow sheet
 library;
 
 import 'dart:async';
