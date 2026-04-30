@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
@@ -170,29 +171,18 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageRiverpod);
+    final kpi = _gradeList.isNotEmpty ? _buildKpiWidget(lang) : null;
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHeader(lang),
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              edgeOffset: 20,
-              onRefresh: () async {
-                await onRefreshRequested();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 24),
-                children: [
-                  _buildGradesContent(lang),
-                ],
-              ),
-            ),
-          ),
-        ],
+      body: BrandPageLayout(
+        header: _buildHeader(lang),
+        kpiCard: kpi,
+        role: 'wali',
+        onRefresh: () async {
+          await onRefreshRequested();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        bodyChildren: [_buildGradesBody(lang)],
       ),
     );
   }
@@ -205,32 +195,31 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
   ///     the grade cards for that subject.
   /// Falls back to the loading skeleton or empty state via the
   /// existing `buildGradeList()` mixin call when there's no data.
-  Widget _buildGradesContent(LanguageProvider lang) {
+  // Cached aggregates recomputed when grade list changes.
+  ({int scored, int pending, double avg, double min, double max}) _gradeAggregates() {
+    final scores = _gradeList
+        .map((g) => double.tryParse((g as Map)['score']?.toString() ?? ''))
+        .whereType<double>()
+        .toList();
+    return (
+      scored: scores.length,
+      pending: _gradeList.length - scores.length,
+      avg: scores.isEmpty ? 0.0 : scores.reduce((a, b) => a + b) / scores.length,
+      min: scores.isEmpty ? 0.0 : scores.reduce((a, b) => a < b ? a : b),
+      max: scores.isEmpty ? 0.0 : scores.reduce((a, b) => a > b ? a : b),
+    );
+  }
+
+  Widget _buildKpiWidget(LanguageProvider lang) {
+    final s = _gradeAggregates();
+    return _buildKpiStrip(lang, s.scored, s.pending, s.avg, s.min, s.max);
+  }
+
+  Widget _buildGradesBody(LanguageProvider lang) {
     if (_gradeList.isEmpty) {
       return buildGradeList(); // mixin handles loading + empty state
     }
 
-    // Aggregate stats for the KPI strip.
-    final scores = _gradeList
-        .map((g) {
-          final raw = (g as Map)['score']?.toString() ?? '';
-          return double.tryParse(raw);
-        })
-        .whereType<double>()
-        .toList();
-    final scored = scores.length;
-    final pending = _gradeList.length - scored;
-    final avg = scores.isEmpty
-        ? 0.0
-        : scores.reduce((a, b) => a + b) / scores.length;
-    final minScore = scores.isEmpty
-        ? 0.0
-        : scores.reduce((a, b) => a < b ? a : b);
-    final maxScore = scores.isEmpty
-        ? 0.0
-        : scores.reduce((a, b) => a > b ? a : b);
-
-    // Group grades by subject preserving insertion order.
     final groups = <String, List<dynamic>>{};
     for (final g in _gradeList) {
       final m = g as Map;
@@ -246,7 +235,6 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildKpiStrip(lang, scored, pending, avg, minScore, maxScore),
         for (final entry in groups.entries) ...[
           _GradeSubjectHeader(
             subject: entry.key,

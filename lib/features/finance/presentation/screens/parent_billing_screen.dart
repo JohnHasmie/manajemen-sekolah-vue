@@ -27,6 +27,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/parent_finance_controller.dart';
@@ -267,30 +268,22 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          header,
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              edgeOffset: 20,
-              onRefresh: () async {
-                await ref.read(parentFinanceProvider.notifier).forceRefresh();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 24),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: BillingList(
-                      key: _billingListKey,
-                      languageProvider: languageProvider,
-                    ),
-                  ),
-                ],
-              ),
+      body: BrandPageLayout(
+        header: header,
+        // KPI is embedded inside BillingList — pass it as body content
+        // with kpiCard so the overlap works on the billing KPI strip.
+        kpiCard: const SizedBox.shrink(),
+        role: 'wali',
+        onRefresh: () async {
+          await ref.read(parentFinanceProvider.notifier).forceRefresh();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        bodyChildren: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: BillingList(
+              key: _billingListKey,
+              languageProvider: languageProvider,
             ),
           ),
         ],

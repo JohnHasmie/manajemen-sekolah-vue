@@ -26,6 +26,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
@@ -134,28 +135,17 @@ class ParentClassActivityScreenState
     final lang = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHeader(lang),
-          Expanded(
-            child: RefreshIndicator(
-              color: ColorUtils.brandAzureDeep,
-              edgeOffset: 20,
-              onRefresh: () async {
-                await forceRefresh();
-                if (mounted) setState(() => _lastSync = DateTime.now());
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 24),
-                children: [
-                  KeyedSubtree(
-                    key: activityListKey,
-                    child: buildActivityList(),
-                  ),
-                ],
-              ),
-            ),
+      body: BrandPageLayout(
+        header: _buildHeader(lang),
+        role: 'wali',
+        onRefresh: () async {
+          await forceRefresh();
+          if (mounted) setState(() => _lastSync = DateTime.now());
+        },
+        bodyChildren: [
+          KeyedSubtree(
+            key: activityListKey,
+            child: buildActivityList(),
           ),
         ],
       ),

@@ -27,6 +27,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
 
@@ -113,98 +114,85 @@ class _ParentReportCardDetailScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          _buildHeader(context),
-          Expanded(
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
+      body: BrandPageLayout(
+        header: _buildHeader(context),
+        kpiCard: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: _KpiStrip(reportCardData: reportCardData),
+        ),
+        bodyChildren: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _KpiStrip(reportCardData: reportCardData),
+                _SectionHeader(title: 'Sikap', trailing: 'Wali kelas'),
+                const SizedBox(height: 8),
+                _SikapCard(reportCardData: reportCardData),
+                const SizedBox(height: 18),
+                _SectionHeader(
+                  title: 'Nilai per mata pelajaran',
+                  trailing: '${_subjects.length} mapel',
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _SectionHeader(
-                        title: 'Sikap',
-                        trailing: 'Wali kelas',
-                      ),
-                      const SizedBox(height: 8),
-                      _SikapCard(reportCardData: reportCardData),
-                      const SizedBox(height: 18),
-                      _SectionHeader(
-                        title: 'Nilai per mata pelajaran',
-                        trailing: '${_subjects.length} mapel',
-                      ),
-                      const SizedBox(height: 8),
-                      ..._subjects.map(
-                        (s) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _SubjectCard(subject: s as Map),
-                        ),
-                      ),
-                      if (_subjects.isEmpty)
-                        _EmptyHint(
-                          label: 'Belum ada nilai mata pelajaran.',
-                        ),
-                      if (_extras.isNotEmpty) ...[
-                        const SizedBox(height: 18),
-                        _SectionHeader(
-                          title: 'Ekstrakurikuler',
-                          trailing: '${_extras.length} kegiatan',
-                        ),
-                        const SizedBox(height: 8),
-                        _ExtrasCard(extras: _extras),
-                      ],
-                      if (_achievements.isNotEmpty) ...[
-                        const SizedBox(height: 18),
-                        _SectionHeader(
-                          title: 'Prestasi',
-                          trailing: '${_achievements.length} prestasi',
-                        ),
-                        const SizedBox(height: 8),
-                        _AchievementsCard(achievements: _achievements),
-                      ],
-                      const SizedBox(height: 18),
-                      _SectionHeader(
-                        title: 'Kehadiran',
-                        trailing: _attendanceTotalLabel(),
-                      ),
-                      const SizedBox(height: 8),
-                      _AttendanceCard(reportCardData: reportCardData),
-                      if ((reportCardData['homeroom_notes'] ?? '')
-                          .toString()
-                          .trim()
-                          .isNotEmpty) ...[
-                        const SizedBox(height: 18),
-                        _SectionHeader(
-                          title: 'Catatan Wali Kelas',
-                          trailing: _homeroomTeacherName(),
-                        ),
-                        const SizedBox(height: 8),
-                        _NotesCard(
-                          notes: reportCardData['homeroom_notes']
-                              .toString()
-                              .trim(),
-                          teacher: _homeroomTeacherName(),
-                        ),
-                      ],
-                      const SizedBox(height: 18),
-                      if (_isGenap)
-                        _DecisionBanner(reportCardData: reportCardData)
-                      else
-                        const _GanjilDecisionNote(),
-                      const SizedBox(height: 12),
-                      _ExportNote(),
-                      const SizedBox(height: 110),
-                    ],
+                const SizedBox(height: 8),
+                ..._subjects.map(
+                  (s) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _SubjectCard(subject: s as Map),
                   ),
                 ),
+                if (_subjects.isEmpty)
+                  _EmptyHint(label: 'Belum ada nilai mata pelajaran.'),
+                if (_extras.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  _SectionHeader(
+                    title: 'Ekstrakurikuler',
+                    trailing: '${_extras.length} kegiatan',
+                  ),
+                  const SizedBox(height: 8),
+                  _ExtrasCard(extras: _extras),
+                ],
+                if (_achievements.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  _SectionHeader(
+                    title: 'Prestasi',
+                    trailing: '${_achievements.length} prestasi',
+                  ),
+                  const SizedBox(height: 8),
+                  _AchievementsCard(achievements: _achievements),
+                ],
+                const SizedBox(height: 18),
+                _SectionHeader(
+                  title: 'Kehadiran',
+                  trailing: _attendanceTotalLabel(),
+                ),
+                const SizedBox(height: 8),
+                _AttendanceCard(reportCardData: reportCardData),
+                if ((reportCardData['homeroom_notes'] ?? '')
+                    .toString()
+                    .trim()
+                    .isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  _SectionHeader(
+                    title: 'Catatan Wali Kelas',
+                    trailing: _homeroomTeacherName(),
+                  ),
+                  const SizedBox(height: 8),
+                  _NotesCard(
+                    notes: reportCardData['homeroom_notes']
+                        .toString()
+                        .trim(),
+                    teacher: _homeroomTeacherName(),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                if (_isGenap)
+                  _DecisionBanner(reportCardData: reportCardData)
+                else
+                  const _GanjilDecisionNote(),
+                const SizedBox(height: 12),
+                _ExportNote(),
+                const SizedBox(height: 110),
               ],
             ),
           ),

@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/announcement_card_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/content_state_mixin.dart';
@@ -81,23 +82,12 @@ class ParentAnnouncementScreenState
       },
       child: Scaffold(
         backgroundColor: ColorUtils.slate50,
-        body: Column(
-          children: [
-            buildHeader(languageProvider),
-            Expanded(
-              child: RefreshIndicator(
-                color: ColorUtils.brandAzureDeep,
-                edgeOffset: 20,
-                onRefresh: forceRefresh,
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 24),
-                  children: [
-                    buildContent(languageProvider),
-                  ],
-                ),
-              ),
-            ),
+        body: BrandPageLayout(
+          header: buildHeader(languageProvider),
+          role: 'wali',
+          onRefresh: forceRefresh,
+          bodyChildren: [
+            buildContent(languageProvider),
           ],
         ),
       ),
