@@ -383,54 +383,41 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   /// carousel auto-cycles per `BrandKpiCarousel`'s default 6 s dwell;
   /// each card renders a Stories-style progress strip on its top edge
   /// driven by `activeSliceProvider('parent_dashboard')`. Single-anak
-  /// parents see a flat 4-card layout (no progress strip, no cycle).
+  /// (or no-data) parents see a flat 4-card layout (no progress
+  /// strip, no cycle) — but the four mockup KPIs are always present.
   ///
   /// Backend shape — `widget.state.stats['slices']` is a list of
   /// per-child KPI bundles produced by `DashboardController::buildParentChildSlices`.
   Widget _buildKpiCarousel() {
-    final slices = _parseSlices(widget.state.stats['slices']);
+    final parsed = _parseSlices(widget.state.stats['slices']);
 
-    // Empty fallback — no children registered yet, or backend hasn't
-    // populated slices. Render a single placeholder card row so the
-    // overlay area isn't blank.
-    if (slices.isEmpty) {
-      return HeroStatsRow(
-        cards: [
-          HeroStatsCard(
-            label: 'Anak',
-            value: _formatNumber(_childrenCount),
-            icon: Icons.family_restroom_outlined,
-            accentColor: widget.primaryColor,
-            caption: 'terdaftar',
-          ),
-          HeroStatsCard(
-            label: 'Kehadiran',
-            value: '$_attendanceRate%',
-            icon: Icons.check_circle_outline,
-            accentColor: ColorUtils.success600,
-            caption: 'belum ada data',
-          ),
-        ],
-      );
-    }
+    // No-data fallback — backend returned an empty list (children not
+    // yet enrolled, or backend pre-deploy). Synthesise a single
+    // placeholder slice with zero/null values so the carousel still
+    // renders the four mockup KPIs (Kehadiran / Tagihan / Rata-rata /
+    // Pengumuman). With sliceCount = 1 the carousel skips the
+    // progress strip and auto-cycle automatically.
+    final slices = parsed.isEmpty ? [_ParentSlice.placeholder()] : parsed;
 
     return BrandKpiCarousel(
       scope: 'parent_dashboard',
       sliceCount: slices.length,
       cardBuilder: (sliceIndex) {
         final s = slices[sliceIndex.clamp(0, slices.length - 1)];
-        final ctxLabel = '${s.name} · ${s.classLabel}';
+        final ctxLabel = s.isPlaceholder
+            ? 'Belum ada data'
+            : '${s.name} · ${s.classLabel}';
 
         return [
           // 1. Kehadiran 30 hari
           HeroStatsCard(
             label: 'KEHADIRAN',
             sliceLabel: ctxLabel,
-            value: '${s.attendanceRate}%',
+            value: s.isPlaceholder ? '—' : '${s.attendanceRate}%',
             icon: Icons.directions_run_rounded,
             accentColor: ColorUtils.success600,
             caption: '30 hari terakhir',
-            trend: s.attendanceDelta != 0
+            trend: (!s.isPlaceholder && s.attendanceDelta != 0)
                 ? StatTrend(
                     direction: s.attendanceDelta > 0
                         ? StatTrendDirection.up
@@ -439,21 +426,23 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
                         '${s.attendanceDelta > 0 ? '+' : ''}${s.attendanceDelta}% bln ini',
                   )
                 : null,
-            onTap: _openAttendance,
+            onTap: s.isPlaceholder ? null : _openAttendance,
           ),
           // 2. Tagihan jatuh tempo
           HeroStatsCard(
             label: 'TAGIHAN',
             sliceLabel: ctxLabel,
-            value: s.overdueTotal > 0
-                ? 'Rp ${_formatRupiahShort(s.overdueTotal)}'
-                : 'Lunas',
+            value: s.isPlaceholder
+                ? '—'
+                : (s.overdueTotal > 0
+                    ? 'Rp ${_formatRupiahShort(s.overdueTotal)}'
+                    : 'Lunas'),
             icon: Icons.account_balance_wallet_outlined,
             accentColor: ColorUtils.error600,
-            caption: s.overdueCount > 0
-                ? '${s.overdueCount} tagihan'
-                : 'tidak ada',
-            onTap: _openBilling,
+            caption: s.isPlaceholder
+                ? 'jatuh tempo'
+                : (s.overdueCount > 0 ? '${s.overdueCount} tagihan' : 'tidak ada'),
+            onTap: s.isPlaceholder ? null : _openBilling,
           ),
           // 3. Rata-rata nilai
           HeroStatsCard(
@@ -466,7 +455,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             accentColor: const Color(0xFF6366F1),
             caption: s.avgGradeTerm != null
                 ? '${s.avgGradeSubjectCount} mapel'
-                : 'belum ada',
+                : (s.isPlaceholder ? 'semester aktif' : 'belum ada'),
             trend: (s.avgGradeTerm != null && s.avgGradeDelta.abs() >= 0.1)
                 ? StatTrend(
                     direction: s.avgGradeDelta > 0
@@ -476,19 +465,21 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
                         '${s.avgGradeDelta > 0 ? '+' : ''}${s.avgGradeDelta.toStringAsFixed(1)} sem lalu',
                   )
                 : null,
-            onTap: _openGrades,
+            onTap: s.isPlaceholder ? null : _openGrades,
           ),
           // 4. Pengumuman kelas
           HeroStatsCard(
             label: 'PENGUMUMAN',
             sliceLabel: ctxLabel,
-            value: '${s.unreadAnnouncements}',
+            value: s.isPlaceholder ? '—' : '${s.unreadAnnouncements}',
             icon: Icons.campaign_outlined,
             accentColor: ColorUtils.brandAzureDeep,
-            caption: s.unreadAnnouncements == 0
-                ? 'sudah terbaca'
-                : '${s.unreadTodayDelta} hari ini',
-            onTap: _openAnnouncements,
+            caption: s.isPlaceholder
+                ? 'belum dibaca'
+                : (s.unreadAnnouncements == 0
+                    ? 'sudah terbaca'
+                    : '${s.unreadTodayDelta} hari ini'),
+            onTap: s.isPlaceholder ? null : _openAnnouncements,
           ),
         ];
       },
@@ -877,6 +868,12 @@ class _ParentSlice {
   final int unreadAnnouncements;
   final int unreadTodayDelta;
 
+  /// True when this slice is a synthesised "no data" placeholder used
+  /// to keep the four mockup KPIs visible before the parent has
+  /// children enrolled or before the backend slice payload is wired.
+  /// Cards render `—` for the value and disable taps.
+  final bool isPlaceholder;
+
   const _ParentSlice({
     required this.studentId,
     required this.name,
@@ -890,7 +887,27 @@ class _ParentSlice {
     required this.avgGradeSubjectCount,
     required this.unreadAnnouncements,
     required this.unreadTodayDelta,
+    this.isPlaceholder = false,
   });
+
+  /// Empty-state slice. Carousel renders 4 mockup KPIs with `—`
+  /// values and disabled taps. Used when the parent has no children
+  /// linked yet or the backend hasn't returned a slices array.
+  factory _ParentSlice.placeholder() => const _ParentSlice(
+    studentId: '',
+    name: '',
+    classLabel: '',
+    attendanceRate: 0,
+    attendanceDelta: 0,
+    overdueTotal: 0,
+    overdueCount: 0,
+    avgGradeTerm: null,
+    avgGradeDelta: 0,
+    avgGradeSubjectCount: 0,
+    unreadAnnouncements: 0,
+    unreadTodayDelta: 0,
+    isPlaceholder: true,
+  );
 
   factory _ParentSlice.fromJson(Map<String, dynamic> json) {
     int asInt(dynamic v) {
