@@ -160,10 +160,10 @@ class _BrandKpiCarouselState extends ConsumerState<BrandKpiCarousel> {
         Padding(
           padding: widget.padding,
           child: SizedBox(
-            // Tall enough to fit a card with progress strip + sliceLabel.
-            // ~124px content + 14px padding * 2 = 152, plus a little
-            // breathing room. Matches the v3 mockup measurements.
-            height: 130,
+            // Card height from v3 mockup: 124px base + progress strip
+            // (3px + 10px gap) + sliceLabel (12px + 2px gap) = ~151px.
+            // Add a little breathing room for shadows.
+            height: 156,
             child: showPagination
                 ? PageView.builder(
                     controller: _pageCtrl,

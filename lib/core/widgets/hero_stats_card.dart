@@ -164,57 +164,64 @@ class HeroStatsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Optional Stories-style progress strip at the top edge of
-          // the card. Driven by `BrandKpiCarousel`. Only rendered when
-          // there's a real cycle (>1 slice).
+          // Optional Stories-style progress strip at the top edge.
           if (progress != null && progress!.total > 1) ...[
             _SliceProgressStrip(progress: progress!, accentColor: accentColor),
             const SizedBox(height: 10),
           ],
-          // Icon badge top-left (mockup line 39-42)
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.12),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            alignment: Alignment.center,
-            child: Icon(icon, size: 18, color: accentColor),
+          // Icon badge + label on same row (v3 mockup)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: const BorderRadius.all(Radius.circular(11)),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 18, color: accentColor),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 2),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF64748B),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    if (sliceLabel != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        sliceLabel!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: sliceLabelMuted
+                              ? const Color(0xFF94A3B8)
+                              : accentColor,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
           const Spacer(),
-          // Small label above the value (mockup line 43)
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF64748B),
-            ),
-          ),
-          // Optional active-slice context line (e.g., "Salman · 30 hari")
-          if (sliceLabel != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              sliceLabel!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w700,
-                color: sliceLabelMuted
-                    ? const Color(0xFF94A3B8) // slate-400 — muted
-                    : accentColor,
-                letterSpacing: 0.1,
-              ),
-            ),
-          ],
-          const SizedBox(height: 6),
-          // Big value + inline trend chip or caption (mockup line 44-56).
-          // Caption ("· 42 kelas") and trend chip sit inline after the
-          // value, bottom-aligned to the text baseline.
+          // Big value + trend badge
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -224,7 +231,7 @@ class HeroStatsCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 26,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),
                     height: 1.0,
@@ -232,24 +239,8 @@ class HeroStatsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (caption != null) ...[
-                const SizedBox(width: 6),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 3),
-                  child: Text(
-                    caption!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-              ],
               if (trend != null) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 2),
                   child: _TrendChip(trend: trend!),
@@ -257,6 +248,20 @@ class HeroStatsCard extends StatelessWidget {
               ],
             ],
           ),
+          // Caption below value (separate line)
+          if (caption != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              caption!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
+              ),
+            ),
+          ],
         ],
       ),
     );

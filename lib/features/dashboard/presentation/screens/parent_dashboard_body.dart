@@ -266,7 +266,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       clipBehavior: Clip.none,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 70),
+          padding: const EdgeInsets.only(bottom: 90),
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
