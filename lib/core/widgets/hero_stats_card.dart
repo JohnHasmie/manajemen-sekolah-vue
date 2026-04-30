@@ -123,8 +123,11 @@ class HeroStatsCard extends StatelessWidget {
   /// in the strip animate in sync. Null hides the strip entirely.
   final KpiProgress? progress;
 
-  /// Tap handler — typically navigates to a detail view.
+  /// Short tap handler — in carousel context this pauses/plays.
   final VoidCallback? onTap;
+
+  /// Long press handler — navigates to the detail screen.
+  final VoidCallback? onLongPress;
 
   /// Padding inside the card. Default: 12 px all around (compact so three
   /// tiles fit a 360 px viewport with the value+label inline format).
@@ -142,6 +145,7 @@ class HeroStatsCard extends StatelessWidget {
     this.sliceLabelMuted = false,
     this.progress,
     this.onTap,
+    this.onLongPress,
     this.padding = const EdgeInsets.all(12),
   });
 
@@ -231,7 +235,7 @@ class HeroStatsCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 26,
+                    fontSize: 22,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),
                     height: 1.0,
@@ -266,12 +270,13 @@ class HeroStatsCard extends StatelessWidget {
       ),
     );
 
-    if (onTap == null) return card;
+    if (onTap == null && onLongPress == null) return card;
     return Material(
       color: Colors.transparent,
       borderRadius: const BorderRadius.all(Radius.circular(16)),
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: card,
       ),

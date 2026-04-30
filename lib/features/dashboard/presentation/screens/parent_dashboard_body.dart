@@ -266,7 +266,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       clipBehavior: Clip.none,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 90),
+          padding: const EdgeInsets.only(bottom: 100),
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -370,8 +370,8 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
         ),
         Positioned(
           key: widget.statsSectionKey,
-          left: 16,
-          right: 16,
+          left: 0,
+          right: 0,
           bottom: 0,
           child: _buildKpiCarousel(),
         ),
@@ -402,6 +402,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     return BrandKpiCarousel(
       scope: 'parent_dashboard',
       sliceCount: slices.length,
+      autoSlideCards: true,
       cardBuilder: (sliceIndex) {
         final s = slices[sliceIndex.clamp(0, slices.length - 1)];
         final ctxLabel = s.isPlaceholder
@@ -417,7 +418,9 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             value: s.isPlaceholder ? '—' : '${s.attendanceRate}%',
             icon: Icons.directions_run_rounded,
             accentColor: ColorUtils.success600,
-            caption: '30 hari terakhir',
+            caption: s.isPlaceholder
+                ? '30 hari'
+                : '${s.attendanceBreakdown['sakit'] ?? 0} sakit · ${s.attendanceBreakdown['izin'] ?? 0} izin · ${s.attendanceBreakdown['alpa'] ?? 0} alpa',
             trend: (!s.isPlaceholder && s.attendanceDelta != 0)
                 ? StatTrend(
                     direction: s.attendanceDelta > 0
@@ -429,7 +432,29 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
                 : null,
             onTap: s.isPlaceholder ? null : _openAttendance,
           ),
-          // 2. Tagihan jatuh tempo
+          // 2. Tugas
+          HeroStatsCard(
+            label: 'TUGAS',
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: s.isPlaceholder,
+            value: s.isPlaceholder ? '—' : '${s.tugasPending}',
+            icon: Icons.assignment_outlined,
+            accentColor: ColorUtils.warning600,
+            caption: s.isPlaceholder
+                ? 'menunggu'
+                : (s.tugasOverdue > 0
+                    ? '${s.tugasOverdue} belum dikumpul'
+                    : '${s.tugasTotal} total tugas'),
+            trend: (s.tugasOverdue > 0)
+                ? StatTrend(
+                    direction: StatTrendDirection.down,
+                    label: '${s.tugasOverdue} belum dikumpul',
+                    inverse: true,
+                  )
+                : null,
+            onTap: s.isPlaceholder ? null : _openGrades,
+          ),
+          // 3. Tagihan jatuh tempo
           HeroStatsCard(
             label: 'TAGIHAN',
             sliceLabel: ctxLabel,
@@ -443,10 +468,12 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             accentColor: ColorUtils.error600,
             caption: s.isPlaceholder
                 ? 'jatuh tempo'
-                : (s.overdueCount > 0 ? '${s.overdueCount} tagihan' : 'tidak ada'),
+                : (s.overdueCount > 0
+                    ? '${s.overdueCount} tagihan'
+                    : 'tidak ada tunggakan'),
             onTap: s.isPlaceholder ? null : _openBilling,
           ),
-          // 3. Rata-rata nilai
+          // 4. Rata-rata nilai
           HeroStatsCard(
             label: 'RATA-RATA',
             sliceLabel: ctxLabel,
@@ -469,21 +496,6 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
                   )
                 : null,
             onTap: s.isPlaceholder ? null : _openGrades,
-          ),
-          // 4. Pengumuman kelas
-          HeroStatsCard(
-            label: 'PENGUMUMAN',
-            sliceLabel: ctxLabel,
-            sliceLabelMuted: s.isPlaceholder,
-            value: s.isPlaceholder ? '—' : '${s.unreadAnnouncements}',
-            icon: Icons.campaign_outlined,
-            accentColor: ColorUtils.brandAzureDeep,
-            caption: s.isPlaceholder
-                ? 'belum dibaca'
-                : (s.unreadAnnouncements == 0
-                    ? 'sudah terbaca'
-                    : '${s.unreadTodayDelta} hari ini'),
-            onTap: s.isPlaceholder ? null : _openAnnouncements,
           ),
         ];
       },
@@ -864,13 +876,16 @@ class _ParentSlice {
   final String classLabel;
   final int attendanceRate;
   final int attendanceDelta;
+  final Map<String, int> attendanceBreakdown;
   final int overdueTotal;
   final int overdueCount;
   final double? avgGradeTerm;
   final double avgGradeDelta;
   final int avgGradeSubjectCount;
-  final int unreadAnnouncements;
-  final int unreadTodayDelta;
+  final int tugasTotal;
+  final int tugasPending;
+  final int tugasOverdue;
+  final String? tugasNextTitle;
 
   /// True when this slice is a synthesised "no data" placeholder used
   /// to keep the four mockup KPIs visible before the parent has
@@ -884,13 +899,16 @@ class _ParentSlice {
     required this.classLabel,
     required this.attendanceRate,
     required this.attendanceDelta,
+    required this.attendanceBreakdown,
     required this.overdueTotal,
     required this.overdueCount,
     required this.avgGradeTerm,
     required this.avgGradeDelta,
     required this.avgGradeSubjectCount,
-    required this.unreadAnnouncements,
-    required this.unreadTodayDelta,
+    required this.tugasTotal,
+    required this.tugasPending,
+    required this.tugasOverdue,
+    this.tugasNextTitle,
     this.isPlaceholder = false,
   });
 
@@ -903,13 +921,15 @@ class _ParentSlice {
     classLabel: '',
     attendanceRate: 0,
     attendanceDelta: 0,
+    attendanceBreakdown: {'sakit': 0, 'izin': 0, 'alpa': 0},
     overdueTotal: 0,
     overdueCount: 0,
     avgGradeTerm: null,
     avgGradeDelta: 0,
     avgGradeSubjectCount: 0,
-    unreadAnnouncements: 0,
-    unreadTodayDelta: 0,
+    tugasTotal: 0,
+    tugasPending: 0,
+    tugasOverdue: 0,
     isPlaceholder: true,
   );
 
@@ -935,13 +955,20 @@ class _ParentSlice {
       classLabel: json['class_label']?.toString() ?? '',
       attendanceRate: asInt(json['attendance_rate_30d']),
       attendanceDelta: asInt(json['attendance_delta_pct']),
+      attendanceBreakdown: {
+        'sakit': asInt((json['attendance_breakdown'] as Map?)?['sakit']),
+        'izin': asInt((json['attendance_breakdown'] as Map?)?['izin']),
+        'alpa': asInt((json['attendance_breakdown'] as Map?)?['alpa']),
+      },
       overdueTotal: asInt(json['overdue_total']),
       overdueCount: asInt(json['overdue_count']),
       avgGradeTerm: asDouble(json['avg_grade_term']),
       avgGradeDelta: asDouble(json['avg_grade_delta']) ?? 0.0,
       avgGradeSubjectCount: asInt(json['avg_grade_subject_count']),
-      unreadAnnouncements: asInt(json['unread_class_announcements']),
-      unreadTodayDelta: asInt(json['unread_today_delta']),
+      tugasTotal: asInt(json['tugas_total']),
+      tugasPending: asInt(json['tugas_pending']),
+      tugasOverdue: asInt(json['tugas_overdue']),
+      tugasNextTitle: json['tugas_next_title']?.toString(),
     );
   }
 }

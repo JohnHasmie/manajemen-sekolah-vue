@@ -38,6 +38,8 @@
 // caller's data lookup co-located with the card definition and makes
 // it trivial to read `slices[i]` exactly once per slice.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
@@ -75,6 +77,13 @@ class BrandKpiCarousel extends ConsumerStatefulWidget {
   /// brand-page layout).
   final EdgeInsets padding;
 
+  /// When true, the card pages auto-slide every [autoSlideDuration].
+  /// Tapping a card pauses the auto-slide; tapping again resumes.
+  final bool autoSlideCards;
+
+  /// Duration between auto-slide page transitions.
+  final Duration autoSlideDuration;
+
   const BrandKpiCarousel({
     super.key,
     required this.scope,
@@ -82,6 +91,8 @@ class BrandKpiCarousel extends ConsumerStatefulWidget {
     required this.cardBuilder,
     this.perPage = 2,
     this.padding = const EdgeInsets.symmetric(horizontal: 16),
+    this.autoSlideCards = false,
+    this.autoSlideDuration = const Duration(seconds: 5),
   });
 
   /// Default extent the carousel overlaps the gradient hero by, so
@@ -95,12 +106,13 @@ class BrandKpiCarousel extends ConsumerStatefulWidget {
 class _BrandKpiCarouselState extends ConsumerState<BrandKpiCarousel> {
   final PageController _pageCtrl = PageController();
   int _currentPage = 0;
+  Timer? _autoSlideTimer;
+  bool _autoSlidePaused = false;
+  int _totalPages = 0;
 
   @override
   void initState() {
     super.initState();
-    // Push the slice count up to the notifier on the next frame so
-    // we don't mutate provider state during build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref
@@ -124,13 +136,35 @@ class _BrandKpiCarouselState extends ConsumerState<BrandKpiCarousel> {
 
   @override
   void dispose() {
+    _autoSlideTimer?.cancel();
     _pageCtrl.dispose();
     super.dispose();
   }
 
-  void _onCardTapped() {
-    // Tap pauses the cycle for kSliceTapPause so the user can read.
-    ref.read(activeSliceProvider(widget.scope).notifier).notifyTap();
+  void _startAutoSlide(int totalPages) {
+    _autoSlideTimer?.cancel();
+    if (!widget.autoSlideCards || totalPages <= 1) return;
+    _autoSlideTimer = Timer.periodic(widget.autoSlideDuration, (_) {
+      if (!mounted || _autoSlidePaused) return;
+      final next = (_currentPage + 1) % totalPages;
+      _pageCtrl.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  void _togglePause() {
+    if (_autoSlidePaused) {
+      setState(() => _autoSlidePaused = false);
+      _startAutoSlide(_totalPages);
+      ref.read(activeSliceProvider(widget.scope).notifier).resume();
+    } else {
+      setState(() => _autoSlidePaused = true);
+      _autoSlideTimer?.cancel();
+      ref.read(activeSliceProvider(widget.scope).notifier).notifyTap();
+    }
   }
 
   @override
@@ -140,19 +174,27 @@ class _BrandKpiCarouselState extends ConsumerState<BrandKpiCarousel> {
 
     if (cards.isEmpty) return const SizedBox.shrink();
 
-    // Inject progress + tap forwarding into each card.
+    // Inject progress into each card.
     final wrappedCards = [
       for (final card in cards) _wrapCard(card, slice),
     ];
 
-    // Chunk into pages of `perPage`.
+    // Chunk cards into pages of perPage (default 2).
     final pages = <List<HeroStatsCard>>[];
     for (var i = 0; i < wrappedCards.length; i += widget.perPage) {
       final end = (i + widget.perPage).clamp(0, wrappedCards.length);
       pages.add(wrappedCards.sublist(i, end));
     }
 
-    final showPagination = pages.length > 1;
+    // Start auto-slide when page count is known.
+    if (_totalPages != pages.length) {
+      _totalPages = pages.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _startAutoSlide(pages.length);
+      });
+    }
+
+    final showDots = pages.length > 1;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -160,23 +202,21 @@ class _BrandKpiCarouselState extends ConsumerState<BrandKpiCarousel> {
         Padding(
           padding: widget.padding,
           child: SizedBox(
-            // Card height from v3 mockup: 124px base + progress strip
-            // (3px + 10px gap) + sliceLabel (12px + 2px gap) = ~151px.
-            // Add a little breathing room for shadows.
-            height: 156,
-            child: showPagination
-                ? PageView.builder(
+            height: 120,
+            child: pages.length <= 1
+                ? _PageRow(cards: pages.first)
+                : PageView.builder(
                     controller: _pageCtrl,
-                    onPageChanged: (i) => setState(() => _currentPage = i),
+                    onPageChanged: (i) =>
+                        setState(() => _currentPage = i),
                     itemCount: pages.length,
                     itemBuilder: (_, pageIndex) =>
                         _PageRow(cards: pages[pageIndex]),
-                  )
-                : _PageRow(cards: pages.first),
+                  ),
           ),
         ),
-        if (showPagination) ...[
-          const SizedBox(height: 10),
+        if (showDots) ...[
+          const SizedBox(height: 8),
           _PageDots(total: pages.length, active: _currentPage),
         ],
       ],
@@ -206,10 +246,9 @@ class _BrandKpiCarouselState extends ConsumerState<BrandKpiCarousel> {
             )
           : null,
       padding: card.padding,
-      onTap: () {
-        _onCardTapped();
-        originalTap?.call();
-      },
+      // Short tap = pause/play auto-slide. Navigation is via long press.
+      onTap: _togglePause,
+      onLongPress: originalTap,
     );
   }
 }
