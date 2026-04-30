@@ -23,6 +23,34 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Direction of a stat's trend indicator.
 enum StatTrendDirection { up, down, flat }
 
+/// Progress descriptor for the optional Stories-style segmented strip
+/// drawn at the top edge of a [HeroStatsCard].
+///
+/// Used by `BrandKpiCarousel` so each card in the strip can render the
+/// same multi-segment "which slice is active" indicator (e.g., one
+/// segment per anak for a parent dashboard, one per kelas for a guru
+/// dashboard). When `total` is 1 the strip is omitted entirely — a
+/// single-slice card looks like a plain stats card.
+@immutable
+class KpiProgress {
+  /// Total number of slices in the cycle (e.g., 3 children).
+  final int total;
+
+  /// 0-based index of the currently-active slice.
+  final int activeIndex;
+
+  /// 0..1 fill of the active segment (0 = just started, 1 = about to
+  /// advance). Sibling cards in the same strip share this value so the
+  /// animation is visually one continuous bar.
+  final double fillFraction;
+
+  const KpiProgress({
+    required this.total,
+    required this.activeIndex,
+    required this.fillFraction,
+  });
+}
+
 /// A single-line, optional trend indicator rendered in the top-right of the
 /// card (e.g., "▲ 12% vs minggu lalu").
 class StatTrend {
@@ -78,6 +106,18 @@ class HeroStatsCard extends StatelessWidget {
   /// Optional trend chip in the top-right of the card.
   final StatTrend? trend;
 
+  /// Optional secondary line under [label] showing which slice the card
+  /// currently represents (e.g., "Salman · 30 hari", "Kelas 5A · MTK").
+  /// Lives between the label and the value so the user always knows
+  /// whose number they're reading. Pass null when no slice context
+  /// applies (single-anak parent, admin school view, etc.).
+  final String? sliceLabel;
+
+  /// Optional Stories-style segmented progress at the top edge.
+  /// Driven by `BrandKpiCarousel`'s `activeSliceProvider` so all cards
+  /// in the strip animate in sync. Null hides the strip entirely.
+  final KpiProgress? progress;
+
   /// Tap handler — typically navigates to a detail view.
   final VoidCallback? onTap;
 
@@ -93,6 +133,8 @@ class HeroStatsCard extends StatelessWidget {
     required this.accentColor,
     this.caption,
     this.trend,
+    this.sliceLabel,
+    this.progress,
     this.onTap,
     this.padding = const EdgeInsets.all(12),
   });
@@ -116,6 +158,13 @@ class HeroStatsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Optional Stories-style progress strip at the top edge of
+          // the card. Driven by `BrandKpiCarousel`. Only rendered when
+          // there's a real cycle (>1 slice).
+          if (progress != null && progress!.total > 1) ...[
+            _SliceProgressStrip(progress: progress!, accentColor: accentColor),
+            const SizedBox(height: 10),
+          ],
           // Icon badge top-left (mockup line 39-42)
           Container(
             width: 32,
@@ -139,6 +188,21 @@ class HeroStatsCard extends StatelessWidget {
               color: Color(0xFF64748B),
             ),
           ),
+          // Optional active-slice context line (e.g., "Salman · 30 hari")
+          if (sliceLabel != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              sliceLabel!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w700,
+                color: accentColor,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ],
           const SizedBox(height: 6),
           // Big value + inline trend chip or caption (mockup line 44-56).
           // Caption ("· 42 kelas") and trend chip sit inline after the
@@ -251,6 +315,92 @@ class _TrendChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Stories-style segmented progress bar drawn flush to the top edge
+/// of a [HeroStatsCard]. Each segment represents one slice in the
+/// cycle (e.g., one anak / one kelas). The active segment fills from
+/// 0..1 according to [KpiProgress.fillFraction] driven by
+/// `BrandKpiCarousel`'s active-slice notifier; segments before the
+/// active index are fully filled, segments after are empty.
+class _SliceProgressStrip extends StatelessWidget {
+  final KpiProgress progress;
+  final Color accentColor;
+
+  const _SliceProgressStrip({required this.progress, required this.accentColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 3,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const gap = 4.0;
+          final totalGaps = (progress.total - 1) * gap;
+          final segWidth =
+              (constraints.maxWidth - totalGaps) / progress.total;
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              for (int i = 0; i < progress.total; i++) ...[
+                _Segment(
+                  width: segWidth,
+                  // Segments before active are full, the active one
+                  // animates 0..1, segments after are empty.
+                  fill: i < progress.activeIndex
+                      ? 1.0
+                      : (i == progress.activeIndex
+                            ? progress.fillFraction.clamp(0.0, 1.0)
+                            : 0.0),
+                  color: accentColor,
+                ),
+                if (i < progress.total - 1) const SizedBox(width: gap),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _Segment extends StatelessWidget {
+  final double width;
+  final double fill;
+  final Color color;
+
+  const _Segment({
+    required this.width,
+    required this.fill,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Track
+        Container(
+          width: width,
+          height: 3,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE2E8F0),
+            borderRadius: BorderRadius.circular(1.5),
+          ),
+        ),
+        // Fill
+        Container(
+          width: width * fill,
+          height: 3,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(1.5),
+          ),
+        ),
+      ],
     );
   }
 }
