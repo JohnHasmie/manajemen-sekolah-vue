@@ -197,6 +197,7 @@ class _BrandKpiCarouselState extends ConsumerState<BrandKpiCarousel> {
       caption: card.caption,
       trend: card.trend,
       sliceLabel: card.sliceLabel,
+      sliceLabelMuted: card.sliceLabelMuted,
       progress: slice.total > 1
           ? KpiProgress(
               total: slice.total,

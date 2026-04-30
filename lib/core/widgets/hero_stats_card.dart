@@ -113,6 +113,11 @@ class HeroStatsCard extends StatelessWidget {
   /// applies (single-anak parent, admin school view, etc.).
   final String? sliceLabel;
 
+  /// When true the [sliceLabel] is rendered in muted slate instead of
+  /// the card's [accentColor]. Used for placeholder / empty states
+  /// ("Belum ada data") so they don't read as alerts.
+  final bool sliceLabelMuted;
+
   /// Optional Stories-style segmented progress at the top edge.
   /// Driven by `BrandKpiCarousel`'s `activeSliceProvider` so all cards
   /// in the strip animate in sync. Null hides the strip entirely.
@@ -134,6 +139,7 @@ class HeroStatsCard extends StatelessWidget {
     this.caption,
     this.trend,
     this.sliceLabel,
+    this.sliceLabelMuted = false,
     this.progress,
     this.onTap,
     this.padding = const EdgeInsets.all(12),
@@ -198,7 +204,9 @@ class HeroStatsCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 9.5,
                 fontWeight: FontWeight.w700,
-                color: accentColor,
+                color: sliceLabelMuted
+                    ? const Color(0xFF94A3B8) // slate-400 — muted
+                    : accentColor,
                 letterSpacing: 0.1,
               ),
             ),

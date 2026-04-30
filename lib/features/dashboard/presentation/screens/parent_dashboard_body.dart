@@ -413,6 +413,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           HeroStatsCard(
             label: 'KEHADIRAN',
             sliceLabel: ctxLabel,
+            sliceLabelMuted: s.isPlaceholder,
             value: s.isPlaceholder ? '—' : '${s.attendanceRate}%',
             icon: Icons.directions_run_rounded,
             accentColor: ColorUtils.success600,
@@ -432,6 +433,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           HeroStatsCard(
             label: 'TAGIHAN',
             sliceLabel: ctxLabel,
+            sliceLabelMuted: s.isPlaceholder,
             value: s.isPlaceholder
                 ? '—'
                 : (s.overdueTotal > 0
@@ -448,6 +450,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           HeroStatsCard(
             label: 'RATA-RATA',
             sliceLabel: ctxLabel,
+            sliceLabelMuted: s.isPlaceholder,
             value: s.avgGradeTerm != null
                 ? s.avgGradeTerm!.toStringAsFixed(1)
                 : '—',
@@ -471,6 +474,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           HeroStatsCard(
             label: 'PENGUMUMAN',
             sliceLabel: ctxLabel,
+            sliceLabelMuted: s.isPlaceholder,
             value: s.isPlaceholder ? '—' : '${s.unreadAnnouncements}',
             icon: Icons.campaign_outlined,
             accentColor: ColorUtils.brandAzureDeep,
