@@ -24,6 +24,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/shell_nav.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/academic_year_chip.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
@@ -39,6 +40,7 @@ import 'package:manajemensekolah/features/finance/presentation/screens/parent_bi
 import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/screens/parent_inbox_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/academic_year_picker_sheet.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
@@ -143,27 +145,19 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   String get _schoolName {
     final ud = widget.state.userData;
     final raw = (ud['school_name'] ?? ud['nama_sekolah'])?.toString().trim();
-    if (raw == null || raw.isEmpty) return 'Sekolah';
+    if (raw == null || raw.isEmpty) return AppLocalizations.dbSchool.tr;
     return raw;
   }
 
   String get _greetingSubtitle {
     final year = widget.state.userData['academic_year']?.toString();
-    if (year == null || year.isEmpty) return 'Orang Tua';
-    return 'Orang Tua · TP $year';
+    if (year == null || year.isEmpty) return AppLocalizations.pdParent.tr;
+    return '${AppLocalizations.pdParent.tr} · TP $year';
   }
 
   String get _userName {
     final raw = widget.state.userData['name']?.toString().trim();
-    return (raw == null || raw.isEmpty) ? 'Orang Tua' : raw;
-  }
-
-  String _greetingPart() {
-    final hour = DateTime.now().hour;
-    if (hour < 11) return 'pagi';
-    if (hour < 15) return 'siang';
-    if (hour < 18) return 'sore';
-    return 'malam';
+    return (raw == null || raw.isEmpty) ? AppLocalizations.pdParent.tr : raw;
   }
 
   // KPI counts
@@ -244,8 +238,17 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     );
   }
 
+  /// Phase-5 surface B — full Perlu Perhatian inbox screen reached
+  /// from the "Lihat semua" link in the dashboard inbox card.
+  void _openInbox() {
+    AppNavigator.push(context, const ParentInboxScreen());
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Watch language provider to rebuild when language changes.
+    ref.watch(languageRiverpod);
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: AppRefreshIndicator(
@@ -283,7 +286,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   /// school pill, and KPI cards floating onto the bottom edge.
   Widget _buildHeroWithKpiOverlay(BuildContext context) {
     final statusBarHeight = MediaQuery.of(context).viewPadding.top;
-    final notifBadge = _asInt(widget.state.stats['unread_notifications']) +
+    final notifBadge = _asInt(widget.state.userData['unread_notifications_count']) +
         _asInt(widget.state.stats['unread_announcements']);
     return Stack(
       clipBehavior: Clip.none,
@@ -330,7 +333,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Selamat ${_greetingPart()}',
+                              AppLocalizations.greeting(DateTime.now().hour),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
@@ -389,29 +392,38 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
                   // give a height constraint upward, so layout asserts.
                   // Both children carry their own intrinsic height; the
                   // default `start` alignment is correct here.
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SchoolPill.expanded(
-                          schoolName: _schoolName,
-                          subtitle: _greetingSubtitle,
-                          onTap: widget.onSchoolSwitchTap,
-                          accentColor: _parentBrandAzure,
-                          actionLabel: 'Ganti',
-                          onDarkSurface: true,
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: SchoolPill.expanded(
+                            schoolName: _schoolName,
+                            subtitle: _greetingSubtitle,
+                            onTap: widget.onSchoolSwitchTap,
+                            accentColor: _parentBrandAzure,
+                            actionLabel: AppLocalizations.dbSwitch.tr,
+                            onDarkSurface: true,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      AcademicYearChip(
-                        yearLabel: _academicYearLabel,
-                        semesterLabel: widget.state.currentSemesterLabel,
-                        onTap: () => showAcademicYearPickerSheet(
-                          context: context,
-                          ref: ref,
-                          currentSemesterLabel: widget.state.currentSemesterLabel,
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          flex: 2,
+                          child: AcademicYearChip(
+                            yearLabel: _academicYearLabel,
+                            semesterLabel: widget.state.currentSemesterLabel
+                                ?.replaceAll(RegExp(r'\s*[-\u2013\u2014·].*'), '')
+                                .trim(),
+                            onTap: () => showAcademicYearPickerSheet(
+                              context: context,
+                              ref: ref,
+                              currentSemesterLabel: widget.state.currentSemesterLabel,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -456,49 +468,49 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       cardBuilder: (sliceIndex) {
         final s = slices[sliceIndex.clamp(0, slices.length - 1)];
         final ctxLabel = s.isPlaceholder
-            ? 'Belum ada data'
+            ? AppLocalizations.pdNoDataYet.tr
             : '${s.name} · ${s.classLabel}';
 
         return [
           // 1. Kehadiran 30 hari
           HeroStatsCard(
-            label: 'KEHADIRAN',
+            label: AppLocalizations.pdPresence.tr,
             sliceLabel: ctxLabel,
             sliceLabelMuted: s.isPlaceholder,
             value: s.isPlaceholder ? '—' : '${s.attendanceRate}%',
             icon: Icons.directions_run_rounded,
             accentColor: ColorUtils.success600,
             caption: s.isPlaceholder
-                ? '30 hari'
-                : '${s.attendanceBreakdown['sakit'] ?? 0} sakit · ${s.attendanceBreakdown['izin'] ?? 0} izin · ${s.attendanceBreakdown['alpa'] ?? 0} alpa',
+                ? '30 ${AppLocalizations.day.tr.toLowerCase()}'
+                : '${s.attendanceBreakdown['sakit'] ?? 0} ${AppLocalizations.pdSick.tr.toLowerCase()} · ${s.attendanceBreakdown['izin'] ?? 0} ${AppLocalizations.pdPermission.tr.toLowerCase()} · ${s.attendanceBreakdown['alpa'] ?? 0} ${AppLocalizations.pdAlpha.tr.toLowerCase()}',
             trend: (!s.isPlaceholder && s.attendanceDelta != 0)
                 ? StatTrend(
                     direction: s.attendanceDelta > 0
                         ? StatTrendDirection.up
                         : StatTrendDirection.down,
                     label:
-                        '${s.attendanceDelta > 0 ? '+' : ''}${s.attendanceDelta}% bln ini',
+                        '${s.attendanceDelta > 0 ? '+' : ''}${s.attendanceDelta}% ${AppLocalizations.pdThisMonth.tr}',
                   )
                 : null,
             onTap: s.isPlaceholder ? null : _openAttendance,
           ),
           // 2. Tugas
           HeroStatsCard(
-            label: 'TUGAS',
+            label: AppLocalizations.pdTasks.tr,
             sliceLabel: ctxLabel,
             sliceLabelMuted: s.isPlaceholder,
             value: s.isPlaceholder ? '—' : '${s.tugasPending}',
             icon: Icons.assignment_outlined,
             accentColor: ColorUtils.warning600,
             caption: s.isPlaceholder
-                ? 'menunggu'
+                ? AppLocalizations.pdWaiting.tr
                 : (s.tugasOverdue > 0
-                    ? '${s.tugasOverdue} belum dikumpul'
-                    : '${s.tugasTotal} total tugas'),
+                    ? '${s.tugasOverdue} ${AppLocalizations.pdNotCollected.tr}'
+                    : '${s.tugasTotal} ${AppLocalizations.pdTotalTasks.tr}'),
             trend: (s.tugasOverdue > 0)
                 ? StatTrend(
                     direction: StatTrendDirection.down,
-                    label: '${s.tugasOverdue} belum dikumpul',
+                    label: '${s.tugasOverdue} ${AppLocalizations.pdNotCollected.tr}',
                     inverse: true,
                   )
                 : null,
@@ -506,26 +518,26 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           ),
           // 3. Tagihan jatuh tempo
           HeroStatsCard(
-            label: 'TAGIHAN',
+            label: AppLocalizations.pdBilling.tr,
             sliceLabel: ctxLabel,
             sliceLabelMuted: s.isPlaceholder,
             value: s.isPlaceholder
                 ? '—'
                 : (s.overdueTotal > 0
                     ? 'Rp ${_formatRupiahShort(s.overdueTotal)}'
-                    : 'Lunas'),
+                    : AppLocalizations.pdVerified.tr),
             icon: Icons.account_balance_wallet_outlined,
             accentColor: ColorUtils.error600,
             caption: s.isPlaceholder
-                ? 'jatuh tempo'
+                ? AppLocalizations.pdDue.tr
                 : (s.overdueCount > 0
-                    ? '${s.overdueCount} tagihan'
-                    : 'tidak ada tunggakan'),
+                    ? '${s.overdueCount} ${AppLocalizations.billing.tr.toLowerCase()}'
+                    : AppLocalizations.pdNoArrears.tr),
             onTap: s.isPlaceholder ? null : _openBilling,
           ),
           // 4. Rata-rata nilai
           HeroStatsCard(
-            label: 'RATA-RATA',
+            label: AppLocalizations.pdAverage.tr,
             sliceLabel: ctxLabel,
             sliceLabelMuted: s.isPlaceholder,
             value: s.avgGradeTerm != null
@@ -534,15 +546,15 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             icon: Icons.bar_chart_rounded,
             accentColor: const Color(0xFF6366F1),
             caption: s.avgGradeTerm != null
-                ? '${s.avgGradeSubjectCount} mapel'
-                : (s.isPlaceholder ? 'semester aktif' : 'belum ada'),
+                ? '${s.avgGradeSubjectCount} ${AppLocalizations.pdSubjectsCount.tr}'
+                : (s.isPlaceholder ? AppLocalizations.pdActiveSemester.tr : AppLocalizations.pdNoDataYet.tr),
             trend: (s.avgGradeTerm != null && s.avgGradeDelta.abs() >= 0.1)
                 ? StatTrend(
                     direction: s.avgGradeDelta > 0
                         ? StatTrendDirection.up
                         : StatTrendDirection.down,
                     label:
-                        '${s.avgGradeDelta > 0 ? '+' : ''}${s.avgGradeDelta.toStringAsFixed(1)} sem lalu',
+                        '${s.avgGradeDelta > 0 ? '+' : ''}${s.avgGradeDelta.toStringAsFixed(1)} ${AppLocalizations.pdLastSemester.tr}',
                   )
                 : null,
             onTap: s.isPlaceholder ? null : _openGrades,
@@ -594,7 +606,11 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: PendingInboxCard(
         title: 'Perlu perhatian',
-        onSeeAll: _openBilling,
+        // Phase-5 surface B — "Lihat semua" opens the full inbox
+        // screen instead of jumping to the billing tab. The billing
+        // category remains reachable from there via the Tagihan
+        // filter chip.
+        onSeeAll: _openInbox,
         seeAllLabel: 'Lihat semua',
         totalLabel: 'total menunggu',
         accentColor: _parentBrandAzure,
@@ -611,7 +627,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           ),
           PendingInboxEntry(
             icon: Icons.grade_outlined,
-            label: 'Nilai baru anak',
+            label: AppLocalizations.dbGradesAndReportCards.tr,
             count: _newGrades,
             color: ColorUtils.success600,
             subtitle: _newGrades > 0
@@ -621,7 +637,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           ),
           PendingInboxEntry(
             icon: Icons.announcement_outlined,
-            label: 'Pengumuman baru',
+            label: AppLocalizations.announcements.tr,
             count: _newAnnouncements,
             color: ColorUtils.info600,
             subtitle: _newAnnouncements > 0
@@ -631,7 +647,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           ),
           PendingInboxEntry(
             icon: Icons.check_circle_outline,
-            label: 'Kehadiran anak',
+            label: AppLocalizations.pdPresence.tr,
             count: _attendanceAlpha,
             color: ColorUtils.warning600,
             subtitle: _attendanceAlpha > 0
@@ -650,33 +666,33 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       actions: [
         QuickAction(
           icon: Icons.announcement_outlined,
-          label: 'Pengumuman',
+          label: AppLocalizations.announcements.tr,
           color: widget.primaryColor,
-          caption: 'Informasi',
+          caption: AppLocalizations.information.tr,
           showBadge: _newAnnouncements > 0,
           onTap: _openAnnouncements,
         ),
         QuickAction(
           icon: Icons.account_balance_wallet_outlined,
-          label: 'Tagihan',
+          label: AppLocalizations.billing.tr,
           color: ColorUtils.error600,
-          caption: 'Pembayaran',
+          caption: AppLocalizations.pdPayment.tr,
           showBadge: _overdueBills > 0,
           onTap: _openBilling,
         ),
         QuickAction(
           icon: Icons.grade_outlined,
-          label: 'Nilai',
+          label: AppLocalizations.grades.tr,
           color: ColorUtils.success600,
-          caption: 'Akademik',
+          caption: AppLocalizations.pdAcademic.tr,
           showBadge: _newGrades > 0,
           onTap: _openGrades,
         ),
         QuickAction(
           icon: Icons.check_circle_outline,
-          label: 'Kehadiran',
+          label: AppLocalizations.pdPresence.tr,
           color: ColorUtils.warning600,
-          caption: 'Presensi',
+          caption: AppLocalizations.presence.tr,
           showBadge: _attendanceAlpha > 0,
           onTap: _openAttendance,
         ),

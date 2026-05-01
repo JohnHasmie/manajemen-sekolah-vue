@@ -26,6 +26,7 @@ class ApiEndpoints {
   // ── Dashboard ──
   static const dashboardStats = '/dashboard/stats';
   static const parentAcademicRecent = '/dashboard/parent-academic-recent';
+  static const parentInbox = '/dashboard/parent-inbox';
   static const health = '/health';
 
   // ── Students ──
