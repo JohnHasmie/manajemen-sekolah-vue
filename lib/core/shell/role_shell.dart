@@ -159,13 +159,16 @@ class _RoleShellState extends ConsumerState<RoleShell> {
           accentColor: ColorUtils.getRoleColor(widget.role),
           onTap: (idx) {
             final tappedTab = state.tabs[idx];
-            // Convention: tapping the *active* tab pops that tab's
-            // stack to root. Tapping a non-active tab switches.
-            if (tappedTab == state.activeTab) {
-              notifier.popToRoot(tappedTab);
-            } else {
-              notifier.setTab(tappedTab);
-            }
+            // Bottom-nav contract: tapping a tab ALWAYS lands on
+            // that tab's root, whether it's currently active or
+            // sitting in the background with a deep stack. So we:
+            //   1. switch to the tab (no-op if already active)
+            //   2. pop its stack down to the initial route
+            // This is the "tap Beranda → see the dashboard" UX —
+            // the user shouldn't have to remember whether they
+            // last left the tab on a deep page.
+            notifier.setTab(tappedTab);
+            notifier.popToRoot(tappedTab);
           },
         ),
       ),
