@@ -5,6 +5,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_alert_dialog.dart';
+import 'package:manajemensekolah/core/widgets/language_picker_sheet.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -66,43 +67,19 @@ mixin DialogMixin on ConsumerState<Dashboard> {
     );
   }
 
-  /// Shows language selection dialog with Indonesia and English options.
+  /// Shows the brand language picker bottom sheet (Phase-5 redesign).
+  /// The legacy `AlertDialog` form was replaced by
+  /// [showLanguagePickerSheet] — same entry point name preserved so
+  /// existing call sites in the dashboard app bar keep compiling.
+  /// `languageProvider` and `primaryColor` parameters are kept for
+  /// signature compatibility but unused by the new sheet (the sheet
+  /// reads `languageRiverpod` directly).
   void showLanguageDialog(
     BuildContext context,
     LanguageProvider languageProvider,
     Color primaryColor,
   ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
-        ),
-        title: Text(
-          AppLocalizations.chooseLanguage.tr,
-          style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            LanguageOptionTile(
-              languageProvider: languageProvider,
-              language: 'Indonesia',
-              code: 'id',
-              color: Colors.green,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            LanguageOptionTile(
-              languageProvider: languageProvider,
-              language: 'English',
-              code: 'en',
-              color: Colors.blue,
-            ),
-          ],
-        ),
-      ),
-    );
+    showLanguagePickerSheet(context: context, ref: ref);
   }
 
   /// Shows account bottom sheet with user profile and school info.
@@ -111,8 +88,9 @@ mixin DialogMixin on ConsumerState<Dashboard> {
     BuildContext context,
     DashboardState state,
     Color primaryColor,
-    String effectiveRole,
-  ) {
+    String effectiveRole, {
+    required VoidCallback onLanguageTap,
+  }) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -121,6 +99,7 @@ mixin DialogMixin on ConsumerState<Dashboard> {
         state: state,
         primaryColor: primaryColor,
         effectiveRole: effectiveRole,
+        onLanguageTap: onLanguageTap,
         onShowSchoolSelection: () =>
             showSchoolSelectionDialog(context, state, primaryColor),
       ),
