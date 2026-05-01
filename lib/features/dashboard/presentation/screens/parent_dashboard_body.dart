@@ -382,8 +382,14 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
                   // school pill takes the available space and the chip
                   // is a fixed-width sidekick. On narrow screens the
                   // pill ellipsises; the chip stays legible.
+                  //
+                  // No `crossAxisAlignment: stretch` — that would ask
+                  // Flutter to bound the Row's height to the children
+                  // but neither parent (the hero Column) nor the chip
+                  // give a height constraint upward, so layout asserts.
+                  // Both children carry their own intrinsic height; the
+                  // default `start` alignment is correct here.
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
                         child: SchoolPill.expanded(
