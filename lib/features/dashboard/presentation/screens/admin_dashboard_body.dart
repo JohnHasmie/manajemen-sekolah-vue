@@ -677,7 +677,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
               AppNavigator.push(context, const AdminAnnouncementScreen()),
         ),
         ModulLainStripItem(
-          label: 'Aktivitas Kelas',
+          label: 'Kegiatan Kelas',
           icon: Icons.local_activity_outlined,
           onTap: _openAktivitasKelas,
         ),

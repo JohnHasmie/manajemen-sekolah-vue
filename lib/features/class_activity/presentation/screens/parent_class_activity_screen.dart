@@ -164,7 +164,7 @@ class ParentClassActivityScreenState
       }),
       title: lang.getTranslatedText({
         'en': 'Class Activity',
-        'id': 'Aktivitas Kelas',
+        'id': 'Kegiatan Kelas',
       }),
       actionIcons: [
         BrandHeaderIconButton(

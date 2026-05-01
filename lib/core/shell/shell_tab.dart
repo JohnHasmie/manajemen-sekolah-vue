@@ -72,6 +72,11 @@ extension ShellTabMeta on ShellTab {
   /// Kept short (single word) so 4-5 tabs fit Samsung portrait without
   /// truncation. The audit's P0 #2/#3 (Pengatura\nn / Pengumum…) was
   /// the cautionary tale here.
+  ///
+  /// Default label is the role-neutral one. Use [labelFor] to get a
+  /// role-specific override (e.g. parent's `finance` reads "Tagihan"
+  /// because the wali surface is bills-only, while admin's stays
+  /// "Keuangan" since the admin hub also covers payments + types).
   String get label {
     switch (this) {
       case ShellTab.home:
@@ -93,5 +98,20 @@ extension ShellTabMeta on ShellTab {
       case ShellTab.attendance:
         return 'Kehadiran';
     }
+  }
+
+  /// Role-aware label override. Falls through to [label] when no
+  /// override exists for the (tab, role) pair. Add new overrides
+  /// here rather than in the bottom-nav widget so call sites stay
+  /// consistent and the matrix is easy to scan.
+  String labelFor(String role) {
+    final r = role.toLowerCase();
+    // Parent (`wali` / `parent`) — the finance tab only surfaces
+    // bills, so the nav reads "Tagihan" to match the screen content
+    // and the dashboard's KPI / quick-action labelling.
+    if ((r == 'wali' || r == 'parent') && this == ShellTab.finance) {
+      return 'Tagihan';
+    }
+    return label;
   }
 }
