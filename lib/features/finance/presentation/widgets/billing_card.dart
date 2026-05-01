@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/widgets/app_alert_dialog.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/parent_bill_checkout_screen.dart';
 
 class BillingCard extends StatelessWidget {
   final Map<String, dynamic> billing;
@@ -83,38 +83,16 @@ class BillingCard extends StatelessWidget {
     return '${parsed.day} ${monthsId[parsed.month - 1]} ${parsed.year}';
   }
 
-  /// PR-10 / P0 #8: parent billing previously had no payment CTA. This
-  /// stub opens an [AppAlertDialog] with bank-transfer instructions until
-  /// the in-app payment flow ships. The dialog explains the existing
-  /// out-of-band process (transfer + receipt upload via admin) so the
-  /// affordance maps to the real workflow today rather than leaving the
-  /// user stranded.
-  void _showPayDialog(BuildContext context) {
-    AppAlertDialog.show(
-      context: context,
-      title: languageProvider.getTranslatedText({
-        'en': 'Pay via Transfer',
-        'id': 'Bayar via Transfer',
-      }),
-      message: languageProvider.getTranslatedText({
-        'en':
-            'Please transfer the bill amount to the school account, then '
-                'send the receipt to your school administrator for '
-                'verification. An in-app payment + receipt upload flow is '
-                'on the roadmap.',
-        'id':
-            'Silakan transfer jumlah tagihan ke rekening sekolah, lalu '
-                'kirim bukti pembayaran ke admin sekolah untuk diverifikasi. '
-                'Fitur pembayaran + unggah bukti dalam aplikasi sedang '
-                'direncanakan.',
-      }),
-      icon: Icons.account_balance_rounded,
-      confirmText: languageProvider.getTranslatedText({
-        'en': 'OK',
-        'id': 'Mengerti',
-      }),
-      showCancel: false,
-    );
+  /// Phase-5 surface C+D — opens the new full-screen Bayar checkout.
+  /// Replaces the previous AppAlertDialog stub. The bill payload is
+  /// passed straight through; the checkout reads `amount`, `type`,
+  /// `student.name`, `student_name` for its recap card.
+  ///
+  /// When the checkout returns `true` (payment + verification or
+  /// upload completed), the caller can refresh the bill list to
+  /// reflect the new status.
+  Future<bool?> _openCheckout(BuildContext context) {
+    return openParentBillCheckout(context, bill: billing);
   }
 
   @override
@@ -359,7 +337,7 @@ class BillingCard extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () => _showPayDialog(context),
+                      onPressed: () => _openCheckout(context),
                       icon: const Icon(
                         Icons.account_balance_rounded,
                         size: 16,
