@@ -1,19 +1,30 @@
-// Detail view dialog for admin announcement screen.
+// Detail bottom-sheet for an announcement. Phase-4 surface 2.
 //
-// Extracted from AdminAnnouncementScreenState._showAnnouncementDetail().
-// Shows full announcement metadata, content, and file attachment.
+// Was a center `Dialog` with a top-of-card gradient header + "Tutup"
+// footer button. The Phase-4 redesign converts it to a brand-style
+// bottom sheet:
+//
+//   • Drag handle on top, close-X in top-right
+//   • Compact header: tinted icon badge + role-target chip + title
+//   • Prominent body content (the announcement text itself)
+//   • Optional attachment chip (file name + size)
+//   • 2x2 detail grid at the bottom (Dibuat oleh, Role Target,
+//     Tanggal Mulai, Tanggal Berakhir, Dibuat pada)
+//   • No footer "Tutup" button — close-X + tap-outside dismisses
+//
+// The widget signature is preserved so the existing `mixins/
+// admin_dialog_mixin.dart` caller works unchanged; only the parent
+// invocation switched from `showDialog` to `showModalBottomSheet`.
+//
+// Used by admin AND parent announcement screens (parent invokes the
+// same mixin via inheritance).
+
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
-import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_detail_row.dart';
 
-/// Dialog that shows full details of a single announcement.
-///
-/// Like a Vue `<AnnouncementDetailModal>` component — receives data via props
-/// and fires `onOpenFile` to the parent when the attachment is tapped.
 class AnnouncementDetailDialog extends StatelessWidget {
   final Map<String, dynamic> announcementData;
   final Color primaryColor;
@@ -37,312 +48,396 @@ class AnnouncementDetailDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Announcement.fromJson(announcementData);
-    return Dialog(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(20)),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with gradient
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                gradient: cardGradient,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+    final isImportant = ['penting', 'important']
+        .contains(announcementData['priority']);
+    final filePath = announcementData['file_path']?.toString();
+    final fileName = announcementData['file_name']?.toString();
+    final creator = announcementData['creator']?['name']
+        ?? announcementData['creator_name']
+        ?? '—';
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.92,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(28),
+              topRight: Radius.circular(28),
+            ),
+          ),
+          child: Column(
+            children: [
+              _buildDragHandle(),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    8,
+                    AppSpacing.md,
+                    AppSpacing.md,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(10),
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.announcement,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Text(
-                          model.title.isNotEmpty ? model.title : 'No Title',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                      _buildHeader(context, model, isImportant),
+                      AppSpacing.v16,
+                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                      AppSpacing.v16,
+                      _buildBody(model),
+                      if (filePath != null && filePath.isNotEmpty) ...[
+                        AppSpacing.v16,
+                        _buildAttachment(filePath, fileName),
+                      ],
+                      AppSpacing.v16,
+                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                      AppSpacing.v16,
+                      _buildDetailGrid(creator, model),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    formatDate(model.createdAt),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── pieces ────────────────────────────────────────────────────────
+
+  Widget _buildDragHandle() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Stack(
+        children: [
+          // Centered drag handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFCBD5E1),
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
+          ),
+          // Close-X in top-right
+          Positioned(
+            right: 8,
+            top: -2,
+            child: _CloseButton(),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+  Widget _buildHeader(
+    BuildContext context,
+    Announcement model,
+    bool isImportant,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Tinted icon badge
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: primaryColor.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            isImportant ? Icons.warning_amber_rounded : Icons.campaign_outlined,
+            color: primaryColor,
+            size: 28,
+          ),
+        ),
+        AppSpacing.h12,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _kickerLabel(isImportant),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
+                  color: ColorUtils.slate500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                model.title.isNotEmpty ? model.title : '—',
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: ColorUtils.slate900,
+                  height: 1.25,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _kickerLabel(bool isImportant) {
+    final base = languageProvider.getTranslatedText({
+      'en': 'ANNOUNCEMENT',
+      'id': 'PENGUMUMAN',
+    });
+    if (!isImportant) return '$base · UMUM';
+    return '$base · ${languageProvider.getTranslatedText({
+      'en': 'IMPORTANT',
+      'id': 'PENTING',
+    })}';
+  }
+
+  Widget _buildBody(Announcement model) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          languageProvider.getTranslatedText({
+            'en': 'CONTENT',
+            'id': 'ISI PENGUMUMAN',
+          }),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+            color: ColorUtils.slate500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          model.content.isEmpty ? '—' : model.content,
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.55,
+            color: ColorUtils.slate700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAttachment(String filePath, String? fileName) {
+    return InkWell(
+      onTap: () => onOpenFile(filePath, fileName ?? 'attachment'),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: ColorUtils.slate50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.75),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: primaryColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.attach_file_rounded,
+                color: primaryColor,
+                size: 18,
+              ),
+            ),
+            AppSpacing.h12,
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Priority badge
-                  if ([
-                    'penting',
-                    'important',
-                  ].contains(announcementData['priority']))
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(8),
-                        ),
-                        border: Border.all(color: Colors.orange),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.warning,
-                            size: 14,
-                            color: Colors.orange,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Important Announcement',
-                              'id': 'Pengumuman Penting',
-                            }),
-                            style: const TextStyle(
-                              color: Colors.orange,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Content text
                   Text(
-                    model.content,
+                    fileName ?? 'lampiran',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 16,
-                      height: 1.6,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
                       color: ColorUtils.slate800,
                     ),
                   ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Attachment Section
-                  if (announcementData['file_path'] != null) ...[
-                    Text(
-                      languageProvider.getTranslatedText({
-                        'en': 'Attachment',
-                        'id': 'Lampiran',
-                      }),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: ColorUtils.slate600,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    InkWell(
-                      onTap: () => onOpenFile(
-                        announcementData['file_path'],
-                        announcementData['file_name'] ?? 'attachment',
-                      ),
-                      borderRadius: const BorderRadius.all(Radius.circular(12)),
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: ColorUtils.slate50,
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(12),
-                          ),
-                          border: Border.all(color: ColorUtils.slate200),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(AppSpacing.sm),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(8),
-                                ),
-                                border: Border.all(color: ColorUtils.slate200),
-                              ),
-                              child: Icon(
-                                Icons.attach_file,
-                                color: primaryColor,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    announcementData['file_name'] ??
-                                        languageProvider.getTranslatedText({
-                                          'en': 'Download File',
-                                          'id': 'Unduh File',
-                                        }),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: ColorUtils.slate800,
-                                    ),
-                                  ),
-                                  Text(
-                                    languageProvider.getTranslatedText({
-                                      'en': 'Tap to open',
-                                      'id': 'Ketuk untuk membuka',
-                                    }),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: ColorUtils.slate500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Icon(
-                              Icons.download_rounded,
-                              color: ColorUtils.slate400,
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                  ],
-
-                  // Metadata
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    decoration: BoxDecoration(
-                      color: ColorUtils.slate50,
-                      borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    ),
-                    child: Column(
-                      children: [
-                        AnnouncementDetailRow(
-                          icon: Icons.person,
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Created by',
-                            'id': 'Dibuat oleh',
-                          }),
-                          value:
-                              announcementData['creator']?['name'] ??
-                              announcementData['creator_name'] ??
-                              'Unknown',
-                          primaryColor: primaryColor,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        AnnouncementDetailRow(
-                          icon: Icons.people,
-                          label: languageProvider.getTranslatedText({
-                            'en': 'Target Role',
-                            'id': 'Role Target',
-                          }),
-                          value: getTargetText(announcementData),
-                          primaryColor: primaryColor,
-                        ),
-                        if (announcementData['start_date'] != null)
-                          const SizedBox(height: AppSpacing.sm),
-                        if (announcementData['start_date'] != null)
-                          AnnouncementDetailRow(
-                            icon: Icons.calendar_today,
-                            label: languageProvider.getTranslatedText({
-                              'en': 'Start Date',
-                              'id': 'Tanggal Mulai',
-                            }),
-                            value: formatDate(announcementData['start_date']),
-                            primaryColor: primaryColor,
-                          ),
-                        if (announcementData['end_date'] != null)
-                          const SizedBox(height: AppSpacing.sm),
-                        if (announcementData['end_date'] != null)
-                          AnnouncementDetailRow(
-                            icon: Icons.event_busy,
-                            label: languageProvider.getTranslatedText({
-                              'en': 'End Date',
-                              'id': 'Tanggal Berakhir',
-                            }),
-                            value: formatDate(announcementData['end_date']),
-                            primaryColor: primaryColor,
-                          ),
-                      ],
+                  const SizedBox(height: 2),
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'Tap to open',
+                      'id': 'Ketuk untuk membuka',
+                    }),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: ColorUtils.slate500,
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Close button
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => AppNavigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: Text(
-                        languageProvider.getTranslatedText({
-                          'en': 'Close',
-                          'id': 'Tutup',
-                        }),
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            Icon(
+              Icons.download_rounded,
+              size: 18,
+              color: ColorUtils.slate400,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDetailGrid(String creator, Announcement model) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'DETAIL',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+            color: ColorUtils.slate500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _DetailCell(
+                label: languageProvider.getTranslatedText({
+                  'en': 'Created by',
+                  'id': 'Dibuat oleh',
+                }),
+                value: creator,
+              ),
+            ),
+            Expanded(
+              child: _DetailCell(
+                label: languageProvider.getTranslatedText({
+                  'en': 'Target Role',
+                  'id': 'Role Target',
+                }),
+                value: getTargetText(announcementData),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _DetailCell(
+                label: languageProvider.getTranslatedText({
+                  'en': 'Start Date',
+                  'id': 'Tanggal Mulai',
+                }),
+                value: announcementData['start_date'] != null
+                    ? formatDate(announcementData['start_date']?.toString())
+                    : '—',
+              ),
+            ),
+            Expanded(
+              child: _DetailCell(
+                label: languageProvider.getTranslatedText({
+                  'en': 'End Date',
+                  'id': 'Tanggal Berakhir',
+                }),
+                value: announcementData['end_date'] != null
+                    ? formatDate(announcementData['end_date']?.toString())
+                    : '—',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _DetailCell(
+          label: languageProvider.getTranslatedText({
+            'en': 'Created at',
+            'id': 'Dibuat pada',
+          }),
+          value: formatDate(model.createdAt),
+        ),
+      ],
+    );
+  }
+}
+
+/// Top-right close-X. Uses a Builder so we can pop the right route.
+class _CloseButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Builder(
+      builder: (ctx) => InkWell(
+        onTap: () => Navigator.of(ctx).pop(),
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.close_rounded,
+            size: 16,
+            color: ColorUtils.slate600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One cell in the 2x2 detail grid — small uppercase label above
+/// a bold value.
+class _DetailCell extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _DetailCell({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9.5,
+            color: ColorUtils.slate500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: ColorUtils.slate900,
+          ),
+        ),
+      ],
     );
   }
 }

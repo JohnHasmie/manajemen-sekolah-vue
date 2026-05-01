@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/'
     'controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/mixins/dashboard_account_sheet_header_mixin.dart';
@@ -29,9 +30,14 @@ class DashboardAccountSheet extends ConsumerStatefulWidget {
   final Color primaryColor;
   final String effectiveRole;
 
-  /// Called when the user taps "Switch School" — opens the school-selection
-  /// dialog which must be anchored to the parent screen's context.
+  /// Called when the user taps "Switch School".
   final VoidCallback onShowSchoolSelection;
+
+  /// Called when the user wants to switch app language.
+  final VoidCallback onLanguageTap;
+
+  /// Called when the user taps "Switch Role".
+  final void Function(String schoolId, List<String> roleList) onShowRoleSelection;
 
   const DashboardAccountSheet({
     super.key,
@@ -39,6 +45,8 @@ class DashboardAccountSheet extends ConsumerStatefulWidget {
     required this.primaryColor,
     required this.effectiveRole,
     required this.onShowSchoolSelection,
+    required this.onLanguageTap,
+    required this.onShowRoleSelection,
   });
 
   @override
@@ -69,93 +77,226 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
     super.dispose();
   }
 
+  String get _userName =>
+      (widget.state.userData['name'] ??
+              widget.state.userData['nama'] ??
+              'Pengguna')
+          .toString();
+
+  String get _userEmail =>
+      (widget.state.userData['email'] ?? '').toString();
+
+  String get _initial {
+    final n = _userName.trim();
+    return n.isEmpty ? '?' : n[0].toUpperCase();
+  }
+
+  String get _schoolName =>
+      (widget.state.userData['school_name'] ??
+              widget.state.userData['nama_sekolah'] ??
+              '-')
+          .toString();
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => Navigator.of(context).pop(),
-      child: Container(
-        margin: EdgeInsets.fromLTRB(
-          AppSpacing.xl,
-          AppSpacing.xl,
-          AppSpacing.xl,
-          MediaQuery.of(context).padding.bottom + AppSpacing.xl,
-        ),
-        child: GestureDetector(
-          onTap: () {},
-          child: Wrap(
-            children: [
-              Container(
+    ref.watch(languageRiverpod);
+    final bottomPad = MediaQuery.of(context).viewPadding.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(24, 0, 24, 20 + bottomPad),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 10, bottom: 20),
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.all(Radius.circular(25)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
-                      child: _buildSheetContent(context),
-                    ),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: IconButton(
-                        icon: const Icon(Icons.close),
-                        color: Colors.grey.shade500,
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ),
-                  ],
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+            ),
+            // Avatar + name + email + role pill + close X
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Avatar
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: widget.primaryColor.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    _initial,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: widget.primaryColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _userName,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _userEmail,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: widget.primaryColor.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: Text(
+                          roleDisplayName(widget.effectiveRole),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: widget.primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Close X
+                Material(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () => Navigator.pop(context),
+                    child: const SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: Icon(Icons.close, size: 16, color: Color(0xFF475569)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
 
-  /// Build the main column content of the sheet
-  Widget _buildSheetContent(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Drag handle
-        _buildDragHandle(),
-        AppSpacing.v20,
+            // Lihat Profil Lengkap
+            buildLihatProfilTile(context),
+            const SizedBox(height: 20),
 
-        // User info row
-        buildUserInfoRow(context),
-        AppSpacing.v24,
+            // Divider
+            const Divider(color: Color(0xFFF1F5F9), height: 1),
+            const SizedBox(height: 16),
 
-        // Role switcher section
-        buildRoleSwitcherSection(),
+            // AKSES SAYA section
+            Text(
+              AppLocalizations.myAccess.tr.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF94A3B8),
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 12),
 
-        // School and settings section
-        buildSchoolSettingsSection(widget.state, context),
+            // Peran aktif row
+            () {
+              final roles = widget.state.availableRoles;
+              final hasMultiple = roles.length > 1;
+              return _AccessRow(
+                icon: Icons.person_outline,
+                iconColor: widget.primaryColor,
+                label: AppLocalizations.activeRole.tr,
+                value: roleDisplayName(widget.effectiveRole),
+                action: hasMultiple ? AppLocalizations.switchAction.tr : '',
+                isActive: true,
+                accentColor: widget.primaryColor,
+                onTap: hasMultiple
+                    ? () {
+                        final sId = (widget.state.userData['school_id'] ?? '').toString();
+                        final rList = roles.map((e) => e.toString()).toList();
+                        Navigator.pop(context);
+                        widget.onShowRoleSelection(sId, rList);
+                      }
+                    : () {},
+              );
+            }(),
+            const SizedBox(height: 8),
 
-        // Logout button
-        buildLogoutButton(context),
-      ],
-    );
-  }
+            // Sekolah aktif row
+            () {
+              final schools = widget.state.accessibleSchools;
+              final hasMultiple = schools.length > 1;
+              return _AccessRow(
+                icon: Icons.school_outlined,
+                iconColor: const Color(0xFF10B981),
+                label: AppLocalizations.activeSchool.tr,
+                value: _schoolName,
+                action: hasMultiple ? AppLocalizations.switchAction.tr : '',
+                onTap: hasMultiple
+                    ? () {
+                        Navigator.pop(context);
+                        widget.onShowSchoolSelection();
+                      }
+                    : () {},
+              );
+            }(),
+            const SizedBox(height: 12),
 
-  /// Build the drag handle indicator at the top of the sheet
-  Widget _buildDragHandle() {
-    return Center(
-      child: Container(
-        width: 60,
-        height: 4,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade300,
-          borderRadius: const BorderRadius.all(Radius.circular(2)),
+            // Divider before Bahasa
+            const Divider(color: Color(0xFFF1F5F9), height: 1),
+            const SizedBox(height: 16),
+
+            // Bahasa row
+            _AccessRow(
+              icon: Icons.language_outlined,
+              iconColor: const Color(0xFF6366F1),
+              label: AppLocalizations.language.tr,
+              value: ref.watch(languageRiverpod).currentLanguage == LanguageProvider.english
+                  ? 'English'
+                  : 'Bahasa Indonesia',
+              action: AppLocalizations.changeAction.tr,
+              onTap: widget.onLanguageTap,
+            ),
+            const SizedBox(height: 20),
+
+            // Divider
+            const Divider(color: Color(0xFFF1F5F9), height: 1),
+            const SizedBox(height: 20),
+
+            // Logout
+            buildLogoutButton(context),
+            const SizedBox(height: 12),
+          ],
         ),
       ),
     );
@@ -186,4 +327,98 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
 
   @override
   VoidCallback get onShowSchoolSelection => widget.onShowSchoolSelection;
+}
+
+class _AccessRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final String action;
+  final bool isActive;
+  final Color? accentColor;
+  final VoidCallback onTap;
+
+  const _AccessRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.action,
+    this.isActive = false,
+    this.accentColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isActive
+        ? const Color(0xFFF0F9FF)
+        : Colors.white;
+    final border = isActive
+        ? const Color(0xFFBAE6FD)
+        : const Color(0xFFE2E8F0);
+
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: border, width: 0.75),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 16, color: iconColor),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    ),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (action.isNotEmpty)
+                Text(
+                  action,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: accentColor ?? const Color(0xFF1A8FBE),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

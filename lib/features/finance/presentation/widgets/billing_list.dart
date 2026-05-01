@@ -13,11 +13,14 @@
 // outer `ListView`, so scroll/refresh stay at the screen level.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/parent_finance_controller.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/parent_bill_checkout_screen.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/parent_payment_success_screen.dart';
 
 class BillingList extends ConsumerWidget {
   final LanguageProvider languageProvider;
@@ -537,7 +540,7 @@ class _SectionHeader extends StatelessWidget {
 // Overdue rows get the red border + red exclamation badge.
 // ---------------------------------------------------------------------------
 
-class _BillingRow extends StatelessWidget {
+class _BillingRow extends ConsumerWidget {
   final Map<String, dynamic> data;
   final LanguageProvider lang;
   final bool isOverdue;
@@ -549,6 +552,55 @@ class _BillingRow extends StatelessWidget {
     required this.isOverdue,
     required this.formatRupiah,
   });
+
+  /// Tap handler for the row — Phase-5C wiring.
+  /// Unpaid bills launch the full-screen Bayar checkout. Paid /
+  /// verified bills open the success screen as a receipt-only view.
+  /// Pending (manual transfer awaiting verification) opens success
+  /// in `isManualPending` mode so the parent sees the timeline.
+  Future<void> _onTap(BuildContext context, WidgetRef ref) async {
+    final status = (data['status'] ?? '').toString().toLowerCase();
+    final isPaid =
+        status == 'verified' || status == 'lunas' || status == 'paid';
+    final isPending = status == 'pending';
+
+    if (isPaid || isPending) {
+      // Receipt / pending review — go straight to success screen
+      // through AppNavigator so app-level routing observers fire.
+      await AppNavigator.push<void>(
+        context,
+        ParentPaymentSuccessScreen(
+          billName: (data['name'] ??
+                  data['title'] ??
+                  data['type'] ??
+                  'Tagihan')
+              .toString(),
+          studentName: (data['student_name'] ??
+                  data['student']?['name'] ??
+                  'Anak')
+              .toString(),
+          methodLabel:
+              (data['payment_method'] ?? data['method'] ?? '-').toString(),
+          amount:
+              double.tryParse((data['amount'] ?? '0').toString()) ?? 0,
+          adminFee:
+              double.tryParse((data['admin_fee'] ?? '0').toString()) ?? 0,
+          isManualPending: isPending,
+        ),
+      );
+      return;
+    }
+
+    // Unpaid → open the brand checkout. When it returns true the
+    // gateway has confirmed payment, so refresh the bill list to
+    // pick up the new status / amount paid.
+    final refreshed =
+        await openParentBillCheckout(context, bill: data);
+    if (refreshed == true) {
+      // ignore: unused_result — fire-and-forget refresh.
+      ref.read(parentFinanceProvider.notifier).refreshBilling();
+    }
+  }
 
   ({Color bg, Color fg, IconData icon, String label}) _appearance() {
     final status = (data['status'] ?? '').toString().toLowerCase();
@@ -612,7 +664,7 @@ class _BillingRow extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final a = _appearance();
     final title =
         (data['name'] ?? data['title'] ?? data['jenis_pembayaran_nama'] ?? '-')
@@ -636,9 +688,7 @@ class _BillingRow extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: InkWell(
           borderRadius: const BorderRadius.all(Radius.circular(14)),
-          onTap: () {
-            // TODO(parent-tagihan): wire detail / pay sheet here.
-          },
+          onTap: () => _onTap(context, ref),
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(

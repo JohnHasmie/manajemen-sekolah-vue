@@ -84,8 +84,14 @@ mixin AdminDialogMixin on ConsumerState<AdminAnnouncementScreen> {
   void showAnnouncementDetail(Map<String, dynamic> announcementData) {
     final languageProvider = ref.read(languageRiverpod);
 
-    showDialog(
+    // Phase-4 surface 2: bottom sheet, not center dialog. Same
+    // widget signature; the widget itself renders as a bottom-sheet
+    // body now (see `AnnouncementDetailDialog`).
+    showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) => AnnouncementDetailDialog(
         announcementData: announcementData,
         primaryColor: getPrimaryColor(),

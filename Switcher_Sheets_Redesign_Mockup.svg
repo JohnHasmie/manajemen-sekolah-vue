@@ -1,0 +1,420 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 1280" font-family="Inter, -apple-system, system-ui, sans-serif">
+  <!-- ============================================================== -->
+  <!-- DEFS                                                           -->
+  <!-- ============================================================== -->
+  <defs>
+    <linearGradient id="adminGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#143068"/>
+      <stop offset="1" stop-color="#1F4A8F"/>
+    </linearGradient>
+    <linearGradient id="guruGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#143068"/>
+      <stop offset="1" stop-color="#21AFE6"/>
+    </linearGradient>
+    <linearGradient id="waliGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#21AFE6"/>
+      <stop offset="1" stop-color="#1A8FBE"/>
+    </linearGradient>
+    <linearGradient id="brandHero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#21AFE6"/>
+      <stop offset="1" stop-color="#1A8FBE"/>
+    </linearGradient>
+    <filter id="phoneShadow" x="-10%" y="-5%" width="120%" height="115%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.12"/>
+    </filter>
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+    <filter id="sheetShadow" x="-20%" y="-5%" width="140%" height="115%">
+      <feDropShadow dx="0" dy="-12" stdDeviation="14" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+    <filter id="checkShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#143068" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <rect width="1320" height="1280" fill="#F8FAFC"/>
+
+  <!-- ============================================================== -->
+  <!-- TITLE BAR                                                      -->
+  <!-- ============================================================== -->
+  <text x="60" y="58" font-weight="800" font-size="26" fill="#0F172A">Switcher Sheets · High-Fidelity Redesign</text>
+  <text x="60" y="84" font-size="13" fill="#64748B">2 surfaces — Pilih Peran (role switcher) · Pilih Sekolah (school switcher) · brand-aligned bottom sheets · Bahasa-only</text>
+  <rect x="60" y="100" width="1200" height="1" fill="#E2E8F0"/>
+
+  <!-- comparison badges -->
+  <g transform="translate(60, 116)">
+    <rect width="220" height="26" rx="13" fill="#FEE2E2"/>
+    <circle cx="14" cy="13" r="4" fill="#DC2626"/>
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#991B1B">BEFORE — generic AlertDialog</text>
+  </g>
+  <g transform="translate(290, 116)">
+    <rect width="220" height="26" rx="13" fill="#DCFCE7"/>
+    <circle cx="14" cy="13" r="4" fill="#15803D"/>
+    <text x="24" y="17" font-size="11" font-weight="700" fill="#15803D">AFTER — brand bottom sheet</text>
+  </g>
+
+  <!-- ============================================================== -->
+  <!-- PHONE 1 — PILIH PERAN (role switcher)                          -->
+  <!-- ============================================================== -->
+  <g transform="translate(80, 170)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <rect width="380" height="780" rx="36" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- status bar -->
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+    <g transform="translate(320, 22)" fill="#0F172A">
+      <rect x="0" y="2" width="14" height="10" rx="1"/>
+      <rect x="18" y="0" width="22" height="12" rx="2" fill="none" stroke="#0F172A" stroke-width="1"/>
+      <rect x="20" y="2" width="16" height="8" rx="1"/>
+    </g>
+
+    <!-- dimmed scrim with peeking dashboard behind -->
+    <rect x="0" y="44" width="380" height="380" fill="#F1F5F9"/>
+    <g opacity="0.35">
+      <rect x="20" y="68" width="340" height="80" rx="14" fill="#21AFE6"/>
+      <rect x="20" y="160" width="340" height="180" rx="14" fill="white" stroke="#E2E8F0"/>
+      <rect x="20" y="350" width="340" height="40" rx="10" fill="white" stroke="#E2E8F0"/>
+    </g>
+    <rect x="0" y="44" width="380" height="380" fill="#0F172A" opacity="0.45"/>
+
+    <!-- ============== BOTTOM SHEET ============== -->
+    <g filter="url(#sheetShadow)">
+      <path d="M 0 444 L 0 780 L 380 780 L 380 444 Q 380 424 360 424 L 20 424 Q 0 424 0 444 Z" fill="white"/>
+    </g>
+
+    <!-- drag handle -->
+    <rect x="170" y="438" width="40" height="4" rx="2" fill="#CBD5E1"/>
+
+    <!-- header row -->
+    <g transform="translate(20, 460)">
+      <!-- icon disc -->
+      <rect width="44" height="44" rx="14" fill="#21AFE6" opacity="0.12"/>
+      <g transform="translate(11, 11)" fill="none" stroke="#1A8FBE" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7 L17 7 M14 4 L17 7 L14 10"/>
+        <path d="M17 15 L3 15 M6 12 L3 15 L6 18"/>
+      </g>
+      <!-- title + subtitle -->
+      <text x="58" y="20" font-weight="800" font-size="17" fill="#0F172A">Pilih Peran</text>
+      <text x="58" y="38" font-size="11.5" fill="#64748B">Akun ini terdaftar di 3 peran</text>
+    </g>
+
+    <!-- divider -->
+    <rect x="20" y="520" width="340" height="1" fill="#F1F5F9"/>
+
+    <!-- ROLE TILE 1 — Administrator (selected) -->
+    <g transform="translate(20, 538)">
+      <rect width="340" height="78" rx="16" fill="#143068" opacity="0.06"/>
+      <rect width="340" height="78" rx="16" fill="none" stroke="#143068" stroke-width="1.5"/>
+      <!-- role icon disc -->
+      <rect x="14" y="14" width="50" height="50" rx="16" fill="url(#adminGrad)"/>
+      <g transform="translate(28, 27)" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 1 L1 5 V13 C1 17 5 21 11 23 C17 21 21 17 21 13 V5 Z M8 11 L11 14 L15 9"/>
+      </g>
+      <!-- text -->
+      <text x="78" y="32" font-weight="800" font-size="14" fill="#0F172A">Administrator</text>
+      <text x="78" y="50" font-size="11.5" fill="#64748B">Kelola sekolah, guru, dan siswa</text>
+      <!-- badge "Aktif" -->
+      <rect x="78" y="58" width="40" height="14" rx="7" fill="#143068"/>
+      <text x="83" y="68" font-size="9" font-weight="800" fill="white">AKTIF</text>
+      <!-- check disc -->
+      <g transform="translate(290, 23)" filter="url(#checkShadow)">
+        <circle cx="16" cy="16" r="16" fill="url(#adminGrad)"/>
+        <path d="M9 16 L14 21 L23 12" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <!-- ROLE TILE 2 — Guru -->
+    <g transform="translate(20, 626)">
+      <rect width="340" height="78" rx="16" fill="white"/>
+      <rect width="340" height="78" rx="16" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+      <rect x="14" y="14" width="50" height="50" rx="16" fill="url(#guruGrad)"/>
+      <g transform="translate(28, 27)" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="6" r="4"/>
+        <path d="M3 22 C3 16 7 13 11 13 C15 13 19 16 19 22"/>
+      </g>
+      <text x="78" y="34" font-weight="800" font-size="14" fill="#0F172A">Guru</text>
+      <text x="78" y="52" font-size="11.5" fill="#64748B">Mengajar dan mengelola kelas</text>
+      <!-- chevron -->
+      <g transform="translate(304, 32)" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M0 -7 L7 0 L0 7"/>
+      </g>
+    </g>
+
+    <!-- ROLE TILE 3 — Wali Murid -->
+    <g transform="translate(20, 714)">
+      <rect width="340" height="78" rx="16" fill="white"/>
+      <rect width="340" height="78" rx="16" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+      <rect x="14" y="14" width="50" height="50" rx="16" fill="url(#waliGrad)"/>
+      <g transform="translate(27, 26)" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9" cy="6" r="3.5"/>
+        <circle cx="17" cy="9" r="3"/>
+        <path d="M2 22 C2 17 5 14 9 14 C13 14 16 17 16 22"/>
+        <path d="M14 22 C14 19 16 16 19 16 C22 16 24 19 24 22"/>
+      </g>
+      <text x="78" y="34" font-weight="800" font-size="14" fill="#0F172A">Wali Murid</text>
+      <text x="78" y="52" font-size="11.5" fill="#64748B">Pantau perkembangan anak</text>
+      <g transform="translate(304, 32)" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M0 -7 L7 0 L0 7"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- caption -->
+  <g transform="translate(80, 970)">
+    <text x="0" y="0" font-weight="800" font-size="14" fill="#0F172A">Surface 1 · Pilih Peran</text>
+    <text x="0" y="18" font-size="11.5" fill="#64748B">Bottom sheet · brand-azure header icon · role-tinted gradient avatars</text>
+    <text x="0" y="34" font-size="11.5" fill="#64748B">Active role gets a tinted card + AKTIF badge + check disc</text>
+    <text x="0" y="50" font-size="11.5" fill="#64748B">Other roles show chevron affordance, tap → switch + close</text>
+  </g>
+
+  <!-- ============================================================== -->
+  <!-- PHONE 2 — PILIH SEKOLAH (school switcher)                     -->
+  <!-- ============================================================== -->
+  <g transform="translate(560, 170)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <rect width="380" height="780" rx="36" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- status bar -->
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+    <g transform="translate(320, 22)" fill="#0F172A">
+      <rect x="0" y="2" width="14" height="10" rx="1"/>
+      <rect x="18" y="0" width="22" height="12" rx="2" fill="none" stroke="#0F172A" stroke-width="1"/>
+      <rect x="20" y="2" width="16" height="8" rx="1"/>
+    </g>
+
+    <!-- dimmed scrim with peeking content behind -->
+    <rect x="0" y="44" width="380" height="320" fill="#F1F5F9"/>
+    <g opacity="0.35">
+      <rect x="20" y="68" width="340" height="60" rx="12" fill="#21AFE6"/>
+      <rect x="20" y="140" width="340" height="160" rx="14" fill="white" stroke="#E2E8F0"/>
+    </g>
+    <rect x="0" y="44" width="380" height="320" fill="#0F172A" opacity="0.45"/>
+
+    <!-- ============== BOTTOM SHEET ============== -->
+    <g filter="url(#sheetShadow)">
+      <path d="M 0 384 L 0 780 L 380 780 L 380 384 Q 380 364 360 364 L 20 364 Q 0 364 0 384 Z" fill="white"/>
+    </g>
+
+    <!-- drag handle -->
+    <rect x="170" y="378" width="40" height="4" rx="2" fill="#CBD5E1"/>
+
+    <!-- header row -->
+    <g transform="translate(20, 400)">
+      <rect width="44" height="44" rx="14" fill="#21AFE6" opacity="0.12"/>
+      <g transform="translate(10, 10)" fill="none" stroke="#1A8FBE" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2 L23 8 L12 14 L1 8 Z"/>
+        <path d="M5 11 V18 C5 20 8 22 12 22 C16 22 19 20 19 18 V11"/>
+      </g>
+      <text x="58" y="20" font-weight="800" font-size="17" fill="#0F172A">Pilih Sekolah</text>
+      <text x="58" y="38" font-size="11.5" fill="#64748B">Akun terhubung ke 2 sekolah</text>
+    </g>
+
+    <!-- search bar -->
+    <g transform="translate(20, 460)">
+      <rect width="340" height="40" rx="12" fill="#F1F5F9"/>
+      <g transform="translate(14, 12)" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="8" cy="8" r="6"/>
+        <path d="M13 13 L17 17"/>
+      </g>
+      <text x="46" y="25" font-size="12" fill="#94A3B8">Cari sekolah…</text>
+    </g>
+
+    <!-- SCHOOL TILE 1 — selected -->
+    <g transform="translate(20, 520)">
+      <rect width="340" height="92" rx="16" fill="#21AFE6" opacity="0.06"/>
+      <rect width="340" height="92" rx="16" fill="none" stroke="#21AFE6" stroke-width="1.5"/>
+      <!-- avatar (initials disc) -->
+      <rect x="14" y="14" width="50" height="50" rx="16" fill="url(#brandHero)"/>
+      <text x="39" y="46" text-anchor="middle" font-weight="800" font-size="16" fill="white">KA</text>
+      <!-- info -->
+      <text x="78" y="32" font-weight="800" font-size="14" fill="#0F172A">SMP Kamil Edu A</text>
+      <text x="78" y="50" font-size="11" fill="#64748B">Jl. Mawar No. 12 · Bandung</text>
+      <!-- chips -->
+      <g transform="translate(78, 60)">
+        <rect width="32" height="18" rx="6" fill="#DBEAFE"/>
+        <text x="16" y="13" text-anchor="middle" font-size="10" font-weight="800" fill="#1E40AF">SMP</text>
+        <rect x="38" width="60" height="18" rx="6" fill="#DCFCE7"/>
+        <text x="68" y="13" text-anchor="middle" font-size="10" font-weight="800" fill="#15803D">Aktif sekarang</text>
+      </g>
+      <!-- check disc -->
+      <g transform="translate(290, 30)" filter="url(#checkShadow)">
+        <circle cx="16" cy="16" r="16" fill="url(#brandHero)"/>
+        <path d="M9 16 L14 21 L23 12" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <!-- SCHOOL TILE 2 -->
+    <g transform="translate(20, 624)">
+      <rect width="340" height="92" rx="16" fill="white"/>
+      <rect width="340" height="92" rx="16" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+      <rect x="14" y="14" width="50" height="50" rx="16" fill="#94A3B8"/>
+      <text x="39" y="46" text-anchor="middle" font-weight="800" font-size="16" fill="white">KB</text>
+      <text x="78" y="32" font-weight="800" font-size="14" fill="#0F172A">SMP Kamil Edu B</text>
+      <text x="78" y="50" font-size="11" fill="#64748B">Jl. Melati No. 7 · Bandung</text>
+      <g transform="translate(78, 60)">
+        <rect width="32" height="18" rx="6" fill="#DBEAFE"/>
+        <text x="16" y="13" text-anchor="middle" font-size="10" font-weight="800" fill="#1E40AF">SMP</text>
+        <rect x="38" width="68" height="18" rx="6" fill="#FEF3C7"/>
+        <text x="72" y="13" text-anchor="middle" font-size="10" font-weight="800" fill="#B45309">3 anak terdaftar</text>
+      </g>
+      <g transform="translate(304, 42)" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M0 -7 L7 0 L0 7"/>
+      </g>
+    </g>
+
+    <!-- empty-state hint when more schools added -->
+    <text x="200" y="744" text-anchor="middle" font-size="10.5" fill="#94A3B8">Tarik untuk segarkan daftar sekolah</text>
+  </g>
+
+  <!-- caption -->
+  <g transform="translate(560, 970)">
+    <text x="0" y="0" font-weight="800" font-size="14" fill="#0F172A">Surface 2 · Pilih Sekolah</text>
+    <text x="0" y="18" font-size="11.5" fill="#64748B">Bottom sheet · search bar · initials avatars (brand-azure for active, slate for others)</text>
+    <text x="0" y="34" font-size="11.5" fill="#64748B">Address subtitle + jenjang chip + status chip (Aktif sekarang / N anak terdaftar)</text>
+    <text x="0" y="50" font-size="11.5" fill="#64748B">Pull-to-refresh hint at the bottom for parents with many schools</text>
+  </g>
+
+  <!-- ============================================================== -->
+  <!-- DESIGN SPEC ANNOTATIONS                                       -->
+  <!-- ============================================================== -->
+  <g transform="translate(1000, 170)">
+    <rect width="280" height="780" rx="20" fill="white" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+    <text x="20" y="36" font-weight="800" font-size="13" fill="#0F172A">Design Spec</text>
+    <rect x="20" y="48" width="240" height="1" fill="#F1F5F9"/>
+
+    <g transform="translate(20, 70)">
+      <rect width="6" height="6" rx="3" fill="#21AFE6"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Container</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">AppBottomSheet wrapper</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Top radius 20 · drag handle</text>
+      <text x="0" y="52" font-size="10.5" fill="#64748B">Samsung-safe area at bottom</text>
+    </g>
+
+    <g transform="translate(20, 142)">
+      <rect width="6" height="6" rx="3" fill="#21AFE6"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Header</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">44×44 brand-azure tinted disc</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Bahasa-only title + subtitle</text>
+      <text x="0" y="52" font-size="10.5" fill="#64748B">No truncation — full title fits</text>
+    </g>
+
+    <g transform="translate(20, 214)">
+      <rect width="6" height="6" rx="3" fill="#21AFE6"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Selection</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Active card: 6% role-tinted bg,</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">role-color 1.5px border, gradient</text>
+      <text x="0" y="52" font-size="10.5" fill="#64748B">check disc, AKTIF badge</text>
+    </g>
+
+    <g transform="translate(20, 286)">
+      <rect width="6" height="6" rx="3" fill="#21AFE6"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Other tiles</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">White bg · slate200 border</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Chevron-right affordance</text>
+      <text x="0" y="52" font-size="10.5" fill="#64748B">Tap = switch + dismiss sheet</text>
+    </g>
+
+    <g transform="translate(20, 358)">
+      <rect width="6" height="6" rx="3" fill="#21AFE6"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Role gradients</text>
+      <g transform="translate(0, 16)">
+        <rect width="60" height="20" rx="6" fill="url(#adminGrad)"/>
+        <text x="68" y="14" font-size="10" fill="#0F172A">Admin · navy</text>
+      </g>
+      <g transform="translate(0, 42)">
+        <rect width="60" height="20" rx="6" fill="url(#guruGrad)"/>
+        <text x="68" y="14" font-size="10" fill="#0F172A">Guru · cobalt</text>
+      </g>
+      <g transform="translate(0, 68)">
+        <rect width="60" height="20" rx="6" fill="url(#waliGrad)"/>
+        <text x="68" y="14" font-size="10" fill="#0F172A">Wali · azure</text>
+      </g>
+    </g>
+
+    <g transform="translate(20, 484)">
+      <rect width="6" height="6" rx="3" fill="#21AFE6"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Copy (id-only)</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Pilih Peran (was Select Role)</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Pilih Sekolah (was Select School)</text>
+      <text x="0" y="52" font-size="10.5" fill="#64748B">Tutup (was Cancel)</text>
+    </g>
+
+    <g transform="translate(20, 556)">
+      <rect width="6" height="6" rx="3" fill="#21AFE6"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Footer</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">No footer — sheet auto-dismisses</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">on tap. Drag down OR tap scrim</text>
+      <text x="0" y="52" font-size="10.5" fill="#64748B">to cancel without changing</text>
+    </g>
+
+    <g transform="translate(20, 628)">
+      <rect width="6" height="6" rx="3" fill="#21AFE6"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Edge cases</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">1 role → no sheet, direct switch</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Many schools → search filters</text>
+      <text x="0" y="52" font-size="10.5" fill="#64748B">Pull to refresh fetches list</text>
+    </g>
+  </g>
+
+  <!-- ============================================================== -->
+  <!-- INTERACTION FLOW STRIP                                         -->
+  <!-- ============================================================== -->
+  <g transform="translate(80, 1060)">
+    <rect width="1160" height="180" rx="20" fill="white" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+    <text x="20" y="36" font-weight="800" font-size="13" fill="#0F172A">Flow · what happens when the user taps</text>
+    <rect x="20" y="48" width="1120" height="1" fill="#F1F5F9"/>
+
+    <!-- step 1 -->
+    <g transform="translate(40, 70)">
+      <circle r="14" fill="#21AFE6"/>
+      <text y="5" text-anchor="middle" font-size="11" font-weight="800" fill="white">1</text>
+      <text x="26" y="6" font-weight="700" font-size="12" fill="#0F172A">Tap role/school name</text>
+      <text x="26" y="22" font-size="11" fill="#64748B">From AppBar pill or account sheet</text>
+    </g>
+    <!-- arrow -->
+    <g transform="translate(290, 76)" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-linecap="round">
+      <path d="M0 0 L24 0 M19 -4 L24 0 L19 4"/>
+    </g>
+
+    <!-- step 2 -->
+    <g transform="translate(330, 70)">
+      <circle r="14" fill="#21AFE6"/>
+      <text y="5" text-anchor="middle" font-size="11" font-weight="800" fill="white">2</text>
+      <text x="26" y="6" font-weight="700" font-size="12" fill="#0F172A">Bottom sheet slides up</text>
+      <text x="26" y="22" font-size="11" fill="#64748B">Active option highlighted with check</text>
+    </g>
+    <g transform="translate(580, 76)" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-linecap="round">
+      <path d="M0 0 L24 0 M19 -4 L24 0 L19 4"/>
+    </g>
+
+    <!-- step 3 -->
+    <g transform="translate(620, 70)">
+      <circle r="14" fill="#21AFE6"/>
+      <text y="5" text-anchor="middle" font-size="11" font-weight="800" fill="white">3</text>
+      <text x="26" y="6" font-weight="700" font-size="12" fill="#0F172A">Tap a different option</text>
+      <text x="26" y="22" font-size="11" fill="#64748B">Sheet auto-dismisses (no Save button)</text>
+    </g>
+    <g transform="translate(870, 76)" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-linecap="round">
+      <path d="M0 0 L24 0 M19 -4 L24 0 L19 4"/>
+    </g>
+
+    <!-- step 4 -->
+    <g transform="translate(910, 70)">
+      <circle r="14" fill="#15803D"/>
+      <text y="5" text-anchor="middle" font-size="11" font-weight="800" fill="white">4</text>
+      <text x="26" y="6" font-weight="700" font-size="12" fill="#0F172A">Context switches</text>
+      <text x="26" y="22" font-size="11" fill="#64748B">App refreshes shell, dashboard reloads</text>
+    </g>
+
+    <!-- footer note -->
+    <g transform="translate(40, 130)">
+      <rect width="1080" height="30" rx="10" fill="#FEF3C7"/>
+      <g transform="translate(14, 9)" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="6" cy="6" r="6"/>
+        <path d="M6 3 V7 M6 9 V9.1"/>
+      </g>
+      <text x="38" y="20" font-size="11.5" fill="#92400E"><tspan font-weight="800">Catatan:</tspan> tidak ada tombol Batal — bottom sheet sudah punya gestur drag-down + tap scrim. Cuma "tutup" jika user tidak jadi ganti.</text>
+    </g>
+  </g>
+</svg>

@@ -53,6 +53,51 @@ class DashboardService {
   ///
   /// Returns an empty list on any error so the UI can hide the
   /// section gracefully instead of breaking.
+  /// Full Perlu Perhatian feed for the "Lihat Semua" inbox screen.
+  /// Returns rows + per-category unread counts.
+  ///
+  /// Categories: all / tagihan / nilai / pengumuman / kehadiran /
+  /// aktivitas / raport. The `category` parameter narrows server-side
+  /// — passing `'all'` fetches everything.
+  static Future<({List<Map<String, dynamic>> items, Map<String, int> counts})>
+      getParentInbox({
+    String category = 'all',
+    int limit = 50,
+  }) async {
+    try {
+      final response = await dioClient.get(
+        ApiEndpoints.parentInbox,
+        queryParameters: {'category': category, 'limit': limit},
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic> && result['success'] == true) {
+        final raw = result['data'];
+        final items = raw is List
+            ? raw
+                .whereType<Map>()
+                .map<Map<String, dynamic>>(
+                  (e) => Map<String, dynamic>.from(e),
+                )
+                .toList(growable: false)
+            : <Map<String, dynamic>>[];
+        final counts = <String, int>{};
+        final c = result['counts'];
+        if (c is Map) {
+          c.forEach((k, v) {
+            counts[k.toString()] = (v is int)
+                ? v
+                : int.tryParse(v.toString()) ?? 0;
+          });
+        }
+        return (items: items, counts: counts);
+      }
+      return (items: const <Map<String, dynamic>>[], counts: const <String, int>{});
+    } catch (e) {
+      AppLogger.error('api', 'Error fetching parent inbox: $e');
+      return (items: const <Map<String, dynamic>>[], counts: const <String, int>{});
+    }
+  }
+
   static Future<List<Map<String, dynamic>>> getParentAcademicRecent({
     String? academicYearId,
     int limit = 5,

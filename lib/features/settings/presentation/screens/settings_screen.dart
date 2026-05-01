@@ -92,8 +92,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         buildPersonalInfoCard(),
                         const SizedBox(height: AppSpacing.md),
                         buildAccountInfoCard(role),
-                        const SizedBox(height: AppSpacing.xxl),
+                        const SizedBox(height: AppSpacing.lg),
+                        // Change password kept as a secondary action;
+                        // primary "Keluar Akun" button takes the
+                        // brand-recommended danger spot at the
+                        // bottom of the page.
                         buildChangePasswordButton(showChangePasswordDialog),
+                        const SizedBox(height: AppSpacing.md),
+                        buildLogoutButton(context),
                         const SizedBox(height: AppSpacing.xxl),
                       ],
                     ),

@@ -1,0 +1,436 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1180" font-family="Inter, -apple-system, system-ui, sans-serif">
+  <!-- ========== DEFS ========== -->
+  <defs>
+    <linearGradient id="heroGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#21AFE6"/>
+      <stop offset="1" stop-color="#1A8FBE"/>
+    </linearGradient>
+    <linearGradient id="segActive" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="white" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="white" stop-opacity="0.95"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+    <filter id="phoneShadow" x="-10%" y="-5%" width="120%" height="115%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- ========== BACKGROUND ========== -->
+  <rect width="1440" height="1180" fill="#F8FAFC"/>
+
+  <!-- ========== TITLE ========== -->
+  <text x="60" y="58" font-weight="800" font-size="26" fill="#0F172A">Parent Dashboard · Per-child Auto-cycle KPI</text>
+  <text x="60" y="84" font-size="13" fill="#64748B">Header is now role-agnostic · Stories-style child cycle on top of the carousel · KPI page dots below · same shared components for admin/teacher/parent</text>
+  <rect x="60" y="100" width="1320" height="1" fill="#E2E8F0"/>
+
+  <!-- ========== PHONE 1 — Salman active, KPI page 1 ========== -->
+  <g transform="translate(80, 130)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <rect width="380" height="780" rx="36" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- status bar -->
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+    <g transform="translate(320, 22)" fill="#0F172A">
+      <rect x="0" y="2" width="14" height="10" rx="1"/>
+      <rect x="18" y="0" width="22" height="12" rx="2" fill="none" stroke="#0F172A" stroke-width="1"/>
+      <rect x="20" y="2" width="16" height="8" rx="1"/>
+    </g>
+
+    <!-- HERO GRADIENT — taller now to fit greeting + child-cycle strip -->
+    <rect x="16" y="56" width="348" height="240" rx="22" fill="url(#heroGrad)"/>
+
+    <!-- account chip top-right -->
+    <g transform="translate(296, 76)">
+      <rect width="56" height="28" rx="14" fill="rgba(255,255,255,0.2)"/>
+      <circle cx="14" cy="14" r="9" fill="rgba(255,255,255,0.9)"/>
+      <text x="28" y="18" font-size="11" font-weight="700" fill="white">YH</text>
+    </g>
+
+    <!-- bell -->
+    <g transform="translate(248, 78)" fill="white">
+      <circle cx="12" cy="12" r="14" fill="rgba(255,255,255,0.18)"/>
+      <path d="M9 8 a3 3 0 0 1 6 0 v3 l1 2 h-8 l1 -2 z M11 16 a1 1 0 0 0 2 0"/>
+      <circle cx="17" cy="6" r="3" fill="#EF4444"/>
+    </g>
+
+    <!-- greeting (no child-chip strip!) -->
+    <text x="32" y="104" font-size="12" fill="rgba(255,255,255,0.85)" font-weight="500">Selamat pagi 👋</text>
+    <text x="32" y="130" font-size="22" font-weight="800" fill="white">Yahya Al Hasymi</text>
+    <text x="32" y="150" font-size="11" fill="rgba(255,255,255,0.85)">Wali Murid · SD Al-Kamil Bekasi</text>
+
+    <!-- =========== CHILD CYCLE STRIP =========== -->
+    <g transform="translate(32, 174)">
+      <text x="0" y="0" font-size="9.5" font-weight="800" fill="rgba(255,255,255,0.75)" letter-spacing="1">MENAMPILKAN ANAK</text>
+      <!-- segmented progress bars (Stories-style) -->
+      <g transform="translate(0, 8)">
+        <!-- segment 1 — Salman, 40% filled (active) -->
+        <rect width="100" height="3" rx="1.5" fill="rgba(255,255,255,0.25)"/>
+        <rect width="40" height="3" rx="1.5" fill="white"/>
+        <!-- segment 2 — Khadijah, empty -->
+        <rect x="108" width="100" height="3" rx="1.5" fill="rgba(255,255,255,0.25)"/>
+        <!-- segment 3 — Maryam, empty -->
+        <rect x="216" width="100" height="3" rx="1.5" fill="rgba(255,255,255,0.25)"/>
+      </g>
+      <!-- names + avatars -->
+      <g transform="translate(0, 20)">
+        <!-- Salman ACTIVE -->
+        <circle cx="14" cy="14" r="14" fill="white"/>
+        <text x="14" y="18" font-size="11" font-weight="800" fill="#1A8FBE" text-anchor="middle">S</text>
+        <text x="34" y="12" font-size="11" font-weight="800" fill="white">Salman</text>
+        <text x="34" y="24" font-size="9" fill="rgba(255,255,255,0.85)">Kelas 5A</text>
+
+        <!-- Khadijah inactive -->
+        <g transform="translate(108, 0)" opacity="0.55">
+          <circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.25)"/>
+          <text x="14" y="18" font-size="11" font-weight="800" fill="white" text-anchor="middle">K</text>
+          <text x="34" y="12" font-size="11" font-weight="700" fill="white">Khadijah</text>
+          <text x="34" y="24" font-size="9" fill="rgba(255,255,255,0.8)">Kelas 2B</text>
+        </g>
+
+        <!-- Maryam inactive -->
+        <g transform="translate(216, 0)" opacity="0.55">
+          <circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.25)"/>
+          <text x="14" y="18" font-size="11" font-weight="800" fill="white" text-anchor="middle">M</text>
+          <text x="34" y="12" font-size="11" font-weight="700" fill="white">Maryam</text>
+          <text x="34" y="24" font-size="9" fill="rgba(255,255,255,0.8)">PAUD A</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- ===== KPI strip (carousel page 1, Salman active) ===== -->
+    <g transform="translate(20, 256)">
+      <!-- CARD 1 — KEHADIRAN -->
+      <g filter="url(#cardShadow)">
+        <rect width="166" height="116" rx="16" fill="white"/>
+        <rect width="166" height="116" rx="16" fill="none" stroke="#E2E8F0" stroke-width="0.75"/>
+      </g>
+      <rect x="14" y="14" width="34" height="34" rx="11" fill="#10B981" fill-opacity="0.12"/>
+      <g transform="translate(22, 22)" fill="#10B981">
+        <circle cx="4" cy="4" r="2.4"/><circle cx="14" cy="4" r="2.4"/>
+        <rect x="2" y="9" width="5" height="9" rx="2"/>
+        <rect x="11" y="9" width="6" height="9" rx="2"/>
+      </g>
+      <text x="56" y="28" font-size="10" font-weight="700" fill="#64748B" letter-spacing="0.5">KEHADIRAN</text>
+      <text x="56" y="42" font-size="9" fill="#94A3B8"><tspan font-weight="700" fill="#1A8FBE">Salman</tspan> · 30 hari</text>
+      <text x="14" y="84" font-size="26" font-weight="800" fill="#0F172A">94<tspan font-size="16" fill="#64748B">%</tspan></text>
+      <g transform="translate(82, 70)">
+        <rect width="68" height="20" rx="10" fill="#DCFCE7"/>
+        <text x="34" y="14" font-size="10" font-weight="800" fill="#059669" text-anchor="middle">↑ 3% bln ini</text>
+      </g>
+      <text x="14" y="103" font-size="10.5" fill="#64748B">2 sakit · 1 izin · 0 alpa</text>
+    </g>
+
+    <g transform="translate(194, 256)">
+      <g filter="url(#cardShadow)">
+        <rect width="166" height="116" rx="16" fill="white"/>
+        <rect width="166" height="116" rx="16" fill="none" stroke="#E2E8F0" stroke-width="0.75"/>
+      </g>
+      <rect x="14" y="14" width="34" height="34" rx="11" fill="#EF4444" fill-opacity="0.12"/>
+      <g transform="translate(22, 22)" fill="#EF4444">
+        <rect x="0" y="0" width="14" height="18" rx="1.5"/>
+        <rect x="3" y="4" width="8" height="1.5" fill="white"/>
+        <rect x="3" y="8" width="8" height="1.5" fill="white"/>
+        <rect x="3" y="12" width="5" height="1.5" fill="white"/>
+      </g>
+      <text x="56" y="28" font-size="10" font-weight="700" fill="#64748B" letter-spacing="0.5">TAGIHAN</text>
+      <text x="56" y="42" font-size="9" fill="#94A3B8"><tspan font-weight="700" fill="#1A8FBE">Salman</tspan> · jatuh tempo</text>
+      <text x="14" y="84" font-size="22" font-weight="800" fill="#0F172A">Rp 450<tspan font-size="14" fill="#64748B">K</tspan></text>
+      <g transform="translate(96, 70)">
+        <rect width="54" height="20" rx="10" fill="#FEE2E2"/>
+        <text x="27" y="14" font-size="10" font-weight="800" fill="#DC2626" text-anchor="middle">2 tagihan</text>
+      </g>
+      <text x="14" y="103" font-size="10.5" fill="#EF4444" font-weight="600">SPP Apr · Buku LKS</text>
+    </g>
+
+    <!-- KPI page dots -->
+    <g transform="translate(170, 388)">
+      <rect width="20" height="6" rx="3" fill="#1A8FBE"/>
+      <circle cx="30" cy="3" r="3" fill="#CBD5E1"/>
+    </g>
+
+    <!-- below: aksi cepat + sections placeholders -->
+    <text x="32" y="430" font-size="13" font-weight="800" fill="#0F172A">Aksi Cepat</text>
+    <g transform="translate(20, 444)">
+      <rect width="84" height="84" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="92" width="84" height="84" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="184" width="84" height="84" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="276" width="64" height="84" rx="14" fill="#F1F5F9"/>
+    </g>
+    <text x="32" y="556" font-size="13" font-weight="800" fill="#0F172A">Aktivitas Terbaru</text>
+    <rect x="20" y="570" width="340" height="64" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+    <rect x="20" y="640" width="340" height="64" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+
+    <rect y="720" width="380" height="60" fill="white"/>
+    <rect y="720" width="380" height="1" fill="#E2E8F0"/>
+    <g transform="translate(0, 730)" font-size="9" font-weight="700" text-anchor="middle">
+      <text x="38" y="38" fill="#1A8FBE">Beranda</text>
+      <text x="114" y="38" fill="#94A3B8">Akademik</text>
+      <text x="190" y="38" fill="#94A3B8">Keuangan</text>
+      <text x="266" y="38" fill="#94A3B8">Pengumuman</text>
+      <text x="342" y="38" fill="#94A3B8">Profil</text>
+    </g>
+  </g>
+
+  <!-- transition arrow + auto-cycle marker between phones -->
+  <g transform="translate(484, 290)">
+    <text x="0" y="0" font-size="10" font-weight="800" fill="#1A8FBE" letter-spacing="1.5">AUTO ⟳ 6s</text>
+    <path d="M-4 22 H42 M34 14 L44 22 L34 30" fill="none" stroke="#1A8FBE" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="20" y="56" font-size="10" font-weight="600" fill="#64748B" text-anchor="middle">+ swipe</text>
+    <text x="20" y="72" font-size="10" font-weight="600" fill="#64748B" text-anchor="middle">halaman</text>
+  </g>
+
+  <!-- ========== PHONE 2 — Khadijah active, KPI page 2 ========== -->
+  <g transform="translate(540, 130)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <rect width="380" height="780" rx="36" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+    <g transform="translate(320, 22)" fill="#0F172A">
+      <rect x="0" y="2" width="14" height="10" rx="1"/>
+      <rect x="18" y="0" width="22" height="12" rx="2" fill="none" stroke="#0F172A" stroke-width="1"/>
+      <rect x="20" y="2" width="16" height="8" rx="1"/>
+    </g>
+
+    <rect x="16" y="56" width="348" height="240" rx="22" fill="url(#heroGrad)"/>
+
+    <g transform="translate(296, 76)">
+      <rect width="56" height="28" rx="14" fill="rgba(255,255,255,0.2)"/>
+      <circle cx="14" cy="14" r="9" fill="rgba(255,255,255,0.9)"/>
+      <text x="28" y="18" font-size="11" font-weight="700" fill="white">YH</text>
+    </g>
+    <g transform="translate(248, 78)" fill="white">
+      <circle cx="12" cy="12" r="14" fill="rgba(255,255,255,0.18)"/>
+      <path d="M9 8 a3 3 0 0 1 6 0 v3 l1 2 h-8 l1 -2 z M11 16 a1 1 0 0 0 2 0"/>
+      <circle cx="17" cy="6" r="3" fill="#EF4444"/>
+    </g>
+
+    <text x="32" y="104" font-size="12" fill="rgba(255,255,255,0.85)" font-weight="500">Selamat pagi 👋</text>
+    <text x="32" y="130" font-size="22" font-weight="800" fill="white">Yahya Al Hasymi</text>
+    <text x="32" y="150" font-size="11" fill="rgba(255,255,255,0.85)">Wali Murid · SD Al-Kamil Bekasi</text>
+
+    <!-- child cycle strip — Khadijah active, segment 2 ~70% filled -->
+    <g transform="translate(32, 174)">
+      <text x="0" y="0" font-size="9.5" font-weight="800" fill="rgba(255,255,255,0.75)" letter-spacing="1">MENAMPILKAN ANAK</text>
+      <g transform="translate(0, 8)">
+        <!-- segment 1 — Salman, fully filled (already shown) -->
+        <rect width="100" height="3" rx="1.5" fill="rgba(255,255,255,0.25)"/>
+        <rect width="100" height="3" rx="1.5" fill="white"/>
+        <!-- segment 2 — Khadijah, 70% filled (active now) -->
+        <rect x="108" width="100" height="3" rx="1.5" fill="rgba(255,255,255,0.25)"/>
+        <rect x="108" width="70" height="3" rx="1.5" fill="white"/>
+        <!-- segment 3 — empty -->
+        <rect x="216" width="100" height="3" rx="1.5" fill="rgba(255,255,255,0.25)"/>
+      </g>
+      <g transform="translate(0, 20)">
+        <!-- Salman inactive -->
+        <g opacity="0.55">
+          <circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.25)"/>
+          <text x="14" y="18" font-size="11" font-weight="800" fill="white" text-anchor="middle">S</text>
+          <text x="34" y="12" font-size="11" font-weight="700" fill="white">Salman</text>
+          <text x="34" y="24" font-size="9" fill="rgba(255,255,255,0.8)">Kelas 5A</text>
+        </g>
+        <!-- Khadijah ACTIVE -->
+        <g transform="translate(108, 0)">
+          <circle cx="14" cy="14" r="14" fill="white"/>
+          <text x="14" y="18" font-size="11" font-weight="800" fill="#1A8FBE" text-anchor="middle">K</text>
+          <text x="34" y="12" font-size="11" font-weight="800" fill="white">Khadijah</text>
+          <text x="34" y="24" font-size="9" fill="rgba(255,255,255,0.85)">Kelas 2B</text>
+        </g>
+        <g transform="translate(216, 0)" opacity="0.55">
+          <circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.25)"/>
+          <text x="14" y="18" font-size="11" font-weight="800" fill="white" text-anchor="middle">M</text>
+          <text x="34" y="12" font-size="11" font-weight="700" fill="white">Maryam</text>
+          <text x="34" y="24" font-size="9" fill="rgba(255,255,255,0.8)">PAUD A</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- KPI strip — page 2 (Nilai + Pengumuman), now showing Khadijah's data -->
+    <g transform="translate(20, 256)">
+      <g filter="url(#cardShadow)">
+        <rect width="166" height="116" rx="16" fill="white"/>
+        <rect width="166" height="116" rx="16" fill="none" stroke="#E2E8F0" stroke-width="0.75"/>
+      </g>
+      <rect x="14" y="14" width="34" height="34" rx="11" fill="#6366F1" fill-opacity="0.12"/>
+      <g transform="translate(22, 22)" fill="#6366F1">
+        <rect x="0" y="12" width="3" height="6" rx="1"/>
+        <rect x="5" y="8" width="3" height="10" rx="1"/>
+        <rect x="10" y="4" width="3" height="14" rx="1"/>
+        <rect x="15" y="0" width="3" height="18" rx="1"/>
+      </g>
+      <text x="56" y="28" font-size="10" font-weight="700" fill="#64748B" letter-spacing="0.5">RATA-RATA</text>
+      <text x="56" y="42" font-size="9" fill="#94A3B8"><tspan font-weight="700" fill="#1A8FBE">Khadijah</tspan> · 6 mapel</text>
+      <text x="14" y="84" font-size="26" font-weight="800" fill="#0F172A">88.<tspan font-size="20">6</tspan></text>
+      <g transform="translate(82, 70)">
+        <rect width="68" height="20" rx="10" fill="#E0E7FF"/>
+        <text x="34" y="14" font-size="10" font-weight="800" fill="#4F46E5" text-anchor="middle">Sem. Ganjil</text>
+      </g>
+      <text x="14" y="103" font-size="10.5" fill="#64748B">↑ 2.1 dari sem. lalu</text>
+    </g>
+
+    <g transform="translate(194, 256)">
+      <g filter="url(#cardShadow)">
+        <rect width="166" height="116" rx="16" fill="white"/>
+        <rect width="166" height="116" rx="16" fill="none" stroke="#E2E8F0" stroke-width="0.75"/>
+      </g>
+      <rect x="14" y="14" width="34" height="34" rx="11" fill="#21AFE6" fill-opacity="0.14"/>
+      <g transform="translate(20, 24)" fill="#1A8FBE">
+        <path d="M0 6 L14 0 L14 18 L0 12 Z"/>
+        <rect x="14" y="4" width="3" height="10" rx="1"/>
+      </g>
+      <text x="56" y="28" font-size="10" font-weight="700" fill="#64748B" letter-spacing="0.5">PENGUMUMAN</text>
+      <text x="56" y="42" font-size="9" fill="#94A3B8"><tspan font-weight="700" fill="#1A8FBE">Kelas 2B</tspan> · belum dibaca</text>
+      <text x="14" y="84" font-size="26" font-weight="800" fill="#0F172A">1</text>
+      <g transform="translate(40, 70)">
+        <rect width="62" height="20" rx="10" fill="#E0F2FE"/>
+        <text x="31" y="14" font-size="10" font-weight="800" fill="#0369A1" text-anchor="middle">+1 hari ini</text>
+      </g>
+      <text x="14" y="103" font-size="10.5" fill="#64748B">Lomba menggambar 2B</text>
+    </g>
+
+    <!-- KPI page dots — page 2 active -->
+    <g transform="translate(170, 388)">
+      <circle cx="3" cy="3" r="3" fill="#CBD5E1"/>
+      <rect x="14" y="0" width="20" height="6" rx="3" fill="#1A8FBE"/>
+    </g>
+
+    <text x="32" y="430" font-size="13" font-weight="800" fill="#0F172A">Aksi Cepat</text>
+    <g transform="translate(20, 444)">
+      <rect width="84" height="84" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="92" width="84" height="84" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="184" width="84" height="84" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="276" width="64" height="84" rx="14" fill="#F1F5F9"/>
+    </g>
+    <text x="32" y="556" font-size="13" font-weight="800" fill="#0F172A">Aktivitas Terbaru</text>
+    <rect x="20" y="570" width="340" height="64" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+    <rect x="20" y="640" width="340" height="64" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+
+    <rect y="720" width="380" height="60" fill="white"/>
+    <rect y="720" width="380" height="1" fill="#E2E8F0"/>
+    <g transform="translate(0, 730)" font-size="9" font-weight="700" text-anchor="middle">
+      <text x="38" y="38" fill="#1A8FBE">Beranda</text>
+      <text x="114" y="38" fill="#94A3B8">Akademik</text>
+      <text x="190" y="38" fill="#94A3B8">Keuangan</text>
+      <text x="266" y="38" fill="#94A3B8">Pengumuman</text>
+      <text x="342" y="38" fill="#94A3B8">Profil</text>
+    </g>
+  </g>
+
+  <!-- ========== ANNOTATIONS PANEL ========== -->
+  <g transform="translate(960, 130)">
+    <rect width="420" height="780" rx="20" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+
+    <text x="24" y="40" font-size="16" font-weight="800" fill="#0F172A">Two-axis interaction</text>
+
+    <g transform="translate(24, 64)">
+      <rect width="6" height="76" rx="3" fill="#21AFE6"/>
+      <text x="20" y="14" font-size="13" font-weight="800" fill="#0F172A">Axis 1 · Anak (auto-cycle)</text>
+      <text x="20" y="32" font-size="11" fill="#475569" width="370">Stories-style segmented bar di atas KPI strip.</text>
+      <text x="20" y="48" font-size="11" fill="#475569">• Dwell 6 detik per anak, loop ke awal</text>
+      <text x="20" y="64" font-size="11" fill="#475569">• Tap segment → jump ke anak itu, pause 30s</text>
+      <text x="20" y="80" font-size="11" fill="#475569">• 1 anak → strip + auto-cycle dimatikan</text>
+    </g>
+
+    <g transform="translate(24, 168)">
+      <rect width="6" height="60" rx="3" fill="#6366F1"/>
+      <text x="20" y="14" font-size="13" font-weight="800" fill="#0F172A">Axis 2 · Halaman KPI (manual)</text>
+      <text x="20" y="32" font-size="11" fill="#475569">Swipe horizontal pada area kartu.</text>
+      <text x="20" y="48" font-size="11" fill="#475569">Dot indicator di bawah kartu, bukan auto.</text>
+    </g>
+
+    <rect x="24" y="248" width="372" height="1" fill="#E2E8F0"/>
+
+    <text x="24" y="278" font-size="13" font-weight="800" fill="#0F172A">Komponen Shared</text>
+
+    <g transform="translate(24, 296)" font-size="11" fill="#475569">
+      <text y="0"><tspan font-weight="800" fill="#0F172A">BrandDashboardHeader</tspan> · semua role</text>
+      <text y="16">  greeting · sub-role · school-pill · account-chip · bell</text>
+      <text y="32">  ❌ tanpa child-selector — isolated to parent body</text>
+      <text y="56"><tspan font-weight="800" fill="#0F172A">BrandKpiCarousel</tspan> · semua role</text>
+      <text y="72">  cards: List&lt;HeroStatsCard&gt;, perPage = 2, autoplay = false</text>
+      <text y="88">  cards.length &gt; perPage → PageView + dot indicator</text>
+      <text y="112"><tspan font-weight="800" fill="#0F172A">ChildCycleStrip</tspan> · parent-only opsional</text>
+      <text y="128">  Stories-style segmented bar + avatar row</text>
+      <text y="144">  drives activeChildIdProvider (Riverpod)</text>
+      <text y="168"><tspan font-weight="800" fill="#0F172A">HeroStatsCard</tspan> · sudah ada, dipakai apa adanya</text>
+    </g>
+
+    <rect x="24" y="488" width="372" height="1" fill="#E2E8F0"/>
+
+    <text x="24" y="518" font-size="13" font-weight="800" fill="#0F172A">Backend (parent only)</text>
+    <g transform="translate(24, 536)" font-size="11" fill="#475569">
+      <text y="0"><tspan font-weight="700">DashboardController@parent</tspan> sekarang return <tspan font-weight="700">per-anak</tspan>:</text>
+      <text y="18" font-family="ui-monospace, SFMono-Regular, monospace" fill="#0F172A">children: [</text>
+      <text y="34" font-family="ui-monospace, SFMono-Regular, monospace" fill="#0F172A">  { student_id, name, class,</text>
+      <text y="50" font-family="ui-monospace, SFMono-Regular, monospace" fill="#0F172A">    attendance_rate_30d, attendance_delta,</text>
+      <text y="66" font-family="ui-monospace, SFMono-Regular, monospace" fill="#0F172A">    overdue_total, overdue_count,</text>
+      <text y="82" font-family="ui-monospace, SFMono-Regular, monospace" fill="#0F172A">    avg_grade_term, avg_grade_delta,</text>
+      <text y="98" font-family="ui-monospace, SFMono-Regular, monospace" fill="#0F172A">    unread_class_announcements }, …]</text>
+      <text y="118">Cache 60s per parent_id; invalidasi saat switch sekolah.</text>
+    </g>
+
+    <rect x="24" y="676" width="372" height="1" fill="#E2E8F0"/>
+
+    <text x="24" y="706" font-size="13" font-weight="800" fill="#0F172A">Edge cases</text>
+    <g transform="translate(24, 724)" font-size="11" fill="#475569">
+      <text y="0">• 1 anak → no strip, no auto-cycle, label tanpa "·  Salman"</text>
+      <text y="16">• 0 anak → empty state, KPI strip hidden</text>
+      <text y="32">• User scroll konten → auto-cycle pause selama scroll aktif</text>
+      <text y="48">• Tap kartu → buka detail (Kehadiran/Tagihan/Rapor) untuk anak aktif</text>
+    </g>
+  </g>
+
+  <!-- ========== SHARED-COMPONENT MATRIX ========== -->
+  <g transform="translate(80, 950)">
+    <rect width="1280" height="200" rx="20" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+
+    <text x="24" y="36" font-size="16" font-weight="800" fill="#0F172A">Role × Komponen Matrix</text>
+    <text x="24" y="58" font-size="11" fill="#64748B">Tiga role pakai header + KPI carousel yang sama. Hanya parent yang punya overlay child-cycle.</text>
+
+    <!-- header row -->
+    <g transform="translate(24, 80)" font-size="11" font-weight="800" fill="#0F172A">
+      <text x="0" y="0">Komponen</text>
+      <text x="320" y="0">Admin</text>
+      <text x="500" y="0">Guru</text>
+      <text x="680" y="0">Wali Murid</text>
+      <text x="900" y="0">File</text>
+    </g>
+    <line x1="24" y1="92" x2="1256" y2="92" stroke="#E2E8F0"/>
+
+    <g transform="translate(24, 116)" font-size="11" fill="#475569">
+      <text x="0" y="0" font-weight="700" fill="#0F172A">BrandDashboardHeader</text>
+      <text x="320" y="0" fill="#10B981" font-weight="800">✓</text>
+      <text x="500" y="0" fill="#10B981" font-weight="800">✓</text>
+      <text x="680" y="0" fill="#10B981" font-weight="800">✓</text>
+      <text x="900" y="0" font-family="ui-monospace, monospace" fill="#0F172A">core/widgets/brand_dashboard_header.dart</text>
+
+      <text x="0" y="22" font-weight="700" fill="#0F172A">BrandKpiCarousel</text>
+      <text x="320" y="22" fill="#10B981" font-weight="800">✓</text>
+      <text x="500" y="22" fill="#10B981" font-weight="800">✓</text>
+      <text x="680" y="22" fill="#10B981" font-weight="800">✓</text>
+      <text x="900" y="22" font-family="ui-monospace, monospace" fill="#0F172A">core/widgets/brand_kpi_carousel.dart</text>
+
+      <text x="0" y="44" font-weight="700" fill="#0F172A">HeroStatsCard</text>
+      <text x="320" y="44" fill="#10B981" font-weight="800">✓</text>
+      <text x="500" y="44" fill="#10B981" font-weight="800">✓</text>
+      <text x="680" y="44" fill="#10B981" font-weight="800">✓</text>
+      <text x="900" y="44" font-family="ui-monospace, monospace" fill="#0F172A">core/widgets/hero_stats_card.dart (existing)</text>
+
+      <text x="0" y="66" font-weight="700" fill="#0F172A">ChildCycleStrip</text>
+      <text x="320" y="66" fill="#94A3B8">—</text>
+      <text x="500" y="66" fill="#94A3B8">—</text>
+      <text x="680" y="66" fill="#10B981" font-weight="800">✓</text>
+      <text x="900" y="66" font-family="ui-monospace, monospace" fill="#0F172A">features/dashboard/.../child_cycle_strip.dart</text>
+    </g>
+  </g>
+
+  <!-- bottom phone labels -->
+  <g transform="translate(80, 930)" font-size="12" font-weight="700">
+    <text x="190" y="0" fill="#1A8FBE" text-anchor="middle">t = 2s · Anak: Salman · KPI Hal 1</text>
+  </g>
+  <g transform="translate(540, 930)" font-size="12" font-weight="700">
+    <text x="190" y="0" fill="#1A8FBE" text-anchor="middle">t = 10s · Anak: Khadijah · KPI Hal 2</text>
+  </g>
+</svg>
