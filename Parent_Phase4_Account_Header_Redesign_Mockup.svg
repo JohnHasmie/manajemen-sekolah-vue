@@ -1,0 +1,579 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1840 1340" font-family="Inter, -apple-system, system-ui, sans-serif">
+  <!-- ========== DEFS ========== -->
+  <defs>
+    <linearGradient id="heroGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#21AFE6"/>
+      <stop offset="1" stop-color="#1A8FBE"/>
+    </linearGradient>
+    <linearGradient id="heroGradVert" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#21AFE6"/>
+      <stop offset="1" stop-color="#1A8FBE"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+    <filter id="phoneShadow" x="-10%" y="-5%" width="120%" height="115%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+    <filter id="sheetShadow" x="-20%" y="-5%" width="140%" height="115%">
+      <feDropShadow dx="0" dy="-12" stdDeviation="14" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect width="1840" height="1340" fill="#F8FAFC"/>
+
+  <!-- ========== TITLE BAR ========== -->
+  <text x="60" y="58" font-weight="800" font-size="26" fill="#0F172A">Parent · Account &amp; Header Redesign · Phase 4</text>
+  <text x="60" y="84" font-size="13" fill="#64748B">4 surfaces — Profil Pengguna · Pengumuman Detail Sheet · Account Sheet (from person icon) · Tahun Ajaran Switcher</text>
+  <rect x="60" y="100" width="1720" height="1" fill="#E2E8F0"/>
+
+  <!-- ============================================================== -->
+  <!-- PHONE 1 — PROFIL PENGGUNA (full screen redesign)                -->
+  <!-- ============================================================== -->
+  <g transform="translate(80, 130)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <rect width="380" height="780" rx="36" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- status bar -->
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+    <g transform="translate(320, 22)" fill="#0F172A">
+      <rect x="0" y="2" width="14" height="10" rx="1"/>
+      <rect x="18" y="0" width="22" height="12" rx="2" fill="none" stroke="#0F172A" stroke-width="1"/>
+      <rect x="20" y="2" width="16" height="8" rx="1"/>
+    </g>
+
+    <!-- Compact hero (180px) — back, title, edit -->
+    <rect x="0" y="44" width="380" height="180" fill="url(#heroGradVert)"/>
+    <!-- back arrow -->
+    <g transform="translate(20, 64)">
+      <rect width="40" height="40" rx="14" fill="rgba(255,255,255,0.18)"/>
+      <path d="M24 13 L16 20 L24 27" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <text x="190" y="92" font-size="16" font-weight="800" fill="white" text-anchor="middle">Profil Saya</text>
+    <!-- edit pencil top-right -->
+    <g transform="translate(312, 64)">
+      <rect width="40" height="40" rx="14" fill="rgba(255,255,255,0.18)"/>
+      <g transform="translate(12, 12)" fill="white">
+        <path d="M10 0 L16 6 L4 18 L0 18 L0 14 Z"/>
+      </g>
+    </g>
+
+    <!-- Avatar overlapping hero bottom -->
+    <g transform="translate(140, 140)">
+      <circle cx="50" cy="50" r="56" fill="white"/>
+      <circle cx="50" cy="50" r="50" fill="#21AFE6" fill-opacity="0.18"/>
+      <text x="50" y="64" font-size="42" font-weight="800" fill="#1A8FBE" text-anchor="middle">M</text>
+    </g>
+
+    <!-- Name + email + role pill -->
+    <text x="190" y="262" font-size="20" font-weight="800" fill="#0F172A" text-anchor="middle">Mas Yahya</text>
+    <text x="190" y="284" font-size="11" fill="#64748B" text-anchor="middle">yahyahasymi@gmail.com</text>
+    <g transform="translate(154, 296)">
+      <rect width="72" height="22" rx="11" fill="#21AFE6" fill-opacity="0.14"/>
+      <text x="36" y="15" font-size="10" font-weight="800" fill="#1A8FBE" text-anchor="middle">Wali Murid</text>
+    </g>
+
+    <!-- ===== Card 1 — Informasi Pribadi ===== -->
+    <g transform="translate(16, 340)" filter="url(#cardShadow)">
+      <rect width="348" height="172" rx="18" fill="white"/>
+      <rect width="348" height="172" rx="18" fill="none" stroke="#E2E8F0" stroke-width="0.75"/>
+    </g>
+    <text x="32" y="368" font-size="13" font-weight="800" fill="#0F172A">Informasi Pribadi</text>
+    <text x="32" y="384" font-size="10" fill="#94A3B8">Tap pensil di kanan atas untuk edit</text>
+    <line x1="32" y1="394" x2="348" y2="394" stroke="#F1F5F9"/>
+
+    <!-- info row template -->
+    <g transform="translate(32, 406)">
+      <text x="0" y="9" font-size="9.5" fill="#94A3B8" letter-spacing="0.4">EMAIL</text>
+      <text x="0" y="26" font-size="12" font-weight="700" fill="#0F172A">yahyahasymi@gmail.com</text>
+    </g>
+    <g transform="translate(32, 446)">
+      <text x="0" y="9" font-size="9.5" fill="#94A3B8" letter-spacing="0.4">NO. TELEPON</text>
+      <text x="0" y="26" font-size="12" font-weight="700" fill="#0F172A">+62 812 0000 0000</text>
+      <!-- right-side action -->
+      <text x="270" y="22" font-size="10" font-weight="700" fill="#1A8FBE">Verif</text>
+    </g>
+    <g transform="translate(32, 486)">
+      <text x="0" y="9" font-size="9.5" fill="#94A3B8" letter-spacing="0.4">ALAMAT</text>
+      <text x="0" y="26" font-size="11" font-weight="600" fill="#475569">Jl. Pendidikan No. 1, Jakarta</text>
+    </g>
+
+    <!-- ===== Card 2 — Akun &amp; Akses ===== -->
+    <g transform="translate(16, 528)" filter="url(#cardShadow)">
+      <rect width="348" height="160" rx="18" fill="white"/>
+      <rect width="348" height="160" rx="18" fill="none" stroke="#E2E8F0" stroke-width="0.75"/>
+    </g>
+    <text x="32" y="556" font-size="13" font-weight="800" fill="#0F172A">Akun &amp; Akses</text>
+    <line x1="32" y1="568" x2="348" y2="568" stroke="#F1F5F9"/>
+
+    <!-- Peran row -->
+    <g transform="translate(32, 580)">
+      <rect width="32" height="32" rx="10" fill="#21AFE6" fill-opacity="0.14"/>
+      <g transform="translate(8, 8)" fill="#1A8FBE"><circle cx="8" cy="6" r="4"/><path d="M2 18 a6 4 0 0 1 12 0"/></g>
+      <text x="46" y="12" font-size="10" fill="#94A3B8">Peran aktif</text>
+      <text x="46" y="27" font-size="12" font-weight="700" fill="#0F172A">Wali Murid</text>
+      <text x="290" y="22" font-size="10" font-weight="700" fill="#1A8FBE">Ganti</text>
+    </g>
+    <!-- Sekolah row -->
+    <g transform="translate(32, 622)">
+      <rect width="32" height="32" rx="10" fill="#10B981" fill-opacity="0.14"/>
+      <g transform="translate(8, 8)" fill="#10B981"><path d="M0 6 L8 0 L16 6 L16 14 L0 14 Z"/></g>
+      <text x="46" y="12" font-size="10" fill="#94A3B8">Sekolah aktif</text>
+      <text x="46" y="27" font-size="12" font-weight="700" fill="#0F172A">SMP Kamil Edu B</text>
+      <text x="290" y="22" font-size="10" font-weight="700" fill="#1A8FBE">Ganti</text>
+    </g>
+
+    <!-- Logout button -->
+    <g transform="translate(16, 716)">
+      <rect width="348" height="44" rx="14" fill="#FEE2E2"/>
+      <g transform="translate(122, 14)" fill="#DC2626">
+        <path d="M0 8 L7 8 M7 4 L11 8 L7 12"/>
+      </g>
+      <text x="180" y="28" font-size="13" font-weight="800" fill="#DC2626" text-anchor="middle">Keluar Akun</text>
+    </g>
+  </g>
+
+  <text x="270" y="930" font-size="12" font-weight="700" fill="#1A8FBE" text-anchor="middle">1 · Profil Saya (full page)</text>
+
+  <!-- ============================================================== -->
+  <!-- PHONE 2 — PENGUMUMAN DETAIL (bottom sheet redesign)             -->
+  <!-- ============================================================== -->
+  <g transform="translate(540, 130)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <rect width="380" height="780" rx="36" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- background list dimmed -->
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+    <g transform="translate(320, 22)" fill="#0F172A">
+      <rect x="0" y="2" width="14" height="10" rx="1"/>
+      <rect x="18" y="0" width="22" height="12" rx="2" fill="none" stroke="#0F172A" stroke-width="1"/>
+      <rect x="20" y="2" width="16" height="8" rx="1"/>
+    </g>
+    <!-- dimmed announcement list behind -->
+    <rect x="16" y="56" width="348" height="200" rx="22" fill="#0F172A" fill-opacity="0.05"/>
+    <rect x="16" y="270" width="348" height="100" rx="14" fill="#0F172A" fill-opacity="0.05"/>
+    <rect x="16" y="380" width="348" height="100" rx="14" fill="#0F172A" fill-opacity="0.05"/>
+    <!-- dim overlay -->
+    <rect width="380" height="780" rx="36" fill="#0F172A" fill-opacity="0.45"/>
+
+    <!-- ===== Bottom sheet ===== -->
+    <g transform="translate(0, 200)" filter="url(#sheetShadow)">
+      <rect width="380" height="580" fill="white"/>
+      <path d="M0 28 Q0 0 28 0 H352 Q380 0 380 28 V580 H0 Z" fill="white"/>
+      <!-- top corners radius 28 — done above; redraw the rounded top -->
+      <rect width="380" height="580" fill="white"/>
+      <path d="M0,28 Q0,0 28,0 L352,0 Q380,0 380,28" fill="white"/>
+    </g>
+    <g transform="translate(0, 200)">
+      <rect width="380" height="580" fill="white"/>
+      <!-- override with proper rounded top -->
+    </g>
+    <!-- redraw cleaner: clipped rect with rounded top -->
+    <g transform="translate(0, 200)">
+      <path d="M0 28 Q0 0 28 0 H352 Q380 0 380 28 V580 H0 Z" fill="white"/>
+      <!-- drag handle -->
+      <rect x="170" y="10" width="40" height="4" rx="2" fill="#CBD5E1"/>
+      <!-- close X top right -->
+      <g transform="translate(332, 24)">
+        <rect width="30" height="30" rx="10" fill="#F1F5F9"/>
+        <path d="M10 10 L20 20 M20 10 L10 20" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+      </g>
+
+      <!-- Header section: icon + title + meta chips -->
+      <g transform="translate(24, 38)">
+        <rect width="56" height="56" rx="16" fill="#21AFE6" fill-opacity="0.14"/>
+        <g transform="translate(18, 18)" fill="#1A8FBE"><rect width="20" height="20" rx="3"/><rect x="9" y="4" width="2" height="9" fill="white"/><rect x="9" y="14" width="2" height="2" fill="white"/></g>
+      </g>
+      <text x="96" y="62" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="0.5">PENGUMUMAN · UMUM</text>
+      <text x="96" y="84" font-size="18" font-weight="800" fill="#0F172A">Test 2</text>
+
+      <!-- divider -->
+      <line x1="24" y1="118" x2="356" y2="118" stroke="#F1F5F9"/>
+
+      <!-- Body content -->
+      <text x="24" y="148" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="0.5">ISI PENGUMUMAN</text>
+      <text x="24" y="172" font-size="13" fill="#475569">Test Pengumuman 2 — pengumuman ini</text>
+      <text x="24" y="192" font-size="13" fill="#475569">akan tampil ke semua pengguna selama</text>
+      <text x="24" y="212" font-size="13" fill="#475569">periode 30 Mar – 2 Apr 2026.</text>
+
+      <!-- Attachment chip if any -->
+      <g transform="translate(24, 232)">
+        <rect width="180" height="36" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="0.75"/>
+        <g transform="translate(10, 10)" fill="#1A8FBE">
+          <rect width="14" height="16" rx="1.5"/>
+          <rect x="3" y="3" width="8" height="1.5" fill="white"/>
+          <rect x="3" y="6" width="8" height="1.5" fill="white"/>
+          <rect x="3" y="9" width="5" height="1.5" fill="white"/>
+        </g>
+        <text x="34" y="22" font-size="11" font-weight="700" fill="#0F172A">brosur-2026.pdf</text>
+        <text x="156" y="22" font-size="9" fill="#94A3B8">320 KB</text>
+      </g>
+
+      <!-- divider -->
+      <line x1="24" y1="290" x2="356" y2="290" stroke="#F1F5F9"/>
+
+      <!-- Metadata grid (2x2) -->
+      <text x="24" y="316" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="0.5">DETAIL</text>
+      <g transform="translate(24, 332)">
+        <!-- row 1 -->
+        <g>
+          <text x="0" y="10" font-size="9.5" fill="#94A3B8">Dibuat oleh</text>
+          <text x="0" y="28" font-size="12" font-weight="700" fill="#0F172A">Mas Yahya</text>
+        </g>
+        <g transform="translate(170, 0)">
+          <text x="0" y="10" font-size="9.5" fill="#94A3B8">Role Target</text>
+          <text x="0" y="28" font-size="12" font-weight="700" fill="#0F172A">Semua Pengguna</text>
+        </g>
+        <!-- row 2 -->
+        <g transform="translate(0, 50)">
+          <text x="0" y="10" font-size="9.5" fill="#94A3B8">Tanggal Mulai</text>
+          <text x="0" y="28" font-size="12" font-weight="700" fill="#0F172A">30 Mar 2026</text>
+        </g>
+        <g transform="translate(170, 50)">
+          <text x="0" y="10" font-size="9.5" fill="#94A3B8">Tanggal Berakhir</text>
+          <text x="0" y="28" font-size="12" font-weight="700" fill="#0F172A">2 Apr 2026</text>
+        </g>
+        <!-- row 3 — created at -->
+        <g transform="translate(0, 100)">
+          <text x="0" y="10" font-size="9.5" fill="#94A3B8">Dibuat pada</text>
+          <text x="0" y="28" font-size="12" font-weight="700" fill="#0F172A">31 Mar 2026, 04:08</text>
+        </g>
+      </g>
+
+      <!-- Footer Tutup button removed — close X in top right is enough -->
+      <!-- Tap-outside also dismisses -->
+    </g>
+  </g>
+
+  <text x="730" y="930" font-size="12" font-weight="700" fill="#1A8FBE" text-anchor="middle">2 · Pengumuman Detail Sheet</text>
+
+  <!-- ============================================================== -->
+  <!-- PHONE 3 — ACCOUNT SHEET (from person icon, dropdown bottom sheet)-->
+  <!-- ============================================================== -->
+  <g transform="translate(1000, 130)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <rect width="380" height="780" rx="36" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+    <g transform="translate(320, 22)" fill="#0F172A">
+      <rect x="0" y="2" width="14" height="10" rx="1"/>
+      <rect x="18" y="0" width="22" height="12" rx="2" fill="none" stroke="#0F172A" stroke-width="1"/>
+      <rect x="20" y="2" width="16" height="8" rx="1"/>
+    </g>
+
+    <!-- dim overlay (dashboard behind) -->
+    <rect x="0" y="44" width="380" height="700" fill="#21AFE6" fill-opacity="0.4"/>
+    <rect x="0" y="44" width="380" height="700" fill="#0F172A" fill-opacity="0.35"/>
+
+    <!-- Bottom sheet -->
+    <g transform="translate(0, 220)">
+      <path d="M0 28 Q0 0 28 0 H352 Q380 0 380 28 V560 H0 Z" fill="white"/>
+      <rect x="170" y="10" width="40" height="4" rx="2" fill="#CBD5E1"/>
+
+      <!-- Account header (avatar + name + email) -->
+      <g transform="translate(24, 32)">
+        <circle cx="28" cy="28" r="28" fill="#21AFE6" fill-opacity="0.14"/>
+        <text x="28" y="36" font-size="22" font-weight="800" fill="#1A8FBE" text-anchor="middle">M</text>
+        <!-- close X far right -->
+        <g transform="translate(290, 12)">
+          <rect width="30" height="30" rx="10" fill="#F1F5F9"/>
+          <path d="M10 10 L20 20 M20 10 L10 20" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+        </g>
+      </g>
+      <text x="92" y="58" font-size="15" font-weight="800" fill="#0F172A">Mas Yahya</text>
+      <text x="92" y="74" font-size="11" fill="#64748B">yahyahasymi@gmail.com</text>
+      <g transform="translate(92, 80)">
+        <rect width="60" height="18" rx="9" fill="#21AFE6" fill-opacity="0.14"/>
+        <text x="30" y="12" font-size="9" font-weight="800" fill="#1A8FBE" text-anchor="middle">Wali Murid</text>
+      </g>
+
+      <!-- "Lihat Profil Lengkap" link tile -->
+      <g transform="translate(24, 116)">
+        <rect width="332" height="44" rx="12" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="0.75"/>
+        <g transform="translate(14, 14)" fill="#1A8FBE">
+          <circle cx="8" cy="6" r="4"/>
+          <path d="M2 18 a6 4 0 0 1 12 0"/>
+        </g>
+        <text x="48" y="28" font-size="12" font-weight="700" fill="#0F172A">Lihat Profil Lengkap</text>
+        <path d="M308 18 L316 22 L308 26" stroke="#1A8FBE" stroke-width="2" stroke-linecap="round" fill="none"/>
+      </g>
+
+      <!-- divider -->
+      <line x1="24" y1="184" x2="356" y2="184" stroke="#F1F5F9"/>
+
+      <!-- Section: Akses -->
+      <text x="24" y="208" font-size="11" font-weight="800" fill="#94A3B8" letter-spacing="0.5">AKSES SAYA</text>
+
+      <!-- Role row (current = wali, with check) -->
+      <g transform="translate(24, 220)">
+        <rect width="332" height="48" rx="14" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="0.75"/>
+        <g transform="translate(14, 14)" fill="#1A8FBE">
+          <circle cx="10" cy="8" r="5"/>
+          <path d="M2 22 a8 4 0 0 1 16 0"/>
+        </g>
+        <text x="50" y="22" font-size="9" fill="#94A3B8">Peran aktif</text>
+        <text x="50" y="38" font-size="12" font-weight="800" fill="#0F172A">Wali Murid</text>
+        <text x="270" y="30" font-size="10" font-weight="700" fill="#1A8FBE">Ganti ▾</text>
+      </g>
+
+      <!-- Sekolah row -->
+      <g transform="translate(24, 276)">
+        <rect width="332" height="48" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+        <g transform="translate(14, 14)" fill="#10B981">
+          <path d="M0 8 L10 0 L20 8 L20 18 L0 18 Z"/>
+        </g>
+        <text x="50" y="22" font-size="9" fill="#94A3B8">Sekolah aktif</text>
+        <text x="50" y="38" font-size="12" font-weight="800" fill="#0F172A">SMP Kamil Edu B</text>
+        <text x="270" y="30" font-size="10" font-weight="700" fill="#1A8FBE">Ganti ▾</text>
+      </g>
+
+      <!-- Bahasa row -->
+      <g transform="translate(24, 332)">
+        <rect width="332" height="48" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+        <g transform="translate(14, 14)" fill="#6366F1">
+          <circle cx="10" cy="10" r="9" fill="none" stroke="#6366F1" stroke-width="1.5"/>
+          <path d="M2 10 H18 M10 2 a14 8 0 0 1 0 16 a14 8 0 0 1 0 -16" fill="none" stroke="#6366F1" stroke-width="1"/>
+        </g>
+        <text x="50" y="22" font-size="9" fill="#94A3B8">Bahasa</text>
+        <text x="50" y="38" font-size="12" font-weight="800" fill="#0F172A">Bahasa Indonesia</text>
+        <text x="270" y="30" font-size="10" font-weight="700" fill="#1A8FBE">Ubah ▾</text>
+      </g>
+
+      <!-- divider -->
+      <line x1="24" y1="404" x2="356" y2="404" stroke="#F1F5F9"/>
+
+      <!-- Logout -->
+      <g transform="translate(24, 426)">
+        <rect width="332" height="48" rx="14" fill="#FEE2E2"/>
+        <g transform="translate(124, 16)" fill="#DC2626">
+          <path d="M0 8 L7 8 M7 4 L11 8 L7 12"/>
+        </g>
+        <text x="172" y="30" font-size="13" font-weight="800" fill="#DC2626" text-anchor="middle">Keluar Akun</text>
+      </g>
+
+      <!-- Note about removed Pengaturan -->
+      <g transform="translate(24, 488)">
+        <text x="166" y="14" font-size="9" fill="#94A3B8" text-anchor="middle">— pengaturan dipindah ke halaman Profil Lengkap —</text>
+      </g>
+    </g>
+  </g>
+
+  <text x="1190" y="930" font-size="12" font-weight="700" fill="#1A8FBE" text-anchor="middle">3 · Account Sheet (from person icon)</text>
+
+  <!-- ============================================================== -->
+  <!-- PHONE 4 — TAHUN AJARAN SWITCHER (header + picker sheet)        -->
+  <!-- ============================================================== -->
+  <g transform="translate(1460, 130)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <rect width="380" height="780" rx="36" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+    <g transform="translate(320, 22)" fill="#0F172A">
+      <rect x="0" y="2" width="14" height="10" rx="1"/>
+      <rect x="18" y="0" width="22" height="12" rx="2" fill="none" stroke="#0F172A" stroke-width="1"/>
+      <rect x="20" y="2" width="16" height="8" rx="1"/>
+    </g>
+
+    <!-- Hero gradient (showing the new header) -->
+    <rect x="16" y="56" width="348" height="220" rx="22" fill="url(#heroGrad)"/>
+
+    <!-- Top icons row: 🌐 🔔 👤 -->
+    <g transform="translate(248, 78)">
+      <circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.18)"/>
+      <text x="14" y="19" font-size="13" font-weight="700" fill="white" text-anchor="middle">EN</text>
+    </g>
+    <g transform="translate(284, 78)">
+      <circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.18)"/>
+      <g transform="translate(8, 7)" fill="white"><path d="M2 8 a4 4 0 0 1 8 0 v4 l1 2 h-10 l1 -2 z"/><circle cx="6" cy="14" r="1"/></g>
+      <circle cx="22" cy="6" r="3" fill="#EF4444"/>
+    </g>
+    <g transform="translate(320, 78)">
+      <circle cx="14" cy="14" r="14" fill="white"/>
+      <text x="14" y="19" font-size="11" font-weight="800" fill="#1A8FBE" text-anchor="middle">M</text>
+    </g>
+
+    <!-- Greeting -->
+    <text x="32" y="106" font-size="12" fill="rgba(255,255,255,0.85)" font-weight="500">Selamat pagi 👋</text>
+    <text x="32" y="130" font-size="20" font-weight="800" fill="white">Yahya Al Hasymi</text>
+    <text x="32" y="150" font-size="11" fill="rgba(255,255,255,0.85)">Wali Murid · 3 anak terdaftar</text>
+
+    <!-- ===== NEW: combined School + Tahun Ajaran chip strip ===== -->
+    <g transform="translate(32, 168)">
+      <!-- School chip (left, wider) -->
+      <rect width="200" height="58" rx="14" fill="rgba(255,255,255,0.18)"/>
+      <g transform="translate(12, 12)" fill="rgba(255,255,255,0.95)">
+        <path d="M0 8 L12 0 L24 8 L24 22 L0 22 Z"/>
+      </g>
+      <text x="46" y="22" font-size="9" font-weight="800" fill="rgba(255,255,255,0.85)" letter-spacing="0.6">SEKOLAH AKTIF</text>
+      <text x="46" y="40" font-size="12" font-weight="800" fill="white">SMP Kamil Edu B</text>
+      <text x="46" y="52" font-size="10" fill="rgba(255,255,255,0.85)">Ganti ▾</text>
+
+      <!-- Tahun Ajaran chip (right) — NEW -->
+      <g transform="translate(212, 0)">
+        <rect width="104" height="58" rx="14" fill="rgba(255,255,255,0.28)" stroke="rgba(255,255,255,0.4)"/>
+        <g transform="translate(10, 12)" fill="rgba(255,255,255,0.95)">
+          <rect width="22" height="22" rx="3" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="1.5"/>
+          <rect x="3" y="2" width="2" height="4" fill="rgba(255,255,255,0.95)"/>
+          <rect x="17" y="2" width="2" height="4" fill="rgba(255,255,255,0.95)"/>
+          <line x1="0" y1="9" x2="22" y2="9" stroke="rgba(255,255,255,0.95)" stroke-width="1"/>
+        </g>
+        <text x="36" y="22" font-size="9" font-weight="800" fill="rgba(255,255,255,0.85)" letter-spacing="0.6">TAHUN AJARAN</text>
+        <text x="36" y="40" font-size="11" font-weight="800" fill="white">2025/2026</text>
+        <text x="36" y="52" font-size="10" fill="rgba(255,255,255,0.85)">Sem. Ganjil ▾</text>
+      </g>
+    </g>
+
+    <!-- dim overlay -->
+    <rect x="0" y="44" width="380" height="736" fill="#0F172A" fill-opacity="0.35"/>
+
+    <!-- Year picker bottom sheet -->
+    <g transform="translate(0, 280)">
+      <path d="M0 28 Q0 0 28 0 H352 Q380 0 380 28 V500 H0 Z" fill="white"/>
+      <rect x="170" y="10" width="40" height="4" rx="2" fill="#CBD5E1"/>
+
+      <text x="190" y="42" font-size="14" font-weight="800" fill="#0F172A" text-anchor="middle">Pilih Tahun Ajaran</text>
+      <text x="190" y="60" font-size="10" fill="#64748B" text-anchor="middle">Tahun ajaran aktif memengaruhi data semua tab</text>
+
+      <line x1="24" y1="80" x2="356" y2="80" stroke="#F1F5F9"/>
+
+      <!-- ACTIVE: 2025/2026 — expanded with semester list -->
+      <g transform="translate(24, 96)">
+        <rect width="332" height="120" rx="14" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="1"/>
+        <text x="14" y="22" font-size="9.5" font-weight="800" fill="#1A8FBE" letter-spacing="0.6">AKTIF SEKARANG</text>
+        <text x="14" y="42" font-size="14" font-weight="800" fill="#0F172A">2025 / 2026</text>
+        <!-- semester chips -->
+        <g transform="translate(14, 56)">
+          <rect width="142" height="48" rx="12" fill="white" stroke="#21AFE6" stroke-width="1.5"/>
+          <text x="14" y="20" font-size="9" fill="#94A3B8">Semester 1</text>
+          <text x="14" y="38" font-size="12" font-weight="800" fill="#1A8FBE">Ganjil</text>
+          <circle cx="124" cy="24" r="9" fill="#1A8FBE"/>
+          <path d="M120 24 L123 27 L129 21" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <g transform="translate(162, 56)">
+          <rect width="142" height="48" rx="12" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+          <text x="14" y="20" font-size="9" fill="#94A3B8">Semester 2</text>
+          <text x="14" y="38" font-size="12" font-weight="800" fill="#475569">Genap</text>
+        </g>
+      </g>
+
+      <!-- 2024/2025 -->
+      <g transform="translate(24, 232)">
+        <rect width="332" height="48" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+        <text x="14" y="22" font-size="9" fill="#94A3B8">Sebelumnya</text>
+        <text x="14" y="38" font-size="12" font-weight="700" fill="#475569">2024 / 2025</text>
+        <text x="270" y="30" font-size="10" font-weight="700" fill="#1A8FBE">Pilih ▾</text>
+      </g>
+
+      <!-- 2023/2024 -->
+      <g transform="translate(24, 288)">
+        <rect width="332" height="48" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+        <text x="14" y="22" font-size="9" fill="#94A3B8">Sebelumnya</text>
+        <text x="14" y="38" font-size="12" font-weight="700" fill="#475569">2023 / 2024</text>
+        <text x="270" y="30" font-size="10" font-weight="700" fill="#1A8FBE">Pilih ▾</text>
+      </g>
+
+      <!-- footer hint -->
+      <line x1="24" y1="360" x2="356" y2="360" stroke="#F1F5F9"/>
+      <text x="190" y="386" font-size="9.5" fill="#94A3B8" text-anchor="middle">Hanya admin yang dapat menambah tahun ajaran baru.</text>
+
+      <!-- Tutup button -->
+      <g transform="translate(24, 408)">
+        <rect width="332" height="44" rx="14" fill="#F1F5F9"/>
+        <text x="166" y="28" font-size="12" font-weight="800" fill="#475569" text-anchor="middle">Tutup</text>
+      </g>
+    </g>
+  </g>
+
+  <text x="1650" y="930" font-size="12" font-weight="700" fill="#1A8FBE" text-anchor="middle">4 · Tahun Ajaran Switcher (header + picker)</text>
+
+  <!-- ============================================================== -->
+  <!-- ANNOTATIONS / SPEC PANEL                                       -->
+  <!-- ============================================================== -->
+  <g transform="translate(80, 970)">
+    <rect width="1680" height="320" rx="20" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+
+    <text x="24" y="36" font-size="16" font-weight="800" fill="#0F172A">Spec &amp; navigation map</text>
+    <text x="24" y="56" font-size="11" fill="#64748B">How the four surfaces interact. The header gets a per-role icon strip + a tahun ajaran chip; tapping the person icon opens the new account sheet.</text>
+
+    <!-- 4 columns of annotations -->
+    <g transform="translate(24, 80)" font-size="11" fill="#475569">
+      <!-- Profile -->
+      <rect width="6" height="220" rx="3" fill="#21AFE6"/>
+      <text x="20" y="14" font-weight="800" fill="#0F172A">1 · Profil Saya</text>
+      <text x="20" y="34" font-weight="700" fill="#0F172A">Trigger: Lihat Profil Lengkap (sheet 3)</text>
+      <text x="20" y="54">• Compact 180px hero · big avatar</text>
+      <text x="20" y="74">• Nama / Email / Phone / Alamat dalam 1 kartu Informasi Pribadi</text>
+      <text x="20" y="94">• Peran aktif + Sekolah aktif sebagai item tappable di kartu Akun &amp; Akses</text>
+      <text x="20" y="114">• Tap pensil di header → mode edit inline</text>
+      <text x="20" y="134">• Logout di paling bawah, danger color</text>
+      <text x="20" y="158" font-weight="700" fill="#0F172A">Komponen baru:</text>
+      <text x="20" y="176">  ProfileInfoCard, ProfileAccessRow</text>
+      <text x="20" y="200" font-weight="700" fill="#0F172A">File:</text>
+      <text x="20" y="216" font-family="ui-monospace, monospace" font-size="10" fill="#0F172A">features/account/.../profile_screen.dart</text>
+    </g>
+
+    <g transform="translate(434, 80)" font-size="11" fill="#475569">
+      <rect width="6" height="220" rx="3" fill="#10B981"/>
+      <text x="20" y="14" font-weight="800" fill="#0F172A">2 · Pengumuman Detail</text>
+      <text x="20" y="34" font-weight="700" fill="#0F172A">Trigger: tap row di Pengumuman</text>
+      <text x="20" y="54">• Bottom sheet, bukan center dialog</text>
+      <text x="20" y="74">• Konten pengumuman jadi item utama (heading + body)</text>
+      <text x="20" y="94">• Lampiran (jika ada) sebagai chip rapi</text>
+      <text x="20" y="114">• Metadata jadi grid 2x2 di bawah, kompak</text>
+      <text x="20" y="134">• Footer Tutup dihapus — close X di pojok cukup</text>
+      <text x="20" y="158" font-weight="700" fill="#0F172A">Reuse:</text>
+      <text x="20" y="176">  AppBottomSheet (pakai apa adanya)</text>
+      <text x="20" y="200" font-weight="700" fill="#0F172A">File:</text>
+      <text x="20" y="216" font-family="ui-monospace, monospace" font-size="10" fill="#0F172A">features/announcements/.../announcement_detail_sheet.dart</text>
+    </g>
+
+    <g transform="translate(844, 80)" font-size="11" fill="#475569">
+      <rect width="6" height="220" rx="3" fill="#6366F1"/>
+      <text x="20" y="14" font-weight="800" fill="#0F172A">3 · Account Sheet</text>
+      <text x="20" y="34" font-weight="700" fill="#0F172A">Trigger: tap 👤 person icon di header</text>
+      <text x="20" y="54">• Avatar + nama + email + role pill di atas</text>
+      <text x="20" y="74">• "Lihat Profil Lengkap" → buka surface 1</text>
+      <text x="20" y="94">• 3 tappable rows: Peran (Ganti), Sekolah (Ganti), Bahasa (Ubah)</text>
+      <text x="20" y="114" font-weight="700" fill="#DC2626">• Pengaturan icon button DIHAPUS dari sheet ini</text>
+      <text x="20" y="134">  (akses Pengaturan via Profil &gt; Pengaturan Lanjutan)</text>
+      <text x="20" y="154">• Logout button danger color, full-width</text>
+      <text x="20" y="178" font-weight="700" fill="#0F172A">File:</text>
+      <text x="20" y="194" font-family="ui-monospace, monospace" font-size="10" fill="#0F172A">features/dashboard/.../account_sheet.dart</text>
+      <text x="20" y="216" font-style="italic">Replace existing role/school sheet</text>
+    </g>
+
+    <g transform="translate(1254, 80)" font-size="11" fill="#475569">
+      <rect width="6" height="220" rx="3" fill="#F59E0B"/>
+      <text x="20" y="14" font-weight="800" fill="#0F172A">4 · Tahun Ajaran Switcher</text>
+      <text x="20" y="34" font-weight="700" fill="#0F172A">Lokasi: hero header (samping School pill)</text>
+      <text x="20" y="54">• School pill dipersempit, beri tempat untuk chip Tahun Ajaran</text>
+      <text x="20" y="74">• Chip tampil: tahun + semester aktif</text>
+      <text x="20" y="94">• Tap chip → bottom sheet picker</text>
+      <text x="20" y="114">• Picker: tahun aktif expanded (2 chip semester)</text>
+      <text x="20" y="134">  tahun lalu collapsed (1 row)</text>
+      <text x="20" y="154">• Tahun ajaran berlaku global → semua tab refresh</text>
+      <text x="20" y="178" font-weight="700" fill="#0F172A">Komponen baru:</text>
+      <text x="20" y="194">  AcademicYearChip, AcademicYearPickerSheet</text>
+      <text x="20" y="216" font-family="ui-monospace, monospace" font-size="10" fill="#0F172A">core/widgets/academic_year_chip.dart</text>
+    </g>
+  </g>
+
+  <!-- ============================================================== -->
+  <!-- INTERACTION FLOW DIAGRAM                                       -->
+  <!-- ============================================================== -->
+  <g transform="translate(80, 1310)">
+    <text font-size="11" font-weight="700" fill="#475569">
+      <tspan x="0" font-weight="800" fill="#0F172A">Flow:</tspan>
+      <tspan dx="6">Header 👤 →</tspan>
+      <tspan dx="6" fill="#1A8FBE">Account Sheet (3)</tspan>
+      <tspan dx="6">→ Lihat Profil Lengkap →</tspan>
+      <tspan dx="6" fill="#1A8FBE">Profile Page (1)</tspan>
+      <tspan dx="20">·</tspan>
+      <tspan dx="20">Header chip Tahun Ajaran →</tspan>
+      <tspan dx="6" fill="#1A8FBE">Picker Sheet (4)</tspan>
+      <tspan dx="20">·</tspan>
+      <tspan dx="20">Tap announcement row →</tspan>
+      <tspan dx="6" fill="#1A8FBE">Detail Sheet (2)</tspan>
+    </text>
+  </g>
+</svg>

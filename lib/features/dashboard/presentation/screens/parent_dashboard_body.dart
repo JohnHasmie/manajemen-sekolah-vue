@@ -24,6 +24,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/shell_nav.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/academic_year_chip.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
@@ -38,6 +39,7 @@ import 'package:manajemensekolah/features/finance/presentation/screens/parent_bi
 import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/academic_year_picker_sheet.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/parent_report_card_screen.dart';
@@ -192,6 +194,14 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
 
   String? get _academicYearId =>
       ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
+
+  /// Display label for the academic year chip in the hero. Watches
+  /// `academicYearRiverpod` so the chip updates when the user picks a
+  /// different year via [showAcademicYearPickerSheet].
+  String get _academicYearLabel {
+    final year = ref.watch(academicYearRiverpod).selectedAcademicYear;
+    return year?['year']?.toString() ?? '—';
+  }
 
   void _openAnnouncements() {
     AppNavigator.push(context, const ParentAnnouncementScreen());
@@ -368,13 +378,34 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
                   const SizedBox(height: AppSpacing.md),
                   _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
                   const SizedBox(height: AppSpacing.md),
-                  SchoolPill.expanded(
-                    schoolName: _schoolName,
-                    subtitle: _greetingSubtitle,
-                    onTap: widget.onSchoolSwitchTap,
-                    accentColor: _parentBrandAzure,
-                    actionLabel: 'Ganti',
-                    onDarkSurface: true,
+                  // School pill + tahun-ajaran chip side-by-side. The
+                  // school pill takes the available space and the chip
+                  // is a fixed-width sidekick. On narrow screens the
+                  // pill ellipsises; the chip stays legible.
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: SchoolPill.expanded(
+                          schoolName: _schoolName,
+                          subtitle: _greetingSubtitle,
+                          onTap: widget.onSchoolSwitchTap,
+                          accentColor: _parentBrandAzure,
+                          actionLabel: 'Ganti',
+                          onDarkSurface: true,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      AcademicYearChip(
+                        yearLabel: _academicYearLabel,
+                        semesterLabel: widget.state.currentSemesterLabel,
+                        onTap: () => showAcademicYearPickerSheet(
+                          context: context,
+                          ref: ref,
+                          currentSemesterLabel: widget.state.currentSemesterLabel,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
