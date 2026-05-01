@@ -240,14 +240,18 @@ class _ExpandedSchoolPill extends StatelessWidget {
           ),
           child: Row(
             children: [
+              // Initials avatar — gives the dashboard hero its
+              // "school identity" anchor before the name. Sized to
+              // match the academic-year chip's left-icon weight so
+              // the two pills sit on the same visual rhythm.
               _SchoolAvatar(
                 schoolName: schoolName,
                 logoUrl: logoUrl,
-                size: 44,
+                size: 36,
                 accentColor: accentColor,
                 onDarkSurface: onDarkSurface,
               ),
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,25 +282,6 @@ class _ExpandedSchoolPill extends StatelessWidget {
                   ],
                 ),
               ),
-              if (onTap != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: actionBg,
-                    borderRadius: const BorderRadius.all(Radius.circular(8)),
-                  ),
-                  child: Text(
-                    actionLabel,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: fg,
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
