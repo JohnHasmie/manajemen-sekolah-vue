@@ -196,15 +196,24 @@ class _QuickActionTile extends StatelessWidget {
                 ],
               ),
               AppSpacing.v8,
-              Text(
-                action.label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
+              // FittedBox+scaleDown so single-word labels longer than
+              // the column (e.g. "Pengumuman" at columnsPerRow:4 on
+              // narrow viewports) shrink to fit on ONE line instead of
+              // breaking mid-word into "Pengumum / an". Short labels
+              // render at full size — scaleDown only kicks in when
+              // overflow would occur.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.center,
+                child: Text(
+                  action.label,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
                 ),
               ),
               if (action.caption != null) ...[

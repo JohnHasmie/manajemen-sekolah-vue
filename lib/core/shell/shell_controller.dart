@@ -72,6 +72,27 @@ class ShellState {
   }
 }
 
+/// Outcome of a system-back press, returned by
+/// [ShellNotifier.handleSystemBack] so the host (`RoleShell`) can react
+/// — show a snackbar, exit the app, or do nothing.
+enum SystemBackResult {
+  /// The back press was absorbed by the shell — either popped a deep
+  /// route, switched to the home tab, or armed the exit-confirm
+  /// timer. Caller should NOT propagate the back further.
+  consumed,
+
+  /// User is on the home tab root and tapped back. The shell has
+  /// armed an exit-confirm window; the host should show a snackbar
+  /// like "Tekan kembali sekali lagi untuk keluar". The next back
+  /// press inside [ShellNotifier.exitConfirmWindow] will return
+  /// [allowExit].
+  awaitingExitConfirm,
+
+  /// Second back tap inside the exit-confirm window — the host
+  /// should call `SystemNavigator.pop()` to actually exit the app.
+  allowExit,
+}
+
 /// Riverpod controller for [ShellState].
 ///
 /// Family-keyed by role string so multiple roles can theoretically have
@@ -112,29 +133,53 @@ class ShellNotifier extends Notifier<ShellState> {
     navKey.currentState?.popUntil((route) => route.isFirst);
   }
 
+  /// Time window during which a second back press on the home root
+  /// triggers app exit. Held in a static const so the
+  /// [SystemBackResult] enum docs can reference it without importing
+  /// material/duration.
+  static const Duration exitConfirmWindow = Duration(seconds: 2);
+
+  /// Timestamp of the most recent back-press while on the home tab
+  /// root; used to detect a "press again to exit" double-tap.
+  /// Reset to null after a successful exit OR when the user
+  /// navigates away (we don't bother resetting on tab change because
+  /// the timer is short and harmless).
+  DateTime? _exitTapAt;
+
   /// Wire-up for the system-back gesture / hardware back button.
   ///
-  /// Returns `true` when the back press has been consumed (caller
-  /// shouldn't pop further), `false` when the host should let the OS
-  /// handle it (typical: about to exit the app from Beranda root).
-  ///
   /// Behavior:
-  ///   1. If the active tab can pop, pop it.
-  ///   2. Else if active tab isn't Beranda, switch to Beranda.
-  ///   3. Else allow the OS to handle (return false → Android shows the
-  ///      "press back again to exit" gesture / iOS does nothing).
-  Future<bool> handleSystemBack() async {
+  ///   1. If the active tab can pop a route off its back-stack → pop
+  ///      one level. Returns [SystemBackResult.consumed].
+  ///   2. Else if active tab isn't Beranda → switch to Beranda.
+  ///      Returns [SystemBackResult.consumed].
+  ///   3. Else (we're on Beranda root) →
+  ///      a. First press inside the window → arm the timer, return
+  ///         [SystemBackResult.awaitingExitConfirm]. Host shows a
+  ///         "tekan kembali sekali lagi untuk keluar" snackbar.
+  ///      b. Second press within [exitConfirmWindow] → return
+  ///         [SystemBackResult.allowExit]; host calls
+  ///         `SystemNavigator.pop()` to exit cleanly.
+  Future<SystemBackResult> handleSystemBack() async {
     final navKey = state.navigatorKeys[state.activeTab];
     if (navKey?.currentState?.canPop() ?? false) {
       navKey!.currentState!.pop();
-      return true;
+      return SystemBackResult.consumed;
     }
     if (state.activeTab != ShellTab.home &&
         state.tabs.contains(ShellTab.home)) {
       setTab(ShellTab.home);
-      return true;
+      return SystemBackResult.consumed;
     }
-    return false;
+    // We're on the home tab root — drive the exit-confirm flow.
+    final now = DateTime.now();
+    final last = _exitTapAt;
+    if (last != null && now.difference(last) < exitConfirmWindow) {
+      _exitTapAt = null;
+      return SystemBackResult.allowExit;
+    }
+    _exitTapAt = now;
+    return SystemBackResult.awaitingExitConfirm;
   }
 
   /// Mint a fresh set of `GlobalKey<NavigatorState>` for every tab and

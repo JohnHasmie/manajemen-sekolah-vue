@@ -27,6 +27,7 @@
 // Per `P1_BottomNav_Spec.md` § 3.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/school_epoch_provider.dart';
 import 'package:manajemensekolah/core/shell/shell_controller.dart';
@@ -103,10 +104,33 @@ class _RoleShellState extends ConsumerState<RoleShell> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        final consumed = await notifier.handleSystemBack();
-        if (!consumed && context.mounted) {
-          // Allow the OS to handle exit when we have nothing left.
-          Navigator.of(context).maybePop();
+        final result = await notifier.handleSystemBack();
+        if (!context.mounted) return;
+        switch (result) {
+          case SystemBackResult.consumed:
+            // The shell already popped a route or switched tab. Nothing
+            // more to do.
+            break;
+          case SystemBackResult.awaitingExitConfirm:
+            // First back press on Beranda root — show the
+            // "tekan sekali lagi" hint. The shell's notifier has
+            // already armed the timer; a second back press inside
+            // the window will return [allowExit].
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(const SnackBar(
+                content: Text('Tekan kembali sekali lagi untuk keluar'),
+                duration: Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+              ));
+            break;
+          case SystemBackResult.allowExit:
+            // Second back press inside the window — actually exit.
+            // SystemNavigator.pop() is the Android-correct way to
+            // close the app cleanly; a no-op on iOS per HIG, which
+            // is the right behaviour there too.
+            await SystemNavigator.pop();
+            break;
         }
       },
       child: Scaffold(
@@ -129,18 +153,22 @@ class _RoleShellState extends ConsumerState<RoleShell> {
           ),
         ),
         bottomNavigationBar: _RoleBottomNav(
+          role: widget.role,
           tabs: state.tabs,
           activeIndex: state.activeIndex,
           accentColor: ColorUtils.getRoleColor(widget.role),
           onTap: (idx) {
             final tappedTab = state.tabs[idx];
-            // Convention: tapping the *active* tab pops that tab's
-            // stack to root. Tapping a non-active tab switches.
-            if (tappedTab == state.activeTab) {
-              notifier.popToRoot(tappedTab);
-            } else {
-              notifier.setTab(tappedTab);
-            }
+            // Bottom-nav contract: tapping a tab ALWAYS lands on
+            // that tab's root, whether it's currently active or
+            // sitting in the background with a deep stack. So we:
+            //   1. switch to the tab (no-op if already active)
+            //   2. pop its stack down to the initial route
+            // This is the "tap Beranda → see the dashboard" UX —
+            // the user shouldn't have to remember whether they
+            // last left the tab on a deep page.
+            notifier.setTab(tappedTab);
+            notifier.popToRoot(tappedTab);
           },
         ),
       ),
@@ -182,12 +210,14 @@ class _TabBranch extends StatelessWidget {
 /// [BottomNavigationBar] directly (vs. a custom widget) so theming and
 /// accessibility (focus, ripple, semantics labels) come for free.
 class _RoleBottomNav extends StatelessWidget {
+  final String role;
   final List<ShellTab> tabs;
   final int activeIndex;
   final Color accentColor;
   final ValueChanged<int> onTap;
 
   const _RoleBottomNav({
+    required this.role,
     required this.tabs,
     required this.activeIndex,
     required this.accentColor,
@@ -212,8 +242,13 @@ class _RoleBottomNav extends StatelessWidget {
         fontWeight: FontWeight.w500,
       ),
       items: [
+        // Use `labelFor(role)` so role-specific overrides (e.g. parent
+        // finance → "Tagihan") render in the bottom nav.
         for (final tab in tabs)
-          BottomNavigationBarItem(icon: Icon(tab.icon), label: tab.label),
+          BottomNavigationBarItem(
+            icon: Icon(tab.icon),
+            label: tab.labelFor(role),
+          ),
       ],
     );
   }
