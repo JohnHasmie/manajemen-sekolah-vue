@@ -168,24 +168,79 @@ mixin DashboardAccountSheetActionsMixin {
     );
   }
 
-  /// Build the school switch and settings section
+  /// Build the school-switch section. Per Phase-4 redesign the
+  /// "Pengaturan" button is no longer shown here — settings live on
+  /// the new full Profile page (reachable via [buildLihatProfilTile]).
+  /// Single-school users skip the school button entirely so the sheet
+  /// stays compact.
   Widget buildSchoolSettingsSection(
     DashboardState sheetState,
     BuildContext context,
   ) {
-    final items = <Widget>[];
-
-    if (sheetState.accessibleSchools.length > 1) {
-      items.addAll([
-        buildSwitchSchoolButton(context),
-        AppSpacing.v16,
-        const Divider(),
-        AppSpacing.v16,
-      ]);
+    if (sheetState.accessibleSchools.length <= 1) {
+      return const SizedBox.shrink();
     }
+    return Column(
+      children: [buildSwitchSchoolButton(context), AppSpacing.v16],
+    );
+  }
 
-    items.addAll([buildSettingsButton(context), AppSpacing.v16]);
-
-    return Column(children: items);
+  /// Tile that opens the full Profile page (Surface 1 in Phase-4).
+  /// Replaces the previous "Pengaturan" button — the user gets full
+  /// account detail + advanced settings on that page rather than a
+  /// truncated settings shortcut here.
+  Widget buildLihatProfilTile(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          AppNavigator.pop(context);
+          AppNavigator.push(context, const SettingsScreen());
+        },
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0F9FF),
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
+            border: Border.all(color: const Color(0xFFBAE6FD), width: 0.75),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: ColorUtils.brandAzure.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.person_outline,
+                  size: 18,
+                  color: ColorUtils.brandAzureDeep,
+                ),
+              ),
+              AppSpacing.h12,
+              const Expanded(
+                child: Text(
+                  'Lihat Profil Lengkap',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: ColorUtils.brandAzureDeep,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

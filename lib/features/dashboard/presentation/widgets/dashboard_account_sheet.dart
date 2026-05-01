@@ -133,12 +133,18 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
 
         // User info row
         buildUserInfoRow(context),
-        AppSpacing.v24,
+        AppSpacing.v16,
+
+        // Lihat Profil Lengkap → opens full Profile page (Phase-4
+        // surface 1). Replaces the dropped Pengaturan button —
+        // settings now live on the full profile page.
+        buildLihatProfilTile(context),
+        AppSpacing.v20,
 
         // Role switcher section
         buildRoleSwitcherSection(),
 
-        // School and settings section
+        // School switch (Pengaturan removed per Phase-4)
         buildSchoolSettingsSection(widget.state, context),
 
         // Logout button
