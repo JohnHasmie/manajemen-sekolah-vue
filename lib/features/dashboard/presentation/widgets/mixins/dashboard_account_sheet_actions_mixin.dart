@@ -7,8 +7,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/'
     'controllers/dashboard_controller.dart';
-import 'package:manajemensekolah/features/settings/presentation/screens/'
-    'settings_screen.dart';
+import 'package:manajemensekolah/features/account/presentation/screens/'
+    'profile_screen.dart';
 
 /// Mixin for action buttons: switch school, settings, logout.
 mixin DashboardAccountSheetActionsMixin {
@@ -72,7 +72,7 @@ mixin DashboardAccountSheetActionsMixin {
       child: InkWell(
         onTap: () {
           AppNavigator.pop(context);
-          AppNavigator.push(context, const SettingsScreen());
+          AppNavigator.push(context, const ProfileScreen());
         },
         borderRadius: const BorderRadius.all(Radius.circular(15)),
         child: Container(
@@ -195,7 +195,7 @@ mixin DashboardAccountSheetActionsMixin {
       child: InkWell(
         onTap: () {
           AppNavigator.pop(context);
-          AppNavigator.push(context, const SettingsScreen());
+          AppNavigator.push(context, const ProfileScreen());
         },
         borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: Container(
