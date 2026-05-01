@@ -79,47 +79,20 @@ class _LanguagePickerSheet extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
 
           // Title block
-          Stack(
-            alignment: Alignment.center,
+          Column(
             children: [
-              Column(
-                children: [
-                  Text(
-                    'Pilih Bahasa',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: ColorUtils.slate900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Berlaku di seluruh aplikasi',
-                    style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
-                  ),
-                ],
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: InkWell(
-                  onTap: () => Navigator.of(context).pop(),
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 16,
-                      color: ColorUtils.slate600,
-                    ),
-                  ),
+              Text(
+                'Pilih Bahasa',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: ColorUtils.slate900,
                 ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Berlaku di seluruh aplikasi',
+                style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
               ),
             ],
           ),

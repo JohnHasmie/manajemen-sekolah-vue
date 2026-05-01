@@ -24,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
 import 'package:manajemensekolah/core/widgets/pending_inbox_card.dart';
@@ -146,28 +147,22 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   String get _schoolName {
     final ud = widget.state.userData;
     final raw = (ud['school_name'] ?? ud['nama_sekolah'])?.toString().trim();
-    if (raw == null || raw.isEmpty) return 'Sekolah';
+    if (raw == null || raw.isEmpty) return AppLocalizations.dbSchool.tr;
     return raw;
   }
 
   String get _greetingSubtitle {
     final year = widget.state.userData['academic_year']?.toString();
-    if (year == null || year.isEmpty) return 'Guru';
-    return 'Guru · TP $year';
+    if (year == null || year.isEmpty) return AppLocalizations.dbTeacher.tr;
+    return '${AppLocalizations.dbTeacher.tr} · TP $year';
   }
 
   String get _userName {
     final raw = widget.state.userData['name']?.toString().trim();
-    return (raw == null || raw.isEmpty) ? 'Guru' : raw;
+    return (raw == null || raw.isEmpty) ? AppLocalizations.dbTeacher.tr : raw;
   }
 
-  String _greetingPart() {
-    final hour = DateTime.now().hour;
-    if (hour < 11) return 'pagi';
-    if (hour < 15) return 'siang';
-    if (hour < 18) return 'sore';
-    return 'malam';
-  }
+  // Removed greetingPart in favor of AppLocalizations.greeting
 
   // Count helpers — read from the live stats map with 0 fallback
   int get _studentCount => _asInt(widget.state.stats['student_count']);
@@ -183,6 +178,8 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   int get _pendingMaterials => _asInt(widget.state.stats['pending_materials']);
   int get _pendingActivities =>
       _asInt(widget.state.stats['pending_class_activities']);
+
+  // Derived counts used in the UI. Fallback to 0 if data is missing.
 
   static int _asInt(Object? v) {
     if (v == null) return 0;
@@ -253,6 +250,9 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch language provider to rebuild when language changes.
+    ref.watch(languageRiverpod);
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: AppRefreshIndicator(
@@ -337,7 +337,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Selamat ${_greetingPart()}',
+                              AppLocalizations.greeting(DateTime.now().hour),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
@@ -411,7 +411,6 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
 
   /// Build 3 KPI cards in a single horizontal row (unified for all roles).
   Widget _buildKpiCards() {
-    // Count helpers for caption values
     final approvedRppCount = _asInt(
       widget.state.stats['approved_lesson_plans'] ?? 0,
     );
@@ -419,27 +418,27 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     return HeroStatsRow(
       cards: [
         HeroStatsCard(
-          label: 'Siswa diampu',
+          label: AppLocalizations.dbStudentsTaught.tr,
           value: _formatNumber(_studentCount),
           icon: Icons.school_outlined,
           accentColor: widget.primaryColor,
-          caption: '${_classCount} kelas',
+          caption: '${_classCount} ${AppLocalizations.dbClasses.tr}',
           onTap: () {},
         ),
         HeroStatsCard(
-          label: 'Sesi hari ini',
+          label: AppLocalizations.dbSessionsToday.tr,
           value: _formatNumber(_sessionsTodayCount),
           icon: Icons.schedule_outlined,
           accentColor: ColorUtils.success600,
-          caption: 'jadwal',
+          caption: AppLocalizations.dbSchedule.tr,
           onTap: () {},
         ),
         HeroStatsCard(
-          label: 'RPP',
+          label: AppLocalizations.dbTeacher.tr == 'Guru' ? 'RPP' : 'Lesson Plans',
           value: _formatNumber(_totalRppCount),
           icon: Icons.description_outlined,
           accentColor: ColorUtils.warning600,
-          caption: '$approvedRppCount disetujui',
+          caption: '$approvedRppCount ${AppLocalizations.dbApproved.tr}',
           onTap: () {},
         ),
       ],
@@ -461,50 +460,50 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: PendingInboxCard(
-        title: 'Perlu perhatian',
+        title: AppLocalizations.dbAttentionRequired.tr,
         onSeeAll: _openLessonPlans,
-        seeAllLabel: 'Lihat semua',
-        totalLabel: 'total menunggu',
+        seeAllLabel: AppLocalizations.dbSeeAll.tr,
+        totalLabel: AppLocalizations.dbTotalWaiting.tr,
         accentColor: _teacherCobalt,
         entries: [
           PendingInboxEntry(
             icon: Icons.description_outlined,
-            label: 'RPP butuh revisi',
+            label: AppLocalizations.dbRppNeedsRevision.tr,
             count: _pendingRppRevisions,
             color: ColorUtils.warning600,
             subtitle: _pendingRppRevisions > 0
-                ? 'RPP memerlukan perbaikan'
-                : 'Semua RPP sudah sesuai',
+                ? AppLocalizations.dbRppNeedsFix.tr
+                : AppLocalizations.dbAllRppCompliant.tr,
             onTap: _openLessonPlans,
           ),
           PendingInboxEntry(
             icon: Icons.campaign_outlined,
-            label: 'Pengumuman draft',
+            label: AppLocalizations.dbAnnouncementDrafts.tr,
             count: _draftAnnouncements,
             color: ColorUtils.info600,
             subtitle: _draftAnnouncements > 0
-                ? 'Draft belum dipublikasikan'
-                : 'Tidak ada draft tersimpan',
+                ? AppLocalizations.dbDraftNotPublished.tr
+                : AppLocalizations.dbNoDraftsSaved.tr,
             onTap: _openAnnouncementDrafts,
           ),
           PendingInboxEntry(
             icon: Icons.article_outlined,
-            label: 'Materi belum terbit',
+            label: AppLocalizations.dbMaterialsNotPublished.tr,
             count: _pendingMaterials,
             color: ColorUtils.corporateBlue600,
             subtitle: _pendingMaterials > 0
-                ? 'Materi menunggu publikasi'
-                : 'Semua materi sudah terbit',
+                ? AppLocalizations.dbMaterialsWaitingPublication.tr
+                : AppLocalizations.dbAllMaterialsPublished.tr,
             onTap: _openMaterials,
           ),
           PendingInboxEntry(
             icon: Icons.event_outlined,
-            label: 'Aktivitas tertunda',
+            label: AppLocalizations.dbPendingActivities.tr,
             count: _pendingActivities,
             color: ColorUtils.success600,
             subtitle: _pendingActivities > 0
-                ? 'Kegiatan kelas menunggu'
-                : 'Tidak ada kegiatan tertunda',
+                ? AppLocalizations.dbClassActivitiesWaiting.tr
+                : AppLocalizations.dbNoPendingActivities.tr,
             onTap: _openActivities,
           ),
         ],
@@ -550,8 +549,8 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
 
   Widget _buildModulLain() {
     return ModulLainStrip(
-      title: 'Modul lain',
-      totalLabel: '7 modul',
+      title: AppLocalizations.dbOtherModules.tr,
+      totalLabel: '7 ${AppLocalizations.dbOtherModules.tr.toLowerCase()}',
       accentColor: _teacherCobalt,
       visibleItems: [
         ModulLainStripItem(
@@ -627,11 +626,11 @@ class _RealtimePill extends StatelessWidget {
     if (isFresh) {
       final hh = lastSync.hour.toString().padLeft(2, '0');
       final mm = lastSync.minute.toString().padLeft(2, '0');
-      return 'Terhubung realtime · $hh:$mm';
+      return '${AppLocalizations.dbConnectedRealtime.tr}$hh:$mm';
     }
     final mins = DateTime.now().difference(lastSync).inMinutes;
-    if (mins <= 0) return 'Mencoba menyambungkan ulang…';
-    return 'Terakhir diperbarui $mins menit lalu';
+    if (mins <= 0) return AppLocalizations.dbConnecting.tr;
+    return '${AppLocalizations.dbLastUpdated.tr} $mins ${AppLocalizations.dbMinsAgo.tr}';
   }
 }
 
@@ -639,7 +638,7 @@ class _PulsingDot extends StatefulWidget {
   final Color color;
   final bool animate;
 
-  const _PulsingDot({required this.color, required this.animate});
+  const _PulsingDot({required this.animate, required this.color});
 
   @override
   State<_PulsingDot> createState() => _PulsingDotState();

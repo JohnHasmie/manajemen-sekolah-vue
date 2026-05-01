@@ -49,6 +49,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
@@ -207,7 +209,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   String get _schoolName {
     final ud = widget.state.userData;
     final raw = (ud['school_name'] ?? ud['nama_sekolah'])?.toString().trim();
-    if (raw == null || raw.isEmpty) return 'Sekolah';
+    if (raw == null || raw.isEmpty) return AppLocalizations.dbSchool.tr;
     return raw;
   }
 
@@ -215,25 +217,19 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   /// Mirrors the SVG mockup line 33 format.
   String get _greetingSubtitle {
     final year = widget.state.userData['academic_year']?.toString();
-    if (year == null || year.isEmpty) return 'Admin Sekolah';
-    return 'Admin Sekolah · TP $year';
+    if (year == null || year.isEmpty) return AppLocalizations.dbAdminSchool.tr;
+    return '${AppLocalizations.dbAdminSchool.tr} · TP $year';
   }
 
   /// Full display name shown under the time-of-day greeting in the hero.
   String get _userName {
     final raw = widget.state.userData['name']?.toString().trim();
-    return (raw == null || raw.isEmpty) ? 'Admin Sekolah' : raw;
+    return (raw == null || raw.isEmpty) ? AppLocalizations.dbAdminSchool.tr : raw;
   }
 
   /// "pagi" / "siang" / "sore" / "malam" by local hour. Used for the
   /// Phase 3 hero greeting line "Selamat ${greetingPart()}".
-  String _greetingPart() {
-    final hour = DateTime.now().hour;
-    if (hour < 11) return 'pagi';
-    if (hour < 15) return 'siang';
-    if (hour < 18) return 'sore';
-    return 'malam';
-  }
+  // Removed greetingPart in favor of AppLocalizations.greeting
 
   /// Count helpers — read from the live stats map with 0 fallback so if the
   /// backend later adds these fields (see Phase 4 backlog) the UI picks
@@ -302,6 +298,9 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch language provider to rebuild when language changes.
+    ref.watch(languageRiverpod);
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: AppRefreshIndicator(
@@ -400,7 +399,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Selamat ${_greetingPart()}',
+                              AppLocalizations.greeting(DateTime.now().hour),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
@@ -455,7 +454,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
                     subtitle: _greetingSubtitle,
                     onTap: widget.onSchoolSwitchTap,
                     accentColor: _adminNavy,
-                    actionLabel: 'Ganti',
+                    actionLabel: AppLocalizations.dbSwitch.tr,
                     onDarkSurface: true,
                   ),
                 ],
@@ -488,7 +487,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
           // TODO(backend): wire stats['attendance_rate_today'] (today's
           // school-wide attendance %) and stats['attendance_delta_pct']
           // (signed delta vs yesterday). Until then both default to 0.
-          label: 'Kehadiran hari ini',
+          label: AppLocalizations.dbPresenceToday.tr,
           value: '$attendanceRate%',
           icon: Icons.check_rounded,
           accentColor: ColorUtils.success600,
@@ -504,11 +503,11 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
           onTap: _openSiswa,
         ),
         HeroStatsCard(
-          label: 'Siswa aktif',
+          label: AppLocalizations.dbActiveStudents.tr,
           value: _formatNumber(_asInt(stats['total_students'])),
           icon: Icons.people_outline_rounded,
           accentColor: ColorUtils.corporateBlue600,
-          caption: classCount > 0 ? '· $classCount kelas' : null,
+          caption: classCount > 0 ? '· $classCount ${AppLocalizations.dbClasses.tr}' : null,
           onTap: _openSiswa,
         ),
       ],
@@ -535,50 +534,50 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: PendingInboxCard(
-        title: 'Perlu perhatian',
+        title: AppLocalizations.dbAttentionRequired.tr,
         onSeeAll: _openFinanceVerification,
-        seeAllLabel: 'Lihat semua',
-        totalLabel: 'total menunggu',
+        seeAllLabel: AppLocalizations.dbSeeAll.tr,
+        totalLabel: AppLocalizations.dbTotalWaiting.tr,
         accentColor: _adminNavy,
         entries: [
           PendingInboxEntry(
             icon: Icons.receipt_long_outlined,
-            label: 'Verifikasi pembayaran',
+            label: AppLocalizations.dbPaymentVerification.tr,
             count: _pendingVerifyCount,
             color: ColorUtils.warning600,
             subtitle: _pendingVerifyCount > 0
-                ? 'Bukti transfer menunggu review'
-                : 'Tidak ada bukti transfer baru',
+                ? AppLocalizations.dbProofWaitingReview.tr
+                : AppLocalizations.dbNoNewProof.tr,
             onTap: _openFinanceVerification,
           ),
           PendingInboxEntry(
             icon: Icons.description_outlined,
-            label: 'RPP menunggu review',
+            label: AppLocalizations.dbRppWaitingReview.tr,
             count: _pendingRppCount,
             color: ColorUtils.corporateBlue600,
             subtitle: _pendingRppCount > 0
-                ? 'RPP guru menunggu persetujuan'
-                : 'Semua RPP sudah direview',
+                ? AppLocalizations.dbRppTeacherWaitingApproval.tr
+                : AppLocalizations.dbAllRppReviewed.tr,
             onTap: _openLessonPlanReview,
           ),
           PendingInboxEntry(
             icon: Icons.campaign_outlined,
-            label: 'Pengumuman draft',
+            label: AppLocalizations.dbAnnouncementDrafts.tr,
             count: _draftAnnouncementCount,
             color: ColorUtils.info600,
             subtitle: _draftAnnouncementCount > 0
-                ? 'Draft belum dipublikasikan'
-                : 'Tidak ada draft tersimpan',
+                ? AppLocalizations.dbDraftNotPublished.tr
+                : AppLocalizations.dbNoDraftsSaved.tr,
             onTap: _openAnnouncementDrafts,
           ),
           PendingInboxEntry(
             icon: Icons.warning_amber_outlined,
-            label: 'Tagihan menunggak',
+            label: AppLocalizations.dbOverdueBills.tr,
             count: _overdueBillCount,
             color: ColorUtils.error600,
             subtitle: _overdueBillCount > 0
-                ? 'Jatuh tempo terlewat'
-                : 'Tidak ada tunggakan aktif',
+                ? AppLocalizations.dbDuePassed.tr
+                : AppLocalizations.dbNoActiveArrears.tr,
             onTap: _openFinanceClassReport,
           ),
         ],
@@ -594,24 +593,24 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
       actions: [
         QuickAction(
           icon: Icons.people_alt_outlined,
-          label: 'Siswa',
+          label: AppLocalizations.students.tr,
           color: ColorUtils.corporateBlue600,
-          caption: 'Kelola data',
+          caption: AppLocalizations.dbDataManagement.tr,
           onTap: _openSiswa,
         ),
         QuickAction(
           icon: Icons.account_balance_wallet_outlined,
-          label: 'Keuangan',
+          label: AppLocalizations.finance.tr,
           color: ColorUtils.success600,
-          caption: 'Jenis & tagihan',
+          caption: AppLocalizations.dbTypesAndBills.tr,
           showBadge: _pendingVerifyCount > 0,
           onTap: _openKeuangan,
         ),
         QuickAction(
           icon: Icons.assignment_turned_in_outlined,
-          label: 'Laporan',
+          label: AppLocalizations.reports.tr,
           color: ColorUtils.warning600,
-          caption: 'Nilai & raport',
+          caption: AppLocalizations.dbGradesAndReportCards.tr,
           onTap: _openLaporanRaport,
         ),
         QuickAction(
@@ -619,9 +618,9 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
           // Shortened from "Pengaturan" → "Setelan" so the label fits the
           // 4-column tile width on Samsung portrait without wrapping to
           // two lines ("Pengatura\nn").
-          label: 'Setelan',
+          label: AppLocalizations.settings.tr,
           color: ColorUtils.slate700,
-          caption: 'Sekolah',
+          caption: AppLocalizations.dbSchool.tr,
           onTap: _openPengaturan,
         ),
       ],
@@ -643,13 +642,14 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
       AppNavigator.push(context, const AdminClassActivityScreen());
 
   Widget _buildModulLain() {
+    ref.watch(languageRiverpod);
     return ModulLainStrip(
-      title: 'Modul lain',
-      totalLabel: '8 modul',
+      title: AppLocalizations.dbOtherModules.tr,
+      totalLabel: '8 ${AppLocalizations.dbOtherModules.tr.toLowerCase()}',
       accentColor: _adminNavy,
       visibleItems: [
         ModulLainStripItem(
-          label: 'Jadwal',
+          label: AppLocalizations.dbSchedule.tr,
           icon: Icons.schedule_outlined,
           onTap: _openJadwal,
         ),
@@ -740,11 +740,11 @@ class _RealtimePill extends StatelessWidget {
     if (isFresh) {
       final hh = lastSync.hour.toString().padLeft(2, '0');
       final mm = lastSync.minute.toString().padLeft(2, '0');
-      return 'Terhubung realtime · $hh:$mm';
+      return '${AppLocalizations.dbConnectedRealtime.tr}$hh:$mm';
     }
     final mins = DateTime.now().difference(lastSync).inMinutes;
-    if (mins <= 0) return 'Mencoba menyambungkan ulang…';
-    return 'Terakhir diperbarui $mins menit lalu';
+    if (mins <= 0) return AppLocalizations.dbConnecting.tr;
+    return '${AppLocalizations.dbLastUpdated.tr} $mins ${AppLocalizations.dbMinsAgo.tr}';
   }
 }
 

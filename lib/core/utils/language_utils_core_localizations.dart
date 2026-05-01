@@ -364,6 +364,34 @@ const _kNoStudentsInClass = {
 ///
 /// Usage: `AppLocalizations.welcome.tr` (via the [LocalizedString]
 /// extension).
+const _kPdAcademic = {'en': 'Academic', 'id': 'Akademik'};
+const _kPdPayment = {'en': 'Payment', 'id': 'Pembayaran'};
+const _kPdPresence = {'en': 'Presence', 'id': 'Absensi'};
+const _kPdTasks = {'en': 'Tasks', 'id': 'Tugas'};
+const _kPdBilling = {'en': 'Billing', 'id': 'Tagihan'};
+const _kPdAverage = {'en': 'Average', 'id': 'Rata-rata'};
+const _kPdThisMonth = {'en': 'this month', 'id': 'bulan ini'};
+const _kPdWaiting = {'en': 'waiting', 'id': 'menunggu'};
+const _kPdNotCollected = {'en': 'not collected', 'id': 'belum dikumpul'};
+const _kPdTotalTasks = {'en': 'total tasks', 'id': 'total tugas'};
+const _kPdNoArrears = {'en': 'no arrears', 'id': 'tidak ada tunggakan'};
+const _kPdActiveSemester = {'en': 'active semester', 'id': 'semester aktif'};
+const _kPdSubjectsCount = {'en': 'subjects', 'id': 'mapel'};
+const _kPdLastSemester = {'en': 'last semester', 'id': 'sem lalu'};
+const _kPdNoDataYet = {'en': 'no data yet', 'id': 'belum ada'};
+const _kDbClasses = {'en': 'classes', 'id': 'kelas'};
+const _kDbSchedule = {'en': 'schedule', 'id': 'jadwal'};
+const _kDbApproved = {'en': 'approved', 'id': 'disetujui'};
+
+const _kViewFullProfile = {'en': 'View Full Profile', 'id': 'Lihat Profil Lengkap'};
+const _kMyAccess = {'en': 'MY ACCESS', 'id': 'AKSES SAYA'};
+const _kActiveRole = {'en': 'Active Role', 'id': 'Peran aktif'};
+const _kActiveSchool = {'en': 'Active School', 'id': 'Sekolah aktif'};
+const _kLanguage = {'en': 'Language', 'id': 'Bahasa'};
+const _kChange = {'en': 'Change', 'id': 'Ubah'};
+const _kSwitchAction = {'en': 'Switch ▾', 'id': 'Ganti ▾'};
+const _kChangeAction = {'en': 'Change ▾', 'id': 'Ubah ▾'};
+
 class AppLocalizations {
   static Map<String, String> get appTitle => _kAppTitle;
   static Map<String, String> get editClass => _kEditClass;
@@ -664,4 +692,88 @@ class AppLocalizations {
   static Map<String, String> get ok => _kOk;
   static Map<String, String> get studentReport => _kStudentReport;
   static Map<String, String> get presenceReport => _kPresenceReport;
+  static Map<String, String> get pdPresence => _kPdPresence;
+  static Map<String, String> get pdTasks => _kPdTasks;
+  static Map<String, String> get pdBilling => _kPdBilling;
+  static Map<String, String> get pdAverage => _kPdAverage;
+  static Map<String, String> get pdThisMonth => _kPdThisMonth;
+  static Map<String, String> get pdWaiting => _kPdWaiting;
+  static Map<String, String> get pdNotCollected => _kPdNotCollected;
+  static Map<String, String> get pdTotalTasks => _kPdTotalTasks;
+  static Map<String, String> get pdNoArrears => _kPdNoArrears;
+  static Map<String, String> get pdActiveSemester => _kPdActiveSemester;
+  static Map<String, String> get pdSubjectsCount => _kPdSubjectsCount;
+  static Map<String, String> get pdLastSemester => _kPdLastSemester;
+  static Map<String, String> get pdNoDataYet => _kPdNoDataYet;
+  static Map<String, String> get pdSick => _kPdSick;
+  static Map<String, String> get pdPermission => _kPdPermission;
+  static Map<String, String> get pdAlpha => _kPdAlpha;
+  static Map<String, String> get pdVerified => _kPdVerified;
+  static Map<String, String> get grades => _kGrades;
+  static Map<String, String> get dbClasses => _kDbClasses;
+  static Map<String, String> get dbSchedule => _kDbSchedule;
+  static Map<String, String> get dbApproved => _kDbApproved;
+  static Map<String, String> get pdDue => _kPdDue;
+
+  static Map<String, String> get dbConnectedRealtime => _kDbConnectedRealtime;
+  static Map<String, String> get dbLastUpdated => _kDbLastUpdated;
+  static Map<String, String> get dbMinsAgo => _kDbMinsAgo;
+  static Map<String, String> get dbConnecting => _kDbConnecting;
+  static Map<String, String> get dbSchool => _kDbSchool;
+  static Map<String, String> get dbAdminSchool => _kDbAdminSchool;
+  static Map<String, String> get dbTeacher => _kDbTeacher;
+  static Map<String, String> get dbPresenceToday => _kDbPresenceToday;
+  static Map<String, String> get dbActiveStudents => _kDbActiveStudents;
+  static Map<String, String> get dbStudentsTaught => _kDbStudentsTaught;
+  static Map<String, String> get dbSessionsToday => _kDbSessionsToday;
+  static Map<String, String> get dbTotalWaiting => _kDbTotalWaiting;
+  static Map<String, String> get dbSeeAll => _kDbSeeAll;
+  static Map<String, String> get dbAttentionRequired => _kDbAttentionRequired;
+  static Map<String, String> get dbPaymentVerification => _kDbPaymentVerification;
+  static Map<String, String> get dbProofWaitingReview => _kDbProofWaitingReview;
+  static Map<String, String> get dbNoNewProof => _kDbNoNewProof;
+  static Map<String, String> get dbRppWaitingReview => _kDbRppWaitingReview;
+  static Map<String, String> get dbRppTeacherWaitingApproval => _kDbRppTeacherWaitingApproval;
+  static Map<String, String> get dbAllRppReviewed => _kDbAllRppReviewed;
+  static Map<String, String> get dbAnnouncementDrafts => _kDbAnnouncementDrafts;
+  static Map<String, String> get dbDraftNotPublished => _kDbDraftNotPublished;
+  static Map<String, String> get dbNoDraftsSaved => _kDbNoDraftsSaved;
+  static Map<String, String> get dbOverdueBills => _kDbOverdueBills;
+  static Map<String, String> get dbDuePassed => _kDbDuePassed;
+  static Map<String, String> get dbNoActiveArrears => _kDbNoActiveArrears;
+  static Map<String, String> get dbRppNeedsRevision => _kDbRppNeedsRevision;
+  static Map<String, String> get dbRppNeedsFix => _kDbRppNeedsFix;
+  static Map<String, String> get dbAllRppCompliant => _kDbAllRppCompliant;
+  static Map<String, String> get dbMaterialsNotPublished => _kDbMaterialsNotPublished;
+  static Map<String, String> get dbMaterialsWaitingPublication => _kDbMaterialsWaitingPublication;
+  static Map<String, String> get dbAllMaterialsPublished => _kDbAllMaterialsPublished;
+  static Map<String, String> get dbPendingActivities => _kDbPendingActivities;
+  static Map<String, String> get dbClassActivitiesWaiting => _kDbClassActivitiesWaiting;
+  static Map<String, String> get dbNoPendingActivities => _kDbNoPendingActivities;
+  static Map<String, String> get dbDataManagement => _kDbDataManagement;
+  static Map<String, String> get dbTypesAndBills => _kDbTypesAndBills;
+  static Map<String, String> get dbGradesAndReportCards => _kDbGradesAndReportCards;
+  static Map<String, String> get dbOtherModules => _kDbOtherModules;
+  static Map<String, String> get dbSwitch => _kDbSwitch;
+
+  static Map<String, String> get pdAcademic => _kPdAcademic;
+  static Map<String, String> get pdPayment => _kPdPayment;
+  static Map<String, String> get pdParent => _kPdParent;
+  
+  static Map<String, String> get viewFullProfile => _kViewFullProfile;
+  static Map<String, String> get myAccess => _kMyAccess;
+  static Map<String, String> get activeRole => _kActiveRole;
+  static Map<String, String> get activeSchool => _kActiveSchool;
+  static Map<String, String> get language => _kLanguage;
+  static Map<String, String> get change => _kChange;
+  static Map<String, String> get switchAction => _kSwitchAction;
+  static Map<String, String> get changeAction => _kChangeAction;
+
+  static String greeting(int hour) {
+    if (hour < 11) return welcome.tr; // "Selamat datang," fallback if specific missing
+    if (hour < 11) return goodMorning.tr;
+    if (hour < 15) return goodAfternoon.tr;
+    if (hour < 18) return _kDbGoodSore.tr;
+    return goodEvening.tr;
+  }
 }

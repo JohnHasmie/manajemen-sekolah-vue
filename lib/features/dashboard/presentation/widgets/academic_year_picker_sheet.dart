@@ -50,26 +50,28 @@ Future<String?> showAcademicYearPickerSheet({
     isScrollControlled: true,
     useSafeArea: true,
     builder: (sheetCtx) => _AcademicYearPickerSheet(
-      ref: ref,
       currentSemesterLabel: currentSemesterLabel,
     ),
   );
 }
 
-class _AcademicYearPickerSheet extends StatelessWidget {
-  final WidgetRef ref;
+class _AcademicYearPickerSheet extends ConsumerWidget {
   final String? currentSemesterLabel;
 
   const _AcademicYearPickerSheet({
-    required this.ref,
     required this.currentSemesterLabel,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final yearProvider = ref.watch(academicYearRiverpod);
-    final years = yearProvider.academicYears;
+    // Sort years ascending (e.g. 2023/2024 comes before 2024/2025).
+    final years = List<dynamic>.from(yearProvider.academicYears);
+    years.sort((a, b) => (a['year'] ?? '').toString().compareTo((b['year'] ?? '').toString()));
+    
     final selected = yearProvider.selectedAcademicYear;
+    final selectedId = selected?['id']?.toString();
+    final selectedIndex = years.indexWhere((y) => y['id']?.toString() == selectedId);
 
     return Container(
       decoration: const BoxDecoration(
@@ -137,9 +139,11 @@ class _AcademicYearPickerSheet extends StatelessWidget {
                     semesterLabel: currentSemesterLabel,
                   );
                 }
+                final isNext = i > selectedIndex && selectedIndex != -1;
                 return _CollapsedYearTile(
                   yearLabel: yearLabel,
-                  onTap: () => _onPickYear(context, id),
+                  label: isNext ? 'Selanjutnya' : 'Sebelumnya',
+                  onTap: () => _onPickYear(context, ref, id),
                 );
               },
             ),
@@ -148,11 +152,6 @@ class _AcademicYearPickerSheet extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Hanya admin yang dapat menambah tahun ajaran baru.',
-            style: TextStyle(fontSize: 9.5, color: ColorUtils.slate500),
-            textAlign: TextAlign.center,
-          ),
           const SizedBox(height: AppSpacing.md),
 
           // Tutup button
@@ -185,7 +184,11 @@ class _AcademicYearPickerSheet extends StatelessWidget {
   /// Handle picking a previous (non-active) year. Sets the selection
   /// in the provider, kicks off a dashboard reload, and pops the sheet
   /// so the user is back on the surface that opened it.
-  Future<void> _onPickYear(BuildContext context, String yearId) async {
+  Future<void> _onPickYear(
+    BuildContext context,
+    WidgetRef ref,
+    String yearId,
+  ) async {
     if (yearId.isEmpty) return;
     final notifier = ref.read(academicYearRiverpod);
     notifier.setSelectedYear(yearId);
@@ -346,9 +349,14 @@ class _SemesterChip extends StatelessWidget {
 /// A previous (non-active) year. Tap to switch to it.
 class _CollapsedYearTile extends StatelessWidget {
   final String yearLabel;
+  final String label;
   final VoidCallback onTap;
 
-  const _CollapsedYearTile({required this.yearLabel, required this.onTap});
+  const _CollapsedYearTile({
+    required this.yearLabel,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -375,7 +383,7 @@ class _CollapsedYearTile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Sebelumnya',
+                      label,
                       style: TextStyle(
                         fontSize: 9,
                         color: ColorUtils.slate500,

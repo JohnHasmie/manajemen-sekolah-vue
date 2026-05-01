@@ -152,7 +152,7 @@ mixin DashboardAccountSheetActionsMixin {
                   AppSpacing.h8,
                   Text(
                     isLoggingOut
-                        ? 'Logging out...'
+                        ? '${AppLocalizations.logout.tr}...'
                         : AppLocalizations.logout.tr,
                     style: const TextStyle(
                       color: Colors.redAccent,
@@ -222,10 +222,10 @@ mixin DashboardAccountSheetActionsMixin {
                 ),
               ),
               AppSpacing.h12,
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Lihat Profil Lengkap',
-                  style: TextStyle(
+                  AppLocalizations.viewFullProfile.tr,
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),

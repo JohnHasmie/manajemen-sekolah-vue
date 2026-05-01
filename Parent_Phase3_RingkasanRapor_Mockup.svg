@@ -1,0 +1,138 @@
+<svg viewBox="0 0 400 960" xmlns="http://www.w3.org/2000/svg" role="img" style="display:block;margin:0 auto;max-width:400px;width:100%;background:#F8FAFC;border-radius:24px;border:0.5px solid rgba(0,0,0,0.08)">
+  <title>Parent Ringkasan Rapor (Report card summary) - Phase 3</title>
+  <desc>Per-child semester report card summary. Azure gradient hero with child selector chips and a semester chip, hero KPI strip (Rata-rata, Peringkat, Kehadiran), then subject grade cards each color-coded by predicate.</desc>
+  <defs>
+    <linearGradient id="azR" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#21AFE6"/>
+      <stop offset="100%" stop-color="#1A8FBE"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="400" height="288" fill="url(#azR)"/>
+  <text x="24" y="28" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.7" font-weight="500">08:14</text>
+  <g transform="translate(352,22)" fill="#FFFFFF" opacity="0.8">
+    <rect x="0" y="0" width="14" height="9" rx="2"/><rect x="16" y="2" width="10" height="5" rx="1"/>
+  </g>
+  <rect x="20" y="58" width="36" height="36" rx="10" fill="#FFFFFF" fill-opacity="0.18"/>
+  <path d="M37 70 l-6 6 l6 6" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="68" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.78" font-weight="500">Akademik · Anak</text>
+  <text x="68" y="96" font-family="system-ui,sans-serif" font-size="20" fill="#FFFFFF" font-weight="700">Ringkasan Rapor</text>
+  <rect x="306" y="60" width="78" height="36" rx="12" fill="#FFFFFF" fill-opacity="0.18"/>
+  <g transform="translate(316,72)" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 0v3M11 0v3M0 6h14M0 3a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2H2a2 2 0 0 1 -2 -2z"/>
+  </g>
+  <text x="356" y="83" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="600" text-anchor="middle">Cetak</text>
+  <circle cx="31" cy="120" r="3" fill="#4ADE80"/>
+  <text x="40" y="123" font-family="system-ui,sans-serif" font-size="10.5" fill="#FFFFFF" opacity="0.78" font-weight="500">Terhubung realtime · 08:14</text>
+  <text x="20" y="156" font-family="system-ui,sans-serif" font-size="10.5" fill="#FFFFFF" opacity="0.7" font-weight="600" letter-spacing="0.6">PILIH ANAK</text>
+  <rect x="20" y="166" width="120" height="46" rx="14" fill="#FFFFFF"/>
+  <circle cx="44" cy="189" r="14" fill="#1A8FBE"/>
+  <text x="44" y="194" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="700" text-anchor="middle">RA</text>
+  <text x="64" y="186" font-family="system-ui,sans-serif" font-size="12" fill="#0F172A" font-weight="700">Rania</text>
+  <text x="64" y="200" font-family="system-ui,sans-serif" font-size="10" fill="#64748B" font-weight="500">Kelas 8B</text>
+  <rect x="148" y="166" width="120" height="46" rx="14" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.28"/>
+  <circle cx="172" cy="189" r="14" fill="#FFFFFF" fill-opacity="0.28"/>
+  <text x="172" y="194" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="700" text-anchor="middle">FA</text>
+  <text x="192" y="186" font-family="system-ui,sans-serif" font-size="12" fill="#FFFFFF" font-weight="700">Faiz</text>
+  <text x="192" y="200" font-family="system-ui,sans-serif" font-size="10" fill="#FFFFFF" opacity="0.78" font-weight="500">Kelas 5A</text>
+  <rect x="276" y="166" width="120" height="46" rx="14" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.28"/>
+  <circle cx="300" cy="189" r="14" fill="#FFFFFF" fill-opacity="0.28"/>
+  <text x="300" y="194" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" font-weight="700" text-anchor="middle">NU</text>
+  <text x="320" y="186" font-family="system-ui,sans-serif" font-size="12" fill="#FFFFFF" font-weight="700">Nuha</text>
+  <text x="320" y="200" font-family="system-ui,sans-serif" font-size="10" fill="#FFFFFF" opacity="0.78" font-weight="500">Kelas 2C</text>
+  <rect x="20" y="232" width="172" height="36" rx="12" fill="#FFFFFF" fill-opacity="0.18"/>
+  <text x="106" y="254" font-family="system-ui,sans-serif" font-size="12.5" fill="#FFFFFF" font-weight="600" text-anchor="middle">Sem. Ganjil 2025/2026</text>
+  <path d="M180 247 l5 5 l5 -5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="200" y="232" width="80" height="36" rx="12" fill="#FFFFFF" fill-opacity="0.14" stroke="#FFFFFF" stroke-opacity="0.28"/>
+  <text x="240" y="254" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.86" font-weight="600" text-anchor="middle">UTS</text>
+  <rect x="288" y="232" width="80" height="36" rx="12" fill="#FFFFFF" fill-opacity="0.14" stroke="#FFFFFF" stroke-opacity="0.28"/>
+  <text x="328" y="254" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.86" font-weight="600" text-anchor="middle">UAS</text>
+
+  <rect x="16" y="278" width="368" height="92" rx="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <text x="78" y="306" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Rata-rata</text>
+  <text x="78" y="332" font-family="system-ui,sans-serif" font-size="22" fill="#0F172A" font-weight="800" text-anchor="middle">87,4</text>
+  <rect x="50" y="342" width="56" height="18" rx="9" fill="#DCFCE7"/>
+  <text x="78" y="356" font-family="system-ui,sans-serif" font-size="10" fill="#15803D" font-weight="700" text-anchor="middle">Sangat Baik</text>
+  <line x1="138" y1="298" x2="138" y2="350" stroke="#F1F5F9" stroke-width="1"/>
+  <text x="200" y="306" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Peringkat</text>
+  <text x="200" y="332" font-family="system-ui,sans-serif" font-size="22" fill="#0F172A" font-weight="800" text-anchor="middle">5</text>
+  <text x="220" y="332" font-family="system-ui,sans-serif" font-size="11" fill="#94A3B8" font-weight="500">/ 32</text>
+  <rect x="172" y="342" width="56" height="18" rx="9" fill="#DBEAFE"/>
+  <text x="200" y="356" font-family="system-ui,sans-serif" font-size="10" fill="#1D4ED8" font-weight="700" text-anchor="middle">Atas rata-rata</text>
+  <line x1="260" y1="298" x2="260" y2="350" stroke="#F1F5F9" stroke-width="1"/>
+  <text x="322" y="306" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="middle">Kehadiran</text>
+  <text x="322" y="332" font-family="system-ui,sans-serif" font-size="22" fill="#0F172A" font-weight="800" text-anchor="middle">96%</text>
+  <rect x="294" y="342" width="56" height="18" rx="9" fill="#DCFCE7"/>
+  <text x="322" y="356" font-family="system-ui,sans-serif" font-size="10" fill="#15803D" font-weight="700" text-anchor="middle">+1,4%</text>
+
+  <text x="24" y="402" font-family="system-ui,sans-serif" font-size="14" fill="#0F172A" font-weight="700">Nilai per mata pelajaran</text>
+  <text x="376" y="402" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500" text-anchor="end">10 mapel</text>
+
+  <rect x="16" y="414" width="368" height="64" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="426" width="40" height="40" rx="12" fill="#DCFCE7"/>
+  <text x="48" y="453" font-family="system-ui,sans-serif" font-size="20" fill="#15803D" font-weight="800" text-anchor="middle">A</text>
+  <text x="80" y="438" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">Matematika</text>
+  <text x="80" y="456" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Bu Sari · Sangat Baik</text>
+  <text x="368" y="438" font-family="system-ui,sans-serif" font-size="20" fill="#0F172A" font-weight="800" text-anchor="end">93</text>
+  <text x="368" y="458" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="end">KKM 75</text>
+
+  <rect x="16" y="486" width="368" height="64" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="498" width="40" height="40" rx="12" fill="#DCFCE7"/>
+  <text x="48" y="525" font-family="system-ui,sans-serif" font-size="20" fill="#15803D" font-weight="800" text-anchor="middle">A</text>
+  <text x="80" y="510" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">B. Indonesia</text>
+  <text x="80" y="528" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Bu Rini · Sangat Baik</text>
+  <text x="368" y="510" font-family="system-ui,sans-serif" font-size="20" fill="#0F172A" font-weight="800" text-anchor="end">90</text>
+  <text x="368" y="530" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="end">KKM 75</text>
+
+  <rect x="16" y="558" width="368" height="64" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="570" width="40" height="40" rx="12" fill="#DBEAFE"/>
+  <text x="48" y="597" font-family="system-ui,sans-serif" font-size="20" fill="#1D4ED8" font-weight="800" text-anchor="middle">B</text>
+  <text x="80" y="582" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">IPA Terpadu</text>
+  <text x="80" y="600" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Bu Sari · Baik</text>
+  <text x="368" y="582" font-family="system-ui,sans-serif" font-size="20" fill="#0F172A" font-weight="800" text-anchor="end">85</text>
+  <text x="368" y="602" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="end">KKM 75</text>
+
+  <rect x="16" y="630" width="368" height="64" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="642" width="40" height="40" rx="12" fill="#DBEAFE"/>
+  <text x="48" y="669" font-family="system-ui,sans-serif" font-size="20" fill="#1D4ED8" font-weight="800" text-anchor="middle">B</text>
+  <text x="80" y="654" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">IPS Terpadu</text>
+  <text x="80" y="672" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Pak Hadi · Baik</text>
+  <text x="368" y="654" font-family="system-ui,sans-serif" font-size="20" fill="#0F172A" font-weight="800" text-anchor="end">82</text>
+  <text x="368" y="674" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="end">KKM 75</text>
+
+  <rect x="16" y="702" width="368" height="64" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <rect x="28" y="714" width="40" height="40" rx="12" fill="#FEF3C7"/>
+  <text x="48" y="741" font-family="system-ui,sans-serif" font-size="20" fill="#B45309" font-weight="800" text-anchor="middle">C</text>
+  <text x="80" y="726" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="700">B. Inggris</text>
+  <text x="80" y="744" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="500">Mr. John · Cukup</text>
+  <text x="368" y="726" font-family="system-ui,sans-serif" font-size="20" fill="#0F172A" font-weight="800" text-anchor="end">76</text>
+  <text x="368" y="746" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="end">KKM 75</text>
+
+  <rect x="16" y="778" width="368" height="48" rx="14" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="1"/>
+  <g transform="translate(116,794)" fill="none" stroke="#1A8FBE" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 2h12l4 4v12H2z"/><path d="M5 9h6M5 12h4"/>
+  </g>
+  <text x="200" y="807" font-family="system-ui,sans-serif" font-size="13" fill="#1A8FBE" font-weight="700" text-anchor="middle">Lihat rapor lengkap (10 mapel) →</text>
+
+  <rect x="0" y="876" width="400" height="84" fill="#FFFFFF"/>
+  <line x1="0" y1="876" x2="400" y2="876" stroke="#E2E8F0" stroke-width="1"/>
+  <g transform="translate(40,894)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 12 L12 2 L22 12 v10 a2 2 0 0 1 -2 2 H4 a2 2 0 0 1 -2 -2 z"/>
+  </g>
+  <text x="50" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Beranda</text>
+  <g transform="translate(120,894)" fill="none" stroke="#1A8FBE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 6 L12 0 L24 6 L12 12 z"/><path d="M5 9 v6 c0 2 3 3 7 3 s7 -1 7 -3 v-6"/>
+  </g>
+  <text x="132" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#1A8FBE" font-weight="700" text-anchor="middle">Akademik</text>
+  <g transform="translate(200,894)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0.5" y="2" width="22" height="20" rx="3"/><path d="M0 8h23M6 0v4M17 0v4"/><path d="M7 14l3 3l6 -7"/>
+  </g>
+  <text x="212" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Kehadiran</text>
+  <g transform="translate(280,894)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="1" y="3" width="22" height="18" rx="3"/><path d="M1 9h22"/><circle cx="18" cy="15" r="2"/>
+  </g>
+  <text x="292" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Keuangan</text>
+  <g transform="translate(360,898)" fill="none" stroke="#94A3B8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="7" r="4"/><path d="M2 20c1.5-4 5.5-6 9-6s7.5 2 9 6"/>
+  </g>
+  <text x="371" y="934" font-family="system-ui,sans-serif" font-size="10" fill="#94A3B8" font-weight="500" text-anchor="middle">Profil</text>
+</svg>

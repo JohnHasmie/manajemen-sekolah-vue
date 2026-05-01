@@ -52,9 +52,8 @@ class AcademicYearChip extends StatelessWidget {
         onTap: onTap,
         borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: Container(
-          width: width,
-          height: 58,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.28),
             borderRadius: const BorderRadius.all(Radius.circular(14)),
@@ -63,59 +62,44 @@ class AcademicYearChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Mini calendar icon
-              SizedBox(
-                width: 22,
-                height: 22,
-                child: CustomPaint(painter: _CalendarIconPainter()),
-              ),
-              const SizedBox(width: 8),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'TAHUN AJARAN',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
+
                     Text(
                       yearLabel.isEmpty ? '—' : yearLabel,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
                     if (semesterLabel != null) ...[
-                      const SizedBox(height: 1),
+                      const SizedBox(height: 2),
                       Text(
                         '${semesterLabel!} ▾',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 9.5,
-                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.72),
                         ),
                       ),
                     ] else ...[
-                      const SizedBox(height: 1),
+                      const SizedBox(height: 2),
                       Text(
                         '▾',
                         style: TextStyle(
-                          fontSize: 9.5,
-                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.72),
                         ),
                       ),
                     ],
@@ -130,40 +114,4 @@ class AcademicYearChip extends StatelessWidget {
   }
 }
 
-/// Custom mini-calendar icon — drawn rather than using
-/// `Icons.calendar_today` so the stroke matches the hero typography.
-class _CalendarIconPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.95)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    final fill = Paint()
-      ..color = Colors.white.withValues(alpha: 0.95)
-      ..style = PaintingStyle.fill;
 
-    // Body
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 4, size.width, size.height - 4),
-        const Radius.circular(3),
-      ),
-      paint,
-    );
-    // Hangers (top)
-    canvas.drawRect(Rect.fromLTWH(4, 0, 2, 5), fill);
-    canvas.drawRect(Rect.fromLTWH(size.width - 6, 0, 2, 5), fill);
-    // Header line
-    canvas.drawLine(
-      Offset(0, 9),
-      Offset(size.width, 9),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.95)
-        ..strokeWidth = 1,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}

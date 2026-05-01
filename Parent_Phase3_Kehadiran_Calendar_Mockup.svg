@@ -1,0 +1,110 @@
+<svg viewBox="0 0 400 960" xmlns="http://www.w3.org/2000/svg" role="img" style="display:block;margin:0 auto;max-width:400px;width:100%;background:#F8FAFC;border-radius:24px;border:0.5px solid rgba(0,0,0,0.08)">
+  <title>Parent Kehadiran calendar full-month view</title>
+  <desc>Phase-3 calendar view: azure hero with month name and prev/next chevrons, 4 mini KPI tiles (Hadir/Izin/Sakit/Alpha counts), 7-column SEN-MIN grid with each school day color-coded (green=hadir, amber=terlambat/sakit, cyan=izin, red=alpha, slate=weekend or outside-month), and an inline detail panel for the selected day at the bottom.</desc>
+  <defs>
+    <linearGradient id="azureGradCal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#21AFE6"/>
+      <stop offset="100%" stop-color="#1A8FBE"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="400" height="208" fill="url(#azureGradCal)"/>
+  <text x="24" y="28" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.7" font-weight="500">08:14</text>
+  <g transform="translate(352,22)" fill="#FFFFFF" opacity="0.8">
+    <rect x="0" y="0" width="14" height="9" rx="2"/>
+    <rect x="16" y="2" width="10" height="5" rx="1"/>
+  </g>
+  <rect x="20" y="58" width="36" height="36" rx="10" fill="#FFFFFF" fill-opacity="0.18"/>
+  <path d="M37 70 l-6 6 l6 6" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="68" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#FFFFFF" opacity="0.78" font-weight="500">Kehadiran · Rania Ahmad</text>
+  <text x="68" y="96" font-family="system-ui,sans-serif" font-size="20" fill="#FFFFFF" font-weight="700" letter-spacing="0.1">Oktober 2025</text>
+  <rect x="306" y="60" width="36" height="36" rx="10" fill="#FFFFFF" fill-opacity="0.18"/>
+  <path d="M321 76 l-5 -5 l5 -5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="348" y="60" width="36" height="36" rx="10" fill="#FFFFFF" fill-opacity="0.18"/>
+  <path d="M363 76 l5 -5 l-5 -5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="20" y="120" width="84" height="64" rx="14" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.18"/>
+  <text x="62" y="140" font-family="system-ui,sans-serif" font-size="10.5" fill="#FFFFFF" opacity="0.78" font-weight="500" text-anchor="middle">Hadir</text>
+  <text x="62" y="166" font-family="system-ui,sans-serif" font-size="22" fill="#FFFFFF" font-weight="800" text-anchor="middle">19</text>
+  <text x="62" y="178" font-family="system-ui,sans-serif" font-size="9" fill="#FFFFFF" opacity="0.7" font-weight="500" text-anchor="middle">hari</text>
+  <rect x="112" y="120" width="84" height="64" rx="14" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.18"/>
+  <text x="154" y="140" font-family="system-ui,sans-serif" font-size="10.5" fill="#FFFFFF" opacity="0.78" font-weight="500" text-anchor="middle">Izin</text>
+  <text x="154" y="166" font-family="system-ui,sans-serif" font-size="22" fill="#FFFFFF" font-weight="800" text-anchor="middle">2</text>
+  <text x="154" y="178" font-family="system-ui,sans-serif" font-size="9" fill="#FFFFFF" opacity="0.7" font-weight="500" text-anchor="middle">hari</text>
+  <rect x="204" y="120" width="84" height="64" rx="14" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.18"/>
+  <text x="246" y="140" font-family="system-ui,sans-serif" font-size="10.5" fill="#FFFFFF" opacity="0.78" font-weight="500" text-anchor="middle">Sakit</text>
+  <text x="246" y="166" font-family="system-ui,sans-serif" font-size="22" fill="#FFFFFF" font-weight="800" text-anchor="middle">1</text>
+  <text x="246" y="178" font-family="system-ui,sans-serif" font-size="9" fill="#FFFFFF" opacity="0.7" font-weight="500" text-anchor="middle">hari</text>
+  <rect x="296" y="120" width="84" height="64" rx="14" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.18"/>
+  <text x="338" y="140" font-family="system-ui,sans-serif" font-size="10.5" fill="#FFFFFF" opacity="0.78" font-weight="500" text-anchor="middle">Alpha</text>
+  <text x="338" y="166" font-family="system-ui,sans-serif" font-size="22" fill="#FFFFFF" font-weight="800" text-anchor="middle">0</text>
+  <text x="338" y="178" font-family="system-ui,sans-serif" font-size="9" fill="#FFFFFF" opacity="0.7" font-weight="500" text-anchor="middle">hari</text>
+  <rect x="16" y="232" width="368" height="436" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.75"/>
+  <text x="36" y="262" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="600" text-anchor="middle">SEN</text>
+  <text x="84" y="262" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="600" text-anchor="middle">SEL</text>
+  <text x="132" y="262" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="600" text-anchor="middle">RAB</text>
+  <text x="180" y="262" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="600" text-anchor="middle">KAM</text>
+  <text x="228" y="262" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="600" text-anchor="middle">JUM</text>
+  <text x="276" y="262" font-family="system-ui,sans-serif" font-size="11" fill="#94A3B8" font-weight="600" text-anchor="middle">SAB</text>
+  <text x="324" y="262" font-family="system-ui,sans-serif" font-size="11" fill="#94A3B8" font-weight="600" text-anchor="middle">MIN</text>
+  <line x1="20" y1="276" x2="380" y2="276" stroke="#F1F5F9" stroke-width="1"/>
+  <text x="276" y="306" font-family="system-ui,sans-serif" font-size="13" fill="#CBD5E1" font-weight="600" text-anchor="middle">27</text>
+  <text x="324" y="306" font-family="system-ui,sans-serif" font-size="13" fill="#CBD5E1" font-weight="600" text-anchor="middle">28</text>
+  <rect x="22" y="288" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="36" y="306" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">29</text>
+  <rect x="70" y="288" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="84" y="306" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">30</text>
+  <text x="132" y="306" font-family="system-ui,sans-serif" font-size="13" fill="#94A3B8" font-weight="500" text-anchor="middle">1</text>
+  <text x="180" y="306" font-family="system-ui,sans-serif" font-size="13" fill="#94A3B8" font-weight="500" text-anchor="middle">2</text>
+  <text x="228" y="306" font-family="system-ui,sans-serif" font-size="13" fill="#94A3B8" font-weight="500" text-anchor="middle">3</text>
+  <rect x="22" y="332" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="36" y="350" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">6</text>
+  <rect x="70" y="332" width="28" height="32" rx="8" fill="#FEF3C7"/>
+  <text x="84" y="350" font-family="system-ui,sans-serif" font-size="13" fill="#B45309" font-weight="700" text-anchor="middle">7</text>
+  <rect x="118" y="332" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="132" y="350" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">8</text>
+  <rect x="166" y="332" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="180" y="350" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">9</text>
+  <rect x="214" y="332" width="28" height="32" rx="8" fill="#FEF3C7"/>
+  <text x="228" y="350" font-family="system-ui,sans-serif" font-size="13" fill="#B45309" font-weight="700" text-anchor="middle">10</text>
+  <rect x="22" y="376" width="28" height="32" rx="8" fill="#E0F2FE"/>
+  <text x="36" y="394" font-family="system-ui,sans-serif" font-size="13" fill="#0E7490" font-weight="700" text-anchor="middle">13</text>
+  <rect x="70" y="376" width="28" height="32" rx="8" fill="#E0F2FE"/>
+  <text x="84" y="394" font-family="system-ui,sans-serif" font-size="13" fill="#0E7490" font-weight="700" text-anchor="middle">14</text>
+  <rect x="118" y="376" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="132" y="394" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">15</text>
+  <rect x="166" y="376" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="180" y="394" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">16</text>
+  <rect x="214" y="376" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="228" y="394" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">17</text>
+  <rect x="22" y="420" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="36" y="438" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">20</text>
+  <rect x="70" y="420" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="84" y="438" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">21</text>
+  <rect x="118" y="420" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="132" y="438" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">22</text>
+  <rect x="166" y="420" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="180" y="438" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">23</text>
+  <rect x="214" y="420" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="228" y="438" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">24</text>
+  <rect x="22" y="464" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="36" y="482" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">27</text>
+  <rect x="66" y="460" width="36" height="40" rx="10" fill="none" stroke="#1A8FBE" stroke-width="2"/>
+  <rect x="70" y="464" width="28" height="32" rx="8" fill="#FEF3C7"/>
+  <text x="84" y="482" font-family="system-ui,sans-serif" font-size="13" fill="#B45309" font-weight="700" text-anchor="middle">28</text>
+  <rect x="118" y="464" width="28" height="32" rx="8" fill="#E0F2FE"/>
+  <text x="132" y="482" font-family="system-ui,sans-serif" font-size="13" fill="#0E7490" font-weight="700" text-anchor="middle">29</text>
+  <rect x="166" y="464" width="28" height="32" rx="8" fill="#FEF3C7"/>
+  <text x="180" y="482" font-family="system-ui,sans-serif" font-size="13" fill="#B45309" font-weight="700" text-anchor="middle">30</text>
+  <rect x="214" y="464" width="28" height="32" rx="8" fill="#DCFCE7"/>
+  <text x="228" y="482" font-family="system-ui,sans-serif" font-size="13" fill="#15803D" font-weight="700" text-anchor="middle">31</text>
+  <text x="276" y="482" font-family="system-ui,sans-serif" font-size="13" fill="#CBD5E1" font-weight="500" text-anchor="middle">1</text>
+  <text x="324" y="482" font-family="system-ui,sans-serif" font-size="13" fill="#CBD5E1" font-weight="500" text-anchor="middle">2</text>
+  <line x1="32" y1="520" x2="368" y2="520" stroke="#F1F5F9" stroke-width="1"/>
+  <text x="32" y="544" font-family="system-ui,sans-serif" font-size="11" fill="#64748B" font-weight="600" letter-spacing="0.4">DETAIL SELASA · 28 OKT</text>
+  <rect x="32" y="556" width="68" height="22" rx="11" fill="#FEF3C7"/>
+  <circle cx="42" cy="567" r="3" fill="#F59E0B"/>
+  <text x="80" y="571" font-family="system-ui,sans-serif" font-size="11" fill="#B45309" font-weight="700" text-anchor="end">Terlambat</text>
+  <text x="32" y="600" font-family="system-ui,sans-serif" font-size="13" fill="#0F172A" font-weight="600">Hadir, terlambat 12 menit</text>
+  <text x="32" y="618" font-family="system-ui,sans-serif" font-size="11.5" fill="#64748B" font-weight="500">Datang 07:12  ·  Pulang 14:30</text>
+  <text x="32" y="636" font-family="system-ui,sans-serif" font-size="11.5" fill="#64748B" font-weight="500">Catatan: macet di jalan</text>
+  <line x1="32" y1="668" x2="368" y2="668" stroke="#F1F5F9" stroke-width="1"/>
+</svg>

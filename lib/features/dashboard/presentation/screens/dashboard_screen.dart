@@ -240,9 +240,15 @@ class _DashboardState extends ConsumerState<Dashboard>
           );
           ref.read(dashboardProvider.notifier).refreshStats();
         },
-        onAccountTap: () =>
-            showAccountBottomSheet(context, state, primaryColor, effectiveRole),
-        onSchoolSwitchTap: () => showAcademicYearDialog(context),
+        onAccountTap: () => showAccountBottomSheet(
+          context,
+          state,
+          primaryColor,
+          effectiveRole,
+          onLanguageTap: () =>
+              showLanguageDialog(context, languageProvider, primaryColor),
+        ),
+        onSchoolSwitchTap: () => showSchoolSelectionDialog(context, state, primaryColor),
       );
     }
 
@@ -264,9 +270,15 @@ class _DashboardState extends ConsumerState<Dashboard>
           );
           ref.read(dashboardProvider.notifier).refreshStats();
         },
-        onAccountTap: () =>
-            showAccountBottomSheet(context, state, primaryColor, effectiveRole),
-        onSchoolSwitchTap: () => showAcademicYearDialog(context),
+        onAccountTap: () => showAccountBottomSheet(
+          context,
+          state,
+          primaryColor,
+          effectiveRole,
+          onLanguageTap: () =>
+              showLanguageDialog(context, languageProvider, primaryColor),
+        ),
+        onSchoolSwitchTap: () => showSchoolSelectionDialog(context, state, primaryColor),
       );
     }
 
@@ -288,9 +300,15 @@ class _DashboardState extends ConsumerState<Dashboard>
           );
           ref.read(dashboardProvider.notifier).refreshStats();
         },
-        onAccountTap: () =>
-            showAccountBottomSheet(context, state, primaryColor, effectiveRole),
-        onSchoolSwitchTap: () => showAcademicYearDialog(context),
+        onAccountTap: () => showAccountBottomSheet(
+          context,
+          state,
+          primaryColor,
+          effectiveRole,
+          onLanguageTap: () =>
+              showLanguageDialog(context, languageProvider, primaryColor),
+        ),
+        onSchoolSwitchTap: () => showSchoolSelectionDialog(context, state, primaryColor),
       );
     }
 
@@ -314,8 +332,14 @@ class _DashboardState extends ConsumerState<Dashboard>
         );
         ref.read(dashboardProvider.notifier).refreshStats();
       },
-      (state) =>
-          showAccountBottomSheet(context, state, primaryColor, effectiveRole),
+      (state) => showAccountBottomSheet(
+        context,
+        state,
+        primaryColor,
+        effectiveRole,
+        onLanguageTap: () =>
+            showLanguageDialog(context, languageProvider, primaryColor),
+      ),
       () => showAcademicYearDialog(context),
       (state) => getTodaysOverviewCards(
         state,
@@ -367,9 +391,15 @@ class _DashboardState extends ConsumerState<Dashboard>
           ),
         );
       },
-      (state) =>
-          showAccountBottomSheet(context, state, primaryColor, effectiveRole),
-      () => showAcademicYearDialog(context),
+      (state) => showAccountBottomSheet(
+        context,
+        state,
+        primaryColor,
+        effectiveRole,
+        onLanguageTap: () =>
+            showLanguageDialog(context, languageProvider, primaryColor),
+      ),
+      () => showSchoolSelectionDialog(context, ref.read(dashboardProvider).value ?? const DashboardState(isStatsLoaded: false), primaryColor),
     );
   }
 }

@@ -154,7 +154,10 @@ class _SchoolSwitcherSheet extends StatelessWidget {
       subtitle: 'Akun terhubung ke ${schools.length} sekolah',
       heroCard: currentSchool == null
           ? null
-          : _SchoolHeroCard(school: currentSchool),
+          : _SchoolHeroCard(
+              school: currentSchool,
+              onTap: () => AppNavigator.pop(context),
+            ),
       sectionLabel: others.isEmpty ? null : 'GANTI KE',
       tiles: [
         for (final s in others)
@@ -264,23 +267,44 @@ class _RoleSwitcherSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     // Resolve current vs others. Compare via the shell-role key so the
     // 'wali' alias matches against a backend 'parent' result.
+    final state = ref.read(dashboardProvider).value;
+    final currentSchoolId = state?.userData['school_id']?.toString() ?? '';
+    final isSameSchool = currentSchoolId == schoolId;
+
+    String? targetSchoolName;
+    if (state != null) {
+      for (final s in state.accessibleSchools) {
+        if ((s['school_id'] ?? s['id'])?.toString() == schoolId) {
+          targetSchoolName = s['nama_sekolah']?.toString() ?? s['name']?.toString();
+          break;
+        }
+      }
+    }
+
     final currentKey = _shellRoleKey(currentRole);
     String? activeRole;
     final others = <String>[];
     for (final r in roleList) {
-      if (_shellRoleKey(r) == currentKey && activeRole == null) {
+      if (isSameSchool && _shellRoleKey(r) == currentKey && activeRole == null) {
         activeRole = r;
       } else {
         others.add(r);
       }
     }
 
+    final title = targetSchoolName != null ? 'Pilih Peran di $targetSchoolName' : 'Pilih Peran';
+
     return _SwitcherSheetScaffold(
       icon: Icons.swap_horiz_rounded,
-      title: 'Pilih Peran',
+      title: title,
       subtitle: 'Akun terdaftar di ${roleList.length} peran',
-      heroCard: activeRole == null ? null : _RoleHeroCard(role: activeRole),
-      sectionLabel: others.isEmpty ? null : 'GANTI KE',
+      heroCard: activeRole == null
+          ? null
+          : _RoleHeroCard(
+              role: activeRole,
+              onTap: () => AppNavigator.pop(context),
+            ),
+      sectionLabel: others.isEmpty ? null : (activeRole == null ? 'PILIH PERAN' : 'GANTI KE'),
       tiles: [
         for (final r in others)
           _RoleTile(role: r, onTap: () => _onRoleTap(r)),
@@ -501,15 +525,22 @@ class _SwitcherSheetScaffold extends StatelessWidget {
 
 class _SchoolHeroCard extends StatelessWidget {
   final Map<dynamic, dynamic> school;
+  final VoidCallback? onTap;
 
-  const _SchoolHeroCard({required this.school});
+  const _SchoolHeroCard({
+    required this.school,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final name = (school['school_name'] ?? school['name'] ?? 'Sekolah')
         .toString();
     final address = (school['address'] ?? '').toString();
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -611,21 +642,30 @@ class _SchoolHeroCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 
 class _RoleHeroCard extends StatelessWidget {
   final String role;
+  final VoidCallback? onTap;
 
-  const _RoleHeroCard({required this.role});
+  const _RoleHeroCard({
+    required this.role,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final name = _roleDisplayName(role);
     final desc = _roleDescription(role);
     final gradient = ColorUtils.brandGradient(role);
-    return Container(
+    
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: gradient,
@@ -714,7 +754,8 @@ class _RoleHeroCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 

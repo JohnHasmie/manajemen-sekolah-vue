@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
-import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_detail_dialog.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_detail_sheet.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 
 /// Mixin for UI interactions like detail dialogs and filtering.
@@ -54,17 +54,13 @@ mixin UiInteractionMixin on ConsumerState<ParentAnnouncementScreen> {
   }
 
   void showAnnouncementDetail(Map<String, dynamic> announcementData) {
-    final languageProvider = ref.read(languageRiverpod);
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AnnouncementDetailDialog(
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AnnouncementDetailSheet(
         announcementData: announcementData,
         primaryColor: getPrimaryColor(),
-        cardGradient: getCardGradient(),
-        languageProvider: languageProvider,
-        onOpenFile: openFile,
-        formatDate: formatDate,
-        getTargetText: (item) => getTargetText(item, languageProvider),
       ),
     );
   }

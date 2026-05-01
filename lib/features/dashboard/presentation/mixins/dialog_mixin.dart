@@ -102,6 +102,8 @@ mixin DialogMixin on ConsumerState<Dashboard> {
         onLanguageTap: onLanguageTap,
         onShowSchoolSelection: () =>
             showSchoolSelectionDialog(context, state, primaryColor),
+        onShowRoleSelection: (schoolId, roleList) =>
+            showRolePickerDialog(context, schoolId, roleList),
       ),
     );
   }
