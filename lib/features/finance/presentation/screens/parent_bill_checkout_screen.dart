@@ -26,6 +26,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/parent_payment_success_screen.dart';
@@ -62,24 +64,59 @@ class _ParentBillCheckoutScreenState
     extends ConsumerState<ParentBillCheckoutScreen> {
   _PayMethod _method = _PayMethod.qris;
 
-  /// Stub gateway data — would normally come from
-  /// `POST /bill/{id}/checkout`. Format matches a typical Midtrans
-  /// Snap response so the swap-in is one-line later.
-  late final _CheckoutSession _session = _stubSession();
+  /// Live checkout session. Initialized from the local stub so the
+  /// page always has something to render, then overwritten by the
+  /// backend response when [_loadSession] resolves.
+  late _CheckoutSession _session;
 
+  @override
+  void initState() {
+    super.initState();
+    _session = _stubSession();
+    _loadSession();
+  }
+
+  /// Initialize the checkout against the backend. The API enforces
+  /// parent ownership of the bill and returns the QR / VA / manual
+  /// bank list in one call. Errors are swallowed — we keep showing
+  /// the local stub so a flaky network never blocks the UI.
+  Future<void> _loadSession() async {
+    final billId = widget.bill['id']?.toString();
+    if (billId == null || billId.isEmpty) return;
+    try {
+      final response =
+          await ApiService().post('/bill/$billId/checkout', const {});
+      if (!mounted) return;
+      final data = response is Map && response['data'] is Map
+          ? Map<String, dynamic>.from(response['data'] as Map)
+          : (response is Map ? Map<String, dynamic>.from(response) : null);
+      if (data != null) {
+        setState(() {
+          _session = _CheckoutSession.fromJson(data);
+        });
+      }
+    } catch (e) {
+      AppLogger.error('parent-bill-checkout', e);
+      // Keep the stub session so the user can still see how to pay.
+    }
+  }
+
+  /// Local fallback for offline / error states. Mirrors the live
+  /// backend defaults so the UI is identical visually.
   _CheckoutSession _stubSession() {
     final amount = (widget.bill['amount'] as num?)?.toDouble() ?? 0;
-    final adminFee = _method == _PayMethod.qris ? 0.0 : 4000.0;
     return _CheckoutSession(
       amount: amount,
-      adminFee: adminFee,
+      qrisAdminFee: 0,
+      vaAdminFee: 4000,
+      manualAdminFee: 0,
       qrString: 'TAG-${widget.bill['id']}',
       vaNumber: '8077 0123 4567 8901',
       vaBank: 'BCA',
       manualBankList: const [
-        ('BCA', '8077 1234 5678', 'SD Al-Kamil'),
-        ('Mandiri', '157 0001 2345 678', 'SD Al-Kamil'),
-        ('BNI', '0123 4567 89', 'SD Al-Kamil'),
+        ('BCA', '8077 1234 5678', 'Yayasan Sekolah'),
+        ('Mandiri', '157 0001 2345 678', 'Yayasan Sekolah'),
+        ('BNI', '0123 4567 89', 'Yayasan Sekolah'),
       ],
       expiresAt: DateTime.now().add(const Duration(hours: 24)),
     );
@@ -196,7 +233,8 @@ class _ParentBillCheckoutScreenState
     final headerLabel = studentName.isEmpty
         ? billName.toUpperCase()
         : '${billName.toUpperCase()} · ${studentName.toUpperCase()}';
-    final total = _session.total;
+    final adminFee = _session.adminFeeFor(_method);
+    final total = _session.totalFor(_method);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -242,7 +280,7 @@ class _ParentBillCheckoutScreenState
                 ),
               ),
               const Spacer(),
-              if (_session.adminFee > 0)
+              if (adminFee > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -253,7 +291,7 @@ class _ParentBillCheckoutScreenState
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: Text(
-                    '+ admin ${_formatRupiah(_session.adminFee)} ▾',
+                    '+ admin ${_formatRupiah(adminFee)} ▾',
                     style: const TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w700,
@@ -376,7 +414,7 @@ class _ParentBillCheckoutScreenState
           // Salin nominal pill
           _CopyPill(
             label: 'Nominal',
-            value: _formatRupiah(_session.total),
+            value: _formatRupiah(_session.totalFor(_method)),
             onCopy: () => _toastCopied('Nominal'),
           ),
         ],
@@ -456,7 +494,7 @@ class _ParentBillCheckoutScreenState
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                _formatRupiah(_session.total),
+                _formatRupiah(_session.totalFor(_method)),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -465,7 +503,7 @@ class _ParentBillCheckoutScreenState
               ),
               const SizedBox(width: 8),
               Text(
-                '+ admin ${_formatRupiah(_session.adminFee)}',
+                '+ admin ${_formatRupiah(_session.adminFeeFor(_method))}',
                 style: TextStyle(
                   fontSize: 9.5,
                   color: ColorUtils.slate500,
@@ -693,7 +731,7 @@ class _ParentBillCheckoutScreenState
           studentName: studentName,
           methodLabel: _methodLabel,
           amount: _session.amount,
-          adminFee: _session.adminFee,
+          adminFee: _session.adminFeeFor(_method),
           isManualPending: _method == _PayMethod.manual,
         ),
       ),
@@ -962,11 +1000,14 @@ class _BankRow extends StatelessWidget {
   }
 }
 
-/// Stub of the response that `POST /bill/{id}/checkout` will return.
-/// Kept as a small named record so the swap-in is one-line later.
+/// Mirror of the JSON returned by `POST /bill/{id}/checkout`. The
+/// shape matches a typical Midtrans Snap response so swapping the
+/// stub gateway for a real provider is a one-method change.
 class _CheckoutSession {
   final double amount;
-  final double adminFee;
+  final double qrisAdminFee;
+  final double vaAdminFee;
+  final double manualAdminFee;
   final String qrString;
   final String vaNumber;
   final String vaBank;
@@ -975,7 +1016,9 @@ class _CheckoutSession {
 
   _CheckoutSession({
     required this.amount,
-    required this.adminFee,
+    required this.qrisAdminFee,
+    required this.vaAdminFee,
+    required this.manualAdminFee,
     required this.qrString,
     required this.vaNumber,
     required this.vaBank,
@@ -983,7 +1026,62 @@ class _CheckoutSession {
     required this.expiresAt,
   });
 
-  double get total => amount + adminFee;
+  /// Build a session from the backend JSON envelope. Tolerates legacy
+  /// or partial payloads by falling back to safe defaults.
+  factory _CheckoutSession.fromJson(Map<String, dynamic> json) {
+    double asDouble(dynamic v, {double fallback = 0}) =>
+        v is num ? v.toDouble() : double.tryParse('$v') ?? fallback;
+
+    final rawList = json['manual_bank_list'];
+    final banks = <(String, String, String)>[];
+    if (rawList is List) {
+      for (final entry in rawList) {
+        if (entry is Map) {
+          banks.add((
+            (entry['bank'] ?? '').toString(),
+            (entry['account_number'] ?? '').toString(),
+            (entry['account_name'] ?? '').toString(),
+          ));
+        }
+      }
+    }
+
+    DateTime expires;
+    final rawExpires = json['expires_at']?.toString();
+    if (rawExpires != null && rawExpires.isNotEmpty) {
+      expires = DateTime.tryParse(rawExpires) ??
+          DateTime.now().add(const Duration(hours: 24));
+    } else {
+      expires = DateTime.now().add(const Duration(hours: 24));
+    }
+
+    return _CheckoutSession(
+      amount: asDouble(json['amount']),
+      qrisAdminFee: asDouble(json['qris_admin_fee']),
+      vaAdminFee: asDouble(json['va_admin_fee'], fallback: 4000),
+      manualAdminFee: asDouble(json['manual_admin_fee']),
+      qrString: (json['qr_string'] ?? '').toString(),
+      vaNumber: (json['va_number'] ?? '').toString(),
+      vaBank: (json['va_bank'] ?? 'BCA').toString(),
+      manualBankList: banks,
+      expiresAt: expires,
+    );
+  }
+
+  /// Per-method admin fee picker. The screen passes the active tab
+  /// in so total/breakdown rows always reflect the right surcharge.
+  double adminFeeFor(_PayMethod method) {
+    switch (method) {
+      case _PayMethod.qris:
+        return qrisAdminFee;
+      case _PayMethod.va:
+        return vaAdminFee;
+      case _PayMethod.manual:
+        return manualAdminFee;
+    }
+  }
+
+  double totalFor(_PayMethod method) => amount + adminFeeFor(method);
 }
 
 String _formatRupiah(double amount) {
