@@ -13,6 +13,7 @@
 // outer `ListView`, so scroll/refresh stay at the screen level.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
@@ -564,29 +565,27 @@ class _BillingRow extends ConsumerWidget {
     final isPending = status == 'pending';
 
     if (isPaid || isPending) {
-      // Receipt / pending review — go straight to success screen.
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => ParentPaymentSuccessScreen(
-            billName: (data['name'] ??
-                    data['title'] ??
-                    data['type'] ??
-                    'Tagihan')
-                .toString(),
-            studentName: (data['student_name'] ??
-                    data['student']?['name'] ??
-                    'Anak')
-                .toString(),
-            methodLabel:
-                (data['payment_method'] ?? data['method'] ?? '-').toString(),
-            amount:
-                double.tryParse((data['amount'] ?? '0').toString()) ?? 0,
-            adminFee: double.tryParse(
-                  (data['admin_fee'] ?? '0').toString(),
-                ) ??
-                0,
-            isManualPending: isPending,
-          ),
+      // Receipt / pending review — go straight to success screen
+      // through AppNavigator so app-level routing observers fire.
+      await AppNavigator.push<void>(
+        context,
+        ParentPaymentSuccessScreen(
+          billName: (data['name'] ??
+                  data['title'] ??
+                  data['type'] ??
+                  'Tagihan')
+              .toString(),
+          studentName: (data['student_name'] ??
+                  data['student']?['name'] ??
+                  'Anak')
+              .toString(),
+          methodLabel:
+              (data['payment_method'] ?? data['method'] ?? '-').toString(),
+          amount:
+              double.tryParse((data['amount'] ?? '0').toString()) ?? 0,
+          adminFee:
+              double.tryParse((data['admin_fee'] ?? '0').toString()) ?? 0,
+          isManualPending: isPending,
         ),
       );
       return;

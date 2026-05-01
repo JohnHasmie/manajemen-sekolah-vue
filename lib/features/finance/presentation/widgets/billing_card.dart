@@ -17,16 +17,20 @@ class BillingCard extends StatelessWidget {
     required this.languageProvider,
   });
 
+  /// Cached IDR formatter — recreating NumberFormat per build was
+  /// showing up in the perf audit since the bills list rebuilds the
+  /// card on every parent state change.
+  static final NumberFormat _idrFormatter = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
+
   String _formatCurrency(dynamic amount) {
     if (amount == null) return 'Rp 0';
     try {
       final double value = double.parse(amount.toString());
-      final formatter = NumberFormat.currency(
-        locale: 'id_ID',
-        symbol: 'Rp ',
-        decimalDigits: 0,
-      );
-      return formatter.format(value);
+      return _idrFormatter.format(value);
     } catch (e) {
       return 'Rp $amount';
     }

@@ -60,6 +60,25 @@ class ParentBillCheckoutScreen extends ConsumerStatefulWidget {
 
 enum _PayMethod { qris, va, manual }
 
+/// Cache lifetime for a checkout session — short enough that a stale
+/// gateway response doesn't sit indefinitely, long enough that quick
+/// back-and-forth navigation skips redundant POSTs.
+const Duration _sessionTtl = Duration(seconds: 60);
+
+/// Process-wide checkout-session cache. The stub gateway returns
+/// deterministic data per bill, so caching is safe; once a real
+/// gateway lands the cache TTL keeps payloads fresh enough.
+final Map<String, _SessionCacheEntry> _sessionCache = {};
+
+class _SessionCacheEntry {
+  final _CheckoutSession session;
+  final DateTime fetchedAt;
+
+  _SessionCacheEntry({required this.session, required this.fetchedAt});
+
+  bool get isFresh => DateTime.now().difference(fetchedAt) < _sessionTtl;
+}
+
 class _ParentBillCheckoutScreenState
     extends ConsumerState<ParentBillCheckoutScreen> {
   _PayMethod _method = _PayMethod.qris;
@@ -80,9 +99,25 @@ class _ParentBillCheckoutScreenState
   /// parent ownership of the bill and returns the QR / VA / manual
   /// bank list in one call. Errors are swallowed — we keep showing
   /// the local stub so a flaky network never blocks the UI.
+  ///
+  /// Sessions are cached for [_sessionTtl] keyed by bill ID. Same
+  /// bill always returns the same stub VA, so reopening the screen
+  /// within a minute reuses the prior response and skips a network
+  /// hop. Cache misses still hit the API.
   Future<void> _loadSession() async {
     final billId = widget.bill['id']?.toString();
     if (billId == null || billId.isEmpty) return;
+
+    final cached = _sessionCache[billId];
+    if (cached != null && cached.isFresh) {
+      // ignore: avoid_redundant_argument_values — explicit setState
+      // makes the optimistic-cache replacement obvious.
+      setState(() {
+        _session = cached.session;
+      });
+      return;
+    }
+
     try {
       final response =
           await ApiService().post('/bill/$billId/checkout', const {});
@@ -91,8 +126,13 @@ class _ParentBillCheckoutScreenState
           ? Map<String, dynamic>.from(response['data'] as Map)
           : (response is Map ? Map<String, dynamic>.from(response) : null);
       if (data != null) {
+        final fresh = _CheckoutSession.fromJson(data);
+        _sessionCache[billId] = _SessionCacheEntry(
+          session: fresh,
+          fetchedAt: DateTime.now(),
+        );
         setState(() {
-          _session = _CheckoutSession.fromJson(data);
+          _session = fresh;
         });
       }
     } catch (e) {
@@ -104,7 +144,10 @@ class _ParentBillCheckoutScreenState
   /// Local fallback for offline / error states. Mirrors the live
   /// backend defaults so the UI is identical visually.
   _CheckoutSession _stubSession() {
-    final amount = (widget.bill['amount'] as num?)?.toDouble() ?? 0;
+    final rawAmount = widget.bill['amount'];
+    final amount = rawAmount is num
+        ? rawAmount.toDouble()
+        : double.tryParse(rawAmount?.toString() ?? '') ?? 0;
     return _CheckoutSession(
       amount: amount,
       qrisAdminFee: 0,
@@ -724,16 +767,15 @@ class _ParentBillCheckoutScreenState
     final studentName = widget.bill['student_name']?.toString()
         ?? widget.bill['student']?['name']?.toString()
         ?? 'Anak';
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => ParentPaymentSuccessScreen(
-          billName: billName,
-          studentName: studentName,
-          methodLabel: _methodLabel,
-          amount: _session.amount,
-          adminFee: _session.adminFeeFor(_method),
-          isManualPending: _method == _PayMethod.manual,
-        ),
+    final result = await AppNavigator.push<bool>(
+      context,
+      ParentPaymentSuccessScreen(
+        billName: billName,
+        studentName: studentName,
+        methodLabel: _methodLabel,
+        amount: _session.amount,
+        adminFee: _session.adminFeeFor(_method),
+        isManualPending: _method == _PayMethod.manual,
       ),
     );
     if (result == true && mounted) {
