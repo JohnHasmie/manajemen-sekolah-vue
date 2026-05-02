@@ -354,9 +354,12 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Gradient hero — full width, edge-to-edge, rounded bottom corners
+        // Gradient hero — full width, edge-to-edge, rounded bottom corners.
+        // 100dp bottom padding leaves an empty navy band where the KPI
+        // strip floats. Matches parent_dashboard_body.dart so admin and
+        // parent dashboards land the cards at the same vertical anchor.
         Padding(
-          padding: const EdgeInsets.only(bottom: 70),
+          padding: const EdgeInsets.only(bottom: 100),
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -463,11 +466,13 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
             ),
           ),
         ),
-        // KPI strip floating at the bottom of the gradient
+        // KPI strip floating at the bottom of the gradient. Positioned
+        // edge-to-edge (left: 0, right: 0) — BrandKpiCarousel applies
+        // its own 16dp horizontal padding so we don't double-pad.
         Positioned(
           key: widget.statsSectionKey,
-          left: 16,
-          right: 16,
+          left: 0,
+          right: 0,
           bottom: 0,
           child: _buildHeroStats(),
         ),
@@ -498,85 +503,119 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   //   Page 2: Nilai rata-rata     · RPP menunggu
   Widget _buildHeroStats() {
     final stats = widget.state.stats;
-    final attendanceRate = _asInt(stats['attendance_rate_today']);
-    final attendanceDelta = _asInt(stats['attendance_delta_pct']);
-    final classCount = _asInt(stats['total_classes']);
-    final totalStudents = _asInt(stats['total_students']);
-    final avgGradeRaw = stats['avg_grade_school'] ?? stats['avg_grade'];
-    final avgGrade = avgGradeRaw is num ? avgGradeRaw.toDouble() : null;
-    final pendingLp = _asInt(stats['pending_lesson_plans']);
-    final totalLp = _asInt(stats['total_lesson_plans']);
+    final slices = _parseAdminSlices(stats);
 
-    // Single-slice mode for now ("Semua"). When the backend ships
-    // per-Tingkat slices, switch to a parsed list and let the carousel
-    // cycle them stories-style.
     return BrandKpiCarousel(
       scope: 'admin_dashboard',
-      sliceCount: 1,
+      sliceCount: slices.length,
       autoSlideCards: true,
-      cardBuilder: (_) => [
-        // 1. Kehadiran hari ini
-        HeroStatsCard(
-          label: AppLocalizations.dbPresenceToday.tr,
-          sliceLabel: 'Semua kelas',
-          sliceLabelMuted: true,
-          value: '$attendanceRate%',
-          icon: Icons.check_rounded,
-          accentColor: ColorUtils.success600,
-          trend: attendanceDelta == 0
-              ? null
-              : StatTrend(
-                  direction: attendanceDelta > 0
-                      ? StatTrendDirection.up
-                      : StatTrendDirection.down,
-                  label:
-                      '${attendanceDelta > 0 ? '+' : ''}$attendanceDelta%',
-                ),
-          onTap: _openSiswa,
-        ),
-        // 2. Siswa aktif
-        HeroStatsCard(
-          label: AppLocalizations.dbActiveStudents.tr,
-          sliceLabel: 'Semua tingkat',
-          sliceLabelMuted: true,
-          value: _formatNumber(totalStudents),
-          icon: Icons.people_outline_rounded,
-          accentColor: ColorUtils.corporateBlue600,
-          caption: classCount > 0
-              ? '· $classCount ${AppLocalizations.dbClasses.tr}'
-              : null,
-          onTap: _openSiswa,
-        ),
-        // 3. Nilai rata-rata sekolah
-        // TODO(i18n): promote 'Rata-rata Nilai', 'Semester ini',
-        // 'Belum ada data' to AppLocalizations once the EN copy is
-        // signed off. Kept Bahasa-literal here to avoid blocking the
-        // KPI migration on a localization round-trip.
-        HeroStatsCard(
-          label: 'Rata-rata Nilai',
-          sliceLabel: 'Semua mapel',
-          sliceLabelMuted: true,
-          value: avgGrade != null ? avgGrade.toStringAsFixed(1) : '—',
-          icon: Icons.bar_chart_rounded,
-          accentColor: const Color(0xFF6366F1),
-          caption: avgGrade != null ? 'Semester ini' : 'Belum ada data',
-          onTap: _openGrades,
-        ),
-        // 4. RPP menunggu persetujuan
-        // TODO(i18n): promote 'RPP Menunggu', 'Perlu ditinjau',
-        // 'Semua disetujui' to AppLocalizations.
-        HeroStatsCard(
-          label: 'RPP Menunggu',
-          sliceLabel: totalLp > 0 ? 'dari $totalLp RPP' : 'Semester ini',
-          sliceLabelMuted: true,
-          value: _formatNumber(pendingLp),
-          icon: Icons.assignment_outlined,
-          accentColor: ColorUtils.warning600,
-          caption: pendingLp > 0 ? 'Perlu ditinjau' : 'Semua disetujui',
-          onTap: _openLessonPlans,
-        ),
-      ],
+      cardBuilder: (sliceIndex) {
+        final slice = slices[sliceIndex.clamp(0, slices.length - 1)];
+        final ctxLabel = slice.label;
+
+        return [
+          // 1. Kehadiran hari ini
+          HeroStatsCard(
+            label: AppLocalizations.dbPresenceToday.tr,
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: slice.isAggregate,
+            value: '${slice.attendanceRate}%',
+            icon: Icons.check_rounded,
+            accentColor: ColorUtils.success600,
+            trend: slice.attendanceDelta == 0
+                ? null
+                : StatTrend(
+                    direction: slice.attendanceDelta > 0
+                        ? StatTrendDirection.up
+                        : StatTrendDirection.down,
+                    label:
+                        '${slice.attendanceDelta > 0 ? '+' : ''}${slice.attendanceDelta}%',
+                  ),
+            onTap: _openSiswa,
+          ),
+          // 2. Siswa aktif
+          HeroStatsCard(
+            label: AppLocalizations.dbActiveStudents.tr,
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: slice.isAggregate,
+            value: _formatNumber(slice.totalStudents),
+            icon: Icons.people_outline_rounded,
+            accentColor: ColorUtils.corporateBlue600,
+            caption: slice.totalClasses > 0
+                ? '· ${slice.totalClasses} ${AppLocalizations.dbClasses.tr}'
+                : null,
+            onTap: _openSiswa,
+          ),
+          // 3. Nilai rata-rata sekolah
+          // TODO(i18n): promote 'Rata-rata Nilai', 'Semester ini',
+          // 'Belum ada data' to AppLocalizations once the EN copy
+          // is signed off.
+          HeroStatsCard(
+            label: 'Rata-rata Nilai',
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: slice.isAggregate,
+            value: slice.avgGrade != null
+                ? slice.avgGrade!.toStringAsFixed(1)
+                : '—',
+            icon: Icons.bar_chart_rounded,
+            accentColor: const Color(0xFF6366F1),
+            caption:
+                slice.avgGrade != null ? 'Semester ini' : 'Belum ada data',
+            onTap: _openNilai,
+          ),
+          // 4. RPP menunggu persetujuan
+          // TODO(i18n): promote 'RPP Menunggu', 'Perlu ditinjau',
+          // 'Semua disetujui' to AppLocalizations.
+          HeroStatsCard(
+            label: 'RPP Menunggu',
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: slice.isAggregate,
+            value: _formatNumber(slice.pendingLessonPlans),
+            icon: Icons.assignment_outlined,
+            accentColor: ColorUtils.warning600,
+            caption: slice.pendingLessonPlans > 0
+                ? 'Perlu ditinjau'
+                : 'Semua disetujui',
+            onTap: _openLessonPlanReview,
+          ),
+        ];
+      },
     );
+  }
+
+  /// Parse the admin `slices` array out of [DashboardState.stats]. The
+  /// backend ships an array of per-Tingkat slice records (see
+  /// `DashboardController::buildAdminTingkatSlices`); when it's missing
+  /// (older backend or no enrolment yet), synthesise a single
+  /// "Semua tingkat" slice from the top-level stat fields so the
+  /// carousel always has at least one entry to render.
+  List<_AdminSlice> _parseAdminSlices(Map<String, dynamic> stats) {
+    final raw = stats['slices'];
+    if (raw is List && raw.isNotEmpty) {
+      final parsed = raw
+          .whereType<Map>()
+          .map((e) => _AdminSlice.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+      if (parsed.isNotEmpty) return parsed;
+    }
+    // Fallback — synthesise a single "Semua" slice from top-level fields
+    // so the migration ships gracefully even when the backend hasn't
+    // yet emitted the slices array.
+    return [
+      _AdminSlice(
+        key: 'all',
+        label: 'Semua tingkat',
+        attendanceRate: _asInt(stats['attendance_rate_today']),
+        attendanceDelta: _asInt(stats['attendance_delta_pct']),
+        totalStudents: _asInt(stats['total_students']),
+        totalClasses: _asInt(stats['total_classes']),
+        pendingLessonPlans: _asInt(stats['pending_lesson_plans']),
+        avgGrade: () {
+          final v = stats['avg_grade_school'] ?? stats['avg_grade'];
+          return v is num ? v.toDouble() : null;
+        }(),
+      ),
+    ];
   }
 
   /// Narrow number formatter: thousands separator only. Avoids pulling in
@@ -937,6 +976,61 @@ class _HeroIconButton extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// One slice of the admin BrandKpiCarousel — either the school-wide
+/// aggregate (`'all'`) or a per-Tingkat breakdown. Mirrors the shape
+/// of the `slices` array emitted by
+/// `DashboardController::buildAdminTingkatSlices` on the backend.
+///
+/// Fields that the backend hasn't filled (e.g., `avg_grade` when the
+/// per-Tingkat grade query is skipped) come through as null and the
+/// card renders an em-dash.
+class _AdminSlice {
+  final String key;
+  final String label;
+  final int attendanceRate;
+  final int attendanceDelta;
+  final int totalStudents;
+  final int totalClasses;
+  final int pendingLessonPlans;
+  final double? avgGrade;
+
+  const _AdminSlice({
+    required this.key,
+    required this.label,
+    required this.attendanceRate,
+    required this.attendanceDelta,
+    required this.totalStudents,
+    required this.totalClasses,
+    required this.pendingLessonPlans,
+    required this.avgGrade,
+  });
+
+  /// True when this slice represents the school-wide aggregate.
+  /// Used to grey out the slice label so "Semua tingkat" reads as
+  /// muted context rather than competing with the primary value.
+  bool get isAggregate => key == 'all';
+
+  factory _AdminSlice.fromJson(Map<String, dynamic> json) {
+    int asInt(Object? v) {
+      if (v is int) return v;
+      if (v is double) return v.round();
+      return int.tryParse('$v') ?? 0;
+    }
+
+    final avg = json['avg_grade'];
+    return _AdminSlice(
+      key: (json['key'] ?? 'unknown').toString(),
+      label: (json['label'] ?? '').toString(),
+      attendanceRate: asInt(json['attendance_rate']),
+      attendanceDelta: asInt(json['attendance_delta']),
+      totalStudents: asInt(json['total_students']),
+      totalClasses: asInt(json['total_classes']),
+      pendingLessonPlans: asInt(json['pending_lesson_plans']),
+      avgGrade: avg is num ? avg.toDouble() : null,
     );
   }
 }
