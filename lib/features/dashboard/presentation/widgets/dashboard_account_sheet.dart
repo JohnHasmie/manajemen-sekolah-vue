@@ -311,12 +311,6 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
   Color get primaryColor => widget.primaryColor;
 
   @override
-  String get effectiveRole => widget.effectiveRole;
-
-  @override
-  WidgetRef get widgetRef => ref;
-
-  @override
   bool get isMounted => mounted;
 
   @override
@@ -324,9 +318,6 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
 
   @override
   ValueNotifier<String?> get switchingRoleNotifier => _switchingRole;
-
-  @override
-  VoidCallback get onShowSchoolSelection => widget.onShowSchoolSelection;
 }
 
 class _AccessRow extends StatelessWidget {

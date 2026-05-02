@@ -30,6 +30,7 @@ import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/parent_payment_success_screen.dart';
 
 /// Push the Bayar checkout for [bill]. Returns `true` when the user
@@ -65,10 +66,22 @@ enum _PayMethod { qris, va, manual }
 /// back-and-forth navigation skips redundant POSTs.
 const Duration _sessionTtl = Duration(seconds: 60);
 
-/// Process-wide checkout-session cache. The stub gateway returns
-/// deterministic data per bill, so caching is safe; once a real
-/// gateway lands the cache TTL keeps payloads fresh enough.
+/// Process-wide checkout-session cache, keyed by
+/// `"{userId}|{schoolId}|{billId}"`. The user/school scoping protects
+/// against multi-account devices: if user A signs out and user B
+/// signs in, B's session lookups can't ever resolve to A's cached
+/// entries even if a bill ID happened to collide across schools.
+///
+/// Call [clearParentBillCheckoutCache] from the logout / school-switch
+/// path to drop everything; the auth flow already clears the on-disk
+/// `LocalCacheService`, so this in-memory cache rides alongside it.
 final Map<String, _SessionCacheEntry> _sessionCache = {};
+
+/// Flush the in-memory checkout-session cache. Called from the auth
+/// logout path so a re-login on the same device starts cold.
+void clearParentBillCheckoutCache() {
+  _sessionCache.clear();
+}
 
 class _SessionCacheEntry {
   final _CheckoutSession session;
@@ -104,14 +117,26 @@ class _ParentBillCheckoutScreenState
   /// bill always returns the same stub VA, so reopening the screen
   /// within a minute reuses the prior response and skips a network
   /// hop. Cache misses still hit the API.
+  /// Compose a user-scoped cache key. Reads the active dashboard
+  /// state (set on login) so the cache silos per (user, school) — if
+  /// no dashboard state exists yet (e.g., the screen was opened
+  /// before the dashboard finished loading), fall back to the bill
+  /// ID alone with a `_anon_` namespace so the entry never collides
+  /// with a real user's cache.
+  String _cacheKey(String billId) {
+    final state = ref.read(dashboardProvider).value;
+    final userId = state?.userData['id']?.toString() ?? '_anon_';
+    final schoolId = state?.userData['school_id']?.toString() ?? '_no_school_';
+    return '$userId|$schoolId|$billId';
+  }
+
   Future<void> _loadSession() async {
     final billId = widget.bill['id']?.toString();
     if (billId == null || billId.isEmpty) return;
 
-    final cached = _sessionCache[billId];
+    final key = _cacheKey(billId);
+    final cached = _sessionCache[key];
     if (cached != null && cached.isFresh) {
-      // ignore: avoid_redundant_argument_values — explicit setState
-      // makes the optimistic-cache replacement obvious.
       setState(() {
         _session = cached.session;
       });
@@ -127,7 +152,7 @@ class _ParentBillCheckoutScreenState
           : (response is Map ? Map<String, dynamic>.from(response) : null);
       if (data != null) {
         final fresh = _CheckoutSession.fromJson(data);
-        _sessionCache[billId] = _SessionCacheEntry(
+        _sessionCache[key] = _SessionCacheEntry(
           session: fresh,
           fetchedAt: DateTime.now(),
         );
