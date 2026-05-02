@@ -1,50 +1,34 @@
 // Brand-aligned school + role switcher bottom sheets.
 //
 // Phase-5 redesign — replaces the legacy `AlertDialog`s. Both sheets
-// follow the "Hero Saat ini + Ganti ke" pattern from the v3 mockup:
-//
-//   ┌──────────────────────────────────────┐
-//   │ ✚  Pilih Sekolah                     │  ← brand-azure tinted icon
-//   │    Akun terhubung ke 2 sekolah       │
-//   ├──────────────────────────────────────┤
-//   │ ┌────────────────────────────────┐  │
-//   │ │ SAAT INI       [AKTIF]         │  │  ← brand gradient
-//   │ │ KA  SMP Kamil Edu A            │  │
-//   │ │     Jl. Mawar No. 12 · Bandung │  │
-//   │ └────────────────────────────────┘  │
-//   │                                       │
-//   │   GANTI KE                            │
-//   │ ┌────────────────────────────────┐  │
-//   │ │ KB  SMP Kamil Edu B            │  │  ← compact tile
-//   │ │     Jl. Melati No. 7 · Bandung │  │     (no chevron)
-//   │ └────────────────────────────────┘  │
-//   └──────────────────────────────────────┘
+// follow the "Hero Saat ini + Ganti ke" pattern from the v3 mockup,
+// implemented as thin wrappers over the shared
+//   • BrandHeroSheet     — sheet chrome (handle, header, hero, tiles)
+//   • SelectionHeroCard  — gradient "Saat ini" card
+//   • SelectionTile      — compact alternatives row
+//   • InitialsAvatar     — circular initials disc
+//   • role_labels.dart   — pure Bahasa label / icon / shell-key helpers
 //
 // Public API kept identical — `showDashboardSchoolSelectionDialog` and
 // `showDashboardRolePickerDialog` are still the only entry points,
 // so call sites in dialog_mixin.dart and dashboard_account_sheet
-// don't need to change. Internally each opens a `showModalBottomSheet`
-// that hosts the corresponding `_SwitcherSheet`.
-//
-// Why a custom sheet (not AppBottomSheet)
-// ---------------------------------------
-// AppBottomSheet's default header is a colored gradient — but in this
-// design the gradient is reserved for the "Saat ini" hero card so the
-// active selection reads as a card rather than a header. The Phase-5A
-// language picker set the precedent (see core/widgets/language_picker_sheet)
-// so we follow the same pattern here.
+// don't need to change.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/school_epoch_provider.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/shell/shell_controller.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/role_labels.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_hero_sheet.dart';
+import 'package:manajemensekolah/core/widgets/initials_avatar.dart';
+import 'package:manajemensekolah/core/widgets/selection_hero_card.dart';
+import 'package:manajemensekolah/core/widgets/selection_tile.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 
 // ════════════════════════════════════════════════════════════════
@@ -130,6 +114,25 @@ class _SchoolSwitcherSheet extends StatelessWidget {
     required this.onNeedsRoleSelection,
   });
 
+  /// Brand-azure gradient — used for the "Saat ini" school hero card.
+  static final LinearGradient _schoolGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [ColorUtils.brandAzure, ColorUtils.brandAzureDeep],
+  );
+
+  String _schoolName(Map<dynamic, dynamic> school) =>
+      (school['school_name'] ?? school['name'] ?? 'Sekolah').toString();
+
+  String _schoolAddress(Map<dynamic, dynamic> school) =>
+      (school['address'] ?? '').toString();
+
+  String? _schoolLogo(Map<dynamic, dynamic> school) {
+    final raw = school['logo_url'] ?? school['logo'];
+    final s = raw?.toString();
+    return (s == null || s.isEmpty) ? null : s;
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentId = state.userData['school_id']?.toString();
@@ -148,21 +151,38 @@ class _SchoolSwitcherSheet extends StatelessWidget {
       }
     }
 
-    return _SwitcherSheetScaffold(
+    return BrandHeroSheet(
       icon: Icons.school_rounded,
       title: 'Pilih Sekolah',
       subtitle: 'Akun terhubung ke ${schools.length} sekolah',
-      heroCard: currentSchool == null
+      hero: currentSchool == null
           ? null
-          : _SchoolHeroCard(
-              school: currentSchool,
+          : SelectionHeroCard(
+              gradient: _schoolGradient,
+              avatar: InitialsAvatar.onDark(
+                name: _schoolName(currentSchool),
+                size: 50,
+                logoUrl: _schoolLogo(currentSchool),
+                borderRadius: 16,
+              ),
+              title: _schoolName(currentSchool),
+              subtitle: _schoolAddress(currentSchool).isEmpty
+                  ? null
+                  : _schoolAddress(currentSchool),
               onTap: () => AppNavigator.pop(context),
             ),
-      sectionLabel: others.isEmpty ? null : 'GANTI KE',
       tiles: [
         for (final s in others)
-          _SchoolTile(
-            school: s,
+          SelectionTile(
+            avatar: InitialsAvatar(
+              name: _schoolName(s),
+              size: 36,
+              color: ColorUtils.slate400,
+              logoUrl: _schoolLogo(s),
+              borderRadius: 12,
+            ),
+            title: _schoolName(s),
+            subtitle: _schoolAddress(s).isEmpty ? null : _schoolAddress(s),
             onTap: () => _onSchoolTap(s),
           ),
       ],
@@ -198,14 +218,9 @@ class _SchoolSwitcherSheet extends StatelessWidget {
       final newRole = result['user']?['role']?.toString() ?? currentRole;
       await LocalCacheService.clearAll();
       if (ref.context.mounted) {
-        // Compare via the *effective* role (the shell-family key) — the
-        // backend uses English ('parent' / 'teacher') while
-        // [currentRole] carries the Indonesian alias ('wali' / 'guru').
-        // Without normalizing, parent → parent looked like a cross-role
-        // switch and we'd `router.go('/parent')`, which GoRouter treats
-        // as a same-route no-op, so the refresh code never ran.
-        final newKey = _shellRoleKey(newRole);
-        final currentKey = _shellRoleKey(currentRole);
+        // Compare via the shell-family key — see role_labels.dart.
+        final newKey = shellRoleKey(newRole);
+        final currentKey = shellRoleKey(currentRole);
         if (newKey == currentKey) {
           ref.read(shellProvider(newKey).notifier).resetNavigatorStacks();
           bumpSchoolEpoch(ref);
@@ -229,17 +244,6 @@ class _SchoolSwitcherSheet extends StatelessWidget {
       }
     }
   }
-}
-
-/// Maps a backend role value (`'parent'` / `'teacher'` / `'admin'`) to the
-/// `shellProvider` family key (`'wali'` / `'guru'` / `'admin'`). Mirrors the
-/// normalization done in `DashboardController._effectiveRole` — keep these
-/// two in sync, otherwise the school-switch fix will read the wrong shell
-/// notifier and the GlobalKeys won't actually be regenerated.
-String _shellRoleKey(String role) {
-  if (role == 'teacher') return 'guru';
-  if (role == 'parent') return 'wali';
-  return role;
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -275,39 +279,75 @@ class _RoleSwitcherSheet extends StatelessWidget {
     if (state != null) {
       for (final s in state.accessibleSchools) {
         if ((s['school_id'] ?? s['id'])?.toString() == schoolId) {
-          targetSchoolName = s['nama_sekolah']?.toString() ?? s['name']?.toString();
+          targetSchoolName = s['nama_sekolah']?.toString() ??
+              s['name']?.toString() ??
+              s['school_name']?.toString();
           break;
         }
       }
     }
 
-    final currentKey = _shellRoleKey(currentRole);
+    final currentKey = shellRoleKey(currentRole);
     String? activeRole;
     final others = <String>[];
     for (final r in roleList) {
-      if (isSameSchool && _shellRoleKey(r) == currentKey && activeRole == null) {
+      if (isSameSchool && shellRoleKey(r) == currentKey && activeRole == null) {
         activeRole = r;
       } else {
         others.add(r);
       }
     }
 
-    final title = targetSchoolName != null ? 'Pilih Peran di $targetSchoolName' : 'Pilih Peran';
+    final title = targetSchoolName != null
+        ? 'Pilih Peran di $targetSchoolName'
+        : 'Pilih Peran';
 
-    return _SwitcherSheetScaffold(
+    return BrandHeroSheet(
       icon: Icons.swap_horiz_rounded,
       title: title,
       subtitle: 'Akun terdaftar di ${roleList.length} peran',
-      heroCard: activeRole == null
+      hero: activeRole == null
           ? null
-          : _RoleHeroCard(
-              role: activeRole,
+          : SelectionHeroCard(
+              gradient: ColorUtils.brandGradient(activeRole),
+              avatar: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  roleIconData(activeRole),
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              title: roleDisplayName(activeRole),
+              subtitle: roleDescription(activeRole),
               onTap: () => AppNavigator.pop(context),
             ),
-      sectionLabel: others.isEmpty ? null : (activeRole == null ? 'PILIH PERAN' : 'GANTI KE'),
+      sectionLabel: others.isEmpty
+          ? null
+          : (activeRole == null ? 'PILIH PERAN' : 'GANTI KE'),
       tiles: [
         for (final r in others)
-          _RoleTile(role: r, onTap: () => _onRoleTap(r)),
+          SelectionTile(
+            avatar: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: ColorUtils.brandGradient(r),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: Icon(roleIconData(r), size: 18, color: Colors.white),
+            ),
+            title: roleDisplayName(r),
+            subtitle: roleDescription(r),
+            onTap: () => _onRoleTap(r),
+          ),
       ],
       emptyMessage: others.isEmpty
           ? 'Tidak ada peran lain yang terhubung dengan akun Anda di sekolah ini'
@@ -326,8 +366,8 @@ class _RoleSwitcherSheet extends StatelessWidget {
       final newRole = result['user']?['role']?.toString() ?? role;
       await LocalCacheService.clearAll();
       if (ref.context.mounted) {
-        final newKey = _shellRoleKey(newRole);
-        final currentKey = _shellRoleKey(currentRole);
+        final newKey = shellRoleKey(newRole);
+        final currentKey = shellRoleKey(currentRole);
         if (newKey == currentKey) {
           // Same role → reset Navigator GlobalKeys + bump epoch so the
           // IndexedStack subtree fully rebuilds with fresh per-tab
@@ -354,637 +394,5 @@ class _RoleSwitcherSheet extends StatelessWidget {
         );
       }
     }
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// SHARED SCAFFOLD — header + drag handle + content layout
-// ════════════════════════════════════════════════════════════════
-
-class _SwitcherSheetScaffold extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Widget? heroCard;
-  final String? sectionLabel;
-  final List<Widget> tiles;
-  final String? emptyMessage;
-
-  const _SwitcherSheetScaffold({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.heroCard,
-    this.sectionLabel,
-    required this.tiles,
-    this.emptyMessage,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
-        ),
-      ),
-      padding: EdgeInsets.only(
-        top: 8,
-        left: AppSpacing.md,
-        right: AppSpacing.md,
-        bottom: AppSpacing.md + MediaQuery.of(context).viewPadding.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFCBD5E1),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Header row: tinted icon disc + title + subtitle
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: ColorUtils.brandAzure.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: ColorUtils.brandAzureDeep,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: ColorUtils.slate900,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: ColorUtils.slate500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Hero "Saat ini" card
-          if (heroCard != null) heroCard!,
-          if (heroCard != null) const SizedBox(height: AppSpacing.md),
-
-          // "GANTI KE" section
-          if (sectionLabel != null) ...[
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 8, top: 4),
-              child: Text(
-                sectionLabel!,
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  color: ColorUtils.slate400,
-                  letterSpacing: 0.6,
-                ),
-              ),
-            ),
-            // Constrain the alternatives list so very long ones can scroll.
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.35,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var i = 0; i < tiles.length; i++) ...[
-                      tiles[i],
-                      if (i != tiles.length - 1)
-                        const SizedBox(height: 8),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
-
-          // Empty state when nothing to switch to
-          if (emptyMessage != null) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: AppSpacing.md,
-              ),
-              child: Text(
-                emptyMessage!,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: ColorUtils.slate500,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// HERO CARDS (current selection — gradient background, white text)
-// ════════════════════════════════════════════════════════════════
-
-class _SchoolHeroCard extends StatelessWidget {
-  final Map<dynamic, dynamic> school;
-  final VoidCallback? onTap;
-
-  const _SchoolHeroCard({
-    required this.school,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final name = (school['school_name'] ?? school['name'] ?? 'Sekolah')
-        .toString();
-    final address = (school['address'] ?? '').toString();
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [ColorUtils.brandAzure, ColorUtils.brandAzureDeep],
-        ),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Text(
-                'SAAT INI',
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white.withValues(alpha: 0.7),
-                  letterSpacing: 0.6,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.22),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: const Text(
-                  'AKTIF',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  _initials(name),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    if (address.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        address,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.white.withValues(alpha: 0.85),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-  }
-}
-
-class _RoleHeroCard extends StatelessWidget {
-  final String role;
-  final VoidCallback? onTap;
-
-  const _RoleHeroCard({
-    required this.role,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final name = _roleDisplayName(role);
-    final desc = _roleDescription(role);
-    final gradient = ColorUtils.brandGradient(role);
-    
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Text(
-                'SAAT INI',
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white.withValues(alpha: 0.7),
-                  letterSpacing: 0.6,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.22),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: const Text(
-                  'AKTIF',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                alignment: Alignment.center,
-                child: Icon(_roleIcon(role), color: Colors.white, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      desc,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// COMPACT TILES (alternatives — white card, no chevron)
-// ════════════════════════════════════════════════════════════════
-
-class _SchoolTile extends StatelessWidget {
-  final Map<dynamic, dynamic> school;
-  final VoidCallback onTap;
-
-  const _SchoolTile({required this.school, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final name = (school['school_name'] ?? school['name'] ?? 'Sekolah')
-        .toString();
-    final address = (school['address'] ?? '').toString();
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: ColorUtils.slate400,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  _initials(name),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: ColorUtils.slate900,
-                      ),
-                    ),
-                    if (address.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        address,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          color: ColorUtils.slate500,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RoleTile extends StatelessWidget {
-  final String role;
-  final VoidCallback onTap;
-
-  const _RoleTile({required this.role, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  gradient: ColorUtils.brandGradient(role),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  _roleIcon(role),
-                  size: 18,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _roleDisplayName(role),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: ColorUtils.slate900,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _roleDescription(role),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        color: ColorUtils.slate500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// HELPERS — role label/description/icon + initials
-// ════════════════════════════════════════════════════════════════
-
-String _initials(String name) {
-  final trimmed = name.trim();
-  if (trimmed.isEmpty) return '?';
-  final tokens = trimmed.split(RegExp(r'\s+'));
-  if (tokens.length == 1) {
-    return tokens.first.characters.first.toUpperCase();
-  }
-  return (tokens[0].characters.first + tokens[1].characters.first)
-      .toUpperCase();
-}
-
-String _roleDisplayName(String role) {
-  switch (role) {
-    case 'admin':
-    case 'administrator':
-      return 'Administrator';
-    case 'guru':
-    case 'teacher':
-      return 'Guru';
-    case 'wali':
-    case 'parent':
-    case 'orang_tua':
-      return 'Wali Murid';
-    case 'staff':
-      return 'Staff';
-    default:
-      return role;
-  }
-}
-
-String _roleDescription(String role) {
-  switch (role) {
-    case 'admin':
-    case 'administrator':
-      return 'Kelola sekolah, guru, dan siswa';
-    case 'guru':
-    case 'teacher':
-      return 'Mengajar dan mengelola kelas';
-    case 'wali':
-    case 'parent':
-    case 'orang_tua':
-      return 'Pantau perkembangan anak';
-    case 'staff':
-      return 'Tugas operasional sekolah';
-    default:
-      return '';
-  }
-}
-
-IconData _roleIcon(String role) {
-  switch (role) {
-    case 'admin':
-    case 'administrator':
-      return Icons.admin_panel_settings_rounded;
-    case 'guru':
-    case 'teacher':
-      return Icons.school_rounded;
-    case 'wali':
-    case 'parent':
-    case 'orang_tua':
-      return Icons.family_restroom_rounded;
-    case 'staff':
-      return Icons.work_rounded;
-    default:
-      return Icons.person_rounded;
   }
 }

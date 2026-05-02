@@ -18,6 +18,7 @@
 // typically open a school-picker bottom sheet.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/widgets/initials_avatar.dart';
 
 /// A compact pill displaying the active school, suitable for AppBar trailing
 /// slots or gradient-header right edges.
@@ -290,8 +291,14 @@ class _ExpandedSchoolPill extends StatelessWidget {
   }
 }
 
-/// Circular avatar: tries to load [logoUrl]; if absent or errored, falls back
-/// to a monogrammed initial on an accent-tinted disc.
+/// Thin wrapper over the shared [InitialsAvatar] that picks the right
+/// variant for the SchoolPill: tinted-on-accent on light surfaces,
+/// translucent-white on gradient hero headers.
+///
+/// History: this used to carry its own initials/clip/error logic.
+/// That code now lives in `core/widgets/initials_avatar.dart` so
+/// every avatar across the app (school, role, student, teacher)
+/// shares one implementation and one performance profile.
 class _SchoolAvatar extends StatelessWidget {
   final String schoolName;
   final String? logoUrl;
@@ -307,61 +314,20 @@ class _SchoolAvatar extends StatelessWidget {
     required this.onDarkSurface,
   });
 
-  /// Cached whitespace splitter — was being recreated on every build
-  /// of `_SchoolAvatar` (which lives inside a list-row Material). The
-  /// allocation is tiny but the avatar rebuilds on every dashboard
-  /// state change, so hoisting it to a static is a free win.
-  static final RegExp _whitespace = RegExp(r'\s+');
-
-  String _initial() {
-    final trimmed = schoolName.trim();
-    if (trimmed.isEmpty) return '?';
-    // Compose up to 2 chars from the first two tokens ("Al-Kamil" → "AK")
-    // for better legibility on the 44 px avatar. On the 26 px avatar the
-    // second char is clipped by the container anyway.
-    final tokens = trimmed.split(_whitespace);
-    if (tokens.length == 1) return tokens.first.characters.first.toUpperCase();
-    return (tokens[0].characters.first + tokens[1].characters.first)
-        .toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final baseColor = onDarkSurface
-        ? Colors.white.withValues(alpha: 0.9)
-        : accentColor;
-    final bg = onDarkSurface
-        ? Colors.white.withValues(alpha: 0.25)
-        : accentColor.withValues(alpha: 0.12);
-
-    final child = logoUrl != null && logoUrl!.isNotEmpty
-        ? ClipOval(
-            child: Image.network(
-              logoUrl!,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _initialAvatar(baseColor, bg),
-            ),
-          )
-        : _initialAvatar(baseColor, bg);
-
-    return SizedBox(width: size, height: size, child: child);
-  }
-
-  Widget _initialAvatar(Color fg, Color bg) {
-    return Container(
-      decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-      alignment: Alignment.center,
-      child: Text(
-        _initial(),
-        style: TextStyle(
-          fontSize: size * 0.38,
-          fontWeight: FontWeight.w800,
-          color: fg,
-          height: 1,
-        ),
-      ),
+    if (onDarkSurface) {
+      return InitialsAvatar.onDark(
+        name: schoolName,
+        size: size,
+        logoUrl: logoUrl,
+      );
+    }
+    return InitialsAvatar.tinted(
+      name: schoolName,
+      size: size,
+      color: accentColor,
+      logoUrl: logoUrl,
     );
   }
 }
