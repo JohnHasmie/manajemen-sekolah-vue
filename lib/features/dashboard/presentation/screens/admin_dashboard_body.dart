@@ -52,6 +52,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
+import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 import 'package:manajemensekolah/core/widgets/pending_inbox_card.dart';
@@ -474,20 +475,51 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     );
   }
 
-  // ── Hero stats — 2 cards in a row, matching the Phase 3 mockup ────
-
+  // ── Hero stats — paired auto-slide via the shared BrandKpiCarousel ──
+  //
+  // Why BrandKpiCarousel
+  // --------------------
+  // Same widget the parent dashboard uses — matches the v3 mockup
+  // (2 cards per page, auto-slide, top progress strip when slices
+  // exist, capsule/dot page indicator below, no "Page 1 of N" text).
+  //
+  // Slice schema (target)
+  // ---------------------
+  // Slice 0 = SEMUA (school-wide aggregate, what we ship today).
+  // Slices 1+ = per Tingkat (Tingkat 7, 8, 9). When the backend adds
+  // `slices` to the admin stats payload (mirroring
+  // `DashboardController::buildParentChildSlices`), bump
+  // `sliceCount` and the carousel auto-engages the cycle. Until
+  // then `sliceCount: 1` keeps the strip flat — exactly what
+  // BrandKpiCarousel does in the no-slices case.
+  //
+  // Card pages (4 cards × perPage = 2 → 2 pages auto-slide):
+  //   Page 1: Kehadiran hari ini · Siswa aktif
+  //   Page 2: Nilai rata-rata     · RPP menunggu
   Widget _buildHeroStats() {
     final stats = widget.state.stats;
     final attendanceRate = _asInt(stats['attendance_rate_today']);
     final attendanceDelta = _asInt(stats['attendance_delta_pct']);
     final classCount = _asInt(stats['total_classes']);
-    return HeroStatsRow(
-      cards: [
+    final totalStudents = _asInt(stats['total_students']);
+    final avgGradeRaw = stats['avg_grade_school'] ?? stats['avg_grade'];
+    final avgGrade = avgGradeRaw is num ? avgGradeRaw.toDouble() : null;
+    final pendingLp = _asInt(stats['pending_lesson_plans']);
+    final totalLp = _asInt(stats['total_lesson_plans']);
+
+    // Single-slice mode for now ("Semua"). When the backend ships
+    // per-Tingkat slices, switch to a parsed list and let the carousel
+    // cycle them stories-style.
+    return BrandKpiCarousel(
+      scope: 'admin_dashboard',
+      sliceCount: 1,
+      autoSlideCards: true,
+      cardBuilder: (_) => [
+        // 1. Kehadiran hari ini
         HeroStatsCard(
-          // TODO(backend): wire stats['attendance_rate_today'] (today's
-          // school-wide attendance %) and stats['attendance_delta_pct']
-          // (signed delta vs yesterday). Until then both default to 0.
           label: AppLocalizations.dbPresenceToday.tr,
+          sliceLabel: 'Semua kelas',
+          sliceLabelMuted: true,
           value: '$attendanceRate%',
           icon: Icons.check_rounded,
           accentColor: ColorUtils.success600,
@@ -502,13 +534,46 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
                 ),
           onTap: _openSiswa,
         ),
+        // 2. Siswa aktif
         HeroStatsCard(
           label: AppLocalizations.dbActiveStudents.tr,
-          value: _formatNumber(_asInt(stats['total_students'])),
+          sliceLabel: 'Semua tingkat',
+          sliceLabelMuted: true,
+          value: _formatNumber(totalStudents),
           icon: Icons.people_outline_rounded,
           accentColor: ColorUtils.corporateBlue600,
-          caption: classCount > 0 ? '· $classCount ${AppLocalizations.dbClasses.tr}' : null,
+          caption: classCount > 0
+              ? '· $classCount ${AppLocalizations.dbClasses.tr}'
+              : null,
           onTap: _openSiswa,
+        ),
+        // 3. Nilai rata-rata sekolah
+        // TODO(i18n): promote 'Rata-rata Nilai', 'Semester ini',
+        // 'Belum ada data' to AppLocalizations once the EN copy is
+        // signed off. Kept Bahasa-literal here to avoid blocking the
+        // KPI migration on a localization round-trip.
+        HeroStatsCard(
+          label: 'Rata-rata Nilai',
+          sliceLabel: 'Semua mapel',
+          sliceLabelMuted: true,
+          value: avgGrade != null ? avgGrade.toStringAsFixed(1) : '—',
+          icon: Icons.bar_chart_rounded,
+          accentColor: const Color(0xFF6366F1),
+          caption: avgGrade != null ? 'Semester ini' : 'Belum ada data',
+          onTap: _openGrades,
+        ),
+        // 4. RPP menunggu persetujuan
+        // TODO(i18n): promote 'RPP Menunggu', 'Perlu ditinjau',
+        // 'Semua disetujui' to AppLocalizations.
+        HeroStatsCard(
+          label: 'RPP Menunggu',
+          sliceLabel: totalLp > 0 ? 'dari $totalLp RPP' : 'Semester ini',
+          sliceLabelMuted: true,
+          value: _formatNumber(pendingLp),
+          icon: Icons.assignment_outlined,
+          accentColor: ColorUtils.warning600,
+          caption: pendingLp > 0 ? 'Perlu ditinjau' : 'Semua disetujui',
+          onTap: _openLessonPlans,
         ),
       ],
     );

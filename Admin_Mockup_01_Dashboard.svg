@@ -1,0 +1,511 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 1280" font-family="Inter, -apple-system, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="adminHero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#143068"/>
+      <stop offset="1" stop-color="#1F4A8F"/>
+    </linearGradient>
+    <linearGradient id="kpiCardBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="kpiCardEmerald" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10B981"/>
+      <stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="kpiCardAmber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#B45309"/>
+    </linearGradient>
+    <linearGradient id="kpiCardViolet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#6D28D9"/>
+    </linearGradient>
+    <filter id="phoneShadow" x="-10%" y="-5%" width="120%" height="115%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.12"/>
+    </filter>
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="1320" height="1280" fill="#F8FAFC"/>
+
+  <!-- TITLE -->
+  <text x="60" y="58" font-weight="800" font-size="26" fill="#0F172A">Admin Mockup 01 · Dashboard</text>
+  <text x="60" y="84" font-size="13" fill="#64748B">Hero · KPI carousel · Quick actions · Perlu Perhatian · uses shared SchoolPill / BrandKpiCarousel / SelectionTile primitives</text>
+  <rect x="60" y="100" width="1200" height="1" fill="#E2E8F0"/>
+
+  <!-- ============================================== -->
+  <!-- PHONE — full dashboard scroll                  -->
+  <!-- ============================================== -->
+  <g transform="translate(80, 130)" filter="url(#phoneShadow)">
+    <rect width="380" height="1080" rx="36" fill="white"/>
+    <rect width="380" height="1080" rx="36" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- status bar -->
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+    <g transform="translate(320, 22)" fill="#0F172A">
+      <rect x="0" y="2" width="14" height="10" rx="1"/>
+      <rect x="18" y="0" width="22" height="12" rx="2" fill="none" stroke="#0F172A" stroke-width="1"/>
+      <rect x="20" y="2" width="16" height="8" rx="1"/>
+    </g>
+
+    <!-- HERO -->
+    <rect x="0" y="44" width="380" height="220" fill="url(#adminHero)"/>
+    <!-- top bar: school pill + tahun ajaran chip + person icon -->
+    <g transform="translate(16, 60)">
+      <!-- school pill expanded -->
+      <rect width="220" height="44" rx="14" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.14)"/>
+      <rect x="6" y="6" width="32" height="32" rx="11" fill="rgba(255,255,255,0.25)"/>
+      <text x="22" y="27" text-anchor="middle" font-weight="800" font-size="11.5" fill="white">KA</text>
+      <text x="44" y="22" font-weight="800" font-size="12.5" fill="white">SMP Kamil Edu A</text>
+      <text x="44" y="36" font-size="10" fill="rgba(255,255,255,0.72)">Selamat pagi, Admin</text>
+      <!-- year chip -->
+      <rect x="226" width="80" height="44" rx="14" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.14)"/>
+      <text x="266" y="22" text-anchor="middle" font-weight="800" font-size="11" fill="white">2025/2026</text>
+      <text x="266" y="36" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.72)">Sem. Ganjil</text>
+      <!-- person icon -->
+      <rect x="312" width="36" height="36" rx="12" fill="rgba(255,255,255,0.18)"/>
+      <g transform="translate(322, 9)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+        <circle cx="8" cy="6" r="3.5"/>
+        <path d="M2 18 C2 14 5 12 8 12 C11 12 14 14 14 18"/>
+      </g>
+    </g>
+
+    <!-- Realtime indicator + greeting -->
+    <text x="20" y="142" font-weight="800" font-size="22" fill="white">Selamat datang</text>
+    <text x="20" y="166" font-size="12" fill="rgba(255,255,255,0.85)">Pantau aktivitas sekolah hari ini</text>
+
+    <!-- KPI carousel (peeking off screen) -->
+    <g transform="translate(16, 188)">
+      <!-- Card 1 (active) -->
+      <rect width="180" height="64" rx="14" fill="white" filter="url(#cardShadow)"/>
+      <rect x="12" y="12" width="36" height="36" rx="11" fill="url(#kpiCardBlue)"/>
+      <g transform="translate(22, 22)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+        <circle cx="8" cy="6" r="3.5"/>
+        <path d="M2 17 C2 12 5 10 8 10 C11 10 14 12 14 17"/>
+      </g>
+      <text x="58" y="22" font-size="9" font-weight="800" fill="#64748B" letter-spacing="0.4">SISWA</text>
+      <text x="58" y="42" font-weight="800" font-size="20" fill="#0F172A">1,248</text>
+      <text x="58" y="56" font-size="9" fill="#10B981" font-weight="700">+12 minggu ini</text>
+
+      <!-- Card 2 (peek) -->
+      <rect x="190" width="180" height="64" rx="14" fill="white" filter="url(#cardShadow)"/>
+      <rect x="202" y="12" width="36" height="36" rx="11" fill="url(#kpiCardEmerald)"/>
+      <g transform="translate(212, 22)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 4 H14 V14 H2 Z"/>
+        <path d="M5 8 H11"/>
+      </g>
+      <text x="248" y="22" font-size="9" font-weight="800" fill="#64748B" letter-spacing="0.4">GURU</text>
+      <text x="248" y="42" font-weight="800" font-size="20" fill="#0F172A">62</text>
+      <text x="248" y="56" font-size="9" fill="#64748B">38 wali kelas</text>
+    </g>
+
+    <!-- carousel dots -->
+    <g transform="translate(190, 268)">
+      <circle cx="0" cy="0" r="3" fill="#143068"/>
+      <circle cx="10" cy="0" r="3" fill="#CBD5E1"/>
+      <circle cx="20" cy="0" r="3" fill="#CBD5E1"/>
+    </g>
+
+    <!-- ============= MANAJEMEN DATA SECTION ============= -->
+    <text x="20" y="296" font-size="10" font-weight="800" fill="#94A3B8" letter-spacing="0.6">MANAJEMEN DATA</text>
+
+    <!-- 4-up quick action grid -->
+    <g transform="translate(16, 308)">
+      <!-- Siswa -->
+      <rect width="84" height="92" rx="16" fill="white" stroke="#E2E8F0"/>
+      <rect x="22" y="14" width="40" height="40" rx="13" fill="#DBEAFE"/>
+      <g transform="translate(34, 26)" fill="none" stroke="#1E40AF" stroke-width="2" stroke-linecap="round">
+        <circle cx="8" cy="5" r="3.5"/>
+        <path d="M2 17 C2 12 5 10 8 10 C11 10 14 12 14 17"/>
+      </g>
+      <text x="42" y="74" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0F172A">Siswa</text>
+      <text x="42" y="86" text-anchor="middle" font-size="9" fill="#64748B">1,248</text>
+
+      <!-- Guru -->
+      <rect x="92" width="84" height="92" rx="16" fill="white" stroke="#E2E8F0"/>
+      <rect x="114" y="14" width="40" height="40" rx="13" fill="#DCFCE7"/>
+      <g transform="translate(126, 26)" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 4 H14 V14 H2 Z"/>
+        <path d="M4 8 H12 M4 11 H10"/>
+      </g>
+      <text x="134" y="74" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0F172A">Guru</text>
+      <text x="134" y="86" text-anchor="middle" font-size="9" fill="#64748B">62</text>
+
+      <!-- Kelas -->
+      <rect x="184" width="84" height="92" rx="16" fill="white" stroke="#E2E8F0"/>
+      <rect x="206" y="14" width="40" height="40" rx="13" fill="#FEF3C7"/>
+      <g transform="translate(218, 26)" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round">
+        <rect x="2" y="3" width="12" height="11" rx="1"/>
+        <path d="M5 7 H11 M5 10 H9"/>
+      </g>
+      <text x="226" y="74" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0F172A">Kelas</text>
+      <text x="226" y="86" text-anchor="middle" font-size="9" fill="#64748B">36</text>
+
+      <!-- Mapel -->
+      <rect x="276" width="84" height="92" rx="16" fill="white" stroke="#E2E8F0"/>
+      <rect x="298" y="14" width="40" height="40" rx="13" fill="#EDE9FE"/>
+      <g transform="translate(310, 26)" fill="none" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 2 V14 H13 V4 L11 2 Z"/>
+        <path d="M5 7 H11 M5 10 H9"/>
+      </g>
+      <text x="318" y="74" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0F172A">Mapel</text>
+      <text x="318" y="86" text-anchor="middle" font-size="9" fill="#64748B">14</text>
+    </g>
+
+    <!-- 2nd row -->
+    <g transform="translate(16, 410)">
+      <!-- Jadwal -->
+      <rect width="84" height="92" rx="16" fill="white" stroke="#E2E8F0"/>
+      <rect x="22" y="14" width="40" height="40" rx="13" fill="#FCE7F3"/>
+      <g transform="translate(34, 26)" fill="none" stroke="#BE185D" stroke-width="2" stroke-linecap="round">
+        <rect x="2" y="3" width="12" height="11" rx="1"/>
+        <path d="M2 6 H14 M5 1 V5 M11 1 V5"/>
+      </g>
+      <text x="42" y="74" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0F172A">Jadwal</text>
+      <text x="42" y="86" text-anchor="middle" font-size="9" fill="#64748B">324 sesi</text>
+
+      <!-- Pengumuman -->
+      <rect x="92" width="84" height="92" rx="16" fill="white" stroke="#E2E8F0"/>
+      <rect x="114" y="14" width="40" height="40" rx="13" fill="#CFFAFE"/>
+      <g transform="translate(125, 26)" fill="none" stroke="#0E7490" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 4 H10 L14 8 L10 12 H2 V4 Z"/>
+        <path d="M14 8 V14"/>
+      </g>
+      <text x="134" y="74" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0F172A">Pengumuman</text>
+      <text x="134" y="86" text-anchor="middle" font-size="9" fill="#64748B">8 baru</text>
+
+      <!-- Keuangan -->
+      <rect x="184" width="84" height="92" rx="16" fill="white" stroke="#E2E8F0"/>
+      <rect x="206" y="14" width="40" height="40" rx="13" fill="#FEE2E2"/>
+      <g transform="translate(218, 26)" fill="none" stroke="#B91C1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="4" width="14" height="9" rx="1.5"/>
+        <circle cx="8" cy="8" r="2"/>
+      </g>
+      <text x="226" y="74" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0F172A">Keuangan</text>
+      <text x="226" y="86" text-anchor="middle" font-size="9" fill="#DC2626" font-weight="700">12 telat</text>
+
+      <!-- Sistem -->
+      <rect x="276" width="84" height="92" rx="16" fill="white" stroke="#E2E8F0"/>
+      <rect x="298" y="14" width="40" height="40" rx="13" fill="#F1F5F9"/>
+      <g transform="translate(310, 26)" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="8" cy="8" r="3"/>
+        <path d="M8 1 V3 M8 13 V15 M1 8 H3 M13 8 H15 M3 3 L4 4 M12 12 L13 13 M3 13 L4 12 M12 4 L13 3"/>
+      </g>
+      <text x="318" y="74" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0F172A">Sistem</text>
+      <text x="318" y="86" text-anchor="middle" font-size="9" fill="#64748B">Pengaturan</text>
+    </g>
+
+    <!-- ============= AKTIVITAS HARI INI ============= -->
+    <text x="20" y="540" font-size="10" font-weight="800" fill="#94A3B8" letter-spacing="0.6">AKTIVITAS HARI INI</text>
+    <g transform="translate(16, 552)" filter="url(#cardShadow)">
+      <rect width="348" height="92" rx="16" fill="white"/>
+      <!-- 4 mini stats -->
+      <g transform="translate(16, 16)">
+        <text x="0" y="10" font-size="9" font-weight="800" fill="#64748B" letter-spacing="0.4">KEHADIRAN</text>
+        <text x="0" y="30" font-weight="800" font-size="18" fill="#15803D">94%</text>
+        <text x="0" y="48" font-size="9" fill="#64748B">1,173/1,248</text>
+      </g>
+      <rect x="92" y="20" width="1" height="50" fill="#F1F5F9"/>
+      <g transform="translate(108, 16)">
+        <text x="0" y="10" font-size="9" font-weight="800" fill="#64748B" letter-spacing="0.4">RPP</text>
+        <text x="0" y="30" font-weight="800" font-size="18" fill="#0F172A">87/124</text>
+        <text x="0" y="48" font-size="9" fill="#B45309" font-weight="700">37 menunggu</text>
+      </g>
+      <rect x="200" y="20" width="1" height="50" fill="#F1F5F9"/>
+      <g transform="translate(216, 16)">
+        <text x="0" y="10" font-size="9" font-weight="800" fill="#64748B" letter-spacing="0.4">NILAI</text>
+        <text x="0" y="30" font-weight="800" font-size="18" fill="#0F172A">82.4</text>
+        <text x="0" y="48" font-size="9" fill="#10B981" font-weight="700">+1.2 vs minggu lalu</text>
+      </g>
+    </g>
+
+    <!-- ============= PERLU PERHATIAN ============= -->
+    <text x="20" y="676" font-size="10" font-weight="800" fill="#94A3B8" letter-spacing="0.6">PERLU PERHATIAN</text>
+    <text x="344" y="676" text-anchor="end" font-size="10" font-weight="700" fill="#1E40AF">Lihat Semua →</text>
+
+    <!-- Alert card 1 — RPP backlog -->
+    <g transform="translate(16, 688)" filter="url(#cardShadow)">
+      <rect width="348" height="64" rx="14" fill="white" stroke="#FCA5A5" stroke-width="1.2"/>
+      <rect x="14" y="14" width="36" height="36" rx="11" fill="#FEE2E2"/>
+      <g transform="translate(28, 25)" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 1 V7 M4 9 V9.1 M2 14 H6 L4 1 Z" fill="#DC2626" stroke="none"/>
+      </g>
+      <text x="60" y="28" font-weight="800" font-size="12.5" fill="#0F172A">37 RPP menunggu persetujuan</text>
+      <text x="60" y="44" font-size="10.5" fill="#64748B">Pak Yahya, Bu Rina, +35 lainnya</text>
+      <text x="320" y="36" text-anchor="end" font-size="11" font-weight="800" fill="#DC2626">Tinjau →</text>
+    </g>
+
+    <!-- Alert card 2 — Tagihan telat -->
+    <g transform="translate(16, 760)" filter="url(#cardShadow)">
+      <rect width="348" height="64" rx="14" fill="white" stroke="#E2E8F0"/>
+      <rect x="14" y="14" width="36" height="36" rx="11" fill="#FEF3C7"/>
+      <g transform="translate(26, 25)" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="2" width="14" height="10" rx="1.5"/>
+        <circle cx="8" cy="7" r="2"/>
+      </g>
+      <text x="60" y="28" font-weight="800" font-size="12.5" fill="#0F172A">12 tagihan telat &gt;30 hari</text>
+      <text x="60" y="44" font-size="10.5" fill="#64748B">Total Rp 24,5jt · 8 wali murid</text>
+      <text x="320" y="36" text-anchor="end" font-size="11" font-weight="800" fill="#B45309">Tindak →</text>
+    </g>
+
+    <!-- Alert card 3 — Pengumuman draft -->
+    <g transform="translate(16, 832)" filter="url(#cardShadow)">
+      <rect width="348" height="64" rx="14" fill="white" stroke="#E2E8F0"/>
+      <rect x="14" y="14" width="36" height="36" rx="11" fill="#DBEAFE"/>
+      <g transform="translate(28, 25)" fill="none" stroke="#1E40AF" stroke-width="2" stroke-linecap="round">
+        <rect x="2" y="2" width="10" height="14" rx="1"/>
+        <path d="M5 6 H9 M5 9 H9 M5 12 H7"/>
+      </g>
+      <text x="60" y="28" font-weight="800" font-size="12.5" fill="#0F172A">3 pengumuman tersimpan draft</text>
+      <text x="60" y="44" font-size="10.5" fill="#64748B">Belum dipublikasi · 5 hari yang lalu</text>
+      <text x="320" y="36" text-anchor="end" font-size="11" font-weight="800" fill="#1E40AF">Buka →</text>
+    </g>
+
+    <!-- ============= BOTTOM NAV ============= -->
+    <g transform="translate(0, 1010)">
+      <rect width="380" height="70" fill="white" stroke="#E2E8F0"/>
+      <!-- 5 tabs: Beranda, Data, Akademik, Operasi, Sistem -->
+      <g transform="translate(38, 14)">
+        <g transform="translate(0, 0)" fill="#143068">
+          <rect width="36" height="3" rx="1.5"/>
+        </g>
+        <g transform="translate(8, 14)" fill="none" stroke="#143068" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 9 L11 1 L20 9 V19 H14 V13 H8 V19 H2 Z"/>
+        </g>
+        <text x="18" y="50" text-anchor="middle" font-size="9" font-weight="800" fill="#143068">Beranda</text>
+      </g>
+      <g transform="translate(114, 14)">
+        <g transform="translate(8, 14)" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="6" r="3.5"/>
+          <path d="M3 19 C3 13 7 10 11 10 C15 10 19 13 19 19"/>
+        </g>
+        <text x="18" y="50" text-anchor="middle" font-size="9" font-weight="600" fill="#94A3B8">Data</text>
+      </g>
+      <g transform="translate(190, 14)">
+        <g transform="translate(8, 14)" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 4 H17 V18 H3 Z"/>
+          <path d="M6 8 H14 M6 11 H12 M6 14 H10"/>
+        </g>
+        <text x="18" y="50" text-anchor="middle" font-size="9" font-weight="600" fill="#94A3B8">Akademik</text>
+      </g>
+      <g transform="translate(266, 14)">
+        <g transform="translate(8, 14)" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="3" width="14" height="13" rx="1.5"/>
+          <path d="M3 8 H17 M9 3 V16"/>
+        </g>
+        <text x="18" y="50" text-anchor="middle" font-size="9" font-weight="600" fill="#94A3B8">Operasi</text>
+      </g>
+      <g transform="translate(342, 14)">
+        <g transform="translate(8, 14)" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="4"/>
+          <path d="M11 3 V5 M11 17 V19 M3 11 H5 M17 11 H19"/>
+        </g>
+        <text x="18" y="50" text-anchor="middle" font-size="9" font-weight="600" fill="#94A3B8">Sistem</text>
+      </g>
+    </g>
+
+    <!-- iPhone home indicator -->
+    <rect x="120" y="1062" width="140" height="4" rx="2" fill="#0F172A" opacity="0.85"/>
+  </g>
+
+  <!-- ============================================== -->
+  <!-- DESIGN SPEC PANEL (right column)                -->
+  <!-- ============================================== -->
+  <g transform="translate(540, 130)" filter="url(#cardShadow)">
+    <rect width="320" height="380" rx="20" fill="white" stroke="#E2E8F0"/>
+    <text x="20" y="36" font-weight="800" font-size="13" fill="#0F172A">Hero · Spec</text>
+    <rect x="20" y="48" width="280" height="1" fill="#F1F5F9"/>
+
+    <g transform="translate(20, 70)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Gradient</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">brandDarkBlue → brandDarkBlueDeep</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">220px tall · status bar overlay</text>
+    </g>
+    <g transform="translate(20, 130)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">SchoolPill (compact)</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">onDarkSurface · 32px InitialsAvatar</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Tap → BrandHeroSheet (Pilih Sekolah)</text>
+    </g>
+    <g transform="translate(20, 190)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Tahun ajaran chip</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Tap → AcademicYearPickerSheet</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Same hero pattern, AY gradient</text>
+    </g>
+    <g transform="translate(20, 250)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Person icon</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Tap → DashboardAccountSheet</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Profile · Peran · Sekolah · Bahasa · Logout</text>
+    </g>
+    <g transform="translate(20, 310)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Greeting</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">22pt heading · 12pt subtitle</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Time-of-day aware copy</text>
+    </g>
+  </g>
+
+  <g transform="translate(540, 530)" filter="url(#cardShadow)">
+    <rect width="320" height="320" rx="20" fill="white" stroke="#E2E8F0"/>
+    <text x="20" y="36" font-weight="800" font-size="13" fill="#0F172A">KPI Carousel · Spec</text>
+    <rect x="20" y="48" width="280" height="1" fill="#F1F5F9"/>
+    <g transform="translate(20, 70)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">BrandKpiCarousel</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Reuses parent's carousel — admin slices:</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Siswa · Guru · Kelas · Mapel</text>
+    </g>
+    <g transform="translate(20, 130)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Peek next card</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">PageView with 0.85 viewport · 8px peek</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Swipe + dot indicator</text>
+    </g>
+    <g transform="translate(20, 190)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Delta line</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Green = +growth, slate = neutral</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Backed by /dashboard/stats slices</text>
+    </g>
+    <g transform="translate(20, 250)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Tap on card</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Routes to matching CRUD list</text>
+    </g>
+  </g>
+
+  <g transform="translate(540, 870)" filter="url(#cardShadow)">
+    <rect width="320" height="340" rx="20" fill="white" stroke="#E2E8F0"/>
+    <text x="20" y="36" font-weight="800" font-size="13" fill="#0F172A">Quick Actions · Spec</text>
+    <rect x="20" y="48" width="280" height="1" fill="#F1F5F9"/>
+    <g transform="translate(20, 70)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">8 tile grid</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">2 rows × 4 cols · 84×92 each</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Tinted icon disc + name + subtitle</text>
+    </g>
+    <g transform="translate(20, 130)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Tile colors</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Each entity owns a hue (siswa=blue,</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">guru=emerald, kelas=amber, mapel=violet,</text>
+      <text x="0" y="52" font-size="10.5" fill="#64748B">jadwal=pink, pengumuman=cyan, …)</text>
+    </g>
+    <g transform="translate(20, 200)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Subtitle</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Live count or alert badge ("12 telat")</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Color flips red when there's a backlog</text>
+    </g>
+    <g transform="translate(20, 270)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Perlu Perhatian</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Same _PerluPerhatianCard as parent</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Red border on overdue · "Lihat Semua"</text>
+    </g>
+  </g>
+
+  <!-- bottom annotation -->
+  <g transform="translate(900, 130)" filter="url(#cardShadow)">
+    <rect width="340" height="1080" rx="20" fill="white" stroke="#E2E8F0"/>
+    <text x="20" y="36" font-weight="800" font-size="13" fill="#0F172A">Reused from parent</text>
+    <rect x="20" y="48" width="300" height="1" fill="#F1F5F9"/>
+    <g transform="translate(20, 70)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#143068">SchoolPill (compact + expanded)</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">Hero header school identity. Shared with</text>
+      <text x="0" y="46" font-size="10.5" fill="#64748B">parent + teacher dashboards.</text>
+    </g>
+    <g transform="translate(20, 110)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#143068">AcademicYearChip + picker</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">Hero "Saat ini" sheet pattern, taps open</text>
+      <text x="0" y="46" font-size="10.5" fill="#64748B">academicYearPickerSheet.</text>
+    </g>
+    <g transform="translate(20, 150)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#143068">DashboardAccountSheet</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">Person icon → bottom sheet with</text>
+      <text x="0" y="46" font-size="10.5" fill="#64748B">_AccessRow rows + Lihat Profil tile.</text>
+    </g>
+    <g transform="translate(20, 190)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#143068">BrandKpiCarousel</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">Identical PageView + dot indicator with</text>
+      <text x="0" y="46" font-size="10.5" fill="#64748B">admin-specific slice schema.</text>
+    </g>
+    <g transform="translate(20, 230)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#143068">Perlu Perhatian card pattern</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">Tinted-icon + name + subtitle + arrow,</text>
+      <text x="0" y="46" font-size="10.5" fill="#64748B">red border for overdue items.</text>
+    </g>
+    <g transform="translate(20, 270)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#143068">"Lihat Semua" pattern</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">Section header + right-aligned link →</text>
+      <text x="0" y="46" font-size="10.5" fill="#64748B">routes to filter-scoped Inbox screen.</text>
+    </g>
+
+    <rect x="20" y="320" width="300" height="1" fill="#F1F5F9"/>
+    <text x="20" y="346" font-weight="800" font-size="13" fill="#0F172A">New for admin</text>
+
+    <g transform="translate(20, 370)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#0F172A">Quick action grid (8 tiles)</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">Replaces the legacy menu list with a</text>
+      <text x="0" y="46" font-size="10.5" fill="#64748B">card grid that surfaces live counts.</text>
+    </g>
+    <g transform="translate(20, 420)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#0F172A">Aktivitas hari ini strip</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">Three-up KPI summary (Kehadiran %,</text>
+      <text x="0" y="46" font-size="10.5" fill="#64748B">RPP backlog, Nilai avg) in one card.</text>
+    </g>
+    <g transform="translate(20, 470)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#0F172A">Bottom nav (5 tabs)</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">Beranda · Data · Akademik · Operasi ·</text>
+      <text x="0" y="46" font-size="10.5" fill="#64748B">Sistem. Tap routes to feature roots.</text>
+    </g>
+
+    <rect x="20" y="530" width="300" height="1" fill="#F1F5F9"/>
+    <text x="20" y="556" font-weight="800" font-size="13" fill="#0F172A">Color tokens used</text>
+
+    <g transform="translate(20, 580)">
+      <rect width="40" height="22" rx="6" fill="#143068"/>
+      <text x="46" y="16" font-size="10" fill="#0F172A">brandDarkBlue · admin hero start</text>
+    </g>
+    <g transform="translate(20, 610)">
+      <rect width="40" height="22" rx="6" fill="#1F4A8F"/>
+      <text x="46" y="16" font-size="10" fill="#0F172A">brandDarkBlueDeep · hero end</text>
+    </g>
+    <g transform="translate(20, 640)">
+      <rect width="40" height="22" rx="6" fill="#3B82F6"/>
+      <text x="46" y="16" font-size="10" fill="#0F172A">corporateBlue500 · KPI siswa</text>
+    </g>
+    <g transform="translate(20, 670)">
+      <rect width="40" height="22" rx="6" fill="#10B981"/>
+      <text x="46" y="16" font-size="10" fill="#0F172A">emerald500 · KPI guru</text>
+    </g>
+    <g transform="translate(20, 700)">
+      <rect width="40" height="22" rx="6" fill="#F59E0B"/>
+      <text x="46" y="16" font-size="10" fill="#0F172A">amber500 · KPI kelas</text>
+    </g>
+    <g transform="translate(20, 730)">
+      <rect width="40" height="22" rx="6" fill="#8B5CF6"/>
+      <text x="46" y="16" font-size="10" fill="#0F172A">violet500 · KPI mapel</text>
+    </g>
+
+    <rect x="20" y="780" width="300" height="1" fill="#F1F5F9"/>
+    <text x="20" y="806" font-weight="800" font-size="13" fill="#0F172A">Behavior notes</text>
+    <g transform="translate(20, 830)">
+      <text x="0" y="14" font-size="10.5" fill="#64748B">• Pull-to-refresh on the scroll view</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">  refreshes all stats + alerts.</text>
+      <text x="0" y="56" font-size="10.5" fill="#64748B">• Realtime badge on bottom-nav tab dots</text>
+      <text x="0" y="74" font-size="10.5" fill="#64748B">  for unread items per section.</text>
+      <text x="0" y="98" font-size="10.5" fill="#64748B">• Quick-action subtitle counts come from</text>
+      <text x="0" y="116" font-size="10.5" fill="#64748B">  /admin/dashboard/full single endpoint.</text>
+      <text x="0" y="140" font-size="10.5" fill="#64748B">• Perlu Perhatian items dismiss after</text>
+      <text x="0" y="158" font-size="10.5" fill="#64748B">  the underlying action is resolved.</text>
+      <text x="0" y="182" font-size="10.5" fill="#64748B">• Greeting time changes 5–11 / 11–15 /</text>
+      <text x="0" y="200" font-size="10.5" fill="#64748B">  15–18 / 18–5 (pagi/siang/sore/malam).</text>
+    </g>
+  </g>
+</svg>
