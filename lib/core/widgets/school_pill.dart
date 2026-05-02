@@ -307,13 +307,19 @@ class _SchoolAvatar extends StatelessWidget {
     required this.onDarkSurface,
   });
 
+  /// Cached whitespace splitter — was being recreated on every build
+  /// of `_SchoolAvatar` (which lives inside a list-row Material). The
+  /// allocation is tiny but the avatar rebuilds on every dashboard
+  /// state change, so hoisting it to a static is a free win.
+  static final RegExp _whitespace = RegExp(r'\s+');
+
   String _initial() {
     final trimmed = schoolName.trim();
     if (trimmed.isEmpty) return '?';
     // Compose up to 2 chars from the first two tokens ("Al-Kamil" → "AK")
     // for better legibility on the 44 px avatar. On the 26 px avatar the
     // second char is clipped by the container anyway.
-    final tokens = trimmed.split(RegExp(r'\s+'));
+    final tokens = trimmed.split(_whitespace);
     if (tokens.length == 1) return tokens.first.characters.first.toUpperCase();
     return (tokens[0].characters.first + tokens[1].characters.first)
         .toUpperCase();

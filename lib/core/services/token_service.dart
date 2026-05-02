@@ -17,6 +17,8 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/parent_bill_checkout_screen.dart'
+    show clearParentBillCheckoutCache;
 
 /// Singleton service for managing authentication tokens and login state.
 /// Uses SecureStorageService for encrypted token/user storage.
@@ -147,6 +149,13 @@ class TokenService {
 
       // Clear local API cache
       await LocalCacheService.clearAll();
+
+      // Drop in-memory feature caches that aren't backed by
+      // LocalCacheService (e.g., the parent Bayar checkout session
+      // map). Without this a re-login on the same device could hit
+      // the previous user's cached gateway response if a bill ID
+      // happened to collide across schools.
+      clearParentBillCheckoutCache();
 
       // Set force logout flag
       await _secureStorage.setForceLogout(true);
